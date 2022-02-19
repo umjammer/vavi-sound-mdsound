@@ -7,9 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import MDSound.common.QuadConsumer;
-import MDSound.common.QuadFunction;
-import MDSound.common.TriConsumer;
+import MDSound.Common.QuadConsumer;
+import MDSound.Common.QuadFunction;
+import MDSound.Common.TriConsumer;
 import MDSound.np.np_nes_fds;
 
     public class MDSound

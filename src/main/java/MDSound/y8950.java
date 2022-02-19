@@ -2,7 +2,7 @@
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import MDSound.common.TriConsumer;
+import MDSound.Common.TriConsumer;
 
     public class y8950 extends Instrument
     {

@@ -2,7 +2,6 @@
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
-import java.util.stream.IntStream;
 
     public class PPSDRV extends Instrument
     {
@@ -47,7 +46,7 @@ import java.util.stream.IntStream;
             if (option != null && option.length > 0)
             {
                 real = true;
-                psg = (BiConsumer<Integer, Integer>)option[0];
+                psg = (BiConsumer<Integer, Integer>) option[0];
             }
 
             return clock;
@@ -430,9 +429,7 @@ import java.util.stream.IntStream;
                 }
 
             }
-            byte[] a = new byte[o.size()];
-            IntStream.range(0, o.size()).forEach(i -> a[i] = o.get(i).byteValue());
-            ppsDt[ChipID] = a;
+            ppsDt[ChipID] = Common.toByteArray(o);
 
             //ヘッダの作成
             List<PPSHeader> h = new ArrayList<PPSHeader>();

@@ -3,7 +3,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import MDSound.common.TriConsumer;
+import MDSound.Common.TriConsumer;
 
     public class ym3526 extends Instrument
     {
@@ -435,7 +435,7 @@ import MDSound.common.TriConsumer;
         //        void y8950_set_keyboard_handler(void* chip, OPL_PORTHANDLER_W KeyboardHandler_w, OPL_PORTHANDLER_R KeyboardHandler_r, void* param);
         //        void y8950_set_delta_t_memory(void* chip, void* deltat_mem_ptr, int deltat_mem_size);
         //        void y8950_write_pcmrom(void* chip, offs_t ROMSize, offs_t DataStart,
-        //                                 offs_t DataLength, const UINT8* ROMData);
+        //                                 offs_t DataLength, final UINT8* ROMData);
 
         //        void* y8950_init(UINT32 clock, UINT32 rate);
         //        void y8950_shutdown(void* chip);

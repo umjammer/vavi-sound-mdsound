@@ -4,7 +4,7 @@ import java.util.Random;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import MDSound.common.TriConsumer;
+import MDSound.Common.TriConsumer;
 
     public class ymf262 extends Instrument
     {

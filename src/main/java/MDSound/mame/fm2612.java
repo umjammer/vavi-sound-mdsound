@@ -1,7 +1,7 @@
 ﻿package MDSound.mame;
 import java.util.function.BiConsumer;
 
-import MDSound.common.QuadConsumer;
+import MDSound.Common.QuadConsumer;
 import MDSound.mame.fm.FM_base;
 
 	public class fm2612

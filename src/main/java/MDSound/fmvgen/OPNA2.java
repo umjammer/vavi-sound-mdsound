@@ -3,7 +3,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.function.Function;
 
-import MDSound.common;
+import MDSound.Common;
 import MDSound.fmgen.opna;
 import MDSound.fmvgen.effect.Compressor;
 import MDSound.fmvgen.effect.HPFLPF;
@@ -680,7 +680,7 @@ import dotnet4j.io.Stream;
 
                 try (Stream st = appendFileReaderCallback.apply(fileName))
                 {
-                    buf = common.ReadAllBytes(st);
+                    buf = Common.ReadAllBytes(st);
                 }
 
                 if (buf == null)
@@ -690,7 +690,7 @@ import dotnet4j.io.Stream;
                     String fileNameRym = "2608_RYM.WAV";
                     try (Stream st = appendFileReaderCallback.apply(fileNameRym))
                     {
-                        buf = common.ReadAllBytes(st);
+                        buf = Common.ReadAllBytes(st);
                     }
                 }
 

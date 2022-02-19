@@ -701,9 +701,7 @@ import java.util.stream.IntStream;
                 }
             }
 
-            byte[] a = new byte[o.size()];
-            IntStream.range(0, o.size()).forEach(i -> a[i] = o.get(i).byteValue());
-            pcmData[chipID][bank] = a;
+            pcmData[chipID][bank] = Common.toByteArray(o);
             //System.IO.File.WriteAllBytes("a.raw", pcmData[bank]);
             return 0;
         }

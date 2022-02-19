@@ -1,7 +1,9 @@
 ﻿package MDSound.np.chip;
 import MDSound.MDSound;
-import MDSound.common;
+import MDSound.Common;
 import MDSound.np.IDevice.ISoundChip;
+import MDSound.np.chip.IDeviceInfo.ITrackInfo;
+import MDSound.np.chip.IDeviceInfo.TrackInfoBasic;
 
     public class nes_vrc7 implements ISoundChip
     {
@@ -19,9 +21,9 @@ import MDSound.np.IDevice.ISoundChip;
         {
             patch_set = (int)Emu2413.OPLL_TONE_ENUM.OPLL_VRC7_RW_TONE.ordinal();
 
-            opll = emu2413.OPLL_new(3579545, (int)common.SampleRate);
+            opll = emu2413.OPLL_new(3579545, (int)Common.SampleRate);
             emu2413.OPLL_reset_patch(opll, (int)patch_set);
-            SetClock(common.NsfClock);// DEFAULT_CLOCK);
+            SetClock(Common.NsfClock);// DEFAULT_CLOCK);
 
             for (int c = 0; c < 2; ++c)
                 for (int t = 0; t < 6; ++t)

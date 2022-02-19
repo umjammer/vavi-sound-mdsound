@@ -1,5 +1,5 @@
 ﻿package MDSound;
-import MDSound.common.QuadFunction;
+import MDSound.Common.QuadFunction;
 
     public class XGMFunction
     {

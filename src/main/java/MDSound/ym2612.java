@@ -124,7 +124,7 @@ public class ym2612 extends Instrument
         int[] LFO_INC_TAB = new int[8];              // LFO step table
 
         //delegate void dlgUpdateChan(ym2612_ YM2612, channel_ CH, int[][] buf, int length);
-        interface dlgUpdateChan extends common.QuadConsumer<ym2612_, channel_, int[][], Integer> {
+        interface dlgUpdateChan extends Common.QuadConsumer<ym2612_, channel_, int[][], Integer> {
         }
         private static dlgUpdateChan[] UPDATE_CHAN = new dlgUpdateChan[]    // Update Channel functions pointer table
         {

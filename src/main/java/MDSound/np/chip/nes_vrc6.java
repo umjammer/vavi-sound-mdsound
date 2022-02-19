@@ -1,6 +1,8 @@
 ﻿package MDSound.np.chip;
 import MDSound.MDSound;
 import MDSound.np.IDevice.ISoundChip;
+import MDSound.np.chip.IDeviceInfo.ITrackInfo;
+import MDSound.np.chip.IDeviceInfo.TrackInfoBasic;
 
     public class nes_vrc6 implements ISoundChip
     {

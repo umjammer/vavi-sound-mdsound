@@ -4,7 +4,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.function.Function;
 
-import MDSound.common;
+import MDSound.Common;
 import dotnet4j.io.FileAccess;
 import dotnet4j.io.FileMode;
 import dotnet4j.io.FileStream;
@@ -1558,13 +1558,13 @@ stop:
 
                     try (Stream st = appendFileReaderCallback.apply(buf1))
                     {
-                        file = common.ReadAllBytes(st);
+                        file = Common.ReadAllBytes(st);
                     }
                     if (file == null)
                     {
                         try (Stream st = appendFileReaderCallback.apply(buf2))
                         {
-                            file = common.ReadAllBytes(st);
+                            file = Common.ReadAllBytes(st);
                         }
                     }
 
@@ -1575,13 +1575,13 @@ stop:
                         {
                             try (Stream st = appendFileReaderCallback.apply(rymBuf1))
                             {
-                                file = common.ReadAllBytes(st);
+                                file = Common.ReadAllBytes(st);
                             }
                             if (file == null)
                             {
                                 try (Stream st = appendFileReaderCallback.apply(rymBuf2))
                                 {
-                                    file = common.ReadAllBytes(st);
+                                    file = Common.ReadAllBytes(st);
                                 }
                             }
                             if (file != null)

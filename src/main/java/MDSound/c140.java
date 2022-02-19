@@ -1,5 +1,9 @@
 ﻿package MDSound;
 
+import java.util.Arrays;
+
+import MDSound.Qsound_ctr.STATE;
+
 public class c140 extends Instrument
     {
 
@@ -465,6 +469,7 @@ public class c140 extends Instrument
             SYSTEM2,
             SYSTEM21,
             ASIC219;
+            public static C140_TYPE valueOf(int v) { return Arrays.stream(values()).filter(e -> e.ordinal() == v).findFirst().get(); }
         }
 
         /*typedef struct _c140_interface c140_interface;

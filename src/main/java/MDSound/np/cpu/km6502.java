@@ -3,7 +3,7 @@ package MDSound.np.cpu;
 
 import java.util.function.BiFunction;
 
-import MDSound.common.TriConsumer;
+import MDSound.Common.TriConsumer;
 import MDSound.np.IDevice;
 
 

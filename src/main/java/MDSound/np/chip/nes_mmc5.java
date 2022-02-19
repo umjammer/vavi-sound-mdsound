@@ -1,6 +1,8 @@
 ﻿package MDSound.np.chip;
 import MDSound.MDSound;
 import MDSound.np.IDevice.ISoundChip;
+import MDSound.np.chip.IDeviceInfo.ITrackInfo;
+import MDSound.np.chip.IDeviceInfo.TrackInfoBasic;
 import MDSound.np.cpu.km6502;
 
     public class nes_mmc5 implements ISoundChip

@@ -13,6 +13,9 @@
         <configuration>
           <source>8</source>
           <target>8</target>
+          <testExcludes>
+            <testExclude>test/RealChip</testExclude>
+          </testExcludes>
         </configuration>
       </plugin>
       <plugin>
@@ -56,9 +59,9 @@
     </dependency>
 
     <dependency>
-      <groupId>com.github.umjammer</groupId>
+      <groupId>moe.yo3explorer</groupId> <!-- com.github.umjammer -->
       <artifactId>dotnet4j</artifactId>
-      <version>1.2.0</version>
+      <version>1.2.1-SNAPSHOT</version>
     </dependency>
 
     <dependency>

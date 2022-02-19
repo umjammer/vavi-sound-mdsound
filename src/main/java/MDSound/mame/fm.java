@@ -3,8 +3,8 @@
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import MDSound.common.QuadConsumer;
-import MDSound.common.TriConsumer;
+import MDSound.Common.QuadConsumer;
+import MDSound.Common.TriConsumer;
 
 public class fm
     {

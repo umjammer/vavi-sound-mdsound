@@ -1281,7 +1281,7 @@ import dotnet4j.io.Stream;
                 else
                 {
                     try (Stream st = romStream.apply(ROM_FILENAME.toString())) {
-                        ROMFile = common.ReadAllBytes(st);
+                        ROMFile = Common.ReadAllBytes(st);
                     }
                     ROMFileSize = (int)ROMFile.length;
                 }
