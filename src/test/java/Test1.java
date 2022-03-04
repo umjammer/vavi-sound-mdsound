@@ -1,3 +1,4 @@
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -8,14 +9,9 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import MDSound.X68Sound.Global;
+import mdsound.x68Sound.Global;
 
 
-/*
- * Copyright (c) 2022 by Naohide Sano, All rights reserved.
- *
- * Programmed by Naohide Sano
- */
 public class Test1 {
 
     @Test

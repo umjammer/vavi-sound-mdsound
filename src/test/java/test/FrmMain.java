@@ -23,7 +23,6 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 
-import MDSound.MDSound.Chip;
 import dotnet4j.io.File;
 //import test.RealChip.RSoundChip;
 import test.SoundManager.DriverAction;
@@ -34,12 +33,6 @@ import test.SoundManager.SoundManager.Enq;
 
     public class FrmMain extends JFrame
     {
-//        #region Windows フォーム デザイナーで生成されたコード
-
-        /// <summary>
-        /// デザイナー サポートに必要なメソッドです。このメソッドの内容を
-        /// コード エディターで変更しないでください。
-        /// </summary>
         private void InitializeComponent()
         {
             this.label1 = new JLabel();
@@ -76,25 +69,25 @@ import test.SoundManager.SoundManager.Enq;
             this.label12 = new JLabel();
             this.label5 = new JLabel();
             this.label4 = new JLabel();
-            // 
+            //
             // label1
-            // 
+            //
 //            this.label1.AutoSize = true;
             this.label1.setLocation(new Point(12, 9));
             this.label1.setName("label1");
             this.label1.setPreferredSize(new Dimension(66, 12));
 //            this.label1.TabIndex = 0;
             this.label1.setText("Select VGM");
-            // 
+            //
             // tbFile
-            // 
+            //
             this.tbFile.setLocation(new Point(12, 25));
             this.tbFile.setName("tbFile");
             this.tbFile.setPreferredSize(new Dimension(286, 19));
 //            this.tbFile.TabIndex = 1;
-            // 
+            //
             // btnRef
-            // 
+            //
             this.btnRef.setLocation(new Point(304, 23));
             this.btnRef.setName("btnRef");
             this.btnRef.setPreferredSize(new Dimension(25, 23));
@@ -102,9 +95,9 @@ import test.SoundManager.SoundManager.Enq;
             this.btnRef.setText("...");
 //            this.btnRef.UseVisualStyleBackColor = true;
             this.btnRef.addActionListener(this::BtnRef_Click);
-            // 
+            //
             // btnPlay
-            // 
+            //
             this.btnPlay.setLocation(new Point(173, 52));
             this.btnPlay.setName("btnPlay");
             this.btnPlay.setPreferredSize(new Dimension(75, 23));
@@ -112,9 +105,9 @@ import test.SoundManager.SoundManager.Enq;
             this.btnPlay.setText(">");
 //            this.btnPlay.UseVisualStyleBackColor = true;
             this.btnPlay.addActionListener(this::BtnPlay_Click);
-            // 
+            //
             // btnStop
-            // 
+            //
             this.btnStop.setLocation(new Point(254, 52));
             this.btnStop.setName("btnStop");
             this.btnStop.setPreferredSize(new Dimension(75, 23));
@@ -122,33 +115,33 @@ import test.SoundManager.SoundManager.Enq;
             this.btnStop.setText("[]");
 //            this.btnStop.UseVisualStyleBackColor = true;
             this.btnStop.addActionListener(this::BtnStop_Click);
-            // 
+            //
             // label2
-            // 
+            //
 //            this.label2.AutoSize = true;
             this.label2.setLocation(new Point(-174, 47));
             this.label2.setName("label2");
             this.label2.setPreferredSize(new Dimension(179, 12));
 //            this.label2.TabIndex = 5;
             this.label2.setText("||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
-            // 
+            //
             // timer1
-            // 
+            //
             this.timer1.scheduleAtFixedRate(this::Timer1_Tick, 0l, 10l, TimeUnit.SECONDS);
-            // 
+            //
             // label3
-            // 
+            //
 //            this.label3.AutoSize = true;
             this.label3.setLocation(new Point(-174, 63));
             this.label3.setName("label3");
             this.label3.setPreferredSize(new Dimension(179, 12));
 //            this.label3.TabIndex = 5;
             this.label3.setText("||||||||||||||||||||||||||||||||||||||||||||||||||||||||||");
-            // 
+            //
             // groupBox1
-            // 
-//            this.groupBox1.Anchor = ((JAnchorStyles)((((JAnchorStyles.Top | JAnchorStyles.Bottom) 
-//            | JAnchorStyles.Left) 
+            //
+//            this.groupBox1.Anchor = ((JAnchorStyles)((((JAnchorStyles.Top | JAnchorStyles.Bottom)
+//            | JAnchorStyles.Left)
 //            | JAnchorStyles.Right)));
             this.groupBox1.add(this.lblInterrupt);
             this.groupBox1.add(this.lblRealChipSenderIsRunning);
@@ -181,236 +174,237 @@ import test.SoundManager.SoundManager.Enq;
 //            this.groupBox1.TabIndex = 6;
 //            this.groupBox1.TabStop = false;
             this.groupBox1.setName("Status");
-            // 
+            //
             // lblInterrupt
-            // 
+            //
             this.lblInterrupt.setLocation(new Point(209, 174));
             this.lblInterrupt.setName("lblInterrupt");
             this.lblInterrupt.setPreferredSize(new Dimension(95, 12));
 //            this.lblInterrupt.TabIndex = 0;
             this.lblInterrupt.setText("Disable");
             this.lblInterrupt.setHorizontalAlignment(SwingConstants.RIGHT);
-            // 
+            //
             // lblRealChipSenderIsRunning
-            // 
+            //
             this.lblRealChipSenderIsRunning.setLocation(new Point(209, 151));
             this.lblRealChipSenderIsRunning.setName("lblRealChipSenderIsRunning");
             this.lblRealChipSenderIsRunning.setPreferredSize(new Dimension(95, 12));
 //            this.lblRealChipSenderIsRunning.TabIndex = 0;
             this.lblRealChipSenderIsRunning.setText("Stop");
             this.lblRealChipSenderIsRunning.setHorizontalAlignment(SwingConstants.CENTER);
-            // 
+            //
             // lblEmuChipSenderIsRunning
-            // 
+            //
             this.lblEmuChipSenderIsRunning.setLocation(new Point(209, 139));
             this.lblEmuChipSenderIsRunning.setName("lblEmuChipSenderIsRunning");
             this.lblEmuChipSenderIsRunning.setPreferredSize(new Dimension(95, 12));
 //            this.lblEmuChipSenderIsRunning.TabIndex = 0;
             this.lblEmuChipSenderIsRunning.setText("Stop");
             this.lblEmuChipSenderIsRunning.setHorizontalAlignment(SwingConstants.RIGHT);
-            // 
+            //
             // lblDebug
-            // 
+            //
 //            this.lblDebug.AutoSize = true;
             this.lblDebug.setLocation(new Point(6, 192));
             this.lblDebug.setName("lblDebug");
             this.lblDebug.setPreferredSize(new Dimension(35, 12));
 //            this.lblDebug.TabIndex = 0;
             this.lblDebug.setText("debug");
-            // 
+            //
             // label14
-            // 
+            //
 //            this.label14.AutoSize = true;
             this.label14.setLocation(new Point(6, 174));
             this.label14.setName("label14");
             this.label14.setPreferredSize(new Dimension(54, 12));
 //            this.label14.TabIndex = 0;
             this.label14.setText("Interrupt :");
-            // 
+            //
             // lblDataSenderIsRunning
-            // 
+            //
             this.lblDataSenderIsRunning.setLocation(new Point(209, 127));
             this.lblDataSenderIsRunning.setName("lblDataSenderIsRunning");
             this.lblDataSenderIsRunning.setPreferredSize(new Dimension(95, 12));
 //            this.lblDataSenderIsRunning.TabIndex = 0;
             this.lblDataSenderIsRunning.setText("Stop");
             this.lblDataSenderIsRunning.setHorizontalAlignment(SwingConstants.RIGHT);
-            // 
+            //
             // label13
-            // 
+            //
 //            this.label13.AutoSize = true;
             this.label13.setLocation(new Point(6, 151));
             this.label13.setName("label13");
             this.label13.setPreferredSize(new Dimension(142, 12));
 //            this.label13.TabIndex = 0;
             this.label13.setText("RealChipSenderIsRunning :");
-            // 
+            //
             // lblDataMakerIsRunning
-            // 
+            //
             this.lblDataMakerIsRunning.setLocation(new Point(209, 115));
             this.lblDataMakerIsRunning.setName("lblDataMakerIsRunning");
             this.lblDataMakerIsRunning.setPreferredSize(new Dimension(95, 12));
 //            this.lblDataMakerIsRunning.TabIndex = 0;
             this.lblDataMakerIsRunning.setText("Stop");
             this.lblDataMakerIsRunning.setHorizontalAlignment(SwingConstants.RIGHT);
-            // 
+            //
             // label10
-            // 
+            //
 //            this.label10.AutoSize = true;
             this.label10.setLocation(new Point(6, 139));
             this.label10.setName("label10");
             this.label10.setPreferredSize(new Dimension(141, 12));
 //            this.label10.TabIndex = 0;
             this.label10.setText("EmuChipSenderIsRunning :");
-            // 
+            //
             // lblRealChipSenderBufferSize
-            // 
+            //
             this.lblRealChipSenderBufferSize.setLocation(new Point(209, 95));
             this.lblRealChipSenderBufferSize.setName("lblRealChipSenderBufferSize");
             this.lblRealChipSenderBufferSize.setPreferredSize(new Dimension(95, 12));
 //            this.lblRealChipSenderBufferSize.TabIndex = 0;
             this.lblRealChipSenderBufferSize.setText("0");
             this.lblRealChipSenderBufferSize.setHorizontalAlignment(SwingConstants.RIGHT);
-            // 
+            //
             // label11
-            // 
+            //
 //            this.label11.AutoSize = true;
             this.label11.setLocation(new Point(6, 127));
             this.label11.setName("label11");
             this.label11.setPreferredSize(new Dimension(120, 12));
 //            this.label11.TabIndex = 0;
             this.label11.setText("DataSenderIsRunning :");
-            // 
+            //
             // label8
-            // 
+            //
 //            this.label8.AutoSize = true;
             this.label8.setLocation(new Point(6, 115));
             this.label8.setName("label8");
             this.label8.setPreferredSize(new Dimension(116, 12));
 //            this.label8.TabIndex = 0;
             this.label8.setText("DataMakerIsRunning :");
-            // 
+            //
             // lblEmuChipSenderBufferSize
-            // 
+            //
             this.lblEmuChipSenderBufferSize.setLocation(new Point(209, 83));
             this.lblEmuChipSenderBufferSize.setName("lblEmuChipSenderBufferSize");
             this.lblEmuChipSenderBufferSize.setPreferredSize(new Dimension(95, 12));
 //            this.lblEmuChipSenderBufferSize.TabIndex = 0;
             this.lblEmuChipSenderBufferSize.setText("0");
             this.lblEmuChipSenderBufferSize.setHorizontalAlignment(SwingConstants.RIGHT);
-            // 
+            //
             // label9
-            // 
+            //
 //            this.label9.AutoSize = true;
             this.label9.setLocation(new Point(6, 95));
             this.label9.setName("label9");
             this.label9.setPreferredSize(new Dimension(145, 12));
 //            this.label9.TabIndex = 0;
             this.label9.setText("RealChipSenderBufferSize :");
-            // 
+            //
             // lblDataSenderBufferSize
-            // 
+            //
             this.lblDataSenderBufferSize.setLocation(new Point(209, 71));
             this.lblDataSenderBufferSize.setName("lblDataSenderBufferSize");
             this.lblDataSenderBufferSize.setPreferredSize(new Dimension(95, 12));
 //            this.lblDataSenderBufferSize.TabIndex = 0;
             this.lblDataSenderBufferSize.setText("0");
             this.lblDataSenderBufferSize.setHorizontalAlignment(SwingConstants.RIGHT);
-            // 
+            //
             // label7
-            // 
+            //
 //            this.label7.AutoSize = true;
             this.label7.setLocation(new Point(6, 83));
             this.label7.setName("label7");
             this.label7.setPreferredSize(new Dimension(144, 12));
 //            this.label7.TabIndex = 0;
             this.label7.setText("EmuChipSenderBufferSize :");
-            // 
+            //
             // lblDataSenderBufferCounter
-            // 
+            //
             this.lblDataSenderBufferCounter.setLocation(new Point(209, 51));
             this.lblDataSenderBufferCounter.setName("lblDataSenderBufferCounter");
             this.lblDataSenderBufferCounter.setPreferredSize(new Dimension(95, 12));
 //            this.lblDataSenderBufferCounter.TabIndex = 0;
             this.lblDataSenderBufferCounter.setText("0");
             this.lblDataSenderBufferCounter.setHorizontalAlignment(SwingConstants.RIGHT);
-            // 
+            //
             // label6
-            // 
+            //
 //            this.label6.AutoSize = true;
             this.label6.setLocation(new Point(6, 71));
             this.label6.setName("label6");
             this.label6.setPreferredSize(new Dimension(123, 12));
 //            this.label6.TabIndex = 0;
             this.label6.setText("DataSenderBufferSize :");
-            // 
+            //
             // lblEmuSeqCounter
-            // 
+            //
             this.lblEmuSeqCounter.setLocation(new Point(209, 27));
             this.lblEmuSeqCounter.setName("lblEmuSeqCounter");
             this.lblEmuSeqCounter.setPreferredSize(new Dimension(95, 12));
 //            this.lblEmuSeqCounter.TabIndex = 0;
             this.lblEmuSeqCounter.setText("0");
             this.lblEmuSeqCounter.setHorizontalAlignment(SwingConstants.RIGHT);
-            // 
+            //
             // lblDriverSeqCounter
-            // 
+            //
             this.lblDriverSeqCounter.setLocation(new Point(209, 15));
             this.lblDriverSeqCounter.setName("lblDriverSeqCounter");
             this.lblDriverSeqCounter.setPreferredSize(new Dimension(95, 12));
 //            this.lblDriverSeqCounter.TabIndex = 0;
             this.lblDriverSeqCounter.setText("0");
             this.lblDriverSeqCounter.setHorizontalAlignment(SwingConstants.RIGHT);
-            // 
+            //
             // label15
-            // 
+            //
 //            this.label15.AutoSize = true;
             this.label15.setLocation(new Point(6, 27));
             this.label15.setName("label15");
             this.label15.setPreferredSize(new Dimension(92, 12));
 //            this.label15.TabIndex = 0;
             this.label15.setText("EmuSeqCounter :");
-            // 
+            //
             // lblSeqCounter
-            // 
+            //
             this.lblSeqCounter.setLocation(new Point(209, 39));
             this.lblSeqCounter.setName("lblSeqCounter");
             this.lblSeqCounter.setPreferredSize(new Dimension(95, 12));
 //            this.lblSeqCounter.TabIndex = 0;
             this.lblSeqCounter.setText("0");
             this.lblSeqCounter.setHorizontalAlignment(SwingConstants.RIGHT);
-            // 
+            //
             // label12
-            // 
+            //
 //            this.label12.AutoSize = true;
             this.label12.setLocation(new Point(6, 15));
             this.label12.setName("label12");
             this.label12.setPreferredSize(new Dimension(101, 12));
 //            this.label12.TabIndex = 0;
             this.label12.setText("DriverSeqCounter :");
-            // 
+            //
             // label5
-            // 
+            //
 //            this.label5.AutoSize = true;
             this.label5.setLocation(new Point(6, 51));
             this.label5.setName("label5");
             this.label5.setPreferredSize(new Dimension(142, 12));
 //            this.label5.TabIndex = 0;
             this.label5.setText("DataSenderBufferCounter :");
-            // 
+            //
             // label4
-            // 
+            //
 //            this.label4.AutoSize = true;
             this.label4.setLocation(new Point(6, 39));
             this.label4.setName("label4");
             this.label4.setPreferredSize(new Dimension(70, 12));
 //            this.label4.TabIndex = 0;
             this.label4.setText("SeqCounter :");
-            // 
+            //
             // FrmMain
-            // 
+            //
 //            this.AutoScaleDimensions = new SizeF(6F, 12F);
 //            this.AutoScaleMode = JAutoScaleMode.Font;
+            getContentPane().setLayout(null);
             this.getContentPane().setPreferredSize(new Dimension(1920, 1080));
             this.getContentPane().add(this.groupBox1);
             this.getContentPane().add(this.label3);
@@ -432,12 +426,10 @@ import test.SoundManager.SoundManager.Enq;
                 }
             });
             setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-            getContentPane().setLayout(new FlowLayout());
-            pack();
+//            getContentPane().setLayout(new FlowLayout());
+//            pack();
             setVisible(true);
         }
-
-//        #endregion
 
         private JLabel label1;
         private JTextField tbFile;
@@ -478,8 +470,8 @@ import test.SoundManager.SoundManager.Enq;
         private static int SamplingRate = 44100;
         private static int samplingBuffer = 1024*8;
         private static short[] frames = new short[samplingBuffer * 4];
-        private static MDSound.MDSound mds = null;
-        
+        private static mdsound.MDSound mds = null;
+
 //        private static AudioStream sdl;
 //        private static AudioCallback sdlCb = new AudioCallback(EmuCallback);
 //        private static IntPtr sdlCbPtr;
@@ -540,7 +532,7 @@ import test.SoundManager.SoundManager.Enq;
         public static class VGM_PCM_BANK
         {
             public int BankCount;
-            public List<VGM_PCM_DATA> Bank = new ArrayList<VGM_PCM_DATA>();
+            public List<VGM_PCM_DATA> Bank = new ArrayList<>();
             public int DataSize;
             public byte[] Data;
             public int DataPos;
@@ -569,10 +561,10 @@ import test.SoundManager.SoundManager.Enq;
 
             Mount();
 
-            mds = new MDSound.MDSound(SamplingRate, samplingBuffer, null);
+            mds = new mdsound.MDSound(SamplingRate, samplingBuffer, null);
 
-            MDSound.Log.level = MDSound.LogLevel.TRACE;
-            MDSound.Log.writeLine = this::LogWrite;
+            mdsound.Log.level = mdsound.LogLevel.TRACE;
+            mdsound.Log.writeLine = this::LogWrite;
 
 //            sdlCbHandle = GCHandle.Alloc(sdlCb);
 //            sdlCbPtr = Marshal.GetFunctionPointerForDelegate(sdlCb);
@@ -582,7 +574,7 @@ import test.SoundManager.SoundManager.Enq;
 //            };
         }
 
-        private void LogWrite(MDSound.LogLevel level,String msg)
+        private void LogWrite(mdsound.LogLevel level,String msg)
         {
             log.Write(msg);
         }
@@ -777,7 +769,7 @@ import test.SoundManager.SoundManager.Enq;
 
         private static Pack[] SoftInitYM2608(int dev)
         {
-            List<Pack> data = new ArrayList<Pack>();
+            List<Pack> data = new ArrayList<>();
             byte i;
 
             data.add(new Pack(dev, 0, 0x2d, 0x00, null));
@@ -879,7 +871,7 @@ import test.SoundManager.SoundManager.Enq;
             // ADPCM
             data.add(new Pack(dev, 0, 0x100 + 0x00, 0x21, null)); // ADPCMリセット
             data.add(new Pack(dev, 0, 0x100 + 0x01, 0x06, null)); // ADPCM消音
-            data.add(new Pack(dev, 0, 0x100 + 0x10, 0x9C, null)); // FLAGリセット        
+            data.add(new Pack(dev, 0, 0x100 + 0x10, 0x9C, null)); // FLAGリセット
 
             return data.toArray(new Pack[data.size()]);
         }
@@ -929,19 +921,19 @@ import test.SoundManager.SoundManager.Enq;
             vgmAdr = vgmDataOffset;
             vgmAnalyze = true;
 
-            MDSound.MDSound.Chip[] chips = null;
-            List<MDSound.MDSound.Chip> lstChip = new ArrayList<MDSound.MDSound.Chip>();
-            MDSound.MDSound.Chip chip = null;
+            mdsound.MDSound.Chip[] chips = null;
+            List<mdsound.MDSound.Chip> lstChip = new ArrayList<mdsound.MDSound.Chip>();
+            mdsound.MDSound.Chip chip = null;
 
             if (GetLE32(0x0c) != 0)
             {
-                chip = new MDSound.MDSound.Chip()
+                chip = new mdsound.MDSound.Chip()
                 {{
-                    type = MDSound.MDSound.enmInstrumentType.SN76489;
+                    type = mdsound.MDSound.enmInstrumentType.SN76489;
                     ID = 0;
                 }};
-                //MDSound.sn76489 sn76489 = new MDSound.sn76489();
-                MDSound.SN76496 sn76489 = new MDSound.SN76496();
+                //mdsound.sn76489 sn76489 = new mdsound.sn76489();
+                mdsound.SN76496 sn76489 = new mdsound.SN76496();
                 chip.Instrument = sn76489;
                 chip.Update = sn76489::Update;
                 chip.Start = sn76489::Start;
@@ -971,12 +963,12 @@ import test.SoundManager.SoundManager.Enq;
                 lstChip.add(chip);
             }
 
-            //chip = new MDSound.MDSound.Chip
+            //chip = new mdsound.MDSound.Chip
             //{
-            //    type = MDSound.MDSound.enmInstrumentType.YM2413,
+            //    type = mdsound.MDSound.enmInstrumentType.YM2413,
             //    ID = 0
             //};
-            //MDSound.SinWave sin = new MDSound.SinWave();
+            //mdsound.SinWave sin = new mdsound.SinWave();
             //chip.Instrument = sin;
             //chip.Update = sin::Update;
             //chip.Start = sin::Start;
@@ -990,19 +982,19 @@ import test.SoundManager.SoundManager.Enq;
 
             if (GetLE32(0x10) != 0)
             {
-                chip = new MDSound.MDSound.Chip()
+                chip = new mdsound.MDSound.Chip()
                 {{
-                    type = MDSound.MDSound.enmInstrumentType.YM2413;
+                    type = mdsound.MDSound.enmInstrumentType.YM2413;
                     ID = 0;
                 }};
-                MDSound.ym2413 ym2413 = new MDSound.ym2413();
+                mdsound.ym2413 ym2413 = new mdsound.ym2413();
                 chip.Instrument = ym2413;
                 chip.Update = ym2413::Update;
                 chip.Start = ym2413::Start;
                 chip.Stop = ym2413::Stop;
                 chip.Reset = ym2413::Reset;
                 chip.SamplingRate = SamplingRate;
-                chip.Clock = GetLE32(0x10); 
+                chip.Clock = GetLE32(0x10);
                 chip.Volume = 0;
                 chip.Option = null;
                 lstChip.add(chip);
@@ -1010,20 +1002,20 @@ import test.SoundManager.SoundManager.Enq;
 
             if (GetLE32(0x2c) != 0)
             {
-                chip = new MDSound.MDSound.Chip();
-                chip.type = MDSound.MDSound.enmInstrumentType.YM2612;
-                //chip.type = MDSound.MDSound.enmInstrumentType.YM3438;
+                chip = new mdsound.MDSound.Chip();
+                chip.type = mdsound.MDSound.enmInstrumentType.YM2612;
+                //chip.type = mdsound.MDSound.enmInstrumentType.YM3438;
                 chip.ID = 0;
-                //MDSound.ym2612 ym2612 = new MDSound.ym2612();
-                //MDSound.ym3438 ym2612 = new MDSound.ym3438();
-                MDSound.ym2612mame ym2612 = new MDSound.ym2612mame();
+                //mdsound.ym2612 ym2612 = new mdsound.ym2612();
+                //mdsound.ym3438 ym2612 = new mdsound.ym3438();
+                mdsound.ym2612mame ym2612 = new mdsound.ym2612mame();
                 chip.Instrument = ym2612;
                 chip.Update = ym2612::Update;
                 chip.Start = ym2612::Start;
                 chip.Stop = ym2612::Stop;
                 chip.Reset = ym2612::Reset;
                 chip.SamplingRate = SamplingRate;
-                chip.Clock = GetLE32(0x2c); 
+                chip.Clock = GetLE32(0x2c);
                 chip.Volume = 0;
                 chip.Option = null;
                 lstChip.add(chip);
@@ -1031,19 +1023,19 @@ import test.SoundManager.SoundManager.Enq;
 
             if (GetLE32(0x30) != 0)
             {
-                chip = new MDSound.MDSound.Chip();
-                chip.type = MDSound.MDSound.enmInstrumentType.YM2151;
+                chip = new mdsound.MDSound.Chip();
+                chip.type = mdsound.MDSound.enmInstrumentType.YM2151;
                 chip.ID = 0;
-                //MDSound.ym2151 ym2151 = new MDSound.ym2151();
-                //MDSound.ym2151_mame ym2151 = new MDSound.ym2151_mame();
-                MDSound.ym2151_x68sound ym2151 = new MDSound.ym2151_x68sound();
+                //mdsound.ym2151 ym2151 = new mdsound.ym2151();
+                //mdsound.ym2151_mame ym2151 = new mdsound.ym2151_mame();
+                mdsound.ym2151_x68sound ym2151 = new mdsound.ym2151_x68sound();
                 chip.Instrument = ym2151;
                 chip.Update = ym2151::Update;
                 chip.Start = ym2151::Start;
                 chip.Stop = ym2151::Stop;
                 chip.Reset = ym2151::Reset;
                 chip.SamplingRate = SamplingRate;
-                chip.Clock = GetLE32(0x30); 
+                chip.Clock = GetLE32(0x30);
                 chip.Volume = 0;
                 chip.Option = null;
                 lstChip.add(chip);
@@ -1051,10 +1043,10 @@ import test.SoundManager.SoundManager.Enq;
 
             if (GetLE32(0x38) != 0 && 0x38 < vgmDataOffset - 3)
             {
-                chip = new MDSound.MDSound.Chip();
-                chip.type = MDSound.MDSound.enmInstrumentType.SEGAPCM;
+                chip = new mdsound.MDSound.Chip();
+                chip.type = mdsound.MDSound.enmInstrumentType.SEGAPCM;
                 chip.ID = 0;
-                MDSound.segapcm segapcm = new MDSound.segapcm();
+                mdsound.segapcm segapcm = new mdsound.segapcm();
                 chip.Instrument = segapcm;
                 chip.Update = segapcm::Update;
                 chip.Start = segapcm::Start;
@@ -1064,16 +1056,16 @@ import test.SoundManager.SoundManager.Enq;
                 chip.Clock = GetLE32(0x38);
                 chip.Option = new Object[] { (int)GetLE32(0x3c) };
                 chip.Volume = 0;
-                
+
                 lstChip.add(chip);
             }
 
             if (GetLE32(0x44) != 0 && 0x44 < vgmDataOffset - 3)
             {
-                chip = new MDSound.MDSound.Chip();
-                chip.type = MDSound.MDSound.enmInstrumentType.YM2203;
+                chip = new mdsound.MDSound.Chip();
+                chip.type = mdsound.MDSound.enmInstrumentType.YM2203;
                 chip.ID = 0;
-                MDSound.ym2203 ym2203 = new MDSound.ym2203();
+                mdsound.ym2203 ym2203 = new mdsound.ym2203();
                 chip.Instrument = ym2203;
                 chip.Update = ym2203::Update;
                 chip.Start = ym2203::Start;
@@ -1088,10 +1080,10 @@ import test.SoundManager.SoundManager.Enq;
 
             if (GetLE32(0x48) != 0 && 0x48 < vgmDataOffset - 3)
             {
-                chip = new MDSound.MDSound.Chip();
-                chip.type = MDSound.MDSound.enmInstrumentType.YM2608;
+                chip = new mdsound.MDSound.Chip();
+                chip.type = mdsound.MDSound.enmInstrumentType.YM2608;
                 chip.ID = 0;
-                MDSound.ym2608 ym2608 = new MDSound.ym2608();
+                mdsound.ym2608 ym2608 = new mdsound.ym2608();
                 chip.Instrument = ym2608;
                 chip.Update = ym2608::Update;
                 chip.Start = ym2608::Start;
@@ -1105,10 +1097,10 @@ import test.SoundManager.SoundManager.Enq;
             }
             //if (GetLE32(0x48) != 0 && 0x48 < vgmDataOffset - 3)
             //{
-            //    chip = new MDSound.MDSound.Chip();
-            //    chip.type = MDSound.MDSound.enmInstrumentType.YM2609;
+            //    chip = new mdsound.MDSound.Chip();
+            //    chip.type = mdsound.MDSound.enmInstrumentType.YM2609;
             //    chip.ID = 0;
-            //    MDSound.ym2609 ym2609 = new MDSound.ym2609();
+            //    mdsound.ym2609 ym2609 = new mdsound.ym2609();
             //    chip.Instrument = ym2609;
             //    chip.Update = ym2609::Update;
             //    chip.Start = ym2609::Start;
@@ -1123,10 +1115,10 @@ import test.SoundManager.SoundManager.Enq;
 
             if (GetLE32(0x4c) != 0 && 0x4c < vgmDataOffset - 3)
             {
-                chip = new MDSound.MDSound.Chip();
-                chip.type = MDSound.MDSound.enmInstrumentType.YM2610;
+                chip = new mdsound.MDSound.Chip();
+                chip.type = mdsound.MDSound.enmInstrumentType.YM2610;
                 chip.ID = 0;
-                MDSound.ym2610 ym2610 = new MDSound.ym2610();
+                mdsound.ym2610 ym2610 = new mdsound.ym2610();
                 chip.Instrument = ym2610;
                 chip.Update = ym2610::Update;
                 chip.Start = ym2610::Start;
@@ -1143,10 +1135,10 @@ import test.SoundManager.SoundManager.Enq;
 
             if (GetLE32(0x50) != 0 && 0x50 < vgmDataOffset - 3)
             {
-                chip = new MDSound.MDSound.Chip();
-                chip.type = MDSound.MDSound.enmInstrumentType.YM3812;
+                chip = new mdsound.MDSound.Chip();
+                chip.type = mdsound.MDSound.enmInstrumentType.YM3812;
                 chip.ID = 0;
-                MDSound.ym3812 ym3812 = new MDSound.ym3812();
+                mdsound.ym3812 ym3812 = new mdsound.ym3812();
                 chip.Instrument = ym3812;
                 chip.Update = ym3812::Update;
                 chip.Start = ym3812::Start;
@@ -1161,10 +1153,10 @@ import test.SoundManager.SoundManager.Enq;
 
             if (GetLE32(0x54) != 0 && 0x54 < vgmDataOffset - 3)
             {
-                chip = new MDSound.MDSound.Chip();
-                chip.type = MDSound.MDSound.enmInstrumentType.YM3526;
+                chip = new mdsound.MDSound.Chip();
+                chip.type = mdsound.MDSound.enmInstrumentType.YM3526;
                 chip.ID = 0;
-                MDSound.ym3526 ym3526 = new MDSound.ym3526();
+                mdsound.ym3526 ym3526 = new mdsound.ym3526();
                 chip.Instrument = ym3526;
                 chip.Update = ym3526::Update;
                 chip.Start = ym3526::Start;
@@ -1179,10 +1171,10 @@ import test.SoundManager.SoundManager.Enq;
 
             if (GetLE32(0x5c) != 0 && 0x5c < vgmDataOffset - 3)
             {
-                chip = new MDSound.MDSound.Chip();
-                chip.type = MDSound.MDSound.enmInstrumentType.YMF262;
+                chip = new mdsound.MDSound.Chip();
+                chip.type = mdsound.MDSound.enmInstrumentType.YMF262;
                 chip.ID = 0;
-                MDSound.ymf262 ymf262 = new MDSound.ymf262();
+                mdsound.ymf262 ymf262 = new mdsound.ymf262();
                 chip.Instrument = ymf262;
                 chip.Update = ymf262::Update;
                 chip.Start = ymf262::Start;
@@ -1194,10 +1186,10 @@ import test.SoundManager.SoundManager.Enq;
                 chip.Option = null;
                 lstChip.add(chip);
 
-                //chip = new MDSound.MDSound.Chip();
-                //chip.type = MDSound.MDSound.enmInstrumentType.YMF278B;
+                //chip = new mdsound.MDSound.Chip();
+                //chip.type = mdsound.MDSound.enmInstrumentType.YMF278B;
                 //chip.ID = 0;
-                //MDSound.ymf278b ymf278b = new MDSound.ymf278b();
+                //mdsound.ymf278b ymf278b = new mdsound.ymf278b();
                 //chip.Instrument = ymf278b;
                 //chip.Update = ymf278b.Update;
                 //chip.Start = ymf278b.Start;
@@ -1212,10 +1204,10 @@ import test.SoundManager.SoundManager.Enq;
 
             if (GetLE32(0x58) != 0 && 0x58 < vgmDataOffset - 3)
             {
-                chip = new MDSound.MDSound.Chip();
-                chip.type = MDSound.MDSound.enmInstrumentType.Y8950;
+                chip = new mdsound.MDSound.Chip();
+                chip.type = mdsound.MDSound.enmInstrumentType.Y8950;
                 chip.ID = 0;
-                MDSound.y8950 y8950 = new MDSound.y8950();
+                mdsound.y8950 y8950 = new mdsound.y8950();
                 chip.Instrument = y8950;
                 chip.Update = y8950::Update;
                 chip.Start = y8950::Start;
@@ -1230,10 +1222,10 @@ import test.SoundManager.SoundManager.Enq;
 
             if (GetLE32(0x60) != 0 && 0x60 < vgmDataOffset - 3)
             {
-                chip = new MDSound.MDSound.Chip();
-                chip.type = MDSound.MDSound.enmInstrumentType.YMF278B;
+                chip = new mdsound.MDSound.Chip();
+                chip.type = mdsound.MDSound.enmInstrumentType.YMF278B;
                 chip.ID = 0;
-                MDSound.ymf278b ymf278b = new MDSound.ymf278b();
+                mdsound.ymf278b ymf278b = new mdsound.ymf278b();
                 chip.Instrument = ymf278b;
                 chip.Update = ymf278b::Update;
                 chip.Start = ymf278b::Start;
@@ -1248,10 +1240,10 @@ import test.SoundManager.SoundManager.Enq;
 
             if (GetLE32(0x64) != 0 && 0x64 < vgmDataOffset - 3)
             {
-                chip = new MDSound.MDSound.Chip();
-                chip.type = MDSound.MDSound.enmInstrumentType.YMF271;
+                chip = new mdsound.MDSound.Chip();
+                chip.type = mdsound.MDSound.enmInstrumentType.YMF271;
                 chip.ID = 0;
-                MDSound.ymf271 ymf271 = new MDSound.ymf271();
+                mdsound.ymf271 ymf271 = new mdsound.ymf271();
                 chip.Instrument = ymf271;
                 chip.Update = ymf271::Update;
                 chip.Start = ymf271::Start;
@@ -1266,10 +1258,10 @@ import test.SoundManager.SoundManager.Enq;
 
             if (GetLE32(0x68) != 0 && 0x68 < vgmDataOffset - 3)
             {
-                chip = new MDSound.MDSound.Chip();
-                chip.type = MDSound.MDSound.enmInstrumentType.YMZ280B;
+                chip = new mdsound.MDSound.Chip();
+                chip.type = mdsound.MDSound.enmInstrumentType.YMZ280B;
                 chip.ID = 0;
-                MDSound.ymz280b ymz280b = new MDSound.ymz280b();
+                mdsound.ymz280b ymz280b = new mdsound.ymz280b();
                 chip.Instrument = ymz280b;
                 chip.Update = ymz280b::Update;
                 chip.Start = ymz280b::Start;
@@ -1284,11 +1276,11 @@ import test.SoundManager.SoundManager.Enq;
 
             if (GetLE32(0x74) != 0 && 0x74 < vgmDataOffset - 3)
             {
-                chip = new MDSound.MDSound.Chip();
-                chip.type = MDSound.MDSound.enmInstrumentType.AY8910;
+                chip = new mdsound.MDSound.Chip();
+                chip.type = mdsound.MDSound.enmInstrumentType.AY8910;
                 chip.ID = 0;
-                //MDSound.ay8910 ay8910 = new MDSound.ay8910();
-                MDSound.ay8910_mame ay8910 = new MDSound.ay8910_mame();
+                //mdsound.ay8910 ay8910 = new mdsound.ay8910();
+                mdsound.ay8910_mame ay8910 = new mdsound.ay8910_mame();
                 chip.Instrument = ay8910;
                 chip.Update = ay8910::Update;
                 chip.Start = ay8910::Start;
@@ -1309,10 +1301,10 @@ import test.SoundManager.SoundManager.Enq;
 
                 if (GetLE32(0x80) != 0 && 0x80 < vgmDataOffset - 3)
                 {
-                    chip = new MDSound.MDSound.Chip();
-                    chip.type = MDSound.MDSound.enmInstrumentType.DMG;
+                    chip = new mdsound.MDSound.Chip();
+                    chip.type = mdsound.MDSound.enmInstrumentType.DMG;
                     chip.ID = 0;
-                    MDSound.gb gb = new MDSound.gb();
+                    mdsound.gb gb = new mdsound.gb();
                     chip.Instrument = gb;
                     chip.Update = gb::Update;
                     chip.Start = gb::Start;
@@ -1327,10 +1319,10 @@ import test.SoundManager.SoundManager.Enq;
 
                 if (GetLE32(0x84) != 0 && 0x84 < vgmDataOffset - 3)
                 {
-                    chip = new MDSound.MDSound.Chip();
-                    chip.type = MDSound.MDSound.enmInstrumentType.Nes;
+                    chip = new mdsound.MDSound.Chip();
+                    chip.type = mdsound.MDSound.enmInstrumentType.Nes;
                     chip.ID = 0;
-                    MDSound.nes_intf nes_intf = new MDSound.nes_intf();
+                    mdsound.nes_intf nes_intf = new mdsound.nes_intf();
                     chip.Instrument = nes_intf;
                     chip.Update = nes_intf::Update;
                     chip.Start = nes_intf::Start;
@@ -1345,10 +1337,10 @@ import test.SoundManager.SoundManager.Enq;
 
                 if (GetLE32(0x88) != 0 && 0x88 < vgmDataOffset - 3)
                 {
-                    chip = new MDSound.MDSound.Chip();
-                    chip.type = MDSound.MDSound.enmInstrumentType.MultiPCM;
+                    chip = new mdsound.MDSound.Chip();
+                    chip.type = mdsound.MDSound.enmInstrumentType.MultiPCM;
                     chip.ID = 0;
-                    MDSound.multipcm multipcm = new MDSound.multipcm();
+                    mdsound.multipcm multipcm = new mdsound.multipcm();
                     chip.Instrument = multipcm;
                     chip.Update = multipcm::Update;
                     chip.Start = multipcm::Start;
@@ -1363,10 +1355,10 @@ import test.SoundManager.SoundManager.Enq;
 
                 if (GetLE32(0x90) != 0 && 0x90 < vgmDataOffset - 3)
                 {
-                    chip = new MDSound.MDSound.Chip();
-                    chip.type = MDSound.MDSound.enmInstrumentType.OKIM6258;
+                    chip = new mdsound.MDSound.Chip();
+                    chip.type = mdsound.MDSound.enmInstrumentType.OKIM6258;
                     chip.ID = 0;
-                    MDSound.okim6258 okim6258 = new MDSound.okim6258();
+                    mdsound.okim6258 okim6258 = new mdsound.okim6258();
                     chip.Instrument = okim6258;
                     chip.Update = okim6258::Update;
                     chip.Start = okim6258::Start;
@@ -1382,10 +1374,10 @@ import test.SoundManager.SoundManager.Enq;
 
                 if (GetLE32(0x98) != 0 && 0x98 < vgmDataOffset - 3)
                 {
-                    chip = new MDSound.MDSound.Chip();
-                    chip.type = MDSound.MDSound.enmInstrumentType.OKIM6295;
+                    chip = new mdsound.MDSound.Chip();
+                    chip.type = mdsound.MDSound.enmInstrumentType.OKIM6295;
                     chip.ID = 0;
-                    MDSound.okim6295 okim6295 = new MDSound.okim6295();
+                    mdsound.okim6295 okim6295 = new mdsound.okim6295();
                     chip.Instrument = okim6295;
                     chip.Update = okim6295::Update;
                     chip.Start = okim6295::Start;
@@ -1401,10 +1393,10 @@ import test.SoundManager.SoundManager.Enq;
 
                 if (GetLE32(0x9c) != 0 && 0x9c < vgmDataOffset - 3)
                 {
-                    chip = new MDSound.MDSound.Chip();
-                    chip.type = MDSound.MDSound.enmInstrumentType.K051649;
+                    chip = new mdsound.MDSound.Chip();
+                    chip.type = mdsound.MDSound.enmInstrumentType.K051649;
                     chip.ID = 0;
-                    MDSound.K051649 k051649 = new MDSound.K051649();
+                    mdsound.K051649 k051649 = new mdsound.K051649();
                     chip.Instrument = k051649;
                     chip.Update = k051649::Update;
                     chip.Start = k051649::Start;
@@ -1419,12 +1411,12 @@ import test.SoundManager.SoundManager.Enq;
 
                 if (GetLE32(0xa0) != 0 && 0xa0 < vgmDataOffset - 3)
                 {
-                    MDSound.K054539 k054539 = new MDSound.K054539();
+                    mdsound.K054539 k054539 = new mdsound.K054539();
                     int max = (GetLE32(0xa0) & 0x40000000) != 0 ? 2 : 1;
                     for (int i = 0; i < max; i++)
                     {
-                        chip = new MDSound.MDSound.Chip();
-                        chip.type = MDSound.MDSound.enmInstrumentType.K054539;
+                        chip = new mdsound.MDSound.Chip();
+                        chip.type = mdsound.MDSound.enmInstrumentType.K054539;
                         chip.ID = (byte)i;
                         chip.Instrument = k054539;
                         chip.Update = k054539::Update;
@@ -1442,10 +1434,10 @@ import test.SoundManager.SoundManager.Enq;
 
                 if (GetLE32(0xa4) != 0 && 0xa4 < vgmDataOffset - 3)
                 {
-                    chip = new MDSound.MDSound.Chip();
-                    chip.type = MDSound.MDSound.enmInstrumentType.HuC6280;
+                    chip = new mdsound.MDSound.Chip();
+                    chip.type = mdsound.MDSound.enmInstrumentType.HuC6280;
                     chip.ID = 0;
-                    MDSound.Ootake_PSG huc8910 = new MDSound.Ootake_PSG();
+                    mdsound.Ootake_PSG huc8910 = new mdsound.Ootake_PSG();
                     chip.Instrument = huc8910;
                     chip.Update = huc8910::Update;
                     chip.Start = huc8910::Start;
@@ -1460,10 +1452,10 @@ import test.SoundManager.SoundManager.Enq;
 
                 if (GetLE32(0xa8) != 0 && 0xa8 < vgmDataOffset - 3)
                 {
-                    chip = new MDSound.MDSound.Chip();
-                    chip.type = MDSound.MDSound.enmInstrumentType.C140;
+                    chip = new mdsound.MDSound.Chip();
+                    chip.type = mdsound.MDSound.enmInstrumentType.C140;
                     chip.ID = 0;
-                    MDSound.c140 c140 = new MDSound.c140();
+                    mdsound.c140 c140 = new mdsound.c140();
                     chip.Instrument = c140;
                     chip.Update = c140::Update;
                     chip.Start = c140::Start;
@@ -1472,16 +1464,16 @@ import test.SoundManager.SoundManager.Enq;
                     chip.SamplingRate = SamplingRate;
                     chip.Clock = GetLE32(0xa8);
                     chip.Volume = 0;
-                    chip.Option = new Object[] { MDSound.c140.C140_TYPE.valueOf(vgmBuf[0x96] & 0xff) }; 
+                    chip.Option = new Object[] { mdsound.c140.C140_TYPE.valueOf(vgmBuf[0x96] & 0xff) };
                     lstChip.add(chip);
                 }
 
                 if (GetLE32(0xac) != 0 && 0xac < vgmDataOffset - 3)
                 {
-                    chip = new MDSound.MDSound.Chip();
-                    chip.type = MDSound.MDSound.enmInstrumentType.K053260;
+                    chip = new mdsound.MDSound.Chip();
+                    chip.type = mdsound.MDSound.enmInstrumentType.K053260;
                     chip.ID = 0;
-                    MDSound.K053260 k053260 = new MDSound.K053260();
+                    mdsound.K053260 k053260 = new mdsound.K053260();
                     chip.Instrument = k053260;
                     chip.Update = k053260::Update;
                     chip.Start = k053260::Start;
@@ -1496,11 +1488,11 @@ import test.SoundManager.SoundManager.Enq;
 
                 if (GetLE32(0xb4) != 0 && 0xb4 < vgmDataOffset - 3)
                 {
-                    chip = new MDSound.MDSound.Chip();
-                    chip.type = MDSound.MDSound.enmInstrumentType.QSound;
+                    chip = new mdsound.MDSound.Chip();
+                    chip.type = mdsound.MDSound.enmInstrumentType.QSound;
                     chip.ID = 0;
-                    //MDSound.qsound qsound = new MDSound.qsound();
-                    MDSound.Qsound_ctr qsound = new MDSound.Qsound_ctr();
+                    //mdsound.qsound qsound = new mdsound.qsound();
+                    mdsound.Qsound_ctr qsound = new mdsound.Qsound_ctr();
                     chip.Instrument = qsound;
                     chip.Update = qsound::Update;
                     chip.Start = qsound::Start;
@@ -1519,10 +1511,10 @@ import test.SoundManager.SoundManager.Enq;
                     {
                         if (GetLE32(0xc0) != 0 && 0xc0 < vgmDataOffset - 3)
                         {
-                            chip = new MDSound.MDSound.Chip();
-                            chip.type = MDSound.MDSound.enmInstrumentType.WSwan;
+                            chip = new mdsound.MDSound.Chip();
+                            chip.type = mdsound.MDSound.enmInstrumentType.WSwan;
                             chip.ID = 0;
-                            MDSound.ws_audio wswan = new MDSound.ws_audio();
+                            mdsound.ws_audio wswan = new mdsound.ws_audio();
                             chip.Instrument = wswan;
                             chip.Update = wswan::Update;
                             chip.Start = wswan::Start;
@@ -1538,10 +1530,10 @@ import test.SoundManager.SoundManager.Enq;
 
                         if (GetLE32(0xdc) != 0 && 0xdc < vgmDataOffset - 3)
                         {
-                            chip = new MDSound.MDSound.Chip();
-                            chip.type = MDSound.MDSound.enmInstrumentType.C352;
+                            chip = new mdsound.MDSound.Chip();
+                            chip.type = mdsound.MDSound.enmInstrumentType.C352;
                             chip.ID = 0;
-                            MDSound.c352 c352 = new MDSound.c352();
+                            mdsound.c352 c352 = new mdsound.c352();
                             chip.Instrument = c352;
                             chip.Update = c352::Update;
                             chip.Start = c352::Start;
@@ -1557,10 +1549,10 @@ import test.SoundManager.SoundManager.Enq;
 
                         if (GetLE32(0xe0) != 0 && 0xe0 < vgmDataOffset - 3)
                         {
-                            chip = new MDSound.MDSound.Chip();
-                            chip.type = MDSound.MDSound.enmInstrumentType.GA20;
+                            chip = new mdsound.MDSound.Chip();
+                            chip.type = mdsound.MDSound.enmInstrumentType.GA20;
                             chip.ID = 0;
-                            MDSound.iremga20 ga20 = new MDSound.iremga20();
+                            mdsound.iremga20 ga20 = new mdsound.iremga20();
                             chip.Instrument = ga20;
                             chip.Update = ga20::Update;
                             chip.Start = ga20::Start;
@@ -1579,16 +1571,16 @@ import test.SoundManager.SoundManager.Enq;
             }
 
 
-            chips = lstChip.toArray(new Chip[lstChip.size()]);
+            chips = lstChip.toArray(new mdsound.MDSound.Chip[lstChip.size()]);
             mds.Init(SamplingRate, samplingBuffer, chips);
 
 //            sdl.Paused = false;
 
         }
 
-        public static void ChangeChipSampleRate(MDSound.MDSound.Chip chip, int NewSmplRate)
+        public static void ChangeChipSampleRate(mdsound.MDSound.Chip chip, int NewSmplRate)
         {
-            MDSound.MDSound.Chip CAA = chip;
+            mdsound.MDSound.Chip CAA = chip;
 
             if (CAA.SamplingRate == NewSmplRate)
                 return;
@@ -1783,7 +1775,7 @@ import test.SoundManager.SoundManager.Enq;
                     rAdr = vgmBuf[vgmAdr + 1];
                     rDat = vgmBuf[vgmAdr + 2];
                     vgmAdr += 3;
-                    
+
                     mds.WriteYMF262((byte) 0, (byte) 0, rAdr, rDat);
                     //mds.WriteYMF278B(0, 0, rAdr, rDat);
                     //Console.WriteLine("P0:adr{0:x2}:dat{1:x2}", rAdr, rDat);
@@ -1792,7 +1784,7 @@ import test.SoundManager.SoundManager.Enq;
                     rAdr = vgmBuf[vgmAdr + 1];
                     rDat = vgmBuf[vgmAdr + 2];
                     vgmAdr += 3;
-                    
+
                     mds.WriteYMF262((byte) 0, (byte) 1, rAdr, rDat);
                     //mds.WriteYMF278B(0, 1, rAdr, rDat);
                     //Console.WriteLine("P1:adr{0:x2}:dat{1:x2}", rAdr, rDat);

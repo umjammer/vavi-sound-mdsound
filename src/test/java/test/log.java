@@ -2,6 +2,7 @@
 package test;
 
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 
 import dotnet4j.io.File;
@@ -22,7 +23,7 @@ public class log {
 
     public static boolean consoleEchoBack = false;
 
-    private static Charset encoding = Charset.forName("utf-8");
+    private static Charset encoding = StandardCharsets.UTF_8;
 
     public static void ForcedWrite(String msg) {
         try {
