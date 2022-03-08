@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>vavi</groupId>
-  <artifactId>vavi-sound-mds</artifactId>
+  <artifactId>vavi-sound-mdsound</artifactId>
   <version>0.0.1-SNAPSHOT</version>
 
   <build>
@@ -53,9 +53,9 @@
 
   <dependencies>
     <dependency>
-      <groupId>vavi</groupId> <!-- com.github.umjammer -->
+      <groupId>com.github.umjammer</groupId>
       <artifactId>vavi-commons</artifactId>
-      <version>1.1.6-SNAPSHOT</version>
+      <version>1.1.6</version>
     </dependency>
 
     <dependency>
