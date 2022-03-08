@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "test": {
-      "commandName": "Project",
-      "commandLineArgs": "C:\\Users\\kuma\\Desktop\\musicWSwan\\musicWSwan.vgm"
-    }
-  }
-}
