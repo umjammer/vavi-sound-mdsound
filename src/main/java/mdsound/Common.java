@@ -1,12 +1,11 @@
-﻿
+
 package mdsound;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Scanner;
 import java.util.stream.IntStream;
 
 import dotnet4j.io.FileMode;
@@ -14,7 +13,7 @@ import dotnet4j.io.FileStream;
 import dotnet4j.io.MemoryStream;
 import dotnet4j.io.Stream;
 import dotnet4j.io.StreamWriter;
-import mdsound.x68Sound.Global;
+import mdsound.x68sound.Global;
 
 
 public class Common {
@@ -35,13 +34,15 @@ public class Common {
 
     public static byte[] toByteArray(List<Byte> o) {
         byte[] a = new byte[o.size()];
-        IntStream.range(0, o.size()).forEach(i -> a[i] = o.get(i).byteValue());
+        IntStream.range(0, o.size()).forEach(i -> a[i] = o.get(i));
         return a;
     }
 
     public static short[][] readArrays(String name) throws Exception {
-        Path path = Paths.get(Global.class.getResource(name).toURI());
-        List<String> ls = Files.readAllLines(path);
+        Scanner s = new Scanner(Global.class.getResourceAsStream(name));
+        List<String> ls = new ArrayList<>();
+        while (s.hasNextLine()) ls.add(s.nextLine());
+        s.close();
         short[][] d = new short[ls.size()][];
         IntStream.range(0, ls.size()).forEach(i -> {
             String[] ps = ls.get(i).trim().split("[\\s,]+");
@@ -55,21 +56,18 @@ public class Common {
     public static final int NsfClock = 1789773;
 
     public static void write(String fmt, Object... arg) {
-// #if DEBUG
         String msg = String.format(fmt, arg);
-        try (StreamWriter writer = new StreamWriter(new FileStream("log.txt", FileMode.Append))) //
-        {
+        try (StreamWriter writer = new StreamWriter(new FileStream("log.txt", FileMode.Append))) {
             writer.writeLine(msg);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-// #endif
     }
 
-    /// <summary>
-    /// ストリームから一括でバイナリを読み込む
-    /// </summary>
-    public static byte[] ReadAllBytes(Stream stream) throws IOException {
+    /**
+     * ストリームから一括でバイナリを読み込む
+     */
+    public static byte[] readAllBytes(Stream stream) throws IOException {
         if (stream == null)
             return null;
 

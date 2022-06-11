@@ -1,452 +1,463 @@
-﻿package mdsound;
+package mdsound;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 
-    public class PPSDRV extends Instrument
-    {
-        @Override public String getName() {  return "PPSDRV"; }
-        @Override public String getShortName() { return "PPSDRV"; }
 
-        @Override public void Reset(byte ChipID)
-        {
-            ppsDt = new byte[][] { null, null };
-            ppsHd = new PPSHeader[][] { null, null };
-            single_flag=new boolean[2]; // 単音モードか？
-            low_cpu_check_flag = new boolean[2];// 周波数半分で再生か？
-            keyon_flag = new boolean[2]; // Keyon 中か？
-            data_offset1 = new int[] { -1, -1 };
-            data_offset2 = new int[] { -1, -1 };
-            data_xor1 = new int[2];                              // 現在の位置(小数部)
-            data_xor2 = new int[2];                              // 現在の位置(小数部)
-            tick1 = new int[2];
-            tick2 = new int[2];
-            tick_xor1 = new int[2];
-            tick_xor2 = new int[2];
-            data_size1 = new int[] { -1, -1 };
-            data_size2 = new int[] { -1, -1 };
-            volume1 = new int[2];
-            volume2 = new int[2];
-            keyoff_vol = new int[2];
-            EmitTable = new int[][] { new int[16], new int[16] };
-            interpolation = new boolean[] { true, true };
-            SetVolume(ChipID, 0);
+public class PPSDRV extends Instrument.BaseInstrument {
+
+    private PPS[] chips = new PPS[] {new PPS(), new PPS()};
+
+    @Override
+    public String getName() {
+        return "PPSDRV";
+    }
+
+    @Override
+    public String getShortName() {
+        return "PPSDRV";
+    }
+
+    @Override
+    public void reset(byte chipID) {
+        PPS chip = chips[chipID];
+        chip.reset();;
+    }
+
+    @Override
+    public int start(byte chipID, int clock) {
+        return start(chipID, clock, 0);
+    }
+
+    @Override
+    public int start(byte chipID, int clock, int clockValue, Object... option) {
+        PPS chip = chips[chipID];
+        return chip.start(clock, (option != null && option.length > 0) ? (BiConsumer<Integer, Integer>) option[0] : null);
+    }
+
+    @Override
+    public void stop(byte chipID) {
+        PPS chip = chips[chipID];
+        chip.stop();
+    }
+
+    @Override
+    public int write(byte chipID, int port, int adr, int data) {
+        PPS chip = chips[chipID];
+        return chip.write(port, adr, data);
+    }
+
+    static class PPS {
+        public static class Header {
+            public int address;
+            public int length;
+            public byte toneOfs;
+            public byte volumeOfs;
         }
 
-        @Override public int Start(byte ChipID, int clock)
-        {
-            return Start(ChipID, clock, 0);
+        private double samplingRate = 44100.0;
+        private static final int MAX_PPS = 14;
+        private byte[] ppsDt = null;
+        private Header[] ppsHd = null;
+        // 単音モードか？
+        private boolean singleFlag;
+        // 周波数半分で再生か？
+        private boolean lowCpuCheckFlag;
+        // Keyon 中か？
+        private boolean keyonFlag;
+        private int dataOffset1;
+        private int dataOffset2;
+        // 現在の位置 (小数部)
+        private int dataXor1;
+        // 現在の位置 (小数部)
+        private int dataXor2;
+        private int tick1;
+        private int tick2;
+        private int tickXor1;
+        private int tickXor2;
+        private int dataSize1;
+        private int dataSize2;
+        private int volume1;
+        private int volume2;
+        private int keyoffVol;
+        private int[] emitTable = new int[16];
+        private boolean interpolation = true;
+        private boolean real = false;
+        private BiConsumer<Integer, Integer> psg = null;
+        private static final int[] table = new int[] {
+                0, 0, 0, 5, 9, 10, 11, 12, 13, 13, 14, 14, 14, 15, 15, 15,
+                0, 0, 3, 5, 9, 10, 11, 12, 13, 13, 14, 14, 14, 15, 15, 15,
+                0, 3, 5, 7, 9, 10, 11, 12, 13, 13, 14, 14, 14, 15, 15, 15,
+                5, 5, 7, 9, 10, 11, 12, 13, 13, 13, 14, 14, 14, 15, 15, 15,
+                9, 9, 9, 10, 11, 12, 12, 13, 13, 14, 14, 14, 15, 15, 15, 15,
+                10, 10, 10, 11, 12, 12, 13, 13, 13, 14, 14, 14, 15, 15, 15, 15,
+                11, 11, 11, 12, 12, 13, 13, 13, 14, 14, 14, 14, 15, 15, 15, 15,
+                12, 12, 12, 12, 13, 13, 13, 14, 14, 14, 14, 15, 15, 15, 15, 15,
+                13, 13, 13, 13, 13, 13, 14, 14, 14, 14, 14, 15, 15, 15, 15, 15,
+                13, 13, 13, 13, 14, 14, 14, 14, 14, 14, 15, 15, 15, 15, 15, 15,
+                14, 14, 14, 14, 14, 14, 14, 14, 14, 15, 15, 15, 15, 15, 15, 15,
+                14, 14, 14, 14, 14, 14, 14, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+                14, 14, 14, 14, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+                15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+                15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+                15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15
+        };
+
+        /**
+         * 音量設定
+         */
+        private void setVolume(int vol) {
+            // psg.SetVolume(vol);
+
+            double _base = 0x4000 * 2 / 3.0 * Math.pow(10.0, vol / 40.0);
+            for (int i = 15; i >= 1; i--) {
+                emitTable[i] = (int) (_base);
+                _base /= 1.189207115;
+            }
+            emitTable[0] = 0;
         }
 
-        @Override public int Start(byte ChipID, int clock, int ClockValue, Object... option)
-        {
-            this.SamplingRate = (double)clock;
-            Reset(ChipID);
+        private void play(byte al, byte bh, byte bl) {
+            int num = al;
+            int shift = bh;
+            //System.err.printf(bh);
+            int volshift = bl;
 
-            if (option != null && option.length > 0)
-            {
+            if (ppsHd[num].address < 0) return;
+
+            int a = 225 + ppsHd[num].toneOfs;
+            a %= 256;
+            a += shift;
+            a = Math.min(Math.max(a, 1), 255);
+
+            if ((byte) (ppsHd[num].volumeOfs + volshift) >= 15) return;
+            // 音量が 0 以下の時は再生しない
+
+            if (!singleFlag && keyonFlag) {
+                // 2 重発音処理
+                volume2 = volume1;                  // 1 音目を 2 音目に移動
+                dataOffset2 = dataOffset1;
+                dataSize2 = dataSize1;
+                dataXor2 = dataXor1;
+                tick2 = tick1;
+                tickXor2 = tickXor1;
+            } else {
+                // 1 音目で再生
+                dataSize2 = -1;                     // 2 音目は停止中
+            }
+
+            volume1 = ppsHd[num].volumeOfs + volshift;
+            dataOffset1 = ppsHd[num].address;
+            dataSize1 = ppsHd[num].length;    // 1 音目を消して再生
+            dataXor1 = 0;
+            if (lowCpuCheckFlag) {
+                tick1 = (int) (((8000 * a / 225) << 16) / samplingRate);
+                tickXor1 = tick1 & 0xffff;
+                tick1 >>= 16;
+            } else {
+                tick1 = (int) (((16000 * a / 225) << 16) / samplingRate);
+                tickXor1 = tick1 & 0xffff;
+                tick1 >>= 16;
+            }
+
+            // psg.SetReg(0x07, psg.GetReg(0x07) | 0x24); // Tone/Noise C off
+            keyonFlag = true; // 発音開始
+        }
+
+        private void stop() {
+            keyonFlag = false;
+            dataOffset1 = dataOffset2 = -1;
+            dataSize1 = dataSize2 = -1;
+        }
+
+        private boolean setParam(byte paramno, byte data) {
+            switch (paramno & 1) {
+            case 0:
+                singleFlag = data != 0;
+                return true;
+            case 1:
+                lowCpuCheckFlag = data != 0;
+                return true;
+            default:
+                return false;
+            }
+        }
+
+        private void int04() {
+            // TODO: 未実装
+        }
+
+        public void update(int[][] outputs, int samples) {
+            int i, al1, al2, ah1, ah2;
+            int data = 0;
+
+            if (!keyonFlag && keyoffVol == 0) {
+                return;
+            }
+
+            for (i = 0; i < samples; i++) {
+
+                if (dataSize1 > 1) {
+                    al1 = ppsDt[dataOffset1] - volume1;
+                    al2 = ppsDt[dataOffset1 + 1] - volume1;
+                    if (al1 < 0) al1 = 0;
+                    if (al2 < 0) al2 = 0;
+                } else {
+                    al1 = al2 = 0;
+                }
+
+                if (dataSize2 > 1) {
+                    ah1 = ppsDt[dataOffset2] - volume2;
+                    ah2 = ppsDt[dataOffset2 + 1] - volume2;
+                    if (ah1 < 0) ah1 = 0;
+                    if (ah2 < 0) ah2 = 0;
+                } else {
+                    ah1 = ah2 = 0;
+                }
+
+                if (real) {
+                    al1 = table[(al1 << 4) + ah1];
+                    psg.accept(0x0a, al1);
+                } else {
+                    if (interpolation) {
+                        data =
+                                (emitTable[al1] * (0x10000 - dataXor1) + emitTable[al2] * dataXor1 +
+                                        emitTable[ah1] * (0x10000 - dataXor2) + emitTable[ah2] * dataXor2) / 0x10000;
+
+                    } else {
+                        data = emitTable[al1] + emitTable[ah1];
+                    }
+                }
+
+                keyoffVol = (keyoffVol * 255) / 258;
+
+                if (!real) {
+                    if (!keyonFlag) data += keyoffVol;
+                    //if(keyoff_vol!=0) System.err.printf("keyoff_vol%d", keyoff_vol);
+                    outputs[0][i] = (short) Math.max(Math.min(outputs[0][i] + data, Short.MAX_VALUE), Short.MIN_VALUE);
+                    outputs[1][i] = (short) Math.max(Math.min(outputs[1][i] + data, Short.MAX_VALUE), Short.MIN_VALUE);
+                }
+
+                //  psg.mix(dest, 1);
+                //  dest += 2;
+
+                if (dataSize2 > 1) {   // ２音合成再生
+                    dataXor2 += tickXor2;
+                    if (dataXor2 >= 0x10000) {
+                        dataSize2--;
+                        dataOffset2++;
+                        dataXor2 -= 0x10000;
+                    }
+                    dataSize2 -= tick2;
+                    dataOffset2 += tick2;
+
+                    if (lowCpuCheckFlag) {
+                        dataXor2 += tickXor2;
+                        if (dataXor2 >= 0x10000) {
+                            dataSize2--;
+                            dataOffset2++;
+                            dataXor2 -= 0x10000;
+                        }
+                        dataSize2 -= tick2;
+                        dataOffset2 += tick2;
+                    }
+                }
+
+                dataXor1 += tickXor1;
+                if (dataXor1 >= 0x10000) {
+                    dataSize1--;
+                    dataOffset1++;
+                    dataXor1 -= 0x10000;
+                }
+                dataSize1 -= tick1;
+                dataOffset1 += tick1;
+
+                if (lowCpuCheckFlag) {
+                    dataXor1 += tickXor1;
+                    if (dataXor1 >= 0x10000) {
+                        dataSize1--;
+                        dataOffset1++;
+                        dataXor1 -= 0x10000;
+                    }
+                    dataSize1 -= tick1;
+                    dataOffset1 += tick1;
+                }
+
+                if (dataSize1 <= 1 && dataSize2 <= 1) { // 両方停止
+                    if (keyonFlag) {
+                        int ad = dataSize1 - 1;
+                        if (ad >= 0 && ad < ppsDt.length)
+                            keyoffVol += emitTable[ppsDt[ad]] / 8;
+                    }
+                    keyonFlag = false; // 発音停止
+                    if (real) {
+                        psg.accept(0x0a, 0); // Volume を0に
+                    }
+                } else if (dataSize1 <= 1 && dataSize2 > 1) { // 2 音目のみが停止
+                    volume1 = volume2;
+                    dataSize1 = dataSize2;
+                    dataOffset1 = dataOffset2;
+                    dataXor1 = dataXor2;
+                    tick1 = tick2;
+                    tickXor1 = tickXor2;
+                    dataSize2 = -1;
+
+                    int ad = dataSize1 - 1;
+                    if (ad >= 0 && ad < ppsDt.length)
+                        keyoffVol += emitTable[ppsDt[ad]] / 8;
+
+                } else if (dataSize1 > 1 && dataSize2 < 1) { // 2 音目のみが停止
+                    if (dataOffset2 != -1) {
+                        int ad = dataSize2 - 1;
+                        if (ad >= 0 && ad < ppsDt.length)
+                            keyoffVol += emitTable[ppsDt[ad]] / 8;
+                        dataOffset2 = -1;
+                    }
+                }
+            }
+        }
+
+        public int load(byte[] pcmData) {
+            if (pcmData == null || pcmData.length <= MAX_PPS * 6) return -1;
+
+            List<Byte> o = new ArrayList<>();
+
+            // 仮バッファに読み込み
+            for (int i = MAX_PPS * 6; i < pcmData.length; i++) {
+                o.add((byte) ((pcmData[i] >> 4) & 0xf));
+                o.add((byte) ((pcmData[i] >> 0) & 0xf));
+            }
+
+            // データの作成
+            // PPS 補正(プチノイズ対策）/ 160 サンプルで減衰させる
+            for (int i = 0; i < MAX_PPS; i++) {
+                int address = pcmData[i * 6 + 0] + pcmData[i * 6 + 1] * 0x100 - MAX_PPS * 6;
+                int leng = pcmData[i * 6 + 2] + pcmData[i * 6 + 3] * 0x100;
+
+                // 仮バッファは 2 倍の大きさにしている為。
+                address *= 2;
+                leng *= 2;
+
+                int end_pps = address + leng;
+                int start_pps = end_pps - 160; // 160サンプル
+                if (start_pps < address) start_pps = address;
+
+                for (int j = start_pps; j < end_pps; j++) {
+                    //System.err.printf("before%d", o[j]);
+                    o.set(j, (byte) (o.get(j) - (j - start_pps) * 16 / (end_pps - start_pps)));
+                    if (o.get(j) < 0)
+                        o.set(j, (byte) 0);
+                    //System.err.printf("after%d", o[j]);
+                }
+
+            }
+            ppsDt = Common.toByteArray(o);
+
+            //ヘッダの作成
+            List<Header> h = new ArrayList<>();
+            for (int i = 0; i < MAX_PPS; i++) {
+                Header p = new Header();
+                p.address = (pcmData[i * 6 + 0] + pcmData[i * 6 + 1] * 0x100 - MAX_PPS * 6) * 2;
+                p.length = (pcmData[i * 6 + 2] + pcmData[i * 6 + 3] * 0x100) * 2;
+                p.toneOfs = pcmData[i * 6 + 4];
+                p.volumeOfs = pcmData[i * 6 + 5];
+
+                h.add(p);
+            }
+            ppsHd = h.toArray(new Header[h.size()]);
+
+            return 0;
+        }
+
+        public void reset() {
+            ppsDt = null;
+            ppsHd = null;
+            singleFlag = false; // 単音モードか？
+            lowCpuCheckFlag = false; // 周波数半分で再生か？
+            keyonFlag = false; // Keyon 中か？
+            dataOffset1 = -1;
+            dataOffset2 = -1;
+            dataXor1 = 0;                              // 現在の位置(小数部)
+            dataXor2 = 0;                              // 現在の位置(小数部)
+            tick1 = 0;
+            tick2 = 0;
+            tickXor1 = 0;
+            tickXor2 = 0;
+            dataSize1 = -1;
+            dataSize2 = -1;
+            volume1 = 0;
+            volume2 = 0;
+            keyoffVol = 0;
+            emitTable = new int[16];
+            interpolation = true;
+            setVolume(0);
+        }
+
+        public int start(int clock, BiConsumer<Integer, Integer> callback) {
+            this.samplingRate = clock;
+            reset();
+
+            if (callback != null) {
                 real = true;
-                psg = (BiConsumer<Integer, Integer>) option[0];
+                psg = callback;
             }
 
             return clock;
         }
 
-        @Override public void Stop(byte ChipID)
-        {
-        }
-
-        @Override public int Write(byte ChipID, int port, int adr, int data)
-        {
-            switch ((byte)port)
-            {
-                case 0x00:
-                    Reset(ChipID);
-                    break;
-                case 0x01:
-                    Play(ChipID, (byte)(adr >> 8), (byte)adr, (byte)data);
-                    break;
-                case 0x02:
-                    Stop(ChipID);
-                    break;
-                case 0x03:
-                    return SetParam(ChipID, (byte)adr, (byte)data) ? 1 : 0;
-                case 0x04:
-                    int04();
-                    break;
+        public int write(int port, int adr, int data) {
+            switch ((byte) port) {
+            case 0x00:
+                reset();
+                break;
+            case 0x01:
+                play((byte) (adr >> 8), (byte) adr, (byte) data);
+                break;
+            case 0x02:
+                this.stop();
+                break;
+            case 0x03:
+                return setParam((byte) adr, (byte) data) ? 1 : 0;
+            case 0x04:
+                int04();
+                break;
             }
 
             return 0;
         }
-
-
-        public class PPSHeader
-        {
-            public int address;
-            public int length;
-            public byte toneofs;
-            public byte volumeofs;
-        }
-
-        private double SamplingRate = 44100.0;
-        private int MAX_PPS = 14;
-        private byte[][] ppsDt = null;
-        private PPSHeader[][] ppsHd = null;
-        private boolean[] single_flag; // 単音モードか？
-        private boolean[] low_cpu_check_flag;// 周波数半分で再生か？
-        private boolean[] keyon_flag; // Keyon 中か？
-        private int[] data_offset1;
-        private int[] data_offset2;
-        private int[] data_xor1;                              // 現在の位置(小数部)
-        private int[] data_xor2;                              // 現在の位置(小数部)
-        private int[] tick1;
-        private int[] tick2;
-        private int[] tick_xor1;
-        private int[] tick_xor2;
-        private int[] data_size1;
-        private int[] data_size2;
-        private int[] volume1;
-        private int[] volume2;
-        private int[] keyoff_vol;
-        private int[][] EmitTable = new int[][] { new int[16], new int[16] };
-        private boolean[] interpolation = new boolean[] { true, true };
-        private boolean real = false;
-        private BiConsumer<Integer, Integer> psg = null;
-        private static int[] table=new int[] {
-         0, 0, 0, 5, 9,10,11,12,13,13,14,14,14,15,15,15,
-         0, 0, 3, 5, 9,10,11,12,13,13,14,14,14,15,15,15,
-         0, 3, 5, 7, 9,10,11,12,13,13,14,14,14,15,15,15,
-         5, 5, 7, 9,10,11,12,13,13,13,14,14,14,15,15,15,
-         9, 9, 9,10,11,12,12,13,13,14,14,14,15,15,15,15,
-        10,10,10,11,12,12,13,13,13,14,14,14,15,15,15,15,
-        11,11,11,12,12,13,13,13,14,14,14,14,15,15,15,15,
-        12,12,12,12,13,13,13,14,14,14,14,15,15,15,15,15,
-        13,13,13,13,13,13,14,14,14,14,14,15,15,15,15,15,
-        13,13,13,13,14,14,14,14,14,14,15,15,15,15,15,15,
-        14,14,14,14,14,14,14,14,14,15,15,15,15,15,15,15,
-        14,14,14,14,14,14,14,15,15,15,15,15,15,15,15,15,
-        14,14,14,14,15,15,15,15,15,15,15,15,15,15,15,15,
-        15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,
-        15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,
-        15,15,15,15,15,15,15,15,15,15,15,15,15,15,15,15
-        };
-
-        //-----------------------------------------------------------------------------
-        // 音量設定
-        //-----------------------------------------------------------------------------
-        private void SetVolume(byte ChipID,int vol)                 // 音量設定
-        {
-            // psg.SetVolume(vol);
-
-            double _base = 0x4000 * 2 / 3.0 * Math.pow(10.0, vol / 40.0);
-            for (int i = 15; i >= 1; i--)
-            {
-                EmitTable[ChipID][i] = (int)(_base);
-                _base /= 1.189207115;
-            }
-            EmitTable[ChipID][0] = 0;
-
-        }
-
-        private void Play(byte ChipID, byte al, byte bh, byte bl)
-        {
-            int num = al;
-            int shift = (byte)bh;
-            //System.err.printf(bh);
-            int volshift = (byte)bl;
-
-            if (ppsHd[ChipID][num].address < 0) return;
-
-            int a = 225 + ppsHd[ChipID][num].toneofs;
-            a %= 256;
-            a += shift;
-            a = Math.min(Math.max(a, 1), 255);
-
-            if ((byte)(ppsHd[ChipID][num].volumeofs + volshift) >= 15) return;
-            // 音量が０以下の時は再生しない
-
-            if (single_flag[ChipID] == false && keyon_flag[ChipID])
-            {
-                // ２重発音処理
-                volume2[ChipID] = volume1[ChipID];                  // １音目を２音目に移動
-                data_offset2[ChipID] = data_offset1[ChipID];
-                data_size2[ChipID] = data_size1[ChipID];
-                data_xor2[ChipID] = data_xor1[ChipID];
-                tick2[ChipID] = tick1[ChipID];
-                tick_xor2[ChipID] = tick_xor1[ChipID];
-            }
-            else
-            {
-                // １音目で再生
-                data_size2[ChipID] = -1;                     // ２音目は停止中
-            }
-
-            volume1[ChipID] = ppsHd[ChipID][num].volumeofs + volshift;
-            data_offset1[ChipID] = ppsHd[ChipID][num].address;
-            data_size1[ChipID] = ppsHd[ChipID][num].length;    // １音目を消して再生
-            data_xor1[ChipID] = 0;
-            if (low_cpu_check_flag[ChipID])
-            {
-                tick1[ChipID] = (int)(((8000 * a / 225) << 16) / SamplingRate);
-                tick_xor1[ChipID] = tick1[ChipID] & 0xffff;
-                tick1[ChipID] >>= 16;
-            }
-            else
-            {
-                tick1[ChipID] = (int)(((16000 * a / 225) << 16) / SamplingRate);
-                tick_xor1[ChipID] = tick1[ChipID] & 0xffff;
-                tick1[ChipID] >>= 16;
-            }
-
-            // psg.SetReg(0x07, psg.GetReg(0x07) | 0x24); // Tone/Noise C off
-            keyon_flag[ChipID] = true;                      // 発音開始
-            return;
-        }
-
-        private void stop(byte ChipID)
-        {
-            keyon_flag[ChipID] = false;
-            data_offset1[ChipID] = data_offset2[ChipID] = -1;
-            data_size1[ChipID] = data_size2[ChipID] = -1;
-        }
-
-        private boolean SetParam(byte ChipID, byte paramno, byte data)
-        {
-            switch (paramno & 1)
-            {
-                case 0:
-                    single_flag[ChipID] = data != 0;
-                    return true;
-                case 1:
-                    low_cpu_check_flag[ChipID] = data != 0;
-                    return true;
-                default: return false;
-            }
-        }
-
-        private void int04()
-        {
-            //TODO: 未実装
-        }
-
-        @Override public void Update(byte ChipID, int[][] outputs, int samples)
-        {
-            int i, al1, al2, ah1, ah2;
-            int data=0;
-
-            if (keyon_flag[ChipID] == false && keyoff_vol[ChipID] == 0)
-            {
-                return;
-            }
-
-            for (i = 0; i < samples; i++)
-            {
-
-                if (data_size1[ChipID] > 1)
-                {
-                    al1 = ppsDt[ChipID][data_offset1[ChipID]] - volume1[ChipID];
-                    al2 = ppsDt[ChipID][data_offset1[ChipID] + 1] - volume1[ChipID];
-                    if (al1 < 0) al1 = 0;
-                    if (al2 < 0) al2 = 0;
-                }
-                else
-                {
-                    al1 = al2 = 0;
-                }
-
-                if (data_size2[ChipID] > 1)
-                {
-                    ah1 = ppsDt[ChipID][data_offset2[ChipID]] - volume2[ChipID];
-                    ah2 = ppsDt[ChipID][data_offset2[ChipID] + 1] - volume2[ChipID];
-                    if (ah1 < 0) ah1 = 0;
-                    if (ah2 < 0) ah2 = 0;
-                }
-                else
-                {
-                    ah1 = ah2 = 0;
-                }
-
-                if (real)
-                {
-                    al1 = table[(al1 << 4) + ah1];
-                    psg.accept(0x0a, al1);
-                }
-                else
-                {
-                    if (interpolation[ChipID])
-                    {
-                        data =
-                            (EmitTable[ChipID][al1] * (0x10000 - data_xor1[ChipID]) + EmitTable[ChipID][al2] * data_xor1[ChipID] +
-                            EmitTable[ChipID][ah1] * (0x10000 - data_xor2[ChipID]) + EmitTable[ChipID][ah2] * data_xor2[ChipID]) / 0x10000;
-
-                    }
-                    else
-                    {
-                        data = EmitTable[ChipID][al1] + EmitTable[ChipID][ah1];
-                    }
-                }
-
-                keyoff_vol[ChipID] = (keyoff_vol[ChipID] * 255) / 258;
-
-                if (!real)
-                {
-                    if (!keyon_flag[ChipID]) data += keyoff_vol[ChipID];
-                    //if(keyoff_vol!=0) System.err.printf("keyoff_vol{0}", keyoff_vol);
-                    outputs[0][i] = (short)Math.max(Math.min(outputs[0][i] + data, Short.MAX_VALUE), Short.MIN_VALUE);
-                    outputs[1][i] = (short)Math.max(Math.min(outputs[1][i] + data, Short.MAX_VALUE), Short.MIN_VALUE);
-                }
-
-                //  psg.Mix(dest, 1);
-                //  dest += 2;
-
-                if (data_size2[ChipID] > 1)
-                {   // ２音合成再生
-                    data_xor2[ChipID] += tick_xor2[ChipID];
-                    if (data_xor2[ChipID] >= 0x10000)
-                    {
-                        data_size2[ChipID]--;
-                        data_offset2[ChipID]++;
-                        data_xor2[ChipID] -= 0x10000;
-                    }
-                    data_size2[ChipID] -= tick2[ChipID];
-                    data_offset2[ChipID] += tick2[ChipID];
-
-                    if (low_cpu_check_flag[ChipID])
-                    {
-                        data_xor2[ChipID] += tick_xor2[ChipID];
-                        if (data_xor2[ChipID] >= 0x10000)
-                        {
-                            data_size2[ChipID]--;
-                            data_offset2[ChipID]++;
-                            data_xor2[ChipID] -= 0x10000;
-                        }
-                        data_size2[ChipID] -= tick2[ChipID];
-                        data_offset2[ChipID] += tick2[ChipID];
-                    }
-                }
-
-                data_xor1[ChipID] += tick_xor1[ChipID];
-                if (data_xor1[ChipID] >= 0x10000)
-                {
-                    data_size1[ChipID]--;
-                    data_offset1[ChipID]++;
-                    data_xor1[ChipID] -= 0x10000;
-                }
-                data_size1[ChipID] -= tick1[ChipID];
-                data_offset1[ChipID] += tick1[ChipID];
-
-                if (low_cpu_check_flag[ChipID])
-                {
-                    data_xor1[ChipID] += tick_xor1[ChipID];
-                    if (data_xor1[ChipID] >= 0x10000)
-                    {
-                        data_size1[ChipID]--;
-                        data_offset1[ChipID]++;
-                        data_xor1[ChipID] -= 0x10000;
-                    }
-                    data_size1[ChipID] -= tick1[ChipID];
-                    data_offset1[ChipID] += tick1[ChipID];
-                }
-
-                if (data_size1[ChipID] <= 1 && data_size2[ChipID] <= 1)
-                {       // 両方停止
-                    if (keyon_flag[ChipID])
-                    {
-                        int ad = data_size1[ChipID] - 1;
-                        if (ad >= 0 && ad < ppsDt[ChipID].length)
-                            keyoff_vol[ChipID] += EmitTable[ChipID][ppsDt[ChipID][ad]] / 8;
-                    }
-                    keyon_flag[ChipID] = false;     // 発音停止
-                    if (real)
-                    {
-                        psg.accept(0x0a, 0); // Volume を0に
-                    }
-                }
-                else if (data_size1[ChipID] <= 1 && data_size2[ChipID] > 1)
-                {   // １音目のみが停止
-                    volume1[ChipID] = volume2[ChipID];
-                    data_size1[ChipID] = data_size2[ChipID];
-                    data_offset1[ChipID] = data_offset2[ChipID];
-                    data_xor1[ChipID] = data_xor2[ChipID];
-                    tick1[ChipID] = tick2[ChipID];
-                    tick_xor1[ChipID] = tick_xor2[ChipID];
-                    data_size2[ChipID] = -1;
-
-                    int ad = data_size1[ChipID] - 1;
-                    if (ad >= 0 && ad < ppsDt[ChipID].length)
-                        keyoff_vol[ChipID] += EmitTable[ChipID][ppsDt[ChipID][ad]] / 8;
-
-                }
-                else if (data_size1[ChipID] > 1 && data_size2[ChipID] < 1)
-                {   // ２音目のみが停止
-                    if (data_offset2[ChipID] != -1)
-                    {
-                        int ad = data_size2[ChipID] - 1;
-                        if (ad >= 0 && ad < ppsDt[ChipID].length)
-                            keyoff_vol[ChipID] += EmitTable[ChipID][ppsDt[ChipID][ad]] / 8;
-                        data_offset2[ChipID] = -1;
-                    }
-                }
-
-            }
-        }
-
-        public int Load(byte ChipID, byte[] pcmData)
-        {
-            if (pcmData == null || pcmData.length <= MAX_PPS * 6) return -1;
-
-            List<Byte> o = new ArrayList<Byte>();
-
-            //仮バッファに読み込み
-            for (int i = MAX_PPS * 6; i < pcmData.length; i++)
-            {
-                o.add((byte)((pcmData[i] >> 4) & 0xf));
-                o.add((byte)((pcmData[i] >> 0) & 0xf));
-            }
-
-            //データの作成
-            // PPS 補正(プチノイズ対策）／160 サンプルで減衰させる
-            for (int i = 0; i < MAX_PPS; i++)
-            {
-                int address = pcmData[i * 6 + 0] + pcmData[i * 6 + 1] * 0x100 - MAX_PPS * 6;
-                int leng = pcmData[i * 6 + 2] + pcmData[i * 6 + 3] * 0x100;
-
-                //仮バッファは２倍の大きさにしている為。
-                address *= 2;
-                leng *= 2;
-
-                int end_pps = address + leng;
-                int start_pps = end_pps - 160;//160サンプル
-                if (start_pps < address) start_pps = address;
-
-                for (int j = start_pps; j < end_pps; j++)
-                {
-                    //System.err.printf("before{0}",o[j]);
-                    o.set(j, (byte)(o.get(j) - (j - start_pps) * 16 / (end_pps - start_pps)));
-                    if ((byte)o.get(j) < 0)
-                        o.set(j, (byte) 0);
-                    //System.err.printf("after{0}", o[j]);
-                }
-
-            }
-            ppsDt[ChipID] = Common.toByteArray(o);
-
-            //ヘッダの作成
-            List<PPSHeader> h = new ArrayList<PPSHeader>();
-            for (int i = 0; i < MAX_PPS; i++)
-            {
-                PPSHeader p = new PPSHeader();
-                p.address = (pcmData[i * 6 + 0] + pcmData[i * 6 + 1] * 0x100 - MAX_PPS * 6) * 2;
-                p.length = (pcmData[i * 6 + 2] + pcmData[i * 6 + 3] * 0x100) * 2;
-                p.toneofs = pcmData[i * 6 + 4];
-                p.volumeofs = pcmData[i * 6 + 5];
-
-                h.add(p);
-            }
-            ppsHd[ChipID] = h.toArray(new PPSHeader[h.size()]);
-
-            return 0;
-        }
-
     }
+
+    // 音量設定
+    private void setVolume(byte chipID, int vol) {
+        PPS chip = chips[chipID];
+        chip.setVolume(vol);
+    }
+
+    private void play(byte chipID, byte al, byte bh, byte bl) {
+        PPS chip = chips[chipID];
+        chip.play(al, bh, bl);
+    }
+
+    private void stop_(byte chipID) {
+        PPS chip = chips[chipID];
+        chip.stop();
+    }
+
+    private boolean setParam(byte chipID, byte paramno, byte data) {
+        PPS chip = chips[chipID];
+        return chip.setParam(paramno, data);
+    }
+
+    @Override
+    public void update(byte chipID, int[][] outputs, int samples) {
+        PPS chip = chips[chipID];
+        chip.update(outputs, samples);
+    }
+
+    public int load(byte chipID, byte[] pcmData) {
+        PPS chip = chips[chipID];
+        return chip.load(pcmData);
+    }
+}
 

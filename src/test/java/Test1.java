@@ -9,7 +9,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import mdsound.x68Sound.Global;
+import mdsound.x68sound.Global;
 
 
 public class Test1 {

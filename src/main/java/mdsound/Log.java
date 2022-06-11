@@ -1,4 +1,4 @@
-﻿
+
 package mdsound;
 
 import java.util.function.BiConsumer;
@@ -11,7 +11,7 @@ public class Log {
     public static int off = (int) LogLevel.WARNING.v;
     public static Consumer<String> writeMethod;
 
-    public static void WriteLine(LogLevel level, String msg) {
+    public static void writeLine(LogLevel level, String msg) {
         // if ((off & (int)level) != 0) return;
         // return;
         if (level.v <= Log.level.v) {

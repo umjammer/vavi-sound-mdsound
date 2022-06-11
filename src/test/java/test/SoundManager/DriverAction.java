@@ -1,4 +1,4 @@
-﻿package test.SoundManager;
+package test.SoundManager;
 
 public class DriverAction {
     public Runnable Init;

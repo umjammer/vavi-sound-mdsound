@@ -1,4 +1,4 @@
-﻿
+
 package test.SoundManager;
 
 import test.SoundManager.SoundManager.Snd;
@@ -38,7 +38,7 @@ public class RealChipSender extends ChipSender {
                     }
 
                     try {
-                        while (ringBuffer.Deq(Counter, Dev, Typ, Adr, Val, Ex)) {
+                        while (ringBuffer.deq(Counter, Dev, Typ, Adr, Val, Ex)) {
                             ActionOfChip.accept(Counter, Dev, Typ, Adr, Val, Ex);
                         }
                     } catch (Exception e) {

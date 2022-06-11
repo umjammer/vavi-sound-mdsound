@@ -1,4 +1,4 @@
-﻿
+
 package mdsound;
 
 public enum LogLevel {

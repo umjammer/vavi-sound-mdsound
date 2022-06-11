@@ -1,14 +1,15 @@
-﻿
+
 package mdsound.fmvgen.effect;
 
 class CMyFilter {
-    public static float convInt = 21474.83647f;
+
+    public final static float convInt = 21474.83647f;
 
     public static float[] freqTable;
 
     public static float[] gainTable;
 
-    public static float[] QTable;
+    public static float[] qTable;
 
     // フィルタの係数
     private float a0, a1, a2, b0, b1, b2;
@@ -34,11 +35,10 @@ class CMyFilter {
         out2 = 0.0f;
     }
 
-    // --------------------------------------------------------------------------------
-    // 入力信号にフィルタを適用する関数
-    // --------------------------------------------------------------------------------
-
-    public float Process(float in_) {
+    /**
+     * 入力信号にフィルタを適用する関数
+     */
+    public float process(float in_) {
         // 入力信号にフィルタを適用し、出力信号変数に保存。
         float out_ = b0 / a0 * in_ + b1 / a0 * in1 + b2 / a0 * in2 - a1 / a0 * out1 - a2 / a0 * out2;
 
@@ -52,9 +52,9 @@ class CMyFilter {
         return out_;
     }
 
-    public void LowPass(float freq, float q, float samplerate) {
+    public void lowPass(float freq, float q, float samplerate) {
         // フィルタ係数計算で使用する中間値を求める。
-        float omega = 2.0f * 3.14159265f * freq / samplerate;
+        float omega = 2.0f * (float) Math.PI * freq / samplerate;
         float alpha = (float) (Math.sin(omega) / (2.0f * q));
 
         // フィルタ係数を求める。
@@ -66,9 +66,9 @@ class CMyFilter {
         b2 = (float) ((1.0f - Math.cos(omega)) / 2.0f);
     }
 
-    public void HighPass(float freq, float q, float samplerate) {
+    public void highPass(float freq, float q, float samplerate) {
         // フィルタ係数計算で使用する中間値を求める。
-        float omega = 2.0f * 3.14159265f * freq / samplerate;
+        float omega = 2.0f * (float) Math.PI * freq / samplerate;
         float alpha = (float) (Math.sin(omega) / (2.0f * q));
 
         // フィルタ係数を求める。
@@ -80,9 +80,9 @@ class CMyFilter {
         b2 = (float) ((1.0f + Math.cos(omega)) / 2.0f);
     }
 
-    public void BandPass(float freq, float bw, float samplerate) {
+    public void bandPass(float freq, float bw, float samplerate) {
         // フィルタ係数計算で使用する中間値を求める。
-        float omega = 2.0f * 3.14159265f * freq / samplerate;
+        float omega = 2.0f * (float) Math.PI * freq / samplerate;
         float alpha = (float) (Math.sin(omega) * Math.sinh(Math.log(2.0f) / 2.0 * bw * omega / Math.sin(omega)));
 
         // フィルタ係数を求める。
@@ -94,9 +94,9 @@ class CMyFilter {
         b2 = -alpha;
     }
 
-    public void Notch(float freq, float bw, float samplerate) {
+    public void notch(float freq, float bw, float samplerate) {
         // フィルタ係数計算で使用する中間値を求める。
-        float omega = 2.0f * 3.14159265f * freq / samplerate;
+        float omega = 2.0f * (float) Math.PI * freq / samplerate;
         float alpha = (float) (Math.sin(omega) * Math.sinh(Math.log(2.0f) / 2.0 * bw * omega / Math.sin(omega)));
 
         // フィルタ係数を求める。
@@ -108,9 +108,9 @@ class CMyFilter {
         b2 = 1.0f;
     }
 
-    public void LowShelf(float freq, float q, float gain, float samplerate) {
+    public void lowShelf(float freq, float q, float gain, float sampleRate) {
         // フィルタ係数計算で使用する中間値を求める。
-        float omega = 2.0f * 3.14159265f * freq / samplerate;
+        float omega = 2.0f * 3.14159265f * freq / sampleRate;
         float alpha = (float) (Math.sin(omega) / (2.0f * q));
         float A = (float) (Math.pow(10.0f, (gain / 40.0f)));
         float beta = (float) (Math.sqrt(A) / q);
@@ -124,9 +124,9 @@ class CMyFilter {
         b2 = (float) (A * ((A + 1.0f) - (A - 1.0f) * Math.cos(omega) - beta * Math.sin(omega)));
     }
 
-    public void HighShelf(float freq, float q, float gain, float samplerate) {
+    public void highShelf(float freq, float q, float gain, float sampleRate) {
         // フィルタ係数計算で使用する中間値を求める。
-        float omega = 2.0f * 3.14159265f * freq / samplerate;
+        float omega = 2.0f * 3.14159265f * freq / sampleRate;
         float alpha = (float) (Math.sin(omega) / (2.0f * q));
         float A = (float) (Math.pow(10.0f, (gain / 40.0f)));
         float beta = (float) (Math.sqrt(A) / q);
@@ -140,9 +140,9 @@ class CMyFilter {
         b2 = (float) (A * ((A + 1.0f) + (A - 1.0f) * Math.cos(omega) - beta * Math.sin(omega)));
     }
 
-    public void Peaking(float freq, float bw, float gain, float samplerate) {
+    public void peaking(float freq, float bw, float gain, float sampleRate) {
         // フィルタ係数計算で使用する中間値を求める。
-        float omega = 2.0f * 3.14159265f * freq / samplerate;
+        float omega = 2.0f * 3.14159265f * freq / sampleRate;
         float alpha = (float) (Math.sin(omega) * Math.sinh(Math.log(2.0f) / 2.0 * bw * omega / Math.sin(omega)));
         float A = (float) (Math.pow(10.0f, (gain / 40.0f)));
 
@@ -155,9 +155,9 @@ class CMyFilter {
         b2 = 1.0f - alpha * A;
     }
 
-    public void AllPass(float freq, float q, float samplerate) {
+    public void allPass(float freq, float q, float sampleRate) {
         // フィルタ係数計算で使用する中間値を求める。
-        float omega = 2.0f * 3.14159265f * freq / samplerate;
+        float omega = 2.0f * 3.14159265f * freq / sampleRate;
         float alpha = (float) (Math.sin(omega) / (2.0f * q));
 
         // フィルタ係数を求める。
@@ -172,7 +172,7 @@ class CMyFilter {
     public static void makeTable() {
         freqTable = new float[256];
         gainTable = new float[256];
-        QTable = new float[256];
+        qTable = new float[256];
 
         for (int i = 0; i < 256; i++) {
             // freqTableの作成(1～38500まで)
@@ -196,14 +196,14 @@ class CMyFilter {
             // QTableの作成(0.1～20.0まで)
             if (i < 256 / 8 * 3) {
                 // 0-95 : 0.01041667 ～ 1.0
-                QTable[i] = (float) (1.0 / (256 / 8 * 3) * (i + 1));
+                qTable[i] = (float) (1.0 / (256 / 8 * 3) * (i + 1));
             } else if (i < 256 / 8 * 6) {
                 // 96-191 : 1.104167 ～ 11.0
 
-                QTable[i] = (float) (10.0 / (256 / 8 * 3) * (i + 1 - 256 / 8 * 3) + 1.0);
+                qTable[i] = (float) (10.0 / (256 / 8 * 3) * (i + 1 - 256 / 8 * 3) + 1.0);
             } else {
                 // 192-255 : 11.15625 ～ 21.0
-                QTable[i] = (float) (10.0 / (256 / 8 * 2) * (i + 1 - 256 / 8 * 6) + 11.0);
+                qTable[i] = (float) (10.0 / (256 / 8 * 2) * (i + 1 - 256 / 8 * 6) + 11.0);
             }
         }
     }

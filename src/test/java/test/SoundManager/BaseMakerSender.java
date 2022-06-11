@@ -1,4 +1,4 @@
-﻿
+
 package test.SoundManager;
 
 import java.util.concurrent.CompletableFuture;
@@ -21,7 +21,7 @@ public abstract class BaseMakerSender {
     public SoundManager parent = null;
 
     public long GetRingBufferCounter() {
-        return ringBuffer.LookUpCounter();
+        return ringBuffer.lookUpCounter();
     }
 
     public long GetRingBufferSize() {
@@ -50,7 +50,7 @@ public abstract class BaseMakerSender {
     }
 
     public boolean Deq(long Counter, int Dev, int Typ, int Adr, int Val, Object[] Ex) {
-        return ringBuffer.Deq(Counter, Dev, Typ, Adr, Val, Ex);
+        return ringBuffer.deq(Counter, Dev, Typ, Adr, Val, Ex);
     }
 
     public void RequestStart() {

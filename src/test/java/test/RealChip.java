@@ -1,9 +1,5 @@
-﻿
+
 package test;
-
-import java.io.Closeable;
-
-import com.jacob.com.NotImplementedException;
 
 import NScci;
 import Nc86ctl;
@@ -16,7 +12,7 @@ public class RealChip {
     private Nc86ctl.Nc86ctl nc86ctl;
 
     public RealChip() {
-        log.ForcedWrite("RealChip:Ctr:STEP 00(Start)");
+        Log.ForcedWrite("RealChip:Ctr:STEP 00(Start)");
 
         int n = 0;
         try {
@@ -25,9 +21,9 @@ public class RealChip {
             if (n == 0) {
                 nScci.Dispose();
                 nScci = null;
-                log.ForcedWrite("RealChip:Ctr:Not found SCCI.");
+                Log.ForcedWrite("RealChip:Ctr:Not found SCCI.");
             } else {
-                log.ForcedWrite(String.format("RealChip:Ctr:Found SCCI.(Interface count={0})", n));
+                Log.ForcedWrite(String.format("RealChip:Ctr:Found SCCI.(Interface count={0})", n));
                 getScciInstances();
                 nScci.NSoundInterfaceManager_.setLevelDisp(false);
             }
@@ -35,7 +31,7 @@ public class RealChip {
             nScci = null;
         }
 
-        log.ForcedWrite("RealChip:Ctr:STEP 01");
+        Log.ForcedWrite("RealChip:Ctr:STEP 01");
         try {
             nc86ctl = new Nc86ctl.Nc86ctl();
             nc86ctl.initialize();
@@ -43,16 +39,16 @@ public class RealChip {
             if (n == 0) {
                 nc86ctl.deinitialize();
                 nc86ctl = null;
-                log.ForcedWrite("RealChip:Ctr:Not found G.I.M.I.C.");
+                Log.ForcedWrite("RealChip:Ctr:Not found G.I.MPcm.I.C.");
             } else {
-                log.ForcedWrite(String.format("RealChip:Ctr:Found G.I.M.I.C.(Interface count={0})", n));
+                Log.ForcedWrite(String.format("RealChip:Ctr:Found G.I.MPcm.I.C.(Interface count={0})", n));
                 Nc86ctl.NIRealChip nirc = nc86ctl.getChipInterface(0);
                 nirc.reset();
             }
         } catch (Exception e) {
             nc86ctl = null;
         }
-        log.ForcedWrite("RealChip:Ctr:STEP 02(Success)");
+        Log.ForcedWrite("RealChip:Ctr:STEP 02(Success)");
     }
 
     public void Close() {

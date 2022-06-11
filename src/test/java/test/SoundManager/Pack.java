@@ -1,41 +1,40 @@
-﻿package test.SoundManager;
+package test.SoundManager;
 
 public class Pack {
 
-    public int Dev;
-    public int Typ;
-    public int Adr;
-    public int Val;
+    public int dev;
+    public int typ;
+    public int adr;
+    public int val;
 
-    public Object[] Ex;
+    public Object[] ex;
 
     public Pack() {
     }
 
-    public Pack(int Dev, int Typ, int Adr, int Val, Object[] Ex) {
-        this.Dev = Dev;
-        this.Typ = Typ;
-        this.Adr = Adr;
-        this.Val = Val;
-        this.Ex = Ex;
+    public Pack(int dev, int typ, int adr, int val, Object... ex) {
+        this.dev = dev;
+        this.typ = typ;
+        this.adr = adr;
+        this.val = val;
+        this.ex = ex;
     }
 
-    public void Copy(Pack pack) {
-        Dev = pack.Dev;
-        Typ = pack.Typ;
-        Adr = pack.Adr;
-        Val = pack.Val;
-        Ex = pack.Ex;
+    public void copy(Pack pack) {
+        dev = pack.dev;
+        typ = pack.typ;
+        adr = pack.adr;
+        val = pack.val;
+        ex = pack.ex;
     }
 
-    public void Copy(int Dev, int Typ, int Adr, int Val, Object[] Ex) {
-        this.Dev = Dev;
-        this.Typ = Typ;
-        this.Adr = Adr;
-        this.Val = Val;
-        this.Ex = Ex;
+    public void copy(int dev, int typ, int adr, int val, Object... ex) {
+        this.dev = dev;
+        this.typ = typ;
+        this.adr = adr;
+        this.val = val;
+        this.ex = ex;
     }
-
 }
 
 class PPack {
@@ -43,7 +42,7 @@ class PPack {
 
     public PPack next;
 
-    public long Counter;
+    public long counter;
 
     public Pack pack = new Pack();
 }

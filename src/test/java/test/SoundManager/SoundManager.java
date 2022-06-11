@@ -1,4 +1,4 @@
-﻿
+
 package test.SoundManager;
 
 import test.Common.HexaConsumer;
@@ -81,7 +81,7 @@ public class SoundManager {
         realChipSender.Mount();
     }
 
-    public void Release() {
+    public void release() {
         dataMaker.Unmount();
         dataSender.Unmount();
         emuChipSender.Unmount();
@@ -102,7 +102,7 @@ public class SoundManager {
         realChipSender.RequestStart();
     }
 
-    public void RequestStop() {
+    public void requestStop() {
         while (dataMaker.IsRunning())
             dataMaker.RequestStop();
         while (dataSender.IsRunning())
@@ -173,7 +173,7 @@ public class SoundManager {
         return emuChipSender.recvBuffer;
     }
 
-    public boolean IsRunningAsync() {
+    public boolean isRunningAsync() {
         if (dataMaker.IsRunning())
             return true;
         if (dataSender.IsRunning())
@@ -186,13 +186,13 @@ public class SoundManager {
         return false;
     }
 
-    public void SetInterrupt() {
+    public void setInterrupt() {
         synchronized (lockObj) {
             interruptCounter++;
         }
     }
 
-    public void ResetInterrupt() {
+    public void resetInterrupt() {
         synchronized (lockObj) {
             if (interruptCounter > 0)
                 interruptCounter--;

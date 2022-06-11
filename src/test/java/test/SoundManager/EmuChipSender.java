@@ -1,4 +1,4 @@
-﻿
+
 package test.SoundManager;
 
 public class EmuChipSender extends ChipSender {
@@ -41,13 +41,13 @@ public class EmuChipSender extends ChipSender {
                     }
 
                     try {
-                        while (ringBuffer.Deq(Counter, Dev, Typ, Adr, Val, Ex)) {
+                        while (ringBuffer.deq(Counter, Dev, Typ, Adr, Val, Ex)) {
                             // ActionOfChip?.Invoke(Counter, Dev, Typ, Adr, Val, Ex);
                             if (!recvBuffer.Enq(Counter, Dev, Typ, Adr, Val, Ex)) {
-                                parent.SetInterrupt();
+                                parent.setInterrupt();
                                 while (!recvBuffer.Enq(Counter, Dev, Typ, Adr, Val, Ex)) {
                                 }
-                                parent.ResetInterrupt();
+                                parent.resetInterrupt();
                             }
                         }
                     } catch (Exception e) {

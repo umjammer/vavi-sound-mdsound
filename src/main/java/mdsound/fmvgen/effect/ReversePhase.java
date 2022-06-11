@@ -1,128 +1,111 @@
-﻿
+
 package mdsound.fmvgen.effect;
 
 public class ReversePhase {
-    public int[][][] SSG;
 
-    public int[][][] FM;
-
-    public int[][] Rhythm;
-
-    public int[][] AdpcmA;
-
-    public int[][] Adpcm;
+    public int[][][] ssg;
+    public int[][][] fm;
+    public int[][] rhythm;
+    public int[][] adpcmA;
+    public int[][] adpcm;
 
     public ReversePhase() {
-        Init();
+        init();
     }
 
-    private void Init() {
-        SSG = new int[][][] {
-            new int[][] {
-                new int[2], new int[2], new int[2]
-            }, new int[][] {
-                new int[2], new int[2], new int[2]
-            }, new int[][] {
-                new int[2], new int[2], new int[2]
-            }, new int[][] {
-                new int[2], new int[2], new int[2]
-            }
+    private void init() {
+        ssg = new int[][][] {
+                new int[][] {new int[2], new int[2], new int[2]},
+                new int[][] {new int[2], new int[2], new int[2]},
+                new int[][] {new int[2], new int[2], new int[2]},
+                new int[][] {new int[2], new int[2], new int[2]}
         };
-        FM = new int[][][] {
-            new int[][] {
-                new int[2], new int[2], new int[2], new int[2], new int[2], new int[2]
-            }, new int[][] {
-                new int[2], new int[2], new int[2], new int[2], new int[2], new int[2]
-            }
+        fm = new int[][][] {
+                new int[][] {new int[2], new int[2], new int[2], new int[2], new int[2], new int[2]},
+                new int[][] {new int[2], new int[2], new int[2], new int[2], new int[2], new int[2]}
         };
-        Rhythm = new int[][] {
-            new int[2], new int[2], new int[2], new int[2], new int[2], new int[2]
-        };
-        AdpcmA = new int[][] {
-            new int[2], new int[2], new int[2], new int[2], new int[2], new int[2]
-        };
-        Adpcm = new int[][] {
-            new int[2], new int[2], new int[2]
-        };
+        rhythm = new int[][] {new int[2], new int[2], new int[2], new int[2], new int[2], new int[2]};
+        adpcmA = new int[][] {new int[2], new int[2], new int[2], new int[2], new int[2], new int[2]};
+        adpcm = new int[][] {new int[2], new int[2], new int[2]};
 
         for (int i = 0; i < 6; i++) {
-            SSG[0][i / 2][i % 2] = 1;
-            SSG[1][i / 2][i % 2] = 1;
-            SSG[2][i / 2][i % 2] = 1;
-            SSG[3][i / 2][i % 2] = 1;
+            ssg[0][i / 2][i % 2] = 1;
+            ssg[1][i / 2][i % 2] = 1;
+            ssg[2][i / 2][i % 2] = 1;
+            ssg[3][i / 2][i % 2] = 1;
 
-            FM[0][i / 2][i % 2] = 1;
-            FM[0][i / 2 + 3][i % 2] = 1;
-            FM[1][i / 2][i % 2] = 1;
-            FM[1][i / 2 + 3][i % 2] = 1;
+            fm[0][i / 2][i % 2] = 1;
+            fm[0][i / 2 + 3][i % 2] = 1;
+            fm[1][i / 2][i % 2] = 1;
+            fm[1][i / 2 + 3][i % 2] = 1;
 
-            Rhythm[i / 2][i % 2] = 1;
-            Rhythm[i / 2 + 3][i % 2] = 1;
+            rhythm[i / 2][i % 2] = 1;
+            rhythm[i / 2 + 3][i % 2] = 1;
 
-            AdpcmA[i / 2][i % 2] = 1;
-            AdpcmA[i / 2 + 3][i % 2] = 1;
+            adpcmA[i / 2][i % 2] = 1;
+            adpcmA[i / 2 + 3][i % 2] = 1;
 
-            Adpcm[i / 2][i % 2] = 1;
+            adpcm[i / 2][i % 2] = 1;
         }
     }
 
-    public void SetReg(int adr, byte data) {
+    public void setReg(int adr, byte data) {
         switch (adr) {
         case 0:// $CC
             for (int i = 0; i < 6; i++)
-                SSG[0][i / 2][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
+                ssg[0][i / 2][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
             break;
         case 1:// $CD
             for (int i = 0; i < 6; i++)
-                SSG[1][i / 2][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
+                ssg[1][i / 2][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
             break;
         case 2:// $CE
             for (int i = 0; i < 6; i++)
-                SSG[2][i / 2][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
+                ssg[2][i / 2][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
             break;
         case 3:// $CF
             for (int i = 0; i < 6; i++)
-                SSG[3][i / 2][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
+                ssg[3][i / 2][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
             break;
 
         case 4:// $D0
             for (int i = 0; i < 6; i++)
-                FM[0][i / 2][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
+                fm[0][i / 2][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
             break;
         case 5:// $D1
             for (int i = 0; i < 6; i++)
-                FM[0][i / 2 + 3][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
+                fm[0][i / 2 + 3][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
             break;
         case 6:// $D2
             for (int i = 0; i < 6; i++)
-                FM[1][i / 2][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
+                fm[1][i / 2][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
             break;
         case 7:// $D3
             for (int i = 0; i < 6; i++)
-                FM[1][i / 2 + 3][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
+                fm[1][i / 2 + 3][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
             break;
 
         case 8:// $D4
             for (int i = 0; i < 6; i++)
-                Rhythm[i / 2][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
+                rhythm[i / 2][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
             break;
         case 9:// $D5
             for (int i = 0; i < 6; i++)
-                Rhythm[i / 2 + 3][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
+                rhythm[i / 2 + 3][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
             break;
 
         case 10:// $D6
             for (int i = 0; i < 6; i++)
-                AdpcmA[i / 2][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
+                adpcmA[i / 2][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
             break;
         case 11:// $D7
             for (int i = 0; i < 6; i++)
-                AdpcmA[i / 2 + 3][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
+                adpcmA[i / 2 + 3][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
             break;
 
         case 12:// $D8
             for (int i = 0; i < 6; i++)
-                Adpcm[i / 2][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
+                adpcm[i / 2][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
             break;
         }
     }

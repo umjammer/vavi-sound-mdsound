@@ -1,4 +1,4 @@
-﻿package test.SoundManager;
+package test.SoundManager;
 
 import test.SoundManager.SoundManager.Enq;
 
@@ -64,11 +64,11 @@ public class DataSender extends BaseSender {
         if (startData != null) {
             for (Pack dat : startData) {
                 // 振り分けてEnqueue
-                if (dat.Dev >= 0)
-                    while (!EmuEnq.apply(0l, dat.Dev, dat.Typ, dat.Adr, dat.Val, null))
+                if (dat.dev >= 0)
+                    while (!EmuEnq.apply(0l, dat.dev, dat.typ, dat.adr, dat.val, null))
                         Thread.yield();
                 else
-                    while (!RealEnq.apply(0l, dat.Dev, dat.Typ, dat.Adr, dat.Val, null))
+                    while (!RealEnq.apply(0l, dat.dev, dat.typ, dat.adr, dat.val, null))
                         Thread.yield();
             }
         }
@@ -129,14 +129,14 @@ public class DataSender extends BaseSender {
                             }
                             continue;
                         }
-                        if (SeqCounter < ringBuffer.LookUpCounter())
+                        if (SeqCounter < ringBuffer.lookUpCounter())
                             continue;
                         // continue;
                     }
 
                     // dataが貯まってます！
-                    while (SeqCounter >= ringBuffer.LookUpCounter()) {
-                        if (!ringBuffer.Deq(Counter, Dev, Typ, Adr, Val, Ex)) {
+                    while (SeqCounter >= ringBuffer.lookUpCounter()) {
+                        if (!ringBuffer.deq(Counter, Dev, Typ, Adr, Val, Ex)) {
                             break;
                         }
 
@@ -154,11 +154,11 @@ public class DataSender extends BaseSender {
                 if (stopData != null) {
                     for (Pack dat : stopData) {
                         // 振り分けてEnqueue
-                        if (dat.Dev >= 0)
-                            while (!EmuEnq.apply(Counter, dat.Dev, dat.Typ, dat.Adr, dat.Val, null))
+                        if (dat.dev >= 0)
+                            while (!EmuEnq.apply(Counter, dat.dev, dat.typ, dat.adr, dat.val, null))
                                 Thread.yield();
                         else
-                            while (!RealEnq.apply(Counter, dat.Dev, dat.Typ, dat.Adr, dat.Val, null))
+                            while (!RealEnq.apply(Counter, dat.dev, dat.typ, dat.adr, dat.val, null))
                                 Thread.yield();
                     }
                 }

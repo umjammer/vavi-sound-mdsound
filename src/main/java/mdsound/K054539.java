@@ -1,239 +1,470 @@
-﻿package mdsound;
+package mdsound;
 
-public class K054539 extends Instrument
-    {
-
-        public K054539()
-        {
-            visVolume = new int[][][] {
-                new int[][] { new int[] { 0, 0 } }
-                , new int[][] { new int[] { 0, 0 } }
-            };
-            //0..Main
-        }
-
-        @Override public void Reset(byte ChipID)
-        {
-            device_reset_k054539(ChipID);
-        }
-
-        @Override public int Start(byte ChipID, int clock)
-        {
-            return (int)device_start_k054539(ChipID, (int)clock);
-        }
-
-        @Override public void Stop(byte ChipID)
-        {
-            device_stop_k054539(ChipID);
-        }
-
-        @Override public void Update(byte ChipID, int[][] outputs, int samples)
-        {
-            k054539_update(ChipID, outputs, samples);
-
-            visVolume[ChipID][0][0] = outputs[0][0];
-            visVolume[ChipID][0][1] = outputs[1][0];
-        }
-
-        @Override public int Start(byte ChipID, int SamplingRate, int clock, Object... Option)
-        {
-            int sampRate= (int)device_start_k054539(ChipID, (int)clock);
-            int flags = 1;
-            if (Option != null && Option.length > 0) flags = (int)(byte)Option[0];
-            k054539_init_flags(ChipID, flags);
-
-            return sampRate;
-        }
+import java.util.Arrays;
 
 
-        private static final int K054539_RESET_FLAGS = 0;
-        private static final int K054539_REVERSE_STEREO = 1;
-        private static final int K054539_DISABLE_REVERB = 2;
-        private final static int K054539_UPDATE_AT_KEYON = 4;
+/*
+ Konami 054539 (TOP) PCM Sound Chip
 
-        /*********************************************************
+ A lot of information comes from Amuse.
+ Big thanks to them.
 
-            Konami 054539 (TOP) PCM Sound Chip
+   Registers:
+   00..ff: 20 bytes/channel, 8 channels
+     00..02: pitch (lsb, mid, msb)
+         03: volume (0=max, 0x40=-36dB)
+         04: Reverb volume (idem)
+     05: pan (1-f right, 10 middle, 11-1f left)
+     06..07: Reverb delay (0=max, current computation non-trusted)
+     08..0a: loop (lsb, mid, msb)
+     0c..0e: start (lsb, mid, msb) (and current position ?)
 
-            A lot of information comes from Amuse.
-            Big thanks to them.
+   100.1ff: effects?
+     13f: pan of the analog input (1-1f)
 
-        *********************************************************/
+   200..20f: 2 bytes/channel, 8 channels
+     00: type (b2-3), reverse (b5)
+     01: loop (b0)
 
-        //#include "emu.h"
-        //# include <stdlib.h>
-        //# include <string.h> // for memset
-        //# include <stddef.h> // for NULL
-        //# include <math.h>
-        //# include "mamedef.h"
-        //# ifdef _DEBUG
-        //# include <stdio.h>
-        //#endif
-        //# include "k054539.h"
+   214: Key on (b0-7 = channel 0-7)
+   215: Key off          ""
+   225: ?
+   227: Timer frequency
+   228: ?
+   229: ?
+   22a: ?
+   22b: ?
+   22c: Channel active? (b0-7 = channel 0-7)
+   22d: Data read/write port
+   22e: ROM/RAM select (00..7f == ROM banks, 80 = Reverb RAM)
+   22f: Global control:
+        .......x - Enable PCM
+        ......x. - Timer related?
+        ...x.... - Enable ROM/RAM readback from 0x22d
+        ..x..... - Timer output enable?
+        x....... - Disable register RAM updates
 
-        //#define VERBOSE 0
-        //#define LOG(x) do { if (VERBOSE) logerror x; } while (0)
+    The chip has an optional 0x8000 byte Reverb buffer.
+    The Reverb delay is actually an offset in this buffer.
+*/
+public class K054539 extends Instrument.BaseInstrument {
 
-        /* Registers:
-           00..ff: 20 bytes/channel, 8 channels
-             00..02: pitch (lsb, mid, msb)
-                 03: volume (0=max, 0x40=-36dB)
-                 04: reverb volume (idem)
-             05: pan (1-f right, 10 middle, 11-1f left)
-             06..07: reverb delay (0=max, current computation non-trusted)
-             08..0a: loop (lsb, mid, msb)
-             0c..0e: start (lsb, mid, msb) (and current position ?)
+    public K054539() {
+        visVolume = new int[][][] {
+                new int[][] {new int[] {0, 0}},
+                new int[][] {new int[] {0, 0}}
+        };
+        //0..Main
+    }
 
-           100.1ff: effects?
-             13f: pan of the analog input (1-1f)
+    @Override
+    public void reset(byte chipID) {
+        device_reset_k054539(chipID);
+    }
 
-           200..20f: 2 bytes/channel, 8 channels
-             00: type (b2-3), reverse (b5)
-             01: loop (b0)
+    @Override
+    public int start(byte chipID, int clock) {
+        return (int) device_start_k054539(chipID, (int) clock);
+    }
 
-           214: Key on (b0-7 = channel 0-7)
-           215: Key off          ""
-           225: ?
-           227: Timer frequency
-           228: ?
-           229: ?
-           22a: ?
-           22b: ?
-           22c: Channel active? (b0-7 = channel 0-7)
-           22d: Data read/write port
-           22e: ROM/RAM select (00..7f == ROM banks, 80 = Reverb RAM)
-           22f: Global control:
-                .......x - Enable PCM
-                ......x. - Timer related?
-                ...x.... - Enable ROM/RAM readback from 0x22d
-                ..x..... - Timer output enable?
-                x....... - Disable register RAM updates
+    @Override
+    public void stop(byte chipID) {
+        device_stop_k054539(chipID);
+    }
 
-            The chip has an optional 0x8000 byte reverb buffer.
-            The reverb delay is actually an offset in this buffer.
-        */
+    @Override
+    public void update(byte chipID, int[][] outputs, int samples) {
+        k054539_update(chipID, outputs, samples);
 
-        private static class k054539_channel
-        {
+        visVolume[chipID][0][0] = outputs[0][0];
+        visVolume[chipID][0][1] = outputs[1][0];
+    }
+
+    @Override
+    public int start(byte chipID, int SamplingRate, int clockValue, Object... Option) {
+        int sampRate = (int) device_start_k054539(chipID, (int) clockValue);
+        int flags = 1;
+        if (Option != null && Option.length > 0) flags = (int) (byte) Option[0];
+        k054539_init_flags(chipID, flags);
+
+        return sampRate;
+    }
+
+    private static class K054539State {
+
+        private static final int RESET_FLAGS = 0;
+        private static final int REVERSE_STEREO = 1;
+        private static final int DISABLE_REVERB = 2;
+        private static final int UPDATE_AT_KEYON = 4;
+
+        private static class Channel {
             public int pos;
             public int pfrac;
             public int val;
             public int pval;
-        };
+        }
 
-        private static class k054539_state
-        {
-            //final k054539_interface *intf;
-            //device_t *device;
-            public double[] voltab = new double[256];
-            public double[] pantab = new double[0xf];
+        public double[] voltab = new double[256];
+        public double[] pantab = new double[0xf];
 
-            public double[] k054539_gain = new double[8];
-            public byte[][] k054539_posreg_latch = new byte[][] {
+        public double[] gain = new double[8];
+        public byte[][] posreg_latch = new byte[][] {
                 new byte[3], new byte[3], new byte[3], new byte[3],
-                new byte[3],new byte[3],new byte[3],new byte[3] };
-            public int k054539_flags;
+                new byte[3], new byte[3], new byte[3], new byte[3]};
+        public int flags;
 
-            public byte[] regs = new byte[0x230];
-            public byte[] ram;
-            public int ptrRam=0;
-            public int reverb_pos;
+        public byte[] regs = new byte[0x230];
+        public byte[] ram;
+        public int ptrRam = 0;
+        public int reverbPos;
 
-            public int cur_ptr;
-            public int cur_limit;
-            public byte[] cur_zone;
-            public int ptrCur_zone;
-            public byte[] rom;
-            public int ptrRom=0;
+        public int curPtr;
+        public int curLimit;
+        public byte[] curZone;
+        public int ptrCurZone;
+        public byte[] rom;
+        public int ptrRom = 0;
 
-            public int rom_size;
-            public int rom_mask;
-            //sound_stream * stream;
+        public int rom_size;
+        public int rom_mask;
 
-            public k054539_channel[] channels = new k054539_channel[] {
-                new k054539_channel(),
-                new k054539_channel(),
-                new k054539_channel(),
-                new k054539_channel(),
-                new k054539_channel(),
-                new k054539_channel(),
-                new k054539_channel(),
-                new k054539_channel()
-            };
-            public byte[] Muted = new byte[8];
-
-            public int clock;
+        public Channel[] channels = new Channel[] {
+                new Channel(),
+                new Channel(),
+                new Channel(),
+                new Channel(),
+                new Channel(),
+                new Channel(),
+                new Channel(),
+                new Channel()
         };
 
-        private static final int MAX_CHIPS = 0x02;
-        private static k054539_state[] K054539Data = new k054539_state[] { new k054539_state(), new k054539_state() };
+        public byte[] muted = new byte[8];
 
-        @Override public String getName()  { return "K054539"; }
-        @Override public String getShortName() { return "K054"; }
+        public int clock;
 
-        /*INLINE k054539_state *get_safe_token(device_t *device)
-        {
-            assert(device != NULL);
-            assert(device.type() == K054539);
-            return (k054539_state *)downcast<legacy_device_base *>(device).token();
-        }*/
-
-        //*
-
-        //void k054539_init_flags(device_t *device, int flags)
-        public void k054539_init_flags(byte ChipID, int flags)
-        {
-            //k054539_state *info = get_safe_token(device);
-            k054539_state info = K054539Data[ChipID];
-            info.k054539_flags = flags;
+        private int updateReg() {
+            return this.regs[0x22f] & 0x80;
         }
 
-        //void k054539_set_gain(device_t *device, int channel, double gain)
-        public void k054539_set_gain(byte ChipID, int channel, double gain)
-        {
-            //k054539_state *info = get_safe_token(device);
-            k054539_state info = K054539Data[ChipID];
-            if (gain >= 0) info.k054539_gain[channel] = gain;
-        }
-        //*
-
-        private static int k054539_regupdate(k054539_state info)
-        {
-            return (info.regs[0x22f] & 0x80);
+        private void keyOn(int channel) {
+            if (updateReg() == 0)
+                this.regs[0x22c] |= (byte) (1 << channel);
         }
 
-        private static void k054539_keyon(k054539_state info, int channel)
-        {
-            if (k054539_regupdate(info) == 0)
-                info.regs[0x22c] |= (byte)(1 << channel);
+        private void keyOff(int channel) {
+            if (updateReg() == 0)
+                this.regs[0x22c] &= (byte) (~(1 << channel));
         }
 
-        private static void k054539_keyoff(k054539_state info, int channel)
-        {
-            if (k054539_regupdate(info) == 0)
-                info.regs[0x22c] &= (byte)(~(1 << channel));
+        private int init(int clock) {
+
+            if (clock < 1000000)    // if < 1 MHz, then it's the sample rate, not the clock
+                clock *= 384;   // (for backwards compatibility with old VGM logs)
+            this.clock = clock;
+            // most of these are done in device_reset
+            // memset(this.regs, 0, sizeof(this.regs));
+            // memset(this.k054539_posreg_latch, 0, sizeof(this.k054539_posreg_latch)); //*
+            this.flags |= UPDATE_AT_KEYON; //* make it default until proven otherwise
+
+            this.ram = new byte[0x4000];
+            // this.reverb_pos = 0;
+            // this.cur_ptr = 0;
+            // memset(this.ram, 0, 0x4000);
+
+            /*final memory_region *region = (this.intf.rgn@Override != NULL) ? device.machine().region(this.intf.rgnoverride) : device.region();
+            this.rom = *region;
+            this.rom_size = region.bytes();
+            this.rom_mask = 0xffffffffU;
+            for(i=0; i<32; i++)
+                if((1U<<i) >= this.rom_size) {
+                    this.rom_mask = (1U<<i) - 1;
+                    break;
+                }*/
+            this.rom = null;
+            this.rom_size = 0;
+            this.rom_mask = 0x00;
+
+            //if(this.intf.irq)
+            // One or more of the registers must be the timer period
+            // And anyway, this particular frequency is probably wrong
+            // 480 hz is TRUSTED by gokuparo disco stage - the looping sample doesn't line up otherwise
+            // device.machine().scheduler().timer_pulse(attotime::from_hz(480), FUNC(k054539_irq), 0, info);
+
+            //this.stream = device.machine().Sound().stream_alloc(*device, 0, 2, device.clock() / 384, info, k054539_update);
+
+            //device.save_item(NAME(this.regs));
+            //device.save_pointer(NAME(this.ram), 0x4000);
+            //device.save_item(NAME(this.cur_ptr));
+
+            return this.clock / 384;
         }
 
-        //static STREAM_UPDATE( k054539_update )
-        private void k054539_update(byte ChipID, int[][] outputs, int samples)
-        {
-            //k054539_state *info = (k054539_state *)param;
-            k054539_state info = K054539Data[ChipID];
+        private void resetZones() {
+            int data = this.regs[0x22e];
+            this.curZone = (data & 0xff) == 0x80 ? this.ram : this.rom;
+            this.ptrCurZone = (data & 0xff) == 0x80 ? 0 : (0x20000 * data);
+            this.curLimit = (data & 0xff) == 0x80 ? 0x4000 : 0x20000;
+        }
+
+        private void write(int offset, byte data) {
+
+            boolean latch;
+            int offs, ch, pan;
+            byte[] regbase;
+            int regptr;
+
+            regbase = this.regs;
+            latch = (this.flags & K054539State.UPDATE_AT_KEYON) != 0 && (regbase[0x22f] & 1) != 0;
+            //System.err.printf("latch = {0} \n", latch);
+
+            if (latch && offset < 0x100) {
+                offs = (offset & 0x1f) - 0xc;
+                ch = offset >> 5;
+
+                if (offs >= 0 && offs <= 2) {
+                    // latch writes to the position index registers
+                    this.posreg_latch[ch][offs] = data;
+                    //System.err.printf("this.k054539_posreg_latch[{0}][{1}] = {2} \n", ch, offs, data);
+                    return;
+                }
+            } else
+                switch (offset) {
+                case 0x13f:
+                    pan = (data >= 0x11 && data <= 0x1f) ? data - 0x11 : 0x18 - 0x11;
+                    //if(this.intf.apan)
+                    // this.intf.apan(this.device, this.pantab[pan], this.pantab[0xe - pan]);
+                    break;
+
+                case 0x214:
+                    if (latch) {
+                        for (ch = 0; ch < 8; ch++) {
+                            if ((data & (1 << ch)) != 0) {
+                                regptr = (ch << 5) + 0xc;
+
+                                // update the chip at key-on
+                                regbase[regptr + 0] = this.posreg_latch[ch][0];
+                                regbase[regptr + 1] = this.posreg_latch[ch][1];
+                                regbase[regptr + 2] = this.posreg_latch[ch][2];
+
+                                this.keyOn(ch);
+                            }
+                        }
+                    } else {
+                        for (ch = 0; ch < 8; ch++)
+                            if ((data & (1 << ch)) != 0)
+                                this.keyOn(ch);
+                    }
+                    break;
+
+                case 0x215:
+                    for (ch = 0; ch < 8; ch++)
+                        if ((data & (1 << ch)) != 0)
+                            this.keyOff(ch);
+                    break;
+
+                        /*case 0x227:
+                        {
+                            attotime period = attotime::from_hz((float)(38 + data) * (clock()/384.0f/14400.0f)) / 2.0f;
+
+                            m_timer.adjust(period, 0, period);
+
+                            m_timer_state = 0;
+                            m_timer_handler(m_timer_state);
+                        }*/
+                //break;
+
+                case 0x22d:
+                    if ((regbase[0x22e] & 0xff) == 0x80)
+                        this.curZone[this.ptrCurZone + this.curPtr] = data;
+                    this.curPtr++;
+                    if (this.curPtr == this.curLimit)
+                        this.curPtr = 0;
+                    break;
+
+                case 0x22e:
+                    this.curZone = (data & 0xff) == 0x80 ? this.ram : this.rom;
+                    this.ptrCurZone = (data & 0xff) == 0x80 ? 0 : (0x20000 * data);
+                    this.curLimit = (data & 0xff) == 0x80 ? 0x4000 : 0x20000;
+                    this.curPtr = 0;
+                    break;
+
+                        /*case 0x22f:
+                            if (!(data & 0x20)) // Disable timer output?
+                            {
+                                m_timer_state = 0;
+                                m_timer_handler(m_timer_state);
+                            }
+                        break;*/
+
+                default:
+                    //#if 0
+                    //   if(regbase[offset] != data) {
+                    //    if((offset & 0xff00) == 0) {
+                    //     chanoff = offset & 0x1f;
+                    //     if(chanoff < 4 || chanoff == 5 ||
+                    //        (chanoff >=8 && chanoff <= 0xa) ||
+                    //        (chanoff >= 0xc && chanoff <= 0xe))
+                    //      break;
+                    //    }
+                    //    if(1 || ((offset >= 0x200) && (offset <= 0x210)))
+                    //     break;
+                    //    logerror("K054539 %03x = %02x\n", offset, data);
+                    //   }
+                    //#endif
+                    break;
+                }
+
+            regbase[offset] = data;
+        }
+
+        public byte write(int offset) {
+            switch (offset) {
+            case 0x22d:
+                if ((this.regs[0x22f] & 0x10) != 0) {
+                    byte res = this.curZone[this.ptrCurZone + this.curPtr];
+                    this.curPtr++;
+                    if (this.curPtr == this.curLimit)
+                        this.curPtr = 0;
+                    return res;
+                } else
+                    return 0;
+            case 0x22c:
+                break;
+            default:
+                //LOG(("K054539 read %03x\n", offset));
+                break;
+            }
+            return this.regs[offset];
+        }
+
+        private int device_start(int clock) {
+
+            for (int i = 0; i < 8; i++)
+                this.gain[i] = 1.0;
+            this.flags = K054539State.RESET_FLAGS;
+
+            //this.intf = (device.static_config() != NULL) ? (final k054539_interface *)device.static_config() : &defintrf;
+
+                /*
+                    I've tried various equations on volume control but none worked consistently.
+                    The upper four channels in most MW/GX games simply need a significant boost
+                    to Sound right. For example, the bass and smash Sound volumes in Violent Storm
+                    have roughly the same values and the voices in Tokimeki Puzzledama are given
+                    values smaller than those of the hihats. Needless to say the two K054539 chips
+                    in Mystic Warriors are completely out of balance. Rather than forcing a
+                    "one size fits all" function to the voltab the current invert exponential
+                    appraoch seems most appropriate.
+                */
+            // Factor the 1/4 for the number of channels in the volume (1/8 is too harsh, 1/2 gives clipping)
+            // vol=0 . no attenuation, vol=0x40 . -36dB
+            for (int i = 0; i < 256; i++)
+                this.voltab[i] = Math.pow(10.0, (-36.0 * (double) i / (double) 0x40) / 20.0) / 4.0;
+
+            // Pan table for the left channel
+            // Right channel is identical with inverted index
+            // Formula is such that pan[i]**2+pan[0xe-i]**2 = 1 (constant output power)
+            // and pan[0xe] = 1 (full panning)
+            for (int i = 0; i < 0xf; i++)
+                this.pantab[i] = Math.sqrt((double) i) / Math.sqrt((double) 0xe);
+
+            //k054539_init_chip(device, info);
+
+            //device.machine().save().register_postload(save_prepost_delegate(FUNC(reset_zones), info));
+
+            for (int i = 0; i < 8; i++)
+                this.muted[i] = 0x00;
+
+            return this.init(clock);
+        }
+
+        private void stop() {
+            this.rom = null;
+            this.ram = null;
+        }
+
+        private void reset() {
+            Arrays.fill(this.regs, (byte) 0);
+            for (byte[] k054539PosregLatch : this.posreg_latch) {
+                Arrays.fill(k054539PosregLatch, (byte) 0);
+            }
+            //this.k054539_flags |= K054539_UPDATE_AT_KEYON;
+
+            this.reverbPos = 0;
+            this.curPtr = 0;
+            for (int i = 0; i < 0x4000; i++) {
+                this.ram[i] = 0;
+            }
+        }
+
+        private void writeRom(int romSize, int dataStart, int dataLength, byte[] romData) {
+            if (this.rom_size != romSize) {
+                byte i;
+
+                this.rom = new byte[romSize];
+                this.rom_size = romSize;
+                for (i = 0; i < romSize; i++) {
+                    this.rom[i] = (byte) 0xff;
+                }
+
+                this.rom_mask = 0xFFFFFFFF;
+                for (i = 0; i < 32; i++) {
+                    if ((1 << i) >= this.rom_size) {
+                        this.rom_mask = (1 << i) - 1;
+                        break;
+                    }
+                }
+            }
+            if (dataStart > romSize)
+                return;
+            if (dataStart + dataLength > romSize)
+                dataLength = romSize - dataStart;
+
+            if (dataLength >= 0) System.arraycopy(romData, 0, this.rom, dataStart, dataLength);
+        }
+
+        public void writeRom2(int romSize, int dataStart, int dataLength, byte[] romData, int startAdr) {
+            if (this.rom_size != romSize) {
+                byte i;
+
+                this.rom = new byte[romSize];
+                this.rom_size = romSize;
+                for (int ind = 0; ind < romSize; ind++) {
+                    this.rom[ind] = (byte) 0xff;
+                }
+
+                this.rom_mask = 0xFFFFFFFF;
+                for (i = 0; i < 32; i++) {
+                    if ((1 << i) >= this.rom_size) {
+                        this.rom_mask = (1 << i) - 1;
+                        break;
+                    }
+                }
+            }
+            if (dataStart > romSize)
+                return;
+            if (dataStart + dataLength > romSize)
+                dataLength = romSize - dataStart;
+
+            if (dataLength >= 0) System.arraycopy(romData, startAdr, this.rom, dataStart, dataLength);
+        }
+
+        private void update(int[][] outputs, int samples) {
             final double VOL_CAP = 1.80;
 
-            short[] dpcm = new short[]{
-                0<<8, 1<<8, 4<<8, 9<<8, 16<<8, 25<<8, 36<<8, 49<<8,
-                -64<<8, -49<<8, -36<<8, -25<<8, -16<<8, -9<<8, -4<<8, -1<<8
+            final short[] dpcm = new short[] {
+                    0 << 8, 1 << 8, 4 << 8, 9 << 8, 16 << 8, 25 << 8, 36 << 8, 49 << 8,
+                    -64 << 8, -49 << 8, -36 << 8, -25 << 8, -16 << 8, -9 << 8, -4 << 8, -1 << 8
             };
 
-            byte[] rbase = info.ram;//caution original INT16*
+            byte[] rbase = this.ram;
             byte[] rom;
             int rom_mask;
             int i, ch;
             double lval, rval;
             byte[] base1, base2;
             int ptrBase1, ptrBase2;
-            k054539_channel[] chan;
+            Channel[] chan;
             int ptrChan;
             int delta, vol, bval, pan;
             double cur_gain, lvol, rvol, rbvol;
@@ -242,51 +473,46 @@ public class K054539 extends Instrument
             int fdelta, pdelta;
             int cur_pfrac, cur_val, cur_pval;
 
-            for (i = 0; i < samples; i++)
-            {
+            for (i = 0; i < samples; i++) {
                 outputs[0][i] = 0;
                 outputs[1][i] = 0;
             }
 
-            if ((info.regs[0x22f] & 1) == 0) //Enable PCM
+            if ((this.regs[0x22f] & 1) == 0) // Enable PCM
                 return;
 
-            rom = info.rom;
-            rom_mask = info.rom_mask;
+            rom = this.rom;
+            rom_mask = this.rom_mask;
 
-            for (i = 0; i != samples; i++)
-            {
-                //リバーブ
-                if ((info.k054539_flags & K054539_DISABLE_REVERB) == 0)
-                {
-                    //lval = rval = rbase[info.reverb_pos];
-                    short val = (short)(rbase[info.reverb_pos * 2] + rbase[info.reverb_pos * 2 + 1] * 0x100);
+            for (i = 0; i != samples; i++) {
+                // リバーブ
+                if ((this.flags & K054539State.DISABLE_REVERB) == 0) {
+                    //lval = rval = rbase[this.reverb_pos];
+                    short val = (short) (rbase[this.reverbPos * 2] + rbase[this.reverbPos * 2 + 1] * 0x100);
                     lval = rval = val;
-                }
-                else
+                } else
                     lval = rval = 0;
-                //rbase[info.reverb_pos] = 0;
-                //System.err.printf("rbase[info.reverb_pos({0})] = {1} \n", info.reverb_pos, lval);
-                rbase[info.reverb_pos * 2] = 0;
-                rbase[info.reverb_pos * 2 + 1] = 0;
+                //rbase[this.reverb_pos] = 0;
+                //System.err.printf("rbase[this.reverb_pos(%d)] = %d \n", this.reverb_pos, lval);
+                rbase[this.reverbPos * 2] = 0;
+                rbase[this.reverbPos * 2 + 1] = 0;
 
 
                 for (ch = 0; ch < 8; ch++)
-                    if (((info.regs[0x22c] & (1 << ch)) != 0) && info.Muted[ch] == 0)//0x22c ChannelActive
-                    {
-                        base1 = info.regs;
+                    if (((this.regs[0x22c] & (1 << ch)) != 0) && this.muted[ch] == 0) { // 0x22c ChannelActive
+                        base1 = this.regs;
                         ptrBase1 = 0x20 * ch;
-                        base2 = info.regs;
+                        base2 = this.regs;
                         ptrBase2 = 0x200 + 0x2 * ch;
-                        chan = info.channels;
+                        chan = this.channels;
                         ptrChan = ch;
 
-                        //pitch
+                        // pitch
                         delta = base1[ptrBase1 + 0x00] | (base1[ptrBase1 + 0x01] << 8) | (base1[ptrBase1 + 0x02] << 16);
 
                         vol = base1[ptrBase1 + 0x03];
 
-                        //0x04 reverb vol
+                        // 0x04 Reverb vol
                         bval = vol + base1[ptrBase1 + 0x04];
                         if (bval > 255)
                             bval = 255;
@@ -300,631 +526,268 @@ public class K054539 extends Instrument
                         else
                             pan = 0x18 - 0x11;
 
-                        cur_gain = info.k054539_gain[ch];
+                        cur_gain = this.gain[ch];
 
-                        lvol = info.voltab[vol] * info.pantab[pan] * cur_gain;
+                        lvol = this.voltab[vol] * this.pantab[pan] * cur_gain;
                         if (lvol > VOL_CAP)
                             lvol = VOL_CAP;
 
-                        rvol = info.voltab[vol] * info.pantab[0xe - pan] * cur_gain;
+                        rvol = this.voltab[vol] * this.pantab[0xe - pan] * cur_gain;
                         if (rvol > VOL_CAP)
                             rvol = VOL_CAP;
 
-                        rbvol = info.voltab[bval] * cur_gain / 2;
+                        rbvol = this.voltab[bval] * cur_gain / 2;
                         if (rbvol > VOL_CAP)
                             rbvol = VOL_CAP;
 
-                        //System.err.printf("ch={0} lvol={1} rvol={2}\n", ch, lvol, rvol);
+                        //System.err.printf("ch=%d lvol=%d rvol=%d\n", ch, lvol, rvol);
 
                         rdelta = (base1[ptrBase1 + 6] | (base1[ptrBase1 + 7] << 8)) >> 3;
-                        rdelta = (rdelta + info.reverb_pos) & 0x3fff;
+                        rdelta = (rdelta + this.reverbPos) & 0x3fff;
 
-                        cur_pos = (int)((base1[ptrBase1 + 0x0c] | (base1[ptrBase1 + 0x0d] << 8) | (base1[ptrBase1 + 0x0e] << 16)) & rom_mask);
+                        cur_pos = (int) ((base1[ptrBase1 + 0x0c] | (base1[ptrBase1 + 0x0d] << 8) | (base1[ptrBase1 + 0x0e] << 16)) & rom_mask);
 
-                        if ((base2[ptrBase2 + 0] & 0x20) != 0)
-                        {
+                        if ((base2[ptrBase2 + 0] & 0x20) != 0) {
                             delta = -delta;
                             fdelta = +0x10000;
                             pdelta = -1;
-                        }
-                        else
-                        {
+                        } else {
                             fdelta = -0x10000;
                             pdelta = +1;
                         }
 
-                        if (cur_pos != chan[ptrChan].pos)
-                        {
+                        if (cur_pos != chan[ptrChan].pos) {
                             chan[ptrChan].pos = cur_pos;
                             cur_pfrac = 0;
                             cur_val = 0;
                             cur_pval = 0;
-                        }
-                        else
-                        {
-                            cur_pfrac = (int)chan[ptrChan].pfrac;
+                        } else {
+                            cur_pfrac = (int) chan[ptrChan].pfrac;
                             cur_val = chan[ptrChan].val;
                             cur_pval = chan[ptrChan].pval;
                         }
 
-                        switch (base2[ptrBase2 + 0] & 0xc)
-                        {
-                            case 0x0:
-                                { // 8bit pcm
-                                    cur_pfrac += delta;
-                                    while ((cur_pfrac & ~0xffff) != 0)
-                                    {
-                                        cur_pfrac += fdelta;
-                                        cur_pos += (int)pdelta;
+                        switch (base2[ptrBase2 + 0] & 0xc) {
+                        case 0x0: { // 8bit pcm
+                            cur_pfrac += delta;
+                            while ((cur_pfrac & ~0xffff) != 0) {
+                                cur_pfrac += fdelta;
+                                cur_pos += pdelta;
 
-                                        cur_pval = cur_val;
-                                        cur_val = (short)(rom[cur_pos] << 8);
-                                        //if(cur_val == (INT16)0x8000 && (base2[1] & 1))
-                                        if (rom[cur_pos] == 0x80 && (base2[ptrBase2 + 1] & 1) != 0)
-                                        {
-                                            cur_pos = (int)((base1[ptrBase1 + 0x08] | (base1[ptrBase1 + 0x09] << 8) | (base1[ptrBase1 + 0x0a] << 16)) & rom_mask);
-                                            cur_val = (short)(rom[cur_pos] << 8);
-                                        }
-                                        //if(cur_val == (INT16)0x8000)
-                                        if (rom[cur_pos] == 0x80)
-                                            {
-                                                k054539_keyoff(info, ch);
-                                            cur_val = 0;
-                                            break;
-                                        }
-                                    }
-                                    //System.err.printf("ch={0} cur_pos={1} cur_val={2}\n", ch, cur_pos, cur_val);
-                                    //if(ch!=6) cur_val = 0;
+                                cur_pval = cur_val;
+                                cur_val = (short) (rom[cur_pos] << 8);
+                                //if(cur_val == (INT16)0x8000 && (base2[1] & 1))
+                                if ((rom[cur_pos] & 0xff) == 0x80 && (base2[ptrBase2 + 1] & 1) != 0) {
+                                    cur_pos = (base1[ptrBase1 + 0x08] | (base1[ptrBase1 + 0x09] << 8) | (base1[ptrBase1 + 0x0a] << 16)) & rom_mask;
+                                    cur_val = (short) (rom[cur_pos] << 8);
+                                }
+                                //if(cur_val == (INT16)0x8000)
+                                if ((rom[cur_pos] & 0xff) == 0x80) {
+                                    this.keyOff(ch);
+                                    cur_val = 0;
                                     break;
                                 }
+                            }
+                            //System.err.printf("ch=%d cur_pos=%d cur_val=%d\n", ch, cur_pos, cur_val);
+                            //if(ch!=6) cur_val = 0;
+                            break;
+                        }
 
-                            case 0x4:
-                                { // 16bit pcm lsb first
-                                    pdelta <<= 1;
+                        case 0x4: { // 16bit pcm lsb first
+                            pdelta <<= 1;
 
-                                    cur_pfrac += delta;
-                                    while ((cur_pfrac & ~0xffff) != 0)
-                                    {
-                                        cur_pfrac += fdelta;
-                                        cur_pos += (int)pdelta;
+                            cur_pfrac += delta;
+                            while ((cur_pfrac & ~0xffff) != 0) {
+                                cur_pfrac += fdelta;
+                                cur_pos += pdelta;
 
-                                        cur_pval = cur_val;
-                                        cur_val = (short)(rom[cur_pos] | rom[cur_pos + 1] << 8);
-                                        if (cur_val == (short)(0x8000-0x10000) && (base2[ptrBase2 + 1] & 1) != 0)
-                                        {
-                                            cur_pos = (int)((base1[ptrBase1 + 0x08] | (base1[ptrBase1 + 0x09] << 8) | (base1[ptrBase1 + 0x0a] << 16)) & rom_mask);
-                                            cur_val = (short)(rom[cur_pos] | rom[cur_pos + 1] << 8);
-                                        }
-                                        if (cur_val == (short)(0x8000-0x10000))
-                                        {
-                                            k054539_keyoff(info, ch);
-                                            cur_val = 0;
-                                            break;
-                                        }
-                                    }
-                                    //cur_val = 0;
+                                cur_pval = cur_val;
+                                cur_val = (short) (rom[cur_pos] | rom[cur_pos + 1] << 8);
+                                if (cur_val == (short) (0x8000 - 0x10000) && (base2[ptrBase2 + 1] & 1) != 0) {
+                                    cur_pos = (int) ((base1[ptrBase1 + 0x08] | (base1[ptrBase1 + 0x09] << 8) | (base1[ptrBase1 + 0x0a] << 16)) & rom_mask);
+                                    cur_val = (short) (rom[cur_pos] | rom[cur_pos + 1] << 8);
+                                }
+                                if (cur_val == (short) (0x8000 - 0x10000)) {
+                                    this.keyOff(ch);
+                                    cur_val = 0;
                                     break;
                                 }
+                            }
+                            //cur_val = 0;
+                            break;
+                        }
 
-                            case 0x8:
-                                { // 4bit dpcm
-                                    cur_pos <<= 1;
-                                    cur_pfrac <<= 1;
-                                    if ((cur_pfrac & 0x10000) != 0)
-                                    {
-                                        cur_pfrac &= 0xffff;
-                                        cur_pos |= 1;
-                                    }
+                        case 0x8: { // 4bit dpcm
+                            cur_pos <<= 1;
+                            cur_pfrac <<= 1;
+                            if ((cur_pfrac & 0x10000) != 0) {
+                                cur_pfrac &= 0xffff;
+                                cur_pos |= 1;
+                            }
 
-                                    cur_pfrac += delta;
-                                    while ((cur_pfrac & ~0xffff) != 0)
-                                    {
-                                        cur_pfrac += fdelta;
-                                        cur_pos += (int)pdelta;
+                            cur_pfrac += delta;
+                            while ((cur_pfrac & ~0xffff) != 0) {
+                                cur_pfrac += fdelta;
+                                cur_pos += pdelta;
 
-                                        cur_pval = cur_val;
-                                        cur_val = rom[cur_pos >> 1];
-                                        if (cur_val == 0x88 && (base2[ptrBase2 + 1] & 1) != 0)
-                                        {
-                                            cur_pos = (int)((base1[ptrBase1 + 0x08] | (base1[ptrBase1 + 0x09] << 8) | (base1[ptrBase1 + 0x0a] << 16)) & rom_mask) << 1;
-                                            cur_val = rom[cur_pos >> 1];
-                                        }
-                                        if (cur_val == 0x88)
-                                        {
-                                            k054539_keyoff(info, ch);
-                                            cur_val = 0;
-                                            break;
-                                        }
-                                        if ((cur_pos & 1) != 0)
-                                            cur_val >>= 4;
-                                        else
-                                            cur_val &= 15;
-                                        cur_val = cur_pval + dpcm[cur_val];
-                                        if (cur_val < -32768)
-                                            cur_val = -32768;
-                                        else if (cur_val > 32767)
-                                            cur_val = 32767;
-                                    }
-
-                                    cur_pfrac >>= 1;
-                                    if ((cur_pos & 1) != 0)
-                                        cur_pfrac |= 0x8000;
-                                    cur_pos >>= 1;
-                                    //cur_val = 0;
+                                cur_pval = cur_val;
+                                cur_val = rom[cur_pos >> 1];
+                                if ((cur_val & 0xff) == 0x88 && (base2[ptrBase2 + 1] & 1) != 0) {
+                                    cur_pos = ((base1[ptrBase1 + 0x08] | (base1[ptrBase1 + 0x09] << 8) | (base1[ptrBase1 + 0x0a] << 16)) & rom_mask) << 1;
+                                    cur_val = rom[cur_pos >> 1];
+                                }
+                                if ((cur_val & 0xff) == 0x88) {
+                                    this.keyOff(ch);
+                                    cur_val = 0;
                                     break;
                                 }
-                            default:
-                                //LOG(("Unknown sample type %x for channel %d\n", base2[0] & 0xc, ch));
-                                break;
+                                if ((cur_pos & 1) != 0)
+                                    cur_val >>= 4;
+                                else
+                                    cur_val &= 15;
+                                cur_val = cur_pval + dpcm[cur_val];
+                                if (cur_val < -32768)
+                                    cur_val = -32768;
+                                else if (cur_val > 32767)
+                                    cur_val = 32767;
+                            }
+
+                            cur_pfrac >>= 1;
+                            if ((cur_pos & 1) != 0)
+                                cur_pfrac |= 0x8000;
+                            cur_pos >>= 1;
+                            //cur_val = 0;
+                            break;
+                        }
+                        default:
+                            //System.err.prtinf(("Unknown sample type %x for channel %d\n", base2[0] & 0xc, ch));
+                            break;
                         }
                         lval += cur_val * lvol;
                         rval += cur_val * rvol;
-                        //if (ch == 6)
-                        //{
+                        //if (ch == 6) {
                         //    System.err.printf("ch={0} lval={1}\n", ch, lval);
                         //}
-                        int ptr = (rdelta + info.reverb_pos) & 0x1fff;
-                        short valu = (short)(rbase[ptr * 2] + rbase[ptr * 2 + 1] * 0x100);
-                        valu += (short)(cur_val * rbvol);
-                        rbase[ptr * 2] = (byte)(valu & 0xff);
-                        rbase[ptr * 2 + 1] = (byte)((valu & 0xff00) >> 8);
+                        int ptr = (rdelta + this.reverbPos) & 0x1fff;
+                        short valu = (short) (rbase[ptr * 2] + rbase[ptr * 2 + 1] * 0x100);
+                        valu += (short) (cur_val * rbvol);
+                        rbase[ptr * 2] = (byte) (valu & 0xff);
+                        rbase[ptr * 2 + 1] = (byte) ((valu & 0xff00) >> 8);
 
                         chan[ptrChan].pos = cur_pos;
-                        chan[ptrChan].pfrac = (int)cur_pfrac;
+                        chan[ptrChan].pfrac = (int) cur_pfrac;
                         chan[ptrChan].pval = cur_pval;
                         chan[ptrChan].val = cur_val;
 
-                        if (k054539_regupdate(info) == 0)
-                        {
-                            base1[ptrBase1 + 0x0c] = (byte)(cur_pos & 0xff);
-                            base1[ptrBase1 + 0x0d] = (byte)((cur_pos >> 8) & 0xff);
-                            base1[ptrBase1 + 0x0e] = (byte)((cur_pos >> 16) & 0xff);
+                        if (this.updateReg() == 0) {
+                            base1[ptrBase1 + 0x0c] = (byte) (cur_pos & 0xff);
+                            base1[ptrBase1 + 0x0d] = (byte) ((cur_pos >> 8) & 0xff);
+                            base1[ptrBase1 + 0x0e] = (byte) ((cur_pos >> 16) & 0xff);
                         }
                     }
-                info.reverb_pos = (info.reverb_pos + 1) & 0x1fff;
-                outputs[0][i] = (int)lval;
-                outputs[1][i] = (int)rval;
+                this.reverbPos = (this.reverbPos + 1) & 0x1fff;
+                outputs[0][i] = (int) lval;
+                outputs[1][i] = (int) rval;
                 outputs[0][i] <<= 1;
                 outputs[1][i] <<= 1;
-                //System.err.printf( "outputs[0][i] = {0}\n", outputs[0][i]);
-
+                //System.err.printf( "outputs[0][i] = %d\n", outputs[0][i]);
             }
         }
 
-
-        /*static TIMER_CALLBACK( k054539_irq )
-        {
-            k054539_state *info = (k054539_state *)ptr;
-            if(info.regs[0x22f] & 0x20)
-                info.intf.irq(info.device);
-        }*/
-
-        //static void k054539_init_chip(device_t *device, k054539_state *info)
-        private static int k054539_init_chip(k054539_state info, int clock)
-        {
-            //int i;
-
-            if (clock < 1000000)    // if < 1 MHz, then it's the sample rate, not the clock
-                clock *= 384;   // (for backwards compatibility with old VGM logs)
-            info.clock = clock;
-            // most of these are done in device_reset
-            // memset(info.regs, 0, sizeof(info.regs));
-            // memset(info.k054539_posreg_latch, 0, sizeof(info.k054539_posreg_latch)); //*
-            info.k054539_flags |= K054539_UPDATE_AT_KEYON; //* make it default until proven otherwise
-
-            info.ram = new byte[0x4000];
-            // info.reverb_pos = 0;
-            // info.cur_ptr = 0;
-            // memset(info.ram, 0, 0x4000);
-
-            /*final memory_region *region = (info.intf.rgn@Override != NULL) ? device.machine().region(info.intf.rgnoverride) : device.region();
-            info.rom = *region;
-            info.rom_size = region.bytes();
-            info.rom_mask = 0xffffffffU;
-            for(i=0; i<32; i++)
-                if((1U<<i) >= info.rom_size) {
-                    info.rom_mask = (1U<<i) - 1;
-                    break;
-                }*/
-            info.rom = null;
-            info.rom_size = 0;
-            info.rom_mask = 0x00;
-
-            //if(info.intf.irq)
-            // One or more of the registers must be the timer period
-            // And anyway, this particular frequency is probably wrong
-            // 480 hz is TRUSTED by gokuparo disco stage - the looping sample doesn't line up otherwise
-            // device.machine().scheduler().timer_pulse(attotime::from_hz(480), FUNC(k054539_irq), 0, info);
-
-            //info.stream = device.machine().sound().stream_alloc(*device, 0, 2, device.clock() / 384, info, k054539_update);
-
-            //device.save_item(NAME(info.regs));
-            //device.save_pointer(NAME(info.ram), 0x4000);
-            //device.save_item(NAME(info.cur_ptr));
-
-            return info.clock / 384;
+        public void setMuteMask(int muteMask) {
+            for (byte curChn = 0; curChn < 8; curChn++)
+                this.muted[curChn] = (byte) ((muteMask >> curChn) & 0x01);
         }
+    }
 
-        //WRITE8_DEVICE_HANDLER( k054539_w )
-        private void k054539_w(byte ChipID, int offset, byte data)
-        {
-            //k054539_state *info = get_safe_token(device);
-            k054539_state info = K054539Data[ChipID];
+    private static final int MAX_CHIPS = 0x02;
+    private static K054539State[] k054539Data = new K054539State[] {new K054539State(), new K054539State()};
 
-            //#if 0
-            // int voice, reg;
+    @Override
+    public String getName() {
+        return "K054539";
+    }
 
-            // /* The K054539 has behavior like many other wavetable chips including
-            //       the Ensoniq 550x and Gravis GF-1: if a voice is active, writing
-            //       to it's current position is silently ignored.
+    @Override
+    public String getShortName() {
+        return "K054";
+    }
 
-            //       Dadandaan depends on this or the vocals go wrong.
-            //       */
-            // if (offset < 8*0x20)
-            // {
-            //  voice = offset / 0x20;
-            //  reg = offset & ~0x20;
+    public void k054539_init_flags(byte chipID, int flags) {
+        K054539State info = k054539Data[chipID];
+        info.flags = flags;
+    }
 
-            //  if(info.regs[0x22c] & (1<<voice))
-            //  {
-            //   if (reg >= 0xc && reg <= 0xe)
-            //    return;
-            //  }
-            // }
-            //#endif
+    public void k054539_set_gain(byte chipID, int channel, double gain) {
+        K054539State info = k054539Data[chipID];
+        if (gain >= 0) info.gain[channel] = gain;
+    }
 
-            boolean latch;
-            int offs, ch, pan;
-            byte[] regbase;
-            int regptr;
+    private void k054539_update(byte chipID, int[][] outputs, int samples) {
+        K054539State info = k054539Data[chipID];
+        info.update(outputs, samples);
+    }
 
-            regbase = info.regs;
-            latch = (info.k054539_flags & K054539_UPDATE_AT_KEYON) != 0 && (regbase[0x22f] & 1) != 0;
-            //System.err.printf("latch = {0} \n", latch);
+    private void k054539_w(byte chipID, int offset, byte data) {
+        K054539State info = k054539Data[chipID];
+        info.write(offset, data);
+    }
 
-            if (latch && offset < 0x100)
-            {
-                offs = (offset & 0x1f) - 0xc;
-                ch = offset >> 5;
+    public byte k054539_r(byte chipID, int offset) {
+        K054539State info = k054539Data[chipID];
+        return info.write(offset);
+    }
 
-                if (offs >= 0 && offs <= 2)
-                {
-                    // latch writes to the position index registers
-                    info.k054539_posreg_latch[ch][offs] = data;
-                    //System.err.printf("info.k054539_posreg_latch[{0}][{1}] = {2} \n", ch, offs, data);
-                    return;
-                }
-            }
-
-            else
-                switch (offset)
-                {
-                    case 0x13f:
-                        pan = (data >= 0x11 && data <= 0x1f) ? data - 0x11 : 0x18 - 0x11;
-                        //if(info.intf.apan)
-                        // info.intf.apan(info.device, info.pantab[pan], info.pantab[0xe - pan]);
-                        break;
-
-                    case 0x214:
-                        if (latch)
-                        {
-                            for (ch = 0; ch < 8; ch++)
-                            {
-                                if ((data & (1 << ch)) != 0)
-                                {
-                                    regptr = (ch << 5) + 0xc;
-
-                                    // update the chip at key-on
-                                    regbase[regptr + 0] = info.k054539_posreg_latch[ch][0];
-                                    regbase[regptr + 1] = info.k054539_posreg_latch[ch][1];
-                                    regbase[regptr + 2] = info.k054539_posreg_latch[ch][2];
-
-                                    k054539_keyon(info, ch);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            for (ch = 0; ch < 8; ch++)
-                                if ((data & (1 << ch)) != 0)
-                                    k054539_keyon(info, ch);
-                        }
-                        break;
-
-                    case 0x215:
-                        for (ch = 0; ch < 8; ch++)
-                            if ((data & (1 << ch)) != 0)
-                                k054539_keyoff(info, ch);
-                        break;
-
-                    /*case 0x227:
-                    {
-                        attotime period = attotime::from_hz((float)(38 + data) * (clock()/384.0f/14400.0f)) / 2.0f;
-
-                        m_timer.adjust(period, 0, period);
-
-                        m_timer_state = 0;
-                        m_timer_handler(m_timer_state);
-                    }*/
-                    //break;
-
-                    case 0x22d:
-                        if (regbase[0x22e] == 0x80)
-                            info.cur_zone[info.ptrCur_zone + info.cur_ptr] = data;
-                        info.cur_ptr++;
-                        if (info.cur_ptr == info.cur_limit)
-                            info.cur_ptr = 0;
-                        break;
-
-                    case 0x22e:
-                        info.cur_zone =
-                            data == 0x80 ? info.ram : info.rom;
-                        info.ptrCur_zone =
-                            data == 0x80 ? 0 : (0x20000 * data);
-                        info.cur_limit = data == 0x80 ? 0x4000 : 0x20000;
-                        info.cur_ptr = 0;
-                        break;
-
-                    /*case 0x22f:
-                        if (!(data & 0x20)) // Disable timer output?
-                        {
-                            m_timer_state = 0;
-                            m_timer_handler(m_timer_state);
-                        }
-                    break;*/
-
-                    default:
-                        //#if 0
-                        //   if(regbase[offset] != data) {
-                        //    if((offset & 0xff00) == 0) {
-                        //     chanoff = offset & 0x1f;
-                        //     if(chanoff < 4 || chanoff == 5 ||
-                        //        (chanoff >=8 && chanoff <= 0xa) ||
-                        //        (chanoff >= 0xc && chanoff <= 0xe))
-                        //      break;
-                        //    }
-                        //    if(1 || ((offset >= 0x200) && (offset <= 0x210)))
-                        //     break;
-                        //    logerror("K054539 %03x = %02x\n", offset, data);
-                        //   }
-                        //#endif
-                        break;
-                }
-
-            regbase[offset] = data;
-        }
-
-        private static void reset_zones(k054539_state info)
-        {
-            int data = info.regs[0x22e];
-            info.cur_zone = data == 0x80 ? info.ram : info.rom;
-            info.ptrCur_zone = data == 0x80 ? 0 : (0x20000 * data);
-            info.cur_limit = data == 0x80 ? 0x4000 : 0x20000;
-        }
-
-        //READ8_DEVICE_HANDLER( k054539_r )
-        public byte k054539_r(byte ChipID, int offset)
-        {
-            //k054539_state *info = get_safe_token(device);
-            k054539_state info = K054539Data[ChipID];
-            switch (offset)
-            {
-                case 0x22d:
-                    if ((info.regs[0x22f] & 0x10) != 0)
-                    {
-                        byte res = info.cur_zone[info.ptrCur_zone + info.cur_ptr];
-                        info.cur_ptr++;
-                        if (info.cur_ptr == info.cur_limit)
-                            info.cur_ptr = 0;
-                        return res;
-                    }
-                    else
-                        return 0;
-                case 0x22c:
-                    break;
-                default:
-                    //LOG(("K054539 read %03x\n", offset));
-                    break;
-            }
-            return info.regs[offset];
-        }
-
-        //static DEVICE_START( k054539 )
-        private int device_start_k054539(byte ChipID, int clock)
-        {
-            //static final k054539_interface defintrf = { 0 };
-            int i;
-            //k054539_state *info = get_safe_token(device);
-            k054539_state info;
-
-            if (ChipID >= MAX_CHIPS)
-                return 0;
-
-            info = K054539Data[ChipID];
-            //info.device = device;
-
-            for (i = 0; i < 8; i++)
-                info.k054539_gain[i] = 1.0;
-            info.k054539_flags = K054539_RESET_FLAGS;
-
-            //info.intf = (device.static_config() != NULL) ? (final k054539_interface *)device.static_config() : &defintrf;
-
-            /*
-                I've tried various equations on volume control but none worked consistently.
-                The upper four channels in most MW/GX games simply need a significant boost
-                to sound right. For example, the bass and smash sound volumes in Violent Storm
-                have roughly the same values and the voices in Tokimeki Puzzledama are given
-                values smaller than those of the hihats. Needless to say the two K054539 chips
-                in Mystic Warriors are completely out of balance. Rather than forcing a
-                "one size fits all" function to the voltab the current invert exponential
-                appraoch seems most appropriate.
-            */
-            // Factor the 1/4 for the number of channels in the volume (1/8 is too harsh, 1/2 gives clipping)
-            // vol=0 . no attenuation, vol=0x40 . -36dB
-            for (i = 0; i < 256; i++)
-                info.voltab[i] = Math.pow(10.0, (-36.0 * (double)i / (double)0x40) / 20.0) / 4.0;
-
-            // Pan table for the left channel
-            // Right channel is identical with inverted index
-            // Formula is such that pan[i]**2+pan[0xe-i]**2 = 1 (constant output power)
-            // and pan[0xe] = 1 (full panning)
-            for (i = 0; i < 0xf; i++)
-                info.pantab[i] = Math.sqrt((double)i) / Math.sqrt((double)0xe);
-
-            //k054539_init_chip(device, info);
-
-            //device.machine().save().register_postload(save_prepost_delegate(FUNC(reset_zones), info));
-
-            for (i = 0; i < 8; i++)
-                info.Muted[i] = 0x00;
-
-            return k054539_init_chip(info, clock);
-        }
-
-        private void device_stop_k054539(byte ChipID)
-        {
-            k054539_state info = K054539Data[ChipID];
-
-            info.rom = null;
-            info.ram = null;
-
-            return;
-        }
-
-        private void device_reset_k054539(byte ChipID)
-        {
-            k054539_state info = K054539Data[ChipID];
-
-            for (int i = 0; i < info.regs.length; i++)
-            {
-                info.regs[i] = 0;
-            }
-            for (int i = 0; i < info.k054539_posreg_latch.length; i++)
-            {
-                for (int j = 0; j < info.k054539_posreg_latch[i].length; j++)
-                    info.k054539_posreg_latch[i][j] = 0;
-            }
-            //info.k054539_flags |= K054539_UPDATE_AT_KEYON;
-
-            info.reverb_pos = 0;
-            info.cur_ptr = 0;
-            for (int i = 0; i < 0x4000; i++)
-            {
-                info.ram[i] = 0;
-            }
-
-            return;
-        }
-
-        private void k054539_write_rom(byte ChipID, int ROMSize, int DataStart, int DataLength,
-                               byte[] ROMData)
-        {
-            k054539_state info = K054539Data[ChipID];
-
-            if (info.rom_size != ROMSize)
-            {
-                byte i;
-
-                info.rom = new byte[ROMSize];
-                info.rom_size = (int)ROMSize;
-                for (i = 0; i < ROMSize; i++)
-                {
-                    info.rom[i] = (byte) 0xff;
-                }
-
-                info.rom_mask = 0xFFFFFFFF;
-                for (i = 0; i < 32; i++)
-                {
-                    if ((1 << i) >= info.rom_size)
-                    {
-                        info.rom_mask = (int)((1 << i) - 1);
-                        break;
-                    }
-                }
-            }
-            if (DataStart > ROMSize)
-                return;
-            if (DataStart + DataLength > ROMSize)
-                DataLength = ROMSize - DataStart;
-
-            for (int j = 0; j < DataLength; j++)
-            {
-                info.rom[DataStart + j] = ROMData[j];
-            }
-
-            return;
-        }
-
-        public void k054539_write_rom2(byte ChipID, int ROMSize, int DataStart, int DataLength,
-                               byte[] ROMData,int startAdr)
-        {
-            k054539_state info = K054539Data[ChipID];
-
-            if (info.rom_size != ROMSize)
-            {
-                byte i;
-
-                info.rom = new byte[ROMSize];
-                info.rom_size = (int)ROMSize;
-                for (int ind = 0; ind < ROMSize; ind++)
-                {
-                    info.rom[ind] = (byte) 0xff;
-                }
-
-                info.rom_mask = 0xFFFFFFFF;
-                for (i = 0; i < 32; i++)
-                {
-                    if ((1 << i) >= info.rom_size)
-                    {
-                        info.rom_mask = (int)((1 << i) - 1);
-                        break;
-                    }
-                }
-            }
-            if (DataStart > ROMSize)
-                return;
-            if (DataStart + DataLength > ROMSize)
-                DataLength = ROMSize - DataStart;
-
-            for (int j = 0; j < DataLength; j++)
-            {
-                info.rom[DataStart + j] = ROMData[startAdr+ j];
-            }
-
-            return;
-        }
-
-
-        public void k054539_set_mute_mask(byte ChipID, int MuteMask)
-        {
-            k054539_state info = K054539Data[ChipID];
-            byte CurChn;
-
-            for (CurChn = 0; CurChn < 8; CurChn++)
-                info.Muted[CurChn] = (byte)((MuteMask >> CurChn) & 0x01);
-
-            return;
-        }
-
-        @Override public int Write(byte ChipID, int port, int adr, int data)
-        {
-            k054539_w(ChipID, adr, (byte)data);
+    private int device_start_k054539(byte chipID, int clock) {
+        if (chipID >= MAX_CHIPS)
             return 0;
-        }
 
+        K054539State info = k054539Data[chipID];
+        return info.device_start(clock);
+    }
 
+    private void device_stop_k054539(byte chipID) {
+        K054539State info = k054539Data[chipID];
+        info.stop();
+    }
 
+    private void device_reset_k054539(byte chipID) {
+        K054539State info = k054539Data[chipID];
+        info.reset();
+    }
 
-        /**************************************************************************
-         * Generic get_info
-         **************************************************************************/
+    private void k054539_write_rom(byte chipID, int romSize, int dataStart, int dataLength,
+                                   byte[] romData) {
+        K054539State info = k054539Data[chipID];
+        info.writeRom(romSize, dataStart, dataLength, romData);
+    }
 
+    void k054539_write_rom2(byte chipID, int romSize, int dataStart, int dataLength,
+                            byte[] romData, int startAdr) {
+        K054539State info = k054539Data[chipID];
+        info.writeRom2(romSize, dataStart, dataLength, romData, startAdr);
+    }
+
+    public void k054539_set_mute_mask(byte chipID, int muteMask) {
+        K054539State info = k054539Data[chipID];
+        info.setMuteMask(muteMask);
+    }
+
+    @Override
+    public int write(byte chipID, int port, int adr, int data) {
+        k054539_w(chipID, adr, (byte) data);
+        return 0;
+    }
+
+    /**
+     * Generic get_info
+     */
         /*DEVICE_GET_INFO( k054539 )
         {
             switch (state)
             {
                 // --- the following bits of info are returned as 64-bit signed integers --- //
-                case DEVINFO_INT_TOKEN_BYTES:     info.i = sizeof(k054539_state);    break;
+                case DEVINFO_INT_TOKEN_BYTES:     info.i = sizeof(K054539State);    break;
 
                 // --- the following bits of info are returned as pointers to data or functions --- //
                 case DEVINFO_FCT_START:       info.start = DEVICE_START_NAME( k054539 );  break;
@@ -940,7 +803,5 @@ public class K054539 extends Instrument
             }
         }*/
 
-
-        //DEFINE_LEGACY_SOUND_DEVICE(K054539, k054539);
-
-    }
+    //DEFINE_LEGACY_SOUND_DEVICE(K054539, k054539);
+}

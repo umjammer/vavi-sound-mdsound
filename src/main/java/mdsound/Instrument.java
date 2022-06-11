@@ -1,26 +1,35 @@
-﻿
+
 package mdsound;
 
-public abstract class Instrument {
+public interface Instrument {
 
-    public static final byte CHIP_SAMPLING_MODE = 2;
-    public static final int CHIP_SAMPLE_RATE = 44100;
+    int[][][] getVisVolume();
 
-    public int[][][] visVolume = null;// chipid , type , LR
+    String getName();
 
-    public abstract String getName();
+    String getShortName();
 
-    public abstract String getShortName();
+    int start(byte chipID, int clock);
 
-    public abstract int Start(byte ChipID, int clock);
+    int start(byte chipID, int clock, int clockValue, Object... option);
 
-    public abstract int Start(byte ChipID, int clock, int ClockValue, Object... option);
+    void stop(byte chipID);
 
-    public abstract void Stop(byte ChipID);
+    void reset(byte chipID);
 
-    public abstract void Reset(byte ChipID);
+    void update(byte chipID, int[][] outputs, int samples);
 
-    public abstract void Update(byte ChipID, int[][] outputs, int samples);
+    int write(byte chipID, int port, int adr, int data);
 
-    public abstract int Write(byte ChipID, int port, int adr, int data);
+    abstract class BaseInstrument implements Instrument {
+        protected static byte CHIP_SAMPLING_MODE = 2;
+        public static int CHIP_SAMPLE_RATE = 44100;
+
+        // chipid , type , LR
+        protected int[][][] visVolume;
+
+        public int[][][] getVisVolume() {
+            return visVolume;
+        }
+    }
 }
