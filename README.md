@@ -1,9 +1,9 @@
 # MDSound
-���K�h���C�u �T�E���h�`�b�v�G�~�����[�V����.DLL
+メガドライブ サウンドチップエミュレーション.DLL
   
-[�T�v]  
- ����DLL�́AVGM Player�̃\�[�X�Ȃǂ��烁�K�h���C�u�Ȃǂɓ��ڂ���Ă���ȉ��̉����`�b�v�̓����C#�����R�[�h�ɈڐA�������̂ł��B  
-  FM����  
+[概要]  
+ このDLLは、VGM Playerのソースなどからメガドライブなどに搭載されている以下の音源チップの動作をC#向けコードに移植したものです。  
+  FM音源  
     YM2612     OPN2  
 	YM3438     OPN2(cmos)  
     YM2151(mame)     OPM  
@@ -15,7 +15,7 @@
     YM2413     OPLL  
     YMF262     OPL3  
     YMF278B    OPL4  
-  PCM����  
+  PCM音源  
     RF5C164    RF5C  
     PWM        PWM  
     C140       C140  
@@ -29,60 +29,60 @@
     PPZ8       PPZ8  
     PPSDRV     PPSDRV  
     PC-9801-86 P86  
-  �g�`����������  
-    HuC6280(FM�I���L)  HuC6  
+  波形メモリ音源  
+    HuC6280(FM的個所有)  HuC6  
     K051649    K051  
-    NES_FDS(FM�I���L)  
-  PSG����  
+    NES_FDS(FM的個所有)  
+  PSG音源  
     SN76489  
     AY8910  
     NES_APU  
-  ���̑�(���z����)  
+  その他(仮想音源)  
     YM2609   OPNA2  
     AY8910-2 PSG2  
   
-[�@�\�A����]  
- �E����.NET�̕����ɉ������L�q���\�ł��B  
- �E�}�l�[�W�h�ȃv���O�����ł��B(test�v���O������SDLNET���g�p���Ă��܂����B)  
+[機能、特徴]  
+ ・割と.NETの文化に沿った記述が可能です。  
+ ・マネージドなプログラムです。(testプログラムはSDLNETを使用していますが。)  
   
-[���쌠�E�Ɛ�]  
-  MDSound�̓t���[�\�t�g�ł��B���쌠�͍�҂��ۗL���Ă��܂��B  
-  ���̃\�t�g�͖��ۏ؂ł���A���̃\�t�g���g�p�������ɂ��  
-  �����Ȃ鑹�Q����҂͈�؂̐ӔC�𕉂��܂���B  
-  ���C�Z���X�Ɋւ��ẮALGPL���C�Z���X�ɏ�������̂Ƃ��܂��B  
+[著作権・免責]  
+  MDSoundはフリーソフトです。著作権は作者が保有しています。  
+  このソフトは無保証であり、このソフトを使用した事による  
+  いかなる損害も作者は一切の責任を負いません。  
+  ライセンスに関しては、LGPLライセンスに準ずるものとします。  
   
-  MDSound�́A�ȉ��̃\�t�g�E�F�A�̃\�[�X�R�[�h��C#�����ɈڐA���g�p���Ă��܂��B  
-  �����̃\�[�X�͊e����҂����쌠�������܂��B  
-  ���C�Z���X�Ɋւ��ẮA�e�h�L�������g���Q�Ƃ��Ă��������B  
+  MDSoundは、以下のソフトウェアのソースコードをC#向けに移植し使用しています。  
+  これらのソースは各著作者が著作権を持ちます。  
+  ライセンスに関しては、各ドキュメントを参照してください。  
   
- �EVGMPlay  
- �EMAME  
- �EGens  
- �EOotake  
- �Efmgen  
- �ENSFPlay  
- �EX68Sound.dll  
- �ETinyMPCM(��)  
- �ENuked-OPN2  
- �EPMDWin  
- �E���ڂ����玁��t�B���^�A�G�t�F�N�^�[  
+ ・VGMPlay  
+ ・MAME  
+ ・Gens  
+ ・Ootake  
+ ・fmgen  
+ ・NSFPlay  
+ ・X68Sound.dll  
+ ・TinyMPCM(仮)  
+ ・Nuked-OPN2  
+ ・PMDWin  
+ ・うつぼかずら氏作フィルタ、エフェクター  
   
 [SpecialThanks]  
- �{�c�[���͈ȉ��̕��X�ɂ����b�ɂȂ��Ă���܂��B�܂��ȉ��̃\�t�g�E�F�A�A�E�F�u�y�[�W���Q�l�A�g�p���Ă��܂��B  
- �{���ɂ��肪�Ƃ��������܂��B  
+ 本ツールは以下の方々にお世話になっております。また以下のソフトウェア、ウェブページを参考、使用しています。  
+ 本当にありがとうございます。  
   
- �EVisual Studio Community 2015  
- �ESGDK  
- �EVGM Player  
- �ENuked-OPN2  
- �EGit  
- �ESDL/SDLNET  
- �ESourceTree  
- �E������G�f�B�^�[  
- �EQUASI88�̃h�L�������g  
+ ・Visual Studio Community 2015  
+ ・SGDK  
+ ・VGM Player  
+ ・Nuked-OPN2  
+ ・Git  
+ ・SDL/SDLNET  
+ ・SourceTree  
+ ・さくらエディター  
+ ・QUASI88のドキュメント  
   
- �ESMS Power!  
- �EDOBON.NET  
- �EC++��VST���  
- �EWikipedia  
+ ・SMS Power!  
+ ・DOBON.NET  
+ ・C++でVST作り  
+ ・Wikipedia  
   
