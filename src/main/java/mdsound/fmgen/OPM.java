@@ -2,6 +2,8 @@ package mdsound.fmgen;
 
 import java.util.Random;
 
+import static mdsound.fmgen.Fmgen.limit;
+
 
 /**
  * OPM に良く似た(?)音を生成する音源ユニット
@@ -72,13 +74,11 @@ public class OPM extends Timer {
 
     private int pmd;
     private int amd;
-    //private int lfoCount;
-    //private int lfoDCount;
 
-    private int lfoCount_;
-    private int lfoCountDiff_;
-    private int lfoStep_;
-    private int lfoCountPrev_;
+    private int lfoCount;
+    private int lfoCountDiff;
+    private int lfoStep;
+    private int lfoCountPrev;
 
     private int lfoWaveForm;
     private int rateRatio;
@@ -96,7 +96,7 @@ public class OPM extends Timer {
     private byte[] pan = new byte[8];
 
     private Fmgen.Channel4[] ch = new Fmgen.Channel4[8];
-    private Fmgen.Chip chip = new Fmgen.Chip();
+    private Fmgen.Channel4.Chip chip = new Fmgen.Channel4.Chip();
 
     private static int[][] amTable = new int[][] {new int[OPM_LFOENTS], new int[OPM_LFOENTS], new int[OPM_LFOENTS], new int[OPM_LFOENTS]};
     private static int[][] pmTable = new int[][] {new int[OPM_LFOENTS], new int[OPM_LFOENTS], new int[OPM_LFOENTS], new int[OPM_LFOENTS]};
@@ -104,19 +104,13 @@ public class OPM extends Timer {
     private static Random rand = new Random();
 
     public OPM() {
-        amTable[0][0] = -1;
-
-        lfoCount_ = 0;
-        lfoCountPrev_ = ~(int) (0);
-        buildLFOTable();
+        lfoCount = 0;
+        lfoCountPrev = ~(int) (0);
         for (int i = 0; i < 8; i++) {
             ch[i] = new Fmgen.Channel4();
             ch[i].setChip(chip);
-            ch[i].setType(Fmgen.OpType.typeM);
+            ch[i].setType(Fmgen.Channel4.Chip.OpType.typeM);
         }
-    }
-
-    protected void finalize() {
     }
 
     public boolean init(int c, int rf, boolean ip/* = false*/) {
@@ -142,12 +136,11 @@ public class OPM extends Timer {
 
     public void setChannelMask(int mask) {
         for (int i = 0; i < 8; i++)
-            ch[i].mute(!!((mask & (1 << i)) != 0));
+            ch[i].mute((mask & (1 << i)) != 0);
     }
 
     public void reset() {
-        int i;
-        for (i = 0x0; i < 0x100; i++) setReg((int) i, 0);
+        for (int i = 0x0; i < 0x100; i++) setReg(i, 0);
         setReg(0x19, 0x80);
         super.reset();
 
@@ -155,16 +148,16 @@ public class OPM extends Timer {
         noise = 12345;
         noiseCount = 0;
 
-        for (i = 0; i < 8; i++)
+        for (int i = 0; i < 8; i++)
             ch[i].reset();
     }
 
     private void rebuildTimeTable() {
-        int fmclock = clock / 64;
+        int fmClock = clock / 64;
 
-        //assert(fmclock < (0x80000000 >> FM_RATIOBITS));
-        rateRatio = ((fmclock << Fmgen.FM_RATIOBITS) + rate / 2) / rate;
-        setTimerBase(fmclock);
+        //assert(fmClock < (0x80000000 >> FM_RATIOBITS));
+        rateRatio = ((fmClock << Fmgen.FM_RATIOBITS) + rate / 2) / rate;
+        setTimerBase(fmClock);
 
         chip.setRatio(rateRatio);
 
@@ -217,8 +210,8 @@ public class OPM extends Timer {
         switch (addr & 0xff) {
         case 0x01: // TEST (Lfo restart)
             if ((data & 2) != 0) {
-                lfoCount_ = 0;
-                lfoCountPrev_ = ~(int) 0;
+                lfoCount = 0;
+                lfoCountPrev = ~(int) 0;
             }
             reg01 = (byte) data;
             break;
@@ -252,13 +245,13 @@ public class OPM extends Timer {
             lfoFreq = (byte) data;
 
             //assert(16 - 4 - FM_RATIOBITS >= 0);
-            lfoCountDiff_ = rateRatio
+            lfoCountDiff = rateRatio
                     * ((16 + (lfoFreq & 15)) << (16 - 4 - Fmgen.FM_RATIOBITS))
                     / (1 << (15 - (lfoFreq >> 4)));
 
             break;
 
-        case 0x19:                  // PMD/AMD
+        case 0x19: // PMD/AMD
             if ((data & 0x80) != 0) {
                 pmd = data & 0x7f;
             } else {
@@ -266,7 +259,7 @@ public class OPM extends Timer {
             }
             break;
 
-        case 0x1b:                  // CT, W(Lfo waveform)
+        case 0x1b: // CT, W(Lfo waveform)
             lfoWaveForm = data & 3;
             break;
 
@@ -294,7 +287,7 @@ public class OPM extends Timer {
         case 0x2e:
         case 0x2f:
             kc[c] = (byte) data;
-            ch[c].SetKCKF(kc[c], kf[c]);
+            ch[c].setKCKF(kc[c], kf[c]);
             break;
 
         // KF
@@ -307,7 +300,7 @@ public class OPM extends Timer {
         case 0x36:
         case 0x37:
             kf[c] = (byte) (data >> 2);
-            ch[c].SetKCKF(kc[c], kf[c]);
+            ch[c].setKCKF(kc[c], kf[c]);
             break;
 
         // PMS, AMS
@@ -322,7 +315,7 @@ public class OPM extends Timer {
             ch[c].setMS((data << 4) | (data >> 4));
             break;
 
-        case 0x0f:          // NE/NFRQ (noise)
+        case 0x0f: // NE/NFRQ (noise)
             noiseDelta = data;
             noiseCount = 0;
             break;
@@ -335,14 +328,14 @@ public class OPM extends Timer {
     }
 
     private void setParameter(int addr, int data) {
-        final byte[] sltable = new byte[] {
+        final byte[] slTable = new byte[] {
                 0, 4, 8, 12, 16, 20, 24, 28,
                 32, 36, 40, 44, 48, 52, 56, 124
         };
-        byte[] slotTable = new byte[] {0, 2, 1, 3};
+        final byte[] slotTable = new byte[] {0, 2, 1, 3};
 
         int slot = slotTable[(addr >> 3) & 3];
-        Fmgen.Operator op = ch[addr & 7].op[slot];
+        Fmgen.Channel4.Operator op = ch[addr & 7].op[slot];
 
         switch ((addr >> 5) & 7) {
         case 2: // 40-5F DT1/MULTI
@@ -370,16 +363,13 @@ public class OPM extends Timer {
             break;
 
         case 7: // E0-FF SL(D1L)/RR
-            op.setSL(sltable[(data >> 4) & 15]);
+            op.setSL(slTable[(data >> 4) & 15]);
             op.setRR((data & 0x0f) * 4 + 2);
             break;
         }
     }
 
-    private static void buildLFOTable() {
-        if (amTable[0][0] != -1)
-            return;
-
+    static {
         for (int type = 0; type < 4; type++) {
             int r = 0;
             for (int c = 0; c < OPM_LFOENTS; c++) {
@@ -412,7 +402,7 @@ public class OPM extends Timer {
 
                 amTable[type][c] = a;
                 pmTable[type][c] = -p - 1;
-                //            printf("%d ", p);
+                // System.err.printf("%d ", p);
             }
         }
     }
@@ -421,22 +411,22 @@ public class OPM extends Timer {
         if (lfoWaveForm != 3) {
             // if ((lfo_count_ ^ lfo_count_prev_) & ~((1 << 15) - 1))
             {
-                int c = (lfoCount_ >> 15) & 0x1fe;
-                //    fprintf(stderr, "%.8x %.2x\n", lfo_count_, c);
+                int c = (lfoCount >> 15) & 0x1fe;
+                // System.err.printf("%.8x %.2x\n", lfo_count_, c);
                 chip.setPML(pmTable[lfoWaveForm][c] * pmd / 128 + 0x80);
                 chip.setAML(amTable[lfoWaveForm][c] * amd / 128);
             }
         } else {
-            if (((lfoCount_ ^ lfoCountPrev_) & ~((1 << 17) - 1)) != 0) {
+            if (((lfoCount ^ lfoCountPrev) & ~((1 << 17) - 1)) != 0) {
                 int c = (rand.nextInt() / 17) & 0xff;
                 chip.setPML((c - 0x80) * pmd / 128 + 0x80);
                 chip.setAML(c * amd / 128);
             }
         }
-        lfoCountPrev_ = lfoCount_;
-        lfoStep_++;
-        if ((lfoStep_ & 7) == 0) {
-            lfoCount_ += lfoCountDiff_;
+        lfoCountPrev = lfoCount;
+        lfoStep++;
+        if ((lfoStep & 7) == 0) {
+            lfoCount += lfoCountDiff;
         }
     }
 
@@ -450,7 +440,7 @@ public class OPM extends Timer {
             noiseCount = noiseCount - (n << Fmgen.FM_RATIOBITS);
             if ((noiseDelta & 0x1f) == 0x1f)
                 noiseCount -= Fmgen.FM_RATIOBITS;
-            noise = (int) ((noise >> 1) ^ ((noise & 1) != 0 ? 0x8408 : 0));
+            noise = (noise >> 1) ^ ((noise & 1) != 0 ? 0x8408 : 0);
         }
         return noise;
     }
@@ -524,8 +514,8 @@ public class OPM extends Timer {
                     mixSub(activeCh, iDest, iBuf);
                 }
 
-                Fmgen.storeSample(buffer[dest + 0], ((Fmgen.limit((iBuf[1] + iBuf[3]), 0xffff, -0x10000) * fmVolume) >> 14));
-                Fmgen.storeSample(buffer[dest + 1], ((Fmgen.limit((iBuf[2] + iBuf[3]), 0xffff, -0x10000) * fmVolume) >> 14));
+                buffer[dest + 0] += ((limit((iBuf[1] + iBuf[3]), 0xffff, -0x10000) * fmVolume) >> 14);
+                buffer[dest + 1] += ((limit((iBuf[2] + iBuf[3]), 0xffff, -0x10000) * fmVolume) >> 14);
             }
         }
     }

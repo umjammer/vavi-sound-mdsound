@@ -64,7 +64,7 @@ public class Pwm extends Instrument.BaseInstrument {
 
         //#if CHILLY_WILLY_SCALE
         // TODO: Fix Chilly Willy's new scaling algorithm.
-        /* PWM scaling variables. */
+        /** PWM scaling variables. */
         public int offset;
         public int scale;
         //int loudness;
@@ -136,7 +136,7 @@ public class Pwm extends Instrument.BaseInstrument {
          * @param dest Channel (L or R) for the destination.
          */
         //void PWM_SHIFT(src, dest) {
-        // /* Make sure the source FIFO isn't empty. */
+        // /* Make sure the source FIFO isn't empty.
         // if (PWM_RP_##src != PWM_WP_##src)        \
         // {            \
         //  /* Get destination channel output from the source channel FIFO. */   \
@@ -148,8 +148,7 @@ public class Pwm extends Instrument.BaseInstrument {
         //}
 
         /*static void PWM_Shift_Data(void) {
-            switch (PWM_Mode & 0x0F)
-            {
+            switch (PWM_Mode & 0x0F) {
                 case 0x01:
                 case 0x0D:
                     // Rx_LL: Right . Ignore, Left . Left
@@ -213,12 +212,10 @@ public class Pwm extends Instrument.BaseInstrument {
             PWM_Cycle_Cnt += PWM_Cycle;
 
             PWM_Int_Cnt--;
-            if (PWM_Int_Cnt == 0)
-            {
+            if (PWM_Int_Cnt == 0) {
                 PWM_Int_Cnt = PWM_Int;
 
-                if (PWM_Mode & 0x0080)
-                {
+                if (PWM_Mode & 0x0080) {
                     // RPT => generate DREQ1 as well as INT
                     SH2_DMA1_Request(&M_SH2, 1);
                     SH2_DMA1_Request(&S_SH2, 1);
@@ -284,7 +281,7 @@ public class Pwm extends Instrument.BaseInstrument {
         }
 
         private void writeChannel(byte channel, int data) {
-            if (this.clock == 1) {   // old-style commands
+            if (this.clock == 1) { // old-style commands
                 switch (channel) {
                 case 0x00:
                     this.outL = data;
@@ -357,42 +354,42 @@ public class Pwm extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void update(byte chipID, int[][] outputs, int samples) {
-        PwmChip chip = chips[chipID];
+    public void update(byte chipId, int[][] outputs, int samples) {
+        PwmChip chip = chips[chipId];
 
         chip.update(outputs, samples);
 
-        visVolume[chipID][0][0] = outputs[0][0];
-        visVolume[chipID][0][1] = outputs[1][0];
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
     }
 
     @Override
-    public int start(byte chipID, int samplingRate, int clockValue, Object... option) {
-        return start(chipID, clockValue);
+    public int start(byte chipId, int samplingRate, int clockValue, Object... option) {
+        return start(chipId, clockValue);
     }
 
     @Override
-    public int start(byte chipID, int clock) {
-        if (chipID >= MAX_CHIPS)
+    public int start(byte chipId, int clock) {
+        if (chipId >= MAX_CHIPS)
             return 0;
 
-        PwmChip chip = chips[chipID];
+        PwmChip chip = chips[chipId];
         return chip.start(clock);
     }
 
     @Override
-    public void stop(byte chipID) {
+    public void stop(byte chipId) {
     }
 
     @Override
-    public void reset(byte chipID) {
-        PwmChip chip = chips[chipID];
+    public void reset(byte chipId) {
+        PwmChip chip = chips[chipId];
         chip.init();
     }
 
     @Override
-    public int write(byte chipID, int port, int adr, int data) {
-        PwmChip chip = chips[chipID];
+    public int write(byte chipId, int port, int adr, int data) {
+        PwmChip chip = chips[chipId];
         chip.writeChannel((byte) adr, data);
         return 0;
     }

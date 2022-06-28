@@ -8,7 +8,7 @@ public enum LogLevel {
     INFO(8),
     DEBUG(16),
     TRACE(32);
-    int v;
+    final int v;
     LogLevel(int v) {
         this.v = v;
     }

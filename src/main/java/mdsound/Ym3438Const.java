@@ -184,11 +184,11 @@ public abstract class Ym3438Const {
          */
         asic,
         /**
-         * YM2612 (MD1, MD2 VA2) (with ladderEffect + Amplify signal + lowpassfilter)
+         * Ym2612 (MD1, MD2 VA2) (with ladderEffect + Amplify signal + lowpassfilter)
          */
         ym2612,
         /**
-         * YM2612 without lowpass filter (with ladderEffect + Amplify signal)
+         * Ym2612 without lowpass filter (with ladderEffect + Amplify signal)
          */
         ym2612_u,
         /**

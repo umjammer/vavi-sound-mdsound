@@ -25,34 +25,34 @@ public class Op {
             ATACK, SUSTAIN_MAX, SUSTAIN_MAX, SUSTAIN_MAX, RELEASE_MAX, RELEASE_MAX,
     };
 
-    public int[] inp = new int[1];           // FM変調の入力
-    private int lfoPitch;   // 前回のlfopitch値, CULC_DELTA_T値の時はDeltaTを再計算する。
-    private int t;      // 現在時間 (0 <= T < SIZESINTBL*PRECISION)
+    public int[] inp = new int[1]; // FM変調の入力
+    private int lfoPitch; // 前回のlfopitch値, CULC_DELTA_T値の時はDeltaTを再計算する。
+    private int t; // 現在時間 (0 <= T < SIZESINTBL*PRECISION)
     private int deltaT; // Δt
-    private int ame;        // 0(トレモロをかけない), -1(トレモロをかける)
-    private int lfoLevel;   // 前回のlfopitch&Ame値, CULC_ALPHA値の時はAlphaを再計算する。
-    private int alpha;  // 最終的なエンベロープ出力値
+    private int ame; // 0(トレモロをかけない), -1(トレモロをかける)
+    private int lfoLevel; // 前回のlfopitch&Ame値, CULC_ALPHA値の時はAlphaを再計算する。
+    private int alpha; // 最終的なエンベロープ出力値
     //追加 2006.03.26 sam Lfoの更新をSinテーブルの0クロス時に修正するため
     private boolean lfoLevelReCalc;
     private short sinBf;
 
-    public int[] out1 = new int[1];          // オペレータの出力先
-    public int[] out2 = new int[1];         // オペレータの出力先(alg=5時のM1用)
-    public int[] out3 = new int[1];         // オペレータの出力先(alg=5時のM1用)
+    public int[] out1 = new int[1]; // オペレータの出力先
+    public int[] out2 = new int[1]; // オペレータの出力先(alg=5時のM1用)
+    public int[] out3 = new int[1]; // オペレータの出力先(alg=5時のM1用)
 
-    private int pitch;  // 0<=pitch<10*12*64
-    private int dt1Pitch;   // Step に対する補正量
-    private int mul;    // 0.5*2 1*2 2*2 3*2 ... 15*2
-    private int tl;     // (128-TL)*8
+    private int pitch; // 0<=pitch<10*12*64
+    private int dt1Pitch; // Step に対する補正量
+    private int mul; // 0.5*2 1*2 2*2 3*2 ... 15*2
+    private int tl; // (128-TL)*8
 
     private int out2Fb; // フィードバックへの出力値
-    private int inpLast;   // 最後の入力値
-    private int fl;     // フィードバックレベルのシフト値(31,7,6,5,4,3,2,1)
-    private int flMask;    // フィードバックのマスク(0,-1)
+    private int inpLast; // 最後の入力値
+    private int fl; // フィードバックレベルのシフト値(31,7,6,5,4,3,2,1)
+    private int flMask; // フィードバックのマスク(0,-1)
     public int arTime = 0; // AR専用 t
 
-    private int noiseCounter;   // Noise用カウンタ
-    private int noiseStep;  // Noise用カウントダウン値
+    private int noiseCounter; // Noise用カウンタ
+    private int noiseStep; // Noise用カウントダウン値
     private int noiseCycle; // Noise周期 32*2^25(0) ～ 1*2^25(31) NoiseCycle==0の時はノイズオフ
     private int noiseValue; // ノイズ値  1 or -1
 
@@ -65,17 +65,17 @@ public class Op {
     private int xrAdd;
     private int xrLimit;
 
-    private int note;   // 音階 (0 <= Note < 10*12)
-    private int kc;     // 音階 (1 <= Kc <= 128)
-    private int kf;     // 微調整 (0 <= Kf < 64)
-    private int ar;     // 0 <= Ar < 31
-    private int d1R;    // 0 <= D1r < 31
-    private int d2R;    // 0 <= D2r < 31
-    private int rr;     // 0 <= Rr < 15
-    private int ks;     // 0 <= Ks <= 3
-    private int dt2;    // Pitch に対する補正量(0, 384, 500, 608)
-    private int dt1;    // DT1の値(0～7)
-    private int nfrq;   // Noiseflag,NFRQの値
+    private int note; // 音階 (0 <= Note < 10*12)
+    private int kc; // 音階 (1 <= Kc <= 128)
+    private int kf; // 微調整 (0 <= Kf < 64)
+    private int ar; // 0 <= Ar < 31
+    private int d1R; // 0 <= D1r < 31
+    private int d2R; // 0 <= D2r < 31
+    private int rr; // 0 <= Rr < 15
+    private int ks; // 0 <= Ks <= 3
+    private int dt2; // Pitch に対する補正量(0, 384, 500, 608)
+    private int dt1; // DT1の値(0～7)
+    private int nfrq; // Noiseflag,NFRQの値
 
     public static class _StatTbl {
         public int and, cmp, add, limit;
@@ -505,7 +505,7 @@ public class Op {
 
         int lfolevelame = lfoLevel & ame;
         if ((this.lfoLevel != lfolevelame || lfoLevelReCalc) && IS_ZERO_CLOSS(sinBf, Sin) != 0) {
-            alpha = (int) (global.ALPHATBL[global.ALPHAZERO + tl - xrEl - lfolevelame]);
+            alpha = global.ALPHATBL[global.ALPHAZERO + tl - xrEl - lfolevelame];
             this.lfoLevel = lfolevelame;
             lfoLevelReCalc = false;
         }
@@ -519,7 +519,7 @@ public class Op {
         inpLast = o;
 
         out1[0] = o;
-        out2[0] = o;  // alg=5用
+        out2[0] = o; // alg=5用
         out3[0] = o; // alg=5用
         // *out = o2;
         // *out2 = o2; // alg=5用
@@ -537,7 +537,7 @@ public class Op {
 
         int lfolevelame = lfoLevel & ame;
         if ((this.lfoLevel != lfolevelame || lfoLevelReCalc) && IS_ZERO_CLOSS(sinBf, sin) != 0) {
-            alpha = (int) (global.ALPHATBL[global.ALPHAZERO + tl - xrEl - lfolevelame]);
+            alpha = global.ALPHATBL[global.ALPHAZERO + tl - xrEl - lfolevelame];
             this.lfoLevel = lfolevelame;
             lfoLevelReCalc = false;
         }

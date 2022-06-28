@@ -24,18 +24,18 @@ public class WsAudio extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void reset(byte chipID) {
-        chip[chipID].ws_audio_reset();
+    public void reset(byte chipId) {
+        chip[chipId].ws_audio_reset();
     }
 
     @Override
-    public int start(byte chipID, int clock) {
-        return start(chipID, clock, DefaultWSwanClockValue, null);
+    public int start(byte chipId, int clock) {
+        return start(chipId, clock, DefaultWSwanClockValue);
     }
 
     @Override
-    public int start(byte chipID, int clock, int clockValue, Object... option) {
-        chip[chipID].init(clock, clockValue);
+    public int start(byte chipId, int clock, int clockValue, Object... option) {
+        chip[chipId].init(clock, clockValue);
         sampleRate = clock;
         masterClock = clockValue;
 
@@ -51,12 +51,12 @@ public class WsAudio extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void stop(byte chipID) {
-        chip[chipID].stop();
+    public void stop(byte chipId) {
+        chip[chipId].stop();
     }
 
     @Override
-    public void update(byte chipID, int[][] outputs, int samples) {
+    public void update(byte chipId, int[][] outputs, int samples) {
         for (int i = 0; i < samples; i++) {
             outputs[0][i] = 0;
             outputs[1][i] = 0;
@@ -64,7 +64,7 @@ public class WsAudio extends Instrument.BaseInstrument {
             sampleCounter += (masterClock / 128.0) / sampleRate;
             int upc = (int) sampleCounter;
             while (sampleCounter >= 1) {
-                chip[chipID].update(1, frm);
+                chip[chipId].update(1, frm);
 
                 outputs[0][i] += frm[0][0];
                 outputs[1][i] += frm[1][0];
@@ -86,22 +86,22 @@ public class WsAudio extends Instrument.BaseInstrument {
             outputs[1][i] <<= 2;
         }
 
-        visVolume[chipID][0][0] = outputs[0][0];
-        visVolume[chipID][0][1] = outputs[1][0];
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
     }
 
     @Override
-    public int write(byte chipID, int port, int adr, int data) {
-        chip[chipID].writeAudioPort((byte) (adr + 0x80), (byte) data);
+    public int write(byte chipId, int port, int adr, int data) {
+        chip[chipId].writeAudioPort((byte) (adr + 0x80), (byte) data);
         return 0;
     }
 
-    public int WriteMem(byte chipID, int adr, int data) {
-        chip[chipID].writeRamByte((int) adr, (byte) data);
+    public int WriteMem(byte chipId, int adr, int data) {
+        chip[chipId].writeRamByte(adr, (byte) data);
         return 0;
     }
 
-    public void SetMute(byte chipID, int v) {
+    public void SetMute(byte chipId, int v) {
     }
 
     private static class WSAState {
@@ -395,7 +395,7 @@ public class WsAudio extends Instrument.BaseInstrument {
             SDMACL(0x4E),
             SDMACH(0x4F),
             SDMACTL(0x52);
-            int v;
+            final int v;
 
             IORam(int v) {
                 this.v = v;
@@ -508,7 +508,7 @@ public class WsAudio extends Instrument.BaseInstrument {
             this.sweepStep = 0;
             this.noiseType = 0;
             this.noiseRng = 1;
-            this.mainVolume = 0x02;    // 0x04
+            this.mainVolume = 0x02; // 0x04
             this.pcmVolumeLeft = 0;
             this.pcmVolumeRight = 0;
 

@@ -21,39 +21,39 @@ public class Saa1099 extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void reset(byte chipID) {
-        device_reset_saa1099(chipID);
+    public void reset(byte chipId) {
+        device_reset_saa1099(chipId);
     }
 
     @Override
-    public int start(byte chipID, int clock) {
-        return device_start_saa1099(chipID, 8000000);
+    public int start(byte chipId, int clock) {
+        return device_start_saa1099(chipId, 8000000);
     }
 
     @Override
-    public int start(byte chipID, int clock, int clockValue, Object... option) {
-        return device_start_saa1099(chipID, clockValue);
+    public int start(byte chipId, int clock, int clockValue, Object... option) {
+        return device_start_saa1099(chipId, clockValue);
     }
 
     @Override
-    public void stop(byte chipID) {
-        device_stop_saa1099(chipID);
+    public void stop(byte chipId) {
+        device_stop_saa1099(chipId);
     }
 
     @Override
-    public void update(byte chipID, int[][] outputs, int samples) {
-        saa1099_update(chipID, outputs, samples);
+    public void update(byte chipId, int[][] outputs, int samples) {
+        saa1099_update(chipId, outputs, samples);
     }
 
     @Override
-    public int write(byte chipID, int port, int adr, int data) {
-        saa1099_control_w(chipID, 0, (byte) adr);
-        saa1099_data_w(chipID, 0, (byte) data);
+    public int write(byte chipId, int port, int adr, int data) {
+        saa1099_control_w(chipId, 0, (byte) adr);
+        saa1099_data_w(chipId, 0, (byte) data);
         return 0;
     }
 
-    public void SAA1099_SetMute(byte chipID, int v) {
-        saa1099_set_mute_mask(chipID, v);
+    public void SAA1099_SetMute(byte chipId, int v) {
+        saa1099_set_mute_mask(chipId, v);
     }
 
     /**
@@ -556,7 +556,7 @@ public class Saa1099 extends Instrument.BaseInstrument {
                 }
                 break;
             default: // Error!
-                //throw new Exception(String.format("SAA1099: Unknown operation (reg:{0:x02}, data:{1:x02})\n", reg, data));
+                //throw new Exception(String.format("SAA1099: Unknown operation (reg:%02x, data:%02x)\n", reg, data));
                 break;
             }
         }
@@ -570,70 +570,55 @@ public class Saa1099 extends Instrument.BaseInstrument {
     private static final int MAX_CHIPS = 0x02;
     private Saa1099State[] saa1099Data = new Saa1099State[] {new Saa1099State(), new Saa1099State()};
 
-    private void saa1099_update(byte chipID, int[][] outputs, int samples) {
-        Saa1099State saa = saa1099Data[chipID];
+    private void saa1099_update(byte chipId, int[][] outputs, int samples) {
+        Saa1099State saa = saa1099Data[chipId];
 
         saa.update(outputs, samples);
 
-        visVolume[chipID][0][0] = outputs[0][0];
-        visVolume[chipID][0][1] = outputs[1][0];
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
     }
 
-    private int device_start_saa1099(byte chipID, int clock) {
-        if (chipID >= MAX_CHIPS)
+    private int device_start_saa1099(byte chipId, int clock) {
+        if (chipId >= MAX_CHIPS)
             return 0;
 
-        Saa1099State saa = saa1099Data[chipID];
+        Saa1099State saa = saa1099Data[chipId];
         return saa.start(clock);
     }
 
-    private void device_stop_saa1099(byte chipID) {
-        Saa1099State saa = saa1099Data[chipID];
+    private void device_stop_saa1099(byte chipId) {
+        Saa1099State saa = saa1099Data[chipId];
     }
 
-    private void device_reset_saa1099(byte chipID) {
-        Saa1099State saa = saa1099Data[chipID];
+    private void device_reset_saa1099(byte chipId) {
+        Saa1099State saa = saa1099Data[chipId];
         saa.reset();
     }
 
-    private void saa1099_control_w(byte chipID, int offset, byte data) {
-        Saa1099State saa = saa1099Data[chipID];
+    private void saa1099_control_w(byte chipId, int offset, byte data) {
+        Saa1099State saa = saa1099Data[chipId];
         saa.control_w(offset, data);
     }
 
-    private void saa1099_data_w(byte chipID, int offset, byte data) {
-        Saa1099State saa = saa1099Data[chipID];
+    private void saa1099_data_w(byte chipId, int offset, byte data) {
+        Saa1099State saa = saa1099Data[chipId];
         saa.data_w(offset, data);
     }
 
-    private void saa1099_set_mute_mask(byte chipID, int muteMask) {
-        Saa1099State saa = saa1099Data[chipID];
+    private void saa1099_set_mute_mask(byte chipId, int muteMask) {
+        Saa1099State saa = saa1099Data[chipId];
         saa.setMuteMask(muteMask);
     }
 
-    /**
+    /*
      * Generic get_info
      */
-        /*DEVICE_GET_INFO( Saa1099 )
-        {
-         switch (state)
-         {
-          // --- the following bits of info are returned as 64-bit signed integers ---
-          case DEVINFO_INT_TOKEN_BYTES:     info.i = sizeof(saa1099_state);    break;
-
-          // --- the following bits of info are returned as pointers to data or functions ---
-          case DEVINFO_FCT_START:       info.start = DEVICE_START_NAME( Saa1099 );  break;
-          case DEVINFO_FCT_STOP:       // Nothing //         break;
-          case DEVINFO_FCT_RESET:       // Nothing //         break;
-
-          // --- the following bits of info are returned as NULL-terminated strings ---
-          case DEVINFO_STR_NAME:       strcpy(info.s, "SAA1099");      break;
-          case DEVINFO_STR_FAMILY:     strcpy(info.s, "Philips");      break;
-          case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;
-          case DEVINFO_STR_SOURCE_FILE:      strcpy(info.s, __FILE__);      break;
-          case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
-         }
-        }
-
-        DEFINE_LEGACY_SOUND_DEVICE(SAA1099, Saa1099);*/
+    /*DEVICE_GET_INFO( Saa1099 ) {
+      case DEVINFO_STR_NAME:       strcpy(info.s, "SAA1099");      break;
+      case DEVINFO_STR_FAMILY:     strcpy(info.s, "Philips");      break;
+      case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;
+      case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
+     }
+    }*/
 }

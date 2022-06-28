@@ -529,7 +529,7 @@ public class MDSound {
                 buffer[0][0] = 0;
                 buffer[1][0] = 0;
                 resampleChipStream(insts, buffer, 1);
-                //if (buffer[0][0] != 0) System.err.printf("{0}", buffer[0][0]);
+                //if (buffer[0][0] != 0) System.err.printf("%d", buffer[0][0]);
                 a += buffer[0][0];
                 b += buffer[1][0];
 
@@ -652,7 +652,7 @@ public class MDSound {
         int inPos;
         int InPosNext;
         int outPos;
-        int smpFrc;  // Sample Friction
+        int smpFrc; // Sample Friction
         int inPre = 0;
         int inNow;
         int inPosL;
@@ -660,7 +660,7 @@ public class MDSound {
         long tempSmpR;
         int tempS32L;
         int tempS32R;
-        int smpCnt;   // must be signed, else I'm getting calculation errors
+        int smpCnt; // must be signed, else I'm getting calculation errors
         int CurSmpl;
         long chipSmpRate;
 
@@ -677,23 +677,23 @@ public class MDSound {
 
         // This Do-While-Loop gets and resamples the chip output of one or more chips.
         // It's a loop to support the AY8910 paired with the YM2203/YM2608/YM2610.
-        for (int i = 0; i < insts.length; i++) {
+        for (Chip chip : insts) {
             Arrays.fill(streamBufs[0], 0);
             Arrays.fill(streamBufs[1], 0);
             curBufL = streamBufs[0x00];
             curBufR = streamBufs[0x01];
 
-            inst = insts[i];
+            inst = chip;
             //double volume = inst.Volume/100.0;
             int mul = inst.tVolume;
             //if (inst.type == InstrumentType.Nes) mul = 0;
             //mul = (int)(16384.0 * Math.pow(10.0, mul / 40.0));//16384 = 0x4000 = short.MAXValue + 1
 
-            //if (i != 0 && insts[i].LSmpl[0] != 0) System.err.printf("{0} {1}", insts[i].LSmpl[0], insts[0].LSmpl == insts[i].LSmpl);
-            //System.err.printf("{0} {1}", inst.type, inst.Resampler);
-            //System.err.printf("{0}", inst.Resampler);
+            //if (i != 0 && insts[i].LSmpl[0] != 0) System.err.printf("%d %d", insts[i].LSmpl[0], insts[0].LSmpl == insts[i].LSmpl);
+            //System.err.printf("%d %d", inst.type, inst.Resampler);
+            //System.err.printf("%d", inst.Resampler);
             switch (inst.resampler) {
-            case 0x00:  // old, but very fast resampler
+            case 0x00: // old, but very fast resampler
                 inst.smpLast = inst.smpNext;
                 inst.smpP += length;
                 inst.smpNext = (int) ((long) inst.smpP * inst.samplingRate / samplingRate);
@@ -762,15 +762,15 @@ public class MDSound {
                     }
                 }
                 break;
-            case 0x01:  // Upsampling
+            case 0x01: // Upsampling
                 chipSmpRate = inst.samplingRate;
                 inPosL = (int) (FIXPNT_FACT * inst.smpP * chipSmpRate / samplingRate);
                 inPre = fp2i_floor(inPosL);
                 inNow = fp2i_ceil(inPosL);
 
-                //if (inst.type == InstrumentType.YM2612)
+                //if (inst.type == InstrumentType.Ym2612)
                 //{
-                //    System.System.err.printf("inPosL={0} , inPre={1} , inNow={2} , inst.SmpNext={3}", inPosL, inPre, inNow, inst.SmpNext);
+                //    System.System.err.printf("inPosL=%d , inPre=%d , inNow=%d , inst.SmpNext=%d", inPosL, inPre, inNow, inst.SmpNext);
                 //}
 
                 curBufL[0x00] = inst.lsmpl[0];
@@ -826,7 +826,7 @@ public class MDSound {
                 inst.nsmpl[1] = curBufR[inNow];
                 inst.smpP += length;
                 break;
-            case 0x02:  // Copying
+            case 0x02: // Copying
                 inst.smpNext = inst.smpP * inst.samplingRate / samplingRate;
                 //inst.Update(inst.ID, StreamBufs, (int)length);
                 clearLength = length;
@@ -850,7 +850,7 @@ public class MDSound {
                 inst.smpP += length;
                 inst.smpLast = inst.smpNext;
                 break;
-            case 0x03:  // Downsampling
+            case 0x03: // Downsampling
                 chipSmpRate = inst.samplingRate;
                 inPosL = (int) (FIXPNT_FACT * (inst.smpP + length) * chipSmpRate / samplingRate);
                 inst.smpNext = fp2i_ceil(inPosL);
@@ -867,7 +867,7 @@ public class MDSound {
                     buff[0][0] = 0;
                     buff[1][0] = 0;
                     inst.update.accept(inst.id, buff, 1);
-                    //System.err.printf("{0} : {1}", i, buff[0][0]);
+                    //System.err.printf("%d : %d", i, buff[0][0]);
 
                     streamPnt[0][ind] = limit((buff[0][0] * mul) >> 15, 0x7fff, -0x8000);
                     streamPnt[1][ind] = limit((buff[1][0] * mul) >> 15, 0x7fff, -0x8000);
@@ -913,7 +913,7 @@ public class MDSound {
                     // whole Samples in between
                     //inPre = fp2i_floor(InPosNext);
                     inNow = fp2i_ceil(inPos);
-                    smpCnt += (inPre - inNow) * FIXPNT_FACT;    // this is faster
+                    smpCnt += (inPre - inNow) * FIXPNT_FACT; // this is faster
                     while (inNow < inPre) {
                         tempSmpL += (long) curBufL[inNow] * FIXPNT_FACT;
                         tempSmpR += (long) curBufR[inNow] * FIXPNT_FACT;
@@ -934,7 +934,7 @@ public class MDSound {
                 break;
             default:
                 inst.smpP += samplingRate;
-                break;  // do absolutely nothing
+                break; // do absolutely nothing
             }
 
             if (inst.smpLast >= inst.samplingRate) {
@@ -949,12 +949,12 @@ public class MDSound {
                 retSample[1][j] += tempSample[1][j];
             }
 
-            //if (tempSample[0][0] != 0) System.err.printf("{0} {1} {2}", i, tempSample[0][0], inst.Resampler);
+            //if (tempSample[0][0] != 0) System.err.printf("%d %d %d", i, tempSample[0][0], inst.Resampler);
         }
     }
 
-    private int getChipVolume(VGMX_CHP_EXTRA16 tempCX, byte chipID, byte chipNum, byte chipCnt, int sn76496VGMHeaderClock, String strSystemNameE, boolean doubleSSGVol) {
-        // chipID: ID of Chip
+    private int getChipVolume(VGMX_CHP_EXTRA16 tempCX, byte chipId, byte chipNum, byte chipCnt, int sn76496VGMHeaderClock, String strSystemNameE, boolean doubleSSGVol) {
+        // chipId: ID of Chip
         //  Bit 7 - Is Paired Chip
         // chipNum: chip number (0 - first chip, 1 - second chip)
         // chipCnt: chip volume divider (number of used chips)
@@ -971,9 +971,9 @@ public class MDSound {
         //VGMX_CHP_EXTRA16 tempCX;
         VGMX_CHIP_DATA16 tempCD;
 
-        volume = CHIP_VOLS[chipID & 0x7F];
-        switch (chipID & 0xff) {
-        case 0x00:  // Sn76496
+        volume = CHIP_VOLS[chipId & 0x7F];
+        switch (chipId & 0xff) {
+        case 0x00: // Sn76496
             // if T6W28, set volume Divider to 01
             if ((sn76496VGMHeaderClock & 0x80000000) != 0) {
                 // The T6W28 consists of 2 "half" chips.
@@ -981,19 +981,19 @@ public class MDSound {
                 chipCnt = 0x01;
             }
             break;
-        case 0x18:  // OKIM6295
+        case 0x18: // OKIM6295
             // CP System 1 patch
-            if ((strSystemNameE != null || !strSystemNameE.isEmpty()) && strSystemNameE.indexOf("CP") == 0)
+            if ((strSystemNameE != null && !strSystemNameE.isEmpty()) && strSystemNameE.indexOf("CP") == 0)
                 volume = 110;
             break;
-        case 0x86:  // YM2203's AY
+        case 0x86: // YM2203's AY
             volume /= 2;
             break;
-        case 0x87:  // YM2608's AY
+        case 0x87: // YM2608's AY
             // The YM2608 outputs twice as loud as the YM2203 here.
             //volume *= 1;
             break;
-        case 0x88:  // YM2610's AY
+        case 0x88: // YM2610's AY
             //volume *= 1;
             break;
         }
@@ -1003,7 +1003,7 @@ public class MDSound {
         //tempCX = VGMH_Extra.Volumes;
         for (curChp = 0x00; curChp < tempCX.chipCnt; curChp++) {
             tempCD = tempCX.ccData[curChp];
-            if (tempCD.type == chipID && (tempCD.flags & 0x01) == chipNum) {
+            if (tempCD.type == chipId && (tempCD.flags & 0x01) == chipNum) {
                 // Bit 15 - absolute/relative volume
                 // 0 - absolute
                 // 1 - relative (0x0100 = 1.0, 0x80 = 0.5, etc.)
@@ -1011,7 +1011,7 @@ public class MDSound {
                     volume = (volume * (tempCD.data & 0x7FFF) + 0x80) >> 8;
                 else {
                     volume = tempCD.data;
-                    if ((chipID & 0x80) != 0 && doubleSSGVol)
+                    if ((chipId & 0x80) != 0 && doubleSSGVol)
                         volume *= 2;
                 }
                 break;
@@ -1035,20 +1035,20 @@ public class MDSound {
 
     // #region AY8910
 
-    public void writeAY8910(byte chipID, byte adr, byte data) {
+    public void writeAY8910(byte chipId, byte adr, byte data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.AY8910)) return;
 
-            dicInst.get(InstrumentType.AY8910)[0].write(chipID, 0, adr, data);
-            //((Ay8910Mame)(dicInst.get(InstrumentType.AY8910)[0])).Write(chipID, 0, adr, data);
+            dicInst.get(InstrumentType.AY8910)[0].write(chipId, 0, adr, data);
+            //((Ay8910Mame)(dicInst.get(InstrumentType.AY8910)[0])).Write(chipId, 0, adr, data);
         }
     }
 
-    public void writeAY8910(int chipIndex, byte chipID, byte adr, byte data) {
+    public void writeAY8910(int chipIndex, byte chipId, byte adr, byte data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.AY8910)) return;
 
-            dicInst.get(InstrumentType.AY8910)[chipIndex].write(chipID, 0, adr, data);
+            dicInst.get(InstrumentType.AY8910)[chipIndex].write(chipId, 0, adr, data);
         }
     }
 
@@ -1065,35 +1065,35 @@ public class MDSound {
         }
     }
 
-    public void setAY8910Mask(int chipID, int ch) {
+    public void setAY8910Mask(int chipId, int ch) {
         synchronized (lockobj) {
-            ay8910Mask.get(0)[chipID] |= ch;
+            ay8910Mask.get(0)[chipId] |= ch;
             if (!dicInst.containsKey(InstrumentType.AY8910)) return;
-            ((Ay8910) (dicInst.get(InstrumentType.AY8910)[0])).setMute((byte) chipID, ay8910Mask.get(0)[chipID]);
+            ((Ay8910) (dicInst.get(InstrumentType.AY8910)[0])).setMute((byte) chipId, ay8910Mask.get(0)[chipId]);
         }
     }
 
-    public void setAY8910Mask(int chipIndex, int chipID, int ch) {
+    public void setAY8910Mask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
-            ay8910Mask.get(chipIndex)[chipID] |= ch;
+            ay8910Mask.get(chipIndex)[chipId] |= ch;
             if (!dicInst.containsKey(InstrumentType.AY8910)) return;
-            ((Ay8910) (dicInst.get(InstrumentType.AY8910)[chipIndex])).setMute((byte) chipID, ay8910Mask.get(chipIndex)[chipID]);
+            ((Ay8910) (dicInst.get(InstrumentType.AY8910)[chipIndex])).setMute((byte) chipId, ay8910Mask.get(chipIndex)[chipId]);
         }
     }
 
-    public void resetAY8910Mask(int chipID, int ch) {
+    public void resetAY8910Mask(int chipId, int ch) {
         synchronized (lockobj) {
-            ay8910Mask.get(0)[chipID] &= ~ch;
+            ay8910Mask.get(0)[chipId] &= ~ch;
             if (!dicInst.containsKey(InstrumentType.AY8910)) return;
-            ((Ay8910) (dicInst.get(InstrumentType.AY8910)[0])).setMute((byte) chipID, ay8910Mask.get(0)[chipID]);
+            ((Ay8910) (dicInst.get(InstrumentType.AY8910)[0])).setMute((byte) chipId, ay8910Mask.get(0)[chipId]);
         }
     }
 
-    public void resetAY8910Mask(int chipIndex, int chipID, int ch) {
+    public void resetAY8910Mask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
-            ay8910Mask.get(chipIndex)[chipID] &= ~ch;
+            ay8910Mask.get(chipIndex)[chipId] &= ~ch;
             if (!dicInst.containsKey(InstrumentType.AY8910)) return;
-            ((Ay8910) (dicInst.get(InstrumentType.AY8910)[chipIndex])).setMute((byte) chipID, ay8910Mask.get(chipIndex)[chipID]);
+            ((Ay8910) (dicInst.get(InstrumentType.AY8910)[chipIndex])).setMute((byte) chipId, ay8910Mask.get(chipIndex)[chipId]);
         }
     }
 
@@ -1112,21 +1112,21 @@ public class MDSound {
 
     // #region AY8910mame
 
-    public void writeAY8910Mame(byte chipID, byte adr, byte data) {
+    public void writeAY8910Mame(byte chipId, byte adr, byte data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.AY8910mame)) return;
             if (dicInst.get(InstrumentType.AY8910mame)[0] == null) return;
 
-            dicInst.get(InstrumentType.AY8910mame)[0].write(chipID, 0, adr, data);
+            dicInst.get(InstrumentType.AY8910mame)[0].write(chipId, 0, adr, data);
         }
     }
 
-    public void writeAY8910Mame(int chipIndex, byte chipID, byte adr, byte data) {
+    public void writeAY8910Mame(int chipIndex, byte chipId, byte adr, byte data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.AY8910mame)) return;
             if (dicInst.get(InstrumentType.AY8910mame)[chipIndex] == null) return;
 
-            dicInst.get(InstrumentType.AY8910mame)[chipIndex].write(chipID, 0, adr, data);
+            dicInst.get(InstrumentType.AY8910mame)[chipIndex].write(chipId, 0, adr, data);
         }
     }
 
@@ -1143,42 +1143,42 @@ public class MDSound {
         }
     }
 
-    public void setAY8910mameMask(int chipID, int ch) {
+    public void setAY8910mameMask(int chipId, int ch) {
         synchronized (lockobj) {
-            ay8910Mask.get(0)[chipID] |= ch;
+            ay8910Mask.get(0)[chipId] |= ch;
             if (!dicInst.containsKey(InstrumentType.AY8910mame)) return;
             if (dicInst.get(InstrumentType.AY8910mame)[0] == null) return;
-            ((Ay8910Mame) (dicInst.get(InstrumentType.AY8910mame)[0])).setMute((byte) chipID, ay8910Mask.get(0)[chipID]);
+            ((Ay8910Mame) (dicInst.get(InstrumentType.AY8910mame)[0])).setMute((byte) chipId, ay8910Mask.get(0)[chipId]);
         }
     }
 
-    public void setAY8910mameMask(int chipIndex, int chipID, int ch) {
+    public void setAY8910mameMask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
-            ay8910Mask.get(chipIndex)[chipID] |= ch;
+            ay8910Mask.get(chipIndex)[chipId] |= ch;
             if (!dicInst.containsKey(InstrumentType.AY8910mame)) return;
             if (dicInst.get(InstrumentType.AY8910mame)[chipIndex] == null) return;
 
-            ((Ay8910Mame) (dicInst.get(InstrumentType.AY8910mame)[chipIndex])).setMute((byte) chipID, ay8910Mask.get(chipIndex)[chipID]);
+            ((Ay8910Mame) (dicInst.get(InstrumentType.AY8910mame)[chipIndex])).setMute((byte) chipId, ay8910Mask.get(chipIndex)[chipId]);
         }
     }
 
-    public void resetAY8910mameMask(int chipID, int ch) {
+    public void resetAY8910mameMask(int chipId, int ch) {
         synchronized (lockobj) {
-            ay8910Mask.get(0)[chipID] &= ~ch;
+            ay8910Mask.get(0)[chipId] &= ~ch;
             if (!dicInst.containsKey(InstrumentType.AY8910mame)) return;
             if (dicInst.get(InstrumentType.AY8910mame)[0] == null) return;
 
-            ((Ay8910Mame) (dicInst.get(InstrumentType.AY8910mame)[0])).setMute((byte) chipID, ay8910Mask.get(0)[chipID]);
+            ((Ay8910Mame) (dicInst.get(InstrumentType.AY8910mame)[0])).setMute((byte) chipId, ay8910Mask.get(0)[chipId]);
         }
     }
 
-    public void resetAY8910mameMask(int chipIndex, int chipID, int ch) {
+    public void resetAY8910mameMask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
-            ay8910Mask.get(chipIndex)[chipID] &= ~ch;
+            ay8910Mask.get(chipIndex)[chipId] &= ~ch;
             if (!dicInst.containsKey(InstrumentType.AY8910mame)) return;
             if (dicInst.get(InstrumentType.AY8910mame)[chipIndex] == null) return;
 
-            ((Ay8910Mame) (dicInst.get(InstrumentType.AY8910mame)[chipIndex])).setMute((byte) chipID, ay8910Mask.get(chipIndex)[chipID]);
+            ((Ay8910Mame) (dicInst.get(InstrumentType.AY8910mame)[chipIndex])).setMute((byte) chipId, ay8910Mask.get(chipIndex)[chipId]);
         }
     }
 
@@ -1199,39 +1199,39 @@ public class MDSound {
 
     // #region WSwan
 
-    public void writeWSwan(byte chipID, byte Adr, byte Data) {
+    public void writeWSwan(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.WSwan)) return;
             if (dicInst.get(InstrumentType.WSwan)[0] == null) return;
 
-            dicInst.get(InstrumentType.WSwan)[0].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.WSwan)[0].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void writeWSwan(int chipIndex, byte chipID, byte Adr, byte Data) {
+    public void writeWSwan(int chipIndex, byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.WSwan)) return;
             if (dicInst.get(InstrumentType.WSwan)[chipIndex] == null) return;
 
-            dicInst.get(InstrumentType.WSwan)[chipIndex].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.WSwan)[chipIndex].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void writeWSwanMem(byte chipID, int Adr, byte Data) {
+    public void writeWSwanMem(byte chipId, int Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.WSwan)) return;
             if (dicInst.get(InstrumentType.WSwan)[0] == null) return;
 
-            ((WsAudio) (dicInst.get(InstrumentType.WSwan)[0])).WriteMem(chipID, Adr, Data);
+            ((WsAudio) (dicInst.get(InstrumentType.WSwan)[0])).WriteMem(chipId, Adr, Data);
         }
     }
 
-    public void writeWSwanMem(int chipIndex, byte chipID, int Adr, byte Data) {
+    public void writeWSwanMem(int chipIndex, byte chipId, int Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.WSwan)) return;
             if (dicInst.get(InstrumentType.WSwan)[0] == null) return;
 
-            ((WsAudio) (dicInst.get(InstrumentType.WSwan)[chipIndex])).WriteMem(chipID, Adr, Data);
+            ((WsAudio) (dicInst.get(InstrumentType.WSwan)[chipIndex])).WriteMem(chipId, Adr, Data);
         }
     }
 
@@ -1249,39 +1249,39 @@ public class MDSound {
         }
     }
 
-    public void setWSwanMask(int chipID, int ch) {
+    public void setWSwanMask(int chipId, int ch) {
         synchronized (lockobj) {
-            ay8910Mask.get(0)[chipID] |= ch;
+            ay8910Mask.get(0)[chipId] |= ch;
             if (!dicInst.containsKey(InstrumentType.WSwan)) return;
             if (dicInst.get(InstrumentType.WSwan)[0] == null) return;
-            ((WsAudio) (dicInst.get(InstrumentType.WSwan)[0])).SetMute((byte) chipID, WSwanMask.get(0)[chipID]);
+            ((WsAudio) (dicInst.get(InstrumentType.WSwan)[0])).SetMute((byte) chipId, WSwanMask.get(0)[chipId]);
         }
     }
 
-    public void setWSwanMask(int chipIndex, int chipID, int ch) {
+    public void setWSwanMask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
-            WSwanMask.get(chipIndex)[chipID] |= ch;
+            WSwanMask.get(chipIndex)[chipId] |= ch;
             if (!dicInst.containsKey(InstrumentType.WSwan)) return;
             if (dicInst.get(InstrumentType.WSwan)[chipIndex] == null) return;
-            ((WsAudio) (dicInst.get(InstrumentType.WSwan)[chipIndex])).SetMute((byte) chipID, WSwanMask.get(chipIndex)[chipID]);
+            ((WsAudio) (dicInst.get(InstrumentType.WSwan)[chipIndex])).SetMute((byte) chipId, WSwanMask.get(chipIndex)[chipId]);
         }
     }
 
-    public void resetWSwanMask(int chipID, int ch) {
+    public void resetWSwanMask(int chipId, int ch) {
         synchronized (lockobj) {
-            WSwanMask.get(0)[chipID] &= ~ch;
+            WSwanMask.get(0)[chipId] &= ~ch;
             if (!dicInst.containsKey(InstrumentType.WSwan)) return;
             if (dicInst.get(InstrumentType.WSwan)[0] == null) return;
-            ((WsAudio) (dicInst.get(InstrumentType.WSwan)[0])).SetMute((byte) chipID, WSwanMask.get(0)[chipID]);
+            ((WsAudio) (dicInst.get(InstrumentType.WSwan)[0])).SetMute((byte) chipId, WSwanMask.get(0)[chipId]);
         }
     }
 
-    public void resetWSwanMask(int chipIndex, int chipID, int ch) {
+    public void resetWSwanMask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
-            WSwanMask.get(chipIndex)[chipID] &= ~ch;
+            WSwanMask.get(chipIndex)[chipId] &= ~ch;
             if (!dicInst.containsKey(InstrumentType.WSwan)) return;
             if (dicInst.get(InstrumentType.WSwan)[chipIndex] == null) return;
-            ((WsAudio) (dicInst.get(InstrumentType.WSwan)[chipIndex])).SetMute((byte) chipID, WSwanMask.get(chipIndex)[chipID]);
+            ((WsAudio) (dicInst.get(InstrumentType.WSwan)[chipIndex])).SetMute((byte) chipId, WSwanMask.get(chipIndex)[chipId]);
         }
     }
 
@@ -1302,19 +1302,19 @@ public class MDSound {
 
     // #region SAA1099
 
-    public void writeSAA1099(byte chipID, byte Adr, byte Data) {
+    public void writeSAA1099(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.SAA1099)) return;
 
-            dicInst.get(InstrumentType.SAA1099)[0].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.SAA1099)[0].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void writeSAA1099(int chipIndex, byte chipID, byte Adr, byte Data) {
+    public void writeSAA1099(int chipIndex, byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.SAA1099)) return;
 
-            dicInst.get(InstrumentType.SAA1099)[chipIndex].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.SAA1099)[chipIndex].write(chipId, 0, Adr, Data);
         }
     }
 
@@ -1332,35 +1332,35 @@ public class MDSound {
         }
     }
 
-    public void setSAA1099Mask(int chipID, int ch) {
+    public void setSAA1099Mask(int chipId, int ch) {
         synchronized (lockobj) {
-            saa1099Mask.get(0)[chipID] |= ch;
+            saa1099Mask.get(0)[chipId] |= ch;
             if (!dicInst.containsKey(InstrumentType.SAA1099)) return;
-            ((Saa1099) (dicInst.get(InstrumentType.SAA1099)[0])).SAA1099_SetMute((byte) chipID, saa1099Mask.get(0)[chipID]);
+            ((Saa1099) (dicInst.get(InstrumentType.SAA1099)[0])).SAA1099_SetMute((byte) chipId, saa1099Mask.get(0)[chipId]);
         }
     }
 
-    public void setSAA1099Mask(int chipIndex, int chipID, int ch) {
+    public void setSAA1099Mask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
-            saa1099Mask.get(chipIndex)[chipID] |= ch;
+            saa1099Mask.get(chipIndex)[chipId] |= ch;
             if (!dicInst.containsKey(InstrumentType.SAA1099)) return;
-            ((Saa1099) (dicInst.get(InstrumentType.SAA1099)[chipIndex])).SAA1099_SetMute((byte) chipID, saa1099Mask.get(chipIndex)[chipID]);
+            ((Saa1099) (dicInst.get(InstrumentType.SAA1099)[chipIndex])).SAA1099_SetMute((byte) chipId, saa1099Mask.get(chipIndex)[chipId]);
         }
     }
 
-    public void resetSAA1099Mask(int chipID, int ch) {
+    public void resetSAA1099Mask(int chipId, int ch) {
         synchronized (lockobj) {
-            saa1099Mask.get(0)[chipID] &= ~ch;
+            saa1099Mask.get(0)[chipId] &= ~ch;
             if (!dicInst.containsKey(InstrumentType.SAA1099)) return;
-            ((Saa1099) (dicInst.get(InstrumentType.SAA1099)[0])).SAA1099_SetMute((byte) chipID, saa1099Mask.get(0)[chipID]);
+            ((Saa1099) (dicInst.get(InstrumentType.SAA1099)[0])).SAA1099_SetMute((byte) chipId, saa1099Mask.get(0)[chipId]);
         }
     }
 
-    public void resetSAA1099Mask(int chipIndex, int chipID, int ch) {
+    public void resetSAA1099Mask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
-            saa1099Mask.get(chipIndex)[chipID] &= ~ch;
+            saa1099Mask.get(chipIndex)[chipId] &= ~ch;
             if (!dicInst.containsKey(InstrumentType.SAA1099)) return;
-            ((Saa1099) (dicInst.get(InstrumentType.SAA1099)[chipIndex])).SAA1099_SetMute((byte) chipID, saa1099Mask.get(chipIndex)[chipID]);
+            ((Saa1099) (dicInst.get(InstrumentType.SAA1099)[chipIndex])).SAA1099_SetMute((byte) chipId, saa1099Mask.get(chipIndex)[chipId]);
         }
     }
 
@@ -1378,19 +1378,19 @@ public class MDSound {
 
     // #region POKEY
 
-    public void writePOKEY(byte chipID, byte adr, byte data) {
+    public void writePOKEY(byte chipId, byte adr, byte data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.POKEY)) return;
 
-            dicInst.get(InstrumentType.POKEY)[0].write(chipID, 0, adr, data);
+            dicInst.get(InstrumentType.POKEY)[0].write(chipId, 0, adr, data);
         }
     }
 
-    public void writePOKEY(int chipIndex, byte chipID, byte adr, byte data) {
+    public void writePOKEY(int chipIndex, byte chipId, byte adr, byte data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.POKEY)) return;
 
-            dicInst.get(InstrumentType.POKEY)[chipIndex].write(chipID, 0, adr, data);
+            dicInst.get(InstrumentType.POKEY)[chipIndex].write(chipId, 0, adr, data);
         }
     }
 
@@ -1399,37 +1399,37 @@ public class MDSound {
 
     // #region X1_010
 
-    public void writeX1_010(byte chipID, int adr, byte data) {
+    public void writeX1_010(byte chipId, int adr, byte data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.X1_010)) return;
 
-            dicInst.get(InstrumentType.X1_010)[0].write(chipID, 0, adr, data);
+            dicInst.get(InstrumentType.X1_010)[0].write(chipId, 0, adr, data);
         }
     }
 
-    public void writeX1_010(int chipIndex, byte chipID, int Adr, byte Data) {
+    public void writeX1_010(int chipIndex, byte chipId, int Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.X1_010)) return;
 
-            dicInst.get(InstrumentType.X1_010)[chipIndex].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.X1_010)[chipIndex].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void writeX1_010PCMData(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
+    public void writeX1_010PCMData(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.X1_010)) return;
 
-            //((QSound)(dicInst.get(InstrumentType.QSound)[0])).qsound_write_rom(chipID, (int)romSize, (int)dataStart, (int)dataLength, romData, (int)SrcStartAdr);
-            ((X1_010) (dicInst.get(InstrumentType.X1_010)[0])).x1_010_write_rom(chipID, romSize, dataStart, dataLength, romData, SrcStartAdr);
+            //((QSound)(dicInst.get(InstrumentType.QSound)[0])).qsound_write_rom(chipId, (int)romSize, (int)dataStart, (int)dataLength, romData, (int)SrcStartAdr);
+            ((X1_010) (dicInst.get(InstrumentType.X1_010)[0])).x1_010_write_rom(chipId, romSize, dataStart, dataLength, romData, SrcStartAdr);
         }
     }
 
-    public void writeX1_010PCMData(int chipIndex, byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
+    public void writeX1_010PCMData(int chipIndex, byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.X1_010)) return;
 
-            //((QSound)(dicInst.get(InstrumentType.QSound)[chipIndex])).qsound_write_rom(chipID, (int)romSize, (int)dataStart, (int)dataLength, romData, (int)SrcStartAdr);
-            ((X1_010) (dicInst.get(InstrumentType.X1_010)[chipIndex])).x1_010_write_rom(chipID, romSize, dataStart, dataLength, romData, SrcStartAdr);
+            //((QSound)(dicInst.get(InstrumentType.QSound)[chipIndex])).qsound_write_rom(chipId, (int)romSize, (int)dataStart, (int)dataLength, romData, (int)SrcStartAdr);
+            ((X1_010) (dicInst.get(InstrumentType.X1_010)[chipIndex])).x1_010_write_rom(chipId, romSize, dataStart, dataLength, romData, SrcStartAdr);
         }
     }
 
@@ -1446,35 +1446,35 @@ public class MDSound {
         }
     }
 
-    public void setX1_010Mask(int chipID, int ch) {
+    public void setX1_010Mask(int chipId, int ch) {
         synchronized (lockobj) {
-            x1_010Mask.get(0)[chipID] |= ch;
+            x1_010Mask.get(0)[chipId] |= ch;
             if (!dicInst.containsKey(InstrumentType.X1_010)) return;
-            ((X1_010) (dicInst.get(InstrumentType.X1_010)[0])).x1_010_set_mute_mask((byte) chipID, x1_010Mask.get(0)[chipID]);
+            ((X1_010) (dicInst.get(InstrumentType.X1_010)[0])).x1_010_set_mute_mask((byte) chipId, x1_010Mask.get(0)[chipId]);
         }
     }
 
-    public void setX1_010Mask(int chipIndex, int chipID, int ch) {
+    public void setX1_010Mask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
-            x1_010Mask.get(chipIndex)[chipID] |= ch;
+            x1_010Mask.get(chipIndex)[chipId] |= ch;
             if (!dicInst.containsKey(InstrumentType.X1_010)) return;
-            ((X1_010) (dicInst.get(InstrumentType.X1_010)[chipIndex])).x1_010_set_mute_mask((byte) chipID, x1_010Mask.get(chipIndex)[chipID]);
+            ((X1_010) (dicInst.get(InstrumentType.X1_010)[chipIndex])).x1_010_set_mute_mask((byte) chipId, x1_010Mask.get(chipIndex)[chipId]);
         }
     }
 
-    public void resetX1_010Mask(int chipID, int ch) {
+    public void resetX1_010Mask(int chipId, int ch) {
         synchronized (lockobj) {
-            x1_010Mask.get(0)[chipID] &= ~ch;
+            x1_010Mask.get(0)[chipId] &= ~ch;
             if (!dicInst.containsKey(InstrumentType.X1_010)) return;
-            ((X1_010) (dicInst.get(InstrumentType.X1_010)[0])).x1_010_set_mute_mask((byte) chipID, x1_010Mask.get(0)[chipID]);
+            ((X1_010) (dicInst.get(InstrumentType.X1_010)[0])).x1_010_set_mute_mask((byte) chipId, x1_010Mask.get(0)[chipId]);
         }
     }
 
-    public void resetX1_010Mask(int chipIndex, int chipID, int ch) {
+    public void resetX1_010Mask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
-            x1_010Mask.get(chipIndex)[chipID] &= ~ch;
+            x1_010Mask.get(chipIndex)[chipId] &= ~ch;
             if (!dicInst.containsKey(InstrumentType.X1_010)) return;
-            ((X1_010) (dicInst.get(InstrumentType.X1_010)[chipIndex])).x1_010_set_mute_mask((byte) chipID, x1_010Mask.get(chipIndex)[chipID]);
+            ((X1_010) (dicInst.get(InstrumentType.X1_010)[chipIndex])).x1_010_set_mute_mask((byte) chipId, x1_010Mask.get(chipIndex)[chipId]);
         }
     }
 
@@ -1493,35 +1493,35 @@ public class MDSound {
 
     // #region SN76489
 
-    public void writeSN76489(byte chipID, byte Data) {
+    public void writeSN76489(byte chipId, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.SN76489)) return;
 
-            dicInst.get(InstrumentType.SN76489)[0].write(chipID, 0, 0, Data);
+            dicInst.get(InstrumentType.SN76489)[0].write(chipId, 0, 0, Data);
         }
     }
 
-    public void writeSN76489(int chipIndex, byte chipID, byte Data) {
+    public void writeSN76489(int chipIndex, byte chipId, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.SN76489)) return;
 
-            dicInst.get(InstrumentType.SN76489)[chipIndex].write(chipID, 0, 0, Data);
+            dicInst.get(InstrumentType.SN76489)[chipIndex].write(chipId, 0, 0, Data);
         }
     }
 
-    public void writeSN76489GGPanning(byte chipID, byte Data) {
+    public void writeSN76489GGPanning(byte chipId, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.SN76489)) return;
 
-            ((Sn76489) (dicInst.get(InstrumentType.SN76489)[0])).SN76489_GGStereoWrite(chipID, Data);
+            ((Sn76489) (dicInst.get(InstrumentType.SN76489)[0])).SN76489_GGStereoWrite(chipId, Data);
         }
     }
 
-    public void writeSN76489GGPanning(int chipIndex, byte chipID, byte Data) {
+    public void writeSN76489GGPanning(int chipIndex, byte chipId, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.SN76489)) return;
 
-            ((Sn76489) (dicInst.get(InstrumentType.SN76489)[chipIndex])).SN76489_GGStereoWrite(chipID, Data);
+            ((Sn76489) (dicInst.get(InstrumentType.SN76489)[chipIndex])).SN76489_GGStereoWrite(chipId, Data);
         }
     }
 
@@ -1530,66 +1530,66 @@ public class MDSound {
 
     // #region Sn76496
 
-    public void writeSN76496(byte chipID, byte data) {
+    public void writeSN76496(byte chipId, byte data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.SN76496)) return;
 
-            dicInst.get(InstrumentType.SN76496)[0].write(chipID, 0, 0, data);
+            dicInst.get(InstrumentType.SN76496)[0].write(chipId, 0, 0, data);
         }
     }
 
-    public void writeSN76496(int chipIndex, byte chipID, byte data) {
+    public void writeSN76496(int chipIndex, byte chipId, byte data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.SN76496)) return;
 
-            dicInst.get(InstrumentType.SN76496)[chipIndex].write(chipID, 0, 0, data);
+            dicInst.get(InstrumentType.SN76496)[chipIndex].write(chipId, 0, 0, data);
         }
     }
 
-    public void writeSN76496GGPanning(byte chipID, byte data) {
+    public void writeSN76496GGPanning(byte chipId, byte data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.SN76496)) return;
 
-            ((Sn76496) (dicInst.get(InstrumentType.SN76496)[0])).SN76496_GGStereoWrite(chipID, 0, 0, data);
+            ((Sn76496) (dicInst.get(InstrumentType.SN76496)[0])).SN76496_GGStereoWrite(chipId, 0, 0, data);
         }
     }
 
-    public void writeSN76496GGPanning(int chipIndex, byte chipID, byte data) {
+    public void writeSN76496GGPanning(int chipIndex, byte chipId, byte data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.SN76496)) return;
 
-            ((Sn76496) (dicInst.get(InstrumentType.SN76496)[chipIndex])).SN76496_GGStereoWrite(chipID, 0, 0, data);
+            ((Sn76496) (dicInst.get(InstrumentType.SN76496)[chipIndex])).SN76496_GGStereoWrite(chipId, 0, 0, data);
         }
     }
 
     // #endregion
 
 
-    // #region YM2612
+    // #region Ym2612
 
-    public void writeYM2612(byte chipID, byte port, byte adr, byte data) {
+    public void writeYM2612(byte chipId, byte port, byte adr, byte data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2612)) return;
 
-            dicInst.get(InstrumentType.YM2612)[0].write(chipID, 0, (byte) (0 + (port & 1) * 2), adr);
-            dicInst.get(InstrumentType.YM2612)[0].write(chipID, 0, (byte) (1 + (port & 1) * 2), data);
+            dicInst.get(InstrumentType.YM2612)[0].write(chipId, 0, (byte) (0 + (port & 1) * 2), adr);
+            dicInst.get(InstrumentType.YM2612)[0].write(chipId, 0, (byte) (1 + (port & 1) * 2), data);
         }
     }
 
-    public void writeYM2612(int chipIndex, byte chipID, byte port, byte adr, byte data) {
+    public void writeYM2612(int chipIndex, byte chipId, byte port, byte adr, byte data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2612)) return;
 
-            dicInst.get(InstrumentType.YM2612)[chipIndex].write(chipID, 0, (byte) (0 + (port & 1) * 2), adr);
-            dicInst.get(InstrumentType.YM2612)[chipIndex].write(chipID, 0, (byte) (1 + (port & 1) * 2), data);
+            dicInst.get(InstrumentType.YM2612)[chipIndex].write(chipId, 0, (byte) (0 + (port & 1) * 2), adr);
+            dicInst.get(InstrumentType.YM2612)[chipIndex].write(chipId, 0, (byte) (1 + (port & 1) * 2), data);
         }
     }
 
-    public void playPCMYM2612X(int chipIndex, byte chipID, byte port, byte adr, byte data) {
+    public void playPCMYM2612X(int chipIndex, byte chipId, byte port, byte adr, byte data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2612)) return;
             if (!(dicInst.get(InstrumentType.YM2612)[chipIndex] instanceof Ym2612X)) return;
-            ((Ym2612X) dicInst.get(InstrumentType.YM2612)[chipIndex]).XGMfunction.PlayPCM(chipID, adr, data);
+            ((Ym2612X) dicInst.get(InstrumentType.YM2612)[chipIndex]).XGMfunction.PlayPCM(chipId, adr, data);
         }
     }
 
@@ -1598,60 +1598,60 @@ public class MDSound {
 
     // #region YM3438
 
-    public void writeYM3438(byte chipID, byte port, byte adr, byte data) {
+    public void writeYM3438(byte chipId, byte port, byte adr, byte data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM3438)) return;
 
-            dicInst.get(InstrumentType.YM3438)[0].write(chipID, 0, (byte) (0 + (port & 1) * 2), adr);
-            dicInst.get(InstrumentType.YM3438)[0].write(chipID, 0, (byte) (1 + (port & 1) * 2), data);
+            dicInst.get(InstrumentType.YM3438)[0].write(chipId, 0, (byte) (0 + (port & 1) * 2), adr);
+            dicInst.get(InstrumentType.YM3438)[0].write(chipId, 0, (byte) (1 + (port & 1) * 2), data);
         }
     }
 
-    public void writeYM3438(int chipIndex, byte chipID, byte port, byte adr, byte data) {
+    public void writeYM3438(int chipIndex, byte chipId, byte port, byte adr, byte data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM3438)) return;
 
-            dicInst.get(InstrumentType.YM3438)[chipIndex].write(chipID, 0, (byte) (0 + (port & 1) * 2), adr);
-            dicInst.get(InstrumentType.YM3438)[chipIndex].write(chipID, 0, (byte) (1 + (port & 1) * 2), data);
+            dicInst.get(InstrumentType.YM3438)[chipIndex].write(chipId, 0, (byte) (0 + (port & 1) * 2), adr);
+            dicInst.get(InstrumentType.YM3438)[chipIndex].write(chipId, 0, (byte) (1 + (port & 1) * 2), data);
         }
     }
 
-    public void playPCMYM3438X(int chipIndex, byte chipID, byte port, byte adr, byte data) {
+    public void playPCMYM3438X(int chipIndex, byte chipId, byte port, byte adr, byte data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM3438)) return;
             if (!(dicInst.get(InstrumentType.YM3438)[chipIndex] instanceof Ym3438X)) return;
-            ((Ym3438X) dicInst.get(InstrumentType.YM3438)[chipIndex]).xgmFunction.PlayPCM(chipID, adr, data);
+            ((Ym3438X) dicInst.get(InstrumentType.YM3438)[chipIndex]).xgmFunction.PlayPCM(chipId, adr, data);
         }
     }
 
     // #endregion
 
 
-    // #region YM2612
+    // #region Ym2612
 
-    public void writeYM2612Mame(byte chipID, byte port, byte adr, byte data) {
+    public void writeYM2612Mame(byte chipId, byte port, byte adr, byte data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2612mame)) return;
 
-            dicInst.get(InstrumentType.YM2612mame)[0].write(chipID, 0, (byte) (0 + (port & 1) * 2), adr);
-            dicInst.get(InstrumentType.YM2612mame)[0].write(chipID, 0, (byte) (1 + (port & 1) * 2), data);
+            dicInst.get(InstrumentType.YM2612mame)[0].write(chipId, 0, (byte) (0 + (port & 1) * 2), adr);
+            dicInst.get(InstrumentType.YM2612mame)[0].write(chipId, 0, (byte) (1 + (port & 1) * 2), data);
         }
     }
 
-    public void writeYM2612Mame(int chipIndex, byte chipID, byte Port, byte Adr, byte Data) {
+    public void writeYM2612Mame(int chipIndex, byte chipId, byte Port, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2612mame)) return;
 
-            dicInst.get(InstrumentType.YM2612mame)[chipIndex].write(chipID, 0, (byte) (0 + (Port & 1) * 2), Adr);
-            dicInst.get(InstrumentType.YM2612mame)[chipIndex].write(chipID, 0, (byte) (1 + (Port & 1) * 2), Data);
+            dicInst.get(InstrumentType.YM2612mame)[chipIndex].write(chipId, 0, (byte) (0 + (Port & 1) * 2), Adr);
+            dicInst.get(InstrumentType.YM2612mame)[chipIndex].write(chipId, 0, (byte) (1 + (Port & 1) * 2), Data);
         }
     }
 
-    public void playPCMYM2612MameX(int chipIndex, byte chipID, byte port, byte adr, byte data) {
+    public void playPCMYM2612MameX(int chipIndex, byte chipId, byte port, byte adr, byte data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2612mame)) return;
             if (!(dicInst.get(InstrumentType.YM2612mame)[chipIndex] instanceof Ym2612MameX)) return;
-            ((Ym2612MameX) dicInst.get(InstrumentType.YM2612mame)[chipIndex]).XGMfunction.PlayPCM(chipID, adr, data);
+            ((Ym2612MameX) dicInst.get(InstrumentType.YM2612mame)[chipIndex]).XGMfunction.PlayPCM(chipId, adr, data);
         }
     }
 
@@ -1660,20 +1660,20 @@ public class MDSound {
 
     // #region PWM
 
-    public void writePWM(byte chipID, byte adr, int data) {
+    public void writePWM(byte chipId, byte adr, int data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.PWM)) return;
 
-            dicInst.get(InstrumentType.PWM)[0].write(chipID, 0, adr, data);
+            dicInst.get(InstrumentType.PWM)[0].write(chipId, 0, adr, data);
             // (byte)((adr & 0xf0)>>4),(int)((adr & 0xf)*0x100+data));
         }
     }
 
-    public void writePWM(int chipIndex, byte chipID, byte adr, int data) {
+    public void writePWM(int chipIndex, byte chipId, byte adr, int data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.PWM)) return;
 
-            dicInst.get(InstrumentType.PWM)[chipIndex].write(chipID, 0, adr, data);
+            dicInst.get(InstrumentType.PWM)[chipIndex].write(chipId, 0, adr, data);
         }
     }
 
@@ -1682,51 +1682,51 @@ public class MDSound {
 
     // #region RF5C164
 
-    public void writeRF5C164(byte chipID, byte Adr, byte Data) {
+    public void writeRF5C164(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.RF5C164)) return;
 
-            dicInst.get(InstrumentType.RF5C164)[0].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.RF5C164)[0].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void writeRF5C164(int chipIndex, byte chipID, byte Adr, byte Data) {
+    public void writeRF5C164(int chipIndex, byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.RF5C164)) return;
 
-            dicInst.get(InstrumentType.RF5C164)[chipIndex].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.RF5C164)[chipIndex].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void WriteRF5C164PCMData(byte chipID, int RAMStartAdr, int RAMdataLength, byte[] SrcData, int SrcStartAdr) {
+    public void WriteRF5C164PCMData(byte chipId, int RAMStartAdr, int RAMdataLength, byte[] SrcData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.RF5C164)) return;
 
-            ((ScdPcm) (dicInst.get(InstrumentType.RF5C164)[0])).rf5c164_write_ram2(chipID, RAMStartAdr, RAMdataLength, SrcData, SrcStartAdr);
+            ((ScdPcm) (dicInst.get(InstrumentType.RF5C164)[0])).rf5c164_write_ram2(chipId, RAMStartAdr, RAMdataLength, SrcData, SrcStartAdr);
         }
     }
 
-    public void WriteRF5C164PCMData(int chipIndex, byte chipID, int RAMStartAdr, int RAMdataLength, byte[] SrcData, int SrcStartAdr) {
+    public void WriteRF5C164PCMData(int chipIndex, byte chipId, int RAMStartAdr, int RAMdataLength, byte[] SrcData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.RF5C164)) return;
 
-            ((ScdPcm) (dicInst.get(InstrumentType.RF5C164)[chipIndex])).rf5c164_write_ram2(chipID, RAMStartAdr, RAMdataLength, SrcData, SrcStartAdr);
+            ((ScdPcm) (dicInst.get(InstrumentType.RF5C164)[chipIndex])).rf5c164_write_ram2(chipId, RAMStartAdr, RAMdataLength, SrcData, SrcStartAdr);
         }
     }
 
-    public void WriteRF5C164MemW(byte chipID, int Adr, byte Data) {
+    public void WriteRF5C164MemW(byte chipId, int Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.RF5C164)) return;
 
-            ((ScdPcm) (dicInst.get(InstrumentType.RF5C164)[0])).rf5c164_mem_w(chipID, Adr, Data);
+            ((ScdPcm) (dicInst.get(InstrumentType.RF5C164)[0])).rf5c164_mem_w(chipId, Adr, Data);
         }
     }
 
-    public void WriteRF5C164MemW(int chipIndex, byte chipID, int Adr, byte Data) {
+    public void WriteRF5C164MemW(int chipIndex, byte chipId, int Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.RF5C164)) return;
 
-            ((ScdPcm) (dicInst.get(InstrumentType.RF5C164)[chipIndex])).rf5c164_mem_w(chipID, Adr, Data);
+            ((ScdPcm) (dicInst.get(InstrumentType.RF5C164)[chipIndex])).rf5c164_mem_w(chipId, Adr, Data);
         }
     }
 
@@ -1735,51 +1735,51 @@ public class MDSound {
 
     // #region RF5C68
 
-    public void WriteRF5C68(byte chipID, byte Adr, byte Data) {
+    public void WriteRF5C68(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.RF5C68)) return;
 
-            dicInst.get(InstrumentType.RF5C68)[0].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.RF5C68)[0].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void WriteRF5C68(int chipIndex, byte chipID, byte Adr, byte Data) {
+    public void WriteRF5C68(int chipIndex, byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.RF5C68)) return;
 
-            dicInst.get(InstrumentType.RF5C68)[chipIndex].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.RF5C68)[chipIndex].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void WriteRF5C68PCMData(byte chipID, int RAMStartAdr, int RAMdataLength, byte[] SrcData, int SrcStartAdr) {
+    public void WriteRF5C68PCMData(byte chipId, int RAMStartAdr, int RAMdataLength, byte[] SrcData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.RF5C68)) return;
 
-            ((Rf5c68) (dicInst.get(InstrumentType.RF5C68)[0])).rf5c68_write_ram2(chipID, RAMStartAdr, RAMdataLength, SrcData, SrcStartAdr);
+            ((Rf5c68) (dicInst.get(InstrumentType.RF5C68)[0])).rf5c68_write_ram2(chipId, RAMStartAdr, RAMdataLength, SrcData, SrcStartAdr);
         }
     }
 
-    public void WriteRF5C68PCMData(int chipIndex, byte chipID, int RAMStartAdr, int RAMdataLength, byte[] SrcData, int SrcStartAdr) {
+    public void WriteRF5C68PCMData(int chipIndex, byte chipId, int RAMStartAdr, int RAMdataLength, byte[] SrcData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.RF5C68)) return;
 
-            ((Rf5c68) (dicInst.get(InstrumentType.RF5C68)[chipIndex])).rf5c68_write_ram2(chipID, RAMStartAdr, RAMdataLength, SrcData, SrcStartAdr);
+            ((Rf5c68) (dicInst.get(InstrumentType.RF5C68)[chipIndex])).rf5c68_write_ram2(chipId, RAMStartAdr, RAMdataLength, SrcData, SrcStartAdr);
         }
     }
 
-    public void WriteRF5C68MemW(byte chipID, int Adr, byte Data) {
+    public void WriteRF5C68MemW(byte chipId, int Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.RF5C68)) return;
 
-            ((Rf5c68) (dicInst.get(InstrumentType.RF5C68)[0])).rf5c68_mem_w(chipID, Adr, Data);
+            ((Rf5c68) (dicInst.get(InstrumentType.RF5C68)[0])).rf5c68_mem_w(chipId, Adr, Data);
         }
     }
 
-    public void WriteRF5C68MemW(int chipIndex, byte chipID, int Adr, byte Data) {
+    public void WriteRF5C68MemW(int chipIndex, byte chipId, int Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.RF5C68)) return;
 
-            ((Rf5c68) (dicInst.get(InstrumentType.RF5C68)[chipIndex])).rf5c68_mem_w(chipID, Adr, Data);
+            ((Rf5c68) (dicInst.get(InstrumentType.RF5C68)[chipIndex])).rf5c68_mem_w(chipId, Adr, Data);
         }
     }
 
@@ -1788,35 +1788,35 @@ public class MDSound {
 
     // #region C140
 
-    public void WriteC140(byte chipID, int Adr, byte Data) {
+    public void WriteC140(byte chipId, int Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.C140)) return;
 
-            dicInst.get(InstrumentType.C140)[0].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.C140)[0].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void WriteC140(int chipIndex, byte chipID, int Adr, byte Data) {
+    public void WriteC140(int chipIndex, byte chipId, int Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.C140)) return;
 
-            dicInst.get(InstrumentType.C140)[chipIndex].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.C140)[chipIndex].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void WriteC140PCMData(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
+    public void WriteC140PCMData(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.C140)) return;
 
-            ((C140) (dicInst.get(InstrumentType.C140)[0])).c140_write_rom2(chipID, romSize, dataStart, dataLength, romData, SrcStartAdr);
+            ((C140) (dicInst.get(InstrumentType.C140)[0])).c140_write_rom2(chipId, romSize, dataStart, dataLength, romData, SrcStartAdr);
         }
     }
 
-    public void WriteC140PCMData(int chipIndex, byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
+    public void WriteC140PCMData(int chipIndex, byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.C140)) return;
 
-            ((C140) (dicInst.get(InstrumentType.C140)[chipIndex])).c140_write_rom2(chipID, romSize, dataStart, dataLength, romData, SrcStartAdr);
+            ((C140) (dicInst.get(InstrumentType.C140)[chipIndex])).c140_write_rom2(chipId, romSize, dataStart, dataLength, romData, SrcStartAdr);
         }
     }
 
@@ -1825,19 +1825,19 @@ public class MDSound {
 
     // #region YM3812
 
-    public void writeYM3812(int chipID, int rAdr, int rDat) {
+    public void writeYM3812(int chipId, int rAdr, int rDat) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM3812)) return;
 
-            dicInst.get(InstrumentType.YM3812)[0].write((byte) chipID, 0, rAdr, rDat);
+            dicInst.get(InstrumentType.YM3812)[0].write((byte) chipId, 0, rAdr, rDat);
         }
     }
 
-    public void writeYM3812(int chipIndex, int chipID, int rAdr, int rDat) {
+    public void writeYM3812(int chipIndex, int chipId, int rAdr, int rDat) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM3812)) return;
 
-            dicInst.get(InstrumentType.YM3812)[chipIndex].write((byte) chipID, 0, rAdr, rDat);
+            dicInst.get(InstrumentType.YM3812)[chipIndex].write((byte) chipId, 0, rAdr, rDat);
         }
     }
 
@@ -1846,35 +1846,35 @@ public class MDSound {
 
     // #region C352
 
-    public void WriteC352(byte chipID, int Adr, int Data) {
+    public void WriteC352(byte chipId, int Adr, int Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.C352)) return;
 
-            dicInst.get(InstrumentType.C352)[0].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.C352)[0].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void WriteC352(int chipIndex, byte chipID, int Adr, int Data) {
+    public void WriteC352(int chipIndex, byte chipId, int Adr, int Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.C352)) return;
 
-            dicInst.get(InstrumentType.C352)[chipIndex].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.C352)[chipIndex].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void WriteC352PCMData(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
+    public void WriteC352PCMData(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.C352)) return;
 
-            ((C352) (dicInst.get(InstrumentType.C352)[0])).c352_write_rom2(chipID, romSize, dataStart, dataLength, romData, SrcStartAdr);
+            ((C352) (dicInst.get(InstrumentType.C352)[0])).c352_write_rom2(chipId, romSize, dataStart, dataLength, romData, SrcStartAdr);
         }
     }
 
-    public void WriteC352PCMData(int chipIndex, byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
+    public void WriteC352PCMData(int chipIndex, byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.C352)) return;
 
-            ((C352) (dicInst.get(InstrumentType.C352)[chipIndex])).c352_write_rom2(chipID, romSize, dataStart, dataLength, romData, SrcStartAdr);
+            ((C352) (dicInst.get(InstrumentType.C352)[chipIndex])).c352_write_rom2(chipId, romSize, dataStart, dataLength, romData, SrcStartAdr);
         }
     }
 
@@ -1883,19 +1883,19 @@ public class MDSound {
 
     // #region YMF271
 
-    public void WriteYMF271PCMData(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
+    public void WriteYMF271PCMData(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YMF271)) return;
 
-            ((Ymf271) (dicInst.get(InstrumentType.YMF271)[0])).ymf271_write_rom(chipID, romSize, dataStart, dataLength, romData, SrcStartAdr);
+            ((Ymf271) (dicInst.get(InstrumentType.YMF271)[0])).ymf271_write_rom(chipId, romSize, dataStart, dataLength, romData, SrcStartAdr);
         }
     }
 
-    public void WriteYMF271PCMData(int chipIndex, byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
+    public void WriteYMF271PCMData(int chipIndex, byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YMF271)) return;
 
-            ((Ymf271) (dicInst.get(InstrumentType.YMF271)[chipIndex])).ymf271_write_rom(chipID, romSize, dataStart, dataLength, romData, SrcStartAdr);
+            ((Ymf271) (dicInst.get(InstrumentType.YMF271)[chipIndex])).ymf271_write_rom(chipId, romSize, dataStart, dataLength, romData, SrcStartAdr);
         }
     }
 
@@ -1904,35 +1904,35 @@ public class MDSound {
 
     // #region YMF278B
 
-    public void WriteYMF278BPCMData(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
+    public void WriteYMF278BPCMData(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YMF278B)) return;
 
-            ((Ymf278b) (dicInst.get(InstrumentType.YMF278B)[0])).ymf278b_write_rom(chipID, romSize, dataStart, dataLength, romData, SrcStartAdr);
+            ((YmF278b) (dicInst.get(InstrumentType.YMF278B)[0])).ymf278b_write_rom(chipId, romSize, dataStart, dataLength, romData, SrcStartAdr);
         }
     }
 
-    public void WriteYMF278BPCMData(int chipIndex, byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
+    public void WriteYMF278BPCMData(int chipIndex, byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YMF278B)) return;
 
-            ((Ymf278b) (dicInst.get(InstrumentType.YMF278B)[chipIndex])).ymf278b_write_rom(chipID, romSize, dataStart, dataLength, romData, SrcStartAdr);
+            ((YmF278b) (dicInst.get(InstrumentType.YMF278B)[chipIndex])).ymf278b_write_rom(chipId, romSize, dataStart, dataLength, romData, SrcStartAdr);
         }
     }
 
-    public void WriteYMF278BPCMramData(byte chipID, int RAMSize, int dataStart, int dataLength, byte[] ramData, int SrcStartAdr) {
+    public void WriteYMF278BPCMramData(byte chipId, int RAMSize, int dataStart, int dataLength, byte[] ramData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YMF278B)) return;
 
-            ((Ymf278b) (dicInst.get(InstrumentType.YMF278B)[0])).ymf278b_write_ram(chipID, dataStart, dataLength, ramData, SrcStartAdr);
+            ((YmF278b) (dicInst.get(InstrumentType.YMF278B)[0])).ymf278b_write_ram(chipId, dataStart, dataLength, ramData, SrcStartAdr);
         }
     }
 
-    public void WriteYMF278BPCMramData(int chipIndex, byte chipID, int RAMSize, int dataStart, int dataLength, byte[] ramData, int SrcStartAdr) {
+    public void WriteYMF278BPCMramData(int chipIndex, byte chipId, int RAMSize, int dataStart, int dataLength, byte[] ramData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YMF278B)) return;
 
-            ((Ymf278b) (dicInst.get(InstrumentType.YMF278B)[chipIndex])).ymf278b_write_ram(chipID, dataStart, dataLength, ramData, SrcStartAdr);
+            ((YmF278b) (dicInst.get(InstrumentType.YMF278B)[chipIndex])).ymf278b_write_ram(chipId, dataStart, dataLength, ramData, SrcStartAdr);
         }
     }
 
@@ -1941,19 +1941,19 @@ public class MDSound {
 
     // #region YMZ280B
 
-    public void WriteYMZ280BPCMData(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
+    public void WriteYMZ280BPCMData(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YMZ280B)) return;
 
-            ((Ymz280b) (dicInst.get(InstrumentType.YMZ280B)[0])).ymz280b_write_rom(chipID, romSize, dataStart, dataLength, romData, SrcStartAdr);
+            ((YmZ280b) (dicInst.get(InstrumentType.YMZ280B)[0])).ymz280b_write_rom(chipId, romSize, dataStart, dataLength, romData, SrcStartAdr);
         }
     }
 
-    public void WriteYMZ280BPCMData(int chipIndex, byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
+    public void WriteYMZ280BPCMData(int chipIndex, byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YMZ280B)) return;
 
-            ((Ymz280b) (dicInst.get(InstrumentType.YMZ280B)[chipIndex])).ymz280b_write_rom(chipID, romSize, dataStart, dataLength, romData, SrcStartAdr);
+            ((YmZ280b) (dicInst.get(InstrumentType.YMZ280B)[chipIndex])).ymz280b_write_rom(chipId, romSize, dataStart, dataLength, romData, SrcStartAdr);
         }
     }
 
@@ -1962,19 +1962,19 @@ public class MDSound {
 
     // #region Y8950
 
-    public void WriteY8950PCMData(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
+    public void WriteY8950PCMData(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.Y8950)) return;
 
-            ((Y8950) (dicInst.get(InstrumentType.Y8950)[0])).y8950_write_data_pcmrom(chipID, romSize, dataStart, dataLength, romData, SrcStartAdr);
+            ((Y8950) (dicInst.get(InstrumentType.Y8950)[0])).y8950_write_data_pcmrom(chipId, romSize, dataStart, dataLength, romData, SrcStartAdr);
         }
     }
 
-    public void WriteY8950PCMData(int chipIndex, byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
+    public void WriteY8950PCMData(int chipIndex, byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.Y8950)) return;
 
-            ((Y8950) (dicInst.get(InstrumentType.Y8950)[chipIndex])).y8950_write_data_pcmrom(chipID, romSize, dataStart, dataLength, romData, SrcStartAdr);
+            ((Y8950) (dicInst.get(InstrumentType.Y8950)[chipIndex])).y8950_write_data_pcmrom(chipId, romSize, dataStart, dataLength, romData, SrcStartAdr);
         }
     }
 
@@ -1983,19 +1983,19 @@ public class MDSound {
 
     // #region OKIM6258
 
-    public void writeOKIM6258(byte chipID, byte Port, byte Data) {
+    public void writeOKIM6258(byte chipId, byte Port, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.OKIM6258)) return;
 
-            dicInst.get(InstrumentType.OKIM6258)[0].write(chipID, 0, Port, Data);
+            dicInst.get(InstrumentType.OKIM6258)[0].write(chipId, 0, Port, Data);
         }
     }
 
-    public void writeOKIM6258(int chipIndex, byte chipID, byte Port, byte Data) {
+    public void writeOKIM6258(int chipIndex, byte chipId, byte Port, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.OKIM6258)) return;
 
-            dicInst.get(InstrumentType.OKIM6258)[chipIndex].write(chipID, 0, Port, Data);
+            dicInst.get(InstrumentType.OKIM6258)[chipIndex].write(chipId, 0, Port, Data);
         }
     }
 
@@ -2004,35 +2004,35 @@ public class MDSound {
 
     // #region OKIM6295
 
-    public void WriteOKIM6295(byte chipID, byte Port, byte Data) {
+    public void WriteOKIM6295(byte chipId, byte Port, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.OKIM6295)) return;
 
-            dicInst.get(InstrumentType.OKIM6295)[0].write(chipID, 0, Port, Data);
+            dicInst.get(InstrumentType.OKIM6295)[0].write(chipId, 0, Port, Data);
         }
     }
 
-    public void WriteOKIM6295(int chipIndex, byte chipID, byte Port, byte Data) {
+    public void WriteOKIM6295(int chipIndex, byte chipId, byte Port, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.OKIM6295)) return;
 
-            dicInst.get(InstrumentType.OKIM6295)[chipIndex].write(chipID, 0, Port, Data);
+            dicInst.get(InstrumentType.OKIM6295)[chipIndex].write(chipId, 0, Port, Data);
         }
     }
 
-    public void WriteOKIM6295PCMData(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
+    public void WriteOKIM6295PCMData(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.OKIM6295)) return;
 
-            ((OkiM6295) (dicInst.get(InstrumentType.OKIM6295)[0])).okim6295_write_rom2(chipID, romSize, dataStart, dataLength, romData, SrcStartAdr);
+            ((OkiM6295) (dicInst.get(InstrumentType.OKIM6295)[0])).okim6295_write_rom2(chipId, romSize, dataStart, dataLength, romData, SrcStartAdr);
         }
     }
 
-    public void WriteOKIM6295PCMData(int chipIndex, byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
+    public void WriteOKIM6295PCMData(int chipIndex, byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.OKIM6295)) return;
 
-            ((OkiM6295) (dicInst.get(InstrumentType.OKIM6295)[chipIndex])).okim6295_write_rom2(chipID, romSize, dataStart, dataLength, romData, SrcStartAdr);
+            ((OkiM6295) (dicInst.get(InstrumentType.OKIM6295)[chipIndex])).okim6295_write_rom2(chipId, romSize, dataStart, dataLength, romData, SrcStartAdr);
         }
     }
 
@@ -2041,35 +2041,35 @@ public class MDSound {
 
     // #region SEGAPCM
 
-    public void WriteSEGAPCM(byte chipID, int Adr, byte Data) {
+    public void WriteSEGAPCM(byte chipId, int Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.SEGAPCM)) return;
 
-            dicInst.get(InstrumentType.SEGAPCM)[0].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.SEGAPCM)[0].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void WriteSEGAPCM(int chipIndex, byte chipID, int Adr, byte Data) {
+    public void WriteSEGAPCM(int chipIndex, byte chipId, int Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.SEGAPCM)) return;
 
-            dicInst.get(InstrumentType.SEGAPCM)[chipIndex].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.SEGAPCM)[chipIndex].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void WriteSEGAPCMPCMData(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
+    public void WriteSEGAPCMPCMData(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.SEGAPCM)) return;
 
-            ((SegaPcm) (dicInst.get(InstrumentType.SEGAPCM)[0])).sega_pcm_write_rom2(chipID, romSize, dataStart, dataLength, romData, SrcStartAdr);
+            ((SegaPcm) (dicInst.get(InstrumentType.SEGAPCM)[0])).sega_pcm_write_rom2(chipId, romSize, dataStart, dataLength, romData, SrcStartAdr);
         }
     }
 
-    public void WriteSEGAPCMPCMData(int chipIndex, byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
+    public void WriteSEGAPCMPCMData(int chipIndex, byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.SEGAPCM)) return;
 
-            ((SegaPcm) (dicInst.get(InstrumentType.SEGAPCM)[chipIndex])).sega_pcm_write_rom2(chipID, romSize, dataStart, dataLength, romData, SrcStartAdr);
+            ((SegaPcm) (dicInst.get(InstrumentType.SEGAPCM)[chipIndex])).sega_pcm_write_rom2(chipId, romSize, dataStart, dataLength, romData, SrcStartAdr);
         }
     }
 
@@ -2078,51 +2078,51 @@ public class MDSound {
 
     // #region YM2151
 
-    public void writeYM2151(byte chipID, byte Adr, byte Data) {
+    public void writeYM2151(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2151)) return;
 
-            ((dicInst.get(InstrumentType.YM2151)[0])).write(chipID, 0, Adr, Data);
+            ((dicInst.get(InstrumentType.YM2151)[0])).write(chipId, 0, Adr, Data);
         }
     }
 
-    public void writeYM2151(int chipIndex, byte chipID, byte Adr, byte Data) {
+    public void writeYM2151(int chipIndex, byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2151)) return;
 
-            ((dicInst.get(InstrumentType.YM2151)[chipIndex])).write(chipID, 0, Adr, Data);
+            ((dicInst.get(InstrumentType.YM2151)[chipIndex])).write(chipId, 0, Adr, Data);
         }
     }
 
-    public void WriteYM2151mame(byte chipID, byte Adr, byte Data) {
+    public void WriteYM2151mame(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2151mame)) return;
 
-            ((dicInst.get(InstrumentType.YM2151mame)[0])).write(chipID, 0, Adr, Data);
+            ((dicInst.get(InstrumentType.YM2151mame)[0])).write(chipId, 0, Adr, Data);
         }
     }
 
-    public void WriteYM2151mame(int chipIndex, byte chipID, byte Adr, byte Data) {
+    public void WriteYM2151mame(int chipIndex, byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2151mame)) return;
 
-            ((dicInst.get(InstrumentType.YM2151mame)[chipIndex])).write(chipID, 0, Adr, Data);
+            ((dicInst.get(InstrumentType.YM2151mame)[chipIndex])).write(chipId, 0, Adr, Data);
         }
     }
 
-    public void WriteYM2151x68sound(byte chipID, byte Adr, byte Data) {
+    public void WriteYM2151x68sound(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2151x68sound)) return;
 
-            ((dicInst.get(InstrumentType.YM2151x68sound)[0])).write(chipID, 0, Adr, Data);
+            ((dicInst.get(InstrumentType.YM2151x68sound)[0])).write(chipId, 0, Adr, Data);
         }
     }
 
-    public void WriteYM2151x68sound(int chipIndex, byte chipID, byte Adr, byte Data) {
+    public void WriteYM2151x68sound(int chipIndex, byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2151x68sound)) return;
 
-            ((dicInst.get(InstrumentType.YM2151x68sound)[chipIndex])).write(chipID, 0, Adr, Data);
+            ((dicInst.get(InstrumentType.YM2151x68sound)[chipIndex])).write(chipId, 0, Adr, Data);
         }
     }
 
@@ -2131,19 +2131,19 @@ public class MDSound {
 
     // #region YM2203
 
-    public void writeYM2203(byte chipID, byte Adr, byte Data) {
+    public void writeYM2203(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2203)) return;
 
-            dicInst.get(InstrumentType.YM2203)[0].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.YM2203)[0].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void writeYM2203(int chipIndex, byte chipID, byte Adr, byte Data) {
+    public void writeYM2203(int chipIndex, byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2203)) return;
 
-            dicInst.get(InstrumentType.YM2203)[chipIndex].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.YM2203)[chipIndex].write(chipId, 0, Adr, Data);
         }
     }
 
@@ -2152,51 +2152,51 @@ public class MDSound {
 
     // #region YM2608
 
-    public void writeYM2608(byte chipID, byte Port, byte Adr, byte Data) {
+    public void writeYM2608(byte chipId, byte Port, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2608)) return;
 
-            dicInst.get(InstrumentType.YM2608)[0].write(chipID, 0, (Port * 0x100 + Adr), Data);
+            dicInst.get(InstrumentType.YM2608)[0].write(chipId, 0, (Port * 0x100 + Adr), Data);
         }
     }
 
-    public void writeYM2608(int chipIndex, byte chipID, byte Port, byte Adr, byte Data) {
+    public void writeYM2608(int chipIndex, byte chipId, byte Port, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2608)) return;
 
-            dicInst.get(InstrumentType.YM2608)[chipIndex].write(chipID, 0, (Port * 0x100 + Adr), Data);
+            dicInst.get(InstrumentType.YM2608)[chipIndex].write(chipId, 0, (Port * 0x100 + Adr), Data);
         }
     }
 
-    public byte[] GetADPCMBufferYM2608(byte chipID) {
+    public byte[] GetADPCMBufferYM2608(byte chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2608)) return null;
 
-            return ((Ym2608) (dicInst.get(InstrumentType.YM2608)[0])).GetADPCMBuffer(chipID);
+            return ((Ym2608) (dicInst.get(InstrumentType.YM2608)[0])).GetADPCMBuffer(chipId);
         }
     }
 
-    public byte[] GetADPCMBufferYM2608(int chipIndex, byte chipID) {
+    public byte[] GetADPCMBufferYM2608(int chipIndex, byte chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2608)) return null;
 
-            return ((Ym2608) (dicInst.get(InstrumentType.YM2608)[chipIndex])).GetADPCMBuffer(chipID);
+            return ((Ym2608) (dicInst.get(InstrumentType.YM2608)[chipIndex])).GetADPCMBuffer(chipId);
         }
     }
 
-    public int ReadStatusExYM2608(byte chipID) {
+    public int ReadStatusExYM2608(byte chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2608)) throw new IllegalStateException();
 
-            return ((Ym2608) (dicInst.get(InstrumentType.YM2608)[0])).ReadStatusEx(chipID);
+            return ((Ym2608) (dicInst.get(InstrumentType.YM2608)[0])).ReadStatusEx(chipId);
         }
     }
 
-    public int ReadStatusExYM2608(int chipIndex, byte chipID) {
+    public int ReadStatusExYM2608(int chipIndex, byte chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2608)) throw new IllegalStateException();
 
-            return ((Ym2608) (dicInst.get(InstrumentType.YM2608)[chipIndex])).ReadStatusEx(chipID);
+            return ((Ym2608) (dicInst.get(InstrumentType.YM2608)[chipIndex])).ReadStatusEx(chipId);
         }
     }
 
@@ -2205,35 +2205,35 @@ public class MDSound {
 
     // #region YM2609
 
-    public void writeYM2609(byte chipID, byte Port, byte Adr, byte Data) {
+    public void writeYM2609(byte chipId, byte Port, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2609)) return;
 
-            dicInst.get(InstrumentType.YM2609)[0].write(chipID, 0, (Port * 0x100 + Adr), Data);
+            dicInst.get(InstrumentType.YM2609)[0].write(chipId, 0, (Port * 0x100 + Adr), Data);
         }
     }
 
-    public void writeYM2609(int chipIndex, byte chipID, byte Port, byte Adr, byte Data) {
+    public void writeYM2609(int chipIndex, byte chipId, byte Port, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2609)) return;
 
-            dicInst.get(InstrumentType.YM2609)[chipIndex].write(chipID, 0, (Port * 0x100 + Adr), Data);
+            dicInst.get(InstrumentType.YM2609)[chipIndex].write(chipId, 0, (Port * 0x100 + Adr), Data);
         }
     }
 
-    public void WriteYM2609_SetAdpcmA(byte chipID, byte[] Buf) {
+    public void WriteYM2609_SetAdpcmA(byte chipId, byte[] Buf) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2609)) return;
 
-            ((Ym2609) (dicInst.get(InstrumentType.YM2609)[0])).SetAdpcmA(chipID, Buf, Buf.length);
+            ((Ym2609) (dicInst.get(InstrumentType.YM2609)[0])).SetAdpcmA(chipId, Buf, Buf.length);
         }
     }
 
-    public void WriteYM2609_SetAdpcmA(int chipIndex, byte chipID, byte[] Buf) {
+    public void WriteYM2609_SetAdpcmA(int chipIndex, byte chipId, byte[] Buf) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2609)) return;
 
-            ((Ym2609) (dicInst.get(InstrumentType.YM2609)[chipIndex])).SetAdpcmA(chipID, Buf, Buf.length);
+            ((Ym2609) (dicInst.get(InstrumentType.YM2609)[chipIndex])).SetAdpcmA(chipId, Buf, Buf.length);
         }
     }
 
@@ -2242,51 +2242,51 @@ public class MDSound {
 
     // #region YM2610
 
-    public void writeYM2610(byte chipID, byte Port, byte Adr, byte Data) {
+    public void writeYM2610(byte chipId, byte Port, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2610)) return;
 
-            dicInst.get(InstrumentType.YM2610)[0].write(chipID, 0, (Port * 0x100 + Adr), Data);
+            dicInst.get(InstrumentType.YM2610)[0].write(chipId, 0, (Port * 0x100 + Adr), Data);
         }
     }
 
-    public void writeYM2610(int chipIndex, byte chipID, byte Port, byte Adr, byte Data) {
+    public void writeYM2610(int chipIndex, byte chipId, byte Port, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2610)) return;
 
-            dicInst.get(InstrumentType.YM2610)[chipIndex].write(chipID, 0, (Port * 0x100 + Adr), Data);
+            dicInst.get(InstrumentType.YM2610)[chipIndex].write(chipId, 0, (Port * 0x100 + Adr), Data);
         }
     }
 
-    public void WriteYM2610_SetAdpcmA(byte chipID, byte[] Buf) {
+    public void WriteYM2610_SetAdpcmA(byte chipId, byte[] Buf) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2610)) return;
 
-            ((Ym2610) (dicInst.get(InstrumentType.YM2610)[0])).YM2610_setAdpcmA(chipID, Buf, Buf.length);
+            ((Ym2610) (dicInst.get(InstrumentType.YM2610)[0])).YM2610_setAdpcmA(chipId, Buf, Buf.length);
         }
     }
 
-    public void WriteYM2610_SetAdpcmA(int chipIndex, byte chipID, byte[] Buf) {
+    public void WriteYM2610_SetAdpcmA(int chipIndex, byte chipId, byte[] Buf) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2610)) return;
 
-            ((Ym2610) (dicInst.get(InstrumentType.YM2610)[chipIndex])).YM2610_setAdpcmA(chipID, Buf, Buf.length);
+            ((Ym2610) (dicInst.get(InstrumentType.YM2610)[chipIndex])).YM2610_setAdpcmA(chipId, Buf, Buf.length);
         }
     }
 
-    public void WriteYM2610_SetAdpcmB(byte chipID, byte[] Buf) {
+    public void WriteYM2610_SetAdpcmB(byte chipId, byte[] Buf) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2610)) return;
 
-            ((Ym2610) (dicInst.get(InstrumentType.YM2610)[0])).YM2610_setAdpcmB(chipID, Buf, Buf.length);
+            ((Ym2610) (dicInst.get(InstrumentType.YM2610)[0])).YM2610_setAdpcmB(chipId, Buf, Buf.length);
         }
     }
 
-    public void WriteYM2610_SetAdpcmB(int chipIndex, byte chipID, byte[] Buf) {
+    public void WriteYM2610_SetAdpcmB(int chipIndex, byte chipId, byte[] Buf) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2610)) return;
 
-            ((Ym2610) (dicInst.get(InstrumentType.YM2610)[chipIndex])).YM2610_setAdpcmB(chipID, Buf, Buf.length);
+            ((Ym2610) (dicInst.get(InstrumentType.YM2610)[chipIndex])).YM2610_setAdpcmB(chipId, Buf, Buf.length);
         }
     }
 
@@ -2295,19 +2295,19 @@ public class MDSound {
 
     // #region YMF262
 
-    public void writeYMF262(byte chipID, byte Port, byte Adr, byte Data) {
+    public void writeYMF262(byte chipId, byte Port, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YMF262)) return;
 
-            dicInst.get(InstrumentType.YMF262)[0].write(chipID, 0, (Port * 0x100 + Adr), Data);
+            dicInst.get(InstrumentType.YMF262)[0].write(chipId, 0, (Port * 0x100 + Adr), Data);
         }
     }
 
-    public void writeYMF262(int chipIndex, byte chipID, byte Port, byte Adr, byte Data) {
+    public void writeYMF262(int chipIndex, byte chipId, byte Port, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YMF262)) return;
 
-            dicInst.get(InstrumentType.YMF262)[chipIndex].write(chipID, 0, (Port * 0x100 + Adr), Data);
+            dicInst.get(InstrumentType.YMF262)[chipIndex].write(chipId, 0, (Port * 0x100 + Adr), Data);
         }
     }
 
@@ -2316,19 +2316,19 @@ public class MDSound {
 
     // #region YMF271
 
-    public void writeYMF271(byte chipID, byte Port, byte Adr, byte Data) {
+    public void writeYMF271(byte chipId, byte Port, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YMF271)) return;
 
-            dicInst.get(InstrumentType.YMF271)[0].write(chipID, Port, Adr, Data);
+            dicInst.get(InstrumentType.YMF271)[0].write(chipId, Port, Adr, Data);
         }
     }
 
-    public void writeYMF271(int chipIndex, byte chipID, byte Port, byte Adr, byte Data) {
+    public void writeYMF271(int chipIndex, byte chipId, byte Port, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YMF271)) return;
 
-            dicInst.get(InstrumentType.YMF271)[chipIndex].write(chipID, Port, Adr, Data);
+            dicInst.get(InstrumentType.YMF271)[chipIndex].write(chipId, Port, Adr, Data);
         }
     }
 
@@ -2337,17 +2337,17 @@ public class MDSound {
 
     // #region YMF278B
 
-    public void writeYMF278B(byte chipID, byte Port, byte Adr, byte Data) {
+    public void writeYMF278B(byte chipId, byte Port, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YMF278B)) return;
-            dicInst.get(InstrumentType.YMF278B)[0].write(chipID, Port, Adr, Data);
+            dicInst.get(InstrumentType.YMF278B)[0].write(chipId, Port, Adr, Data);
         }
     }
 
-    public void writeYMF278B(int chipIndex, byte chipID, byte Port, byte Adr, byte Data) {
+    public void writeYMF278B(int chipIndex, byte chipId, byte Port, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YMF278B)) return;
-            dicInst.get(InstrumentType.YMF278B)[chipIndex].write(chipID, Port, Adr, Data);
+            dicInst.get(InstrumentType.YMF278B)[chipIndex].write(chipId, Port, Adr, Data);
         }
     }
 
@@ -2356,19 +2356,19 @@ public class MDSound {
 
     // #region YM3526
 
-    public void writeYM3526(byte chipID, byte Adr, byte Data) {
+    public void writeYM3526(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM3526)) return;
 
-            dicInst.get(InstrumentType.YM3526)[0].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.YM3526)[0].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void writeYM3526(int chipIndex, byte chipID, byte Adr, byte Data) {
+    public void writeYM3526(int chipIndex, byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM3526)) return;
 
-            dicInst.get(InstrumentType.YM3526)[chipIndex].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.YM3526)[chipIndex].write(chipId, 0, Adr, Data);
         }
     }
 
@@ -2377,19 +2377,19 @@ public class MDSound {
 
     // #region Y8950
 
-    public void writeY8950(byte chipID, byte Adr, byte Data) {
+    public void writeY8950(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.Y8950)) return;
 
-            dicInst.get(InstrumentType.Y8950)[0].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.Y8950)[0].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void writeY8950(int chipIndex, byte chipID, byte Adr, byte Data) {
+    public void writeY8950(int chipIndex, byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.Y8950)) return;
 
-            dicInst.get(InstrumentType.Y8950)[chipIndex].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.Y8950)[chipIndex].write(chipId, 0, Adr, Data);
         }
     }
 
@@ -2398,19 +2398,19 @@ public class MDSound {
 
     // #region YMZ280B
 
-    public void writeYMZ280B(byte chipID, byte Adr, byte Data) {
+    public void writeYMZ280B(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YMZ280B)) return;
 
-            dicInst.get(InstrumentType.YMZ280B)[0].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.YMZ280B)[0].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void writeYMZ280B(int chipIndex, byte chipID, byte Adr, byte Data) {
+    public void writeYMZ280B(int chipIndex, byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YMZ280B)) return;
 
-            dicInst.get(InstrumentType.YMZ280B)[chipIndex].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.YMZ280B)[chipIndex].write(chipId, 0, Adr, Data);
         }
     }
 
@@ -2419,35 +2419,35 @@ public class MDSound {
 
     // #region HuC6280
 
-    public void writeHuC6280(byte chipID, byte Adr, byte Data) {
+    public void writeHuC6280(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.HuC6280)) return;
 
-            dicInst.get(InstrumentType.HuC6280)[0].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.HuC6280)[0].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void writeHuC6280(int chipIndex, byte chipID, byte Adr, byte Data) {
+    public void writeHuC6280(int chipIndex, byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.HuC6280)) return;
 
-            dicInst.get(InstrumentType.HuC6280)[chipIndex].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.HuC6280)[chipIndex].write(chipId, 0, Adr, Data);
         }
     }
 
-    public byte ReadHuC6280(byte chipID, byte Adr) {
+    public byte ReadHuC6280(byte chipId, byte Adr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.HuC6280)) return 0;
 
-            return ((OotakePsg) (dicInst.get(InstrumentType.HuC6280)[0])).HuC6280_Read(chipID, Adr);
+            return ((OotakePsg) (dicInst.get(InstrumentType.HuC6280)[0])).HuC6280_Read(chipId, Adr);
         }
     }
 
-    public byte ReadHuC6280(int chipIndex, byte chipID, byte Adr) {
+    public byte ReadHuC6280(int chipIndex, byte chipId, byte Adr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.HuC6280)) return 0;
 
-            return ((OotakePsg) (dicInst.get(InstrumentType.HuC6280)[chipIndex])).HuC6280_Read(chipID, Adr);
+            return ((OotakePsg) (dicInst.get(InstrumentType.HuC6280)[chipIndex])).HuC6280_Read(chipId, Adr);
         }
     }
 
@@ -2456,19 +2456,19 @@ public class MDSound {
 
     // #region GA20
 
-    public void WriteGA20(byte chipID, byte Adr, byte Data) {
+    public void WriteGA20(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.GA20)) return;
 
-            dicInst.get(InstrumentType.GA20)[0].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.GA20)[0].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void WriteGA20(int chipIndex, byte chipID, byte Adr, byte Data) {
+    public void WriteGA20(int chipIndex, byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.GA20)) return;
 
-            dicInst.get(InstrumentType.GA20)[chipIndex].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.GA20)[chipIndex].write(chipId, 0, Adr, Data);
         }
     }
 
@@ -2477,19 +2477,19 @@ public class MDSound {
 
     // #region YM2413
 
-    public void writeYM2413(byte chipID, byte Adr, byte Data) {
+    public void writeYM2413(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2413)) return;
 
-            dicInst.get(InstrumentType.YM2413)[0].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.YM2413)[0].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void writeYM2413(int chipIndex, byte chipID, byte Adr, byte Data) {
+    public void writeYM2413(int chipIndex, byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2413)) return;
 
-            dicInst.get(InstrumentType.YM2413)[chipIndex].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.YM2413)[chipIndex].write(chipId, 0, Adr, Data);
         }
     }
 
@@ -2498,19 +2498,19 @@ public class MDSound {
 
     // #region K051649
 
-    public void WriteK051649(byte chipID, int Adr, byte Data) {
+    public void WriteK051649(byte chipId, int Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.K051649)) return;
 
-            dicInst.get(InstrumentType.K051649)[0].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.K051649)[0].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void WriteK051649(int chipIndex, byte chipID, int Adr, byte Data) {
+    public void WriteK051649(int chipIndex, byte chipId, int Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.K051649)) return;
 
-            dicInst.get(InstrumentType.K051649)[chipIndex].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.K051649)[chipIndex].write(chipId, 0, Adr, Data);
         }
     }
 
@@ -2519,35 +2519,35 @@ public class MDSound {
 
     // #region K053260
 
-    public void WriteK053260(byte chipID, byte Adr, byte Data) {
+    public void WriteK053260(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.K053260)) return;
 
-            dicInst.get(InstrumentType.K053260)[0].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.K053260)[0].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void WriteK053260(int chipIndex, byte chipID, byte Adr, byte Data) {
+    public void WriteK053260(int chipIndex, byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.K053260)) return;
 
-            dicInst.get(InstrumentType.K053260)[chipIndex].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.K053260)[chipIndex].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void WriteK053260PCMData(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
+    public void WriteK053260PCMData(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.K053260)) return;
 
-            ((K053260) (dicInst.get(InstrumentType.K053260)[0])).k053260_write_rom(chipID, romSize, dataStart, dataLength, romData, SrcStartAdr);
+            ((K053260) (dicInst.get(InstrumentType.K053260)[0])).k053260_write_rom(chipId, romSize, dataStart, dataLength, romData, SrcStartAdr);
         }
     }
 
-    public void WriteK053260PCMData(int chipIndex, byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
+    public void WriteK053260PCMData(int chipIndex, byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.K053260)) return;
 
-            ((K053260) (dicInst.get(InstrumentType.K053260)[chipIndex])).k053260_write_rom(chipID, romSize, dataStart, dataLength, romData, SrcStartAdr);
+            ((K053260) (dicInst.get(InstrumentType.K053260)[chipIndex])).k053260_write_rom(chipId, romSize, dataStart, dataLength, romData, SrcStartAdr);
         }
     }
 
@@ -2556,35 +2556,35 @@ public class MDSound {
 
     // #region K054539
 
-    public void WriteK054539(byte chipID, int Adr, byte Data) {
+    public void WriteK054539(byte chipId, int Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.K054539)) return;
 
-            dicInst.get(InstrumentType.K054539)[0].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.K054539)[0].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void WriteK054539(int chipIndex, byte chipID, int Adr, byte Data) {
+    public void WriteK054539(int chipIndex, byte chipId, int Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.K054539)) return;
 
-            dicInst.get(InstrumentType.K054539)[chipIndex].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.K054539)[chipIndex].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void writeK054539PCMData(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
+    public void writeK054539PCMData(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.K054539)) return;
 
-            ((K054539) (dicInst.get(InstrumentType.K054539)[0])).k054539_write_rom2(chipID, romSize, dataStart, dataLength, romData, SrcStartAdr);
+            ((K054539) (dicInst.get(InstrumentType.K054539)[0])).k054539_write_rom2(chipId, romSize, dataStart, dataLength, romData, SrcStartAdr);
         }
     }
 
-    public void writeK054539PCMData(int chipIndex, byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
+    public void writeK054539PCMData(int chipIndex, byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.K054539)) return;
 
-            ((K054539) (dicInst.get(InstrumentType.K054539)[chipIndex])).k054539_write_rom2(chipID, romSize, dataStart, dataLength, romData, SrcStartAdr);
+            ((K054539) (dicInst.get(InstrumentType.K054539)[chipIndex])).k054539_write_rom2(chipId, romSize, dataStart, dataLength, romData, SrcStartAdr);
         }
     }
 
@@ -2593,43 +2593,43 @@ public class MDSound {
 
     // #region PPZ8
 
-    public void WritePPZ8(byte chipID, int port, int address, int data, byte[] addtionalData) {
+    public void WritePPZ8(byte chipId, int port, int address, int data, byte[] addtionalData) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.PPZ8)) return;
 
             //if (port == 0x03) {
-            //    ((PPZ8)(dicInst.get(InstrumentType.PPZ8)[0])).LoadPcm(chipID, (byte)address, (byte)data, addtionalData);
+            //    ((PPZ8)(dicInst.get(InstrumentType.PPZ8)[0])).LoadPcm(chipId, (byte)address, (byte)data, addtionalData);
             //} else {
-            dicInst.get(InstrumentType.PPZ8)[0].write(chipID, port, address, data);
+            dicInst.get(InstrumentType.PPZ8)[0].write(chipId, port, address, data);
             //}
         }
     }
 
-    public void WritePPZ8(int chipIndex, byte chipID, int port, int address, int data, byte[] addtionalData) {
+    public void WritePPZ8(int chipIndex, byte chipId, int port, int address, int data, byte[] addtionalData) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.PPZ8)) return;
 
             //if (port == 0x03) {
-            //    ((PPZ8)(dicInst.get(InstrumentType.PPZ8)[0])).LoadPcm(chipID, (byte)address, (byte)data, addtionalData);
+            //    ((PPZ8)(dicInst.get(InstrumentType.PPZ8)[0])).LoadPcm(chipId, (byte)address, (byte)data, addtionalData);
             //} else {
-            dicInst.get(InstrumentType.PPZ8)[chipIndex].write(chipID, port, address, data);
+            dicInst.get(InstrumentType.PPZ8)[chipIndex].write(chipId, port, address, data);
             //}
         }
     }
 
-    public void WritePPZ8PCMData(byte chipID, int address, int data, byte[][] PCMData) {
+    public void WritePPZ8PCMData(byte chipId, int address, int data, byte[][] PCMData) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.PPZ8)) return;
 
-            ((PPZ8) (dicInst.get(InstrumentType.PPZ8)[0])).loadPcm(chipID, (byte) address, (byte) data, PCMData);
+            ((PPZ8) (dicInst.get(InstrumentType.PPZ8)[0])).loadPcm(chipId, (byte) address, (byte) data, PCMData);
         }
     }
 
-    public void WritePPZ8PCMData(int chipIndex, byte chipID, int address, int data, byte[][] PCMData) {
+    public void WritePPZ8PCMData(int chipIndex, byte chipId, int address, int data, byte[][] PCMData) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.PPZ8)) return;
 
-            ((PPZ8) (dicInst.get(InstrumentType.PPZ8)[chipIndex])).loadPcm(chipID, (byte) address, (byte) data, PCMData);
+            ((PPZ8) (dicInst.get(InstrumentType.PPZ8)[chipIndex])).loadPcm(chipId, (byte) address, (byte) data, PCMData);
         }
     }
 
@@ -2648,35 +2648,35 @@ public class MDSound {
 
     // #region PPSDRV
 
-    public void WritePPSDRV(byte chipID, int port, int address, int data, byte[] addtionalData) {
+    public void WritePPSDRV(byte chipId, int port, int address, int data, byte[] addtionalData) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.PPSDRV)) return;
 
-            dicInst.get(InstrumentType.PPSDRV)[0].write(chipID, port, address, data);
+            dicInst.get(InstrumentType.PPSDRV)[0].write(chipId, port, address, data);
         }
     }
 
-    public void WritePPSDRV(int chipIndex, byte chipID, int port, int address, int data, byte[] addtionalData) {
+    public void WritePPSDRV(int chipIndex, byte chipId, int port, int address, int data, byte[] addtionalData) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.PPSDRV)) return;
 
-            dicInst.get(InstrumentType.PPSDRV)[chipIndex].write(chipID, port, address, data);
+            dicInst.get(InstrumentType.PPSDRV)[chipIndex].write(chipId, port, address, data);
         }
     }
 
-    public void WritePPSDRVPCMData(byte chipID, byte[] PCMData) {
+    public void WritePPSDRVPCMData(byte chipId, byte[] PCMData) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.PPSDRV)) return;
 
-            ((PPSDRV) (dicInst.get(InstrumentType.PPSDRV)[0])).load(chipID, PCMData);
+            ((PPSDRV) (dicInst.get(InstrumentType.PPSDRV)[0])).load(chipId, PCMData);
         }
     }
 
-    public void WritePPSDRVPCMData(int chipIndex, byte chipID, byte[] PCMData) {
+    public void WritePPSDRVPCMData(int chipIndex, byte chipId, byte[] PCMData) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.PPSDRV)) return;
 
-            ((PPSDRV) (dicInst.get(InstrumentType.PPSDRV)[chipIndex])).load(chipID, PCMData);
+            ((PPSDRV) (dicInst.get(InstrumentType.PPSDRV)[chipIndex])).load(chipId, PCMData);
         }
     }
 
@@ -2685,43 +2685,43 @@ public class MDSound {
 
     // #region P86
 
-    public void writeP86(byte chipID, int port, int address, int data, byte[] addtionalData) {
+    public void writeP86(byte chipId, int port, int address, int data, byte[] addtionalData) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.P86)) return;
 
             //if (port == 0x03) {
-            //    ((P86)(dicInst.get(InstrumentType.P86)[0])).LoadPcm(chipID, (byte)address, (byte)data, addtionalData);
+            //    ((P86)(dicInst.get(InstrumentType.P86)[0])).LoadPcm(chipId, (byte)address, (byte)data, addtionalData);
             //} else {
-            dicInst.get(InstrumentType.P86)[0].write(chipID, port, address, data);
+            dicInst.get(InstrumentType.P86)[0].write(chipId, port, address, data);
             //}
         }
     }
 
-    public void writeP86(int chipIndex, byte chipID, int port, int address, int data, byte[] addtionalData) {
+    public void writeP86(int chipIndex, byte chipId, int port, int address, int data, byte[] addtionalData) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.P86)) return;
 
             //if (port == 0x03) {
-            //    ((P86)(dicInst.get(InstrumentType.P86)[0])).LoadPcm(chipID, (byte)address, (byte)data, addtionalData);
+            //    ((P86)(dicInst.get(InstrumentType.P86)[0])).LoadPcm(chipId, (byte)address, (byte)data, addtionalData);
             //} else {
-            dicInst.get(InstrumentType.P86)[chipIndex].write(chipID, port, address, data);
+            dicInst.get(InstrumentType.P86)[chipIndex].write(chipId, port, address, data);
             //}
         }
     }
 
-    public void writeP86PCMData(byte chipID, int address, int data, byte[] pcmData) {
+    public void writeP86PCMData(byte chipId, int address, int data, byte[] pcmData) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.P86)) return;
 
-            ((P86) (dicInst.get(InstrumentType.P86)[0])).loadPcm(chipID, (byte) address, (byte) data, pcmData);
+            ((P86) (dicInst.get(InstrumentType.P86)[0])).loadPcm(chipId, (byte) address, (byte) data, pcmData);
         }
     }
 
-    public void writeP86PCMData(int chipIndex, byte chipID, int address, int data, byte[] pcmData) {
+    public void writeP86PCMData(int chipIndex, byte chipId, int address, int data, byte[] pcmData) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.P86)) return;
 
-            ((P86) (dicInst.get(InstrumentType.P86)[chipIndex])).loadPcm(chipID, (byte) address, (byte) data, pcmData);
+            ((P86) (dicInst.get(InstrumentType.P86)[chipIndex])).loadPcm(chipId, (byte) address, (byte) data, pcmData);
         }
     }
 
@@ -2730,35 +2730,35 @@ public class MDSound {
 
     // #region QSound
 
-    public void WriteQSound(byte chipID, int adr, byte dat) {
+    public void WriteQSound(byte chipId, int adr, byte dat) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.QSound)) return;
 
-            ((QSound) (dicInst.get(InstrumentType.QSound)[0])).qsound_w(chipID, adr, dat);
+            ((QSound) (dicInst.get(InstrumentType.QSound)[0])).qsound_w(chipId, adr, dat);
         }
     }
 
-    public void WriteQSound(int chipIndex, byte chipID, int adr, byte dat) {
+    public void WriteQSound(int chipIndex, byte chipId, int adr, byte dat) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.QSound)) return;
 
-            ((QSound) (dicInst.get(InstrumentType.QSound)[chipIndex])).qsound_w(chipID, adr, dat);
+            ((QSound) (dicInst.get(InstrumentType.QSound)[chipIndex])).qsound_w(chipId, adr, dat);
         }
     }
 
-    public void WriteQSoundPCMData(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
+    public void WriteQSoundPCMData(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.QSound)) return;
 
-            ((QSound) (dicInst.get(InstrumentType.QSound)[0])).qsound_write_rom(chipID, romSize, dataStart, dataLength, romData, SrcStartAdr);
+            ((QSound) (dicInst.get(InstrumentType.QSound)[0])).qsound_write_rom(chipId, romSize, dataStart, dataLength, romData, SrcStartAdr);
         }
     }
 
-    public void WriteQSoundPCMData(int chipIndex, byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
+    public void WriteQSoundPCMData(int chipIndex, byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.QSound)) return;
 
-            ((QSound) (dicInst.get(InstrumentType.QSound)[chipIndex])).qsound_write_rom(chipID, romSize, dataStart, dataLength, romData, SrcStartAdr);
+            ((QSound) (dicInst.get(InstrumentType.QSound)[chipIndex])).qsound_write_rom(chipId, romSize, dataStart, dataLength, romData, SrcStartAdr);
         }
     }
 
@@ -2767,39 +2767,39 @@ public class MDSound {
 
     // #region QSoundCtr
 
-    public void WriteQSoundCtr(byte chipID, int adr, byte dat) {
+    public void WriteQSoundCtr(byte chipId, int adr, byte dat) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.QSoundCtr)) return;
 
-            //((QSound)(dicInst.get(InstrumentType.QSound)[0])).qsound_w(chipID, adr, dat);
-            ((QSoundCtr) (dicInst.get(InstrumentType.QSoundCtr)[0])).qsound_w(chipID, adr, dat);
+            //((QSound)(dicInst.get(InstrumentType.QSound)[0])).qsound_w(chipId, adr, dat);
+            ((QSoundCtr) (dicInst.get(InstrumentType.QSoundCtr)[0])).qsound_w(chipId, adr, dat);
         }
     }
 
-    public void WriteQSoundCtr(int chipIndex, byte chipID, int adr, byte dat) {
+    public void WriteQSoundCtr(int chipIndex, byte chipId, int adr, byte dat) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.QSoundCtr)) return;
 
-            //((QSound)(dicInst.get(InstrumentType.QSound)[chipIndex])).qsound_w(chipID, adr, dat);
-            ((QSoundCtr) (dicInst.get(InstrumentType.QSoundCtr)[chipIndex])).qsound_w(chipID, adr, dat);
+            //((QSound)(dicInst.get(InstrumentType.QSound)[chipIndex])).qsound_w(chipId, adr, dat);
+            ((QSoundCtr) (dicInst.get(InstrumentType.QSoundCtr)[chipIndex])).qsound_w(chipId, adr, dat);
         }
     }
 
-    public void WriteQSoundCtrPCMData(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
+    public void WriteQSoundCtrPCMData(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.QSoundCtr)) return;
 
-            //((QSound)(dicInst.get(InstrumentType.QSound)[0])).qsound_write_rom(chipID, (int)romSize, (int)dataStart, (int)dataLength, romData, (int)SrcStartAdr);
-            ((QSoundCtr) (dicInst.get(InstrumentType.QSoundCtr)[0])).qsound_write_rom(chipID, romSize, dataStart, dataLength, romData, SrcStartAdr);
+            //((QSound)(dicInst.get(InstrumentType.QSound)[0])).qsound_write_rom(chipId, (int)romSize, (int)dataStart, (int)dataLength, romData, (int)SrcStartAdr);
+            ((QSoundCtr) (dicInst.get(InstrumentType.QSoundCtr)[0])).qsound_write_rom(chipId, romSize, dataStart, dataLength, romData, SrcStartAdr);
         }
     }
 
-    public void WriteQSoundCtrPCMData(int chipIndex, byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
+    public void WriteQSoundCtrPCMData(int chipIndex, byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.QSoundCtr)) return;
 
-            //((QSound)(dicInst.get(InstrumentType.QSound)[chipIndex])).qsound_write_rom(chipID, (int)romSize, (int)dataStart, (int)dataLength, romData, (int)SrcStartAdr);
-            ((QSoundCtr) (dicInst.get(InstrumentType.QSoundCtr)[chipIndex])).qsound_write_rom(chipID, romSize, dataStart, dataLength, romData, SrcStartAdr);
+            //((QSound)(dicInst.get(InstrumentType.QSound)[chipIndex])).qsound_write_rom(chipId, (int)romSize, (int)dataStart, (int)dataLength, romData, (int)SrcStartAdr);
+            ((QSoundCtr) (dicInst.get(InstrumentType.QSoundCtr)[chipIndex])).qsound_write_rom(chipId, romSize, dataStart, dataLength, romData, SrcStartAdr);
         }
     }
 
@@ -2808,19 +2808,19 @@ public class MDSound {
 
     // #region GA20
 
-    public void WriteGA20PCMData(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
+    public void WriteGA20PCMData(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.GA20)) return;
 
-            ((Iremga20) (dicInst.get(InstrumentType.GA20)[0])).iremga20_write_rom(chipID, romSize, dataStart, dataLength, romData, SrcStartAdr);
+            ((Iremga20) (dicInst.get(InstrumentType.GA20)[0])).iremga20_write_rom(chipId, romSize, dataStart, dataLength, romData, SrcStartAdr);
         }
     }
 
-    public void WriteGA20PCMData(int chipIndex, byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
+    public void WriteGA20PCMData(int chipIndex, byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.GA20)) return;
 
-            ((Iremga20) (dicInst.get(InstrumentType.GA20)[chipIndex])).iremga20_write_rom(chipID, romSize, dataStart, dataLength, romData, SrcStartAdr);
+            ((Iremga20) (dicInst.get(InstrumentType.GA20)[chipIndex])).iremga20_write_rom(chipId, romSize, dataStart, dataLength, romData, SrcStartAdr);
         }
     }
 
@@ -2829,81 +2829,81 @@ public class MDSound {
 
     // #region DMG
 
-    public void writeDMG(byte chipID, byte Adr, byte Data) {
+    public void writeDMG(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.DMG)) return;
 
-            dicInst.get(InstrumentType.DMG)[0].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.DMG)[0].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void writeDMG(int chipIndex, byte chipID, byte Adr, byte Data) {
+    public void writeDMG(int chipIndex, byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.DMG)) return;
 
-            dicInst.get(InstrumentType.DMG)[chipIndex].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.DMG)[chipIndex].write(chipId, 0, Adr, Data);
         }
     }
 
-    public Gb.GbSound ReadDMG(byte chipID) {
+    public Gb.GbSound ReadDMG(byte chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.DMG)) return null;
 
-            return ((Gb) (dicInst.get(InstrumentType.DMG)[0])).getSoundData(chipID);
+            return ((Gb) (dicInst.get(InstrumentType.DMG)[0])).getSoundData(chipId);
         }
 
     }
 
-    public Gb.GbSound ReadDMG(int chipIndex, byte chipID) {
+    public Gb.GbSound ReadDMG(int chipIndex, byte chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.DMG)) return null;
 
-            return ((Gb) (dicInst.get(InstrumentType.DMG)[chipIndex])).getSoundData(chipID);
+            return ((Gb) (dicInst.get(InstrumentType.DMG)[chipIndex])).getSoundData(chipId);
         }
 
     }
 
-    public void setDMGMask(byte chipID, int ch) {
+    public void setDMGMask(byte chipId, int ch) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.DMG)) return;
             if (dicInst.get(InstrumentType.DMG)[0] == null) return;
 
-            int maskStatus = ((Gb) (dicInst.get(InstrumentType.DMG)[0])).getMuteMask(chipID);
+            int maskStatus = ((Gb) (dicInst.get(InstrumentType.DMG)[0])).getMuteMask(chipId);
             maskStatus |= 1 << ch;//ch:0 - 3
-            ((Gb) (dicInst.get(InstrumentType.DMG)[0])).setMuteMask(chipID, maskStatus);
+            ((Gb) (dicInst.get(InstrumentType.DMG)[0])).setMuteMask(chipId, maskStatus);
         }
     }
 
-    public void resetDMGMask(byte chipID, int ch) {
+    public void resetDMGMask(byte chipId, int ch) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.DMG)) return;
             if (dicInst.get(InstrumentType.DMG)[0] == null) return;
 
-            int maskStatus = ((Gb) (dicInst.get(InstrumentType.DMG)[0])).getMuteMask(chipID);
+            int maskStatus = ((Gb) (dicInst.get(InstrumentType.DMG)[0])).getMuteMask(chipId);
             maskStatus &= ~(1 << ch);//ch:0 - 3
-            ((Gb) (dicInst.get(InstrumentType.DMG)[0])).setMuteMask(chipID, maskStatus);
+            ((Gb) (dicInst.get(InstrumentType.DMG)[0])).setMuteMask(chipId, maskStatus);
         }
     }
 
-    public void setDMGMask(int chipIndex, byte chipID, int ch) {
+    public void setDMGMask(int chipIndex, byte chipId, int ch) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.DMG)) return;
             if (dicInst.get(InstrumentType.DMG)[chipIndex] == null) return;
 
-            int maskStatus = ((Gb) (dicInst.get(InstrumentType.DMG)[chipIndex])).getMuteMask(chipID);
+            int maskStatus = ((Gb) (dicInst.get(InstrumentType.DMG)[chipIndex])).getMuteMask(chipId);
             maskStatus |= 1 << ch;//ch:0 - 3
-            ((Gb) (dicInst.get(InstrumentType.DMG)[chipIndex])).setMuteMask(chipID, maskStatus);
+            ((Gb) (dicInst.get(InstrumentType.DMG)[chipIndex])).setMuteMask(chipId, maskStatus);
         }
     }
 
-    public void resetDMGMask(int chipIndex, byte chipID, int ch) {
+    public void resetDMGMask(int chipIndex, byte chipId, int ch) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.DMG)) return;
             if (dicInst.get(InstrumentType.DMG)[chipIndex] == null) return;
 
-            int maskStatus = ((Gb) (dicInst.get(InstrumentType.DMG)[chipIndex])).getMuteMask(chipID);
+            int maskStatus = ((Gb) (dicInst.get(InstrumentType.DMG)[chipIndex])).getMuteMask(chipId);
             maskStatus &= ~(1 << ch);//ch:0 - 3
-            ((Gb) (dicInst.get(InstrumentType.DMG)[chipIndex])).setMuteMask(chipID, maskStatus);
+            ((Gb) (dicInst.get(InstrumentType.DMG)[chipIndex])).setMuteMask(chipId, maskStatus);
         }
     }
 
@@ -2912,67 +2912,67 @@ public class MDSound {
 
     // #region NES
 
-    public void writeNES(byte chipID, byte Adr, byte Data) {
+    public void writeNES(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.Nes)) return;
 
-            dicInst.get(InstrumentType.Nes)[0].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.Nes)[0].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void writeNES(int chipIndex, byte chipID, byte Adr, byte Data) {
+    public void writeNES(int chipIndex, byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.Nes)) return;
 
-            dicInst.get(InstrumentType.Nes)[chipIndex].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.Nes)[chipIndex].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void WriteNESRam(byte chipID, int dataStart, int dataLength, byte[] ramData, int RAMdataStartAdr) {
+    public void WriteNESRam(byte chipId, int dataStart, int dataLength, byte[] ramData, int RAMdataStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.Nes)) return;
 
-            ((NesIntF) (dicInst.get(InstrumentType.Nes)[0])).nes_write_ram(chipID, dataStart, dataLength, ramData, RAMdataStartAdr);
+            ((NesIntF) (dicInst.get(InstrumentType.Nes)[0])).nes_write_ram(chipId, dataStart, dataLength, ramData, RAMdataStartAdr);
         }
     }
 
-    public void WriteNESRam(int chipIndex, byte chipID, int dataStart, int dataLength, byte[] ramData, int RAMdataStartAdr) {
+    public void WriteNESRam(int chipIndex, byte chipId, int dataStart, int dataLength, byte[] ramData, int RAMdataStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.Nes)) return;
 
-            ((NesIntF) (dicInst.get(InstrumentType.Nes)[chipIndex])).nes_write_ram(chipID, dataStart, dataLength, ramData, RAMdataStartAdr);
+            ((NesIntF) (dicInst.get(InstrumentType.Nes)[chipIndex])).nes_write_ram(chipId, dataStart, dataLength, ramData, RAMdataStartAdr);
         }
     }
 
-    public byte[] ReadNESapu(byte chipID) {
+    public byte[] ReadNESapu(byte chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.Nes)) return null;
 
-            return ((NesIntF) (dicInst.get(InstrumentType.Nes)[0])).nes_r_apu(chipID);
+            return ((NesIntF) (dicInst.get(InstrumentType.Nes)[0])).nes_r_apu(chipId);
         }
     }
 
-    public byte[] ReadNESapu(int chipIndex, byte chipID) {
+    public byte[] ReadNESapu(int chipIndex, byte chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.Nes)) return null;
 
-            return ((NesIntF) (dicInst.get(InstrumentType.Nes)[chipIndex])).nes_r_apu(chipID);
+            return ((NesIntF) (dicInst.get(InstrumentType.Nes)[chipIndex])).nes_r_apu(chipId);
         }
     }
 
-    public byte[] ReadNESdmc(byte chipID) {
+    public byte[] ReadNESdmc(byte chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.Nes)) return null;
 
-            return ((NesIntF) (dicInst.get(InstrumentType.Nes)[0])).nes_r_dmc(chipID);
+            return ((NesIntF) (dicInst.get(InstrumentType.Nes)[0])).nes_r_dmc(chipId);
         }
     }
 
-    public byte[] ReadNESdmc(int chipIndex, byte chipID) {
+    public byte[] ReadNESdmc(int chipIndex, byte chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.Nes)) return null;
 
-            return ((NesIntF) (dicInst.get(InstrumentType.Nes)[chipIndex])).nes_r_dmc(chipID);
+            return ((NesIntF) (dicInst.get(InstrumentType.Nes)[chipIndex])).nes_r_dmc(chipId);
         }
     }
 
@@ -2987,11 +2987,11 @@ public class MDSound {
             0xb000, 0xb001, 0xb002, 0xb003
     };
 
-    public void WriteVRC6(int chipIndex, byte chipID, byte Adr, byte Data) {
+    public void WriteVRC6(int chipIndex, byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.VRC6)) return;
 
-            dicInst.get(InstrumentType.VRC6)[chipIndex].write(chipID, 0, vrc6AddressTable[Adr], Data);
+            dicInst.get(InstrumentType.VRC6)[chipIndex].write(chipId, 0, vrc6AddressTable[Adr], Data);
         }
     }
 
@@ -3000,51 +3000,51 @@ public class MDSound {
 
     // #region MultiPCM
 
-    public void WriteMultiPCM(byte chipID, byte Adr, byte Data) {
+    public void WriteMultiPCM(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.MultiPCM)) return;
 
-            dicInst.get(InstrumentType.MultiPCM)[0].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.MultiPCM)[0].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void WriteMultiPCM(int chipIndex, byte chipID, byte Adr, byte Data) {
+    public void WriteMultiPCM(int chipIndex, byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.MultiPCM)) return;
 
-            dicInst.get(InstrumentType.MultiPCM)[chipIndex].write(chipID, 0, Adr, Data);
+            dicInst.get(InstrumentType.MultiPCM)[chipIndex].write(chipId, 0, Adr, Data);
         }
     }
 
-    public void WriteMultiPCMSetBank(byte chipID, byte Ch, int Adr) {
+    public void WriteMultiPCMSetBank(byte chipId, byte Ch, int Adr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.MultiPCM)) return;
 
-            ((MultiPcm) (dicInst.get(InstrumentType.MultiPCM)[0])).multipcm_bank_write(chipID, Ch, Adr);
+            ((MultiPcm) (dicInst.get(InstrumentType.MultiPCM)[0])).multipcm_bank_write(chipId, Ch, Adr);
         }
     }
 
-    public void WriteMultiPCMSetBank(int chipIndex, byte chipID, byte Ch, int Adr) {
+    public void WriteMultiPCMSetBank(int chipIndex, byte chipId, byte Ch, int Adr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.MultiPCM)) return;
 
-            ((MultiPcm) (dicInst.get(InstrumentType.MultiPCM)[chipIndex])).multipcm_bank_write(chipID, Ch, Adr);
+            ((MultiPcm) (dicInst.get(InstrumentType.MultiPCM)[chipIndex])).multipcm_bank_write(chipId, Ch, Adr);
         }
     }
 
-    public void WriteMultiPCMPCMData(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
+    public void WriteMultiPCMPCMData(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.MultiPCM)) return;
 
-            ((MultiPcm) (dicInst.get(InstrumentType.MultiPCM)[0])).multipcm_write_rom2(chipID, romSize, dataStart, dataLength, romData, SrcStartAdr);
+            ((MultiPcm) (dicInst.get(InstrumentType.MultiPCM)[0])).multipcm_write_rom2(chipId, romSize, dataStart, dataLength, romData, SrcStartAdr);
         }
     }
 
-    public void WriteMultiPCMPCMData(int chipIndex, byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
+    public void WriteMultiPCMPCMData(int chipIndex, byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.MultiPCM)) return;
 
-            ((MultiPcm) (dicInst.get(InstrumentType.MultiPCM)[chipIndex])).multipcm_write_rom2(chipID, romSize, dataStart, dataLength, romData, SrcStartAdr);
+            ((MultiPcm) (dicInst.get(InstrumentType.MultiPCM)[chipIndex])).multipcm_write_rom2(chipId, romSize, dataStart, dataLength, romData, SrcStartAdr);
         }
     }
 
@@ -3053,19 +3053,19 @@ public class MDSound {
 
     // #region FDS
 
-    public NpNesFds readFDS(byte chipID) {
+    public NpNesFds readFDS(byte chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.Nes)) return null;
 
-            return ((NesIntF) (dicInst.get(InstrumentType.Nes)[0])).nes_r_fds(chipID);
+            return ((NesIntF) (dicInst.get(InstrumentType.Nes)[0])).nes_r_fds(chipId);
         }
     }
 
-    public NpNesFds readFDS(int chipIndex, byte chipID) {
+    public NpNesFds readFDS(int chipIndex, byte chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.Nes)) return null;
 
-            return ((NesIntF) (dicInst.get(InstrumentType.Nes)[chipIndex])).nes_r_fds(chipID);
+            return ((NesIntF) (dicInst.get(InstrumentType.Nes)[chipIndex])).nes_r_fds(chipId);
         }
     }
 
@@ -3948,53 +3948,53 @@ public class MDSound {
         }
     }
 
-    public int[][] ReadYM2612Register(byte chipID) {
+    public int[][] ReadYM2612Register(byte chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2612)) return null;
-            return ((Ym2612) (dicInst.get(InstrumentType.YM2612)[0])).YM2612_Chip[chipID].REG;
+            return ((Ym2612) (dicInst.get(InstrumentType.YM2612)[0])).chips[chipId].regs;
         }
     }
 
-    public int[][] ReadYM2612Register(int chipIndex, byte chipID) {
+    public int[][] ReadYM2612Register(int chipIndex, byte chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2612)) return null;
-            return ((Ym2612) (dicInst.get(InstrumentType.YM2612)[chipIndex])).YM2612_Chip[chipID].REG;
+            return ((Ym2612) (dicInst.get(InstrumentType.YM2612)[chipIndex])).chips[chipId].regs;
         }
     }
 
-    public ScdPcm.PcmChip ReadRf5c164Register(int chipID) {
+    public ScdPcm.PcmChip ReadRf5c164Register(int chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.RF5C164)) return null;
             if (((ScdPcm) (dicInst.get(InstrumentType.RF5C164)[0])).PCM_Chip == null || ((ScdPcm) (dicInst.get(InstrumentType.RF5C164)[0])).PCM_Chip.length < 1)
                 return null;
-            return ((ScdPcm) (dicInst.get(InstrumentType.RF5C164)[0])).PCM_Chip[chipID];
+            return ((ScdPcm) (dicInst.get(InstrumentType.RF5C164)[0])).PCM_Chip[chipId];
         }
     }
 
-    public ScdPcm.PcmChip ReadRf5c164Register(int chipIndex, int chipID) {
+    public ScdPcm.PcmChip ReadRf5c164Register(int chipIndex, int chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.RF5C164)) return null;
             if (((ScdPcm) (dicInst.get(InstrumentType.RF5C164)[chipIndex])).PCM_Chip == null || ((ScdPcm) (dicInst.get(InstrumentType.RF5C164)[chipIndex])).PCM_Chip.length < 1)
                 return null;
-            return ((ScdPcm) (dicInst.get(InstrumentType.RF5C164)[chipIndex])).PCM_Chip[chipID];
+            return ((ScdPcm) (dicInst.get(InstrumentType.RF5C164)[chipIndex])).PCM_Chip[chipId];
         }
     }
 
-    public Rf5c68.Rf5c68State ReadRf5c68Register(int chipID) {
+    public Rf5c68.Rf5c68State ReadRf5c68Register(int chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.RF5C68)) return null;
             if (((Rf5c68) (dicInst.get(InstrumentType.RF5C68)[0])).rf5C68Data == null || ((Rf5c68) (dicInst.get(InstrumentType.RF5C68)[0])).rf5C68Data.length < 1)
                 return null;
-            return ((Rf5c68) (dicInst.get(InstrumentType.RF5C68)[0])).rf5C68Data[chipID];
+            return ((Rf5c68) (dicInst.get(InstrumentType.RF5C68)[0])).rf5C68Data[chipId];
         }
     }
 
-    public Rf5c68.Rf5c68State ReadRf5c68Register(int chipIndex, int chipID) {
+    public Rf5c68.Rf5c68State ReadRf5c68Register(int chipIndex, int chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.RF5C68)) return null;
             if (((Rf5c68) (dicInst.get(InstrumentType.RF5C68)[chipIndex])).rf5C68Data == null || ((Rf5c68) (dicInst.get(InstrumentType.RF5C68)[chipIndex])).rf5C68Data.length < 1)
                 return null;
-            return ((Rf5c68) (dicInst.get(InstrumentType.RF5C68)[chipIndex])).rf5C68Data[chipID];
+            return ((Rf5c68) (dicInst.get(InstrumentType.RF5C68)[chipIndex])).rf5C68Data[chipId];
         }
     }
 
@@ -4012,666 +4012,666 @@ public class MDSound {
         }
     }
 
-    public int[] ReadC352Flag(int chipID) {
+    public int[] ReadC352Flag(int chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.C352)) return null;
-            return ((C352) dicInst.get(InstrumentType.C352)[0]).getFlags((byte) chipID);
+            return ((C352) dicInst.get(InstrumentType.C352)[0]).getFlags((byte) chipId);
         }
     }
 
-    public int[] ReadC352Flag(int chipIndex, int chipID) {
+    public int[] ReadC352Flag(int chipIndex, int chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.C352)) return null;
-            return ((C352) dicInst.get(InstrumentType.C352)[chipIndex]).getFlags((byte) chipID);
+            return ((C352) dicInst.get(InstrumentType.C352)[chipIndex]).getFlags((byte) chipId);
         }
     }
 
-    public MultiPcm._MultiPCM ReadMultiPCMRegister(int chipID) {
+    public MultiPcm.MultiPCM ReadMultiPCMRegister(int chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.MultiPCM)) return null;
-            return ((MultiPcm) (dicInst.get(InstrumentType.MultiPCM)[0])).multipcm_r(chipID);
+            return ((MultiPcm) (dicInst.get(InstrumentType.MultiPCM)[0])).multipcm_r(chipId);
         }
     }
 
-    public MultiPcm._MultiPCM ReadMultiPCMRegister(int chipIndex, int chipID) {
+    public MultiPcm.MultiPCM ReadMultiPCMRegister(int chipIndex, int chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.MultiPCM)) return null;
-            return ((MultiPcm) (dicInst.get(InstrumentType.MultiPCM)[chipIndex])).multipcm_r(chipID);
+            return ((MultiPcm) (dicInst.get(InstrumentType.MultiPCM)[chipIndex])).multipcm_r(chipId);
         }
     }
 
-    public Ymf271.YMF271Chip ReadYMF271Register(int chipID) {
+    public Ymf271.YMF271Chip ReadYMF271Register(int chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YMF271)) return null;
             if (dicInst.get(InstrumentType.YMF271)[0] == null) return null;
-            return ((Ymf271) (dicInst.get(InstrumentType.YMF271)[0])).YMF271Data[chipID];
+            return ((Ymf271) (dicInst.get(InstrumentType.YMF271)[0])).ymf271Chips[chipId];
         }
     }
 
-    public Ymf271.YMF271Chip ReadYMF271Register(int chipIndex, int chipID) {
+    public Ymf271.YMF271Chip ReadYMF271Register(int chipIndex, int chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YMF271)) return null;
             if (dicInst.get(InstrumentType.YMF271)[chipIndex] == null) return null;
-            return ((Ymf271) (dicInst.get(InstrumentType.YMF271)[chipIndex])).YMF271Data[chipID];
+            return ((Ymf271) (dicInst.get(InstrumentType.YMF271)[chipIndex])).ymf271Chips[chipId];
         }
     }
 
 
-    public OkiM6258.OkiM6258State ReadOKIM6258Status(int chipID) {
+    public OkiM6258.OkiM6258State ReadOKIM6258Status(int chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.OKIM6258)) return null;
-            return ((OkiM6258) dicInst.get(InstrumentType.OKIM6258)[0]).okiM6258Data[chipID];
+            return ((OkiM6258) dicInst.get(InstrumentType.OKIM6258)[0]).okiM6258Data[chipId];
         }
     }
 
-    public OkiM6258.OkiM6258State ReadOKIM6258Status(int chipIndex, int chipID) {
+    public OkiM6258.OkiM6258State ReadOKIM6258Status(int chipIndex, int chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.OKIM6258)) return null;
-            return ((OkiM6258) dicInst.get(InstrumentType.OKIM6258)[chipIndex]).okiM6258Data[chipID];
+            return ((OkiM6258) dicInst.get(InstrumentType.OKIM6258)[chipIndex]).okiM6258Data[chipId];
         }
     }
 
-    public OkiM6295.OkiM6295State ReadOKIM6295Status(int chipID) {
+    public OkiM6295.OkiM6295State ReadOKIM6295Status(int chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.OKIM6295)) return null;
-            return ((OkiM6295) dicInst.get(InstrumentType.OKIM6295)[0]).OKIM6295Data[chipID];
+            return ((OkiM6295) dicInst.get(InstrumentType.OKIM6295)[0]).chips[chipId];
         }
     }
 
-    public OkiM6295.OkiM6295State ReadOKIM6295Status(int chipIndex, int chipID) {
+    public OkiM6295.OkiM6295State ReadOKIM6295Status(int chipIndex, int chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.OKIM6295)) return null;
-            return ((OkiM6295) dicInst.get(InstrumentType.OKIM6295)[chipIndex]).OKIM6295Data[chipID];
+            return ((OkiM6295) dicInst.get(InstrumentType.OKIM6295)[chipIndex]).chips[chipId];
         }
     }
 
-    public SegaPcm.SegaPcmState ReadSegaPCMStatus(int chipID) {
+    public SegaPcm.SegaPcmState ReadSegaPCMStatus(int chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.SEGAPCM)) return null;
-            return ((SegaPcm) dicInst.get(InstrumentType.SEGAPCM)[0]).SPCMData[chipID];
+            return ((SegaPcm) dicInst.get(InstrumentType.SEGAPCM)[0]).SPCMData[chipId];
         }
     }
 
-    public SegaPcm.SegaPcmState ReadSegaPCMStatus(int chipIndex, int chipID) {
+    public SegaPcm.SegaPcmState ReadSegaPCMStatus(int chipIndex, int chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.SEGAPCM)) return null;
-            return ((SegaPcm) dicInst.get(InstrumentType.SEGAPCM)[chipIndex]).SPCMData[chipID];
+            return ((SegaPcm) dicInst.get(InstrumentType.SEGAPCM)[chipIndex]).SPCMData[chipId];
         }
     }
 
 
-    public OotakePsg.HuC6280State ReadHuC6280Status(int chipID) {
+    public OotakePsg.HuC6280State ReadHuC6280Status(int chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.HuC6280)) return null;
-            return ((OotakePsg) dicInst.get(InstrumentType.HuC6280)[0]).GetState((byte) chipID);
+            return ((OotakePsg) dicInst.get(InstrumentType.HuC6280)[0]).GetState((byte) chipId);
         }
     }
 
-    public OotakePsg.HuC6280State ReadHuC6280Status(int chipIndex, int chipID) {
+    public OotakePsg.HuC6280State ReadHuC6280Status(int chipIndex, int chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.HuC6280)) return null;
-            return ((OotakePsg) dicInst.get(InstrumentType.HuC6280)[chipIndex]).GetState((byte) chipID);
+            return ((OotakePsg) dicInst.get(InstrumentType.HuC6280)[chipIndex]).GetState((byte) chipId);
         }
     }
 
-    public K051649.K051649State ReadK051649Status(int chipID) {
+    public K051649.K051649State ReadK051649Status(int chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.K051649)) return null;
-            return ((K051649) dicInst.get(InstrumentType.K051649)[0]).GetK051649_State((byte) chipID);
+            return ((K051649) dicInst.get(InstrumentType.K051649)[0]).GetK051649_State((byte) chipId);
         }
     }
 
-    public K051649.K051649State ReadK051649Status(int chipIndex, int chipID) {
+    public K051649.K051649State ReadK051649Status(int chipIndex, int chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.K051649)) return null;
-            return ((K051649) dicInst.get(InstrumentType.K051649)[chipIndex]).GetK051649_State((byte) chipID);
+            return ((K051649) dicInst.get(InstrumentType.K051649)[chipIndex]).GetK051649_State((byte) chipId);
         }
     }
 
-    public int[][] ReadRf5c164Volume(int chipID) {
+    public int[][] ReadRf5c164Volume(int chipId) {
         synchronized (lockobj) {
-            return rf5c164Vol[chipID];
+            return rf5c164Vol[chipId];
         }
     }
 
-    public PPZ8.PPZ8Status.Channel[] readPPZ8Status(int chipID) {
-        synchronized (lockobj) {
-            if (!dicInst.containsKey(InstrumentType.PPZ8)) return null;
-            return ((PPZ8) dicInst.get(InstrumentType.PPZ8)[0]).getPPZ8State((byte) chipID);
-        }
-    }
-
-    public PPZ8.PPZ8Status.Channel[] readPPZ8Status(int chipIndex, int chipID) {
+    public PPZ8.PPZ8Status.Channel[] readPPZ8Status(int chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.PPZ8)) return null;
-            return ((PPZ8) dicInst.get(InstrumentType.PPZ8)[chipIndex]).getPPZ8State((byte) chipID);
+            return ((PPZ8) dicInst.get(InstrumentType.PPZ8)[0]).getPPZ8State((byte) chipId);
+        }
+    }
+
+    public PPZ8.PPZ8Status.Channel[] readPPZ8Status(int chipIndex, int chipId) {
+        synchronized (lockobj) {
+            if (!dicInst.containsKey(InstrumentType.PPZ8)) return null;
+            return ((PPZ8) dicInst.get(InstrumentType.PPZ8)[chipIndex]).getPPZ8State((byte) chipId);
         }
     }
 
 
-    public int[] ReadYM2612KeyOn(byte chipID) {
+    public int[] ReadYM2612KeyOn(byte chipId) {
         synchronized (lockobj) {
-            int[] keys = new int[((Ym2612) (dicInst.get(InstrumentType.YM2612)[0])).YM2612_Chip[chipID].CHANNEL.length];
+            int[] keys = new int[((Ym2612) (dicInst.get(InstrumentType.YM2612)[0])).chips[chipId].channels.length];
             for (int i = 0; i < keys.length; i++)
-                keys[i] = ((Ym2612) (dicInst.get(InstrumentType.YM2612)[0])).YM2612_Chip[chipID].CHANNEL[i].KeyOn;
+                keys[i] = ((Ym2612) (dicInst.get(InstrumentType.YM2612)[0])).chips[chipId].channels[i].keyOn;
             return keys;
         }
     }
 
-    public int[] ReadYM2612KeyOn(int chipIndex, byte chipID) {
+    public int[] ReadYM2612KeyOn(int chipIndex, byte chipId) {
         synchronized (lockobj) {
-            int[] keys = new int[((Ym2612) (dicInst.get(InstrumentType.YM2612)[chipIndex])).YM2612_Chip[chipID].CHANNEL.length];
+            int[] keys = new int[((Ym2612) (dicInst.get(InstrumentType.YM2612)[chipIndex])).chips[chipId].channels.length];
             for (int i = 0; i < keys.length; i++)
-                keys[i] = ((Ym2612) (dicInst.get(InstrumentType.YM2612)[chipIndex])).YM2612_Chip[chipID].CHANNEL[i].KeyOn;
+                keys[i] = ((Ym2612) (dicInst.get(InstrumentType.YM2612)[chipIndex])).chips[chipId].channels[i].keyOn;
             return keys;
         }
     }
 
-    public int[] ReadYM2151KeyOn(int chipID) {
+    public int[] ReadYM2151KeyOn(int chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2151)) return null;
             for (int i = 0; i < 8; i++) {
-                //ym2151Key[chipID][i] = ((Ym2151)(iYM2151)).YM2151_Chip[chipID].CHANNEL[i].KeyOn;
+                //ym2151Key[chipId][i] = ((Ym2151)(iYM2151)).YM2151_Chip[chipId].CHANNEL[i].KeyOn;
             }
-            return ym2151Key[chipID];
+            return ym2151Key[chipId];
         }
     }
 
-    public int[] ReadYM2203KeyOn(int chipID) {
+    public int[] ReadYM2203KeyOn(int chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2203)) return null;
             for (int i = 0; i < 6; i++) {
-                //ym2203Key[chipID][i] = ((Ym2203)(iYM2203)).YM2203_Chip[chipID].CHANNEL[i].KeyOn;
+                //ym2203Key[chipId][i] = ((Ym2203)(iYM2203)).YM2203_Chip[chipId].CHANNEL[i].KeyOn;
             }
-            return ym2203Key[chipID];
+            return ym2203Key[chipId];
         }
     }
 
-    public int[] ReadYM2608KeyOn(int chipID) {
+    public int[] ReadYM2608KeyOn(int chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2608)) return null;
             for (int i = 0; i < 11; i++) {
-                //ym2608Key[chipID][i] = ((Ym2608)(iYM2608)).YM2608_Chip[chipID].CHANNEL[i].KeyOn;
+                //ym2608Key[chipId][i] = ((Ym2608)(iYM2608)).YM2608_Chip[chipId].CHANNEL[i].KeyOn;
             }
-            return ym2608Key[chipID];
+            return ym2608Key[chipId];
         }
     }
 
-    public int[] ReadYM2609KeyOn(int chipID) {
+    public int[] ReadYM2609KeyOn(int chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2609)) return null;
             for (int i = 0; i < 11; i++) {
-                //ym2608Key[chipID][i] = ((Ym2608)(iYM2608)).YM2608_Chip[chipID].CHANNEL[i].KeyOn;
+                //ym2608Key[chipId][i] = ((Ym2608)(iYM2608)).YM2608_Chip[chipId].CHANNEL[i].KeyOn;
             }
-            return ym2609Key[chipID];
+            return ym2609Key[chipId];
         }
     }
 
-    public int[] ReadYM2610KeyOn(int chipID) {
+    public int[] ReadYM2610KeyOn(int chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2610)) return null;
             for (int i = 0; i < 11; i++) {
-                //ym2610Key[chipID][i] = ((Ym2610)(iYM2610)).YM2610_Chip[chipID].CHANNEL[i].KeyOn;
+                //ym2610Key[chipId][i] = ((Ym2610)(iYM2610)).YM2610_Chip[chipId].CHANNEL[i].KeyOn;
             }
-            return ym2610Key[chipID];
+            return ym2610Key[chipId];
         }
     }
 
 
-    public void setSN76489Mask(int chipID, int ch) {
+    public void setSN76489Mask(int chipId, int ch) {
         synchronized (lockobj) {
-            sn76489Mask.get(0)[chipID] &= ~ch;
+            sn76489Mask.get(0)[chipId] &= ~ch;
             if (!dicInst.containsKey(InstrumentType.SN76489)) return;
-            ((Sn76489) (dicInst.get(InstrumentType.SN76489)[0])).SN76489_SetMute((byte) chipID, sn76489Mask.get(0)[chipID]);
+            ((Sn76489) (dicInst.get(InstrumentType.SN76489)[0])).SN76489_SetMute((byte) chipId, sn76489Mask.get(0)[chipId]);
         }
     }
 
-    public void setSN76489Mask(int chipIndex, int chipID, int ch) {
+    public void setSN76489Mask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
-            sn76489Mask.get(chipIndex)[chipID] &= ~ch;
+            sn76489Mask.get(chipIndex)[chipId] &= ~ch;
             if (!dicInst.containsKey(InstrumentType.SN76489)) return;
-            ((Sn76489) (dicInst.get(InstrumentType.SN76489)[chipIndex])).SN76489_SetMute((byte) chipID, sn76489Mask.get(chipIndex)[chipID]);
+            ((Sn76489) (dicInst.get(InstrumentType.SN76489)[chipIndex])).SN76489_SetMute((byte) chipId, sn76489Mask.get(chipIndex)[chipId]);
         }
     }
 
-    public void setYM2612Mask(int chipID, int ch) {
+    public void setYM2612Mask(int chipId, int ch) {
         synchronized (lockobj) {
-            ym2612Mask.get(0)[chipID] |= 1 << ch;
+            ym2612Mask.get(0)[chipId] |= 1 << ch;
             if (dicInst.containsKey(InstrumentType.YM2612)) {
-                ((Ym2612) (dicInst.get(InstrumentType.YM2612)[0])).YM2612_SetMute((byte) chipID, ym2612Mask.get(0)[chipID]);
+                ((Ym2612) (dicInst.get(InstrumentType.YM2612)[0])).YM2612_SetMute((byte) chipId, ym2612Mask.get(0)[chipId]);
             }
             if (dicInst.containsKey(InstrumentType.YM2612mame)) {
-                ((Ym2612Mame) (dicInst.get(InstrumentType.YM2612mame)[0])).SetMute((byte) chipID, ym2612Mask.get(0)[chipID]);
+                ((Ym2612Mame) (dicInst.get(InstrumentType.YM2612mame)[0])).SetMute((byte) chipId, ym2612Mask.get(0)[chipId]);
             }
             if (dicInst.containsKey(InstrumentType.YM3438)) {
-                int mask = ym2612Mask.get(0)[chipID];
+                int mask = ym2612Mask.get(0)[chipId];
                 if ((mask & 0b0010_0000) == 0) mask &= 0b1011_1111;
                 else mask |= 0b0100_0000;
-                ((Ym3438) (dicInst.get(InstrumentType.YM3438)[0])).setMute((byte) chipID, mask);
+                ((Ym3438) (dicInst.get(InstrumentType.YM3438)[0])).setMute((byte) chipId, mask);
             }
         }
     }
 
-    public void setYM2612Mask(int chipIndex, int chipID, int ch) {
+    public void setYM2612Mask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
-            ym2612Mask.get(chipIndex)[chipID] |= 1 << ch;
+            ym2612Mask.get(chipIndex)[chipId] |= 1 << ch;
             if (dicInst.containsKey(InstrumentType.YM2612)) {
-                ((Ym2612) (dicInst.get(InstrumentType.YM2612)[chipIndex])).YM2612_SetMute((byte) chipID, ym2612Mask.get(chipIndex)[chipID]);
+                ((Ym2612) (dicInst.get(InstrumentType.YM2612)[chipIndex])).YM2612_SetMute((byte) chipId, ym2612Mask.get(chipIndex)[chipId]);
             }
             if (dicInst.containsKey(InstrumentType.YM2612mame)) {
-                ((Ym2612Mame) (dicInst.get(InstrumentType.YM2612mame)[chipIndex])).SetMute((byte) chipID, ym2612Mask.get(chipIndex)[chipID]);
+                ((Ym2612Mame) (dicInst.get(InstrumentType.YM2612mame)[chipIndex])).SetMute((byte) chipId, ym2612Mask.get(chipIndex)[chipId]);
             }
             if (dicInst.containsKey(InstrumentType.YM3438)) {
-                int mask = ym2612Mask.get(chipIndex)[chipID];
+                int mask = ym2612Mask.get(chipIndex)[chipId];
                 if ((mask & 0b0010_0000) == 0) mask &= 0b1011_1111;
                 else mask |= 0b0100_0000;
-                ((Ym3438) (dicInst.get(InstrumentType.YM3438)[chipIndex])).setMute((byte) chipID, mask);
+                ((Ym3438) (dicInst.get(InstrumentType.YM3438)[chipIndex])).setMute((byte) chipId, mask);
             }
         }
     }
 
-    public void setYM2203Mask(int chipID, int ch) {
+    public void setYM2203Mask(int chipId, int ch) {
         synchronized (lockobj) {
-            ym2203Mask.get(0)[chipID] |= ch;
+            ym2203Mask.get(0)[chipId] |= ch;
             if (!dicInst.containsKey(InstrumentType.YM2203)) return;
-            ((Ym2203) (dicInst.get(InstrumentType.YM2203)[0])).YM2203_SetMute((byte) chipID, ym2203Mask.get(0)[chipID]);
+            ((Ym2203) (dicInst.get(InstrumentType.YM2203)[0])).YM2203_SetMute((byte) chipId, ym2203Mask.get(0)[chipId]);
         }
     }
 
-    public void setYM2203Mask(int chipIndex, int chipID, int ch) {
+    public void setYM2203Mask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
-            ym2203Mask.get(chipIndex)[chipID] |= ch;
+            ym2203Mask.get(chipIndex)[chipId] |= ch;
             if (!dicInst.containsKey(InstrumentType.YM2203)) return;
-            ((Ym2203) (dicInst.get(InstrumentType.YM2203)[chipIndex])).YM2203_SetMute((byte) chipID, ym2203Mask.get(chipIndex)[chipID]);
+            ((Ym2203) (dicInst.get(InstrumentType.YM2203)[chipIndex])).YM2203_SetMute((byte) chipId, ym2203Mask.get(chipIndex)[chipId]);
         }
     }
 
-    public void setRf5c164Mask(int chipID, int ch) {
+    public void setRf5c164Mask(int chipId, int ch) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.RF5C164)) return;
-            ((ScdPcm) (dicInst.get(InstrumentType.RF5C164)[0])).PCM_Chip[chipID].channels[ch].muted = 1;
+            ((ScdPcm) (dicInst.get(InstrumentType.RF5C164)[0])).PCM_Chip[chipId].channels[ch].muted = 1;
         }
     }
 
-    public void setRf5c164Mask(int chipIndex, int chipID, int ch) {
+    public void setRf5c164Mask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.RF5C164)) return;
-            ((ScdPcm) (dicInst.get(InstrumentType.RF5C164)[chipIndex])).PCM_Chip[chipID].channels[ch].muted = 1;
+            ((ScdPcm) (dicInst.get(InstrumentType.RF5C164)[chipIndex])).PCM_Chip[chipId].channels[ch].muted = 1;
         }
     }
 
-    public void setRf5c68Mask(int chipID, int ch) {
+    public void setRf5c68Mask(int chipId, int ch) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.RF5C68)) return;
-            ((Rf5c68) (dicInst.get(InstrumentType.RF5C68)[0])).rf5C68Data[chipID].chan[ch].muted = 1;
+            ((Rf5c68) (dicInst.get(InstrumentType.RF5C68)[0])).rf5C68Data[chipId].chan[ch].muted = 1;
         }
     }
 
-    public void setRf5c68Mask(int chipIndex, int chipID, int ch) {
+    public void setRf5c68Mask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.RF5C68)) return;
-            ((Rf5c68) (dicInst.get(InstrumentType.RF5C68)[chipIndex])).rf5C68Data[chipID].chan[ch].muted = 1;
+            ((Rf5c68) (dicInst.get(InstrumentType.RF5C68)[chipIndex])).rf5C68Data[chipId].chan[ch].muted = 1;
         }
     }
 
-    public void setC140Mask(int chipID, int ch) {
+    public void setC140Mask(int chipId, int ch) {
         synchronized (lockobj) {
-            c140Mask.get(0)[chipID] |= ch;
+            c140Mask.get(0)[chipId] |= ch;
             if (!dicInst.containsKey(InstrumentType.C140)) return;
-            ((C140) (dicInst.get(InstrumentType.C140)[0])).c140_set_mute_mask((byte) chipID, c140Mask.get(0)[chipID]);
+            ((C140) (dicInst.get(InstrumentType.C140)[0])).c140_set_mute_mask((byte) chipId, c140Mask.get(0)[chipId]);
         }
     }
 
-    public void setC140Mask(int chipIndex, int chipID, int ch) {
+    public void setC140Mask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
-            c140Mask.get(chipIndex)[chipID] |= ch;
+            c140Mask.get(chipIndex)[chipId] |= ch;
             if (!dicInst.containsKey(InstrumentType.C140)) return;
-            ((C140) (dicInst.get(InstrumentType.C140)[chipIndex])).c140_set_mute_mask((byte) chipID, c140Mask.get(chipIndex)[chipID]);
+            ((C140) (dicInst.get(InstrumentType.C140)[chipIndex])).c140_set_mute_mask((byte) chipId, c140Mask.get(chipIndex)[chipId]);
         }
     }
 
-    public void setSegaPcmMask(int chipID, int ch) {
+    public void setSegaPcmMask(int chipId, int ch) {
         synchronized (lockobj) {
-            segapcmMask.get(0)[chipID] |= ch;
+            segapcmMask.get(0)[chipId] |= ch;
             if (!dicInst.containsKey(InstrumentType.SEGAPCM)) return;
-            ((SegaPcm) (dicInst.get(InstrumentType.SEGAPCM)[0])).segapcm_set_mute_mask((byte) chipID, segapcmMask.get(0)[chipID]);
+            ((SegaPcm) (dicInst.get(InstrumentType.SEGAPCM)[0])).segapcm_set_mute_mask((byte) chipId, segapcmMask.get(0)[chipId]);
         }
     }
 
-    public void setSegaPcmMask(int chipIndex, int chipID, int ch) {
+    public void setSegaPcmMask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
-            segapcmMask.get(chipIndex)[chipID] |= ch;
+            segapcmMask.get(chipIndex)[chipId] |= ch;
             if (!dicInst.containsKey(InstrumentType.SEGAPCM)) return;
-            ((SegaPcm) (dicInst.get(InstrumentType.SEGAPCM)[chipIndex])).segapcm_set_mute_mask((byte) chipID, segapcmMask.get(chipIndex)[chipID]);
+            ((SegaPcm) (dicInst.get(InstrumentType.SEGAPCM)[chipIndex])).segapcm_set_mute_mask((byte) chipId, segapcmMask.get(chipIndex)[chipId]);
         }
     }
 
-    public void setQSoundMask(int chipID, int ch) {
+    public void setQSoundMask(int chipId, int ch) {
         synchronized (lockobj) {
             ch = (1 << ch);
-            qsoundMask.get(0)[chipID] |= ch;
+            qsoundMask.get(0)[chipId] |= ch;
             if (dicInst.containsKey(InstrumentType.QSound)) {
-                ((QSound) (dicInst.get(InstrumentType.QSound)[0])).qsound_set_mute_mask((byte) chipID, qsoundMask.get(0)[chipID]);
+                ((QSound) (dicInst.get(InstrumentType.QSound)[0])).qsound_set_mute_mask((byte) chipId, qsoundMask.get(0)[chipId]);
             }
         }
     }
 
-    public void setQSoundMask(int chipIndex, int chipID, int ch) {
+    public void setQSoundMask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
             ch = (1 << ch);
-            qsoundMask.get(chipIndex)[chipID] |= ch;
+            qsoundMask.get(chipIndex)[chipId] |= ch;
             if (!dicInst.containsKey(InstrumentType.QSound)) {
-                ((QSound) (dicInst.get(InstrumentType.QSound)[chipIndex])).qsound_set_mute_mask((byte) chipID, qsoundMask.get(chipIndex)[chipID]);
+                ((QSound) (dicInst.get(InstrumentType.QSound)[chipIndex])).qsound_set_mute_mask((byte) chipId, qsoundMask.get(chipIndex)[chipId]);
             }
         }
     }
 
-    public void setQSoundCtrMask(int chipID, int ch) {
+    public void setQSoundCtrMask(int chipId, int ch) {
         synchronized (lockobj) {
             ch = (1 << ch);
-            qsoundCtrMask.get(0)[chipID] |= ch;
+            qsoundCtrMask.get(0)[chipId] |= ch;
             if (dicInst.containsKey(InstrumentType.QSoundCtr)) {
-                ((QSoundCtr) (dicInst.get(InstrumentType.QSoundCtr)[0])).qsound_set_mute_mask((byte) chipID, qsoundCtrMask.get(0)[chipID]);
+                ((QSoundCtr) (dicInst.get(InstrumentType.QSoundCtr)[0])).qsound_set_mute_mask((byte) chipId, qsoundCtrMask.get(0)[chipId]);
             }
         }
     }
 
-    public void setQSoundCtrMask(int chipIndex, int chipID, int ch) {
+    public void setQSoundCtrMask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
             ch = (1 << ch);
-            qsoundCtrMask.get(chipIndex)[chipID] |= ch;
+            qsoundCtrMask.get(chipIndex)[chipId] |= ch;
             if (!dicInst.containsKey(InstrumentType.QSoundCtr)) {
-                ((QSoundCtr) (dicInst.get(InstrumentType.QSoundCtr)[chipIndex])).qsound_set_mute_mask((byte) chipID, qsoundCtrMask.get(chipIndex)[chipID]);
+                ((QSoundCtr) (dicInst.get(InstrumentType.QSoundCtr)[chipIndex])).qsound_set_mute_mask((byte) chipId, qsoundCtrMask.get(chipIndex)[chipId]);
             }
         }
     }
 
-    public void setOKIM6295Mask(int chipIndex, int chipID, int ch) {
+    public void setOKIM6295Mask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
-            okim6295Mask.get(chipIndex)[chipID] |= ch;
+            okim6295Mask.get(chipIndex)[chipId] |= ch;
             if (!dicInst.containsKey(InstrumentType.OKIM6295)) return;
-            ((OkiM6295) (dicInst.get(InstrumentType.OKIM6295)[chipIndex])).okim6295_set_mute_mask((byte) chipID, okim6295Mask.get(chipIndex)[chipID]);
+            ((OkiM6295) (dicInst.get(InstrumentType.OKIM6295)[chipIndex])).okim6295_set_mute_mask((byte) chipId, okim6295Mask.get(chipIndex)[chipId]);
         }
     }
 
-    public OkiM6295.OkiM6295State.ChannelInfo getOKIM6295Info(int chipIndex, int chipID) {
+    public OkiM6295.OkiM6295State.ChannelInfo getOKIM6295Info(int chipIndex, int chipId) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.OKIM6295)) return null;
-            return ((OkiM6295) (dicInst.get(InstrumentType.OKIM6295)[chipIndex])).readChInfo((byte) chipID);
+            return ((OkiM6295) (dicInst.get(InstrumentType.OKIM6295)[chipIndex])).readChInfo((byte) chipId);
         }
     }
 
-    public void setHuC6280Mask(int chipID, int ch) {
+    public void setHuC6280Mask(int chipId, int ch) {
         synchronized (lockobj) {
-            huc6280Mask.get(0)[chipID] |= ch;
+            huc6280Mask.get(0)[chipId] |= ch;
             if (!dicInst.containsKey(InstrumentType.HuC6280)) return;
-            ((OotakePsg) (dicInst.get(InstrumentType.HuC6280)[0])).HuC6280_SetMute((byte) chipID, huc6280Mask.get(0)[chipID]);
+            ((OotakePsg) (dicInst.get(InstrumentType.HuC6280)[0])).HuC6280_SetMute((byte) chipId, huc6280Mask.get(0)[chipId]);
         }
     }
 
-    public void setHuC6280Mask(int chipIndex, int chipID, int ch) {
+    public void setHuC6280Mask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
-            huc6280Mask.get(chipIndex)[chipID] |= ch;
+            huc6280Mask.get(chipIndex)[chipId] |= ch;
             if (!dicInst.containsKey(InstrumentType.HuC6280)) return;
-            ((OotakePsg) (dicInst.get(InstrumentType.HuC6280)[chipIndex])).HuC6280_SetMute((byte) chipID, huc6280Mask.get(chipIndex)[chipID]);
+            ((OotakePsg) (dicInst.get(InstrumentType.HuC6280)[chipIndex])).HuC6280_SetMute((byte) chipId, huc6280Mask.get(chipIndex)[chipId]);
         }
     }
 
-    public void setNESMask(int chipID, int ch) {
+    public void setNESMask(int chipId, int ch) {
         synchronized (lockobj) {
-            nesMask.get(0)[chipID] |= 0x1 << ch;
+            nesMask.get(0)[chipId] |= 0x1 << ch;
             if (!dicInst.containsKey(InstrumentType.Nes)) return;
-            ((NesIntF) (dicInst.get(InstrumentType.Nes)[0])).nes_set_mute_mask((byte) chipID, nesMask.get(0)[chipID]);
+            ((NesIntF) (dicInst.get(InstrumentType.Nes)[0])).nes_set_mute_mask((byte) chipId, nesMask.get(0)[chipId]);
         }
     }
 
-    public void setNESMask(int chipIndex, int chipID, int ch) {
+    public void setNESMask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
-            nesMask.get(chipIndex)[chipID] |= 0x1 << ch;
+            nesMask.get(chipIndex)[chipId] |= 0x1 << ch;
             if (!dicInst.containsKey(InstrumentType.Nes)) return;
-            ((NesIntF) (dicInst.get(InstrumentType.Nes)[chipIndex])).nes_set_mute_mask((byte) chipID, nesMask.get(chipIndex)[chipID]);
+            ((NesIntF) (dicInst.get(InstrumentType.Nes)[chipIndex])).nes_set_mute_mask((byte) chipId, nesMask.get(chipIndex)[chipId]);
         }
     }
 
-    public void setFDSMask(int chipID) {
+    public void setFDSMask(int chipId) {
         synchronized (lockobj) {
-            nesMask.get(0)[chipID] |= 0x20;
+            nesMask.get(0)[chipId] |= 0x20;
             if (!dicInst.containsKey(InstrumentType.Nes)) return;
-            ((NesIntF) (dicInst.get(InstrumentType.Nes)[0])).nes_set_mute_mask((byte) chipID, nesMask.get(0)[chipID]);
+            ((NesIntF) (dicInst.get(InstrumentType.Nes)[0])).nes_set_mute_mask((byte) chipId, nesMask.get(0)[chipId]);
         }
     }
 
-    public void setFDSMask(int chipIndex, int chipID) {
+    public void setFDSMask(int chipIndex, int chipId) {
         synchronized (lockobj) {
-            nesMask.get(chipIndex)[chipID] |= 0x20;
+            nesMask.get(chipIndex)[chipId] |= 0x20;
             if (!dicInst.containsKey(InstrumentType.Nes)) return;
-            ((NesIntF) (dicInst.get(InstrumentType.Nes)[chipIndex])).nes_set_mute_mask((byte) chipID, nesMask.get(chipIndex)[chipID]);
+            ((NesIntF) (dicInst.get(InstrumentType.Nes)[chipIndex])).nes_set_mute_mask((byte) chipId, nesMask.get(chipIndex)[chipId]);
         }
     }
 
 
-    public void resetSN76489Mask(int chipID, int ch) {
+    public void resetSN76489Mask(int chipId, int ch) {
         synchronized (lockobj) {
-            sn76489Mask.get(0)[chipID] |= ch;
+            sn76489Mask.get(0)[chipId] |= ch;
             if (!dicInst.containsKey(InstrumentType.SN76489)) return;
-            ((Sn76489) (dicInst.get(InstrumentType.SN76489)[0])).SN76489_SetMute((byte) chipID, sn76489Mask.get(0)[chipID]);
+            ((Sn76489) (dicInst.get(InstrumentType.SN76489)[0])).SN76489_SetMute((byte) chipId, sn76489Mask.get(0)[chipId]);
         }
     }
 
-    public void resetSN76489Mask(int chipIndex, int chipID, int ch) {
+    public void resetSN76489Mask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
-            sn76489Mask.get(chipIndex)[chipID] |= ch;
+            sn76489Mask.get(chipIndex)[chipId] |= ch;
             if (!dicInst.containsKey(InstrumentType.SN76489)) return;
-            ((Sn76489) (dicInst.get(InstrumentType.SN76489)[chipIndex])).SN76489_SetMute((byte) chipID, sn76489Mask.get(chipIndex)[chipID]);
+            ((Sn76489) (dicInst.get(InstrumentType.SN76489)[chipIndex])).SN76489_SetMute((byte) chipId, sn76489Mask.get(chipIndex)[chipId]);
         }
     }
 
 
-    public void resetYM2612Mask(int chipID, int ch) {
+    public void resetYM2612Mask(int chipId, int ch) {
         synchronized (lockobj) {
-            ym2612Mask.get(0)[chipID] &= ~(1 << ch);
+            ym2612Mask.get(0)[chipId] &= ~(1 << ch);
             if (dicInst.containsKey(InstrumentType.YM2612)) {
-                ((Ym2612) (dicInst.get(InstrumentType.YM2612)[0])).YM2612_SetMute((byte) chipID, ym2612Mask.get(0)[chipID]);
+                ((Ym2612) (dicInst.get(InstrumentType.YM2612)[0])).YM2612_SetMute((byte) chipId, ym2612Mask.get(0)[chipId]);
             }
             if (dicInst.containsKey(InstrumentType.YM2612mame)) {
-                ((Ym2612Mame) (dicInst.get(InstrumentType.YM2612mame)[0])).SetMute((byte) chipID, ym2612Mask.get(0)[chipID]);
+                ((Ym2612Mame) (dicInst.get(InstrumentType.YM2612mame)[0])).SetMute((byte) chipId, ym2612Mask.get(0)[chipId]);
             }
             if (dicInst.containsKey(InstrumentType.YM3438)) {
-                int mask = ym2612Mask.get(0)[chipID];
+                int mask = ym2612Mask.get(0)[chipId];
                 if ((mask & 0b0010_0000) == 0) mask &= 0b1011_1111;
                 else mask |= 0b0100_0000;
-                ((Ym3438) (dicInst.get(InstrumentType.YM3438)[0])).setMute((byte) chipID, mask);
+                ((Ym3438) (dicInst.get(InstrumentType.YM3438)[0])).setMute((byte) chipId, mask);
             }
         }
     }
 
-    public void resetYM2612Mask(int chipIndex, int chipID, int ch) {
+    public void resetYM2612Mask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
-            ym2612Mask.get(chipIndex)[chipID] &= ~(1 << ch);
+            ym2612Mask.get(chipIndex)[chipId] &= ~(1 << ch);
             if (dicInst.containsKey(InstrumentType.YM2612)) {
-                ((Ym2612) (dicInst.get(InstrumentType.YM2612)[chipIndex])).YM2612_SetMute((byte) chipID, ym2612Mask.get(chipIndex)[chipID]);
+                ((Ym2612) (dicInst.get(InstrumentType.YM2612)[chipIndex])).YM2612_SetMute((byte) chipId, ym2612Mask.get(chipIndex)[chipId]);
             }
             if (dicInst.containsKey(InstrumentType.YM2612mame)) {
-                ((Ym2612Mame) (dicInst.get(InstrumentType.YM2612mame)[chipIndex])).SetMute((byte) chipID, ym2612Mask.get(chipIndex)[chipID]);
+                ((Ym2612Mame) (dicInst.get(InstrumentType.YM2612mame)[chipIndex])).SetMute((byte) chipId, ym2612Mask.get(chipIndex)[chipId]);
             }
             if (dicInst.containsKey(InstrumentType.YM3438)) {
-                int mask = ym2612Mask.get(chipIndex)[chipID];
+                int mask = ym2612Mask.get(chipIndex)[chipId];
                 if ((mask & 0b0010_0000) == 0) mask &= 0b1011_1111;
                 else mask |= 0b0100_0000;
-                ((Ym3438) (dicInst.get(InstrumentType.YM3438)[chipIndex])).setMute((byte) chipID, mask);
+                ((Ym3438) (dicInst.get(InstrumentType.YM3438)[chipIndex])).setMute((byte) chipId, mask);
             }
         }
     }
 
-    public void resetYM2203Mask(int chipID, int ch) {
+    public void resetYM2203Mask(int chipId, int ch) {
         synchronized (lockobj) {
-            ym2203Mask.get(0)[chipID] &= ~ch;
+            ym2203Mask.get(0)[chipId] &= ~ch;
             if (!dicInst.containsKey(InstrumentType.YM2203)) return;
-            ((Ym2203) (dicInst.get(InstrumentType.YM2203)[0])).YM2203_SetMute((byte) chipID, ym2203Mask.get(0)[chipID]);
+            ((Ym2203) (dicInst.get(InstrumentType.YM2203)[0])).YM2203_SetMute((byte) chipId, ym2203Mask.get(0)[chipId]);
         }
     }
 
-    public void resetYM2203Mask(int chipIndex, int chipID, int ch) {
+    public void resetYM2203Mask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
-            ym2203Mask.get(chipIndex)[chipID] &= ~ch;
+            ym2203Mask.get(chipIndex)[chipId] &= ~ch;
             if (!dicInst.containsKey(InstrumentType.YM2203)) return;
-            ((Ym2203) (dicInst.get(InstrumentType.YM2203)[chipIndex])).YM2203_SetMute((byte) chipID, ym2203Mask.get(chipIndex)[chipID]);
+            ((Ym2203) (dicInst.get(InstrumentType.YM2203)[chipIndex])).YM2203_SetMute((byte) chipId, ym2203Mask.get(chipIndex)[chipId]);
         }
     }
 
-    public void resetRf5c164Mask(int chipID, int ch) {
+    public void resetRf5c164Mask(int chipId, int ch) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.RF5C164)) return;
-            ((ScdPcm) (dicInst.get(InstrumentType.RF5C164)[0])).PCM_Chip[chipID].channels[ch].muted = 0;
+            ((ScdPcm) (dicInst.get(InstrumentType.RF5C164)[0])).PCM_Chip[chipId].channels[ch].muted = 0;
         }
     }
 
-    public void resetRf5c164Mask(int chipIndex, int chipID, int ch) {
+    public void resetRf5c164Mask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.RF5C164)) return;
-            ((ScdPcm) (dicInst.get(InstrumentType.RF5C164)[chipIndex])).PCM_Chip[chipID].channels[ch].muted = 0;
+            ((ScdPcm) (dicInst.get(InstrumentType.RF5C164)[chipIndex])).PCM_Chip[chipId].channels[ch].muted = 0;
         }
     }
 
-    public void resetRf5c68Mask(int chipID, int ch) {
+    public void resetRf5c68Mask(int chipId, int ch) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.RF5C68)) return;
-            ((Rf5c68) (dicInst.get(InstrumentType.RF5C68)[0])).rf5C68Data[chipID].chan[ch].muted = 0;
+            ((Rf5c68) (dicInst.get(InstrumentType.RF5C68)[0])).rf5C68Data[chipId].chan[ch].muted = 0;
         }
     }
 
-    public void resetRf5c68Mask(int chipIndex, int chipID, int ch) {
+    public void resetRf5c68Mask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.RF5C68)) return;
-            ((Rf5c68) (dicInst.get(InstrumentType.RF5C68)[chipIndex])).rf5C68Data[chipID].chan[ch].muted = 0;
+            ((Rf5c68) (dicInst.get(InstrumentType.RF5C68)[chipIndex])).rf5C68Data[chipId].chan[ch].muted = 0;
         }
     }
 
-    public void resetC140Mask(int chipID, int ch) {
+    public void resetC140Mask(int chipId, int ch) {
         synchronized (lockobj) {
-            c140Mask.get(0)[chipID] &= ~(int) ch;
+            c140Mask.get(0)[chipId] &= ~(int) ch;
             if (!dicInst.containsKey(InstrumentType.C140)) return;
-            ((C140) (dicInst.get(InstrumentType.C140)[0])).c140_set_mute_mask((byte) chipID, c140Mask.get(0)[chipID]);
+            ((C140) (dicInst.get(InstrumentType.C140)[0])).c140_set_mute_mask((byte) chipId, c140Mask.get(0)[chipId]);
         }
     }
 
-    public void resetC140Mask(int chipIndex, int chipID, int ch) {
+    public void resetC140Mask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
-            c140Mask.get(chipIndex)[chipID] &= ~(int) ch;
+            c140Mask.get(chipIndex)[chipId] &= ~(int) ch;
             if (!dicInst.containsKey(InstrumentType.C140)) return;
-            ((C140) (dicInst.get(InstrumentType.C140)[chipIndex])).c140_set_mute_mask((byte) chipID, c140Mask.get(chipIndex)[chipID]);
+            ((C140) (dicInst.get(InstrumentType.C140)[chipIndex])).c140_set_mute_mask((byte) chipId, c140Mask.get(chipIndex)[chipId]);
         }
     }
 
-    public void resetSegaPcmMask(int chipID, int ch) {
+    public void resetSegaPcmMask(int chipId, int ch) {
         synchronized (lockobj) {
-            segapcmMask.get(0)[chipID] &= ~(int) ch;
+            segapcmMask.get(0)[chipId] &= ~(int) ch;
             if (!dicInst.containsKey(InstrumentType.SEGAPCM)) return;
-            ((SegaPcm) (dicInst.get(InstrumentType.SEGAPCM)[0])).segapcm_set_mute_mask((byte) chipID, segapcmMask.get(0)[chipID]);
+            ((SegaPcm) (dicInst.get(InstrumentType.SEGAPCM)[0])).segapcm_set_mute_mask((byte) chipId, segapcmMask.get(0)[chipId]);
         }
     }
 
-    public void resetSegaPcmMask(int chipIndex, int chipID, int ch) {
+    public void resetSegaPcmMask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
-            segapcmMask.get(chipIndex)[chipID] &= ~(int) ch;
+            segapcmMask.get(chipIndex)[chipId] &= ~(int) ch;
             if (!dicInst.containsKey(InstrumentType.SEGAPCM)) return;
-            ((SegaPcm) (dicInst.get(InstrumentType.SEGAPCM)[chipIndex])).segapcm_set_mute_mask((byte) chipID, segapcmMask.get(chipIndex)[chipID]);
+            ((SegaPcm) (dicInst.get(InstrumentType.SEGAPCM)[chipIndex])).segapcm_set_mute_mask((byte) chipId, segapcmMask.get(chipIndex)[chipId]);
         }
     }
 
-    public void resetQSoundMask(int chipID, int ch) {
+    public void resetQSoundMask(int chipId, int ch) {
         synchronized (lockobj) {
             ch = (1 << ch);
-            qsoundMask.get(0)[chipID] &= ~(int) ch;
+            qsoundMask.get(0)[chipId] &= ~(int) ch;
             if (dicInst.containsKey(InstrumentType.QSound)) {
-                ((QSound) (dicInst.get(InstrumentType.QSound)[0])).qsound_set_mute_mask((byte) chipID, qsoundMask.get(0)[chipID]);
+                ((QSound) (dicInst.get(InstrumentType.QSound)[0])).qsound_set_mute_mask((byte) chipId, qsoundMask.get(0)[chipId]);
             }
         }
     }
 
-    public void resetQSoundMask(int chipIndex, int chipID, int ch) {
+    public void resetQSoundMask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
             ch = (1 << ch);
-            qsoundMask.get(chipIndex)[chipID] &= ~(int) ch;
+            qsoundMask.get(chipIndex)[chipId] &= ~(int) ch;
             if (!dicInst.containsKey(InstrumentType.QSound)) {
-                ((QSound) (dicInst.get(InstrumentType.QSound)[chipIndex])).qsound_set_mute_mask((byte) chipID, qsoundMask.get(chipIndex)[chipID]);
+                ((QSound) (dicInst.get(InstrumentType.QSound)[chipIndex])).qsound_set_mute_mask((byte) chipId, qsoundMask.get(chipIndex)[chipId]);
             }
         }
     }
 
-    public void resetQSoundCtrMask(int chipID, int ch) {
+    public void resetQSoundCtrMask(int chipId, int ch) {
         synchronized (lockobj) {
             ch = (1 << ch);
-            qsoundCtrMask.get(0)[chipID] &= ~(int) ch;
+            qsoundCtrMask.get(0)[chipId] &= ~(int) ch;
             if (dicInst.containsKey(InstrumentType.QSoundCtr)) {
-                ((QSoundCtr) (dicInst.get(InstrumentType.QSoundCtr)[0])).qsound_set_mute_mask((byte) chipID, qsoundCtrMask.get(0)[chipID]);
+                ((QSoundCtr) (dicInst.get(InstrumentType.QSoundCtr)[0])).qsound_set_mute_mask((byte) chipId, qsoundCtrMask.get(0)[chipId]);
             }
         }
     }
 
-    public void resetQSoundCtrMask(int chipIndex, int chipID, int ch) {
+    public void resetQSoundCtrMask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
             ch = (1 << ch);
-            qsoundCtrMask.get(chipIndex)[chipID] &= ~(int) ch;
+            qsoundCtrMask.get(chipIndex)[chipId] &= ~(int) ch;
             if (!dicInst.containsKey(InstrumentType.QSoundCtr)) {
-                ((QSoundCtr) (dicInst.get(InstrumentType.QSoundCtr)[chipIndex])).qsound_set_mute_mask((byte) chipID, qsoundCtrMask.get(chipIndex)[chipID]);
+                ((QSoundCtr) (dicInst.get(InstrumentType.QSoundCtr)[chipIndex])).qsound_set_mute_mask((byte) chipId, qsoundCtrMask.get(chipIndex)[chipId]);
             }
         }
     }
 
-    public void resetOKIM6295Mask(int chipIndex, int chipID, int ch) {
+    public void resetOKIM6295Mask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
-            okim6295Mask.get(chipIndex)[chipID] &= ~(int) ch;
+            okim6295Mask.get(chipIndex)[chipId] &= ~(int) ch;
             if (!dicInst.containsKey(InstrumentType.OKIM6295)) return;
-            ((OkiM6295) (dicInst.get(InstrumentType.OKIM6295)[chipIndex])).okim6295_set_mute_mask((byte) chipID, okim6295Mask.get(chipIndex)[chipID]);
+            ((OkiM6295) (dicInst.get(InstrumentType.OKIM6295)[chipIndex])).okim6295_set_mute_mask((byte) chipId, okim6295Mask.get(chipIndex)[chipId]);
         }
     }
 
-    public void resetHuC6280Mask(int chipID, int ch) {
+    public void resetHuC6280Mask(int chipId, int ch) {
         synchronized (lockobj) {
-            huc6280Mask.get(0)[chipID] &= ~ch;
+            huc6280Mask.get(0)[chipId] &= ~ch;
             if (!dicInst.containsKey(InstrumentType.HuC6280)) return;
-            ((OotakePsg) (dicInst.get(InstrumentType.HuC6280)[0])).HuC6280_SetMute((byte) chipID, huc6280Mask.get(0)[chipID]);
+            ((OotakePsg) (dicInst.get(InstrumentType.HuC6280)[0])).HuC6280_SetMute((byte) chipId, huc6280Mask.get(0)[chipId]);
         }
     }
 
-    public void resetHuC6280Mask(int chipIndex, int chipID, int ch) {
+    public void resetHuC6280Mask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
-            huc6280Mask.get(chipIndex)[chipID] &= ~ch;
+            huc6280Mask.get(chipIndex)[chipId] &= ~ch;
             if (!dicInst.containsKey(InstrumentType.HuC6280)) return;
-            ((OotakePsg) (dicInst.get(InstrumentType.HuC6280)[chipIndex])).HuC6280_SetMute((byte) chipID, huc6280Mask.get(chipIndex)[chipID]);
+            ((OotakePsg) (dicInst.get(InstrumentType.HuC6280)[chipIndex])).HuC6280_SetMute((byte) chipId, huc6280Mask.get(chipIndex)[chipId]);
         }
     }
 
-    public void resetNESMask(int chipID, int ch) {
+    public void resetNESMask(int chipId, int ch) {
         synchronized (lockobj) {
-            nesMask.get(0)[chipID] &= ~(0x1 << ch);
+            nesMask.get(0)[chipId] &= ~(0x1 << ch);
             if (!dicInst.containsKey(InstrumentType.Nes)) return;
-            ((NesIntF) (dicInst.get(InstrumentType.Nes)[0])).nes_set_mute_mask((byte) chipID, nesMask.get(0)[chipID]);
+            ((NesIntF) (dicInst.get(InstrumentType.Nes)[0])).nes_set_mute_mask((byte) chipId, nesMask.get(0)[chipId]);
         }
     }
 
-    public void resetNESMask(int chipIndex, int chipID, int ch) {
+    public void resetNESMask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
-            nesMask.get(chipIndex)[chipID] &= ~(0x1 << ch);
+            nesMask.get(chipIndex)[chipId] &= ~(0x1 << ch);
             if (!dicInst.containsKey(InstrumentType.Nes)) return;
-            ((NesIntF) (dicInst.get(InstrumentType.Nes)[chipIndex])).nes_set_mute_mask((byte) chipID, nesMask.get(chipIndex)[chipID]);
+            ((NesIntF) (dicInst.get(InstrumentType.Nes)[chipIndex])).nes_set_mute_mask((byte) chipId, nesMask.get(chipIndex)[chipId]);
         }
     }
 
-    public void resetFDSMask(int chipID) {
+    public void resetFDSMask(int chipId) {
         synchronized (lockobj) {
-            nesMask.get(0)[chipID] &= ~(int) 0x20;
+            nesMask.get(0)[chipId] &= ~(int) 0x20;
             if (!dicInst.containsKey(InstrumentType.Nes)) return;
-            ((NesIntF) (dicInst.get(InstrumentType.Nes)[0])).nes_set_mute_mask((byte) chipID, nesMask.get(0)[chipID]);
+            ((NesIntF) (dicInst.get(InstrumentType.Nes)[0])).nes_set_mute_mask((byte) chipId, nesMask.get(0)[chipId]);
         }
     }
 
-    public void resetFDSMask(int chipIndex, int chipID) {
+    public void resetFDSMask(int chipIndex, int chipId) {
         synchronized (lockobj) {
-            nesMask.get(chipIndex)[chipID] &= ~(int) 0x20;
+            nesMask.get(chipIndex)[chipId] &= ~(int) 0x20;
             if (!dicInst.containsKey(InstrumentType.Nes)) return;
-            ((NesIntF) (dicInst.get(InstrumentType.Nes)[chipIndex])).nes_set_mute_mask((byte) chipID, nesMask.get(chipIndex)[chipID]);
+            ((NesIntF) (dicInst.get(InstrumentType.Nes)[chipIndex])).nes_set_mute_mask((byte) chipId, nesMask.get(chipIndex)[chipId]);
         }
     }
 

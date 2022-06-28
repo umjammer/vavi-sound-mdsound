@@ -48,10 +48,10 @@ import mdsound.Ym2610;
 import mdsound.Ym2612Mame;
 import mdsound.Ym3526;
 import mdsound.Ym3812;
-import mdsound.Ymf262;
+import mdsound.YmF262;
 import mdsound.Ymf271;
-import mdsound.Ymf278b;
-import mdsound.Ymz280b;
+import mdsound.YmF278b;
+import mdsound.YmZ280b;
 import test.SoundManager.DriverAction;
 import test.SoundManager.Pack;
 import test.SoundManager.RingBuffer;
@@ -768,7 +768,7 @@ public class FrmMain extends JFrame {
         sm.release();
     }
 
-    public static void dataEnq(long counter, int dev, int typ, int adr, int val, Object[] ex) {
+    public static void dataEnq(long counter, int dev, int typ, int adr, int val, Object... ex) {
         while (!enq.apply(counter, dev, typ, adr, val, ex)) Thread.yield();
     }
 
@@ -777,15 +777,15 @@ public class FrmMain extends JFrame {
         List<Pack> data = new ArrayList<>();
         byte i;
 
-        data.add(new Pack(dev, 0, 0x2d, 0x00, null));
-        data.add(new Pack(dev, 0, 0x29, 0x82, null));
-        data.add(new Pack(dev, 0, 0x07, 0x38, null)); //PSG TONE でリセット
+        data.add(new Pack(dev, 0, 0x2d, 0x00));
+        data.add(new Pack(dev, 0, 0x29, 0x82));
+        data.add(new Pack(dev, 0, 0x07, 0x38)); //Psg TONE でリセット
         for (i = (byte) 0xb4; i < 0xb4 + 3; i++) {
-            data.add(new Pack(dev, 0, i, 0xc0, null));
-            data.add(new Pack(dev, 0, 0x100 + i, 0xc0, null));
+            data.add(new Pack(dev, 0, i, 0xc0));
+            data.add(new Pack(dev, 0, 0x100 + i, 0xc0));
         }
 
-        return data.toArray(new Pack[data.size()]);
+        return data.toArray(new Pack[0]);
     }
 
     private static Pack[] softResetYM2608(int dev) {
@@ -793,79 +793,79 @@ public class FrmMain extends JFrame {
         byte i;
 
         // FM全チャネルキーオフ
-        data.add(new Pack(dev, 0, 0x28, 0x00, null));
-        data.add(new Pack(dev, 0, 0x28, 0x01, null));
-        data.add(new Pack(dev, 0, 0x28, 0x02, null));
-        data.add(new Pack(dev, 0, 0x28, 0x04, null));
-        data.add(new Pack(dev, 0, 0x28, 0x05, null));
-        data.add(new Pack(dev, 0, 0x28, 0x06, null));
+        data.add(new Pack(dev, 0, 0x28, 0x00));
+        data.add(new Pack(dev, 0, 0x28, 0x01));
+        data.add(new Pack(dev, 0, 0x28, 0x02));
+        data.add(new Pack(dev, 0, 0x28, 0x04));
+        data.add(new Pack(dev, 0, 0x28, 0x05));
+        data.add(new Pack(dev, 0, 0x28, 0x06));
 
         // FM TL=127
         for (i = 0x40; i < 0x4F + 1; i++) {
-            data.add(new Pack(dev, 0, i, 0x7f, null));
-            data.add(new Pack(dev, 0, 0x100 + i, 0x7f, null));
+            data.add(new Pack(dev, 0, i, 0x7f));
+            data.add(new Pack(dev, 0, 0x100 + i, 0x7f));
         }
         // FM ML/DT
         for (i = 0x30; i < 0x3F + 1; i++) {
-            data.add(new Pack(dev, 0, i, 0x0, null));
-            data.add(new Pack(dev, 0, 0x100 + i, 0x0, null));
+            data.add(new Pack(dev, 0, i, 0x0));
+            data.add(new Pack(dev, 0, 0x100 + i, 0x0));
         }
         // FM AR,DR,SR,KS,AMON
         for (i = 0x50; i < 0x7F + 1; i++) {
-            data.add(new Pack(dev, 0, i, 0x0, null));
-            data.add(new Pack(dev, 0, 0x100 + i, 0x0, null));
+            data.add(new Pack(dev, 0, i, 0x0));
+            data.add(new Pack(dev, 0, 0x100 + i, 0x0));
         }
         // FM SL,RR
         for (i = (byte) 0x80; i < 0x8F + 1; i++) {
-            data.add(new Pack(dev, 0, i, 0xff, null));
-            data.add(new Pack(dev, 0, 0x100 + i, 0xff, null));
+            data.add(new Pack(dev, 0, i, 0xff));
+            data.add(new Pack(dev, 0, 0x100 + i, 0xff));
         }
         // FM F-Num, FB/CONNECT
         for (i = (byte) 0x90; i < 0xBF + 1; i++) {
-            data.add(new Pack(dev, 0, i, 0x0, null));
-            data.add(new Pack(dev, 0, 0x100 + i, 0x0, null));
+            data.add(new Pack(dev, 0, i, 0x0));
+            data.add(new Pack(dev, 0, 0x100 + i, 0x0));
         }
         // FM PAN/AMS/PMS
         for (i = (byte) 0xB4; i < 0xB6 + 1; i++) {
-            data.add(new Pack(dev, 0, i, 0xc0, null));
-            data.add(new Pack(dev, 0, 0x100 + i, 0xc0, null));
+            data.add(new Pack(dev, 0, i, 0xc0));
+            data.add(new Pack(dev, 0, 0x100 + i, 0xc0));
         }
-        data.add(new Pack(dev, 0, 0x22, 0x00, null)); // HW LFO
-        data.add(new Pack(dev, 0, 0x24, 0x00, null)); // Timer-A(1)
-        data.add(new Pack(dev, 0, 0x25, 0x00, null)); // Timer-A(2)
-        data.add(new Pack(dev, 0, 0x26, 0x00, null)); // Timer-B
-        data.add(new Pack(dev, 0, 0x27, 0x30, null)); // Timer Control
-        data.add(new Pack(dev, 0, 0x29, 0x80, null)); // FM4-6 Enable
+        data.add(new Pack(dev, 0, 0x22, 0x00)); // HW LFO
+        data.add(new Pack(dev, 0, 0x24, 0x00)); // Timer-A(1)
+        data.add(new Pack(dev, 0, 0x25, 0x00)); // Timer-A(2)
+        data.add(new Pack(dev, 0, 0x26, 0x00)); // Timer-B
+        data.add(new Pack(dev, 0, 0x27, 0x30)); // Timer Controller
+        data.add(new Pack(dev, 0, 0x29, 0x80)); // FM4-6 Enable
 
         // SSG 音程(2byte*3ch)
         for (i = 0x00; i < 0x05 + 1; i++) {
-            data.add(new Pack(dev, 0, i, 0x00, null));
+            data.add(new Pack(dev, 0, i, 0x00));
         }
-        data.add(new Pack(dev, 0, 0x06, 0x00, null));// SSG ノイズ周波数
-        data.add(new Pack(dev, 0, 0x07, 0x38, null)); // SSG ミキサ
+        data.add(new Pack(dev, 0, 0x06, 0x00));// SSG ノイズ周波数
+        data.add(new Pack(dev, 0, 0x07, 0x38)); // SSG ミキサ
         // SSG ボリューム(3ch)
         for (i = 0x08; i < 0x0A + 1; i++) {
-            data.add(new Pack(dev, 0, i, 0x00, null));
+            data.add(new Pack(dev, 0, i, 0x00));
         }
         // SSG Envelope
         for (i = 0x0B; i < 0x0D + 1; i++) {
-            data.add(new Pack(dev, 0, i, 0x00, null));
+            data.add(new Pack(dev, 0, i, 0x00));
         }
 
         // RHYTHM
-        data.add(new Pack(dev, 0, 0x10, 0xBF, null)); // 強制発音停止
-        data.add(new Pack(dev, 0, 0x11, 0x00, null)); // Total Level
-        data.add(new Pack(dev, 0, 0x18, 0x00, null)); // BD音量
-        data.add(new Pack(dev, 0, 0x19, 0x00, null)); // SD音量
-        data.add(new Pack(dev, 0, 0x1A, 0x00, null)); // CYM音量
-        data.add(new Pack(dev, 0, 0x1B, 0x00, null)); // HH音量
-        data.add(new Pack(dev, 0, 0x1C, 0x00, null)); // TOM音量
-        data.add(new Pack(dev, 0, 0x1D, 0x00, null)); // RIM音量
+        data.add(new Pack(dev, 0, 0x10, 0xBF)); // 強制発音停止
+        data.add(new Pack(dev, 0, 0x11, 0x00)); // Total Level
+        data.add(new Pack(dev, 0, 0x18, 0x00)); // BD音量
+        data.add(new Pack(dev, 0, 0x19, 0x00)); // SD音量
+        data.add(new Pack(dev, 0, 0x1A, 0x00)); // CYM音量
+        data.add(new Pack(dev, 0, 0x1B, 0x00)); // HH音量
+        data.add(new Pack(dev, 0, 0x1C, 0x00)); // TOM音量
+        data.add(new Pack(dev, 0, 0x1D, 0x00)); // RIM音量
 
         // ADPCM
-        data.add(new Pack(dev, 0, 0x100 + 0x00, 0x21, null)); // ADPCMリセット
-        data.add(new Pack(dev, 0, 0x100 + 0x01, 0x06, null)); // ADPCM消音
-        data.add(new Pack(dev, 0, 0x100 + 0x10, 0x9C, null)); // FLAGリセット
+        data.add(new Pack(dev, 0, 0x100 + 0x00, 0x21)); // ADPCMリセット
+        data.add(new Pack(dev, 0, 0x100 + 0x01, 0x06)); // ADPCM消音
+        data.add(new Pack(dev, 0, 0x100 + 0x10, 0x9C)); // FLAGリセット
 
         return data.toArray(new Pack[data.size()]);
     }
@@ -1144,7 +1144,7 @@ public class FrmMain extends JFrame {
             chip = new mdsound.MDSound.Chip();
             chip.type = MDSound.InstrumentType.YMF262;
             chip.id = 0;
-            Ymf262 ymf262 = new Ymf262();
+            YmF262 ymf262 = new YmF262();
             chip.instrument = ymf262;
             chip.update = ymf262::update;
             chip.start = ymf262::start;
@@ -1159,12 +1159,12 @@ public class FrmMain extends JFrame {
             //chip = new mdsound.MDSound.Chip();
             //chip.type = mdsound.MDSound.InstrumentType.YMF278B;
             //chip.ID = 0;
-            //mdsound.Ymf278b Ymf278b = new mdsound.Ymf278b();
-            //chip.Instrument = Ymf278b;
-            //chip.Update = Ymf278b.Update;
-            //chip.Start = Ymf278b.Start;
-            //chip.Stop = Ymf278b.Stop;
-            //chip.Reset = Ymf278b.Reset;
+            //mdsound.YmF278b YmF278b = new mdsound.YmF278b();
+            //chip.Instrument = YmF278b;
+            //chip.Update = YmF278b.Update;
+            //chip.Start = YmF278b.Start;
+            //chip.Stop = YmF278b.Stop;
+            //chip.Reset = YmF278b.Reset;
             //chip.SamplingRate = SamplingRate;
             //chip.Clock = getLE32(0x5c) & 0x7fffffff;
             //chip.Volume = 0;
@@ -1193,7 +1193,7 @@ public class FrmMain extends JFrame {
             chip = new mdsound.MDSound.Chip();
             chip.type = MDSound.InstrumentType.YMF278B;
             chip.id = 0;
-            Ymf278b ymf278b = new Ymf278b();
+            YmF278b ymf278b = new YmF278b();
             chip.instrument = ymf278b;
             chip.update = ymf278b::update;
             chip.start = ymf278b::start;
@@ -1227,7 +1227,7 @@ public class FrmMain extends JFrame {
             chip = new mdsound.MDSound.Chip();
             chip.type = MDSound.InstrumentType.YMZ280B;
             chip.id = 0;
-            Ymz280b ymz280b = new Ymz280b();
+            YmZ280b ymz280b = new YmZ280b();
             chip.instrument = ymz280b;
             chip.update = ymz280b::update;
             chip.start = ymz280b::start;
@@ -1517,7 +1517,7 @@ public class FrmMain extends JFrame {
             }
         }
 
-        chips = lstChip.toArray(new mdsound.MDSound.Chip[lstChip.size()]);
+        chips = lstChip.toArray(new MDSound.Chip[0]);
         mds.init(SamplingRate, samplingBuffer, chips);
 
 //            sdl.Paused = false;
@@ -1594,8 +1594,8 @@ public class FrmMain extends JFrame {
         byte cmd = vgmBuf[vgmAdr];
         //Console.Write(" Adr[{0:x}]:cmd[{1:x}]\r\n", vgmAdr, cmd);
         switch (cmd & 0xff) {
-        case 0x4f: //GG PSG
-        case 0x50: //PSG
+        case 0x4f: //GG Psg
+        case 0x50: //Psg
             mds.writeSN76489((byte) 0, vgmBuf[vgmAdr + 1]);
             //mds.WriteSN76496(0, vgmBuf[vgmAdr + 1]);
             vgmAdr += 2;
@@ -1606,8 +1606,8 @@ public class FrmMain extends JFrame {
             vgmAdr += 3;
             //mds.WriteYM2413(0, rAdr, rDat);
             break;
-        case 0x52: //YM2612 Port0
-        case 0x53: //YM2612 Port1
+        case 0x52: //Ym2612 Port0
+        case 0x53: //Ym2612 Port1
             p = (byte) ((cmd == 0x52) ? 0 : 1);
             rAdr = vgmBuf[vgmAdr + 1];
             rDat = vgmBuf[vgmAdr + 2];
@@ -1647,18 +1647,18 @@ public class FrmMain extends JFrame {
             rAdr = vgmBuf[vgmAdr + 1];
             rDat = vgmBuf[vgmAdr + 2];
             vgmAdr += 3;
-//                    if (rsc == null) DataEnq(DriverSeqCounter, 0x56, 0, 0 * 0x100 + rAdr, rDat, null);
+//                    if (rsc == null) DataEnq(DriverSeqCounter, 0x56, 0, 0 * 0x100 + rAdr, rDat);
 //                    else
-            dataEnq(driverSeqCounter, -1, 0, 0 * 0x100 + rAdr, rDat, null);
+            dataEnq(driverSeqCounter, -1, 0, 0 * 0x100 + rAdr, rDat);
             //mds.WriteYM2609(0, 0, rAdr, rDat);
             break;
         case 0x57: //YM2609 Port1
             rAdr = vgmBuf[vgmAdr + 1];
             rDat = vgmBuf[vgmAdr + 2];
             vgmAdr += 3;
-//                    if (rsc == null) DataEnq(DriverSeqCounter, 0x56, 0, 1 * 0x100 + rAdr, rDat, null);
+//                    if (rsc == null) DataEnq(DriverSeqCounter, 0x56, 0, 1 * 0x100 + rAdr, rDat);
 //                    else
-            dataEnq(driverSeqCounter, -1, 0, 1 * 0x100 + rAdr, rDat, null);
+            dataEnq(driverSeqCounter, -1, 0, 1 * 0x100 + rAdr, rDat);
             //mds.WriteYM2609(0, 1, rAdr, rDat);
 
             break;
@@ -2074,7 +2074,7 @@ public class FrmMain extends JFrame {
             mds.WriteQSound((byte) 0, 0x01, vgmBuf[vgmAdr + 2]);
             mds.WriteQSound((byte) 0, 0x02, vgmBuf[vgmAdr + 3]);
             //rDat = vgmBuf[vgmAdr + 3];
-            //if (rsc == null) DataEnq(DriverSeqCounter, 0xc4, 0, vgmBuf[vgmAdr + 1] * 0x100 + vgmBuf[vgmAdr + 2], rDat, null);
+            //if (rsc == null) DataEnq(DriverSeqCounter, 0xc4, 0, vgmBuf[vgmAdr + 1] * 0x100 + vgmBuf[vgmAdr + 2], rDat);
             vgmAdr += 4;
             break;
         case 0xd0: //YMF278B

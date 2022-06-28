@@ -13,7 +13,6 @@ import dotnet4j.io.FileStream;
 import dotnet4j.io.MemoryStream;
 import dotnet4j.io.Stream;
 import dotnet4j.io.StreamWriter;
-import mdsound.x68sound.Global;
 
 
 public class Common {
@@ -38,8 +37,8 @@ public class Common {
         return a;
     }
 
-    public static short[][] readArrays(String name) throws Exception {
-        Scanner s = new Scanner(Global.class.getResourceAsStream(name));
+    public static short[][] readArrays(String name) {
+        Scanner s = new Scanner(Common.class.getResourceAsStream(name));
         List<String> ls = new ArrayList<>();
         while (s.hasNextLine()) ls.add(s.nextLine());
         s.close();
@@ -67,7 +66,7 @@ public class Common {
     /**
      * ストリームから一括でバイナリを読み込む
      */
-    public static byte[] readAllBytes(Stream stream) throws IOException {
+    public static byte[] readAllBytes(Stream stream) {
         if (stream == null)
             return null;
 
@@ -81,6 +80,8 @@ public class Common {
                 ms.write(buf, 0, r);
             }
             return ms.toArray();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 }

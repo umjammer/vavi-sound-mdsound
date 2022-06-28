@@ -1,11 +1,9 @@
 package mdsound;
 
 
-/*
- Konami 053260 PCM Sound Chip
+import java.util.Arrays;
 
- 2004-02-28: Fixed PPCM decoding. Games Sound much better now.
-*/
+
 public class K053260 extends Instrument.BaseInstrument {
     @Override
     public String getName() {
@@ -18,8 +16,8 @@ public class K053260 extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void reset(byte chipID) {
-        device_reset_k053260(chipID);
+    public void reset(byte chipId) {
+        device_reset_k053260(chipId);
 
         visVolume = new int[][][] {
                 new int[][] {new int[] {0, 0}},
@@ -28,34 +26,39 @@ public class K053260 extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(byte chipID, int clock) {
-        return (int) device_start_k053260(chipID, (int) 3579545);
+    public int start(byte chipId, int clock) {
+        return device_start_k053260(chipId, 3579545);
     }
 
     @Override
-    public int start(byte chipID, int clock, int clockValue, Object... option) {
-        return device_start_k053260(chipID, (int) clockValue);
+    public int start(byte chipId, int clock, int clockValue, Object... option) {
+        return device_start_k053260(chipId, clockValue);
     }
 
     @Override
-    public void stop(byte chipID) {
-        device_stop_k053260(chipID);
+    public void stop(byte chipId) {
+        device_stop_k053260(chipId);
     }
 
     @Override
-    public void update(byte chipID, int[][] outputs, int samples) {
-        k053260_update(chipID, outputs, samples);
+    public void update(byte chipId, int[][] outputs, int samples) {
+        k053260_update(chipId, outputs, samples);
 
-        visVolume[chipID][0][0] = outputs[0][0];
-        visVolume[chipID][0][1] = outputs[1][0];
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
     }
 
     @Override
-    public int write(byte chipID, int port, int adr, int data) {
-        k053260_w(chipID, adr, (byte) data);
+    public int write(byte chipId, int port, int adr, int data) {
+        k053260_w(chipId, adr, (byte) data);
         return 0;
     }
 
+    /**
+     * Konami 053260 PCM Sound Chip
+     *
+     * 2004-02-28: Fixed PPCM decoding. Games Sound much better now.
+    */
     public static class K053260State {
 
         private static final int BASE_SHIFT = 16;
@@ -70,7 +73,8 @@ public class K053260 extends Instrument.BaseInstrument {
             public int pan;
             public int pos;
             public int loop;
-            public int ppcm; /* packed PCM ( 4 bit signed ) */
+            /* packed PCM ( 4 bit signed ) */
+            public int ppcm;
             public int ppcmData;
             public byte muted;
 
@@ -87,6 +91,69 @@ public class K053260 extends Instrument.BaseInstrument {
                 this.ppcm = 0;
                 this.ppcmData = 0;
             }
+
+            public void setup(int r, int v) {
+                switch ((r - 8) & 0x07) {
+                case 0: // sample rate low
+                    this.rate &= 0x0f00;
+                    this.rate |= v;
+                    break;
+
+                case 1: // sample rate high
+                    this.rate &= 0x00ff;
+                    this.rate |= (v & 0x0f) << 8;
+                    break;
+
+                case 2: // size low
+                    this.size &= 0xff00;
+                    this.size |= v;
+                    break;
+
+                case 3: // size high
+                    this.size &= 0x00ff;
+                    this.size |= v << 8;
+                    break;
+
+                case 4: // start low
+                    this.start &= 0xff00;
+                    this.start |= v;
+                    break;
+
+                case 5: // start high
+                    this.start &= 0x00ff;
+                    this.start |= v << 8;
+                    break;
+
+                case 6: // bank
+                    this.bank = v & 0xff;
+                    break;
+
+                case 7: // volume is 7 bits. Convert to 8 bits now.
+                    this.volume = ((v & 0x7f) << 1) | (v & 1);
+                    break;
+                }
+            }
+
+            private void checkBounds(int romSize) {
+
+                int channelStart = (this.bank << 16) + this.start;
+                int channelEnd = channelStart + this.size - 1;
+
+                if (channelStart > romSize) {
+                    //System.err.printf("K53260: Attempting to start playing past the end of the ROM ( start = %06x, end = %06x ).\n", channelStart, channelEnd);
+
+                    this.play = 0;
+
+                    return;
+                }
+
+                if (channelEnd > romSize) {
+                    //System.err.printf("K53260: Attempting to play past the end of the ROM ( start = %06x, end = %06x ).\n", channelStart, channelEnd);
+
+                    this.size = romSize - channelStart;
+                }
+                //if (LOG) System.err.printf("K053260: Sample Start = %06x, Sample End = %06x, Sample rate = %04x, PPCM = %s\n", channelStart, channelEnd, this.rate, this.ppcm ? "yes" : "no");
+            }
         }
 
         public int mode;
@@ -97,17 +164,17 @@ public class K053260 extends Instrument.BaseInstrument {
         public Channel[] channels = new Channel[] {new Channel(), new Channel(), new Channel(), new Channel()};
 
         private void initDeltaTable(int rate, int clock) {
-            double _base = rate;
+            double base = rate;
             double max = clock; /* Hz */
-            int val;
 
             for (int i = 0; i < 0x1000; i++) {
                 double v = 0x1000 - i;
                 double target = max / v;
-                double _fixed = 1 << BASE_SHIFT;
+                double fixed = 1 << BASE_SHIFT;
 
-                if (target != 0 && _base != 0) {
-                    target = _fixed / (_base / target);
+                int val;
+                if (target != 0 && base != 0) {
+                    target = fixed / (base / target);
                     val = (int) target;
                     if (val == 0)
                         val = 1;
@@ -127,36 +194,15 @@ public class K053260 extends Instrument.BaseInstrument {
             return val;
         }
 
-        private static final int MAXOUT = +0x8000;
+        private static final int MAXOUT = 0x8000;
         private static final int MINOUT = -0x8000;
 
         private static final byte[] dpcmcnv = new byte[] {0, 1, 2, 4, 8, 16, 32, 64, -128, -64, -32, -16, -8, -4, -2, -1};
-        private int[] lvol = new int[4], rvol = new int[4], play = new int[4], loop = new int[4], ppcm = new int[4];
+        private int[] lVol = new int[4], rVol = new int[4], play = new int[4], loop = new int[4], ppcm = new int[4];
         //byte[] rom = new byte[4];
         private int[] ptrRom = new int[4];
         private int[] delta = new int[4], end = new int[4], pos = new int[4];
         private byte[] ppcmData = new byte[4];
-
-        private void check_bounds(int channel) {
-
-            int channelStart = (this.channels[channel].bank << 16) + this.channels[channel].start;
-            int channel_end = channelStart + this.channels[channel].size - 1;
-
-            if (channelStart > this.romSize) {
-                //System.err.printf("K53260: Attempting to start playing past the end of the ROM ( start = %06x, end = %06x ).\n", channelStart, channel_end);
-
-                this.channels[channel].play = 0;
-
-                return;
-            }
-
-            if (channel_end > this.romSize) {
-                //System.err.printf("K53260: Attempting to play past the end of the ROM ( start = %06x, end = %06x ).\n", channelStart, channel_end);
-
-                this.channels[channel].size = this.romSize - channelStart;
-            }
-            //if (LOG) System.err.printf("K053260: Sample Start = %06x, Sample End = %06x, Sample rate = %04x, PPCM = %s\n", channelStart, channel_end, this.channels[channel].rate, this.channels[channel].ppcm ? "yes" : "no");
-        }
 
         public void reset() {
             for (int i = 0; i < 4; i++) {
@@ -174,8 +220,8 @@ public class K053260 extends Instrument.BaseInstrument {
                 //rom[i] = this.rom[this.channels[i].start + (this.channels[i].bank << 16)];
                 ptrRom[i] = this.channels[i].start + (this.channels[i].bank << 16);
                 delta[i] = this.deltaTable[this.channels[i].rate];
-                lvol[i] = this.channels[i].volume * this.channels[i].pan;
-                rvol[i] = this.channels[i].volume * (8 - this.channels[i].pan);
+                lVol[i] = this.channels[i].volume * this.channels[i].pan;
+                rVol[i] = this.channels[i].volume * (8 - this.channels[i].pan);
                 end[i] = this.channels[i].size;
                 pos[i] = this.channels[i].pos;
                 play[i] = this.channels[i].play;
@@ -206,44 +252,33 @@ public class K053260 extends Instrument.BaseInstrument {
                         }
 
                         byte d;
-                        if (ppcm[i] != 0) { /* Packed PCM */
-                            /* we only update the signal if we're starting or a real Sound sample has gone by */
-                            /* this is all due to the dynamic sample rate conversion */
+                        if (ppcm[i] != 0) { // Packed PCM
+                            // we only update the signal if we're starting or a real Sound sample has gone by
+                            // this is all due to the dynamic sample rate conversion
                             if (pos[i] == 0 || ((pos[i] ^ (pos[i] - delta[i])) & 0x8000) == 0x8000) {
-                                int newdata;
+                                int newData;
                                 if ((pos[i] & 0x8000) != 0) {
-
-                                    //newdata = ((rom[i][pos[i] >> BASE_SHIFT]) >> 4) & 0x0f; /*high nybble*/
-                                    newdata = ((this.rom[ptrRom[i] + (pos[i] >> BASE_SHIFT)]) >> 4) & 0x0f; /*high nybble*/
+                                    newData = ((this.rom[ptrRom[i] + (pos[i] >> BASE_SHIFT)]) >> 4) & 0x0f; // high nybble
                                 } else {
-                                    //newdata = ((rom[i][pos[i] >> BASE_SHIFT])) & 0x0f; /*low nybble*/
-                                    newdata = ((this.rom[ptrRom[i] + (pos[i] >> BASE_SHIFT)])) & 0x0f; /*low nybble*/
+                                    newData = ((this.rom[ptrRom[i] + (pos[i] >> BASE_SHIFT)])) & 0x0f; // low nybble
                                 }
 
-                                /*ppcm_data[i] = (( ( ppcm_data[i] * 62 ) >> 6 ) + dpcmcnv[newdata]);
-
-                                if ( ppcm_data[i] > 127 )
-                                    ppcm_data[i] = 127;
-                                else
-                                    if ( ppcm_data[i] < -128 )
-                                        ppcm_data[i] = -128;*/
-                                ppcmData[i] += dpcmcnv[newdata];
+                                ppcmData[i] += dpcmcnv[newData];
                             }
 
 
                             d = ppcmData[i];
 
                             pos[i] += delta[i];
-                        } else { /* PCM */
-                            //d = rom[i][pos[i] >> BASE_SHIFT];
-                            d = (byte) this.rom[ptrRom[i] + (pos[i] >> BASE_SHIFT)];
+                        } else { // PCM
+                            d = this.rom[ptrRom[i] + (pos[i] >> BASE_SHIFT)];
 
                             pos[i] += delta[i];
                         }
 
                         if ((this.mode & 2) != 0) {
-                            dataL += (d * lvol[i]) >> 2;
-                            dataR += (d * rvol[i]) >> 2;
+                            dataL += (d * lVol[i]) >> 2;
+                            dataR += (d * rVol[i]) >> 2;
                         }
                     }
                 }
@@ -252,7 +287,7 @@ public class K053260 extends Instrument.BaseInstrument {
                 outputs[0][j] = limit(dataR, MAXOUT, MINOUT);
             }
 
-            /* update the regs now */
+            // update the regs now
             for (int i = 0; i < 4; i++) {
                 if (this.channels[i].muted != 0)
                     continue;
@@ -265,12 +300,11 @@ public class K053260 extends Instrument.BaseInstrument {
         public int device_start(int clock) {
 
             int rate = clock / 32;
-            /* Initialize our chip structure */
+
+            // Initialize our chip structure
 
             this.mode = 0;
 
-            //this.rom = *region;
-            //this.rom_size = region.bytes();
             this.rom = null;
             this.romSize = 0x00;
 
@@ -280,30 +314,11 @@ public class K053260 extends Instrument.BaseInstrument {
             for (int i = 0; i < 0x30; i++)
                 this.regs[i] = 0;
 
-            //this.delta_table = auto_alloc_array( device.machine(), int, 0x1000 );
             this.deltaTable = new int[0x1000];
 
             initDeltaTable(rate, clock);
 
-            /* register with the save state system */
-            /*device.save_item(NAME(this.mode));
-            device.save_item(NAME(this.regs));
-
-            for ( i = 0; i < 4; i++ ) {
-                device.save_item(NAME(this.channels[i].rate), i);
-                device.save_item(NAME(this.channels[i].size), i);
-                device.save_item(NAME(this.channels[i].start), i);
-                device.save_item(NAME(this.channels[i].bank), i);
-                device.save_item(NAME(this.channels[i].volume), i);
-                device.save_item(NAME(this.channels[i].play), i);
-                device.save_item(NAME(this.channels[i].pan), i);
-                device.save_item(NAME(this.channels[i].pos), i);
-                device.save_item(NAME(this.channels[i].loop), i);
-                device.save_item(NAME(this.channels[i].ppcm), i);
-                device.save_item(NAME(this.channels[i].ppcm_data), i);
-            }*/
-
-            /* setup SH1 timer if necessary */
+            // setup SH1 timer if necessary
             //if ( this.intf.irq )
             // device.machine().scheduler().timer_pulse( attotime::from_hz(device.clock()) * 32, this.intf.irq, "this.intf.irq" );
 
@@ -318,132 +333,90 @@ public class K053260 extends Instrument.BaseInstrument {
         }
 
         public void write(int offset, byte data) {
-            int i, t;
-            int r = offset;
-            int v = data;
 
-            if (r > 0x2f) {
+            if (offset > 0x2f) {
                 //System.err.printf("K053260: Writing past registers\n");
                 return;
             }
 
             //this.channel.update();
 
-            /* before we update the regs, we need to check for a latched reg */
-            if (r == 0x28) {
-                t = this.regs[r] ^ v;
+            // before we update the regs, we need to check for a latched reg
+            if (offset == 0x28) {
+                int t = this.regs[offset] ^ (int) data;
 
-                for (i = 0; i < 4; i++) {
-                    if ((t & (1 << i)) != 0) {
-                        if ((v & (1 << i)) != 0) {
-                            this.channels[i].play = 1;
-                            this.channels[i].pos = 0;
-                            this.channels[i].ppcmData = 0;
-                            check_bounds(i);
+                for (int c = 0; c < 4; c++) {
+                    if ((t & (1 << c)) != 0) {
+                        if (((int) data & (1 << c)) != 0) {
+                            this.channels[c].play = 1;
+                            this.channels[c].pos = 0;
+                            this.channels[c].ppcmData = 0;
+                            this.channels[c].checkBounds(this.romSize);
                         } else
-                            this.channels[i].play = 0;
+                            this.channels[c].play = 0;
                     }
                 }
 
-                this.regs[r] = v;
+                this.regs[offset] = data;
                 return;
             }
 
-            /* update regs */
-            this.regs[r] = v;
+            // update regs
+            this.regs[offset] = data;
 
-            /* communication registers */
-            if (r < 8)
+            // communication registers
+            if (offset < 8)
                 return;
 
-            /* channel setup */
-            if (r < 0x28) {
-                int channel = (r - 8) / 8;
-
-                switch ((r - 8) & 0x07) {
-                case 0: /* sample rate low */
-                    this.channels[channel].rate &= 0x0f00;
-                    this.channels[channel].rate |= v;
-                    break;
-
-                case 1: /* sample rate high */
-                    this.channels[channel].rate &= 0x00ff;
-                    this.channels[channel].rate |= (v & 0x0f) << 8;
-                    break;
-
-                case 2: /* size low */
-                    this.channels[channel].size &= 0xff00;
-                    this.channels[channel].size |= v;
-                    break;
-
-                case 3: /* size high */
-                    this.channels[channel].size &= 0x00ff;
-                    this.channels[channel].size |= v << 8;
-                    break;
-
-                case 4: /* start low */
-                    this.channels[channel].start &= 0xff00;
-                    this.channels[channel].start |= v;
-                    break;
-
-                case 5: /* start high */
-                    this.channels[channel].start &= 0x00ff;
-                    this.channels[channel].start |= v << 8;
-                    break;
-
-                case 6: /* bank */
-                    this.channels[channel].bank = v & 0xff;
-                    break;
-
-                case 7: /* volume is 7 bits. Convert to 8 bits now. */
-                    this.channels[channel].volume = ((v & 0x7f) << 1) | (v & 1);
-                    break;
-                }
+            // channel setup
+            if (offset < 0x28) {
+                int ch = (offset - 8) / 8;
+                this.channels[ch].setup(offset, data);
 
                 return;
             }
 
-            switch (r) {
-            case 0x2a: /* loop, ppcm */
-                for (i = 0; i < 4; i++)
-                    this.channels[i].loop = (v & (1 << i)) != 0 ? 1 : 0;
+            switch (offset) {
+            case 0x2a: // loop, ppcm
+                for (int c = 0; c < 4; c++)
+                    this.channels[c].loop = ((int) data & (1 << c)) != 0 ? 1 : 0;
 
-                for (i = 4; i < 8; i++)
-                    this.channels[i - 4].ppcm = (v & (1 << i)) != 0 ? 1 : 0;
+                for (int c = 4; c < 8; c++)
+                    this.channels[c - 4].ppcm = ((int) data & (1 << c)) != 0 ? 1 : 0;
                 break;
 
-            case 0x2c: /* pan */
-                this.channels[0].pan = v & 7;
-                this.channels[1].pan = (v >> 3) & 7;
+            case 0x2c: // pan
+                this.channels[0].pan = (int) data & 7;
+                this.channels[1].pan = ((int) data >> 3) & 7;
                 break;
 
-            case 0x2d: /* more pan */
-                this.channels[2].pan = v & 7;
-                this.channels[3].pan = (v >> 3) & 7;
+            case 0x2d: // more pan
+                this.channels[2].pan = (int) data & 7;
+                this.channels[3].pan = ((int) data >> 3) & 7;
                 break;
 
-            case 0x2f: /* control */
-                this.mode = v & 7;
-                /* bit 0 = read ROM */
-                /* bit 1 = enable Sound output */
-                /* bit 2 = unknown */
+            case 0x2f: // control
+                this.mode = (int) data & 7;
+                // bit 0 = read ROM
+                // bit 1 = enable Sound output
+                // bit 2 = unknown
                 break;
             }
         }
 
         public byte read(int offset) {
             switch (offset) {
-            case 0x29: { /* channel status */
-                int i, status = 0;
+            case 0x29: { // channel status
+                int status = 0;
 
-                for (i = 0; i < 4; i++)
-                    status |= this.channels[i].play << i;
+                for (int c = 0; c < 4; c++)
+                    status |= this.channels[c].play << c;
 
                 return (byte) status;
             }
             //break;
 
-            case 0x2e: /* read ROM */
+            case 0x2e: // read ROM
                 if ((this.mode & 1) != 0) {
                     int offs = this.channels[0].start + (this.channels[0].pos >> BASE_SHIFT) + (this.channels[0].bank << 16);
 
@@ -464,13 +437,12 @@ public class K053260 extends Instrument.BaseInstrument {
             return (byte) this.regs[offset];
         }
 
-        public void write_rom(int romSize, int dataStart, int dataLength, byte[] romData) {
+        public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData) {
             if (this.romSize != romSize) {
                 this.rom = new byte[romSize];
                 this.romSize = romSize;
 
-                for (int i = 0; i < romSize; i++) this.rom[i] = (byte) 0xff;
-                //memset(this.rom, 0xFF, romSize);
+                Arrays.fill(this.rom, 0, romSize, (byte) 0xff);
             }
 
             if (dataStart > romSize)
@@ -478,16 +450,15 @@ public class K053260 extends Instrument.BaseInstrument {
             if (dataStart + dataLength > romSize)
                 dataLength = romSize - dataStart;
 
-            if (dataLength >= 0) System.arraycopy(romData, 0, this.rom, dataStart, dataLength);
+            System.arraycopy(romData, 0, this.rom, dataStart, dataLength);
         }
 
-        public void write_rom(int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
+        public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
             if (this.romSize != romSize) {
-                this.rom = new byte[romSize];// (byte*)realloc(this.rom, romSize);
+                this.rom = new byte[romSize];
                 this.romSize = romSize;
 
-                for (int i = 0; i < romSize; i++) this.rom[i] = (byte) 0xff;
-                //memset(this.rom, 0xFF, romSize);
+                Arrays.fill(this.rom, 0, romSize, (byte) 0xff);
             }
 
             if (dataStart > romSize)
@@ -495,7 +466,7 @@ public class K053260 extends Instrument.BaseInstrument {
             if (dataStart + dataLength > romSize)
                 dataLength = romSize - dataStart;
 
-            if (dataLength >= 0) System.arraycopy(romData, srcStartAdr, this.rom, dataStart, dataLength);
+            System.arraycopy(romData, srcStartAdr, this.rom, dataStart, dataLength);
         }
 
         public void set_mute_mask(int muteMask) {
@@ -505,79 +476,75 @@ public class K053260 extends Instrument.BaseInstrument {
     }
 
     private static final int MAX_CHIPS = 0x02;
-    private K053260State[] K053260Data = new K053260State[] {new K053260State(), new K053260State()};
+    private K053260State[] chips = new K053260State[] {new K053260State(), new K053260State()};
 
-    public void device_reset_k053260(byte chipID) {
-        K053260State ic = K053260Data[chipID];
-        ic.reset();
+    public void device_reset_k053260(byte chipId) {
+        K053260State chip = chips[chipId];
+        chip.reset();
     }
 
-    public void k053260_update(byte chipID, int[][] outputs, int samples) {
-        K053260State ic = K053260Data[chipID];
-        ic.update(outputs, samples);
+    public void k053260_update(byte chipId, int[][] outputs, int samples) {
+        K053260State chip = chips[chipId];
+        chip.update(outputs, samples);
     }
 
-    public int device_start_k053260(byte chipID, int clock) {
-        if (chipID >= MAX_CHIPS)
+    public int device_start_k053260(byte chipId, int clock) {
+        if (chipId >= MAX_CHIPS)
             return 0;
 
-        K053260State ic = K053260Data[chipID];
-        return ic.device_start(clock);
+        K053260State chip = chips[chipId];
+        return chip.device_start(clock);
     }
 
-    public void device_stop_k053260(byte chipID) {
-        K053260State ic = K053260Data[chipID];
-        ic.stop();
+    public void device_stop_k053260(byte chipId) {
+        K053260State chip = chips[chipId];
+        chip.stop();
     }
 
-    public void k053260_w(byte chipID, int offset, byte data) {
-        K053260State ic = K053260Data[chipID];
-        ic.write(offset, data);
+    public void k053260_w(byte chipId, int offset, byte data) {
+        K053260State chip = chips[chipId];
+        chip.write(offset, data);
     }
 
-    public byte k053260_r(byte chipID, int offset) {
-        K053260State ic = K053260Data[chipID];
-        return ic.read(offset);
+    public byte k053260_r(byte chipId, int offset) {
+        K053260State chip = chips[chipId];
+        return chip.read(offset);
     }
 
-    public void k053260_write_rom(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData) {
-        K053260State info = K053260Data[chipID];
-        info.write_rom(romSize, dataStart, dataLength, romData);
+    public void k053260_write_rom(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
+        K053260State chip = chips[chipId];
+        chip.writeRom(romSize, dataStart, dataLength, romData);
     }
 
-    public void k053260_write_rom(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
-        K053260State info = K053260Data[chipID];
-        info.write_rom(romSize, dataStart, dataLength, romData, srcStartAdr);
+    public void k053260_write_rom(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
+        K053260State chip = chips[chipId];
+        chip.writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
     }
 
-    public void k053260_set_mute_mask(byte chipID, int muteMask) {
-        K053260State info = K053260Data[chipID];
-        info.set_mute_mask(muteMask);
+    public void k053260_set_mute_mask(byte chipId, int muteMask) {
+        K053260State chip = chips[chipId];
+        chip.set_mute_mask(muteMask);
     }
 
     /**
      * Generic get_info
      */
-        /*DEVICE_GET_INFO( k053260 )
-        {
-            switch (state)
-            {
-                // --- the following bits of info are returned as 64-bit signed integers --- //
-                case DEVINFO_INT_TOKEN_BYTES:     info.i = sizeof(K053260State);    break;
+    /*DEVICE_GET_INFO( k053260 ) {
+        switch (state) {
+            // --- the following bits of info are returned as 64-bit signed integers --- //
+            case DEVINFO_INT_TOKEN_BYTES:     info.i = sizeof(K053260State);    break;
 
-                // --- the following bits of info are returned as pointers to data or functions --- //
-                case DEVINFO_FCT_START:       info.start = DEVICE_START_NAME( k053260 );  break;
-                case DEVINFO_FCT_STOP:       // nothing //         break;
-                case DEVINFO_FCT_RESET:       info.reset = DEVICE_RESET_NAME( k053260 );  break;
+            // --- the following bits of info are returned as pointers to data or functions --- //
+            case DEVINFO_FCT_START:       info.start = DEVICE_START_NAME( k053260 );  break;
+            case DEVINFO_FCT_STOP: // nothing //         break;
+            case DEVINFO_FCT_RESET:       info.reset = DEVICE_RESET_NAME( k053260 );  break;
 
-                // --- the following bits of info are returned as NULL-terminated strings --- //
-                case DEVINFO_STR_NAME:       strcpy(info.s, "K053260");      break;
-                case DEVINFO_STR_FAMILY:      strcpy(info.s, "Konami custom");    break;
-                case DEVINFO_STR_VERSION:      strcpy(info.s, "1.0");       break;
-                case DEVINFO_STR_SOURCE_FILE:     strcpy(info.s, __FILE__);      break;
-                case DEVINFO_STR_CREDITS:      strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
-            }
+            // --- the following bits of info are returned as NULL-terminated strings --- //
+            case DEVINFO_STR_NAME:       strcpy(info.s, "K053260");      break;
+            case DEVINFO_STR_FAMILY:      strcpy(info.s, "Konami custom");    break;
+            case DEVINFO_STR_VERSION:      strcpy(info.s, "1.0");       break;
+            case DEVINFO_STR_SOURCE_FILE:     strcpy(info.s, __FILE__);      break;
+            case DEVINFO_STR_CREDITS:      strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
         }
-
-        DEFINE_LEGACY_SOUND_DEVICE(K053260, k053260);*/
+    }*/
 }

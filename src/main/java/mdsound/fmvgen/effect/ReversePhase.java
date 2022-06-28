@@ -3,17 +3,13 @@ package mdsound.fmvgen.effect;
 
 public class ReversePhase {
 
-    public int[][][] ssg;
-    public int[][][] fm;
-    public int[][] rhythm;
-    public int[][] adpcmA;
-    public int[][] adpcm;
+    public static int[][][] ssg;
+    public static int[][][] fm;
+    public static int[][] rhythm;
+    public static int[][] adpcmA;
+    public static int[][] adpcm;
 
-    public ReversePhase() {
-        init();
-    }
-
-    private void init() {
+    static {
         ssg = new int[][][] {
                 new int[][] {new int[2], new int[2], new int[2]},
                 new int[][] {new int[2], new int[2], new int[2]},

@@ -1,11 +1,7 @@
 package mdsound.fmvgen;
 
-import mdsound.fmvgen.effect.Compressor;
-import mdsound.fmvgen.effect.HPFLPF;
-import mdsound.fmvgen.effect.Reverb;
+
 import mdsound.fmvgen.effect.ReversePhase;
-import mdsound.fmvgen.effect.Chorus;
-import mdsound.fmvgen.effect.Distortion;
 
 
 public class AdpcmB {
@@ -73,23 +69,13 @@ public class AdpcmB {
     protected byte[] adpcmReg = new byte[8];
     protected float panL = 1.0f;
     protected float panR = 1.0f;
-    private Reverb reverb;
-    private Distortion distortion;
-    private Chorus chorus;
-    private HPFLPF hpflpf;
+    private Fmvgen.Effects effects;
     private int efcCh;
     private int num;
-    private ReversePhase reversePhase;
-    private Compressor compressor;
 
-    public AdpcmB(int num, Reverb reverb, Distortion distortion, Chorus chorus, HPFLPF hpflpf, ReversePhase reversePhase, Compressor compressor, int efcCh) {
+    public AdpcmB(int num, Fmvgen.Effects effects, int efcCh) {
         this.num = num;
-        this.reverb = reverb;
-        this.distortion = distortion;
-        this.chorus = chorus;
-        this.hpflpf = hpflpf;
-        this.reversePhase = reversePhase;
-        this.compressor = compressor;
+        this.effects = effects;
         this.efcCh = efcCh;
     }
 
@@ -103,7 +89,7 @@ public class AdpcmB {
         if (adpcmPlay) {
             int ptrDest = 0;
             //  LOG2("ADPCM Play: %d   DeltaN: %d\n", adpld, deltan);
-            if (adplD <= 8192) {     // fplay < fsamp
+            if (adplD <= 8192) { // fplay < fsamp
                 for (; count > 0; count--) {
                     if (adplC < 0) {
                         adplC += 8192;
@@ -115,18 +101,18 @@ public class AdpcmB {
                     int s = (adplC * apOut0 + (8192 - adplC) * apOut1) >> 13;
                     int[] sL = new int[] {s & maskL};
                     int[] sR = new int[] {s & maskR};
-                    distortion.mix(efcCh, sL, sR);
-                    chorus.mix(efcCh, sL, sR);
-                    hpflpf.mix(efcCh, sL, sR);
-                    compressor.mix(efcCh, sL, sR);
+                    effects.distortion.mix(efcCh, sL, sR);
+                    effects.chorus.mix(efcCh, sL, sR);
+                    effects.hpflpf.mix(efcCh, sL, sR);
+                    effects.compressor.mix(efcCh, sL, sR);
 
-                    sL[0] = (int) (sL[0] * panL) * reversePhase.adpcm[num][0];
-                    sR[0] = (int) (sR[0] * panR) * reversePhase.adpcm[num][1];
-                    int revSampleL = (int) (sL[0] * reverb.sendLevel[efcCh]);
-                    int revSampleR = (int) (sR[0] * reverb.sendLevel[efcCh]);
-                    Fmvgen.storeSample(dest[ptrDest + 0], sL[0]);
-                    Fmvgen.storeSample(dest[ptrDest + 1], sR[0]);
-                    reverb.storeDataC(revSampleL, revSampleR);
+                    sL[0] = (int) (sL[0] * panL) * ReversePhase.adpcm[num][0];
+                    sR[0] = (int) (sR[0] * panR) * ReversePhase.adpcm[num][1];
+                    int revSampleL = (int) (sL[0] * effects.reverb.sendLevel[efcCh]);
+                    int revSampleR = (int) (sR[0] * effects.reverb.sendLevel[efcCh]);
+                    dest[ptrDest + 0] += sL[0];
+                    dest[ptrDest + 1] += sR[0];
+                    effects.reverb.storeDataC(revSampleL, revSampleR);
                     //visAPCMVolume[0] = (int)(s & maskL);
                     //visAPCMVolume[1] = (int)(s & maskR);
                     ptrDest += 2;
@@ -141,18 +127,18 @@ public class AdpcmB {
                     int s = (adplC * apOut1) >> 13;
                     int[] sL = new int[] {s & maskL};
                     int[] sR = new int[] {s & maskR};
-                    distortion.mix(efcCh, sL, sR);
-                    chorus.mix(efcCh, sL, sR);
-                    hpflpf.mix(efcCh, sL, sR);
-                    compressor.mix(efcCh, sL, sR);
+                    effects.distortion.mix(efcCh, sL, sR);
+                    effects.chorus.mix(efcCh, sL, sR);
+                    effects.hpflpf.mix(efcCh, sL, sR);
+                    effects.compressor.mix(efcCh, sL, sR);
 
-                    sL[0] = (int) (sL[0] * panL) * reversePhase.adpcm[num][0];
-                    sR[0] = (int) (sR[0] * panR) * reversePhase.adpcm[num][1];
-                    int revSampleL = (int) (sL[0] * reverb.sendLevel[efcCh]);
-                    int revSampleR = (int) (sR[0] * reverb.sendLevel[efcCh]);
-                    Fmvgen.storeSample(dest[ptrDest + 0], sL[0]);
-                    Fmvgen.storeSample(dest[ptrDest + 1], sR[0]);
-                    reverb.storeDataC(revSampleL, revSampleR);
+                    sL[0] = (int) (sL[0] * panL) * ReversePhase.adpcm[num][0];
+                    sR[0] = (int) (sR[0] * panR) * ReversePhase.adpcm[num][1];
+                    int revSampleL = (int) (sL[0] * effects.reverb.sendLevel[efcCh]);
+                    int revSampleR = (int) (sR[0] * effects.reverb.sendLevel[efcCh]);
+                    dest[ptrDest + 0] += sL[0];
+                    dest[ptrDest + 1] += sR[0];
+                    effects.reverb.storeDataC(revSampleL, revSampleR);
                     //visAPCMVolume[0] = (int)(s & maskL);
                     //visAPCMVolume[1] = (int)(s & maskR);
                     ptrDest += 2;
@@ -160,7 +146,7 @@ public class AdpcmB {
                 }
             } else { // fplay > fsamp (adpld = fplay/famp*8192)
                 int t = (-8192 * 8192) / adplD;
-                stop:
+stop:
                 for (; count > 0; count--) {
                     int s = apOut0 * (8192 + adplC);
                     while (adplC < 0) {
@@ -174,20 +160,18 @@ public class AdpcmB {
                     s >>= 13;
                     int[] sL = new int[] {s & maskL};
                     int[] sR = new int[] {s & maskR};
-                    distortion.mix(efcCh, sL, sR);
-                    chorus.mix(efcCh, sL, sR);
-                    hpflpf.mix(efcCh, sL, sR);
-                    compressor.mix(efcCh, sL, sR);
+                    effects.distortion.mix(efcCh, sL, sR);
+                    effects.chorus.mix(efcCh, sL, sR);
+                    effects.hpflpf.mix(efcCh, sL, sR);
+                    effects.compressor.mix(efcCh, sL, sR);
 
-                    sL[0] = (int) (sL[0] * panL) * reversePhase.adpcm[num][0];
-                    sR[0] = (int) (sR[0] * panR) * reversePhase.adpcm[num][1];
-                    int revSampleL = (int) (sL[0] * reverb.sendLevel[efcCh]);
-                    int revSampleR = (int) (sR[0] * reverb.sendLevel[efcCh]);
-                    Fmvgen.storeSample(dest[ptrDest + 0], sL[0]);
-                    Fmvgen.storeSample(dest[ptrDest + 1], sR[0]);
-                    reverb.storeDataC(revSampleL, revSampleR);
-                    //visAPCMVolume[0] = (int)(s & maskL);
-                    //visAPCMVolume[1] = (int)(s & maskR);
+                    sL[0] = (int) (sL[0] * panL) * ReversePhase.adpcm[num][0];
+                    sR[0] = (int) (sR[0] * panR) * ReversePhase.adpcm[num][1];
+                    int revSampleL = (int) (sL[0] * effects.reverb.sendLevel[efcCh]);
+                    int revSampleR = (int) (sR[0] * effects.reverb.sendLevel[efcCh]);
+                    dest[ptrDest + 0] += sL[0];
+                    dest[ptrDest + 1] += sR[0];
+                    effects.reverb.storeDataC(revSampleL, revSampleR);
                     ptrDest += 2;
                 }
             }
@@ -200,7 +184,7 @@ public class AdpcmB {
 
     public void setReg(int addr, int data) {
         switch (addr) {
-        case 0x00: // Control Register 1
+        case 0x00: // Controller Register 1
             if (((data & 0x80) != 0) && !adpcmPlay) {
                 adpcmPlay = true;
                 memAddr = startAddr;
@@ -214,7 +198,7 @@ public class AdpcmB {
             control1 = (byte) data;
             break;
 
-        case 0x01: // Control Register 2
+        case 0x01: // Controller Register 2
             control2 = (byte) data;
             granuality = (byte) ((control2 & 2) != 0 ? 1 : 4);
             break;
@@ -246,33 +230,33 @@ public class AdpcmB {
             }
             break;
 
-        case 0x09:      // delta-N L
-        case 0x0a:      // delta-N H
+        case 0x09: // delta-N L
+        case 0x0a: // delta-N H
             adpcmReg[addr - 0x09 + 4] = (byte) data;
             deltaN = adpcmReg[5] * 256 + adpcmReg[4];
             deltaN = Math.max(256, deltaN);
             adplD = deltaN * adplBase >> 16;
             break;
 
-        case 0x0b:      // Level Control
+        case 0x0b: // Level Controller
             adpcmLevel = (byte) data;
             adpcmVolume = (adpcmVol * adpcmLevel) >> 12;
             break;
 
-        case 0x0c:      // Limit Address L
-        case 0x0d:      // Limit Address H
+        case 0x0c: // Limit Address L
+        case 0x0d: // Limit Address H
             adpcmReg[addr - 0x0c + 6] = (byte) data;
             limitAddr = (adpcmReg[7] * 256 + adpcmReg[6] + 1) << shiftBit;
             // System.err.printf("  limitaddr %.6x", limitaddr);
             break;
 
-        case 0x10:      // Flag Control
+        case 0x10: // Flag Controller
             if ((data & 0x80) != 0) {
                 status = 0;
                 updateStatus();
             } else {
                 stMask = ~(data & 0x1f);
-                //   UpdateStatus();     //???
+                // updateStatus(); // ???
             }
             break;
         }
@@ -285,12 +269,10 @@ public class AdpcmB {
         if (NO_BITTYPE_EMULATION) {
             if ((control2 & 2) == 0) {
                 // 1 bit mode
-                //adpcmbuf[(memaddr >> 4) & 0x3ffff] = (byte)data;
                 adpcmBuf[(memAddr >> 4) & adpcmMask] = (byte) data;
                 memAddr += 16;
             } else {
                 // 8 bit mode
-                //(int)8* p = &adpcmbuf[(memaddr >> 4) & 0x7fff];
                 int p = (memAddr >> 4) & 0x7fff;
                 int bank = (memAddr >> 1) & 7;
                 byte mask = (byte) (1 << bank);
@@ -314,14 +296,13 @@ public class AdpcmB {
                 memAddr += 2;
             }
         } else {
-            //adpcmbuf[(memaddr >> granuality) & 0x3ffff] = (byte)data;
             adpcmBuf[(memAddr >> granuality) & adpcmMask] = (byte) data;
             memAddr += 1 << granuality;
         }
 
         if (memAddr == stopAddr) {
             setStatus(4);
-            statusNext = 0x04;  // EOS
+            statusNext = 0x04; // EOS
             memAddr &= (shiftBit == 6) ? 0x3fffff : 0x1ffffff;
         }
         if (memAddr == limitAddr) {
@@ -357,7 +338,7 @@ public class AdpcmB {
                 } else {
                     int p = ((memAddr >> 4) & 0x7fff) + ((~memAddr & 1) << 17);
                     int bank = (memAddr >> 1) & 7;
-                    byte mask = (byte) (1 << (int) bank);
+                    byte mask = (byte) (1 << bank);
 
                     data = adpcmBuf[p + 0x18000] & mask;
                     data = data * 2 + (adpcmBuf[p + 0x10000] & mask);
@@ -392,9 +373,9 @@ public class AdpcmB {
                 data = adpcMx;
                 adpcMx = 0;
                 adpcmD = 127;
-                return (int) data;
+                return data;
             } else {
-                memAddr &= adpcmMask;   //0x3fffff;
+                memAddr &= adpcmMask; // 0x3fffff;
                 setStatus(adpcmNotice);
                 adpcmPlay = false;
             }
@@ -447,5 +428,15 @@ public class AdpcmB {
     }
 
     private void intr(boolean f) {
+    }
+
+    public void reset() {
+       this.statusNext = 0;
+       this.memAddr = 0;
+       this.adpcmD = 127;
+       this.adpcMx = 0;
+       this.adpcmPlay = false;
+       this.adplC = 0;
+       this.adplD = 0x100;
     }
 }

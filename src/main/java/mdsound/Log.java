@@ -8,7 +8,7 @@ import java.util.function.Consumer;
 public class Log {
     public static BiConsumer<LogLevel, String> writeLine = null;
     public static LogLevel level = LogLevel.INFO;
-    public static int off = (int) LogLevel.WARNING.v;
+    public static int off = LogLevel.WARNING.v;
     public static Consumer<String> writeMethod;
 
     public static void writeLine(LogLevel level, String msg) {

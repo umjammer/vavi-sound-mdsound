@@ -31,7 +31,7 @@ public class Km6502 implements Device {
 
     public int illegal;
 
-    //pointer to callback functions
+    //pointer to Callback functions
     interface ReadHandler extends Function<Integer, Integer> {}
     interface WriterHandler extends BiConsumer<Integer, Integer>{}
 
@@ -252,7 +252,7 @@ public class Km6502 implements Device {
 
     public int KI_READWORDBUG(int adr) {
         int ret = K_READ(adr);
-        return ret + (K_READ((int) ((adr & 0xFF00) + (int) ((adr + 1) & 0xff))) << 8);
+        return ret + (K_READ((adr & 0xFF00) + ((adr + 1) & 0xff)) << 8);
     }
 
     public int KA_ABSX_() {
@@ -777,11 +777,11 @@ public class Km6502 implements Device {
         K_WRITE(adr, KM_INC(K_READ(adr)));
     }
 
-    public void opCodeE8() /* E8 - INX */ {
+    public void opCodeE8() { // E8 - INX
         this.x = KM_INC(this.x);
     }
 
-    public void opCodeC8() /* C8 - INY */ {
+    public void opCodeC8() { // C8 - INY
         this.y = KM_INC(this.y);
     }
 
@@ -1018,7 +1018,7 @@ public class Km6502 implements Device {
     public void opCode60() { /* 60 - RTS */
         this.pc = KM_POP();
         this.pc += KM_POP() << 8;
-        this.pc = (int) ((this.pc + 1) & 0xffff);
+        this.pc = (this.pc + 1) & 0xffff;
     }
 
     /* --- SBC --- */

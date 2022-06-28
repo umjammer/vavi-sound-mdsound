@@ -1,160 +1,11 @@
 package mdsound;
 
-import java.util.Arrays;
+import java.util.function.Consumer;
 
 
 public class Ym2413 extends Instrument.BaseInstrument {
 
-    private static final double PI = 3.14159265358979323846;
-
-    private enum OPLL_TONE_ENUM {OPLL_2413_TONE, OPLL_VRC7_TONE, OPLL_281B_TONE}
-
-    /* Voice data */
-    private static class OPLL_PATCH {
-        public int TL, FB, EG, ML, AR, DR, SL, RR, KR, KL, AM, PM, WF;
-    }
-
-    /* slot */
-    private class OPLL_SLOT {
-
-        public OPLL_PATCH patch;
-
-        public int type;          /* 0 : modulator 1 : carrier */
-
-        /* OUTPUT */
-        public int feedback;
-        public int[] output = new int[2];   /* Output value of slot */
-
-        /* for Phase Generator (PG) */
-        public int[] sintbl;    /* Wavetable */
-        public int phase;      /* Phase */
-        public int dphase;     /* Phase increment amount */
-        public int pgout;      /* output */
-
-        /* for Envelope Generator (EG) */
-        public int fnum;          /* F-Number */
-        public int block;         /* Bsynchronized */
-        public int volume;        /* Current volume */
-        public int sustine;       /* Sustine 1 = ON, 0 = OFF */
-        public int tll;         /* Total Level + Key scale level*/
-        public int rks;        /* Key scale offset (Rks) */
-        public int eg_mode;       /* Current state */
-        public int eg_phase;   /* Phase */
-        public int eg_dphase;  /* Phase increment amount */
-        public int egout;      /* output */
-
-    }
-
-    /* Mask */
-    private int OPLL_MASK_CH(int x) {
-        return (1 << (x));
-    }
-
-    private int OPLL_MASK_HH = (1 << (9));
-    private int OPLL_MASK_CYM = (1 << (10));
-    private int OPLL_MASK_TOM = (1 << (11));
-    private int OPLL_MASK_SD = (1 << (12));
-    private int OPLL_MASK_BD = (1 << (13));
-    //private int OPLL_MASK_RHYTHM = 0x1f << 9;//(OPLL_MASK_HH | OPLL_MASK_CYM | OPLL_MASK_TOM | OPLL_MASK_SD | OPLL_MASK_BD);
-
-    /* opll */
-    private class OPLL {
-
-        public byte vrc7_mode;
-        public byte adr;
-        //e_(int)32 adr ;
-        public int _out;
-
-        //#ifndef EMU2413_COMPACTION
-        public int realstep;
-        public int oplltime;
-        public int opllstep;
-        public int prev, next;
-        public int[] sprev = new int[2];
-        public int[] snext = new int[2];
-        public float[][] pan = new float[][] {new float[2], new float[2], new float[2], new float[2], new float[2], new float[2], new float[2],
-                new float[2], new float[2], new float[2], new float[2], new float[2], new float[2], new float[2]};
-        //#endif
-
-        /* Register */
-        public byte[] reg = new byte[0x40];
-        public int[] slot_on_flag = new int[18];
-
-        /* Pitch Modulator */
-        public int pm_phase;
-        public int lfo_pm;
-
-        /* Amp Modulator */
-        public int am_phase;
-        public int lfo_am;
-
-        public int quality;
-
-        /* Noise Generator */
-        public int noise_seed;
-
-        /* Channel Data */
-        public int[] patch_number = new int[9];
-        public int[] key_status = new int[9];
-
-        /* Slot */
-        public OPLL_SLOT[] slot = new OPLL_SLOT[18];
-
-        /* Voice Data */
-        public OPLL_PATCH[][] patch = new OPLL_PATCH[][] {
-                new OPLL_PATCH[2], new OPLL_PATCH[2], new OPLL_PATCH[2], new OPLL_PATCH[2]
-                , new OPLL_PATCH[2], new OPLL_PATCH[2], new OPLL_PATCH[2], new OPLL_PATCH[2]
-                , new OPLL_PATCH[2], new OPLL_PATCH[2], new OPLL_PATCH[2], new OPLL_PATCH[2]
-                , new OPLL_PATCH[2], new OPLL_PATCH[2], new OPLL_PATCH[2], new OPLL_PATCH[2]
-                , new OPLL_PATCH[2], new OPLL_PATCH[2], new OPLL_PATCH[2]
-        };
-        public int[] patch_update = new int[2]; /* flag for check patch update */
-
-        public int mask;
-
-    }
-
-    /* Create Object */
-    //private OPLL OPLL_new(int clk, int rate) { return null; }
-    //private void OPLL_delete(OPLL opll) { }
-
-    /* Setup */
-    //private void OPLL_reset(OPLL opll) { }
-    //private void OPLL_reset_patch(OPLL opll, int a) { }
-    //private void OPLL_set_rate(OPLL opll, int r) { }
-    //private void OPLL_set_quality(OPLL opll, int q) { }
-    //private void OPLL_set_pan(OPLL opll, int ch, int pan) { }
-
-    /* Port/Register access */
-    //private void OPLL_writeIO(OPLL opll, int reg, int val) { }
-    //private void OPLL_writeReg(OPLL opll, int reg, int val) { }
-
-    /* Synthsize */
-    //private short OPLL_calc(OPLL opll) { return 0; }
-    //private void OPLL_calc_stereo(OPLL opll, int[][] _out, int samples) { }
-
-    /* Misc */
-    //private void OPLL_setPatch(OPLL opll, byte[] dump) { }
-    //private void OPLL_copyPatch(OPLL opll, int a, OPLL_PATCH p) { }
-    //private void OPLL_forceRefresh(OPLL opll) { }
-
-    /* Utility */
-    //private void OPLL_dump2patch(byte[] dump, OPLL_PATCH patch) { }
-    //private void OPLL_patch2dump(OPLL_PATCH patch, byte[] dump) { }
-    //private void OPLL_getDefaultPatch(int type, int num, OPLL_PATCH p) { }
-
-    /* Channel Mask */
-    //EMU2413_API e_(int)32 OPLL_setMask(OPLL *, e_(int)32 mask) ;
-    //EMU2413_API e_(int)32 OPLL_toggleMask(OPLL *, e_(int)32 mask) ;
-    //private void OPLL_SetMuteMask(OPLL opll, int muteMask) { }
-    //private void OPLL_SetChipMode(OPLL opll, byte Mode) { }
-
-    //#define dump2patch OPLL_dump2patch
-
-    //#endif
-
-    /***********************************************************************************
-
+    /**
      emu2413.c -- YM2413 emulator written by Mitsutaka Okazaki 2001
 
      2001 01-08 : Version 0.10 -- 1st version.
@@ -198,2047 +49,1883 @@ public class Ym2413 extends Instrument.BaseInstrument {
      MSX-Datapack
      YMU757 data sheet
      YM2143 data sheet
-     **************************************************************************************/
-
-    /**
+     *
      * Additions by Maxim:
      * - per-channel panning
-     **/
-    //# include <stdio.h>
-    //# include <stdlib.h>
-    //# include <string.h>
-    //# include <math.h>
-    //# include "mamedef.h"
-    //#undef INLINE
-    //# include "emu2413.h"
-    //# include "panning.h" // Maxim
+     */
+    private static class OPLL {
 
-        /*#ifdef EMU2413_COMPACTION
-        // #define OPLL_TONE_NUM 1
-        static unsigned char default_inst[OPLL_TONE_NUM][(16 + 3) * 16] = {
-          {
-        // #include "2413tone.h"
-           }
-        };
-        // #else
-        // #define OPLL_TONE_NUM 3
-        static unsigned char default_inst[OPLL_TONE_NUM][(16 + 3) * 16] = {
-          {
-        // #include "2413tone.h"
-          },
-          {
-        // #include "vrc7tone.h"
-           },
-          {
-        // #include "281btone.h"
-          }
-        };
-        // #endif*/
+        /** Mask */
+        private static int maskCh(int x) {
+            return 1 << x;
+        }
 
-    // Note: Dump size changed to 8 per instrument, since 9-15 were unused. -VB
-    private static final int OPLL_TONE_NUM = 1;
-    private byte[][] default_inst = new byte[][] {
-            new byte[] {
-/* YM2413 tone by okazaki@angel.ne.jp */
-                    0x49, 0x4c, 0x4c, 0x32, 0x00, 0x00, 0x00, 0x00,
-                    0x61, 0x61, 0x1e, 0x17, (byte) 0xf0, 0x7f, 0x00, 0x17,
-                    0x13, 0x41, 0x16, 0x0e, (byte) 0xfd, (byte) 0xf4, 0x23, 0x23,
-                    0x03, 0x01, (byte) 0x9a, 0x04, (byte) 0xf3, (byte) 0xf3, 0x13, (byte) 0xf3,
-                    0x11, 0x61, 0x0e, 0x07, (byte) 0xfa, 0x64, 0x70, 0x17,
-                    0x22, 0x21, 0x1e, 0x06, (byte) 0xf0, 0x76, 0x00, 0x28,
-                    0x21, 0x22, 0x16, 0x05, (byte) 0xf0, 0x71, 0x00, 0x18,
-                    0x21, 0x61, 0x1d, 0x07, (byte) 0x82, (byte) 0x80, 0x17, 0x17,
-                    0x23, 0x21, 0x2d, 0x16, (byte) 0x90, (byte) 0x90, 0x00, 0x07,
-                    0x21, 0x21, 0x1b, 0x06, 0x64, 0x65, 0x10, 0x17,
-                    0x21, 0x21, 0x0b, 0x1a, (byte) 0x85, (byte) 0xa0, 0x70, 0x07,
-                    0x23, 0x01, (byte) 0x83, 0x10, (byte) 0xff, (byte) 0xb4, 0x10, (byte) 0xf4,
-                    (byte) 0x97, (byte) 0xc1, 0x20, 0x07, (byte) 0xff, (byte) 0xf4, 0x22, 0x22,
-                    0x61, 0x00, 0x0c, 0x05, (byte) 0xc2, (byte) 0xf6, 0x40, 0x44,
-                    0x01, 0x01, 0x56, 0x03, (byte) 0x94, (byte) (byte) 0xc2, 0x03, 0x12,
-                    0x21, 0x01, (byte) 0x89, 0x03, (byte) 0xf1, (byte) 0xe4, (byte) 0xf0, 0x23,
-                    0x07, 0x21, 0x14, 0x00, (byte) 0xee, (byte) 0xf8, (byte) 0xff, (byte) 0xf8,
-                    0x01, 0x31, 0x00, 0x00, (byte) 0xf8, (byte) 0xf7, (byte) 0xf8, (byte) 0xf7,
-                    0x25, 0x11, 0x00, 0x00, (byte) 0xf8, (byte) 0xfa, (byte) 0xf8, 0x55,
+        private int MASK_HH = 1 << 9;
+        private int MASK_CYM = 1 << 10;
+        private int MASK_TOM = 1 << 11;
+        private int MASK_SD = 1 << 12;
+        private int MASK_BD = 1 << 13;
+        //private int OPLL_MASK_RHYTHM = 0x1f << 9;//(OPLL_MASK_HH | OPLL_MASK_CYM | OPLL_MASK_TOM | OPLL_MASK_SD | OPLL_MASK_BD);
+
+        private enum Tone {_2413, _VRC7, _281B}
+
+        /** slot */
+        private static class Slot {
+
+            private static final int BD1 = 12;
+            private static final int BD2 = 13;
+            private static final int HH = 14;
+            private static final int SD = 15;
+            private static final int TOM = 16;
+            private static final int CYM = 17;
+
+            /**
+             * Calc Parameters
+             */
+            private int calcEgDphase(int [][] dPhaseArTable, int[][] dPhaseDrTable) {
+
+                switch (egMode) {
+                case ATTACK:
+                    return dPhaseArTable[this.patch.ar][rks];
+
+                case DECAY:
+                    return dPhaseDrTable[this.patch.dr][rks];
+
+                case SUSHOLD:
+                    return 0;
+
+                case SUSTAIN:
+                    return dPhaseDrTable[this.patch.rr][rks];
+
+                case RELEASE:
+                    if (sustain != 0)
+                        return dPhaseDrTable[5][rks];
+                    else if (this.patch.eg != 0)
+                        return dPhaseDrTable[this.patch.rr][rks];
+                    else
+                        return dPhaseDrTable[7][rks];
+
+                case SETTLE:
+                    return dPhaseDrTable[15][0];
+
+                case FINISH:
+                    return 0;
+
+                default:
+                    return 0;
+                }
             }
-    };
-    //  {
-    //#include "2413tone.h"
-    //  }
-    //};
 
-    /* Size of Sintable ( 8 -- 18 can be used. 9 recommended.) */
-    private int PG_BITS = 9;
-    private static final int PG_WIDTH = (1 << 9);// PG_BITS);
+            /**
+             * Initializing
+             */
+            private void reset(int type) {
+                this.type = type;
+                sinTbl = waveForm[0];
+                phase = 0;
+                dPhase = 0;
+                output[0] = 0;
+                output[1] = 0;
+                feedback = 0;
+                egMode = EgState.FINISH;
+                egPhase = EG_DP_WIDTH;
+                egDPhase = 0;
+                rks = 0;
+                tll = 0;
+                sustain = 0;
+                fNum = 0;
+                block = 0;
+                volume = 0;
+                pgOut = 0;
+                egOut = 0;
+                this.patch = nullPatch;
+            }
 
-    /* Phase increment counter */
-    private int DP_BITS = 18;
-    private int DP_WIDTH = (1 << 18);// DP_BITS);
-    private int DP_BASE_BITS = 18 - 9;//(DP_BITS - PG_BITS);
+            /* PG */
+            private void calcPhase(int lfo) {
+                if (this.patch.pm != 0)
+                    phase += (dPhase * lfo) >> PM_AMP_BITS;
+                else
+                    phase += dPhase;
 
-    /* Dynamic range (Accuracy of sin table) */
-    //private int DB_BITS = 8;
-    private double DB_STEP = (48.0 / (1 << 8));// DB_BITS));
-    private static final int DB_MUTE = (1 << 8);// DB_BITS);
+                phase &= DP_WIDTH - 1;
 
-    /* Dynamic range of envelope */
-    private double EG_STEP = 0.375;
-    private static final int EG_BITS = 7;
-    //private int EG_MUTE = (1 << 7);// EG_BITS);
+                pgOut = highBits(phase, DP_BASE_BITS);
+            }
 
-    /* Dynamic range of total level */
-    private double TL_STEP = 0.75;
-    //private int TL_BITS = 6;
-    //private int TL_MUTE = (1 << 6);// TL_BITS);
+            /**
+             * CARRIOR
+             */
+            private int calcCar(int fm) {
+                if (egOut >= (DB_MUTE - 1)) {
+                    //System.err.printf("calc_slot_car: output over");
+                    output[0] = 0;
+                } else {
+                    //System.err.printf("calc_slot_car: slot.egout %d", slot.egout);
+                    output[0] = db2LinTable[sinTbl[(pgOut + wave2_8pi(fm)) & (PG_WIDTH - 1)] + egOut];
+                }
 
-    /* Dynamic range of sustine level */
-    private double SL_STEP = 3.0;
-    //private int SL_BITS = 4;
-    //private int SL_MUTE = (1 << 4);// SL_BITS);
+                output[1] = (output[1] + output[0]) >> 1;
+                return output[1];
+            }
 
-    //#define EG2DB(d) ((d)*(e_int32)(EG_STEP/DB_STEP))
-    private int EG2DB(int d) {
-        return ((d) * (int) (EG_STEP / DB_STEP));
-    }
+            /** MODULATOR */
+            private int calcMod() {
+                output[1] = output[0];
 
-    //#define TL2EG(d) ((d)*(e_int32)(TL_STEP/EG_STEP))
-    private int TL2EG(int d) {
-        return ((d) * (int) (TL_STEP / EG_STEP));
-    }
+                if (egOut >= (DB_MUTE - 1)) {
+                    output[0] = 0;
+                } else if (this.patch.fb != 0) {
+                    int fm = wave2_4pi(feedback) >> (7 - this.patch.fb);
+                    output[0] = db2LinTable[sinTbl[(pgOut + fm) & (PG_WIDTH - 1)] + egOut];
+                } else {
+                    output[0] = db2LinTable[sinTbl[pgOut] + egOut];
+                }
 
-    //#define SL2EG(d) ((d)*(e_int32)(SL_STEP/EG_STEP))
-    private int SL2EG(int d) {
-        return ((d) * (int) (SL_STEP / EG_STEP));
-    }
+                feedback = (output[1] + output[0]) >> 1;
 
-    //#define DB_POS(x) (e_(int)32)((x)/DB_STEP)
-    private int DB_POS(double x) {
-        return (int) (x / DB_STEP);
-    }
+                return feedback;
+            }
 
-    //#define DB_NEG(x) (e_(int)32)(DB_MUTE+DB_MUTE+(x)/DB_STEP)
-    private int DB_NEG(double x) {
-        return (int) (DB_MUTE + DB_MUTE + x / DB_STEP);
-    }
+            /** TOM */
+            private int calcTom() {
+                if (egOut >= (DB_MUTE - 1))
+                    return 0;
 
-    /* Bits for liner value */
-    private int DB2LIN_AMP_BITS = 8;
-    private int SLOT_AMP_BITS = 8;//(DB2LIN_AMP_BITS);
+                return db2LinTable[sinTbl[pgOut] + egOut];
 
-    /* Bits for envelope phase incremental counter */
-    private int EG_DP_BITS = 22;
-    private int EG_DP_WIDTH = (1 << 22);// EG_DP_BITS);
+            }
 
-    /* Bits for Pitch and Amp modulator */
-    private int PM_PG_BITS = 8;
-    private static final int PM_PG_WIDTH = (1 << 8);// PM_PG_BITS);
-    private int PM_DP_BITS = 16;
-    private int PM_DP_WIDTH = (1 << 16);//PM_DP_BITS);
-    private int AM_PG_BITS = 8;
-    private static final int AM_PG_WIDTH = (1 << 8);//AM_PG_BITS);
-    private int AM_DP_BITS = 16;
-    private int AM_DP_WIDTH = (1 << 16);//AM_DP_BITS);
+            /** SNARE */
+            private int calcSnare(int noise) {
+                if (egOut >= (DB_MUTE - 1))
+                    return 0;
 
-    /* PM table is calcurated by PM_AMP * pow(2,PM_DEPTH*sin(x)/1200) */
-    private int PM_AMP_BITS = 8;
-    private int PM_AMP = (1 << 8);// PM_AMP_BITS);
+                if (bit(pgOut, 7) != 0)
+                    return db2LinTable[(noise != 0 ? dbPos(0.0) : dbPos(15.0)) + egOut];
+                else
+                    return db2LinTable[(noise != 0 ? dbNeg(0.0) : dbNeg(15.0)) + egOut];
+            }
 
-    /* PM speed(Hz) and depth(cent) */
-    private double PM_SPEED = 6.4;
-    private double PM_DEPTH = 13.75;
+            /**
+             * TOP-CYM
+             */
+            private int calcCym(int pgOutHh) {
+                int dbOut;
 
-    /* AM speed(Hz) and depth(dB) */
-    private double AM_SPEED = 3.6413;
-    private double AM_DEPTH = 4.875;
+                if (egOut >= (DB_MUTE - 1))
+                    return 0;
+                else if ((
+                        // the same as fmopl.c
+                        ((bit(pgOutHh, PG_BITS - 8) ^ bit(pgOutHh, PG_BITS - 1)) | bit(pgOutHh, PG_BITS - 7)) ^
+                                // different from fmopl.c
+                                (bit(pgOut, PG_BITS - 7) & ~bit(pgOut, PG_BITS - 5))) != 0
+                )
+                    dbOut = dbNeg(3.0);
+                else
+                    dbOut = dbPos(3.0);
 
-    /* Cut the lower b bit(s) off. */
-    private int HIGHBITS(int c, int b) {
-        return ((c) >> (b));
-    }
+                return db2LinTable[dbOut + egOut];
+            }
 
-    /* Leave the lower b bit(s). */
-    private int LOWBITS(int c, int b) {
-        return ((c) & ((1 << (b)) - 1));
-    }
+            /**
+             * HI-HAT
+             */
+            private int calcHat(int pgOutCym, int noise) {
+                int dbOut;
 
-    /* Expand x which is s bits to d bits. */
-    private int EXPAND_BITS(int x, int s, int d) {
-        return ((x) << ((d) - (s)));
-    }
+                if (egOut >= (DB_MUTE - 1))
+                    return 0;
+                else if ((
+                        // the same as fmopl.c
+                        ((bit(pgOut, PG_BITS - 8) ^ bit(pgOut, PG_BITS - 1)) | bit(pgOut, PG_BITS - 7)) ^
+                                // different from fmopl.c
+                                (bit(pgOutCym, PG_BITS - 7) & ~bit(pgOutCym, PG_BITS - 5))) != 0
+                ) {
+                    if (noise != 0)
+                        dbOut = dbNeg(12.0);
+                    else
+                        dbOut = dbNeg(24.0);
+                } else {
+                    if (noise != 0)
+                        dbOut = dbPos(12.0);
+                    else
+                        dbOut = dbPos(24.0);
+                }
 
-    /* Expand x which is s bits to d bits and fill expanded bits '1' */
-    private int EXPAND_BITS_X(int x, int s, int d) {
-        return (((x) << ((d) - (s))) | ((1 << ((d) - (s))) - 1));
-    }
+                return db2LinTable[dbOut + egOut];
+            }
 
-    /* Adjust envelope speed which depends on sampling rate. */
-    private int RATE_ADJUST(int x) {
-        return (rate == 49716 ? (int) x : (int) ((double) (x) * clk / 72 / rate + 0.5));
-    }        /* added 0.5 to round the value*/
+            /**
+             * EG
+             */
+            private void calcEnvelope(int lfo, Consumer<Slot> updateEg) {
+                int egOut = switch (egMode) {
+                    case ATTACK -> {
+                        int _egOut = arAdjustTable[highBits(egPhase, EG_DP_BITS - EG_BITS)];
+                        egPhase += egDPhase;
+                        if ((EG_DP_WIDTH & egPhase) != 0 || (this.patch.ar == 15)) {
+                            _egOut = 0;
+                            egPhase = 0;
+                            egMode = EgState.DECAY;
+                            updateEg.accept(this);
+                        }
+                        yield _egOut;
+                    }
+                    case DECAY -> {
+                        int _egOut = highBits(egPhase, EG_DP_BITS - EG_BITS);
+                        egPhase += egDPhase;
+                        if (egPhase >= sl[this.patch.sl]) {
+                            if ((this.patch.eg) != 0) {
+                                egPhase = sl[this.patch.sl];
+                                egMode = EgState.SUSHOLD;
+                                updateEg.accept(this);
+                            } else {
+                                egPhase = sl[this.patch.sl];
+                                egMode = EgState.SUSTAIN;
+                                updateEg.accept(this);
+                            }
+                        }
+                        yield _egOut;
+                    }
+                    case SUSHOLD -> {
+                        int _egOut = highBits(egPhase, EG_DP_BITS - EG_BITS);
+                        if (this.patch.eg == 0) {
+                            egMode = EgState.SUSTAIN;
+                            updateEg.accept(this);
+                        }
+                        yield _egOut;
+                    }
+                    case SUSTAIN, RELEASE -> {
+                        int _egOut = highBits(egPhase, EG_DP_BITS - EG_BITS);
+                        egPhase += egDPhase;
+                        if (_egOut >= (1 << EG_BITS)) {
+                            egMode = EgState.FINISH;
+                            _egOut = (1 << EG_BITS) - 1;
+                        }
+                        yield _egOut;
+                    }
+                    case SETTLE -> {
+                        int _egOut = highBits(egPhase, EG_DP_BITS - EG_BITS);
+                        egPhase += egDPhase;
+                        if (_egOut >= (1 << EG_BITS)) {
+                            egMode = EgState.ATTACK;
+                            _egOut = (1 << EG_BITS) - 1;
+                            updateEg.accept(this);
+                        }
+                        yield _egOut;
+                    }
+                    case FINISH -> (1 << EG_BITS) - 1;
+                    default -> (1 << EG_BITS) - 1;
+                };
 
-    private OPLL_SLOT MOD(OPLL o, int x) {
-        return (o.slot[x << 1]);
-    }
+                if (this.patch.am != 0)
+                    egOut = eg2db(egOut + tll) + lfo;
+                else {
+                    egOut = eg2db(egOut + tll);
+                    //System.err.printf("egOut %d slot.tll %d (e_int32)(EG_STEP/DB_STEP) %d", egOut, slot.tll, (short)(EG_STEP / DB_STEP));
+                }
 
-    private OPLL_SLOT CAR(OPLL o, int x) {
-        return o.slot[(x << 1) | 1];
-    }
+                if (egOut >= DB_MUTE)
+                    egOut = DB_MUTE - 1;
 
-    private int BIT(int s, int b) {
-        return (((s) >> (b)) & 1);
-    }
+                this.egOut = egOut | 3;
+            }
 
-    /* Input clock */
-    private int clk = 844451141;
-    /* Sampling rate */
-    private int rate = 3354932;
+            private void updateTll() {
+                tll = (type == 0) ? tllTable[fNum >> 5][block][this.patch.tl][this.patch.kl] : tllTable[fNum >> 5][block][volume][this.patch.kl];
+            }
 
-    /* WaveTable for each envelope amp */
-    private int[] fullsintable = new int[PG_WIDTH];
-    private int[] halfsintable = new int[PG_WIDTH];
+            private void updateRks() {
+                rks = rksTable[fNum >> 8][block][this.patch.kr];
+            }
 
-    private int[][] waveform = new int[2][];// { fullsintable, halfsintable };
+            private void updateWf() {
+                sinTbl = waveForm[this.patch.wf];
+            }
 
-    /* LFO Table */
-    private int[] pmtable = new int[PM_PG_WIDTH];
-    private int[] amtable = new int[AM_PG_WIDTH];
+            /** Voice data */
+            private static class Patch {
+                public int tl, fb, eg, ml, ar, dr, sl, rr, kr, kl, am, pm, wf;
 
-    /* Phase delta for LFO */
-    private int pm_dphase;
-    private int am_dphase;
+                public void copy(Patch other) {
+                    this.am = other.am;
+                    this.ar = other.ar;
+                    this.dr = other.dr;
+                    this.eg = other.eg;
+                    this.fb = other.fb;
+                    this.kl = other.kl;
+                    this.kr = other.kr;
+                    this.ml = other.ml;
+                    this.pm = other.pm;
+                    this.rr = other.rr;
+                    this.sl = other.sl;
+                    this.tl = other.tl;
+                    this.wf = other.wf;
+                }
+            }
 
-    /* dB to Liner table */
-    private short[] DB2LIN_TABLE = new short[(DB_MUTE + DB_MUTE) * 2];
+            public Patch patch;
 
-    /* Liner to Log curve conversion table (for Attack rate). */
-    private int[] AR_ADJUST_TABLE = new int[1 << EG_BITS];
+            /** 0 : modulator 1 : carrier */
+            public int type;
 
-    /* Empty Voice data */
-    private OPLL_PATCH null_patch = new OPLL_PATCH(); //{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 };
+            // OUTPUT
 
-    /* Basic Voice Data */
-    //private OPLL_PATCH[][] default_patch = new OPLL_PATCH[OPLL_TONE_NUM][] { new OPLL_PATCH[(16 + 3) * 2] };
-    private OPLL_PATCH[][] default_patch = new OPLL_PATCH[][] {
-            new OPLL_PATCH[2], new OPLL_PATCH[2], new OPLL_PATCH[2], new OPLL_PATCH[2]
-            , new OPLL_PATCH[2], new OPLL_PATCH[2], new OPLL_PATCH[2], new OPLL_PATCH[2]
-            , new OPLL_PATCH[2], new OPLL_PATCH[2], new OPLL_PATCH[2], new OPLL_PATCH[2]
-            , new OPLL_PATCH[2], new OPLL_PATCH[2], new OPLL_PATCH[2], new OPLL_PATCH[2]
-            , new OPLL_PATCH[2], new OPLL_PATCH[2], new OPLL_PATCH[2]};
+            public int feedback;
+            /** Output value of slot */
+            public int[] output = new int[2];
 
-    /* Definition of envelope mode */
-    private enum OPLL_EG_STATE {
-        READY, ATTACK, DECAY, SUSHOLD, SUSTINE, RELEASE, SETTLE, FINISH;
+            // for Phase Generator (PG)
 
-        static OPLL_EG_STATE valueOf(int v) {
-            return Arrays.stream(values()).filter(e -> e.ordinal() == v).findFirst().get();
+            /** Wavetable */
+            public int[] sinTbl;
+            /** Phase */
+            public int phase;
+            /** Phase increment amount */
+            public int dPhase;
+            /** output */
+            public int pgOut;
+
+            // for Envelope Generator (EG)
+
+            /** F-Number */
+            public int fNum;
+            /** Bsynchronized */
+            public int block;
+            /** Current volume */
+            public int volume;
+            /** Sustain 1 = ON, 0 = OFF */
+            public int sustain;
+            /** Total Level + Key scale level */
+            public int tll;
+            /** Key scale offset (Rks) */
+            public int rks;
+            /** Current state */
+            public EgState egMode;
+            /** Phase */
+            public int egPhase;
+            /** Phase increment amount */
+            public int egDPhase;
+            /** output */
+            public int egOut;
         }
-    }
 
-    ;
+        public byte vrc7Mode;
+        public byte adr;
+        public int out;
 
-    /* Phase incr table for Attack */
-    private int[][] dphaseARTable = new int[][] {
-            new int[16], new int[16], new int[16], new int[16],
-            new int[16], new int[16], new int[16], new int[16],
-            new int[16], new int[16], new int[16], new int[16],
-            new int[16], new int[16], new int[16], new int[16]};
-    /* Phase incr table for Decay and Release */
-    private int[][] dphaseDRTable = new int[][] {
-            new int[16], new int[16], new int[16], new int[16],
-            new int[16], new int[16], new int[16], new int[16],
-            new int[16], new int[16], new int[16], new int[16],
-            new int[16], new int[16], new int[16], new int[16]};
+//#ifndef EMU2413_COMPACTION
+        public int realStep;
+        public int opllTime;
+        public int opllStep;
+        public int prev, next;
+        public int[] sPrev = new int[2];
+        public int[] sNext = new int[2];
+        public float[][] pan = new float[][] {new float[2], new float[2], new float[2], new float[2], new float[2], new float[2], new float[2],
+                new float[2], new float[2], new float[2], new float[2], new float[2], new float[2], new float[2]};
+//#endif
 
-    /* KSL + TL Table */
-    private int[][][][] tllTable;//[16][8][1 << TL_BITS][4];
-    private int[][][] rksTable;//[2][8][2];
+        // Register
+        public byte[] reg = new byte[0x40];
+        public int[] slotOnFlag = new int[18];
 
-    /* Phase incr table for PG */
-    private int[][][] dphaseTable;//[512][8][16];
+        // Pitch Modulator
+        public int pmPhase;
+        public int lfoPm;
 
-    /***************************************************
+        // Amp Modulator
+        public int amPhase;
+        public int lfoAm;
 
-     Create tables
-     ****************************************************/
-    private int Min(int i, int j) {
-        if (i < j)
-            return i;
-        else
-            return j;
-    }
+        public int quality;
 
-    /* Table for AR to LogCurve. */
-    private void makeAdjustTable() {
-        int i;
+        /** Noise Generator */
+        public int noiseSeed;
 
-        AR_ADJUST_TABLE[0] = (1 << EG_BITS) - 1;
-        for (i = 1; i < (1 << EG_BITS); i++)
-            AR_ADJUST_TABLE[i] = (int) ((double) (1 << EG_BITS) - 1 - ((1 << EG_BITS) - 1) * Math.log(i) / Math.log(127));
-    }
+        // Channel Data
+        public int[] patchNumber = new int[9];
+        public int[] keyStatus = new int[9];
 
+        /** Slot */
+        public Slot[] slot = new Slot[18];
 
-    /* Table for dB(0 -- (1<<DB_BITS)-1) to Liner(0 -- DB2LIN_AMP_WIDTH) */
-    private void makeDB2LinTable() {
-        int i;
+        /** Voice Data */
+        public Slot.Patch[][] patch = new Slot.Patch[][] {
+                new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2]
+                , new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2]
+                , new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2]
+                , new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2]
+                , new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2]
+        };
+        public int[] patch_update = new int[2]; // flag for check patch update
 
-        for (i = 0; i < DB_MUTE + DB_MUTE; i++) {
-            DB2LIN_TABLE[i] = (short) ((double) ((1 << DB2LIN_AMP_BITS) - 1) * Math.pow(10, -(double) i * DB_STEP / 20));
-            if (i >= DB_MUTE) DB2LIN_TABLE[i] = 0;
-            DB2LIN_TABLE[i + DB_MUTE + DB_MUTE] = (short) (-DB2LIN_TABLE[i]);
+        public int mask;
+
+        /** Note: Dump size changed to 8 per instrument, since 9-15 were unused. -VB */
+        private static final int OPLL_TONE_NUM = 1;
+        private static final byte[][] default_inst = new byte[][] {
+                new byte[] {
+                        // YM2413 tone by okazaki@angel.ne.jp
+                        0x49, 0x4c, 0x4c, 0x32, 0x00, 0x00, 0x00, 0x00,
+                        0x61, 0x61, 0x1e, 0x17, (byte) 0xf0, 0x7f, 0x00, 0x17,
+                        0x13, 0x41, 0x16, 0x0e, (byte) 0xfd, (byte) 0xf4, 0x23, 0x23,
+                        0x03, 0x01, (byte) 0x9a, 0x04, (byte) 0xf3, (byte) 0xf3, 0x13, (byte) 0xf3,
+                        0x11, 0x61, 0x0e, 0x07, (byte) 0xfa, 0x64, 0x70, 0x17,
+                        0x22, 0x21, 0x1e, 0x06, (byte) 0xf0, 0x76, 0x00, 0x28,
+                        0x21, 0x22, 0x16, 0x05, (byte) 0xf0, 0x71, 0x00, 0x18,
+                        0x21, 0x61, 0x1d, 0x07, (byte) 0x82, (byte) 0x80, 0x17, 0x17,
+                        0x23, 0x21, 0x2d, 0x16, (byte) 0x90, (byte) 0x90, 0x00, 0x07,
+                        0x21, 0x21, 0x1b, 0x06, 0x64, 0x65, 0x10, 0x17,
+                        0x21, 0x21, 0x0b, 0x1a, (byte) 0x85, (byte) 0xa0, 0x70, 0x07,
+                        0x23, 0x01, (byte) 0x83, 0x10, (byte) 0xff, (byte) 0xb4, 0x10, (byte) 0xf4,
+                        (byte) 0x97, (byte) 0xc1, 0x20, 0x07, (byte) 0xff, (byte) 0xf4, 0x22, 0x22,
+                        0x61, 0x00, 0x0c, 0x05, (byte) 0xc2, (byte) 0xf6, 0x40, 0x44,
+                        0x01, 0x01, 0x56, 0x03, (byte) 0x94, (byte) (byte) 0xc2, 0x03, 0x12,
+                        0x21, 0x01, (byte) 0x89, 0x03, (byte) 0xf1, (byte) 0xe4, (byte) 0xf0, 0x23,
+                        0x07, 0x21, 0x14, 0x00, (byte) 0xee, (byte) 0xf8, (byte) 0xff, (byte) 0xf8,
+                        0x01, 0x31, 0x00, 0x00, (byte) 0xf8, (byte) 0xf7, (byte) 0xf8, (byte) 0xf7,
+                        0x25, 0x11, 0x00, 0x00, (byte) 0xf8, (byte) 0xfa, (byte) 0xf8, 0x55,
+                }
+        };
+
+        /* Size of Sintable ( 8 -- 18 can be used. 9 recommended.) */
+        private static final int PG_BITS = 9;
+        private static final int PG_WIDTH = (1 << 9);
+
+        /* Phase increment counter */
+        private static final int DP_BITS = 18;
+        private static final int DP_WIDTH = (1 << 18);
+        private static final int DP_BASE_BITS = 18 - 9;
+
+        /* Dynamic range (Accuracy of sin table) */
+        private static final double DB_STEP = 48.0 / (1 << 8);
+        private static final int DB_MUTE = 1 << 8;
+
+        /* Dynamic range of envelope */
+        private static final double EG_STEP = 0.375;
+        private static final int EG_BITS = 7;
+
+        /* Dynamic range of total level */
+        private static final double TL_STEP = 0.75;
+
+        /* Dynamic range of sustine level */
+        private static final double SL_STEP = 3.0;
+
+        private static int eg2db(int d) {
+            return d * (int) (EG_STEP / DB_STEP);
         }
-    }
 
-    /* Liner(+0.0 - +1.0) to dB((1<<DB_BITS) - 1 -- 0) */
-    private int lin2db(double d) {
-        if (d == 0)
-            return (DB_MUTE - 1);
-        else
-            return Min(-(int) (20.0 * Math.log10(d) / DB_STEP), DB_MUTE - 1);  /* 0 -- 127 */
-    }
-
-    /* Sin Table */
-    private void makeSinTable() {
-        int i;
-
-        for (i = 0; i < PG_WIDTH / 4; i++) {
-            fullsintable[i] = (int) lin2db(Math.sin(2.0 * PI * i / PG_WIDTH));
+        private static int tl2eg(int d) {
+            return d * (int) (TL_STEP / EG_STEP);
         }
 
-        for (i = 0; i < PG_WIDTH / 4; i++) {
-            fullsintable[PG_WIDTH / 2 - 1 - i] = fullsintable[i];
+        private static int sl2eg(int d) {
+            return d * (int) (SL_STEP / EG_STEP);
         }
 
-        for (i = 0; i < PG_WIDTH / 2; i++) {
-            fullsintable[PG_WIDTH / 2 + i] = (int) (DB_MUTE + DB_MUTE + fullsintable[i]);
+        private static int dbPos(double x) {
+            return (int) (x / DB_STEP);
         }
 
-        for (i = 0; i < PG_WIDTH / 2; i++)
-            halfsintable[i] = fullsintable[i];
-        for (i = PG_WIDTH / 2; i < PG_WIDTH; i++)
-            halfsintable[i] = fullsintable[0];
+        private static int dbNeg(double x) {
+            return (int) (DB_MUTE + DB_MUTE + x / DB_STEP);
+        }
 
-        waveform[0] = fullsintable;
-        waveform[1] = halfsintable;
-    }
+        /* Bits for liner value */
+        private static final int DB2LIN_AMP_BITS = 8;
+        private static final int SLOT_AMP_BITS = 8;
 
-    private double saw(double phase) {
-        if (phase <= PI / 2)
-            return phase * 2 / PI;
-        else if (phase <= PI * 3 / 2)
-            return 2.0 - (phase * 2 / PI);
-        else
-            return -4.0 + phase * 2 / PI;
-    }
+        /* Bits for envelope phase incremental counter */
+        private static final int EG_DP_BITS = 22;
+        private static final int EG_DP_WIDTH = 1 << 22;
 
-    /* Table for Pitch Modulator */
-    private void makePmTable() {
-        int i;
+        /* Bits for Pitch and Amp modulator */
+        private static final int PM_PG_BITS = 8;
+        private static final int PM_PG_WIDTH = (1 << 8);
+        private static final int PM_DP_BITS = 16;
+        private static final int PM_DP_WIDTH = (1 << 16);
+        private static final int AM_PG_BITS = 8;
+        private static final int AM_PG_WIDTH = (1 << 8);
+        private static final int AM_DP_BITS = 16;
+        private static final int AM_DP_WIDTH = (1 << 16);
 
-        for (i = 0; i < PM_PG_WIDTH; i++)
-            /* pmtable[i] = (e_int32) ((double) PM_AMP * pow (2, (double) PM_DEPTH * sin (2.0 * PI * i / PM_PG_WIDTH) / 1200)); */
-            pmtable[i] = (int) ((double) PM_AMP * Math.pow(2, (double) PM_DEPTH * saw(2.0 * PI * i / PM_PG_WIDTH) / 1200));
-    }
+        // PM table is calculated by PM_AMP * pow(2 , PM_DEPTH * sin(x) / 1200)
+        private static final int PM_AMP_BITS = 8;
+        private static final int PM_AMP = 1 << 8;
 
-    /* Table for Amp Modulator */
-    private void makeAmTable() {
-        int i;
+        // PM speed(Hz) and depth(cent)
+        private static final double PM_SPEED = 6.4;
+        private static final double PM_DEPTH = 13.75;
 
-        for (i = 0; i < AM_PG_WIDTH; i++)
-            /* amtable[i] = (e_int32) ((double) AM_DEPTH / 2 / DB_STEP * (1.0 + sin (2.0 * PI * i / PM_PG_WIDTH))); */
-            amtable[i] = (int) ((double) AM_DEPTH / 2 / DB_STEP * (1.0 + saw(2.0 * PI * i / PM_PG_WIDTH)));
-    }
+        // AM speed(Hz) and depth(dB)
+        private static final double AM_SPEED = 3.6413;
+        private static final double AM_DEPTH = 4.875;
 
-    /* Phase increment counter table */
-    private void makeDphaseTable() {
-        int fnum, block, ML;
-        int[] mltable = new int[]
-                {1, 1 * 2, 2 * 2, 3 * 2, 4 * 2, 5 * 2, 6 * 2, 7 * 2, 8 * 2, 9 * 2, 10 * 2, 10 * 2, 12 * 2, 12 * 2, 15 * 2, 15 * 2};
+        /** Cut the lower b bit(s) off. */
+        private static int highBits(int c, int b) {
+            return c >> b;
+        }
 
-        dphaseTable = new int[512][][];
-        for (fnum = 0; fnum < 512; fnum++) {
-            dphaseTable[fnum] = new int[8][];
-            for (block = 0; block < 8; block++) {
-                dphaseTable[fnum][block] = new int[16];
-                for (ML = 0; ML < 16; ML++) {
-                    int x = fnum * mltable[ML];
-                    x = x << (int) block;
-                    x = x >> (20 - DP_BITS);
-                    dphaseTable[fnum][block][ML] = (rate == 49716 ? x : (int) ((double) (x) * clk / 72 / rate + 0.5));
+        /** Leave the lower b bit(s). */
+        private static int lowBits(int c, int b) {
+            return c & ((1 << b) - 1);
+        }
+
+        /** Expand x which is s bits to d bits. */
+        private static int expandBits(int x, int s, int d) {
+            return x << (d - s);
+        }
+
+        /** Expand x which is s bits to d bits and fill expanded bits '1' */
+        private static int expandBitsX(int x, int s, int d) {
+            return (x << (d - s)) | ((1 << (d - s)) - 1);
+        }
+
+        /** Adjust envelope speed which depends on sampling rate. */
+        private int adjustRate(int x) {
+            return rate == 49716 ? x : (int) ((double) x * clk / 72 / rate + 0.5); //  added 0.5 to round the value
+        }
+
+        private Slot mod(int x) {
+            return (this.slot[x << 1]);
+        }
+
+        private Slot car(int x) {
+            return this.slot[(x << 1) | 1];
+        }
+
+        private static int bit(int s, int b) {
+            return ((s >> b) & 1);
+        }
+
+        /** Input clock */
+        private int clk = 844451141;
+        /** Sampling rate */
+        private int rate = 3354932;
+
+        // WaveTable for each envelope amp
+        private static int[] fullSinTable = new int[PG_WIDTH];
+        private static int[] halfSinTable = new int[PG_WIDTH];
+
+        private static int[][] waveForm = new int[2][];
+
+        // LFO Table
+        private static int[] pmTable = new int[PM_PG_WIDTH];
+        private static int[] amTable = new int[AM_PG_WIDTH];
+
+        // Phase delta for LFO
+        private int pmDPhase;
+        private int amDPhase;
+
+        /** dB to Liner table */
+        private static short[] db2LinTable = new short[(DB_MUTE + DB_MUTE) * 2];
+
+        /** Liner to Log curve conversion table (for Attack rate). */
+        private static int[] arAdjustTable = new int[1 << EG_BITS];
+
+        /** Empty Voice data */
+        private static final Slot.Patch nullPatch = new Slot.Patch();
+
+        /** Basic Voice Data */
+        private Slot.Patch[][] defaultPatch;
+
+        /** Definition of envelope mode */
+        private enum EgState {
+            READY, ATTACK, DECAY, SUSHOLD, SUSTAIN, RELEASE, SETTLE, FINISH;
+        }
+
+        /** Phase incr table for Attack */
+        private int[][] dPhaseArTable = new int[][] {
+                new int[16], new int[16], new int[16], new int[16],
+                new int[16], new int[16], new int[16], new int[16],
+                new int[16], new int[16], new int[16], new int[16],
+                new int[16], new int[16], new int[16], new int[16]};
+        /** Phase incr table for Decay and Release */
+        private int[][] dPhaseDrTable = new int[][] {
+                new int[16], new int[16], new int[16], new int[16],
+                new int[16], new int[16], new int[16], new int[16],
+                new int[16], new int[16], new int[16], new int[16],
+                new int[16], new int[16], new int[16], new int[16]};
+
+        /** KSL + TL Table */
+        private static int[][][][] tllTable;
+        private static int[][][] rksTable;
+
+        /** Phase incr table for PG */
+        private int[][][] dPhaseTable;
+
+        /* Table for AR to LogCurve. */
+        static {
+            arAdjustTable[0] = (1 << EG_BITS) - 1;
+            for (int i = 1; i < (1 << EG_BITS); i++)
+                arAdjustTable[i] = (int) ((double) (1 << EG_BITS) - 1 - ((1 << EG_BITS) - 1) * Math.log(i) / Math.log(127));
+        }
+
+        /* Table for dB(0 -- (1<<DB_BITS)-1) to Liner(0 -- DB2LIN_AMP_WIDTH) */
+        static {
+            for (int i = 0; i < DB_MUTE + DB_MUTE; i++) {
+                db2LinTable[i] = (short) ((double) ((1 << DB2LIN_AMP_BITS) - 1) * Math.pow(10, -(double) i * DB_STEP / 20));
+                if (i >= DB_MUTE) db2LinTable[i] = 0;
+                db2LinTable[i + DB_MUTE + DB_MUTE] = (short) (-db2LinTable[i]);
+            }
+        }
+
+        /** Liner(+0.0 - +1.0) to dB((1<<DB_BITS) - 1 -- 0) */
+        private static int lin2db(double d) {
+            if (d == 0)
+                return (DB_MUTE - 1);
+            else {
+                // 0 -- 127
+                int i = -(int) (20.0 * Math.log10(d) / DB_STEP);
+                return Math.min(i, DB_MUTE - 1);
+            }
+        }
+
+        /* Sin Table */
+        static {
+            for (int i = 0; i < PG_WIDTH / 4; i++) {
+                fullSinTable[i] = lin2db(Math.sin(2.0 * Math.PI * i / PG_WIDTH));
+            }
+
+            for (int i = 0; i < PG_WIDTH / 4; i++) {
+                fullSinTable[PG_WIDTH / 2 - 1 - i] = fullSinTable[i];
+            }
+
+            for (int i = 0; i < PG_WIDTH / 2; i++) {
+                fullSinTable[PG_WIDTH / 2 + i] = DB_MUTE + DB_MUTE + fullSinTable[i];
+            }
+
+            System.arraycopy(fullSinTable, 0, halfSinTable, 0, PG_WIDTH / 2);
+            for (int i = PG_WIDTH / 2; i < PG_WIDTH; i++)
+                halfSinTable[i] = fullSinTable[0];
+
+            waveForm[0] = fullSinTable;
+            waveForm[1] = halfSinTable;
+        }
+
+        private static double saw(double phase) {
+            if (phase <= Math.PI / 2)
+                return phase * 2 / Math.PI;
+            else if (phase <= Math.PI * 3 / 2)
+                return 2.0 - (phase * 2 / Math.PI);
+            else
+                return -4.0 + phase * 2 / Math.PI;
+        }
+
+        /* Table for Pitch Modulator */
+        static {
+            for (int i = 0; i < PM_PG_WIDTH; i++)
+                pmTable[i] = (int) ((double) PM_AMP * Math.pow(2, PM_DEPTH * saw(2.0 * Math.PI * i / PM_PG_WIDTH) / 1200));
+        }
+
+        /* Table for Amp Modulator */
+        static {
+            for (int i = 0; i < AM_PG_WIDTH; i++)
+                amTable[i] = (int) (AM_DEPTH / 2 / DB_STEP * (1.0 + saw(2.0 * Math.PI * i / PM_PG_WIDTH)));
+        }
+
+        /* Phase increment counter table */
+        private void makeDPhaseTable() {
+            final int[] mlTable = new int[] {
+                    1, 1 * 2, 2 * 2, 3 * 2, 4 * 2, 5 * 2, 6 * 2, 7 * 2, 8 * 2,
+                    9 * 2, 10 * 2, 10 * 2, 12 * 2, 12 * 2, 15 * 2, 15 * 2
+            };
+
+            dPhaseTable = new int[512][][];
+            for (int fnum = 0; fnum < 512; fnum++) {
+                dPhaseTable[fnum] = new int[8][];
+                for (int block = 0; block < 8; block++) {
+                    dPhaseTable[fnum][block] = new int[16];
+                    for (int ml = 0; ml < 16; ml++) {
+                        int x = fnum * mlTable[ml];
+                        x = x << block;
+                        x = x >> (20 - DP_BITS);
+                        dPhaseTable[fnum][block][ml] = (rate == 49716 ? x : (int) ((double) (x) * clk / 72 / rate + 0.5));
+                    }
                 }
             }
         }
-        //dphaseTable[fnum][block][ML] = RATE_ADJUST(((fnum * mltable[ML]) << block) >> (20 - DP_BITS));
-        //#define RATE_ADJUST(x) (rate==49716?x:(e_(int)32)((double)(x)*clk/72/rate + 0.5))        /* added 0.5 to round the value*/
-    }
 
-    private void makeTllTable() {
-        //#define dB2(x) ((x)*2)
+        static {
 
-        double[] kltable = new double[] {
-                2 * 0.000, 2 * 9.000, 2 * 12.000, 2 * 13.875
-                , 2 * 15.000, 2 * 16.125, 2 * 16.875, 2 * 17.625
-                , 2 * 18.000, 2 * 18.750, 2 * 19.125, 2 * 19.500
-                , 2 * 19.875, 2 * 20.250, 2 * 20.625, 2 * 21.000
-        };
+            final double[] klTable = new double[] {
+                    2 * 0.000, 2 * 9.000, 2 * 12.000, 2 * 13.875
+                    , 2 * 15.000, 2 * 16.125, 2 * 16.875, 2 * 17.625
+                    , 2 * 18.000, 2 * 18.750, 2 * 19.125, 2 * 19.500
+                    , 2 * 19.875, 2 * 20.250, 2 * 20.625, 2 * 21.000
+            };
 
-        int tmp;
-        int fnum, block, TL, KL;
-
-        tllTable = new int[16][][][];
-        for (fnum = 0; fnum < 16; fnum++) {
-            tllTable[fnum] = new int[8][][];
-            for (block = 0; block < 8; block++) {
-                tllTable[fnum][block] = new int[64][];
-                for (TL = 0; TL < 64; TL++) {
-                    tllTable[fnum][block][TL] = new int[4];
-                    for (KL = 0; KL < 4; KL++) {
-                        //#define TL2EG(d) ((d)*(e_int32)(TL_STEP/EG_STEP))
-                        if (KL == 0) {
-                            tllTable[fnum][block][TL][KL] = (int) ((TL) * (int) (TL_STEP / EG_STEP));
-                        } else {
-                            tmp = (int) (kltable[fnum] - 2 * (3.000) * (7 - block));
-                            if (tmp <= 0)
-                                tllTable[fnum][block][TL][KL] = (int) ((TL) * (int) (TL_STEP / EG_STEP));
-                            else
-                                tllTable[fnum][block][TL][KL] = (int) (((tmp >> (3 - KL)) / EG_STEP) + ((TL) * (int) (TL_STEP / EG_STEP)));
+            tllTable = new int[16][][][];
+            for (int fNum = 0; fNum < 16; fNum++) {
+                tllTable[fNum] = new int[8][][];
+                for (int block = 0; block < 8; block++) {
+                    tllTable[fNum][block] = new int[64][];
+                    for (int tl = 0; tl < 64; tl++) {
+                        tllTable[fNum][block][tl] = new int[4];
+                        for (int kl = 0; kl < 4; kl++) {
+                            if (kl == 0) {
+                                tllTable[fNum][block][tl][kl] = tl * (int) (TL_STEP / EG_STEP);
+                            } else {
+                                int tmp = (int) (klTable[fNum] - 2 * 3.000 * (7 - block));
+                                if (tmp <= 0)
+                                    tllTable[fNum][block][tl][kl] = tl * (int) (TL_STEP / EG_STEP);
+                                else
+                                    tllTable[fNum][block][tl][kl] = (int) (((tmp >> (3 - kl)) / EG_STEP) + (tl * (int) (TL_STEP / EG_STEP)));
+                            }
                         }
                     }
                 }
             }
         }
-    }
 
-    //# ifdef USE_SPEC_ENV_SPEED
-    private double[][] attacktime = new double[][] {
-            new double[] {0, 0, 0, 0},
-            new double[] {1730.15, 1400.60, 1153.43, 988.66},
-            new double[] {865.08, 700.30, 576.72, 494.33},
-            new double[] {432.54, 350.15, 288.36, 247.16},
-            new double[] {216.27, 175.07, 144.18, 123.58},
-            new double[] {108.13, 87.54, 72.09, 61.79},
-            new double[] {54.07, 43.77, 36.04, 30.90},
-            new double[] {27.03, 21.88, 18.02, 15.45},
-            new double[] {13.52, 10.94, 9.01, 7.72},
-            new double[] {6.76, 5.47, 4.51, 3.86},
-            new double[] {3.38, 2.74, 2.25, 1.93},
-            new double[] {1.69, 1.37, 1.13, 0.97},
-            new double[] {0.84, 0.70, 0.60, 0.54},
-            new double[] {0.50, 0.42, 0.34, 0.30},
-            new double[] {0.28, 0.22, 0.18, 0.14},
-            new double[] {0.00, 0.00, 0.00, 0.00}
-    };
-
-    private double[][] decaytime = new double[][] {
-            new double[] {0, 0, 0, 0},
-            new double[] {20926.60, 16807.20, 14006.00, 12028.60},
-            new double[] {10463.30, 8403.58, 7002.98, 6014.32},
-            new double[] {5231.64, 4201.79, 3501.49, 3007.16},
-            new double[] {2615.82, 2100.89, 1750.75, 1503.58},
-            new double[] {1307.91, 1050.45, 875.37, 751.79},
-            new double[] {653.95, 525.22, 437.69, 375.90},
-            new double[] {326.98, 262.61, 218.84, 187.95},
-            new double[] {163.49, 131.31, 109.42, 93.97},
-            new double[] {81.74, 65.65, 54.71, 46.99},
-            new double[] {40.87, 32.83, 27.36, 23.49},
-            new double[] {20.44, 16.41, 13.68, 11.75},
-            new double[] {10.22, 8.21, 6.84, 5.87},
-            new double[] {5.11, 4.10, 3.42, 2.94},
-            new double[] {2.55, 2.05, 1.71, 1.47},
-            new double[] {1.27, 1.27, 1.27, 1.27}
-    };
-    //#endif
-
-    /* Rate Table for Attack */
-    private void makeDphaseARTable() {
-        int AR, Rks, RM, RL;
-
-        //# ifdef USE_SPEC_ENV_SPEED
-        int[][] attacktable = new int[][] {
-                new int[4], new int[4], new int[4], new int[4],
-                new int[4], new int[4], new int[4], new int[4],
-                new int[4], new int[4], new int[4], new int[4],
-                new int[4], new int[4], new int[4], new int[4]
+//# ifdef USE_SPEC_ENV_SPEED
+        private static final double[][] attackTime = new double[][] {
+                new double[] {0, 0, 0, 0},
+                new double[] {1730.15, 1400.60, 1153.43, 988.66},
+                new double[] {865.08, 700.30, 576.72, 494.33},
+                new double[] {432.54, 350.15, 288.36, 247.16},
+                new double[] {216.27, 175.07, 144.18, 123.58},
+                new double[] {108.13, 87.54, 72.09, 61.79},
+                new double[] {54.07, 43.77, 36.04, 30.90},
+                new double[] {27.03, 21.88, 18.02, 15.45},
+                new double[] {13.52, 10.94, 9.01, 7.72},
+                new double[] {6.76, 5.47, 4.51, 3.86},
+                new double[] {3.38, 2.74, 2.25, 1.93},
+                new double[] {1.69, 1.37, 1.13, 0.97},
+                new double[] {0.84, 0.70, 0.60, 0.54},
+                new double[] {0.50, 0.42, 0.34, 0.30},
+                new double[] {0.28, 0.22, 0.18, 0.14},
+                new double[] {0.00, 0.00, 0.00, 0.00}
         };
 
-        for (RM = 0; RM < 16; RM++)
-            for (RL = 0; RL < 4; RL++) {
-                if (RM == 0)
-                    attacktable[RM][RL] = 0;
-                else if (RM == 15)
-                    attacktable[RM][RL] = (int) EG_DP_WIDTH;
-                else
-                    attacktable[RM][RL] = (int) ((double) (1 << EG_DP_BITS) / (attacktime[RM][RL] * 3579545 / 72000));
-
-            }
-        //#endif
-
-        for (AR = 0; AR < 16; AR++)
-            for (Rks = 0; Rks < 16; Rks++) {
-                RM = AR + (Rks >> 2);
-                RL = Rks & 3;
-                if (RM > 15)
-                    RM = 15;
-                switch (AR) {
-                case 0:
-                    dphaseARTable[AR][Rks] = 0;
-                    break;
-                case 15:
-                    dphaseARTable[AR][Rks] = 0;/*EG_DP_WIDTH;*/
-                    break;
-                default:
-                    //#ifdef USE_SPEC_ENV_SPEED
-                    //#define RATE_ADJUST(x) (rate==49716?x:(e_(int)32)((double)(x)*clk/72/rate + 0.5))        /* added 0.5 to round the value*/
-                    dphaseARTable[AR][Rks] = (rate == 49716 ? attacktable[RM][RL] : (int) ((double) (attacktable[RM][RL]) * clk / 72 / rate + 0.5));
-                    //#else
-                    //dphaseARTable[AR][Rks] = RATE_ADJUST((3 * (RL + 4) << (RM + 1)));
-                    //#endif
-                    break;
-                }
-            }
-    }
-
-    /* Rate Table for Decay and Release */
-    private void makeDphaseDRTable() {
-        int DR, Rks, RM, RL;
-
-        //# ifdef USE_SPEC_ENV_SPEED
-        int[][] decaytable = new int[][] {
-                new int[4], new int[4], new int[4], new int[4],
-                new int[4], new int[4], new int[4], new int[4],
-                new int[4], new int[4], new int[4], new int[4],
-                new int[4], new int[4], new int[4], new int[4]
+        private static final double[][] decayTime = new double[][] {
+                new double[] {0, 0, 0, 0},
+                new double[] {20926.60, 16807.20, 14006.00, 12028.60},
+                new double[] {10463.30, 8403.58, 7002.98, 6014.32},
+                new double[] {5231.64, 4201.79, 3501.49, 3007.16},
+                new double[] {2615.82, 2100.89, 1750.75, 1503.58},
+                new double[] {1307.91, 1050.45, 875.37, 751.79},
+                new double[] {653.95, 525.22, 437.69, 375.90},
+                new double[] {326.98, 262.61, 218.84, 187.95},
+                new double[] {163.49, 131.31, 109.42, 93.97},
+                new double[] {81.74, 65.65, 54.71, 46.99},
+                new double[] {40.87, 32.83, 27.36, 23.49},
+                new double[] {20.44, 16.41, 13.68, 11.75},
+                new double[] {10.22, 8.21, 6.84, 5.87},
+                new double[] {5.11, 4.10, 3.42, 2.94},
+                new double[] {2.55, 2.05, 1.71, 1.47},
+                new double[] {1.27, 1.27, 1.27, 1.27}
         };
+//#endif
 
-        for (RM = 0; RM < 16; RM++)
-            for (RL = 0; RL < 4; RL++)
-                if (RM == 0)
-                    decaytable[RM][RL] = 0;
-                else
-                    decaytable[RM][RL] = (int) ((double) (1 << EG_DP_BITS) / (decaytime[RM][RL] * 3579545 / 72000));
-        //#endif
+        /* Rate Table for Attack */
+        private void makeDPhaseArTable() {
 
-        for (DR = 0; DR < 16; DR++)
-            for (Rks = 0; Rks < 16; Rks++) {
-                RM = DR + (Rks >> 2);
-                RL = Rks & 3;
-                if (RM > 15)
-                    RM = 15;
-                switch (DR) {
-                case 0:
-                    dphaseDRTable[DR][Rks] = 0;
-                    break;
-                default:
-                    //#ifdef USE_SPEC_ENV_SPEED
-                    dphaseDRTable[DR][Rks] = (rate == 49716 ? decaytable[RM][RL] : (int) ((double) (decaytable[RM][RL]) * clk / 72 / rate + 0.5)); //RATE_ADJUST(decaytable[RM][RL]);
-                    //#else
-                    //dphaseDRTable[DR][Rks] = RATE_ADJUST((RL + 4) << (RM - 1));
-                    //#endif
-                    break;
-                }
-            }
-    }
+//# ifdef USE_SPEC_ENV_SPEED
+            final int[][] attackTable = new int[][] {
+                    new int[4], new int[4], new int[4], new int[4],
+                    new int[4], new int[4], new int[4], new int[4],
+                    new int[4], new int[4], new int[4], new int[4],
+                    new int[4], new int[4], new int[4], new int[4]
+            };
 
-    private void makeRksTable() {
-
-        int fnum8, block, KR;
-
-        rksTable = new int[2][][];
-        for (fnum8 = 0; fnum8 < 2; fnum8++) {
-            rksTable[fnum8] = new int[8][];
-            for (block = 0; block < 8; block++) {
-                rksTable[fnum8][block] = new int[2];
-                for (KR = 0; KR < 2; KR++) {
-                    if (KR != 0)
-                        rksTable[fnum8][block][KR] = (block << 1) + fnum8;
+            for (int rm = 0; rm < 16; rm++)
+                for (int rl = 0; rl < 4; rl++) {
+                    if (rm == 0)
+                        attackTable[rm][rl] = 0;
+                    else if (rm == 15)
+                        attackTable[rm][rl] = EG_DP_WIDTH;
                     else
-                        rksTable[fnum8][block][KR] = block >> 1;
+                        attackTable[rm][rl] = (int) ((double) (1 << EG_DP_BITS) / (attackTime[rm][rl] * 3579545 / 72000));
+
+                }
+//#endif
+
+            for (int ar = 0; ar < 16; ar++)
+                for (int rks = 0; rks < 16; rks++) {
+                    int rm = ar + (rks >> 2);
+                    int rl = rks & 3;
+                    if (rm > 15)
+                        rm = 15;
+                    switch (ar) {
+                    case 0:
+                        dPhaseArTable[ar][rks] = 0;
+                        break;
+                    case 15:
+                        dPhaseArTable[ar][rks] = 0;
+                        break;
+                    default:
+                        dPhaseArTable[ar][rks] = (rate == 49716 ? attackTable[rm][rl] : (int) ((double) (attackTable[rm][rl]) * clk / 72 / rate + 0.5));
+                        break;
+                    }
+                }
+        }
+
+        /* Rate Table for Decay and Release */
+        private void makeDPhaseDrTable() {
+//# ifdef USE_SPEC_ENV_SPEED
+            int[][] decaytable = new int[][] {
+                    new int[4], new int[4], new int[4], new int[4],
+                    new int[4], new int[4], new int[4], new int[4],
+                    new int[4], new int[4], new int[4], new int[4],
+                    new int[4], new int[4], new int[4], new int[4]
+            };
+
+            for (int rm = 0; rm < 16; rm++)
+                for (int rl = 0; rl < 4; rl++)
+                    if (rm == 0)
+                        decaytable[rm][rl] = 0;
+                    else
+                        decaytable[rm][rl] = (int) ((double) (1 << EG_DP_BITS) / (decayTime[rm][rl] * 3579545 / 72000));
+//#endif
+
+            for (int dr = 0; dr < 16; dr++)
+                for (int rks = 0; rks < 16; rks++) {
+                    int rm = dr + (rks >> 2);
+                    int rl = rks & 3;
+                    if (rm > 15)
+                        rm = 15;
+                    switch (dr) {
+                    case 0:
+                        dPhaseDrTable[dr][rks] = 0;
+                        break;
+                    default:
+                        dPhaseDrTable[dr][rks] = (rate == 49716 ? decaytable[rm][rl] : (int) ((double) (decaytable[rm][rl]) * clk / 72 / rate + 0.5));
+                        break;
+                    }
+                }
+        }
+
+        static {
+            rksTable = new int[2][][];
+            for (int fNum8 = 0; fNum8 < 2; fNum8++) {
+                rksTable[fNum8] = new int[8][];
+                for (int block = 0; block < 8; block++) {
+                    rksTable[fNum8][block] = new int[2];
+                    for (int kr = 0; kr < 2; kr++) {
+                        if (kr != 0)
+                            rksTable[fNum8][block][kr] = (block << 1) + fNum8;
+                        else
+                            rksTable[fNum8][block][kr] = block >> 1;
+                    }
                 }
             }
         }
-    }
 
-    //private void OPLL_dump2patch(byte[] dump, OPLL_PATCH[] patch)
-    private void OPLL_dump2patch(byte[] dump, int startAdr, OPLL_PATCH[][] patch) {
-        patch[startAdr][0].AM = (int) ((dump[startAdr * 8 + 0] >> 7) & 1);
-        patch[startAdr][1].AM = (int) ((dump[startAdr * 8 + 1] >> 7) & 1);
-        patch[startAdr][0].PM = (int) ((dump[startAdr * 8 + 0] >> 6) & 1);
-        patch[startAdr][1].PM = (int) ((dump[startAdr * 8 + 1] >> 6) & 1);
-        patch[startAdr][0].EG = (int) ((dump[startAdr * 8 + 0] >> 5) & 1);
-        patch[startAdr][1].EG = (int) ((dump[startAdr * 8 + 1] >> 5) & 1);
-        patch[startAdr][0].KR = (int) ((dump[startAdr * 8 + 0] >> 4) & 1);
-        patch[startAdr][1].KR = (int) ((dump[startAdr * 8 + 1] >> 4) & 1);
-        patch[startAdr][0].ML = (int) ((dump[startAdr * 8 + 0]) & 15);
-        patch[startAdr][1].ML = (int) ((dump[startAdr * 8 + 1]) & 15);
-        patch[startAdr][0].KL = (int) ((dump[startAdr * 8 + 2] >> 6) & 3);
-        patch[startAdr][1].KL = (int) ((dump[startAdr * 8 + 3] >> 6) & 3);
-        patch[startAdr][0].TL = (int) ((dump[startAdr * 8 + 2]) & 63);
-        patch[startAdr][0].FB = (int) ((dump[startAdr * 8 + 3]) & 7);
-        patch[startAdr][0].WF = (int) ((dump[startAdr * 8 + 3] >> 3) & 1);
-        patch[startAdr][1].WF = (int) ((dump[startAdr * 8 + 3] >> 4) & 1);
-        patch[startAdr][0].AR = (int) ((dump[startAdr * 8 + 4] >> 4) & 15);
-        patch[startAdr][1].AR = (int) ((dump[startAdr * 8 + 5] >> 4) & 15);
-        patch[startAdr][0].DR = (int) ((dump[startAdr * 8 + 4]) & 15);
-        patch[startAdr][1].DR = (int) ((dump[startAdr * 8 + 5]) & 15);
-        patch[startAdr][0].SL = (int) ((dump[startAdr * 8 + 6] >> 4) & 15);
-        patch[startAdr][1].SL = (int) ((dump[startAdr * 8 + 7] >> 4) & 15);
-        patch[startAdr][0].RR = (int) ((dump[startAdr * 8 + 6]) & 15);
-        patch[startAdr][1].RR = (int) ((dump[startAdr * 8 + 7]) & 15);
-    }
-
-    private void OPLL_getDefaultPatch(int num, OPLL_PATCH[][] patch) {
-        //OPLL_dump2patch(default_inst[type][num * 8], patch);
-        OPLL_dump2patch(default_inst[0], num, patch);
-    }
-
-    private void makeDefaultPatch() {
-        int j;
-
-        for (j = 0; j < 19; j++)
-            OPLL_getDefaultPatch(j, default_patch);
-
-    }
-
-    private void OPLL_setPatch(OPLL opll, byte[] dump) {
-        OPLL_PATCH[][] patch = new OPLL_PATCH[2][];
-        int i;
-
-        for (i = 0; i < 19; i++) {
-            OPLL_dump2patch(dump, i, patch);
-            opll.patch[0][i] = patch[0][i];
-            opll.patch[1][i] = patch[1][i];
+        private void dump2patch(byte[] dump, int startAdr, Slot.Patch[][] patch) {
+            patch[startAdr][0].am = (dump[startAdr * 8 + 0] >> 7) & 1;
+            patch[startAdr][1].am = (dump[startAdr * 8 + 1] >> 7) & 1;
+            patch[startAdr][0].pm = (dump[startAdr * 8 + 0] >> 6) & 1;
+            patch[startAdr][1].pm = (dump[startAdr * 8 + 1] >> 6) & 1;
+            patch[startAdr][0].eg = (dump[startAdr * 8 + 0] >> 5) & 1;
+            patch[startAdr][1].eg = (dump[startAdr * 8 + 1] >> 5) & 1;
+            patch[startAdr][0].kr = (dump[startAdr * 8 + 0] >> 4) & 1;
+            patch[startAdr][1].kr = (dump[startAdr * 8 + 1] >> 4) & 1;
+            patch[startAdr][0].ml = (dump[startAdr * 8 + 0]) & 15;
+            patch[startAdr][1].ml = (dump[startAdr * 8 + 1]) & 15;
+            patch[startAdr][0].kl = (dump[startAdr * 8 + 2] >> 6) & 3;
+            patch[startAdr][1].kl = (dump[startAdr * 8 + 3] >> 6) & 3;
+            patch[startAdr][0].tl = (dump[startAdr * 8 + 2]) & 63;
+            patch[startAdr][0].fb = (dump[startAdr * 8 + 3]) & 7;
+            patch[startAdr][0].wf = (dump[startAdr * 8 + 3] >> 3) & 1;
+            patch[startAdr][1].wf = (dump[startAdr * 8 + 3] >> 4) & 1;
+            patch[startAdr][0].ar = (dump[startAdr * 8 + 4] >> 4) & 15;
+            patch[startAdr][1].ar = (dump[startAdr * 8 + 5] >> 4) & 15;
+            patch[startAdr][0].dr = (dump[startAdr * 8 + 4]) & 15;
+            patch[startAdr][1].dr = (dump[startAdr * 8 + 5]) & 15;
+            patch[startAdr][0].sl = (dump[startAdr * 8 + 6] >> 4) & 15;
+            patch[startAdr][1].sl = (dump[startAdr * 8 + 7] >> 4) & 15;
+            patch[startAdr][0].rr = (dump[startAdr * 8 + 6]) & 15;
+            patch[startAdr][1].rr = (dump[startAdr * 8 + 7]) & 15;
         }
-    }
 
-    private void OPLL_patch2dump(OPLL_PATCH[] patch, byte[] dump) {
-        dump[0] = (byte) ((patch[0].AM << 7) + (patch[0].PM << 6) + (patch[0].EG << 5) + (patch[0].KR << 4) + patch[0].ML);
-        dump[1] = (byte) ((patch[1].AM << 7) + (patch[1].PM << 6) + (patch[1].EG << 5) + (patch[1].KR << 4) + patch[1].ML);
-        dump[2] = (byte) ((patch[0].KL << 6) + patch[0].TL);
-        dump[3] = (byte) ((patch[1].KL << 6) + (patch[1].WF << 4) + (patch[0].WF << 3) + patch[0].FB);
-        dump[4] = (byte) ((patch[0].AR << 4) + patch[0].DR);
-        dump[5] = (byte) ((patch[1].AR << 4) + patch[1].DR);
-        dump[6] = (byte) ((patch[0].SL << 4) + patch[0].RR);
-        dump[7] = (byte) ((patch[1].SL << 4) + patch[1].RR);
-        dump[8] = 0;
-        dump[9] = 0;
-        dump[10] = 0;
-        dump[11] = 0;
-        dump[12] = 0;
-        dump[13] = 0;
-        dump[14] = 0;
-        dump[15] = 0;
-    }
+        private void getDefaultPatch(int num, Slot.Patch[][] patch) {
+            dump2patch(default_inst[0], num, patch);
+        }
 
-    /**
-     * Calc Parameters
-     */
-    private int calc_eg_dphase(OPLL_SLOT slot) {
+        private void makeDefaultPatch() {
+            for (int j = 0; j < 19; j++)
+                getDefaultPatch(j, defaultPatch);
+        }
 
-        switch (OPLL_EG_STATE.valueOf(slot.eg_mode)) {
-        case ATTACK:
-            return dphaseARTable[slot.patch.AR][slot.rks];
+        private void setPatch(byte[] dump) {
+            Slot.Patch[][] patch = new Slot.Patch[2][];
 
-        case DECAY:
-            return dphaseDRTable[slot.patch.DR][slot.rks];
+            for (int i = 0; i < 19; i++) {
+                dump2patch(dump, i, patch);
+                this.patch[0][i] = patch[0][i];
+                this.patch[1][i] = patch[1][i];
+            }
+        }
 
-        case SUSHOLD:
-            return 0;
+        private void patch2dump(Slot.Patch[] patch, byte[] dump) {
+            dump[0] = (byte) ((patch[0].am << 7) + (patch[0].pm << 6) + (patch[0].eg << 5) + (patch[0].kr << 4) + patch[0].ml);
+            dump[1] = (byte) ((patch[1].am << 7) + (patch[1].pm << 6) + (patch[1].eg << 5) + (patch[1].kr << 4) + patch[1].ml);
+            dump[2] = (byte) ((patch[0].kl << 6) + patch[0].tl);
+            dump[3] = (byte) ((patch[1].kl << 6) + (patch[1].wf << 4) + (patch[0].wf << 3) + patch[0].fb);
+            dump[4] = (byte) ((patch[0].ar << 4) + patch[0].dr);
+            dump[5] = (byte) ((patch[1].ar << 4) + patch[1].dr);
+            dump[6] = (byte) ((patch[0].sl << 4) + patch[0].rr);
+            dump[7] = (byte) ((patch[1].sl << 4) + patch[1].rr);
+            dump[8] = 0;
+            dump[9] = 0;
+            dump[10] = 0;
+            dump[11] = 0;
+            dump[12] = 0;
+            dump[13] = 0;
+            dump[14] = 0;
+            dump[15] = 0;
+        }
 
-        case SUSTINE:
-            return dphaseDRTable[slot.patch.RR][slot.rks];
+        // OPLL internal interfaces
 
-        case RELEASE:
-            if (slot.sustine != 0)
-                return dphaseDRTable[5][slot.rks];
-            else if (slot.patch.EG != 0)
-                return dphaseDRTable[slot.patch.RR][slot.rks];
+        private void updatePg(Slot slot) {
+            slot.dPhase = dPhaseTable[slot.fNum][slot.block][slot.patch.ml];
+        }
+
+        private void updateEg(Slot slot) {
+            slot.egDPhase = slot.calcEgDphase(this.dPhaseArTable, this.dPhaseDrTable);
+        }
+
+        private void updateAll(Slot slot) {
+            updatePg(slot);
+            slot.updateTll();
+            slot.updateRks();
+            slot.updateWf();
+            updateEg(slot); // EG should be updated last.
+        }
+
+        /** Slot key on  */
+        private void slotOn(Slot slot) {
+            slot.egMode = EgState.ATTACK;
+            slot.egPhase = 0;
+            slot.phase = 0;
+            updateEg(slot);
+        }
+
+        /** Slot key on without reseting the phase */
+        private void slotOn2(Slot slot) {
+            slot.egMode = EgState.ATTACK;
+            slot.egPhase = 0;
+            updateEg(slot);
+        }
+
+        /** Slot key off */
+        private void slotOff(Slot slot) {
+            if (slot.egMode == EgState.ATTACK)
+                slot.egPhase = expandBits(arAdjustTable[highBits(slot.egPhase, EG_DP_BITS - EG_BITS)], EG_BITS, EG_DP_BITS);
+            slot.egMode = EgState.RELEASE;
+            updateEg(slot);
+        }
+
+        /** Channel key on */
+        private void keyOn(int i) {
+            if (this.slotOnFlag[i * 2] == 0)
+                slotOn(mod(i));
+            if (this.slotOnFlag[i * 2 + 1] == 0)
+                slotOn(car(i));
+            this.keyStatus[i] = 1;
+        }
+
+        /** Channel key off */
+        private void keyOff(int i) {
+            if (this.slotOnFlag[i * 2 + 1] != 0)
+                slotOff(car(i));
+            this.keyStatus[i] = 0;
+        }
+
+        private void keyOnBD() {
+            keyOn(6);
+        }
+
+        private void keyOnSD() {
+            if (this.slotOnFlag[Slot.SD] == 0)
+                slotOn(car(7));
+        }
+
+        private void keyOnTOM() {
+            if (this.slotOnFlag[Slot.TOM] == 0)
+                slotOn(mod(8));
+        }
+
+        private void keyOn_HH() {
+            if (this.slotOnFlag[Slot.HH] == 0)
+                slotOn2(mod(7));
+        }
+
+        private void keyOnCYM() {
+            if (this.slotOnFlag[Slot.CYM] == 0)
+                slotOn2(car(8));
+        }
+
+        /* Drum key off */
+        private void keyOffBD() {
+            keyOff(6);
+        }
+
+        private void keyOffSD() {
+            if (this.slotOnFlag[Slot.SD] != 0)
+                slotOff(car(7));
+        }
+
+        private void keyOffTOM() {
+            if (this.slotOnFlag[Slot.TOM] != 0)
+                slotOff(mod(8));
+        }
+
+        private void keyOffHH() {
+            if (this.slotOnFlag[Slot.HH] != 0)
+                slotOff(mod(7));
+        }
+
+        private void keyOffCYM() {
+            if (this.slotOnFlag[Slot.CYM] != 0)
+                slotOff(car(8));
+        }
+
+        /** Change a Voice */
+        private void setPatch(int i, int num) {
+            this.patchNumber[i] = num;
+            mod(i).patch = this.patch[num][0];
+            car(i).patch = this.patch[num][1];
+        }
+
+        /** Change a rhythm Voice */
+        private void setSlotPatch(Slot slot, Slot.Patch patch) {
+            slot.patch = patch;
+        }
+
+        /** Set sustain parameter */
+        private void setSustain(int c, int sustain) {
+            car(c).sustain = sustain;
+            if (mod(c).type != 0)
+                mod(c).sustain = sustain;
+        }
+
+        /** Volume : 6bit ( Volume register << 2 ) */
+        private void setVolume(int c, int volume) {
+            car(c).volume = volume;
+        }
+
+        private void setSlotVolume(Slot slot, int volume) {
+            slot.volume = volume;
+        }
+
+        /** Set F-Number ( fNum : 9bit ) */
+        private void setFnumber(int c, int fNum) {
+            car(c).fNum = fNum;
+            mod(c).fNum = fNum;
+        }
+
+        /** Set Bsynchronized data (block : 3bit ) */
+        private void setBlock(int c, int block) {
+            car(c).block = block;
+            mod(c).block = block;
+        }
+
+        /** Change Rhythm Mode */
+        private void updateRhythmMode() {
+            if ((this.patchNumber[6] & 0x10) != 0) {
+                if ((this.slotOnFlag[Slot.BD2] | (this.reg[0x0e] & 0x20)) == 0) {
+                    this.slot[Slot.BD1].egMode = EgState.FINISH;
+                    this.slot[Slot.BD2].egMode = EgState.FINISH;
+                    setPatch(6, this.reg[0x36] >> 4);
+                }
+            } else if ((this.reg[0x0e] & 0x20) != 0) {
+                this.patchNumber[6] = 16;
+                this.slot[Slot.BD1].egMode = EgState.FINISH;
+                this.slot[Slot.BD2].egMode = EgState.FINISH;
+                setSlotPatch(this.slot[Slot.BD1], this.patch[16][0]);
+                setSlotPatch(this.slot[Slot.BD2], this.patch[16][1]);
+            }
+
+            if ((this.patchNumber[7] & 0x10) != 0) {
+                if (!((this.slotOnFlag[Slot.HH] != 0 && this.slotOnFlag[Slot.SD] != 0) | (this.reg[0x0e] & 0x20) != 0)) {
+                    this.slot[Slot.HH].type = 0;
+                    this.slot[Slot.HH].egMode = EgState.FINISH;
+                    this.slot[Slot.SD].egMode = EgState.FINISH;
+                    setPatch(7, this.reg[0x37] >> 4);
+                }
+            } else if ((this.reg[0x0e] & 0x20) != 0) {
+                this.patchNumber[7] = 17;
+                this.slot[Slot.HH].type = 1;
+                this.slot[Slot.HH].egMode = EgState.FINISH;
+                this.slot[Slot.SD].egMode = EgState.FINISH;
+                setSlotPatch(this.slot[Slot.HH], this.patch[17][0]);
+                setSlotPatch(this.slot[Slot.SD], this.patch[17][1]);
+            }
+
+            if ((this.patchNumber[8] & 0x10) != 0) {
+                if (!((this.slotOnFlag[Slot.CYM] != 0 && this.slotOnFlag[Slot.TOM] != 0) | (this.reg[0x0e] & 0x20) != 0)) {
+                    this.slot[Slot.TOM].type = 0;
+                    this.slot[Slot.TOM].egMode = EgState.FINISH;
+                    this.slot[Slot.CYM].egMode = EgState.FINISH;
+                    setPatch(8, this.reg[0x38] >> 4);
+                }
+            } else if ((this.reg[0x0e] & 0x20) != 0) {
+                this.patchNumber[8] = 18;
+                this.slot[Slot.TOM].type = 1;
+                this.slot[Slot.TOM].egMode = EgState.FINISH;
+                this.slot[Slot.CYM].egMode = EgState.FINISH;
+                setSlotPatch(this.slot[Slot.TOM], this.patch[18][0]);
+                setSlotPatch(this.slot[Slot.CYM], this.patch[18][1]);
+            }
+        }
+
+        private void updateKeyStatus() {
+            for (int ch = 0; ch < 9; ch++)
+                this.slotOnFlag[ch * 2] = this.slotOnFlag[ch * 2 + 1] = (this.reg[0x20 + ch]) & 0x10;
+
+            if ((this.reg[0x0e] & 0x20) != 0) {
+                this.slotOnFlag[Slot.BD1] |= (this.reg[0x0e] & 0x10);
+                this.slotOnFlag[Slot.BD2] |= (this.reg[0x0e] & 0x10);
+                this.slotOnFlag[Slot.SD] |= (this.reg[0x0e] & 0x08);
+                this.slotOnFlag[Slot.HH] |= (this.reg[0x0e] & 0x01);
+                this.slotOnFlag[Slot.TOM] |= (this.reg[0x0e] & 0x04);
+                this.slotOnFlag[Slot.CYM] |= (this.reg[0x0e] & 0x02);
+            }
+        }
+
+        private void copyPatch(int num, Slot.Patch[] patch) {
+            this.patch[num][0].copy(patch[0]);
+            this.patch[num][1].copy(patch[1]);
+        }
+
+        private void internalRefresh() {
+            makeDPhaseTable();
+            makeDPhaseArTable();
+            makeDPhaseDrTable();
+            pmDPhase = adjustRate((int) (PM_SPEED * PM_DP_WIDTH / (clk / 72)));
+            amDPhase = adjustRate((int) (AM_SPEED * AM_DP_WIDTH / (clk / 72)));
+        }
+
+        private void makeTables(int c, int r) {
+            if (c != clk) {
+                clk = c;
+                makeDefaultPatch();
+            }
+
+            if (r != rate) {
+                rate = r;
+                internalRefresh();
+            }
+        }
+
+        private OPLL(int clk, int rate, Object... option) {
+
+            makeTables(clk, rate);
+
+            defaultPatch = new Slot.Patch[19][];
+            for (int i = 0; i < 19; i++) {
+                defaultPatch[i] = new Slot.Patch[2];
+                for (int j = 0; j < 2; j++) {
+                    defaultPatch[i][j] = new Slot.Patch();
+                }
+            }
+
+            this.vrc7Mode = 0x00;
+
+            for (int i = 0; i < 19; i++) {
+                this.patch[i][0] = new Slot.Patch();
+                this.patch[i][1] = new Slot.Patch();
+            }
+
+            for (int i = 0; i < 14; i++)
+                centrePanning(this.pan[i]);
+
+            this.mask = 0;
+
+            reset();
+            resetPatch(0);
+
+            if (option != null && option.length > 0 && option[0] instanceof byte[] ary) {
+                setPatch(ary);
+            }
+        }
+
+        private void delete() {
+        }
+
+        /** Reset patch datas by system default. */
+        private void resetPatch(int type) {
+            for (int i = 0; i < 19; i++) {
+                copyPatch(i, defaultPatch[i]);
+            }
+        }
+
+        /** Reset whole of OPLL except patch datas. */
+        private void reset() {
+            this.adr = 0;
+            this.out = 0;
+
+            this.pmPhase = 0;
+            this.amPhase = 0;
+
+            this.noiseSeed = 0xffff;
+            //this.mask = 0;
+
+            for (int i = 0; i < 18; i++) {
+                this.slot[i] = new Slot();
+                this.slot[i].reset(i % 2);
+            }
+
+            for (int i = 0; i < 9; i++) {
+                this.keyStatus[i] = 0;
+                setPatch(i, 0);
+            }
+
+            for (int i = 0; i < 0x40; i++)
+                writeReg(i, 0);
+
+//# ifndef EMU2413_COMPACTION
+            this.realStep = (1 << 31) / rate;
+            this.opllStep = (1 << 31) / (clk / 72);
+            this.opllTime = 0;
+//            for (int i = 0; i < 14; i++) {
+//                centre_panning(this.pan[i]);
+//                this.pan[i][0] = 1.0f;
+//                this.pan[i][1] = 1.0f;
+//            }
+            this.sPrev[0] = this.sPrev[1] = 0;
+            this.sNext[0] = this.sNext[1] = 0;
+//#endif
+        }
+
+        /** Force Refresh (When external program changes some parameters). */
+        private void forceRefresh() {
+            for (int i = 0; i < 9; i++)
+                setPatch(i, this.patchNumber[i]);
+
+            for (int i = 0; i < 18; i++) {
+                updatePg(this.slot[i]);
+                this.slot[i].updateRks();
+                this.slot[i].updateTll();
+                this.slot[i].updateWf();
+                updateEg(this.slot[i]);
+            }
+        }
+
+        private void setRate(int r) {
+            if (this.quality != 0)
+                rate = 49716;
             else
-                return dphaseDRTable[7][slot.rks];
-
-        case SETTLE:
-            return dphaseDRTable[15][0];
-
-        case FINISH:
-            return 0;
-
-        default:
-            return 0;
-        }
-    }
-
-    /*
-     * OPLL internal interfaces
-     */
-
-    private final int SLOT_BD1 = 12;
-    private final int SLOT_BD2 = 13;
-    private final int SLOT_HH = 14;
-    private final int SLOT_SD = 15;
-    private final int SLOT_TOM = 16;
-    private final int SLOT_CYM = 17;
-
-    private void UPDATE_PG(OPLL_SLOT S) {
-        S.dphase = dphaseTable[S.fnum][S.block][S.patch.ML];
-    }
-
-    private void UPDATE_TLL(OPLL_SLOT S) {
-        S.tll = (S.type == 0) ? tllTable[S.fnum >> 5][S.block][S.patch.TL][S.patch.KL] : tllTable[S.fnum >> 5][S.block][S.volume][S.patch.KL];
-    }
-
-    private void UPDATE_RKS(OPLL_SLOT S) {
-        S.rks = (int) rksTable[S.fnum >> 8][S.block][S.patch.KR];
-    }
-
-    private void UPDATE_WF(OPLL_SLOT S) {
-        S.sintbl = waveform[S.patch.WF];
-    }
-
-    private void UPDATE_EG(OPLL_SLOT S) {
-        S.eg_dphase = calc_eg_dphase(S);
-    }
-
-    private void UPDATE_ALL(OPLL_SLOT S) {
-        UPDATE_PG(S);
-        UPDATE_TLL(S);
-        UPDATE_RKS(S);
-        UPDATE_WF(S);
-        UPDATE_EG(S);
-    }/* EG should be updated last. */
-
-    /** Slot key on  */
-    private void slotOn(OPLL_SLOT slot) {
-        slot.eg_mode = (int) OPLL_EG_STATE.ATTACK.ordinal();
-        slot.eg_phase = 0;
-        slot.phase = 0;
-        UPDATE_EG(slot);
-    }
-
-    /** Slot key on without reseting the phase */
-    private void slotOn2(OPLL_SLOT slot) {
-        slot.eg_mode = (int) OPLL_EG_STATE.ATTACK.ordinal();
-        slot.eg_phase = 0;
-        UPDATE_EG(slot);
-    }
-
-    /** Slot key off */
-    private void slotOff(OPLL_SLOT slot) {
-        if (slot.eg_mode == (int) OPLL_EG_STATE.ATTACK.ordinal())
-            slot.eg_phase = (int) EXPAND_BITS(AR_ADJUST_TABLE[HIGHBITS((int) slot.eg_phase, EG_DP_BITS - EG_BITS)], EG_BITS, EG_DP_BITS);
-        slot.eg_mode = (int) OPLL_EG_STATE.RELEASE.ordinal();
-        UPDATE_EG(slot);
-    }
-
-    /** Channel key on */
-    private void keyOn(OPLL opll, int i) {
-        if (opll.slot_on_flag[i * 2] == 0)
-            slotOn(MOD(opll, i));
-        if (opll.slot_on_flag[i * 2 + 1] == 0)
-            slotOn(CAR(opll, i));
-        opll.key_status[i] = 1;
-    }
-
-    /** Channel key off */
-    private void keyOff(OPLL opll, int i) {
-        if (opll.slot_on_flag[i * 2 + 1] != 0)
-            slotOff(CAR(opll, i));
-        opll.key_status[i] = 0;
-    }
-
-    private void keyOn_BD(OPLL opll) {
-        keyOn(opll, 6);
-    }
-
-    private void keyOn_SD(OPLL opll) {
-        if (opll.slot_on_flag[SLOT_SD] == 0)
-            slotOn(CAR(opll, 7));
-    }
-
-    private void keyOn_TOM(OPLL opll) {
-        if (opll.slot_on_flag[SLOT_TOM] == 0)
-            slotOn(MOD(opll, 8));
-    }
-
-    private void keyOn_HH(OPLL opll) {
-        if (opll.slot_on_flag[SLOT_HH] == 0)
-            slotOn2(MOD(opll, 7));
-    }
-
-    private void keyOn_CYM(OPLL opll) {
-        if (opll.slot_on_flag[SLOT_CYM] == 0)
-            slotOn2(CAR(opll, 8));
-    }
-
-    /* Drum key off */
-    private void keyOff_BD(OPLL opll) {
-        keyOff(opll, 6);
-    }
-
-    private void keyOff_SD(OPLL opll) {
-        if (opll.slot_on_flag[SLOT_SD] != 0)
-            slotOff(CAR(opll, 7));
-    }
-
-    private void keyOff_TOM(OPLL opll) {
-        if (opll.slot_on_flag[SLOT_TOM] != 0)
-            slotOff(MOD(opll, 8));
-    }
-
-    private void keyOff_HH(OPLL opll) {
-        if (opll.slot_on_flag[SLOT_HH] != 0)
-            slotOff(MOD(opll, 7));
-    }
-
-    private void keyOff_CYM(OPLL opll) {
-        if (opll.slot_on_flag[SLOT_CYM] != 0)
-            slotOff(CAR(opll, 8));
-    }
-
-    /** Change a Voice */
-    private void setPatch(OPLL opll, int i, int num) {
-        opll.patch_number[i] = num;
-        MOD(opll, i).patch = opll.patch[num][0];
-        CAR(opll, i).patch = opll.patch[num][1];
-    }
-
-    /** Change a rhythm Voice */
-    private void setSlotPatch(OPLL_SLOT slot, OPLL_PATCH patch) {
-        slot.patch = patch;
-    }
-
-    /** Set sustine parameter */
-    private void setSustine(OPLL opll, int c, int sustine) {
-        CAR(opll, c).sustine = sustine;
-        if (MOD(opll, c).type != 0)
-            MOD(opll, c).sustine = sustine;
-    }
-
-    /** Volume : 6bit ( Volume register << 2 ) */
-    private void setVolume(OPLL opll, int c, int volume) {
-        CAR(opll, c).volume = volume;
-    }
-
-    private void setSlotVolume(OPLL_SLOT slot, int volume) {
-        slot.volume = volume;
-    }
-
-    /** Set F-Number ( fnum : 9bit ) */
-    private void setFnumber(OPLL opll, int c, int fnum) {
-        CAR(opll, c).fnum = fnum;
-        MOD(opll, c).fnum = fnum;
-    }
-
-    /** Set Bsynchronized data (block : 3bit ) */
-    private void setBlock(OPLL opll, int c, int block) {
-        CAR(opll, c).block = block;
-        MOD(opll, c).block = block;
-    }
-
-    /** Change Rhythm Mode */
-    private void update_rhythm_mode(OPLL opll) {
-        if ((opll.patch_number[6] & 0x10) != 0) {
-            if ((opll.slot_on_flag[SLOT_BD2] | (opll.reg[0x0e] & 0x20)) == 0) {
-                opll.slot[SLOT_BD1].eg_mode = (int) OPLL_EG_STATE.FINISH.ordinal();
-                opll.slot[SLOT_BD2].eg_mode = (int) OPLL_EG_STATE.FINISH.ordinal();
-                setPatch(opll, 6, opll.reg[0x36] >> 4);
-            }
-        } else if ((opll.reg[0x0e] & 0x20) != 0) {
-            opll.patch_number[6] = 16;
-            opll.slot[SLOT_BD1].eg_mode = (int) OPLL_EG_STATE.FINISH.ordinal();
-            opll.slot[SLOT_BD2].eg_mode = (int) OPLL_EG_STATE.FINISH.ordinal();
-            setSlotPatch(opll.slot[SLOT_BD1], opll.patch[16][0]);
-            setSlotPatch(opll.slot[SLOT_BD2], opll.patch[16][1]);
-        }
-
-        if ((opll.patch_number[7] & 0x10) != 0) {
-            if (!((opll.slot_on_flag[SLOT_HH] != 0 && opll.slot_on_flag[SLOT_SD] != 0) | (opll.reg[0x0e] & 0x20) != 0)) {
-                opll.slot[SLOT_HH].type = 0;
-                opll.slot[SLOT_HH].eg_mode = (int) OPLL_EG_STATE.FINISH.ordinal();
-                opll.slot[SLOT_SD].eg_mode = (int) OPLL_EG_STATE.FINISH.ordinal();
-                setPatch(opll, 7, opll.reg[0x37] >> 4);
-            }
-        } else if ((opll.reg[0x0e] & 0x20) != 0) {
-            opll.patch_number[7] = 17;
-            opll.slot[SLOT_HH].type = 1;
-            opll.slot[SLOT_HH].eg_mode = (int) OPLL_EG_STATE.FINISH.ordinal();
-            opll.slot[SLOT_SD].eg_mode = (int) OPLL_EG_STATE.FINISH.ordinal();
-            setSlotPatch(opll.slot[SLOT_HH], opll.patch[17][0]);
-            setSlotPatch(opll.slot[SLOT_SD], opll.patch[17][1]);
-        }
-
-        if ((opll.patch_number[8] & 0x10) != 0) {
-            if (!((opll.slot_on_flag[SLOT_CYM] != 0 && opll.slot_on_flag[SLOT_TOM] != 0) | (opll.reg[0x0e] & 0x20) != 0)) {
-                opll.slot[SLOT_TOM].type = 0;
-                opll.slot[SLOT_TOM].eg_mode = (int) OPLL_EG_STATE.FINISH.ordinal();
-                opll.slot[SLOT_CYM].eg_mode = (int) OPLL_EG_STATE.FINISH.ordinal();
-                setPatch(opll, 8, opll.reg[0x38] >> 4);
-            }
-        } else if ((opll.reg[0x0e] & 0x20) != 0) {
-            opll.patch_number[8] = 18;
-            opll.slot[SLOT_TOM].type = 1;
-            opll.slot[SLOT_TOM].eg_mode = (int) OPLL_EG_STATE.FINISH.ordinal();
-            opll.slot[SLOT_CYM].eg_mode = (int) OPLL_EG_STATE.FINISH.ordinal();
-            setSlotPatch(opll.slot[SLOT_TOM], opll.patch[18][0]);
-            setSlotPatch(opll.slot[SLOT_CYM], opll.patch[18][1]);
-        }
-    }
-
-    private void update_key_status(OPLL opll) {
-        int ch;
-
-        for (ch = 0; ch < 9; ch++)
-            opll.slot_on_flag[ch * 2] = opll.slot_on_flag[ch * 2 + 1] = (opll.reg[0x20 + ch]) & 0x10;
-
-        if ((opll.reg[0x0e] & 0x20) != 0) {
-            opll.slot_on_flag[SLOT_BD1] |= (opll.reg[0x0e] & 0x10);
-            opll.slot_on_flag[SLOT_BD2] |= (opll.reg[0x0e] & 0x10);
-            opll.slot_on_flag[SLOT_SD] |= (opll.reg[0x0e] & 0x08);
-            opll.slot_on_flag[SLOT_HH] |= (opll.reg[0x0e] & 0x01);
-            opll.slot_on_flag[SLOT_TOM] |= (opll.reg[0x0e] & 0x04);
-            opll.slot_on_flag[SLOT_CYM] |= (opll.reg[0x0e] & 0x02);
-        }
-    }
-
-    private void OPLL_copyPatch(OPLL opll, int num, OPLL_PATCH[] patch) {
-        //memcpy(opll.patch[num], patch, sizeof(OPLL_PATCH));
-        opll.patch[num][0].AM = patch[0].AM;
-        opll.patch[num][0].AR = patch[0].AR;
-        opll.patch[num][0].DR = patch[0].DR;
-        opll.patch[num][0].EG = patch[0].EG;
-        opll.patch[num][0].FB = patch[0].FB;
-        opll.patch[num][0].KL = patch[0].KL;
-        opll.patch[num][0].KR = patch[0].KR;
-        opll.patch[num][0].ML = patch[0].ML;
-        opll.patch[num][0].PM = patch[0].PM;
-        opll.patch[num][0].RR = patch[0].RR;
-        opll.patch[num][0].SL = patch[0].SL;
-        opll.patch[num][0].TL = patch[0].TL;
-        opll.patch[num][0].WF = patch[0].WF;
-
-        opll.patch[num][1].AM = patch[1].AM;
-        opll.patch[num][1].AR = patch[1].AR;
-        opll.patch[num][1].DR = patch[1].DR;
-        opll.patch[num][1].EG = patch[1].EG;
-        opll.patch[num][1].FB = patch[1].FB;
-        opll.patch[num][1].KL = patch[1].KL;
-        opll.patch[num][1].KR = patch[1].KR;
-        opll.patch[num][1].ML = patch[1].ML;
-        opll.patch[num][1].PM = patch[1].PM;
-        opll.patch[num][1].RR = patch[1].RR;
-        opll.patch[num][1].SL = patch[1].SL;
-        opll.patch[num][1].TL = patch[1].TL;
-        opll.patch[num][1].WF = patch[1].WF;
-    }
-
-    /***********************************************************
-
-     Initializing
-     ***********************************************************/
-
-    private void OPLL_SLOT_reset(OPLL_SLOT slot, int type) {
-        slot.type = type;
-        slot.sintbl = waveform[0];
-        slot.phase = 0;
-        slot.dphase = 0;
-        slot.output[0] = 0;
-        slot.output[1] = 0;
-        slot.feedback = 0;
-        slot.eg_mode = (int) OPLL_EG_STATE.FINISH.ordinal();
-        slot.eg_phase = (int) EG_DP_WIDTH;
-        slot.eg_dphase = 0;
-        slot.rks = 0;
-        slot.tll = 0;
-        slot.sustine = 0;
-        slot.fnum = 0;
-        slot.block = 0;
-        slot.volume = 0;
-        slot.pgout = 0;
-        slot.egout = 0;
-        slot.patch = null_patch;
-    }
-
-    private void internal_refresh() {
-        makeDphaseTable();
-        makeDphaseARTable();
-        makeDphaseDRTable();
-        pm_dphase = (int) RATE_ADJUST((int) (PM_SPEED * PM_DP_WIDTH / (clk / 72)));
-        am_dphase = (int) RATE_ADJUST((int) (AM_SPEED * AM_DP_WIDTH / (clk / 72)));
-    }
-
-    private void maketables(int c, int r) {
-        if (c != clk) {
-            clk = c;
-            makePmTable();
-            makeAmTable();
-            makeDB2LinTable();
-            makeAdjustTable();
-            makeTllTable();
-            makeRksTable();
-            makeSinTable();
-            makeDefaultPatch();
-        }
-
-        if (r != rate) {
+                rate = r;
+            internalRefresh();
             rate = r;
-            internal_refresh();
         }
-    }
 
-    private OPLL OPLL_new(int clk, int rate, Object... option) {
+        private void setQuality(int q) {
+            this.quality = q;
+            setRate(rate);
+        }
 
-        SL = new int[] {
-                S2E(0.0), S2E(3.0), S2E(6.0), S2E(9.0), S2E(12.0), S2E(15.0), S2E(18.0), S2E(21.0),
-                S2E(24.0), S2E(27.0), S2E(30.0), S2E(33.0), S2E(36.0), S2E(39.0), S2E(42.0), S2E(48.0)
+        // Generate wave data
+
+        /** Convert Amp(0 to EG_HEIGHT) to Phase(0 to 2PI). */
+        private static int wave2_2pi(int e) {
+            return e << (PG_BITS - SLOT_AMP_BITS);
+        }
+
+        /** Convert Amp(0 to EG_HEIGHT) to Phase(0 to 4PI). */
+        private static int wave2_4pi(int e) {
+            return e << (1 + PG_BITS - SLOT_AMP_BITS);
+        }
+
+        /** Convert Amp(0 to EG_HEIGHT) to Phase(0 to 8PI). */
+        private static int wave2_8pi(int e) {
+            return e << (2 + PG_BITS - SLOT_AMP_BITS);
+        }
+
+        /** Update AM, PM unit */
+        private void updateAmPm() {
+            this.pmPhase = (this.pmPhase + pmDPhase) & (PM_DP_WIDTH - 1);
+            this.amPhase = (this.amPhase + amDPhase) & (AM_DP_WIDTH - 1);
+            this.lfoAm = amTable[highBits(this.amPhase, AM_DP_BITS - AM_PG_BITS)];
+            this.lfoPm = pmTable[highBits(this.pmPhase, PM_DP_BITS - PM_PG_BITS)];
+        }
+
+        /** Update Noise unit */
+        private void updateNoise() {
+            if ((this.noiseSeed & 1) != 0) this.noiseSeed ^= 0x8003020;
+            this.noiseSeed >>= 1;
+        }
+
+        private static int s2e(double x) {
+            return sl2eg((int) (x / SL_STEP)) << (EG_DP_BITS - EG_BITS);
+        }
+
+        private static final int[] sl = new int[] {
+                s2e(0.0), s2e(3.0), s2e(6.0), s2e(9.0),
+                s2e(12.0), s2e(15.0), s2e(18.0), s2e(21.0),
+                s2e(24.0), s2e(27.0), s2e(30.0), s2e(33.0),
+                s2e(36.0), s2e(39.0), s2e(42.0), s2e(48.0)
         };
 
-        OPLL opll;
-        int i;
+        private short calc() {
+            int inst = 0, perc = 0;
 
-        default_patch = new OPLL_PATCH[19][];
-        for (i = 0; i < 19; i++) {
-            default_patch[i] = new OPLL_PATCH[2];
-            for (int j = 0; j < 2; j++) {
-                default_patch[i][j] = new OPLL_PATCH();
+            updateAmPm();
+            updateNoise();
+
+            for (int i = 0; i < 18; i++) {
+                this.slot[i].calcPhase(this.lfoPm);
+                this.slot[i].calcEnvelope(this.lfoAm, this::updateEg);
             }
-        }
 
-        maketables(clk, rate);
+            for (int i = 0; i < 6; i++)
+                if ((this.mask & maskCh(i)) == 0 && (car(i).egMode != EgState.FINISH))
+                    inst += car(i).calcCar(mod(i).calcMod());
 
-        opll = new OPLL();
-
-        opll.vrc7_mode = 0x00;
-
-        for (i = 0; i < 19; i++) {
-            opll.patch[i][0] = new OPLL_PATCH();
-            opll.patch[i][1] = new OPLL_PATCH();
-        }
-
-        for (i = 0; i < 14; i++)
-            centre_panning(opll.pan[i]);
-
-        opll.mask = 0;
-
-        OPLL_reset(opll);
-        OPLL_reset_patch(opll, 0);
-
-        if (option != null && option.length > 0 && option[0] instanceof byte[]) {
-            byte[] ary = (byte[]) option[0];
-            OPLL_setPatch(opll, ary);
-        }
-
-        return opll;
-    }
-
-
-    private void OPLL_delete(OPLL opll) {
-        opll = null;
-    }
-
-
-    /* Reset patch datas by system default. */
-    private void OPLL_reset_patch(OPLL opll, int type) {
-        int i;
-
-        for (i = 0; i < 19; i++) {
-            OPLL_copyPatch(opll, i, default_patch[i]);
-        }
-    }
-
-    /* Reset whole of OPLL except patch datas. */
-    private void OPLL_reset(OPLL opll) {
-        int i;
-
-        if (opll == null)
-            return;
-
-        opll.adr = 0;
-        opll._out = 0;
-
-        opll.pm_phase = 0;
-        opll.am_phase = 0;
-
-        opll.noise_seed = 0xffff;
-        //opll.mask = 0;
-
-        for (i = 0; i < 18; i++) {
-            opll.slot[i] = new OPLL_SLOT();
-            OPLL_SLOT_reset(opll.slot[i], i % 2);
-        }
-
-        for (i = 0; i < 9; i++) {
-            opll.key_status[i] = 0;
-            setPatch(opll, i, 0);
-        }
-
-        for (i = 0; i < 0x40; i++)
-            OPLL_writeReg(opll, (int) i, 0);
-
-        //# ifndef EMU2413_COMPACTION
-        opll.realstep = (int) ((1 << 31) / rate);
-        opll.opllstep = (int) ((1 << 31) / (clk / 72));
-        opll.oplltime = 0;
-            /*for (i = 0; i < 14; i++)
-            {
-                  //centre_panning( opll.pan[i] );
-                  opll.pan[i][0] = 1.0f;
-                  opll.pan[i][1] = 1.0f;
-              }*/
-        opll.sprev[0] = opll.sprev[1] = 0;
-        opll.snext[0] = opll.snext[1] = 0;
-        //#endif
-    }
-
-    /* Force Refresh (When external program changes some parameters). */
-    private void OPLL_forceRefresh(OPLL opll) {
-        int i;
-
-        if (opll == null)
-            return;
-
-        for (i = 0; i < 9; i++)
-            setPatch(opll, i, opll.patch_number[i]);
-
-        for (i = 0; i < 18; i++) {
-            UPDATE_PG(opll.slot[i]);
-            UPDATE_RKS(opll.slot[i]);
-            UPDATE_TLL(opll.slot[i]);
-            UPDATE_WF(opll.slot[i]);
-            UPDATE_EG(opll.slot[i]);
-        }
-    }
-
-    private void OPLL_set_rate(OPLL opll, int r) {
-        if (opll.quality != 0)
-            rate = 49716;
-        else
-            rate = r;
-        internal_refresh();
-        rate = r;
-    }
-
-    private void OPLL_set_quality(OPLL opll, int q) {
-        opll.quality = q;
-        OPLL_set_rate(opll, rate);
-    }
-
-    /*********************************************************
-
-     Generate wave data
-     *********************************************************/
-    /* Convert Amp(0 to EG_HEIGHT) to Phase(0 to 2PI). */
-    //#if ( SLOT_AMP_BITS - PG_BITS ) > 0
-    //#define wave2_2pi(e)  ( (e) >> ( SLOT_AMP_BITS - PG_BITS ))
-    //private OPLL_SLOT wave2_2pi(OPLL_SLOT e) {
-    //    return e >> (SLOT_AMP_BITS - PG_BITS);
-    //}
-    //#else
-    //#define wave2_2pi(e)  ( (e) << ( PG_BITS - SLOT_AMP_BITS ))
-    private int wave2_2pi(int e) {
-        return ((e) << (PG_BITS - SLOT_AMP_BITS));
-    }
-    //#endif
-
-    /* Convert Amp(0 to EG_HEIGHT) to Phase(0 to 4PI). */
-    //#if (SLOT_AMP_BITS - PG_BITS - 1 ) == 0
-    //#define wave2_4pi(e)  (e)
-    //#elif (SLOT_AMP_BITS - PG_BITS - 1 ) > 0
-    //#define wave2_4pi(e)  ( (e) >> ( SLOT_AMP_BITS - PG_BITS - 1 ))
-    //#else
-    //#define wave2_4pi(e)  ( (e) << ( 1 + PG_BITS - SLOT_AMP_BITS ))
-    private int wave2_4pi(int e) {
-        return ((e) << (1 + PG_BITS - SLOT_AMP_BITS));
-    }
-    //#endif
-
-    /* Convert Amp(0 to EG_HEIGHT) to Phase(0 to 8PI). */
-    //#if (SLOT_AMP_BITS - PG_BITS - 2 ) == 0
-    //#define wave2_8pi(e)  (e)
-    //#elif (SLOT_AMP_BITS - PG_BITS - 2 ) > 0
-    //#define wave2_8pi(e)  ( (e) >> ( SLOT_AMP_BITS - PG_BITS - 2 ))
-    //#else
-    //#define wave2_8pi(e)  ( (e) << ( 2 + PG_BITS - SLOT_AMP_BITS ))
-    private int wave2_8pi(int e) {
-        return ((e) << (2 + PG_BITS - SLOT_AMP_BITS));
-    }
-    //#endif
-
-    /* Update AM, PM unit */
-    private void update_ampm(OPLL opll) {
-        opll.pm_phase = (int) ((opll.pm_phase + pm_dphase) & (PM_DP_WIDTH - 1));
-        opll.am_phase = (int) ((opll.am_phase + am_dphase) & (AM_DP_WIDTH - 1));
-        opll.lfo_am = amtable[HIGHBITS(opll.am_phase, AM_DP_BITS - AM_PG_BITS)];
-        opll.lfo_pm = pmtable[HIGHBITS((int) opll.pm_phase, PM_DP_BITS - PM_PG_BITS)];
-    }
-
-    /* PG */
-    private void calc_phase(OPLL_SLOT slot, int lfo) {
-        if (slot.patch.PM != 0)
-            slot.phase += (int) ((slot.dphase * lfo) >> PM_AMP_BITS);
-        else
-            slot.phase += slot.dphase;
-
-        slot.phase &= (int) (DP_WIDTH - 1);
-
-        slot.pgout = (int) HIGHBITS((int) slot.phase, DP_BASE_BITS);
-    }
-
-    /* Update Noise unit */
-    private void update_noise(OPLL opll) {
-        if ((opll.noise_seed & 1) != 0) opll.noise_seed ^= 0x8003020;
-        opll.noise_seed >>= 1;
-    }
-
-    private int S2E(double x) {
-        return (int) (SL2EG((int) (x / SL_STEP)) << (EG_DP_BITS - EG_BITS));
-    }
-
-    int[] SL;
-
-    /* EG */
-    private void calc_envelope(OPLL_SLOT slot, int lfo) {
-        //#define S2E(x) (SL2EG((e_int32)(x/SL_STEP))<<(EG_DP_BITS-EG_BITS))
-
-
-        int egout;
-
-        switch (OPLL_EG_STATE.valueOf(slot.eg_mode)) {
-        case ATTACK:
-            egout = AR_ADJUST_TABLE[HIGHBITS((int) slot.eg_phase, EG_DP_BITS - EG_BITS)];
-            slot.eg_phase += slot.eg_dphase;
-            if ((EG_DP_WIDTH & slot.eg_phase) != 0 || (slot.patch.AR == 15)) {
-                egout = 0;
-                slot.eg_phase = 0;
-                slot.eg_mode = (int) OPLL_EG_STATE.DECAY.ordinal();
-                UPDATE_EG(slot);
-            }
-            break;
-
-        case DECAY:
-            egout = (int) HIGHBITS((int) slot.eg_phase, EG_DP_BITS - EG_BITS);
-            slot.eg_phase += slot.eg_dphase;
-            if (slot.eg_phase >= SL[slot.patch.SL]) {
-                if ((slot.patch.EG) != 0) {
-                    slot.eg_phase = SL[slot.patch.SL];
-                    slot.eg_mode = (int) OPLL_EG_STATE.SUSHOLD.ordinal();
-                    UPDATE_EG(slot);
+            if (this.vrc7Mode == 0) {
+                // CH6
+                if (this.patchNumber[6] <= 15) {
+                    if ((this.mask & maskCh(6)) == 0 && (car(6).egMode != EgState.FINISH))
+                        inst += car(6).calcCar(mod(6).calcMod());
                 } else {
-                    slot.eg_phase = SL[slot.patch.SL];
-                    slot.eg_mode = (int) OPLL_EG_STATE.SUSTINE.ordinal();
-                    UPDATE_EG(slot);
+                    if ((this.mask & MASK_BD) == 0 && (car(6).egMode != EgState.FINISH))
+                        perc += car(6).calcCar(mod(6).calcMod());
                 }
-            }
-            break;
 
-        case SUSHOLD:
-            egout = (int) HIGHBITS((int) slot.eg_phase, EG_DP_BITS - EG_BITS);
-            if (slot.patch.EG == 0) {
-                slot.eg_mode = (int) OPLL_EG_STATE.SUSTINE.ordinal();
-                UPDATE_EG(slot);
-            }
-            break;
-
-        case SUSTINE:
-        case RELEASE:
-            egout = (int) HIGHBITS((int) slot.eg_phase, EG_DP_BITS - EG_BITS);
-            slot.eg_phase += slot.eg_dphase;
-            if (egout >= (1 << EG_BITS)) {
-                slot.eg_mode = (int) OPLL_EG_STATE.FINISH.ordinal();
-                egout = (1 << EG_BITS) - 1;
-            }
-            break;
-
-        case SETTLE:
-            egout = (int) HIGHBITS((int) slot.eg_phase, EG_DP_BITS - EG_BITS);
-            slot.eg_phase += slot.eg_dphase;
-            if (egout >= (1 << EG_BITS)) {
-                slot.eg_mode = (int) OPLL_EG_STATE.ATTACK.ordinal();
-                egout = (1 << EG_BITS) - 1;
-                UPDATE_EG(slot);
-            }
-            break;
-
-        case FINISH:
-            egout = (1 << EG_BITS) - 1;
-            break;
-
-        default:
-            egout = (1 << EG_BITS) - 1;
-            break;
-        }
-
-        if (slot.patch.AM != 0)
-            egout = (int) (EG2DB((int) (egout + slot.tll)) + lfo);
-        else {
-            egout = (int) EG2DB((int) (egout + slot.tll));
-            //System.err.printf("egout {0} slot.tll {1} (e_int32)(EG_STEP/DB_STEP) {2}", egout, slot.tll, (short)(EG_STEP / DB_STEP));
-        }
-
-        if (egout >= DB_MUTE)
-            egout = DB_MUTE - 1;
-
-        slot.egout = egout | 3;
-    }
-
-    /* CARRIOR */
-    private int calc_slot_car(OPLL_SLOT slot, int fm) {
-        if (slot.egout >= (DB_MUTE - 1)) {
-            //System.err.printf("calc_slot_car: output over");
-            slot.output[0] = 0;
-        } else {
-            //System.err.printf("calc_slot_car: slot.egout {0}", slot.egout);
-            slot.output[0] = DB2LIN_TABLE[slot.sintbl[(slot.pgout + wave2_8pi(fm)) & (PG_WIDTH - 1)] + slot.egout];
-        }
-
-        slot.output[1] = (slot.output[1] + slot.output[0]) >> 1;
-        return slot.output[1];
-    }
-
-    /* MODULATOR */
-    private int calc_slot_mod(OPLL_SLOT slot) {
-        int fm;
-
-        slot.output[1] = slot.output[0];
-
-        if (slot.egout >= (DB_MUTE - 1)) {
-            slot.output[0] = 0;
-        } else if (slot.patch.FB != 0) {
-            fm = wave2_4pi(slot.feedback) >> (int) (7 - slot.patch.FB);
-            slot.output[0] = DB2LIN_TABLE[slot.sintbl[(slot.pgout + fm) & (PG_WIDTH - 1)] + slot.egout];
-        } else {
-            slot.output[0] = DB2LIN_TABLE[slot.sintbl[slot.pgout] + slot.egout];
-        }
-
-        slot.feedback = (slot.output[1] + slot.output[0]) >> 1;
-
-        return slot.feedback;
-
-    }
-
-    /* TOM */
-    private int calc_slot_tom(OPLL_SLOT slot) {
-        if (slot.egout >= (DB_MUTE - 1))
-            return 0;
-
-        return DB2LIN_TABLE[slot.sintbl[slot.pgout] + slot.egout];
-
-    }
-
-    /* SNARE */
-    private int calc_slot_snare(OPLL_SLOT slot, int noise) {
-        if (slot.egout >= (DB_MUTE - 1))
-            return 0;
-
-        if (BIT((int) slot.pgout, 7) != 0)
-            return DB2LIN_TABLE[(noise != 0 ? DB_POS(0.0) : DB_POS(15.0)) + slot.egout];
-        else
-            return DB2LIN_TABLE[(noise != 0 ? DB_NEG(0.0) : DB_NEG(15.0)) + slot.egout];
-    }
-
-    /*
-      TOP-CYM
-     */
-    private int calc_slot_cym(OPLL_SLOT slot, int pgout_hh) {
-        int dbout;
-
-        if (slot.egout >= (DB_MUTE - 1))
-            return 0;
-        else if ((
-                /* the same as fmopl.c */
-                ((BIT((int) pgout_hh, PG_BITS - 8) ^ BIT((int) pgout_hh, PG_BITS - 1)) | BIT((int) pgout_hh, PG_BITS - 7)) ^
-                        /* different from fmopl.c */
-                        (BIT((int) slot.pgout, PG_BITS - 7) & ~BIT((int) slot.pgout, PG_BITS - 5))) != 0
-        )
-            dbout = DB_NEG(3.0);
-        else
-            dbout = DB_POS(3.0);
-
-        return DB2LIN_TABLE[dbout + slot.egout];
-    }
-
-    /*
-      HI-HAT
-    */
-    private int calc_slot_hat(OPLL_SLOT slot, int pgout_cym, int noise) {
-        int dbout;
-
-        if (slot.egout >= (DB_MUTE - 1))
-            return 0;
-        else if ((
-                /* the same as fmopl.c */
-                ((BIT((int) slot.pgout, PG_BITS - 8) ^ BIT((int) slot.pgout, PG_BITS - 1)) | BIT((int) slot.pgout, PG_BITS - 7)) ^
-                        /* different from fmopl.c */
-                        (BIT(pgout_cym, PG_BITS - 7) & ~BIT(pgout_cym, PG_BITS - 5))) != 0
-        ) {
-            if (noise != 0)
-                dbout = DB_NEG(12.0);
-            else
-                dbout = DB_NEG(24.0);
-        } else {
-            if (noise != 0)
-                dbout = DB_POS(12.0);
-            else
-                dbout = DB_POS(24.0);
-        }
-
-        return DB2LIN_TABLE[dbout + slot.egout];
-    }
-
-    private short calc(OPLL opll) {
-        int inst = 0, perc = 0, _out = 0;
-        int i;
-
-        update_ampm(opll);
-        update_noise(opll);
-
-        for (i = 0; i < 18; i++) {
-            calc_phase(opll.slot[i], opll.lfo_pm);
-            calc_envelope(opll.slot[i], opll.lfo_am);
-        }
-
-        for (i = 0; i < 6; i++)
-            if ((opll.mask & OPLL_MASK_CH(i)) == 0 && (CAR(opll, i).eg_mode != (int) OPLL_EG_STATE.FINISH.ordinal()))
-                inst += calc_slot_car(CAR(opll, i), calc_slot_mod(MOD(opll, i)));
-
-        if (opll.vrc7_mode == 0) {
-            /* CH6 */
-            if (opll.patch_number[6] <= 15) {
-                if ((opll.mask & OPLL_MASK_CH(6)) == 0 && (CAR(opll, 6).eg_mode != (int) OPLL_EG_STATE.FINISH.ordinal()))
-                    inst += calc_slot_car(CAR(opll, 6), calc_slot_mod(MOD(opll, 6)));
-            } else {
-                if ((opll.mask & OPLL_MASK_BD) == 0 && (CAR(opll, 6).eg_mode != (int) OPLL_EG_STATE.FINISH.ordinal()))
-                    perc += calc_slot_car(CAR(opll, 6), calc_slot_mod(MOD(opll, 6)));
-            }
-
-            /* CH7 */
-            if (opll.patch_number[7] <= 15) {
-                if ((opll.mask & OPLL_MASK_CH(7)) == 0 && (CAR(opll, 7).eg_mode != (int) OPLL_EG_STATE.FINISH.ordinal()))
-                    inst += calc_slot_car(CAR(opll, 7), calc_slot_mod(MOD(opll, 7)));
-            } else {
-                if ((opll.mask & OPLL_MASK_HH) == 0 && (MOD(opll, 7).eg_mode != (int) OPLL_EG_STATE.FINISH.ordinal()))
-                    perc += calc_slot_hat(MOD(opll, 7), (int) CAR(opll, 8).pgout, opll.noise_seed & 1);
-                if ((opll.mask & OPLL_MASK_SD) == 0 && (CAR(opll, 7).eg_mode != (int) OPLL_EG_STATE.FINISH.ordinal()))
-                    perc -= calc_slot_snare(CAR(opll, 7), opll.noise_seed & 1);
-            }
-
-            /* CH8 */
-            if (opll.patch_number[8] <= 15) {
-                if ((opll.mask & OPLL_MASK_CH(8)) == 0 && (CAR(opll, 8).eg_mode != (int) OPLL_EG_STATE.FINISH.ordinal()))
-                    inst += calc_slot_car(CAR(opll, 8), calc_slot_mod(MOD(opll, 8)));
-            } else {
-                if ((opll.mask & OPLL_MASK_TOM) == 0 && (MOD(opll, 8).eg_mode != (int) OPLL_EG_STATE.FINISH.ordinal()))
-                    perc += calc_slot_tom(MOD(opll, 8));
-                if ((opll.mask & OPLL_MASK_CYM) == 0 && (CAR(opll, 8).eg_mode != (int) OPLL_EG_STATE.FINISH.ordinal()))
-                    perc -= calc_slot_cym(CAR(opll, 8), MOD(opll, 7).pgout);
-            }
-        } // end if (! opll.vrc7_mode)
-
-        _out = inst + (perc << 1);
-        return (short) _out;
-    }
-
-    //#ifdef EMU2413_COMPACTION
-    private short OPLL_calc(OPLL opll) {
-        return calc(opll);
-    }
-
-    //#else
-    private short OPLL_calc_(OPLL opll) {
-        if (opll.quality == 0)
-            return calc(opll);
-
-        while (opll.realstep > opll.oplltime) {
-            opll.oplltime += opll.opllstep;
-            opll.prev = opll.next;
-            opll.next = calc(opll);
-        }
-
-        opll.oplltime -= opll.realstep;
-        opll._out = (short) (((double) opll.next * (opll.opllstep - opll.oplltime)
-                + (double) opll.prev * opll.oplltime) / opll.opllstep);
-
-        return (short) opll._out;
-    }
-    //#endif
-
-        /*e_(int)32
-        OPLL_setMask (OPLL * opll, e_(int)32 mask)
-        {
-          e_(int)32 ret;
-
-          if (opll)
-          {
-            ret = opll.mask;
-            opll.mask = mask;
-            return ret;
-          }
-          else
-            return 0;
-        }*/
-
-    private void OPLL_SetMuteMask(OPLL opll, int muteMask) {
-        byte curChn;
-        int ChnMsk;
-
-        for (curChn = 0; curChn < 14; curChn++) {
-            if (curChn < 9) {
-                ChnMsk = (int) OPLL_MASK_CH(curChn);
-            } else {
-                switch (curChn) {
-                case 9:
-                    ChnMsk = (int) OPLL_MASK_BD;
-                    break;
-                case 10:
-                    ChnMsk = (int) OPLL_MASK_SD;
-                    break;
-                case 11:
-                    ChnMsk = (int) OPLL_MASK_TOM;
-                    break;
-                case 12:
-                    ChnMsk = (int) OPLL_MASK_CYM;
-                    break;
-                case 13:
-                    ChnMsk = (int) OPLL_MASK_HH;
-                    break;
-                default:
-                    ChnMsk = 0;
-                    break;
-                }
-            }
-            if (((muteMask >> curChn) & 0x01) != 0)
-                opll.mask |= ChnMsk;
-            else
-                opll.mask &= ~ChnMsk;
-        }
-
-        return;
-    }
-
-        /*e_(int)32
-        OPLL_toggleMask (OPLL * opll, e_(int)32 mask)
-        {
-          e_(int)32 ret;
-
-          if (opll)
-          {
-            ret = opll.mask;
-            opll.mask ^= mask;
-            return ret;
-          }
-          else
-            return 0;
-        }*/
-
-    private void OPLL_SetChipMode(OPLL opll, byte Mode) {
-        // Enable/Disable VRC7 Mode (with only 6 instead of 9 channels and no rhythm part)
-        opll.vrc7_mode = Mode;
-
-        return;
-    }
-
-    /****************************************************
-
-     I/O Ctrl
-     *****************************************************/
-
-    private void OPLL_writeReg(OPLL opll, int reg, int data) {
-        //System.err.printf("OPLL_writeReg:reg:{0}:data:{1}", reg,data);
-
-        int i, v, ch;
-
-        data = data & 0xff;
-        reg = reg & 0x3f;
-        opll.reg[reg] = (byte) data;
-
-        switch (reg) {
-        case 0x00:
-            opll.patch[0][0].AM = (data >> 7) & 1;
-            opll.patch[0][0].PM = (data >> 6) & 1;
-            opll.patch[0][0].EG = (data >> 5) & 1;
-            opll.patch[0][0].KR = (data >> 4) & 1;
-            opll.patch[0][0].ML = (data) & 15;
-            for (i = 0; i < 9; i++) {
-                if (opll.patch_number[i] == 0) {
-                    UPDATE_PG(MOD(opll, i));
-                    UPDATE_RKS(MOD(opll, i));
-                    UPDATE_EG(MOD(opll, i));
-                }
-            }
-            break;
-
-        case 0x01:
-            opll.patch[0][1].AM = (data >> 7) & 1;
-            opll.patch[0][1].PM = (data >> 6) & 1;
-            opll.patch[0][1].EG = (data >> 5) & 1;
-            opll.patch[0][1].KR = (data >> 4) & 1;
-            opll.patch[0][1].ML = (data) & 15;
-            for (i = 0; i < 9; i++) {
-                if (opll.patch_number[i] == 0) {
-                    UPDATE_PG(CAR(opll, i));
-                    UPDATE_RKS(CAR(opll, i));
-                    UPDATE_EG(CAR(opll, i));
-                }
-            }
-            break;
-
-        case 0x02:
-            opll.patch[0][0].KL = (data >> 6) & 3;
-            opll.patch[0][0].TL = (data) & 63;
-            for (i = 0; i < 9; i++) {
-                if (opll.patch_number[i] == 0) {
-                    UPDATE_TLL(MOD(opll, i));
-                }
-            }
-            break;
-
-        case 0x03:
-            opll.patch[0][1].KL = (data >> 6) & 3;
-            opll.patch[0][1].WF = (data >> 4) & 1;
-            opll.patch[0][0].WF = (data >> 3) & 1;
-            opll.patch[0][0].FB = (data) & 7;
-            for (i = 0; i < 9; i++) {
-                if (opll.patch_number[i] == 0) {
-                    UPDATE_WF(MOD(opll, i));
-                    UPDATE_WF(CAR(opll, i));
-                }
-            }
-            break;
-
-        case 0x04:
-            opll.patch[0][0].AR = (data >> 4) & 15;
-            opll.patch[0][0].DR = (data) & 15;
-            for (i = 0; i < 9; i++) {
-                if (opll.patch_number[i] == 0) {
-                    UPDATE_EG(MOD(opll, i));
-                }
-            }
-            break;
-
-        case 0x05:
-            opll.patch[0][1].AR = (data >> 4) & 15;
-            opll.patch[0][1].DR = (data) & 15;
-            for (i = 0; i < 9; i++) {
-                if (opll.patch_number[i] == 0) {
-                    UPDATE_EG(CAR(opll, i));
-                }
-            }
-            break;
-
-        case 0x06:
-            opll.patch[0][0].SL = (data >> 4) & 15;
-            opll.patch[0][0].RR = (data) & 15;
-            for (i = 0; i < 9; i++) {
-                if (opll.patch_number[i] == 0) {
-                    UPDATE_EG(MOD(opll, i));
-                }
-            }
-            break;
-
-        case 0x07:
-            opll.patch[0][1].SL = (data >> 4) & 15;
-            opll.patch[0][1].RR = (data) & 15;
-            for (i = 0; i < 9; i++) {
-                if (opll.patch_number[i] == 0) {
-                    UPDATE_EG(CAR(opll, i));
-                }
-            }
-            break;
-
-        case 0x0e:
-            if (opll.vrc7_mode != 0)
-                break;
-            update_rhythm_mode(opll);
-            if ((data & 0x20) != 0) {
-                if ((data & 0x10) != 0)
-                    keyOn_BD(opll);
-                else
-                    keyOff_BD(opll);
-                if ((data & 0x8) != 0)
-                    keyOn_SD(opll);
-                else
-                    keyOff_SD(opll);
-                if ((data & 0x4) != 0)
-                    keyOn_TOM(opll);
-                else
-                    keyOff_TOM(opll);
-                if ((data & 0x2) != 0)
-                    keyOn_CYM(opll);
-                else
-                    keyOff_CYM(opll);
-                if ((data & 0x1) != 0)
-                    keyOn_HH(opll);
-                else
-                    keyOff_HH(opll);
-            }
-            update_key_status(opll);
-
-            UPDATE_ALL(MOD(opll, 6));
-            UPDATE_ALL(CAR(opll, 6));
-            UPDATE_ALL(MOD(opll, 7));
-            UPDATE_ALL(CAR(opll, 7));
-            UPDATE_ALL(MOD(opll, 8));
-            UPDATE_ALL(CAR(opll, 8));
-
-            break;
-
-        case 0x0f:
-            break;
-
-        case 0x10:
-        case 0x11:
-        case 0x12:
-        case 0x13:
-        case 0x14:
-        case 0x15:
-        case 0x16:
-        case 0x17:
-        case 0x18:
-            ch = (int) (reg - 0x10);
-            if (opll.vrc7_mode != 0 && ch >= 6)
-                break;
-            setFnumber(opll, ch, (int) (data + ((opll.reg[0x20 + ch] & 1) << 8)));
-            UPDATE_ALL(MOD(opll, ch));
-            UPDATE_ALL(CAR(opll, ch));
-            break;
-
-        case 0x20:
-        case 0x21:
-        case 0x22:
-        case 0x23:
-        case 0x24:
-        case 0x25:
-        case 0x26:
-        case 0x27:
-        case 0x28:
-            ch = (int) (reg - 0x20);
-            if (opll.vrc7_mode != 0 && ch >= 6)
-                break;
-            setFnumber(opll, ch, (int) (((data & 1) << 8) + opll.reg[0x10 + ch]));
-            setBlock(opll, ch, (int) ((data >> 1) & 7));
-            setSustine(opll, ch, (int) ((data >> 5) & 1));
-            if (ch < 0x06 || (opll.reg[0x0E] & 0x20) == 0) {
-                // Valley Bell Fix: prevent commands 0x26-0x28 from turning
-                // the drums (BD, SD, CYM) off
-                if ((data & 0x10) != 0)
-                    keyOn(opll, ch);
-                else
-                    keyOff(opll, ch);
-            }
-            UPDATE_ALL(MOD(opll, ch));
-            UPDATE_ALL(CAR(opll, ch));
-            update_key_status(opll);
-            update_rhythm_mode(opll);
-            break;
-
-        case 0x30:
-        case 0x31:
-        case 0x32:
-        case 0x33:
-        case 0x34:
-        case 0x35:
-        case 0x36:
-        case 0x37:
-        case 0x38:
-            if (opll.vrc7_mode != 0 && reg >= 0x36)
-                break;
-            i = (int) ((data >> 4) & 15);
-            v = (int) (data & 15);
-            if ((opll.reg[0x0e] & 0x20) != 0 && (reg >= 0x36)) {
-                switch (reg) {
-                case 0x37:
-                    setSlotVolume(MOD(opll, 7), i << 2);
-                    break;
-                case 0x38:
-                    setSlotVolume(MOD(opll, 8), i << 2);
-                    break;
-                default:
-                    break;
-                }
-            } else {
-                setPatch(opll, (int) (reg - 0x30), i);
-            }
-            setVolume(opll, (int) (reg - 0x30), v << 2);
-            UPDATE_ALL(MOD(opll, (int) (reg - 0x30)));
-            UPDATE_ALL(CAR(opll, (int) (reg - 0x30)));
-            break;
-
-        default:
-            break;
-
-        }
-    }
-
-    private void OPLL_writeIO(OPLL opll, int adr, int val) {
-        if ((adr & 1) != 0)
-            OPLL_writeReg(opll, opll.adr, val);
-        else
-            opll.adr = (byte) val;
-    }
-
-    //#ifndef EMU2413_COMPACTION
-    /* STEREO MODE (OPT) */
-    private void OPLL_set_pan(OPLL opll, int ch, int pan) {
-        int fnl_ch;
-
-        if (ch >= 14)
-            return;
-
-        if (ch < 9)
-            fnl_ch = ch;
-        else
-            fnl_ch = 13 - (ch - 9);
-        calc_panning(opll.pan[fnl_ch], pan); // Maxim
-    }
-
-    private void calc_stereo(OPLL opll, int[] _out)//[2]
-    {
-        /* Maxim: added stereo control (multiply each side by a float in opll.pan[ch][side]) */
-        int l = 0, r = 0;
-        /*  e_int32 b[4] = { 0, 0, 0, 0 };        /* Ignore, Right, Left, Center */
-        /*  e_int32 r[4] = { 0, 0, 0, 0 };        /* Ignore, Right, Left, Center */
-        int i;
-        int channel;
-
-        //e0 = sw.ElapsedTicks;
-
-        update_ampm(opll);
-        update_noise(opll);
-
-
-        for (i = 0; i < 18; i++) {
-            //e1 = sw.ElapsedTicks;
-            calc_phase(opll.slot[i], opll.lfo_pm);
-            //e2 = sw.ElapsedTicks;
-            calc_envelope(opll.slot[i], opll.lfo_am);
-            //e3 = sw.ElapsedTicks;
-        }
-
-
-        for (i = 0; i < 6; i++)
-            if ((opll.mask & OPLL_MASK_CH(i)) == 0 && (CAR(opll, i).eg_mode != (int) OPLL_EG_STATE.FINISH.ordinal())) {
-                channel = calc_slot_car(CAR(opll, i), calc_slot_mod(MOD(opll, i)));
-                if (opll.pan[i][0] == 1.0f) {
-                    l += channel;
-                    r += channel;
+                // CH7
+                if (this.patchNumber[7] <= 15) {
+                    if ((this.mask & maskCh(7)) == 0 && (car(7).egMode != EgState.FINISH))
+                        inst += car(7).calcCar(mod(7).calcMod());
                 } else {
-                    l += (int) (channel * opll.pan[i][0]);
-                    r += (int) (channel * opll.pan[i][1]);
+                    if ((this.mask & MASK_HH) == 0 && (mod(7).egMode != EgState.FINISH))
+                        perc += mod(7).calcHat(car(8).pgOut, this.noiseSeed & 1);
+                    if ((this.mask & MASK_SD) == 0 && (car(7).egMode != EgState.FINISH))
+                        perc -= car(7).calcSnare(this.noiseSeed & 1);
+                }
+
+                // CH8
+                if (this.patchNumber[8] <= 15) {
+                    if ((this.mask & maskCh(8)) == 0 && (car(8).egMode != EgState.FINISH))
+                        inst += car(8).calcCar(mod(8).calcMod());
+                } else {
+                    if ((this.mask & MASK_TOM) == 0 && (mod(8).egMode != EgState.FINISH))
+                        perc += mod(8).calcTom();
+                    if ((this.mask & MASK_CYM) == 0 && (car(8).egMode != EgState.FINISH))
+                        perc -= car(8).calcCym(mod(7).pgOut);
                 }
             }
 
-        //e3 = sw.ElapsedTicks;
-
-        if (opll.vrc7_mode == 0) {
-            if (opll.patch_number[6] <= 15) {
-                if ((opll.mask & OPLL_MASK_CH(6)) == 0 && (CAR(opll, 6).eg_mode != (int) OPLL_EG_STATE.FINISH.ordinal())) {
-                    channel = calc_slot_car(CAR(opll, 6), calc_slot_mod(MOD(opll, 6)));
-                    if (opll.pan[6][0] == 1.0f) {
-                        l += channel;
-                        r += channel;
-                    } else {
-                        l += (int) (channel * opll.pan[6][0]);
-                        r += (int) (channel * opll.pan[6][1]);
-                    }
-
-                }
-            } else {
-                if ((opll.mask & OPLL_MASK_BD) == 0 && (CAR(opll, 6).eg_mode != (int) OPLL_EG_STATE.FINISH.ordinal())) {
-                    channel = calc_slot_car(CAR(opll, 6), calc_slot_mod(MOD(opll, 6))) << 1;
-                    if (opll.pan[9][0] == 1.0f) {
-                        l += channel;
-                        r += channel;
-                    } else {
-                        l += (int) (channel * opll.pan[9][0]);
-                        r += (int) (channel * opll.pan[9][1]);
-                    }
-                }
-            }
-
-            if (opll.patch_number[7] <= 15) {
-                if ((opll.mask & OPLL_MASK_CH(7)) == 0 && (CAR(opll, 7).eg_mode != (int) OPLL_EG_STATE.FINISH.ordinal())) {
-                    channel = calc_slot_car(CAR(opll, 7), calc_slot_mod(MOD(opll, 7)));
-                    if (opll.pan[7][0] == 1.0f) {
-                        l += channel;
-                        r += channel;
-                    } else {
-                        l += (int) (channel * opll.pan[7][0]);
-                        r += (int) (channel * opll.pan[7][1]);
-                    }
-                }
-            } else {
-                if ((opll.mask & OPLL_MASK_HH) == 0 && (MOD(opll, 7).eg_mode != (int) OPLL_EG_STATE.FINISH.ordinal())) {
-                    channel = calc_slot_hat(MOD(opll, 7), (int) CAR(opll, 8).pgout, opll.noise_seed & 1) << 1;
-                    if (opll.pan[10][0] == 1.0f) {
-                        l += channel;
-                        r += channel;
-                    } else {
-                        l += (int) (channel * opll.pan[10][0]);
-                        r += (int) (channel * opll.pan[10][1]);
-                    }
-                }
-                if ((opll.mask & OPLL_MASK_SD) == 0 && (CAR(opll, 7).eg_mode != (int) OPLL_EG_STATE.FINISH.ordinal())) {
-                    channel = -(calc_slot_snare(CAR(opll, 7), opll.noise_seed & 1) << 1); // this one is negated
-                    if (opll.pan[11][0] == 1.0f) {
-                        l += channel;
-                        r += channel;
-                    } else {
-                        l += (int) (channel * opll.pan[11][0]);
-                        r += (int) (channel * opll.pan[11][1]);
-                    }
-                }
-            }
-
-            if (opll.patch_number[8] <= 15) {
-                if ((opll.mask & OPLL_MASK_CH(8)) == 0 && (CAR(opll, 8).eg_mode != (int) OPLL_EG_STATE.FINISH.ordinal())) {
-                    channel = calc_slot_car(CAR(opll, 8), calc_slot_mod(MOD(opll, 8)));
-                    if (opll.pan[8][0] == 1.0f) {
-                        l += channel;
-                        r += channel;
-                    } else {
-                        l += (int) (channel * opll.pan[8][0]);
-                        r += (int) (channel * opll.pan[8][1]);
-                    }
-                }
-            } else {
-                if ((opll.mask & OPLL_MASK_TOM) == 0 && (MOD(opll, 8).eg_mode != (int) OPLL_EG_STATE.FINISH.ordinal())) {
-                    channel = calc_slot_tom(MOD(opll, 8)) << 1;
-                    if (opll.pan[12][0] == 1.0f) {
-                        l += channel;
-                        r += channel;
-                    } else {
-                        l += (int) (channel * opll.pan[12][0]);
-                        r += (int) (channel * opll.pan[12][1]);
-                    }
-                }
-                if ((opll.mask & OPLL_MASK_CYM) == 0 && (CAR(opll, 8).eg_mode != (int) OPLL_EG_STATE.FINISH.ordinal())) {
-                    channel = -(calc_slot_cym(CAR(opll, 8), MOD(opll, 7).pgout) << 1); // negated
-                    if (opll.pan[13][0] == 1.0f) {
-                        l += channel;
-                        r += channel;
-                    } else {
-                        l += (int) (channel * opll.pan[13][0]);
-                        r += (int) (channel * opll.pan[13][1]);
-                    }
-                }
-            }
-        } // end if (! opll.vrc7_mode)
-              /*
-                out[1] = (b[1] + b[3] + ((r[1] + r[3]) << 1)) <<3;
-                out[0] = (b[2] + b[3] + ((r[2] + r[3]) << 1)) <<3;
-                */
-        _out[0] = l << 3;
-        _out[1] = r << 3;
-        //e4 = sw.ElapsedTicks;
-    }
-
-        /*void
-        OPLL_calc_stereo (OPLL * opll, e_int32 out[2], samples)
-        {
-          if (!opll.quality)
-          {
-            calc_stereo (opll, out);
-            return;
-          }
-
-          while (opll.realstep > opll.oplltime)
-          {
-            opll.oplltime += opll.opllstep;
-            opll.sprev[0] = opll.snext[0];
-            opll.sprev[1] = opll.snext[1];
-            calc_stereo (opll, opll.snext);
-          }
-
-          opll.oplltime -= opll.realstep;
-          out[0] = (e_int16) (((double) opll.snext[0] * (opll.opllstep - opll.oplltime)
-                               + (double) opll.sprev[0] * opll.oplltime) / opll.opllstep);
-          out[1] = (e_int16) (((double) opll.snext[1] * (opll.opllstep - opll.oplltime)
-                               + (double) opll.sprev[1] * opll.oplltime) / opll.opllstep);
-        }*/
-
-    private void OPLL_calc_stereo(OPLL opll, int[][] _out, int samples) {
-        int[] bufMO = _out[0];
-        int[] bufRO = _out[1];
-        int[] buffers = new int[2];
-
-        int i;
-
-        //sw.Reset(); sw.Start();
-
-        for (i = 0; i < samples; i++) {
-            if (opll.quality == 0) {
-                calc_stereo(opll, buffers);
-                bufMO[i] = buffers[0];
-                bufRO[i] = buffers[1];
-            } else {
-                while (opll.realstep > opll.oplltime) {
-                    opll.oplltime += opll.opllstep;
-                    opll.sprev[0] = opll.snext[0];
-                    opll.sprev[1] = opll.snext[1];
-                    calc_stereo(opll, opll.snext);
-                }
-
-                opll.oplltime -= opll.realstep;
-                bufMO[i] = (int) (((double) opll.snext[0] * (opll.opllstep - opll.oplltime)
-                        + (double) opll.sprev[0] * opll.oplltime) / opll.opllstep);
-                bufRO[i] = (int) (((double) opll.snext[1] * (opll.opllstep - opll.oplltime)
-                        + (double) opll.sprev[1] * opll.oplltime) / opll.opllstep);
-            }
-            bufMO[i] <<= 1;
-            bufRO[i] <<= 1;
-
-            //System.err.printf("OPLL_calc_stereo:out[0][{0}]:{1}:out[1][{0}]:{2}:samples:{3}", i, _out[0][i], _out[1][i], samples);
+            int out = inst + (perc << 1);
+            return (short) out;
         }
 
-        //System.err.printf("elapsed:{0}:{1}:{2}:{3}:{4}:{5}", e0,e1,e2,e3,e4,e5);
+//#ifdef EMU2413_COMPACTION
 
-    }
-    //#endif /* EMU2413_COMPACTION */
+//        private short OPLL_calc() {
+//            return calc();
+//        }
 
-    private double SQRT2 = 1.414213562;
-    private int RANGE = 512;
+//#else
 
-    private void calc_panning(float[] channels, int position) {
-        if (position > RANGE / 2)
-            position = RANGE / 2;
-        else if (position < -RANGE / 2)
-            position = -RANGE / 2;
-        position += RANGE / 2;  // make -256..0..256 . 0..256..512
+        private short calc_() {
+            if (this.quality == 0)
+                return calc();
 
-        // Equal power law: equation is
-        // right = sin( position / range * pi / 2) * sqrt( 2 )
-        // left is equivalent to right with position = range - position
-        // position is in the range 0 .. RANGE
-        // RANGE / 2 = centre, result = 1.0f
-        channels[1] = (float) (Math.sin((double) position / RANGE * PI / 2) * SQRT2);
-        position = RANGE - position;
-        channels[0] = (float) (Math.sin((double) position / RANGE * PI / 2) * SQRT2);
-    }
+            while (this.realStep > this.opllTime) {
+                this.opllTime += this.opllStep;
+                this.prev = this.next;
+                this.next = calc();
+            }
 
-    //-----------------------------------------------------------------
-    // Reset the panning values to the centre position
-    //-----------------------------------------------------------------
-    private void centre_panning(float[] channels) {
-        channels[0] = channels[1] = 1.0f;
+            this.opllTime -= this.realStep;
+            this.out = (short) (((double) this.next * (this.opllStep - this.opllTime)
+                    + (double) this.prev * this.opllTime) / this.opllStep);
+
+            return (short) this.out;
+        }
+
+//#endif
+
+        private void setMuteMask(int muteMask) {
+            int chnMsk;
+
+            for (byte curChn = 0; curChn < 14; curChn++) {
+                if (curChn < 9) {
+                    chnMsk = maskCh(curChn);
+                } else {
+                    chnMsk = switch (curChn) {
+                        case 9 -> MASK_BD;
+                        case 10 -> MASK_SD;
+                        case 11 -> MASK_TOM;
+                        case 12 -> MASK_CYM;
+                        case 13 -> MASK_HH;
+                        default -> 0;
+                    };
+                }
+                if (((muteMask >> curChn) & 0x01) != 0)
+                    this.mask |= chnMsk;
+                else
+                    this.mask &= ~chnMsk;
+            }
+        }
+
+        private void setChipMode(byte Mode) {
+            // Enable/Disable VRC7 Mode (with only 6 instead of 9 channels and no rhythm part)
+            this.vrc7Mode = Mode;
+        }
+
+        // I/O Ctrl
+
+        private void writeReg(int reg, int data) {
+            //System.err.printf("OPLL_writeReg:reg:%d:data:%d", reg,data);
+
+            int v, ch;
+
+            data = data & 0xff;
+            reg = reg & 0x3f;
+            this.reg[reg] = (byte) data;
+
+            switch (reg) {
+            case 0x00:
+                this.patch[0][0].am = (data >> 7) & 1;
+                this.patch[0][0].pm = (data >> 6) & 1;
+                this.patch[0][0].eg = (data >> 5) & 1;
+                this.patch[0][0].kr = (data >> 4) & 1;
+                this.patch[0][0].ml = (data) & 15;
+                for (int i = 0; i < 9; i++) {
+                    if (this.patchNumber[i] == 0) {
+                        updatePg(mod(i));
+                        mod(i).updateRks();
+                        updateEg(mod(i));
+                    }
+                }
+                break;
+
+            case 0x01:
+                this.patch[0][1].am = (data >> 7) & 1;
+                this.patch[0][1].pm = (data >> 6) & 1;
+                this.patch[0][1].eg = (data >> 5) & 1;
+                this.patch[0][1].kr = (data >> 4) & 1;
+                this.patch[0][1].ml = (data) & 15;
+                for (int i = 0; i < 9; i++) {
+                    if (this.patchNumber[i] == 0) {
+                        updatePg(car(i));
+                        car(i).updateRks();
+                        updateEg(car(i));
+                    }
+                }
+                break;
+
+            case 0x02:
+                this.patch[0][0].kl = (data >> 6) & 3;
+                this.patch[0][0].tl = (data) & 63;
+                for (int i = 0; i < 9; i++) {
+                    if (this.patchNumber[i] == 0) {
+                        mod(i).updateTll();
+                    }
+                }
+                break;
+
+            case 0x03:
+                this.patch[0][1].kl = (data >> 6) & 3;
+                this.patch[0][1].wf = (data >> 4) & 1;
+                this.patch[0][0].wf = (data >> 3) & 1;
+                this.patch[0][0].fb = (data) & 7;
+                for (int i = 0; i < 9; i++) {
+                    if (this.patchNumber[i] == 0) {
+                        mod(i).updateWf();
+                        car(i).updateWf();
+                    }
+                }
+                break;
+
+            case 0x04:
+                this.patch[0][0].ar = (data >> 4) & 15;
+                this.patch[0][0].dr = (data) & 15;
+                for (int i = 0; i < 9; i++) {
+                    if (this.patchNumber[i] == 0) {
+                        updateEg(mod(i));
+                    }
+                }
+                break;
+
+            case 0x05:
+                this.patch[0][1].ar = (data >> 4) & 15;
+                this.patch[0][1].dr = (data) & 15;
+                for (int i = 0; i < 9; i++) {
+                    if (this.patchNumber[i] == 0) {
+                        updateEg(car(i));
+                    }
+                }
+                break;
+
+            case 0x06:
+                this.patch[0][0].sl = (data >> 4) & 15;
+                this.patch[0][0].rr = (data) & 15;
+                for (int i = 0; i < 9; i++) {
+                    if (this.patchNumber[i] == 0) {
+                        updateEg(mod(i));
+                    }
+                }
+                break;
+
+            case 0x07:
+                this.patch[0][1].sl = (data >> 4) & 15;
+                this.patch[0][1].rr = (data) & 15;
+                for (int i = 0; i < 9; i++) {
+                    if (this.patchNumber[i] == 0) {
+                        updateEg(car(i));
+                    }
+                }
+                break;
+
+            case 0x0e:
+                if (this.vrc7Mode != 0)
+                    break;
+                updateRhythmMode();
+                if ((data & 0x20) != 0) {
+                    if ((data & 0x10) != 0)
+                        keyOnBD();
+                    else
+                        keyOffBD();
+                    if ((data & 0x8) != 0)
+                        keyOnSD();
+                    else
+                        keyOffSD();
+                    if ((data & 0x4) != 0)
+                        keyOnTOM();
+                    else
+                        keyOffTOM();
+                    if ((data & 0x2) != 0)
+                        keyOnCYM();
+                    else
+                        keyOffCYM();
+                    if ((data & 0x1) != 0)
+                        keyOn_HH();
+                    else
+                        keyOffHH();
+                }
+                updateKeyStatus();
+
+                updateAll(mod(6));
+                updateAll(car(6));
+                updateAll(mod(7));
+                updateAll(car(7));
+                updateAll(mod(8));
+                updateAll(car(8));
+
+                break;
+
+            case 0x0f:
+                break;
+
+            case 0x10:
+            case 0x11:
+            case 0x12:
+            case 0x13:
+            case 0x14:
+            case 0x15:
+            case 0x16:
+            case 0x17:
+            case 0x18:
+                ch = reg - 0x10;
+                if (this.vrc7Mode != 0 && ch >= 6)
+                    break;
+                setFnumber(ch, data + ((this.reg[0x20 + ch] & 1) << 8));
+                updateAll(mod(ch));
+                updateAll(car(ch));
+                break;
+
+            case 0x20:
+            case 0x21:
+            case 0x22:
+            case 0x23:
+            case 0x24:
+            case 0x25:
+            case 0x26:
+            case 0x27:
+            case 0x28:
+                ch = reg - 0x20;
+                if (this.vrc7Mode != 0 && ch >= 6)
+                    break;
+                setFnumber(ch, ((data & 1) << 8) + this.reg[0x10 + ch]);
+                setBlock(ch, (data >> 1) & 7);
+                setSustain(ch, (data >> 5) & 1);
+                if (ch < 0x06 || (this.reg[0x0E] & 0x20) == 0) {
+                    // Valley Bell Fix: prevent commands 0x26-0x28 from turning
+                    // the drums (BD, SD, CYM) off
+                    if ((data & 0x10) != 0)
+                        keyOn(ch);
+                    else
+                        keyOff(ch);
+                }
+                updateAll(mod(ch));
+                updateAll(car(ch));
+                updateKeyStatus();
+                updateRhythmMode();
+                break;
+
+            case 0x30:
+            case 0x31:
+            case 0x32:
+            case 0x33:
+            case 0x34:
+            case 0x35:
+            case 0x36:
+            case 0x37:
+            case 0x38:
+                if (this.vrc7Mode != 0 && reg >= 0x36)
+                    break;
+                int i = (data >> 4) & 15;
+                v = data & 15;
+                if ((this.reg[0x0e] & 0x20) != 0 && (reg >= 0x36)) {
+                    switch (reg) {
+                    case 0x37:
+                        setSlotVolume(mod(7), i << 2);
+                        break;
+                    case 0x38:
+                        setSlotVolume(mod(8), i << 2);
+                        break;
+                    default:
+                        break;
+                    }
+                } else {
+                    setPatch(reg - 0x30, i);
+                }
+                setVolume(reg - 0x30, v << 2);
+                updateAll(mod(reg - 0x30));
+                updateAll(car(reg - 0x30));
+                break;
+
+            default:
+                break;
+
+            }
+        }
+
+        private void writeIO(int adr, int val) {
+            if ((adr & 1) != 0)
+                writeReg(this.adr, val);
+            else
+                this.adr = (byte) val;
+        }
+
+//#ifndef EMU2413_COMPACTION
+
+        /** STEREO MODE (OPT) */
+        private void setPan(int ch, int pan) {
+            int fnlCh;
+
+            if (ch >= 14)
+                return;
+
+            if (ch < 9)
+                fnlCh = ch;
+            else
+                fnlCh = 13 - (ch - 9);
+            calcPanning(this.pan[fnlCh], pan); // Maxim
+        }
+
+        private void calcStereo(int[] out) {
+            // Maxim: added stereo control (multiply each side by a float in this.pan[ch][side])
+            int l = 0, r = 0;
+
+            updateAmPm();
+            updateNoise();
+
+            for (int i = 0; i < 18; i++) {
+                this.slot[i].calcPhase(this.lfoPm);
+                this.slot[i].calcEnvelope(this.lfoAm, this::updateEg);
+            }
+
+            for (int i = 0; i < 6; i++)
+                if ((this.mask & maskCh(i)) == 0 && (car(i).egMode != EgState.FINISH)) {
+                    int channel = car(i).calcCar(mod(i).calcMod());
+                    if (this.pan[i][0] == 1.0f) {
+                        l += channel;
+                        r += channel;
+                    } else {
+                        l += (int) (channel * this.pan[i][0]);
+                        r += (int) (channel * this.pan[i][1]);
+                    }
+                }
+
+            if (this.vrc7Mode == 0) {
+                if (this.patchNumber[6] <= 15) {
+                    if ((this.mask & maskCh(6)) == 0 && (car(6).egMode != EgState.FINISH)) {
+                        int channel = car(6).calcCar(mod(6).calcMod());
+                        if (this.pan[6][0] == 1.0f) {
+                            l += channel;
+                            r += channel;
+                        } else {
+                            l += (int) (channel * this.pan[6][0]);
+                            r += (int) (channel * this.pan[6][1]);
+                        }
+
+                    }
+                } else {
+                    if ((this.mask & MASK_BD) == 0 && (car(6).egMode != EgState.FINISH)) {
+                        int channel = car(6).calcCar(mod(6).calcMod()) << 1;
+                        if (this.pan[9][0] == 1.0f) {
+                            l += channel;
+                            r += channel;
+                        } else {
+                            l += (int) (channel * this.pan[9][0]);
+                            r += (int) (channel * this.pan[9][1]);
+                        }
+                    }
+                }
+
+                if (this.patchNumber[7] <= 15) {
+                    if ((this.mask & maskCh(7)) == 0 && (car(7).egMode != EgState.FINISH)) {
+                        int channel = car(7).calcCar(mod(7).calcMod());
+                        if (this.pan[7][0] == 1.0f) {
+                            l += channel;
+                            r += channel;
+                        } else {
+                            l += (int) (channel * this.pan[7][0]);
+                            r += (int) (channel * this.pan[7][1]);
+                        }
+                    }
+                } else {
+                    if ((this.mask & MASK_HH) == 0 && (mod(7).egMode != EgState.FINISH)) {
+                        int channel = mod(7).calcHat(car(8).pgOut, this.noiseSeed & 1) << 1;
+                        if (this.pan[10][0] == 1.0f) {
+                            l += channel;
+                            r += channel;
+                        } else {
+                            l += (int) (channel * this.pan[10][0]);
+                            r += (int) (channel * this.pan[10][1]);
+                        }
+                    }
+                    if ((this.mask & MASK_SD) == 0 && (car(7).egMode != EgState.FINISH)) {
+                        int channel = -(car(7).calcSnare(this.noiseSeed & 1) << 1); // this one is negated
+                        if (this.pan[11][0] == 1.0f) {
+                            l += channel;
+                            r += channel;
+                        } else {
+                            l += (int) (channel * this.pan[11][0]);
+                            r += (int) (channel * this.pan[11][1]);
+                        }
+                    }
+                }
+
+                if (this.patchNumber[8] <= 15) {
+                    if ((this.mask & maskCh(8)) == 0 && (car(8).egMode != EgState.FINISH)) {
+                        int channel = car(8).calcCar(mod(8).calcMod());
+                        if (this.pan[8][0] == 1.0f) {
+                            l += channel;
+                            r += channel;
+                        } else {
+                            l += (int) (channel * this.pan[8][0]);
+                            r += (int) (channel * this.pan[8][1]);
+                        }
+                    }
+                } else {
+                    if ((this.mask & MASK_TOM) == 0 && (mod(8).egMode != EgState.FINISH)) {
+                        int channel = mod(8).calcTom() << 1;
+                        if (this.pan[12][0] == 1.0f) {
+                            l += channel;
+                            r += channel;
+                        } else {
+                            l += (int) (channel * this.pan[12][0]);
+                            r += (int) (channel * this.pan[12][1]);
+                        }
+                    }
+                    if ((this.mask & MASK_CYM) == 0 && (car(8).egMode != EgState.FINISH)) {
+                        int channel = -(car(8).calcCym(mod(7).pgOut) << 1); // negated
+                        if (this.pan[13][0] == 1.0f) {
+                            l += channel;
+                            r += channel;
+                        } else {
+                            l += (int) (channel * this.pan[13][0]);
+                            r += (int) (channel * this.pan[13][1]);
+                        }
+                    }
+                }
+            }
+            out[0] = l << 3;
+            out[1] = r << 3;
+        }
+
+        private void calcStereo(int[][] out, int samples) {
+            int[] bufMO = out[0];
+            int[] bufRO = out[1];
+            int[] buffers = new int[2];
+
+            for (int i = 0; i < samples; i++) {
+                if (this.quality == 0) {
+                    calcStereo(buffers);
+                    bufMO[i] = buffers[0];
+                    bufRO[i] = buffers[1];
+                } else {
+                    while (this.realStep > this.opllTime) {
+                        this.opllTime += this.opllStep;
+                        this.sPrev[0] = this.sNext[0];
+                        this.sPrev[1] = this.sNext[1];
+                        calcStereo(this.sNext);
+                    }
+
+                    this.opllTime -= this.realStep;
+                    bufMO[i] = (int) (((double) this.sNext[0] * (this.opllStep - this.opllTime)
+                            + (double) this.sPrev[0] * this.opllTime) / this.opllStep);
+                    bufRO[i] = (int) (((double) this.sNext[1] * (this.opllStep - this.opllTime)
+                            + (double) this.sPrev[1] * this.opllTime) / this.opllStep);
+                }
+                bufMO[i] <<= 1;
+                bufRO[i] <<= 1;
+
+                //System.err.printf("OPLL_calc_stereo:out[0][%d]:%d:out[1][%d]:%d:samples:%d", i, out[0][i], out[1][i], samples);
+            }
+            //System.err.printf("elapsed:%d:%d:%d:%d:%d:%d", e0,e1,e2,e3,e4,e5);
+        }
+
+//#endif /* EMU2413_COMPACTION */
+
+        private static final double SQRT2 = 1.414213562;
+        private static final int RANGE = 512;
+
+        private void calcPanning(float[] channels, int position) {
+            if (position > RANGE / 2)
+                position = RANGE / 2;
+            else if (position < -RANGE / 2)
+                position = -RANGE / 2;
+            position += RANGE / 2; // make -256..0..256 . 0..256..512
+
+            // Equal power law: equation is
+            // right = sin( position / range * pi / 2) * sqrt( 2 )
+            // left is equivalent to right with position = range - position
+            // position is in the range 0 .. RANGE
+            // RANGE / 2 = centre, result = 1.0f
+            channels[1] = (float) (Math.sin((double) position / RANGE * Math.PI / 2) * SQRT2);
+            position = RANGE - position;
+            channels[0] = (float) (Math.sin((double) position / RANGE * Math.PI / 2) * SQRT2);
+        }
+
+        /**
+         * Reset the panning values to the centre position
+         */
+        private void centrePanning(float[] channels) {
+            channels[0] = channels[1] = 1.0f;
+        }
     }
 
     public Ym2413() {
+        // 0..Main
         visVolume = new int[][][] {
+                new int[][] {new int[] {0, 0}},
                 new int[][] {new int[] {0, 0}}
-                , new int[][] {new int[] {0, 0}}
         };
-        //0..Main
     }
 
-
     @Override
-    public void reset(byte chipID) {
-        OPLL_reset(opll_[chipID]);
+    public void reset(byte chipId) {
+        opll_[chipId].reset();
     }
 
     private static final int DefaultYM2413ClockValue = 3579545;
 
     @Override
-    public int start(byte chipID, int SamplingRate) {
-        opll_[chipID] = OPLL_new(DefaultYM2413ClockValue, SamplingRate);
-        //OPLL_set_quality(opll_[chipID], 1);
-        OPLL_set_quality(opll_[chipID], 0);
-        return SamplingRate;
+    public int start(byte chipId, int samplingRate) {
+        opll_[chipId] = new OPLL(DefaultYM2413ClockValue, samplingRate);
+        //opll_[chipId].setQuality(1);
+        opll_[chipId].setQuality(0);
+        return samplingRate;
     }
 
     private OPLL[] opll_ = new OPLL[2];
@@ -2254,43 +1941,34 @@ public class Ym2413 extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(byte chipID, int SamplingRate, int clockValue, Object... Option) {
-        opll_[chipID] = OPLL_new(clockValue, SamplingRate, Option);
-        //OPLL_set_quality(opll_[chipID], 1);
-        OPLL_set_quality(opll_[chipID], 0);
-        return SamplingRate;
+    public int start(byte chipId, int samplingRate, int clockValue, Object... option) {
+        opll_[chipId] = new OPLL(clockValue, samplingRate, option);
+        //opll_[chipId].setQuality(1);
+        opll_[chipId].setQuality(0);
+        return samplingRate;
     }
 
     @Override
-    public void stop(byte chipID) {
-        opll_[chipID] = null;
-    }
-
-    //System.Diagnostics.Stopwatch sw = System.Diagnostics.Stopwatch.StartNew();
-    //long e0 = 0, e1 = 0, e2 = 0, e3 = 0, e4 = 0, e5 = 0;
-
-    @Override
-    public void update(byte chipID, int[][] outputs, int samples) {
-        //sw.Reset();
-        //sw.Start();
-
-        OPLL_calc_stereo(opll_[chipID], outputs, samples);
-
-        visVolume[chipID][0][0] = outputs[0][0];
-        visVolume[chipID][0][1] = outputs[1][0];
-
-        //System.err.printf(sw.Elapsed);
-
-    }
-
-    private void YM2413_Write(byte chipID, byte Adr, byte Data) {
-        if (opll_[chipID] == null) return;
-        OPLL_writeReg(opll_[chipID], Adr, Data);
+    public void stop(byte chipId) {
+        opll_[chipId] = null;
     }
 
     @Override
-    public int write(byte chipID, int port, int adr, int data) {
-        YM2413_Write(chipID, (byte) adr, (byte) data);
+    public void update(byte chipId, int[][] outputs, int samples) {
+        opll_[chipId].calcStereo(outputs, samples);
+
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
+    }
+
+    private void YM2413_Write(byte chipId, byte Adr, byte Data) {
+        if (opll_[chipId] == null) return;
+        opll_[chipId].writeReg(Adr, Data);
+    }
+
+    @Override
+    public int write(byte chipId, int port, int adr, int data) {
+        YM2413_Write(chipId, (byte) adr, (byte) data);
         return 0;
     }
 }

@@ -1,16 +1,45 @@
 package mdsound.fmvgen;
 
 import mdsound.fmgen.Fmgen;
+import mdsound.fmvgen.effect.Chorus;
+import mdsound.fmvgen.effect.Compressor;
+import mdsound.fmvgen.effect.Distortion;
+import mdsound.fmvgen.effect.Eq3band;
+import mdsound.fmvgen.effect.HPFLPF;
+import mdsound.fmvgen.effect.Reverb;
+import mdsound.fmvgen.effect.ReversePhase;
 
 
 public class Fmvgen extends Fmgen {
+
+    public static class Effects {
+        private static final int MaxCh = 39;
+
+        public Reverb reverb;
+        public Distortion distortion;
+        public Chorus chorus;
+        public ReversePhase reversePhase;
+        public HPFLPF hpflpf;
+        public Compressor compressor;
+        public Eq3band ep3band;
+
+        public Effects(int clock) {
+            reverb = new Reverb(clock, MaxCh);
+            distortion = new Distortion(clock, MaxCh);
+            chorus = new Chorus(clock, MaxCh);
+            ep3band = new Eq3band(clock);
+            hpflpf = new HPFLPF(clock, MaxCh);
+            reversePhase = new ReversePhase();
+            compressor = new Compressor(clock, MaxCh);
+        }
+    }
 
     public enum OpType {
         typeN,
         typeM
     }
 
-    public static final int[][][] sinetable = new int[][][] {
+    public static final int[][][] sineTable = new int[][][] {
             new int[][] {new int[1024], new int[1024], new int[1024], new int[1024]},
             new int[][] {new int[1024], new int[1024], new int[1024], new int[1024]},
             new int[][] {new int[1024], new int[1024], new int[1024], new int[1024]},
@@ -166,54 +195,73 @@ public class Fmvgen extends Fmgen {
                 }
         };
 
-        //
-        // Operator
-        //
-        boolean tableHasMade = false;
-        //int[] sinetable = new int[1024];
+        //int[] sineTable = new int[1024];
         static int[] clTable = new int[FM_CLENTS];
 
-        public OpType type;       // OP の種類 (MPcm, N...)
-        private int bn;       // Block/Note
-        private int egLevel;  // EG の出力値
-        private int egLevelOnNextPhase;    // 次の eg_phase_ に移る値
-        private int egCount;      // EG の次の変移までの時間
-        private int egCountDiff; // eg_count_ の差分
-        private int egOut;        // EG+TL を合わせた出力値
-        private int tlOut;        // TL 分の出力値
-        //private boolean tl_out_;        // TL 分の出力値
-        //  int  pm_depth_;  // PM depth
-        //  int  am_depth_;  // AM depth
+        // OP の種類 (MPcm, N...)
+        public OpType type;
+        // Block/Note
+        private int bn;
+        // EG の出力値
+        private int egLevel;
+        // 次の eg_phase_ に移る値
+        private int egLevelOnNextPhase;
+        // EG の次の変移までの時間
+        private int egCount;
+        // eg_count_ の差分
+        private int egCountDiff;
+        // EG+TL を合わせた出力値
+        private int egOut;
+        // TL 分の出力値
+        private int tlOut;
+        // TL 分の出力値
+        //private boolean tl_out_;
+        // PM depth
+        //int pm_depth_;
+        // AM depth
+        //int am_depth_;
         private int egRate;
         private int egCurveCount;
         private int ssgOffset;
         private int ssgVector;
         private int ssgPhase;
 
-
-        private int keyScaleRate;       // key scale rate
+        // key scale rate
+        private int keyScaleRate;
         private EGPhase egPhase;
         private int[] ams;
         public int ms;
 
-        private int tl;           // Total Level  (0-127)
-        private int tlLatch;     // Total Level Latch (for CSM mode)
-        private int ar;           // Attack Rate   (0-63)
-        private int dr;           // Decay Rate    (0-63)
-        private int sr;           // Sustain Rate  (0-63)
-        private int sl;           // Sustain Level (0-127)
-        private int rr;           // Release Rate  (0-63)
-        private int ks;           // Keyscale      (0-3)
-        private int ssgType; // SSG-Type Envelop Control
-        private int phaseReset;   // phaseReset(0/1)
+        // Total Level  (0-127)
+        private int tl;
+        // Total Level Latch (for CSM mode)
+        private int tlLatch;
+        // Attack Rate   (0-63)
+        private int ar;
+        // Decay Rate    (0-63)
+        private int dr;
+        // Sustain Rate  (0-63)
+        private int sr;
+        // Sustain Level (0-127)
+        private int sl;
+        // Release Rate  (0-63)
+        private int rr;
+        // Keyscale      (0-3)
+        private int ks;
+        // SSG-Type Envelop Controller
+        private int ssgType;
+        // phaseReset(0/1)
+        private int phaseReset;
 
         public int fb;
         public byte algLink;
         public byte wt;
 
         private boolean keyOn;
-        public boolean amOn;     // enable Amplitude Modulation
-        public boolean paramChanged;    // パラメータが更新された
+        // enable Amplitude Modulation
+        public boolean amOn;
+        // パラメータが更新された
+        public boolean paramChanged;
         private boolean mute;
 
         // １サンプル合成
@@ -221,20 +269,25 @@ public class Fmvgen extends Fmgen {
         // ISample を envelop count (2π) に変換するシフト量
         public static final int IS2EC_SHIFT = ((20 + FM_PGBITS) - 13);
 
-        //typedef (int)32 Counter;
-
-        private Chip chip;
+        private Fmgen.Channel4.Chip chip;
         public int out, out2;
         private int in2;
 
         // Phase Generator this.
-        private int dp;       // ΔP
-        private int detune;       // Detune
-        private int detune2;  // DT2
-        private int multiple; // Multiple
-        private int pgCount;   // Phase 現在値
-        private int pgDiff;    // Phase 差分値
-        private int pgDiffLfo; // Phase 差分値 >> x
+        // ΔP
+        private int dp;
+        // Detune
+        private int detune;
+        // DT2
+        private int detune2;
+        // Multiple
+        private int multiple;
+        // Phase 現在値
+        private int pgCount;
+        // Phase 差分値
+        private int pgDiff;
+        // Phase 差分値 >> x
+        private int pgDiffLfo;
 
         // Envelop Generator this.
         public enum EGPhase {
@@ -247,17 +300,13 @@ public class Fmvgen extends Fmgen {
 
         // Tables this.
         private int[] rateTable = new int[16];
-        private int[][] multable = new int[][] {new int[16], new int[16], new int[16], new int[16]};
+        private int[][] mulTable = new int[][] {new int[16], new int[16], new int[16], new int[16]};
 
         public int dbgOpOut;
         public int dbgPgOut;
 
-
         // 構築
         public Operator() {
-            if (!tableHasMade)
-                makeTable();
-
             // EG Part
             ar = dr = sr = rr = keyScaleRate = 0;
             ams = amTable[0][0];
@@ -296,7 +345,7 @@ public class Fmvgen extends Fmgen {
             paramChanged = true;
         }
 
-        public void makeTable() {
+        static {
             // 対数テーブルの作成
             //assert(FM_CLENTS >= 256);
 
@@ -310,22 +359,21 @@ public class Fmvgen extends Fmgen {
             }
             while (p < FM_CLENTS) {
                 clTable[p] = clTable[p - 512] / 2;
-                //System.err.System.err.printf("{0}:", cltable[p]);
+                //System.err.System.err.printf("%d:", cltable[p]);
                 p++;
             }
 
-            // for (i=0; i<13*256; i++)
+            // for (i = 0; i < 13 * 256; i++)
             //  System.err.printf("%4d, %d, %d\n", i, cltable[i*2], cltable[i*2+1]);
 
             // サインテーブルの作成
             //double log2 = Math.log(2.0);
-            //for (i = 0; i < FM_OPSINENTS / 2; i++)
-            //{
+            //for (i = 0; i < FM_OPSINENTS / 2; i++) {
             //double r = (i * 2 + 1) * FM_PI / FM_OPSINENTS;
             //double q = -256 * Math.log(Math.sin(r)) / log2;
             //int s = (int)((int)(Math.floor(q + 0.5)) + 1);
-            //System.err.System.err.printf("{0}, {1}", s, cltable[s * 2] / 8);
-            //System.err.System.err.printf("{0:d6} , {1:d6} , {2:d6} , {3:X4} , {4:X4}"
+            //System.err.System.err.printf("%d, %d", s, cltable[s * 2] / 8);
+            //System.err.System.err.printf("%6d , %6d , %6d , %4X , %4X"
             //    , s
             //    , cltable[s * 2]
             //    , ((s * 2) % 2 == 0 ? 1 : -1) * (4095 - Math.abs((s * 2) / 2))
@@ -339,21 +387,15 @@ public class Fmvgen extends Fmgen {
                 Fmvgen.waveReset(j, 3);
             }
             //}
-
-            Fmvgen.makeLFOTable();
-
-            tableHasMade = true;
         }
 
         public void setDPBN(int dp, int bn) {
             this.dp = dp;
             this.bn = bn;
             paramChanged = true;
-            //PARAMCHANGE(1);
         }
 
         // 準備
-
         public void prepare() {
             if (paramChanged) {
                 paramChanged = false;
@@ -392,7 +434,7 @@ public class Fmvgen extends Fmgen {
                     ssgVector = table[1];
                 }
                 // LFO
-                ams = amTable[(int) type.ordinal()][amOn ? (ms >> 4) & 3 : 0];
+                ams = amTable[type.ordinal()][amOn ? (ms >> 4) & 3 : 0];
                 egUpdate();
 
                 dbgOpOut = 0;
@@ -400,10 +442,9 @@ public class Fmvgen extends Fmgen {
         }
 
         // envelop の eg_phase_ 変更
-
         public void shiftPhase(EGPhase nextphase) {
             switch (nextphase) {
-            case Attack:        // Attack Phase
+            case Attack: // Attack Phase
                 tl = tlLatch;
                 if (ssgType != 0) {
                     ssgPhase = ssgPhase + 1;
@@ -426,7 +467,7 @@ public class Fmvgen extends Fmgen {
 
                 if (sl != 0) {
                     egLevel = 0;
-                    egLevelOnNextPhase = (int) (ssgType != 0 ? Math.min(sl * 8, 0x200) : sl * 8);
+                    egLevelOnNextPhase = ssgType != 0 ? Math.min(sl * 8, 0x200) : sl * 8;
 
                     setEGRate(dr != 0 ? Math.min(63, dr + keyScaleRate) : 0);
                     egPhase = EGPhase.Decay;
@@ -439,7 +480,7 @@ public class Fmvgen extends Fmgen {
                 setEGRate(sr != 0 ? Math.min(63, sr + keyScaleRate) : 0);
                 egPhase = EGPhase.Sustain;
                 break;
-            case Decay:         // Decay Phase
+            case Decay: // Decay Phase
                 if (sl != 0) {
                     egLevel = 0;
                     egLevelOnNextPhase = ssgType != 0 ? Math.min(sl * 8, 0x200) : sl * 8;
@@ -449,28 +490,27 @@ public class Fmvgen extends Fmgen {
                     break;
                 }
 
-                egLevel = (int) (sl * 8);
+                egLevel = sl * 8;
                 egLevelOnNextPhase = ssgType != 0 ? 0x200 : 0x400;
 
                 setEGRate(sr != 0 ? Math.min(63, sr + keyScaleRate) : 0);
                 egPhase = EGPhase.Sustain;
                 break;
-            case Sustain:       // Sustain Phase
-                egLevel = (int) (sl * 8);
+            case Sustain: // Sustain Phase
+                egLevel = sl * 8;
                 egLevelOnNextPhase = ssgType != 0 ? 0x200 : 0x400;
 
                 setEGRate(sr != 0 ? Math.min(63, sr + keyScaleRate) : 0);
                 egPhase = EGPhase.Sustain;
                 break;
 
-            case Release:       // Release Phase
+            case Release: // Release Phase
                 if (ssgType != 0) {
                     egLevel = egLevel * ssgVector + ssgOffset;
                     ssgVector = 1;
                     ssgOffset = 0;
                 }
-                if (egPhase == EGPhase.Attack || (egLevel < FM_EG_BOTTOM)) //0x400/* && eg_phase_ != off*/))
-                {
+                if (egPhase == EGPhase.Attack || (egLevel < FM_EG_BOTTOM)) { //0x400/* && eg_phase_ != off*/))
                     egLevelOnNextPhase = 0x400;
                     setEGRate(Math.min(63, rr + keyScaleRate));
                     egPhase = EGPhase.Release;
@@ -484,7 +524,7 @@ public class Fmvgen extends Fmgen {
                 egPhase = EGPhase.Off;
                 break;
 
-            case Off:           // off
+            case Off: // off
             default:
                 egLevel = FM_EG_BOTTOM;
                 egLevelOnNextPhase = FM_EG_BOTTOM;
@@ -496,29 +536,23 @@ public class Fmvgen extends Fmgen {
         }
 
         // Block/F-Num
-
         public void setFNum(int f) {
-            dp = (f & 2047) << (int) ((f >> 11) & 7);
+            dp = (f & 2047) << ((f >> 11) & 7);
             bn = notetable[(f >> 7) & 127];
             paramChanged = true;
         }
 
         // 入力: s = 20+FM_PGBITS = 29
-
         public int sine(int c, int s) {
-            return sinetable[c][wt][((s) >> (20 + FM_PGBITS - FM_OPSINBITS)) & (FM_OPSINENTS - 1)];
+            return sineTable[c][wt][((s) >> (20 + FM_PGBITS - FM_OPSINBITS)) & (FM_OPSINENTS - 1)];
         }
 
         public int SINE(int c, int s) {
-            return sinetable[c][wt][(s) & (FM_OPSINENTS - 1)];
+            return sineTable[c][wt][(s) & (FM_OPSINENTS - 1)];
         }
 
         public int logToLin(int a) {
-            //#if 1 // FM_CLENTS < 0xc00  // 400 for TL, 400 for ENV, 400 for LFO.
             return (a < FM_CLENTS) ? clTable[a] : 0;
-            //#else
-            //return cltable[a];
-            //#endif
         }
 
         public void egUpdate() {
@@ -605,10 +639,9 @@ public class Fmvgen extends Fmgen {
             out2 = out;
 
             int pgin = pgCalc() >> (20 + FM_PGBITS - FM_OPSINBITS);
-            //pgin += In >> (20 + FM_PGBITS - FM_OPSINBITS - (2 + IS2EC_SHIFT));
             if (fb < 31) {
-                pgin += ((In2 << (int) (1 + IS2EC_SHIFT)) >> (int) fb) >> (20 + FM_PGBITS - FM_OPSINBITS);
-                //System.err.System.err.printf("Calc:{0}", pgin);
+                pgin += ((In2 << (1 + IS2EC_SHIFT)) >> fb) >> (20 + FM_PGBITS - FM_OPSINBITS);
+                //System.err.System.err.printf("Calc:%d", pgin);
             } else {
                 pgin += In >> (20 + FM_PGBITS - FM_OPSINBITS - (2 + IS2EC_SHIFT));
             }
@@ -624,10 +657,9 @@ public class Fmvgen extends Fmgen {
             out2 = out;
 
             int pgin = pgCalcL() >> (20 + FM_PGBITS - FM_OPSINBITS);
-            //pgin += In >> (20 + FM_PGBITS - FM_OPSINBITS - (2 + IS2EC_SHIFT));
             if (fb < 31) {
                 //                        17                                       19
-                pgin += ((In2 << (1 + IS2EC_SHIFT)) >> (int) fb) >> (20 + FM_PGBITS - FM_OPSINBITS);
+                pgin += ((In2 << (1 + IS2EC_SHIFT)) >> fb) >> (20 + FM_PGBITS - FM_OPSINBITS);
             } else {
                 //                                      1
                 pgin += In >> (20 + FM_PGBITS - FM_OPSINBITS - (2 + IS2EC_SHIFT));
@@ -662,7 +694,7 @@ public class Fmvgen extends Fmgen {
             int pgin = pgCalc() >> (20 + FM_PGBITS - FM_OPSINBITS);
             if (fb < 31) {
                 pgin += ((In << (1 + IS2EC_SHIFT)) >> fb) >> (20 + FM_PGBITS - FM_OPSINBITS);
-                //System.err.System.err.printf("CalcFB:{0}", pgin);
+                //System.err.System.err.printf("CalcFB:%d", pgin);
             }
             out = logToLin(egOut + SINE(ch, pgin));
             dbgOpOut = out2;
@@ -673,12 +705,12 @@ public class Fmvgen extends Fmgen {
         public int calcFBL(int ch, int fb) {
             egStep();
 
-            int In = out + out2;
+            int in = out + out2;
             out2 = out;
 
             int pgin = pgCalcL() >> (20 + FM_PGBITS - FM_OPSINBITS);
             if (fb < 31) {
-                pgin += ((In << (int) (1 + IS2EC_SHIFT)) >> fb) >> (20 + FM_PGBITS - FM_OPSINBITS);
+                pgin += ((in << (1 + IS2EC_SHIFT)) >> fb) >> (20 + FM_PGBITS - FM_OPSINBITS);
             }
 
             out = logToLin(egOut + SINE(ch, pgin) + ams[chip.getAmL()]);
@@ -800,7 +832,7 @@ public class Fmvgen extends Fmgen {
         }
 
         public void setPhaseReset(int prst) {
-            phaseReset = (int) (prst != 0 ? 1 : 0);
+            phaseReset = prst != 0 ? 1 : 0;
             paramChanged = true;
         }
 
@@ -847,7 +879,7 @@ public class Fmvgen extends Fmgen {
             paramChanged = true;
         }
 
-        public void setChip(Chip chip) {
+        public void setChip(Fmgen.Channel4.Chip chip) {
             this.chip = chip;
         }
 
@@ -856,9 +888,6 @@ public class Fmvgen extends Fmgen {
 
         public void setMode(boolean modulator) {
         }
-
-        //  static void SetAML(int l);
-        //  static void SetPML(int l);
 
         public int out() {
             return out;
@@ -880,9 +909,6 @@ public class Fmvgen extends Fmgen {
             return -1;
         }
 
-        // friends this.
-        //private class Channel4;
-
         private void fm_nextPhase(Operator op) {
         }
 
@@ -891,7 +917,7 @@ public class Fmvgen extends Fmgen {
         }
 
         public int[] dbgGetSineTable(int c, int t) {
-            return sinetable[c][t];
+            return sineTable[c][t];
         }
     }
 
@@ -900,9 +926,9 @@ public class Fmvgen extends Fmgen {
         for (int i = 0; i < FM_OPSINENTS / 2; i++) {
             double r = (i * 2 + 1) * Math.PI / FM_OPSINENTS;
             double q = -256 * Math.log(Math.sin(r)) / log2;
-            int s = (int) ((int) (Math.floor(q + 0.5)) + 1);
-            sinetable[waveCh][wavetype][i] = s * 2;
-            sinetable[waveCh][wavetype][FM_OPSINENTS / 2 + i] = s * 2 + 1;
+            int s = (int) (Math.floor(q + 0.5)) + 1;
+            sineTable[waveCh][wavetype][i] = s * 2;
+            sineTable[waveCh][wavetype][FM_OPSINENTS / 2 + i] = s * 2 + 1;
         }
     }
 
@@ -916,14 +942,17 @@ public class Fmvgen extends Fmgen {
         private static final int[] kftable = new int[64];
         private int fb;
         private int[] buf = new int[4];
-        private int[] in = new int[3];          // 各 OP の入力ポインタ
-        private int[] out = new int[3];         // 各 OP の出力ポインタ
+        // 各 OP の入力ポインタ
+        private int[] in = new int[3];
+        // 各 OP の出力ポインタ
+        private int[] out = new int[3];
         private int[] pms;
         private int algo;
-        private Chip chip;
+        private Fmgen.Channel4.Chip chip;
         private boolean ac = false;
         private byte carrier;
-        private int[] oAlg = new int[] {2, 1, 3, 0};//オペレータの計算順序
+        //オペレータの計算順序
+        private static final int[] oAlg = new int[] {2, 1, 3, 0};
         private int ch = 0;
 
         public Operator[] op = new Operator[] {
@@ -940,14 +969,13 @@ public class Fmvgen extends Fmgen {
         }
 
         public void makeTable() {
-            // 100/64 cent =  2^(i*100/64*1200)
+            // 100 / 64 cent = 2 ^ (i * 100 / 64 * 1200)
             for (int i = 0; i < 64; i++) {
                 kftable[i] = (int) (0x10000 * Math.pow(2.0, i / 768.0));
             }
         }
 
         // リセット
-
         public void reset() {
             op[0].reset();
             op[1].reset();
@@ -956,7 +984,6 @@ public class Fmvgen extends Fmgen {
         }
 
         // Calc の用意
-
         public int prepare() {
             op[0].prepare();
             op[1].prepare();
@@ -970,7 +997,6 @@ public class Fmvgen extends Fmgen {
         }
 
         // F-Number/BLOCK を設定
-
         public void setFNum(int f) {
             for (int i = 0; i < 4; i++)
                 op[i].setFNum(f);
@@ -982,7 +1008,6 @@ public class Fmvgen extends Fmgen {
         };
 
         // KC/KF を設定
-
         public void setKCKF(int kc, int kf) {
             int oct = 19 - ((kc >> 4) & 7);
 
@@ -990,7 +1015,7 @@ public class Fmvgen extends Fmgen {
             int kcv = kcTable[kc & 0x0f];
             kcv = (kcv + 2) / 4 * 4;
             //System.err.printf(" %.4x", kcv);
-            int dp = (int) (kcv * kftable[kf & 0x3f]);
+            int dp = kcv * kftable[kf & 0x3f];
             //System.err.printf(" %.4x %.4x %.8x", kcv, kftable[kf & 0x3f], dp >> oct);
             dp >>= 16 + 3;
             dp <<= 16 + 3;
@@ -1004,7 +1029,6 @@ public class Fmvgen extends Fmgen {
         }
 
         // キー制御
-
         public void keyControl(int key) {
             if ((key & 0x1) != 0) op[0].keyOn();
             else op[0].keyOff();
@@ -1117,7 +1141,7 @@ public class Fmvgen extends Fmgen {
             return r;
         }
 
-        //  合成
+        // 合成
         public int calcL() {
             chip.setPMV(pms[chip.getPmL()]);
 
@@ -1195,7 +1219,7 @@ public class Fmvgen extends Fmgen {
             return r;
         }
 
-        //  合成
+        // 合成
         public int calcN(int noise) {
             buf[1] = buf[2] = buf[3] = 0;
 
@@ -1208,7 +1232,7 @@ public class Fmvgen extends Fmgen {
             return buf[out[2]] + o;
         }
 
-        //  合成
+        // 合成
         public int calcLN(int noise) {
             chip.setPMV(pms[chip.getPmL()]);
             buf[1] = buf[2] = buf[3] = 0;
@@ -1257,10 +1281,9 @@ public class Fmvgen extends Fmgen {
         public void refresh() {
             for (int i = 0; i < 4; i++)
                 op[i].paramChanged = true;
-            //PARAMCHANGE(3);
         }
 
-        public void setChip(Chip chip) {
+        public void setChip(Fmgen.Channel4.Chip chip) {
             this.chip = chip;
             for (int i = 0; i < 4; i++)
                 op[i].setChip(chip);
@@ -1272,22 +1295,21 @@ public class Fmvgen extends Fmgen {
 
         public void buildAlg() {
             byte mask = 0xf;
-            byte omask = 0;
             boolean[] use = new boolean[] {false, false, false, false};
 
             carrier = 0xf;
 
             for (int j = 0; j < 4; j++) {
-                omask = (byte) (~mask);
+                byte oMask = (byte) (~mask);
                 for (int i = 0; i < 4; i++) {
                     if (!use[i] && (((op[i].algLink & mask) == 0) || i == 0)) {
                         use[i] = true;
                         //oAlg.add(i);
-                        omask |= (byte) (1 << i);
+                        oMask |= (byte) (1 << i);
                         carrier &= (byte) (~op[i].algLink);
                     }
                 }
-                mask = (byte) (~omask);
+                mask = (byte) (~oMask);
             }
 
             if (carrier != 0xf) {

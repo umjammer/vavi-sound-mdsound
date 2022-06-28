@@ -28,7 +28,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
         public int slot;
         public int channel;
         public short mol, mor;
-        /* IO */
+        // IO
         public short writeData;
         public byte writeA;
         public byte writeD;
@@ -44,7 +44,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
         public byte pinTestIn;
         public byte pinIrq;
         public byte busy;
-        /* LFO */
+        // LFO
         public byte lfoEn;
         public byte lfoFreq;
         public byte lfoPm;
@@ -52,7 +52,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
         public byte lfoCnt;
         public byte lfoInc;
         public byte lfoQuotient;
-        /* Phase generator */
+        // Phase generator
         public short pgFnum;
         public byte pgBlock;
         public byte pgKcode;
@@ -60,7 +60,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
         public int[] pgPhase = new int[24];
         public byte[] pgReset = new byte[24];
         public int pgRead;
-        /* Envelope generator */
+        // Envelope generator
         public byte egCycle;
         public byte egCycleStop;
         public byte egShift;
@@ -179,7 +179,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
         private void doIO() {
             this.writeAEn = (byte) ((this.writeA & 0x03) == 0x01 ? 1 : 0);
             this.writeDEn = (byte) ((this.writeD & 0x03) == 0x01 ? 1 : 0);
-            //System.err.printf("aen:{0} den:{1}\n", this.write_a_en, this.write_d_en);
+            //System.err.printf("aen:%d den:%d\n", this.write_a_en, this.write_d_en);
             this.writeA <<= 1;
             this.writeD <<= 1;
             //BUSY Counter
@@ -287,7 +287,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
                         this.writeFmAddress = 0;
                     }
                 }
-                //System.err.printf("d_en:{0} wdata:{1} adr:{2}\n", this.write_d_en, this.write_data, this.address);
+                //System.err.printf("d_en:%d wdata:%d adr:%d\n", this.write_d_en, this.write_data, this.address);
                 if (this.writeDEn != 0 && (this.writeData & 0x100) == 0) {
                     switch (this.address) {
                     case 0x21: /* LSI test 1 */
@@ -354,7 +354,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
                             this.modeTest2C[i] = (byte) ((this.writeData >> i) & 0x01);
                         }
                         this.dacData &= 0x1fe;
-                        this.dacData |= (short) (this.modeTest2C[3]);
+                        this.dacData |= this.modeTest2C[3];
                         this.egCustomTimer = (byte) (((this.modeTest2C[7] == 0) && (this.modeTest2C[6] != 0)) ? 1 : 0); //todo
                         break;
                     default:
@@ -384,13 +384,13 @@ public class Ym3438 extends Instrument.BaseInstrument {
             byte detune = 0;
             byte block, note;
             byte sum, sum_h, sum_l;
-            byte kcode = (byte) (this.pgKcode);
+            byte kcode = this.pgKcode;
 
             fnum <<= 1;
             if ((lfo_l & 0x08) != 0) {
                 lfo_l ^= 0x0f;
             }
-            fm = (fnum_h >> (int) Ym3438Const.pgLfoSh1[pms][lfo_l]) + (fnum_h >> (int) Ym3438Const.pgLfoSh2[pms][lfo_l]);
+            fm = (fnum_h >> Ym3438Const.pgLfoSh1[pms][lfo_l]) + (fnum_h >> Ym3438Const.pgLfoSh2[pms][lfo_l]);
             if (pms > 5) {
                 fm <<= pms - 5;
             }
@@ -403,7 +403,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
             fnum &= 0xfff;
 
             basefreq = (fnum << this.pgBlock) >> 2;
-            //System.err.printf("040   basefreq:{0} fnum:{1} this.pg_block:{2}\n", basefreq, fnum, this.pg_block);
+            //System.err.printf("040   basefreq:%d fnum:%d this.pg_block:%d\n", basefreq, fnum, this.pg_block);
 
             /* Apply detune */
             if (dt_l != 0) {
@@ -491,7 +491,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
             int slot = (this.slot + 22) % 24;
 
             byte nkon = this.egKonLatch[slot];
-            //System.err.printf("nkon:{0}\n", nkon);
+            //System.err.printf("nkon:%d\n", nkon);
             byte okon = this.egKon[slot];
             byte kon_event;
             byte koff_event;
@@ -511,7 +511,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
             kon_event = (byte) (((nkon != 0 && okon == 0) || (okon != 0 && this.egSsgRepeatLatch[slot] != 0)) ? 1 : 0);
             koff_event = (byte) ((okon != 0 && nkon == 0) ? 1 : 0);
 
-            ssg_level = level = (short) this.egLevel[slot];
+            ssg_level = level = this.egLevel[slot];
 
             if (this.egSsgInv[slot] != 0) {
                 /* Inverse */
@@ -527,7 +527,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
                 eg_off = (byte) ((level & 0x3f0) == 0x3f0 ? 1 : 0);
             }
             nextlevel = level;
-            //System.err.printf("nextlevel:{0} this.eg_state[slot]:{1} slot:{2}\n", nextlevel, this.eg_state[slot],slot);
+            //System.err.printf("nextlevel:%d this.eg_state[slot]:%d slot:%d\n", nextlevel, this.eg_state[slot],slot);
             if (kon_event != 0) {
                 nextstate = (byte) EG_PARAM.Attack.ordinal();
                 /* Instant attack */
@@ -536,7 +536,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
                 } else if (this.egState[slot] == (byte) EG_PARAM.Attack.ordinal() && level != 0 && this.egInc != 0 && nkon != 0) {
                     inc = (short) ((~level << this.egInc) >> 5);
                 }
-                //System.err.printf("inc:{0}\n", inc);
+                //System.err.printf("inc:%d\n", inc);
             } else {
                 switch (EG_PARAM.valueOf(this.egState[slot])) {
                 case Attack:
@@ -545,7 +545,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
                     } else if (this.egInc != 0 && this.egRateMax == 0 && nkon != 0) {
                         inc = (short) ((~level << this.egInc) >> 5);
                     }
-                    //System.err.printf("ainc:{0}\n", inc);
+                    //System.err.printf("ainc:%d\n", inc);
                     break;
                 case Decay:
                     if ((level >> 5) == this.egSl[1]) {
@@ -556,7 +556,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
                             inc <<= 2;
                         }
                     }
-                    //System.err.printf("dinc:{0}\n", inc);
+                    //System.err.printf("dinc:%d\n", inc);
                     break;
                 case Sustain:
                 case Release:
@@ -566,7 +566,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
                             inc <<= 2;
                         }
                     }
-                    //System.err.printf("srinc:{0}\n", inc);
+                    //System.err.printf("srinc:%d\n", inc);
                     break;
                 default:
                     break;
@@ -588,12 +588,12 @@ public class Ym3438 extends Instrument.BaseInstrument {
             }
 
             nextlevel += inc;
-            //System.err.printf("nextlevel:{0}\n", nextlevel);
+            //System.err.printf("nextlevel:%d\n", nextlevel);
 
             this.egKon[slot] = this.egKonLatch[slot];
-            this.egLevel[slot] = (short) ((short) nextlevel & 0x3ff);
+            this.egLevel[slot] = (short) (nextlevel & 0x3ff);
             this.egState[slot] = nextstate;
-            //System.err.printf("this.eg_level[slot]:{0} slot:{1}\n", this.eg_level[slot], slot);
+            //System.err.printf("this.eg_level[slot]:%d slot:%d\n", this.eg_level[slot], slot);
         }
 
         private void envelopePrepare() {
@@ -676,7 +676,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
             short level;
 
             level = this.egLevel[slot];
-            //System.err.printf("level:{0}\n", level);
+            //System.err.printf("level:%d\n", level);
 
             if (this.egSsgInv[slot] != 0) {
                 /* Inverse */
@@ -698,7 +698,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
                 level = 0x3ff;
             }
             this.egOut[slot] = level;
-            //System.err.printf("this.eg_out[slot]:{0} slot:{1}\n", this.eg_out[slot], slot);
+            //System.err.printf("this.eg_out[slot]:%d slot:%d\n", this.eg_out[slot], slot);
         }
 
         private void updateLFO() {
@@ -747,7 +747,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
             } else {
                 mod >>= 1;
             }
-            this.fmMod[slot] = (short) mod;
+            this.fmMod[slot] = mod;
 
             slot = (this.slot + 18) % 24;
             /* OP1 */
@@ -765,7 +765,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
             int slot = (this.slot + 18) % 24;
             int channel = this.channel;
             int op = slot / 6;
-            int test_dac = (int) (this.modeTest2C[5]);
+            int test_dac = this.modeTest2C[5];
             short acc = this.chAcc[channel];
             short add = (short) test_dac;
             short sum = 0;
@@ -774,10 +774,10 @@ public class Ym3438 extends Instrument.BaseInstrument {
             }
             if (Ym3438Const.fmAlgorithm[op][5][this.connect[channel]] != 0 && test_dac == 0) {
                 add += (short) (this.fmOut[slot] >> 5);
-                //System.err.printf("040   this.fm_out[slot]:{0} slot:{1}\n", this.fm_out[slot], slot);
+                //System.err.printf("040   this.fm_out[slot]:%d slot:%d\n", this.fm_out[slot], slot);
             }
             sum = (short) (acc + add);
-            //System.err.printf("040   acc:{0} add:{1}\n", acc, add);
+            //System.err.printf("040   acc:%d add:%d\n", acc, add);
             /* Clamp */
             if (sum > 255) {
                 sum = 255;
@@ -794,7 +794,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
         private void chOutput() {
             int cycles = this.cycles;
             int channel = this.channel;
-            int test_dac = (int) (this.modeTest2C[5]);
+            int test_dac = this.modeTest2C[5];
             short out_;
             short sign;
             int out_en;
@@ -813,7 +813,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
             }
             /* Ch 6 */
             if (((cycles >> 2) == 1 && this.dacEn != 0) || test_dac != 0) {
-                out_ = (short) this.dacData;
+                out_ = this.dacData;
                 out_ <<= 7;
                 out_ >>= 7;
             } else {
@@ -824,8 +824,8 @@ public class Ym3438 extends Instrument.BaseInstrument {
             //this.mor = 0;
             if (Ym3438Const.chip_type == Ym3438Const.Type.ym2612) {
 
-                out_en = (int) ((((cycles & 3) == 3) || test_dac != 0) ? 1 : 0);
-                /* YM2612 DAC emulation(not verified) */
+                out_en = (((cycles & 3) == 3) || test_dac != 0) ? 1 : 0;
+                /* Ym2612 DAC emulation(not verified) */
                 sign = (short) (out_ >> 8);
                 if (out_ >= 0) {
                     out_++;
@@ -841,7 +841,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
                 //else {
                 //    this.mol = sign;
                 //}
-                //System.err.printf("040   out:{0} sign:{1}\n", out_, sign);
+                //System.err.printf("040   out:%d sign:%d\n", out_, sign);
                 if (this.chLockR != 0 && out_en != 0) {
                     this.mor = out_;
                 }
@@ -855,7 +855,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
                 this.mol = 0;
                 this.mor = 0;
 
-                out_en = (int) ((((cycles & 3) != 0) || test_dac != 0) ? 1 : 0);
+                out_en = (((cycles & 3) != 0) || test_dac != 0) ? 1 : 0;
                 /* Discrete YM3438 seems has the ladder effect too */
                 if (out_ >= 0 && Ym3438Const.chip_type == Ym3438Const.Type.discrete) {
                     out_++;
@@ -873,7 +873,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
             int slot = (this.slot + 19) % 24;
             /* Calculate phase */
             short phase = (short) ((this.fmMod[slot] + (this.pgPhase[slot] >> 10)) & 0x3ff);
-            //System.err.printf("040   this.fm_mod[slot]:{0} this.pg_phase[slot]:{1}\n", this.fm_mod[slot], this.pg_phase[slot]);
+            //System.err.printf("040   this.fm_mod[slot]:%d this.pg_phase[slot]:%d\n", this.fm_mod[slot], this.pg_phase[slot]);
             short quarter;
             short level;
             short output;
@@ -885,13 +885,13 @@ public class Ym3438 extends Instrument.BaseInstrument {
             level = (short) Ym3438Const.logSinRom[quarter];
             /* Apply envelope */
             level += (short) (this.egOut[slot] << 2);
-            //System.err.printf("040   quarter:{0} this.eg_out[slot]:{1} slot:{2}\n", quarter, this.eg_out[slot], slot);
+            //System.err.printf("040   quarter:%d this.eg_out[slot]:%d slot:%d\n", quarter, this.eg_out[slot], slot);
             /* Transform */
             if (level > 0x1fff) {
                 level = 0x1fff;
             }
             output = (short) (((Ym3438Const.expRom[(level & 0xff) ^ 0xff] | 0x400) << 2) >> (level >> 8));
-            //System.err.printf("040   output:{0} level:{1}\n", output, level);
+            //System.err.printf("040   output:%d level:%d\n", output, level);
             if ((phase & 0x200) != 0) {
                 output = (short) (((~output) ^ (this.modeTest21[4] << 13)) + 1);
             } else {
@@ -978,7 +978,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
             /* Key On */
             this.egKonLatch[this.slot] = this.modeKon[this.slot];
             this.egKonCsm[this.slot] = 0;
-            //System.err.printf("this.eg_kon_latch[this.slot]:{0} slot:{1}\n", this.eg_kon_latch[this.slot], this.slot);
+            //System.err.printf("this.eg_kon_latch[this.slot]:%d slot:%d\n", this.eg_kon_latch[this.slot], this.slot);
             if (this.channel == 2 && this.modeKonCsm != 0) {
                 /* CSM Key On */
                 this.egKonLatch[this.slot] = 1;
@@ -998,7 +998,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
 
         private void reset(int rate, int clock) {
             int i, rateratio;
-            rateratio = (int) this.rateRatio;
+            rateratio = this.rateRatio;
             //chip = new Ym3438_();
             this.egOut = new short[24];
             this.egLevel = new short[24];
@@ -1018,17 +1018,17 @@ public class Ym3438 extends Instrument.BaseInstrument {
                 this.panR[i] = 1;
             }
             if (rate != 0) {
-                this.rateRatio = (int) ((((long) (144 * rate)) << 10) / clock);// RSM_FRAC) / clock);
+                this.rateRatio = (int) (((144L * rate) << 10) / clock);// RSM_FRAC) / clock);
             } else {
                 this.rateRatio = rateratio;
             }
             //System.err.printfsw = true;
-            //System.err.printf("rateratio{0} rate{1} clock{2}\n", this.rateratio,rate,clock);
+            //System.err.printf("rateratio%d rate%d clock%d\n", this.rateratio,rate,clock);
             //System.err.printfsw = false;
         }
 
         private void clock(int[] buffer) {
-            //System.err.printf("010 mol:{0} mor:{1}\n", this.mol, this.mor);
+            //System.err.printf("010 mol:%d mor:%d\n", this.mol, this.mor);
 
             this.lfoInc = this.modeTest21[1];
             this.pgRead >>= 1;
@@ -1156,7 +1156,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
                 this.pgKcode = this.kcode[(this.channel + 1) % 6];
             }
 
-            //System.err.printf("090 mol:{0} mor:{1}\n", this.mol, this.mor);
+            //System.err.printf("090 mol:%d mor:%d\n", this.mol, this.mor);
 
             updateLFO();
             doRegWrite();
@@ -1164,12 +1164,12 @@ public class Ym3438 extends Instrument.BaseInstrument {
             this.slot = this.cycles;
             this.channel = this.cycles % 6;
 
-            //System.err.printf("100 mol:{0} mor:{1}\n", this.mol, this.mor);
+            //System.err.printf("100 mol:%d mor:%d\n", this.mol, this.mor);
 
             buffer[0] = this.mol;
             buffer[1] = this.mor;
 
-            //System.err.printf("110 mol:{0} mor:{1}\n", this.mol, this.mor);
+            //System.err.printf("110 mol:%d mor:%d\n", this.mol, this.mor);
         }
 
         private void write(int port, byte data) {
@@ -1177,7 +1177,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
             //{
             //    System.err.printfOn();
             //}
-            //System.err.printf("port:{0:x} data:{1:x}\n", port, data);
+            //System.err.printf("port:%x data:%x\n", port, data);
 
             port &= 3;
             this.writeData = (short) (((port << 7) & 0x100) | data);
@@ -1321,7 +1321,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
                         break;
                     }
                     this.clock(grBuffer);
-                    //System.err.printf("l{0} r{1}\n", buffer[0], buffer[1]);
+                    //System.err.printf("l%d r%d\n", buffer[0], buffer[1]);
                     if (mute == 0) {
                         this.samples[0] += grBuffer[0];
                         this.samples[1] += grBuffer[1];
@@ -1348,19 +1348,19 @@ public class Ym3438 extends Instrument.BaseInstrument {
                     this.samples[1] = (int) (this.oldSamples[1] + (1 - 0.512331301282628) * (this.samples[1] * 12 - this.oldSamples[1]));
                 }
                 this.sampleCnt -= this.rateRatio;
-                //System.err.printf("samplecnt{0}\n", this.samplecnt);
+                //System.err.printf("samplecnt%d\n", this.samplecnt);
             }
             buf[0] = (this.oldSamples[0] * (this.rateRatio - this.sampleCnt)
                     + this.samples[0] * this.sampleCnt) / this.rateRatio;
             buf[1] = (this.oldSamples[1] * (this.rateRatio - this.sampleCnt)
                     + this.samples[1] * this.sampleCnt) / this.rateRatio;
-            //System.err.printf("bl{0} br{1} this.oldsamples[0]{2} this.samples[0]{3}\n", buf[0], buf[1], this.oldsamples[0], this.samples[0]);
+            //System.err.printf("bl%d br%d this.oldsamples[0]%d this.samples[0]%d\n", buf[0], buf[1], this.oldsamples[0], this.samples[0]);
             this.sampleCnt += 1 << 10;// RSM_FRAC;
         }
 
         public void setOptions(byte flags) {
             switch ((flags >> 3) & 0x03) {
-            case 0x00: // YM2612
+            case 0x00: // Ym2612
             default:
                 setChipType(Ym3438Const.Type.ym2612);
                 break;
@@ -1370,7 +1370,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
             case 0x02: // Discrete YM3438
                 setChipType(Ym3438Const.Type.discrete);
                 break;
-            case 0x03: // YM2612 without filter emulation
+            case 0x03: // Ym2612 without filter emulation
                 setChipType(Ym3438Const.Type.ym2612_u);
                 break;
             }
@@ -1395,22 +1395,22 @@ public class Ym3438 extends Instrument.BaseInstrument {
         return "OPN2cmos";
     }
 
-    private void writeBuffered(byte chipID, int port, byte data) {
-        Ym3438_ chip = ym3438_[chipID];
+    private void writeBuffered(byte chipId, int port, byte data) {
+        Ym3438_ chip = ym3438_[chipId];
         chip.writeBuffered(port, data);
     }
 
-    private void generateResampled(byte chipID, int[] buf) {
-        Ym3438_ chip = ym3438_[chipID];
+    private void generateResampled(byte chipId, int[] buf) {
+        Ym3438_ chip = ym3438_[chipId];
         chip.generateResampled(buf);
     }
 
     private int[] gsBuffer = new int[2];
 
-    private void generateStream(byte chipID, int[][] sndPtr, int numSamples) {
+    private void generateStream(byte chipId, int[][] sndPtr, int numSamples) {
 
         for (int i = 0; i < numSamples; i++) {
-            generateResampled(chipID, gsBuffer);
+            generateResampled(chipId, gsBuffer);
             //smpl[i] = gsBuffer[0];
             //smpr[i] = gsBuffer[1];
             sndPtr[0][i] = gsBuffer[0];
@@ -1418,14 +1418,14 @@ public class Ym3438 extends Instrument.BaseInstrument {
         }
     }
 
-    public void setMute(byte chipID, int mute) {
+    public void setMute(byte chipId, int mute) {
         for (int i = 0; i < 7; i++) {
-            ym3438_[chipID].mute[i] = (mute >> i) & 0x01;
+            ym3438_[chipId].mute[i] = (mute >> i) & 0x01;
         }
     }
 
-    public void setMute(byte chipID, int ch, boolean mute) {
-        ym3438_[chipID].mute[ch & 0x7] = mute ? 1 : 0;
+    public void setMute(byte chipId, int ch, boolean mute) {
+        ym3438_[chipId].mute[ch & 0x7] = mute ? 1 : 0;
     }
 
     public Ym3438() {
@@ -1442,38 +1442,38 @@ public class Ym3438 extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(byte chipID, int clock) {
-        return start(chipID, clock, 0, null);
+    public int start(byte chipId, int clock) {
+        return start(chipId, clock, 0);
     }
 
     @Override
-    public int start(byte chipID, int clock, int clockValue, Object... option) {
-        ym3438_[chipID].setChipType(type);
-        ym3438_[chipID].reset(clock, clockValue);
+    public int start(byte chipId, int clock, int clockValue, Object... option) {
+        ym3438_[chipId].setChipType(type);
+        ym3438_[chipId].reset(clock, clockValue);
         return clock;
     }
 
     @Override
-    public void stop(byte chipID) {
-        ym3438_[chipID].reset(0, 0);
+    public void stop(byte chipId) {
+        ym3438_[chipId].reset(0, 0);
     }
 
     @Override
-    public void reset(byte chipID) {
-        ym3438_[chipID].reset(0, 0);
+    public void reset(byte chipId) {
+        ym3438_[chipId].reset(0, 0);
     }
 
     @Override
-    public void update(byte chipID, int[][] outputs, int samples) {
-        generateStream(chipID, outputs, samples);
+    public void update(byte chipId, int[][] outputs, int samples) {
+        generateStream(chipId, outputs, samples);
 
-        visVolume[chipID][0][0] = outputs[0][0];
-        visVolume[chipID][0][1] = outputs[1][0];
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
     }
 
     @Override
-    public int write(byte chipID, int port, int adr, int data) {
-        writeBuffered(chipID, adr, (byte) data);
+    public int write(byte chipId, int port, int adr, int data) {
+        writeBuffered(chipId, adr, (byte) data);
         return 0;
     }
 }

@@ -21,10 +21,10 @@ public class HPFLPF {
     private int currentCh = 0;
 
     private static class ChInfo {
-        public CMyFilter highPassL = new CMyFilter();
-        public CMyFilter highPassR = new CMyFilter();
-        public CMyFilter lowPassL = new CMyFilter();
-        public CMyFilter lowPassR = new CMyFilter();
+        public Filter highPassL = new Filter();
+        public Filter highPassR = new Filter();
+        public Filter lowPassL = new Filter();
+        public Filter lowPassR = new Filter();
 
         public boolean hsw = false;
         public float hFreq = 1000f;
@@ -37,8 +37,6 @@ public class HPFLPF {
     public HPFLPF(int clock, int maxCh) {
         this.clock = clock;
         this.maxCh = maxCh;
-        if (CMyFilter.freqTable == null)
-            CMyFilter.makeTable();
         init();
     }
 
@@ -57,12 +55,12 @@ public class HPFLPF {
             chInfo[i].lQ = (float) (1.0f / Math.sqrt(2.0f));
 
             chInfo[i].hsw = false;
-            chInfo[i].highPassL = new CMyFilter();
-            chInfo[i].highPassR = new CMyFilter();
+            chInfo[i].highPassL = new Filter();
+            chInfo[i].highPassR = new Filter();
 
             chInfo[i].lsw = false;
-            chInfo[i].lowPassL = new CMyFilter();
-            chInfo[i].lowPassR = new CMyFilter();
+            chInfo[i].lowPassL = new Filter();
+            chInfo[i].lowPassR = new Filter();
 
             updateParam(i);
         }
@@ -89,7 +87,7 @@ public class HPFLPF {
         mix(ch, inL, inR, 1);
     }
 
-    public void mix(int ch, int[] inL, int[] inR, int wavelength) {
+    public void mix(int ch, int[] inL, int[] inR, int waveLength) {
         if (ch < 0)
             return;
         if (ch >= maxCh)
@@ -101,8 +99,8 @@ public class HPFLPF {
         if (!chInfo[ch].hsw && !chInfo[ch].lsw)
             return;
 
-        fBuf[0] = inL[0] / CMyFilter.convInt;
-        fBuf[1] = inR[0] / CMyFilter.convInt;
+        fBuf[0] = inL[0] / Filter.convInt;
+        fBuf[1] = inR[0] / Filter.convInt;
 
         // 入力信号にフィルタを適用する
         if (chInfo[ch].hsw) {
@@ -115,8 +113,8 @@ public class HPFLPF {
             fBuf[1] = chInfo[ch].lowPassR.process(fBuf[1]);
         }
 
-        inL[0] = (int) (fBuf[0] * CMyFilter.convInt);
-        inR[0] = (int) (fBuf[1] * CMyFilter.convInt);
+        inL[0] = (int) (fBuf[0] * Filter.convInt);
+        inR[0] = (int) (fBuf[1] * Filter.convInt);
     }
 
     public void setReg(int adr, byte data) {
@@ -133,11 +131,11 @@ public class HPFLPF {
             updateParamLPF(currentCh);
             break;
         case 2:
-            chInfo[currentCh].lFreq = CMyFilter.freqTable[data];
+            chInfo[currentCh].lFreq = Filter.freqTable[data];
             updateParamLPF(currentCh);
             break;
         case 3:
-            chInfo[currentCh].lQ = CMyFilter.qTable[data];
+            chInfo[currentCh].lQ = Filter.qTable[data];
             updateParamLPF(currentCh);
             break;
 
@@ -146,11 +144,11 @@ public class HPFLPF {
             updateParamHPF(currentCh);
             break;
         case 5:
-            chInfo[currentCh].hFreq = CMyFilter.freqTable[data];
+            chInfo[currentCh].hFreq = Filter.freqTable[data];
             updateParamHPF(currentCh);
             break;
         case 6:
-            chInfo[currentCh].hQ = CMyFilter.qTable[data];
+            chInfo[currentCh].hQ = Filter.qTable[data];
             updateParamHPF(currentCh);
             break;
         }

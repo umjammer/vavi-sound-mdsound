@@ -18,22 +18,22 @@ public class Sn76489 extends Instrument.BaseInstrument {
         public FeedbackPatterns whiteNoiseFeedback;
         public SRWidths srWidth;
 
-        /* PSG registers: */
-        public int[] registers = new int[8];        /* Tone, vol x4 */
+        /* Psg registers: */
+        public int[] registers = new int[8]; // Tone, vol x4 */
         public int latchedRegister;
         public int noiseShiftRegister;
-        public int noiseFreq;            /* Noise channel signal generator frequency */
+        public int noiseFreq; // Noise channel signal generator frequency */
 
         /* Output calculation variables */
-        public int[] toneFreqVals = new int[4];      /* Frequency register values (counters) */
-        public int[] toneFreqPos = new int[4];        /* Frequency channel flip-flops */
-        public int[] channels = new int[4];          /* Value of each channel, before stereo is applied */
-        public float[] intermediatePos = new float[4];   /* intermediate values used at boundaries between + and - (does not need double accuracy)*/
+        public int[] toneFreqVals = new int[4]; // Frequency register values (counters) */
+        public int[] toneFreqPos = new int[4]; // Frequency channel flip-flops */
+        public int[] channels = new int[4]; // Value of each channel, before stereo is applied */
+        public float[] intermediatePos = new float[4]; // intermediate values used at boundaries between + and - (does not need double accuracy)*/
 
-        public float[][] panning = new float[][] {new float[2], new float[2], new float[2], new float[2]};            /* fake stereo */
+        public float[][] panning = new float[][] {new float[2], new float[2], new float[2], new float[2]}; // fake stereo */
         public int[][] volume = new int[][] {new int[2], new int[2], new int[2], new int[2]};
 
-        public int ngpFlags;       /* bit 7 - NGP Mode on/off, bit 0 - is 2nd NGP chip */
+        public int ngpFlags; // bit 7 - NGP Mode on/off, bit 0 - is 2nd NGP chip */
 
         public SN76489Context ngpChip2;
 
@@ -41,7 +41,7 @@ public class Sn76489 extends Instrument.BaseInstrument {
             FB_BBCMICRO(0x8005), /* Texas Instruments TMS SN76489N (original) from BBC Micro computer */
             FB_SC3000(0x0006), /* Texas Instruments TMS SN76489AN (rev. A) from SC-3000H computer */
             FB_SEGAVDP(0x0009); /* SN76489 clone in Sega's VDP chips (315-5124, 315-5246, 315-5313, Game Gear) */
-            int v;
+            final int v;
 
             FeedbackPatterns(int v) {
                 this.v = v;
@@ -51,7 +51,7 @@ public class Sn76489 extends Instrument.BaseInstrument {
         public enum SRWidths {
             SRW_SC3000BBCMICRO(15),
             SRW_SEGAVDP(16);
-            int v;
+            final int v;
 
             SRWidths(int v) {
                 this.v = v;
@@ -69,8 +69,8 @@ public class Sn76489 extends Instrument.BaseInstrument {
             MUTE_TONE2(2),      /* Tone 2 mute control */
             MUTE_TONE3(4),      /* Tone 3 mute control */
             MUTE_NOISE(8),      /* Noise mute control */
-            MUTE_ALLON(15);     /* All channels enabled */
-            int v;
+            MUTE_ALLON(15); // All channels enabled */
+            final int v;
 
             MuteValues(int v) {
                 this.v = v;
@@ -82,14 +82,14 @@ public class Sn76489 extends Instrument.BaseInstrument {
         private static final double SQRT2 = 1.414213562;
         private static final double RANGE = 512;
 
-        private static final int NoiseInitialState = 0x8000;  /* Initial state of shift register */
-        private static final int PSG_CUTOFF = 0x6;     /* Value below which PSG does not output */
+        private static final int NoiseInitialState = 0x8000; // Initial state of shift register */
+        private static final int PSG_CUTOFF = 0x6; // Value below which Psg does not output */
 
         private static final List<Integer> PSGVolumeValues = Arrays.asList(
                 /* These values are taken from a real SMS2's output */
                 /* {892,892,892,760,623,497,404,323,257,198,159,123,96,75,60,0}, /* I can't remember why 892... :P some scaling I did at some point */
                 /* these values are true volumes for 2dB drops at each step (multiply previous by 10^-0.1) */
-                /*1516,1205,957,760,603,479,381,303,240,191,152,120,96,76,60,0*/
+                // 1516,1205,957,760,603,479,381,303,240,191,152,120,96,76,60,0
                 // The MAME core uses 0x2000 as maximum volume (0x1000 for bipolar output)
                 4096, 3254, 2584, 2053, 1631, 1295, 1029, 817, 649, 516, 410, 325, 258, 205, 163, 0
         );
@@ -120,7 +120,7 @@ public class Sn76489 extends Instrument.BaseInstrument {
                 position = (int) (RANGE / 2);
             else if (position < -RANGE / 2)
                 position = -(int) (RANGE / 2);
-            position += (int) (RANGE / 2);  // make -256..0..256 . 0..256..512
+            position += (int) (RANGE / 2); // make -256..0..256 . 0..256..512
 
             // Equal power law: equation is
             // right = sin( position / range * pi / 2) * sqrt( 2 )
@@ -168,9 +168,9 @@ public class Sn76489 extends Instrument.BaseInstrument {
             this.psgStereo = 0xFF;
 
             for (int i = 0; i <= 3; i++) {
-                /* Initialise PSG state */
-                this.registers[2 * i] = 1;      /* tone freq=1 */
-                this.registers[2 * i + 1] = 0xf;    /* vol=off */
+                /* Initialise Psg state */
+                this.registers[2 * i] = 1; // tone freq=1 */
+                this.registers[2 * i + 1] = 0xf; // vol=off */
                 this.noiseFreq = 0x10;
 
                 /* Set counters to 0 */
@@ -196,7 +196,7 @@ public class Sn76489 extends Instrument.BaseInstrument {
         }
 
         public int[][] update(int[][] buffer, int length) {
-            //System.err.printf("PSGStereo:1:{0}", SN76489_Chip[1].PSGStereo);
+            //System.err.printf("PSGStereo:1:%d", SN76489_Chip[1].PSGStereo);
 
             SN76489Context chip2;
             SN76489Context chipT;
@@ -268,7 +268,7 @@ public class Sn76489 extends Instrument.BaseInstrument {
                             // GG stereo overrides panning
                             bl = ((this.psgStereo >> (i + 4)) & 0x1) * this.channels[i]; // left
                             br = ((this.psgStereo >> i) & 0x1) * this.channels[i]; // right
-                            //System.err.printf("Ch:bl:br:{0}:{1}:{2}:{3}",i,bl,br, this.Channels[i]);
+                            //System.err.printf("Ch:bl:br:%d:%d:%d:%d",i,bl,br, this.Channels[i]);
                         }
 
                         buffer[0][j] += bl;
@@ -276,7 +276,7 @@ public class Sn76489 extends Instrument.BaseInstrument {
                         this.volume[i][0] = Math.abs(bl);// Math.max(bl, this.volume[i][0]);
                         this.volume[i][1] = Math.abs(br);// Math.max(br, this.volume[i][1]);
                     }
-                    //Log.WriteLine(LogLevel.TRACE,String.format("{0}", this.Channels[3]));
+                    //Log.WriteLine(LogLevel.TRACE,String.format("%d", this.Channels[3]));
                 } else {
                     if ((this.ngpFlags & 0x01) == 0) {
                         // For all 3 tone channels
@@ -303,8 +303,8 @@ public class Sn76489 extends Instrument.BaseInstrument {
 
                 /* Increment clock by 1 sample length */
                 this.clock += this.dClock;
-                this.numClocksForSample = (int) this.clock;  /* truncate */
-                this.clock -= this.numClocksForSample;      /* remove integer part */
+                this.numClocksForSample = (int) this.clock; // truncate */
+                this.clock -= this.numClocksForSample; // remove integer part */
 
                 /* Decrement tone channel counters */
                 for (i = 0; i <= 2; ++i)
@@ -318,7 +318,7 @@ public class Sn76489 extends Instrument.BaseInstrument {
 
                 /* Tone channels: */
                 for (i = 0; i <= 2; ++i) {
-                    if (this.toneFreqVals[i] <= 0) {   /* If the counter gets below 0... */
+                    if (this.toneFreqVals[i] <= 0) { // If the counter gets below 0... */
                         if (this.registers[i * 2] >= PSG_CUTOFF) {
                             /* For tone-generating values, calculate how much of the sample is + and how much is - */
                             /* This is optimised into an even more confusing state than it was in the first place... */
@@ -387,14 +387,14 @@ public class Sn76489 extends Instrument.BaseInstrument {
                 this.latchedRegister = (data >> 4) & 0x07;
                 this.registers[this.latchedRegister] =
                         (this.registers[this.latchedRegister] & 0x3f0) /* zero low 4 bits */
-                                | (data & 0xf);                            /* and replace with data */
+                                | (data & 0xf); // and replace with data */
             } else {
                 /* Data byte        %0 - dddddd */
                 if ((this.latchedRegister % 2) == 0 && (this.latchedRegister < 5))
                     /* Tone register */
                     this.registers[this.latchedRegister] =
                             (this.registers[this.latchedRegister] & 0x00f) /* zero high 6 bits */
-                                    | ((data & 0x3f) << 4);                 /* and replace with data */
+                                    | ((data & 0x3f) << 4); // and replace with data */
                 else
                     /* Other register */
                     this.registers[this.latchedRegister] = data & 0x0f; /* Replace with data */
@@ -407,7 +407,7 @@ public class Sn76489 extends Instrument.BaseInstrument {
                     this.registers[this.latchedRegister] = 1; /* Zero frequency changed to 1 to avoid div/0 */
                 break;
             case 6: /* Noise */
-                this.noiseShiftRegister = NoiseInitialState;        /* reset shift register */
+                this.noiseShiftRegister = NoiseInitialState; // reset shift register */
                 this.noiseFreq = 0x10 << (this.registers[6] & 0x3); /* set noise signal generator frequency */
                 break;
             }
@@ -424,8 +424,8 @@ public class Sn76489 extends Instrument.BaseInstrument {
 
     public SN76489Context[] chips = new SN76489Context[] {new SN76489Context(), new SN76489Context()};
 
-    public void SN76489_GGStereoWrite(byte chipID, int data) {
-        SN76489Context chip = chips[chipID];
+    public void SN76489_GGStereoWrite(byte chipId, int data) {
+        SN76489Context chip = chips[chipId];
         chip.GGStereoWrite(data);
     }
 
@@ -448,50 +448,50 @@ public class Sn76489 extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(byte chipID, int clock) {
-        return start(chipID, DefaultPSGClockValue, clock);
+    public int start(byte chipId, int clock) {
+        return start(chipId, DefaultPSGClockValue, clock);
     }
 
     @Override
-    public int start(byte chipID, int samplingRate, int clockValue, Object... option) {
-        chips[chipID] = new SN76489Context();
-        SN76489Context chip = chips[chipID];
+    public int start(byte chipId, int samplingRate, int clockValue, Object... option) {
+        chips[chipId] = new SN76489Context();
+        SN76489Context chip = chips[chipId];
         return chip.start(samplingRate, clockValue);
     }
 
     @Override
-    public void reset(byte chipID) {
-        SN76489Context chip = chips[chipID];
+    public void reset(byte chipId) {
+        SN76489Context chip = chips[chipId];
         chip.reset();
     }
 
     @Override
-    public void stop(byte chipID) {
-        chips[chipID] = null;
+    public void stop(byte chipId) {
+        chips[chipId] = null;
     }
 
     @Override
-    public void update(byte chipID, int[][] buffer, int length) {
-        SN76489Context chip = chips[chipID];
+    public void update(byte chipId, int[][] buffer, int length) {
+        SN76489Context chip = chips[chipId];
         int[][] volumes = chip.update(buffer, length);
 
-        visVolume[chipID][0][0] = volumes[0][0];
-        visVolume[chipID][0][1] = volumes[0][1];
+        visVolume[chipId][0][0] = volumes[0][0];
+        visVolume[chipId][0][1] = volumes[0][1];
     }
 
-    private void SN76489_Write(byte chipID, int data) {
-        SN76489Context chip = chips[chipID];
+    private void SN76489_Write(byte chipId, int data) {
+        SN76489Context chip = chips[chipId];
         chip.write(data);
     }
 
-    public void SN76489_SetMute(byte chipID, int val) {
-        SN76489Context chip = chips[chipID];
+    public void SN76489_SetMute(byte chipId, int val) {
+        SN76489Context chip = chips[chipId];
         chip.setMute(val);
     }
 
     @Override
-    public int write(byte chipID, int port, int adr, int data) {
-        SN76489_Write(chipID, data);
+    public int write(byte chipId, int port, int adr, int data) {
+        SN76489_Write(chipId, data);
         return 0;
     }
 }

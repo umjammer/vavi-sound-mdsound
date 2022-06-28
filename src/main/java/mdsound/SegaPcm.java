@@ -12,32 +12,32 @@ public class SegaPcm extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(byte chipID, int clock) {
+    public int start(byte chipId, int clock) {
         int intf_bank = 0;
-        return device_start_segapcm(chipID, clock, intf_bank);
+        return device_start_segapcm(chipId, clock, intf_bank);
     }
 
     @Override
-    public int start(byte chipID, int samplingrate, int clockValue, Object... option) {
-        return device_start_segapcm(chipID, clockValue, (int) option[0]);
+    public int start(byte chipId, int samplingrate, int clockValue, Object... option) {
+        return device_start_segapcm(chipId, clockValue, (int) option[0]);
     }
 
     @Override
-    public void stop(byte chipID) {
-        device_stop_segapcm(chipID);
+    public void stop(byte chipId) {
+        device_stop_segapcm(chipId);
     }
 
     @Override
-    public void reset(byte chipID) {
-        device_reset_segapcm(chipID);
+    public void reset(byte chipId) {
+        device_reset_segapcm(chipId);
     }
 
     @Override
-    public void update(byte chipID, int[][] outputs, int samples) {
-        SEGAPCM_update(chipID, outputs, samples);
+    public void update(byte chipId, int[][] outputs, int samples) {
+        SEGAPCM_update(chipId, outputs, samples);
 
-        visVolume[chipID][0][0] = outputs[0][0];
-        visVolume[chipID][0][1] = outputs[1][0];
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
     }
 
     /**
@@ -107,11 +107,11 @@ public class SegaPcm extends Instrument.BaseInstrument {
                 /* only process active channels */
                 if ((this.ram[ptrRegs + 0x86] & 1) == 0 && this.muted[ch] == 0) {
                     int ptrRom = this.ptrRom + ((this.ram[ptrRegs + 0x86] & this.bankMask) << this.bankShift);
-                    //System.err.printf("this.ram[ptrRegs + 0x86]:{0:x}", this.ram[ptrRegs + 0x86]);
-                    //System.err.printf("this.bankmask:{0:x}", this.bankmask);
-                    //System.err.printf("this.bankshift:{0:x}", this.bankshift);
-                    int addr = (int) ((this.ram[ptrRegs + 0x85] << 16) | (this.ram[ptrRegs + 0x84] << 8) | this.low[ch]);
-                    int loop = (int) ((this.ram[ptrRegs + 0x05] << 16) | (this.ram[ptrRegs + 0x04] << 8));
+                    //System.err.printf("this.ram[ptrRegs + 0x86]:%x", this.ram[ptrRegs + 0x86]);
+                    //System.err.printf("this.bankmask:%x", this.bankmask);
+                    //System.err.printf("this.bankshift:%x", this.bankshift);
+                    int addr = (this.ram[ptrRegs + 0x85] << 16) | (this.ram[ptrRegs + 0x84] << 8) | this.low[ch];
+                    int loop = (this.ram[ptrRegs + 0x05] << 16) | (this.ram[ptrRegs + 0x04] << 8);
                     byte end = (byte) (this.ram[ptrRegs + 6] + 1);
                     int i;
 
@@ -212,14 +212,14 @@ public class SegaPcm extends Instrument.BaseInstrument {
                 long mask, rom_mask;
 
                 this.rom = new byte[romSize];
-                this.romSize = (int) romSize;
+                this.romSize = romSize;
                 //memset(this.rom, 0x80, romSize);
                 for (int i = 0; i < romSize; i++) {
                     this.rom[i] = (byte) 0x80;
                 }
 
                 // recalculate bankmask
-                mask = (long) (this.intf.bank >> 16);
+                mask = this.intf.bank >> 16;
                 if (mask == 0)
                     mask = BANK_MASK7 >> 16;
 
@@ -242,7 +242,7 @@ public class SegaPcm extends Instrument.BaseInstrument {
                 long mask, rom_mask;
 
                 this.rom = new byte[romSize];
-                this.romSize = (int) romSize;
+                this.romSize = romSize;
                 //memset(this.rom, 0x80, romSize);
                 for (int i = 0; i < romSize; i++) {
                     this.rom[i] = (byte) 0x80;
@@ -286,81 +286,67 @@ public class SegaPcm extends Instrument.BaseInstrument {
         return "SPCM";
     }
 
-    public void SEGAPCM_update(byte chipID, int[][] outputs, int samples) {
-        SegaPcmState spcm = SPCMData[chipID];
+    public void SEGAPCM_update(byte chipId, int[][] outputs, int samples) {
+        SegaPcmState spcm = SPCMData[chipId];
         spcm.update(outputs, samples);
     }
 
-    public int device_start_segapcm(byte chipID, int clock, int intf_bank) {
-        if (chipID >= MAX_CHIPS)
+    public int device_start_segapcm(byte chipId, int clock, int intf_bank) {
+        if (chipId >= MAX_CHIPS)
             return 0;
 
-        SegaPcmState spcm = SPCMData[chipID];
+        SegaPcmState spcm = SPCMData[chipId];
         return spcm.start(clock, intf_bank);
     }
 
-    public void device_stop_segapcm(byte chipID) {
-        SegaPcmState spcm = SPCMData[chipID];
+    public void device_stop_segapcm(byte chipId) {
+        SegaPcmState spcm = SPCMData[chipId];
         spcm.stop();
     }
 
-    public void device_reset_segapcm(byte chipID) {
-        SegaPcmState spcm = SPCMData[chipID];
+    public void device_reset_segapcm(byte chipId) {
+        SegaPcmState spcm = SPCMData[chipId];
         spcm.reset();
     }
 
-    private void sega_pcm_w(byte chipID, int offset, byte data) {
-        SegaPcmState spcm = SPCMData[chipID];
+    private void sega_pcm_w(byte chipId, int offset, byte data) {
+        SegaPcmState spcm = SPCMData[chipId];
         spcm.write(offset, data);
     }
 
-    public byte sega_pcm_r(byte chipID, int offset) {
-        SegaPcmState spcm = SPCMData[chipID];
+    public byte sega_pcm_r(byte chipId, int offset) {
+        SegaPcmState spcm = SPCMData[chipId];
         return spcm.read(offset);
     }
 
-    public void sega_pcm_write_rom(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData) {
-        SegaPcmState spcm = SPCMData[chipID];
+    public void sega_pcm_write_rom(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
+        SegaPcmState spcm = SPCMData[chipId];
         spcm.writeRom(romSize, dataStart, dataLength, romData);
     }
 
-    public void sega_pcm_write_rom2(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
-        SegaPcmState spcm = SPCMData[chipID];
+    public void sega_pcm_write_rom2(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
+        SegaPcmState spcm = SPCMData[chipId];
         spcm.writeRom2(romSize, dataStart, dataLength, romData, srcStartAdr);
     }
 
-    public void segapcm_set_mute_mask(byte chipID, int muteMask) {
-        SegaPcmState spcm = SPCMData[chipID];
+    public void segapcm_set_mute_mask(byte chipId, int muteMask) {
+        SegaPcmState spcm = SPCMData[chipId];
         spcm.setMuteMask(muteMask);
     }
 
     @Override
-    public int write(byte chipID, int port, int adr, int data) {
-        sega_pcm_w(chipID, adr, (byte) data);
+    public int write(byte chipId, int port, int adr, int data) {
+        sega_pcm_w(chipId, adr, (byte) data);
         return 0;
     }
 
-    /**
+    /*
      * Generic get_info
      */
-        /*DEVICE_GET_INFO( SegaPcm )
-        {
-            switch (state)
-            {
-                // --- the following bits of info are returned as 64-bit signed integers ---
-                case DEVINFO_INT_TOKEN_BYTES:     info.i = sizeof(SegaPcmState);    break;
-
-                // --- the following bits of info are returned as pointers to data or functions ---
-                case DEVINFO_FCT_START:       info.start = DEVICE_START_NAME( SegaPcm );  break;
-                case DEVINFO_FCT_STOP:       // Nothing         break;
-                case DEVINFO_FCT_RESET:       // Nothing         break;
-
-                // --- the following bits of info are returned as NULL-terminated strings ---
-                case DEVINFO_STR_NAME:       strcpy(info.s, "Sega PCM");     break;
-                case DEVINFO_STR_FAMILY:     strcpy(info.s, "Sega custom");     break;
-                case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;
-                case DEVINFO_STR_SOURCE_FILE:      strcpy(info.s, __FILE__);      break;
-                case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
-            }
-        }*/
+    /*DEVICE_GET_INFO( SegaPcm ) {
+            case DEVINFO_STR_NAME:       strcpy(info.s, "Sega PCM");     break;
+            case DEVINFO_STR_FAMILY:     strcpy(info.s, "Sega custom");     break;
+            case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;
+            case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
+    }*/
 }

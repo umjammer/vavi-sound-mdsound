@@ -9,17 +9,17 @@ public interface Instrument {
 
     String getShortName();
 
-    int start(byte chipID, int clock);
+    int start(byte chipId, int clock);
 
-    int start(byte chipID, int clock, int clockValue, Object... option);
+    int start(byte chipId, int clock, int clockValue, Object... option);
 
-    void stop(byte chipID);
+    void stop(byte chipId);
 
-    void reset(byte chipID);
+    void reset(byte chipId);
 
-    void update(byte chipID, int[][] outputs, int samples);
+    void update(byte chipId, int[][] outputs, int samples);
 
-    int write(byte chipID, int port, int adr, int data);
+    int write(byte chipId, int port, int adr, int data);
 
     abstract class BaseInstrument implements Instrument {
         protected static byte CHIP_SAMPLING_MODE = 2;

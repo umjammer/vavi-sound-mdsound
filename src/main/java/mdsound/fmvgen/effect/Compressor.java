@@ -11,25 +11,22 @@ public class Compressor {
     private int sampleRate = 44100;
 
     private int currentCh = 0;
-
     private int maxCh;
-
     private ChInfo[] chInfo = null;
-
     private float[] fBuf = new float[2];
 
     private static class ChInfo {
 
-        public boolean sw = false;
+        public boolean sw;
 
         // エフェクターのパラメーター
 
         // 圧縮が始まる音圧。0.1～1.0程度
-        public float threshold = 0.3f;
+        public float threshold;
         // 圧縮する割合。2.0～10.0程度
-        public float ratio = 2.0f;
+        public float ratio;
         // 最終的な音量。1.0～3.0程度
-        public float volume = 2.0f;
+        public float volume;
 
         // 内部変数
 
@@ -37,17 +34,14 @@ public class Compressor {
          * 音圧を検知するために使うローパスフィルタ
          * @see "https://vstcpp.wpblog.jp/?page_id=728"
          */
-        public CMyFilter envfilterL, envfilterR;
+        public Filter envfilterL, envfilterR;
         // 急激な音量変化を避けるためのローパスフィルタ
-        public CMyFilter gainfilterL, gainfilterR;
+        public Filter gainfilterL, gainfilterR;
 
-        public  float envFreq = 30.0f;
-
-        public float envQ = 1.0f;
-
-        public float gainFreq = 5.0f;
-
-        public float gainQ = 1.0f;
+        public float envFreq;
+        public float envQ;
+        public float gainFreq;
+        public float gainQ;
 
         ChInfo() {
             this.sw = false;
@@ -60,10 +54,10 @@ public class Compressor {
             this.envQ = 1.0f;
             this.gainFreq = 5.0f;
             this.gainQ = 1.0f;
-            this.envfilterL = new CMyFilter();
-            this.envfilterR = new CMyFilter(); // 音圧を検知するために使うローパスフィルタ
-            this.gainfilterL = new CMyFilter();
-            this.gainfilterR = new CMyFilter(); // 急激な音量変化を避けるためのローパスフィルタ
+            this.envfilterL = new Filter();
+            this.envfilterR = new Filter(); // 音圧を検知するために使うローパスフィルタ
+            this.gainfilterL = new Filter();
+            this.gainfilterR = new Filter(); // 急激な音量変化を避けるためのローパスフィルタ
         }
 
         public void setReg(int adr, byte data, int sampleRate) {
@@ -79,7 +73,7 @@ public class Compressor {
                 this.envfilterL.lowPass(this.envFreq, this.envQ, sampleRate);
                 this.envfilterR.lowPass(this.envFreq, this.envQ, sampleRate);
             } else if (adr == 5) {
-                this.envQ = CMyFilter.qTable[data];
+                this.envQ = Filter.qTable[data];
                 this.envfilterL.lowPass(this.envFreq, this.envQ, sampleRate);
                 this.envfilterR.lowPass(this.envFreq, this.envQ, sampleRate);
             } else if (adr == 6) {
@@ -87,7 +81,7 @@ public class Compressor {
                 this.gainfilterL.lowPass(this.gainFreq, this.gainQ, sampleRate);
                 this.gainfilterR.lowPass(this.gainFreq, this.gainQ, sampleRate);
             } else if (adr == 7) {
-                this.gainQ = CMyFilter.qTable[data];
+                this.gainQ = Filter.qTable[data];
                 this.gainfilterL.lowPass(this.gainFreq, this.gainQ, sampleRate);
                 this.gainfilterR.lowPass(this.gainFreq, this.gainQ, sampleRate);
             }

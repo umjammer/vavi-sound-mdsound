@@ -3,19 +3,19 @@ package mdsound.x68sound;
 public class Pcm8 {
     private Global global;
 
-    private int scale;      //
-    private int pcm;        // 16bit PCM Data
-    private int pcm16Prev;  // 16bit,8bitPCMの1つ前のデータ
-    private int inpPcm, inpPcmPrev, outPcm;        // HPF用 16bit PCM Data
-    private int outInpPcm, outInpPcmPrev;      // HPF用
-    private int adpcmRate;  // 187500(15625*12), 125000(10416.66*12), 93750(7812.5*12), 62500(5208.33*12), 46875(3906.25*12), ...
+    private int scale; //
+    private int pcm; // 16bit PCM Data
+    private int pcm16Prev; // 16bit,8bitPCMの1つ前のデータ
+    private int inpPcm, inpPcmPrev, outPcm; // HPF用 16bit PCM Data
+    private int outInpPcm, outInpPcmPrev; // HPF用
+    private int adpcmRate; // 187500(15625*12), 125000(10416.66*12), 93750(7812.5*12), 62500(5208.33*12), 46875(3906.25*12), ...
     private int rateCounter;
     private int n1Data; // ADPCM 1サンプルのデータの保存
     private int n1DataFlag; // 0 or 1
 
     private int mode;
-    private int volume;    // x/16
-    private int pcmKind;   // 0～4:ADPCM  5:16bitPCM  6:8bitPCM  7:謎
+    private int volume; // x/16
+    private int pcmKind; // 0～4:ADPCM  5:16bitPCM  6:8bitPCM  7:謎
 
     public byte dmaLastValue;
     public byte adpcmReg;
@@ -27,7 +27,7 @@ public class Pcm8 {
     public byte[] dmaBarBuf;
     public int dmaBarPtr;
     public int dmaBtc;
-    public int dmaOcr;                // 0:チェイン動作なし 0x08:アレイチェイン 0x0C:リンクアレイチェイン
+    public int dmaOcr; // 0:チェイン動作なし 0x08:アレイチェイン 0x0C:リンクアレイチェイン
 
     public Pcm8(Global global) {
         this.global = global;
@@ -36,7 +36,7 @@ public class Pcm8 {
     }
 
     public void init() {
-        adpcmReg = (byte) 0xC7;    // ADPCM動作停止
+        adpcmReg = (byte) 0xC7; // ADPCM動作停止
 
         scale = 0;
         pcm = 0;
@@ -62,7 +62,7 @@ public class Pcm8 {
         rateCounter = 0;
     }
 
-    public void reset() {       // ADPCM キーオン時の処理
+    public void reset() { // ADPCM キーオン時の処理
         scale = 0;
         pcm = 0;
         pcm16Prev = 0;
@@ -93,9 +93,9 @@ public class Pcm8 {
         }
         //DmaMarBuf = DmaBarBuf;
         dmaMarPtr = (mem0 << 24) | (mem1 << 16) | (mem2 << 8) | (mem3); // MAR
-        dmaMtc = (mem4 << 8) | (mem5);  // MTC
+        dmaMtc = (mem4 << 8) | (mem5); // MTC
 
-        if (dmaMtc == 0) {   // MTC == 0 ?
+        if (dmaMtc == 0) { // MTC == 0 ?
             // カウントエラー(メモリアドレス/メモリカウンタ)
             return 1;
         }
@@ -123,12 +123,11 @@ public class Pcm8 {
             // バスエラー(ベースアドレス/ベースカウンタ)
             return 1;
         }
-        //DmaMarBuf = DmaBarBuf;
-        dmaMarPtr = (int) ((mem0 << 24) | (mem1 << 16) | (mem2 << 8) | (mem3)); // MAR
-        dmaMtc = (int) ((mem4 << 8) | (mem5));  // MTC
-        dmaBarPtr = (int) ((mem6 << 24) | (mem7 << 16) | (mem8 << 8) | (mem9)); // BAR
+        dmaMarPtr = (mem0 << 24) | (mem1 << 16) | (mem2 << 8) | (mem3); // MAR
+        dmaMtc = (mem4 << 8) | (mem5); // MTC
+        dmaBarPtr = (mem6 << 24) | (mem7 << 16) | (mem8 << 8) | (mem9); // BAR
 
-        if (dmaMtc == 0) {   // MTC == 0 ?
+        if (dmaMtc == 0) { // MTC == 0 ?
             // カウントエラー(メモリアドレス/メモリカウンタ)
             return 1;
         }
@@ -137,36 +136,33 @@ public class Pcm8 {
 
     public int dmaGetByte() {
         if (dmaMtc == 0) {
-            return -2147483648;// 0x80000000;
+            return 0x80000000;
         }
-        {
-            int mem;
-            mem = global.memRead.apply(dmaMarPtr);
-            if (mem == -1) {
-                // バスエラー(メモリアドレス/メモリカウンタ)
-                return -2147483648;// 0x80000000;
-            }
-            dmaLastValue = (byte) mem;
-            dmaMarPtr++;
+        int mem = global.memRead.apply(dmaMarPtr);
+        if (mem == -1) {
+            // バスエラー(メモリアドレス/メモリカウンタ)
+            return 0x80000000;
         }
+        dmaLastValue = (byte) mem;
+        dmaMarPtr++;
 
         --dmaMtc;
 
         try {
             if (dmaMtc == 0) {
-                if ((dmaOcr & 0x08) != 0) {   // チェイニング動作
-                    if ((dmaOcr & 0x04) == 0) {   // アレイチェイン
+                if ((dmaOcr & 0x08) != 0) { // チェイニング動作
+                    if ((dmaOcr & 0x04) == 0) { // アレイチェイン
                         if (dmaArrayChainSetNextMtcMar() != 0) {
-                            throw new Exception("");
+                            throw new IllegalStateException();
                         }
-                    } else {                       // リンクアレイチェイン
+                    } else { // リンクアレイチェイン
                         if (dmaLinkArrayChainSetNextMtcMar() != 0) {
-                            throw new Exception("");
+                            throw new IllegalStateException();
                         }
                     }
                 }
             }
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
 
         return dmaLastValue;
@@ -176,20 +172,19 @@ public class Pcm8 {
     private static final int MAXPCMVAL = 2047;
     private static final int[] HPF_shift_tbl = new int[] {0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 4,};
 
-
+    /**
     // adpcmを入力して InpPcm の値を変化させる
     // -2047<<(4+4) <= InpPcm <= +2047<<(4+4)
+     */
     public void adpcm2pcm(byte adpcm) {
 
-        int dltL;
-        dltL = Global.dltLTBL[scale];
+        int dltL = Global.dltLTBL[scale];
         dltL = (dltL & ((adpcm & 4) != 0 ? -1 : 0))
                 + ((dltL >> 1) & ((adpcm & 2) != 0 ? -1 : 0))
                 + ((dltL >> 2) & ((adpcm & 1) != 0 ? -1 : 0)) + (dltL >> 3);
         int sign = (adpcm & 8) != 0 ? -1 : 0;
         dltL = (dltL ^ sign) + (sign & 1);
         pcm += dltL;
-
 
         if ((pcm + MAXPCMVAL) > (MAXPCMVAL * 2)) {
             if ((pcm + MAXPCMVAL) >= (MAXPCMVAL * 2)) {
@@ -199,8 +194,7 @@ public class Pcm8 {
             }
         }
 
-        inpPcm = (pcm & -4)//(int)0xFFFFFFFC)
-                << (4 + 4);
+        inpPcm = (pcm & -4) << (4 + 4);
 
         scale += Global.DCT[adpcm];
         if (scale > 48) {
@@ -212,12 +206,13 @@ public class Pcm8 {
         }
     }
 
+    /**
     // pcm16を入力して InpPcm の値を変化させる
     // -2047<<(4+4) <= InpPcm <= +2047<<(4+4)
+     */
     private void pcm16_2pcm(int pcm16) {
         pcm += pcm16 - pcm16Prev;
         pcm16Prev = pcm16;
-
 
         if ((pcm + MAXPCMVAL) > (MAXPCMVAL * 2)) {
             if ((pcm + MAXPCMVAL) >= (MAXPCMVAL * 2)) {
@@ -227,59 +222,54 @@ public class Pcm8 {
             }
         }
 
-        inpPcm = (pcm & -4)//(int)0xFFFFFFFC)
-                << (4 + 4);
+        inpPcm = (pcm & -4) << (4 + 4);
     }
 
     // -32768<<4 <= retval <= +32768<<4
     public int getPcm() {
-        if ((adpcmReg & 0x80) != 0) {       // ADPCM 停止中
-            return -2147483648;// 0x80000000;
+        if ((adpcmReg & 0x80) != 0) { // ADPCM 停止中
+            return 0x80000000;
         }
         rateCounter -= adpcmRate;
         while (rateCounter < 0) {
-            if (pcmKind == 5) {   // 16bitPCM
+            if (pcmKind == 5) { // 16bitPCM
                 int dataH, dataL;
                 dataH = dmaGetByte();
-                if (dataH == -2147483648)//0x80000000)
-                {
+                if (dataH == 0x80000000) {
                     rateCounter = 0;
-                    adpcmReg = (byte) 0xC7;    // ADPCM 停止
-                    return -2147483648;// 0x80000000;
+                    adpcmReg = (byte) 0xC7; // ADPCM 停止
+                    return 0x80000000;
                 }
                 dataL = dmaGetByte();
-                if (dataL == -2147483648)//0x80000000)
-                {
+                if (dataL == 0x80000000) {
                     rateCounter = 0;
-                    adpcmReg = (byte) 0xC7;    // ADPCM 停止
-                    return -2147483648;// 0x80000000;
+                    adpcmReg = (byte) 0xC7; // ADPCM 停止
+                    return 0x80000000;
                 }
                 pcm16_2pcm((short) ((dataH << 8) | dataL)); // OutPcm に値が入る
-            } else if (pcmKind == 6) {   // 8bitPCM
+            } else if (pcmKind == 6) { // 8bitPCM
                 int data;
                 data = dmaGetByte();
-                if (data == -2147483648)//0x80000000)
-                {
+                if (data == 0x80000000) {
                     rateCounter = 0;
-                    adpcmReg = (byte) 0xC7;    // ADPCM 停止
-                    return -2147483648;// 0x80000000;
+                    adpcmReg = (byte) 0xC7; // ADPCM 停止
+                    return 0x80000000;
                 }
-                pcm16_2pcm((char) data);    // InpPcm に値が入る
+                pcm16_2pcm((char) data); // InpPcm に値が入る
             } else {
-                if (n1DataFlag == 0) {       // 次のADPCMデータが内部にない場合
-                    int N10Data;    // (N1Data << 4) | N0Data
+                if (n1DataFlag == 0) { // 次のADPCMデータが内部にない場合
+                    int N10Data; // (N1Data << 4) | N0Data
                     N10Data = dmaGetByte(); // DMA転送(1バイト)
-                    if (N10Data == -2147483648)//0x80000000)
-                    {
+                    if (N10Data == 0x80000000) {
                         rateCounter = 0;
-                        adpcmReg = (byte) 0xC7;    // ADPCM 停止
-                        return -2147483648;// 0x80000000;
+                        adpcmReg = (byte) 0xC7; // ADPCM 停止
+                        return 0x80000000;
                     }
-                    adpcm2pcm((byte) (N10Data & 0x0F));  // InpPcm に値が入る
+                    adpcm2pcm((byte) (N10Data & 0x0F)); // InpPcm に値が入る
                     n1Data = (N10Data >> 4) & 0x0F;
                     n1DataFlag = 1;
                 } else {
-                    adpcm2pcm((byte) n1Data);          // InpPcm に値が入る
+                    adpcm2pcm((byte) n1Data); // InpPcm に値が入る
                     n1DataFlag = 0;
                 }
             }
@@ -293,53 +283,49 @@ public class Pcm8 {
 
     // -32768<<4 <= retval <= +32768<<4
     public int getPcm62() {
-        if ((adpcmReg & 0x80) != 0) {       // ADPCM 停止中
-            return -2147483648;// 0x80000000;
+        if ((adpcmReg & 0x80) != 0) { // ADPCM 停止中
+            return 0x80000000;
         }
         rateCounter -= adpcmRate;
         while (rateCounter < 0) {
-            if (pcmKind == 5) {   // 16bitPCM
+            if (pcmKind == 5) { // 16bitPCM
                 int dataH, dataL;
                 dataH = dmaGetByte();
-                if (dataH == -2147483648)//0x80000000)
-                {
+                if (dataH == 0x80000000) {
                     rateCounter = 0;
-                    adpcmReg = (byte) 0xC7;    // ADPCM 停止
-                    return -2147483648;// 0x80000000;
+                    adpcmReg = (byte) 0xC7; // ADPCM 停止
+                    return 0x80000000;
                 }
                 dataL = dmaGetByte();
-                if (dataL == -2147483648)//0x80000000)
-                {
+                if (dataL == 0x80000000) {
                     rateCounter = 0;
-                    adpcmReg = (byte) 0xC7;    // ADPCM 停止
-                    return -2147483648;// 0x80000000;
+                    adpcmReg = (byte) 0xC7; // ADPCM 停止
+                    return 0x80000000;
                 }
                 pcm16_2pcm((short) ((dataH << 8) | dataL)); // OutPcm に値が入る
-            } else if (pcmKind == 6) {   // 8bitPCM
+            } else if (pcmKind == 6) { // 8bitPCM
                 int data;
                 data = dmaGetByte();
-                if (data == -2147483648)//0x80000000)
-                {
+                if (data == 0x80000000) {
                     rateCounter = 0;
-                    adpcmReg = (byte) 0xC7;    // ADPCM 停止
-                    return -2147483648;// 0x80000000;
+                    adpcmReg = (byte) 0xC7; // ADPCM 停止
+                    return 0x80000000;
                 }
-                pcm16_2pcm((char) data);    // InpPcm に値が入る
+                pcm16_2pcm((char) data); // InpPcm に値が入る
             } else {
-                if (n1DataFlag == 0) {       // 次のADPCMデータが内部にない場合
-                    int N10Data;    // (N1Data << 4) | N0Data
+                if (n1DataFlag == 0) { // 次のADPCMデータが内部にない場合
+                    int N10Data; // (N1Data << 4) | N0Data
                     N10Data = dmaGetByte(); // DMA転送(1バイト)
-                    if (N10Data == -2147483648)//0x80000000)
-                    {
+                    if (N10Data == 0x80000000) {
                         rateCounter = 0;
-                        adpcmReg = (byte) 0xC7;    // ADPCM 停止
-                        return -2147483648;// 0x80000000;
+                        adpcmReg = (byte) 0xC7; // ADPCM 停止
+                        return 0x80000000;
                     }
-                    adpcm2pcm((byte) (N10Data & 0x0F));  // InpPcm に値が入る
+                    adpcm2pcm((byte) (N10Data & 0x0F)); // InpPcm に値が入る
                     n1Data = (N10Data >> 4) & 0x0F;
                     n1DataFlag = 1;
                 } else {
-                    adpcm2pcm((byte) n1Data);          // InpPcm に値が入る
+                    adpcm2pcm((byte) n1Data); // InpPcm に値が入る
                     n1DataFlag = 0;
                 }
             }
@@ -361,16 +347,16 @@ public class Pcm8 {
                 return 0;
             }
         }
-        adpcmReg = (byte) 0xC7;    // ADPCM 停止
+        adpcmReg = (byte) 0xC7; // ADPCM 停止
         dmaMtc = 0;
         dmaMarBuf = adrsBuf;//ここで代入してもどこからも参照されない
         dmaMarPtr = adrsPtr;
         setMode(mode);
         if ((mode & 3) != 0) {
-            dmaMtc = (int) len;
+            dmaMtc = len;
             reset();
-            adpcmReg = 0x47;    // ADPCM 動作開始
-            dmaOcr = 0;         // チェイン動作なし
+            adpcmReg = 0x47; // ADPCM 動作開始
+            dmaOcr = 0; // チェイン動作なし
         }
         return 0;
     }
@@ -384,23 +370,23 @@ public class Pcm8 {
                 return 0;
             }
         }
-        adpcmReg = (byte) 0xC7;    // ADPCM 停止
+        adpcmReg = (byte) 0xC7; // ADPCM 停止
         dmaMtc = 0;
         dmaBarBuf = tblBuf;//ここで代入してもどこからも参照されない
         dmaBarPtr = tblPtr;
-        dmaBtc = (int) cnt;
+        dmaBtc = cnt;
         setMode(mode);
         if ((mode & 3) != 0) {
             dmaArrayChainSetNextMtcMar();
             reset();
-            adpcmReg = 0x47;    // ADPCM 動作開始
-            dmaOcr = 0x08;      // アレイチェイン
+            adpcmReg = 0x47; // ADPCM 動作開始
+            dmaOcr = 0x08; // アレイチェイン
         }
         return 0;
     }
 
     public int lot(byte[] tblBuf, int tblPtr, int mode) {
-        adpcmReg = (byte) 0xC7;    // ADPCM 停止
+        adpcmReg = (byte) 0xC7; // ADPCM 停止
         dmaMtc = 0;
         dmaBarBuf = tblBuf;//ここで代入してもどこからも参照されない
         dmaBarPtr = tblPtr;
@@ -408,8 +394,8 @@ public class Pcm8 {
         if ((mode & 3) != 0) {
             dmaLinkArrayChainSetNextMtcMar();
             reset();
-            adpcmReg = 0x47;    // ADPCM 動作開始
-            dmaOcr = 0x0c;      // リンクアレイチェイン
+            adpcmReg = 0x47; // ADPCM 動作開始
+            dmaOcr = 0x0c; // リンクアレイチェイン
         }
         return 0;
     }
@@ -433,7 +419,7 @@ public class Pcm8 {
         if (m != 0xFF) {
             m &= 3;
             if (m == 0) {
-                adpcmReg = (byte) 0xC7;    // ADPCM 停止
+                adpcmReg = (byte) 0xC7; // ADPCM 停止
                 dmaMtc = 0;
             } else {
                 this.mode = (this.mode & 0xFFFFFF00) | m;
@@ -446,10 +432,10 @@ public class Pcm8 {
         if (dmaMtc == 0) {
             return 0;
         }
-        if ((dmaOcr & 0x08) != 0) {   // チェイニング動作
-            if ((dmaOcr & 0x04) == 0) {   // アレイチェイン
+        if ((dmaOcr & 0x08) != 0) { // チェイニング動作
+            if ((dmaOcr & 0x04) == 0) { // アレイチェイン
                 return -1;
-            } else {                       // リンクアレイチェイン
+            } else { // リンクアレイチェイン
                 return -2;
             }
         }

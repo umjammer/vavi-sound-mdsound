@@ -20,9 +20,9 @@ public class Distortion {
     private static class ChInfo {
         public boolean sw = false;
 
-        public CMyFilter highpassL = new CMyFilter();
+        public Filter highpassL = new Filter();
 
-        public CMyFilter highpassR = new CMyFilter();
+        public Filter highpassR = new Filter();
         // 増幅量。10～300程度(dB換算で20dB～50dB程度)
         public float gain = 300.0f;
         // 出力信号の音量。0.0～1.0の範囲
@@ -45,9 +45,9 @@ public class Distortion {
             // 高音域のみ通す(低音域をカットする)フィルタ設定(左右分)
             // カットする周波数の目安は20Hz～300Hz程度
             // 増幅量が大きくなれば、カットオフ周波数も大きくするとよい
-            chInfo[i].highpassL = new CMyFilter();
+            chInfo[i].highpassL = new Filter();
             chInfo[i].highpassL.highPass(200.0f, (float) (1.0f / Math.sqrt(2.0f)), clock);
-            chInfo[i].highpassR = new CMyFilter();
+            chInfo[i].highpassR = new Filter();
             chInfo[i].highpassR.highPass(200.0f, (float) (1.0f / Math.sqrt(2.0f)), clock);
             chInfo[i].gain = 300.0f;
             chInfo[i].volume = 0.1f;

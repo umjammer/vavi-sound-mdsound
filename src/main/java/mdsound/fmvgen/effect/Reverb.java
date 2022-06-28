@@ -46,7 +46,7 @@ public class Reverb {
         // SendLevel[ch] = 1.0 / (2 << Math.max(Math.min((15 - n), 15), 0));
         n = Math.max(Math.min(n, 15), 0);
         sendLevel[ch] = 1.0 * sl[n];
-        // System.err.printf("{0} {1}", ch, SendLevel[ch]);
+        // System.err.printf("%d %d", ch, SendLevel[ch]);
     }
 
     private static final double[] sl = new double[] {
@@ -77,16 +77,6 @@ public class Reverb {
     public void updatePos() {
         pos = (1 + pos) % buf[0].length;
     }
-
-    // public void storeData(int ch, int v) {
-    // int ptr = (Delta + Pos) % Buf.length;
-    // Buf[ptr] += (int)(v * SendLevel[ch]);
-    // }
-
-    // public void storeData(int LorR, int v) {
-    // int ptr = (Delta + Pos) % Buf[0].length;
-    // Buf[LorR][ptr] += (int)(v);
-    // }
 
     public void storeDataL(int v) {
         int ptr = (delta + pos) % buf[0].length;

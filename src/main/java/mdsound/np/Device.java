@@ -88,11 +88,9 @@ public interface Device {
 
         /**
          * リセット
-         *
          * <p>
          * 取り付けられている全てのデバイスの，Resetメソッドを呼び出す．
          * 呼び出し順序は，デバイスが取り付けられた順序に等しい．
-         * </P>
          */
         @Override
         public void reset() {
@@ -110,10 +108,8 @@ public interface Device {
 
         /**
          * デバイスの取り付け
-         *
          * <p>
          * このバスにデバイスを取り付ける．
-         * </P>
          *
          * @param d 取り付けるデバイスへのポインタ
          */
@@ -123,11 +119,9 @@ public interface Device {
 
         /**
          * 書き込み
-         *
          * <p>
          * 取り付けられている全てのデバイスの，Writeメソッドを呼び出す．
          * 呼び出し順序は，デバイスが取り付けられた順序に等しい．
-         * </P>
          */
         @Override
         public boolean write(int adr, int val, int id/* = 0*/) {
@@ -139,13 +133,11 @@ public interface Device {
 
         /**
          * 読み込み
-         *
          * <p>
          * 取り付けられている全てのデバイスのReadメソッドを呼び出す．
          * 呼び出し順序は，デバイスが取り付けられた順序に等しい．
          * 帰り値は有効な(Readメソッドがtrueを返却した)デバイスの
          * 返り値の論理和．
-         * </P>
          */
         @Override
         public boolean read(int adr, int[] val, int id/* = 0*/) {
@@ -170,22 +162,18 @@ public interface Device {
 
     /**
      * レイヤー
-     *
      * <p>
      * バスと似ているが，読み書きの動作を全デバイスに伝播させない．
      * 最初に読み書きに成功したデバイスを発見した時点で終了する．
-     * </P>
      */
     class Layer extends Bus {
 
         /**
          * 書き込み
-         *
          * <p>
          * 取り付けられているデバイスのWriteメソッドを呼び出す．
          * 呼び出し順序は，デバイスが取り付けられた順序に等しい．
          * Writeに成功したデバイスが見つかった時点で終了．
-         * </P>
          */
         @Override
         public boolean write(int adr, int val, int id/* = 0*/) {
@@ -198,12 +186,10 @@ public interface Device {
 
         /**
          * 読み込み
-         *
          * <p>
          * 取り付けられているデバイスのReadメソッドを呼び出す．
          * 呼び出し順序は，デバイスが取り付けられた順序に等しい．
          * Readに成功したデバイスが見つかった時点で終了．
-         * </P>
          */
         @Override
         public boolean read(int adr, int[] val, int id/* = 0*/) {

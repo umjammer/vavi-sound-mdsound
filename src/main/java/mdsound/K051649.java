@@ -25,8 +25,8 @@ package mdsound;
 public class K051649 extends Instrument.BaseInstrument {
 
     @Override
-    public void reset(byte chipID) {
-        device_reset_k051649(chipID);
+    public void reset(byte chipId) {
+        device_reset_k051649(chipId);
         visVolume = new int[][][] {
                 new int[][] {new int[] {0, 0}},
                 new int[][] {new int[] {0, 0}}
@@ -34,35 +34,35 @@ public class K051649 extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(byte chipID, int clock) {
-        return device_start_k051649(chipID, clock);
+    public int start(byte chipId, int clock) {
+        return device_start_k051649(chipId, clock);
     }
 
     @Override
-    public int start(byte chipID, int SamplingRate, int clockValue, Object... Option) {
-        if (scc1Data[chipID] == null) {
-            scc1Data[chipID] = new K051649State();
+    public int start(byte chipId, int SamplingRate, int clockValue, Object... Option) {
+        if (scc1Data[chipId] == null) {
+            scc1Data[chipId] = new K051649State();
         }
 
-        int sampRate = device_start_k051649(chipID, clockValue);
+        int sampRate = device_start_k051649(chipId, clockValue);
         //int flags = 1;
         //if (Option != null && Option.length > 0) flags = (int)(byte)Option[0];
-        //k054539_init_flags(chipID, flags);
+        //k054539_init_flags(chipId, flags);
 
         return sampRate;
     }
 
     @Override
-    public void stop(byte chipID) {
-        device_stop_k051649(chipID);
+    public void stop(byte chipId) {
+        device_stop_k051649(chipId);
     }
 
     @Override
-    public void update(byte chipID, int[][] outputs, int samples) {
-        k051649_update(chipID, outputs, samples);
+    public void update(byte chipId, int[][] outputs, int samples) {
+        k051649_update(chipId, outputs, samples);
 
-        visVolume[chipID][0][0] = outputs[0][0];
-        visVolume[chipID][0][1] = outputs[1][0];
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
     }
 
     public static class K051649State {
@@ -82,7 +82,7 @@ public class K051649 extends Instrument.BaseInstrument {
             public int frequency;
             public int volume;
             public int key;
-            public byte[] waveRam = new byte[32];        /* 19991207.CAB */
+            public byte[] waveRam = new byte[32]; /** 19991207.CAB */
             public byte muted;
 
             public void reset() {
@@ -103,7 +103,7 @@ public class K051649 extends Instrument.BaseInstrument {
         public int mixerTablePtr;
         public short[] mixerLookup;
         public int mixerLookupPtr;
-        public short[] mixer_buffer;
+        public short[] mixerBuffer;
         public int mixerBufferPtr;
 
         public int curReg;
@@ -138,22 +138,22 @@ public class K051649 extends Instrument.BaseInstrument {
             int mixPtr = 0;
 
             // zap the contents of the mixer buffer
-            if (this.mixer_buffer == null || this.mixer_buffer.length < samples) {
-                this.mixer_buffer = new short[samples];
+            if (this.mixerBuffer == null || this.mixerBuffer.length < samples) {
+                this.mixerBuffer = new short[samples];
             }
-            for (int i = 0; i < samples; i++) this.mixer_buffer[i] = 0;
+            for (int i = 0; i < samples; i++) this.mixerBuffer[i] = 0;
 
             for (int j = 0; j < 5; j++) {
                 // channel is halted for freq < 9
                 if (voice[j].frequency > 8 && voice[j].muted == 0) {
-                    byte[] w = voice[j].waveRam;            /* 19991207.CAB */
+                    byte[] w = voice[j].waveRam; // 19991207.CAB
                     int v = voice[j].volume * voice[j].key;
                     int c = (int) voice[j].counter;
                     /* Amuse source:  Cab suggests this method gives greater resolution */
                     /* Sean Young 20010417: the formula is really: f = clock/(16*(f+1)) */
                     int step = (int) (((long) this.mclock * (1 << FREQ_BITS)) / (float) ((voice[j].frequency + 1) * 16 * (this.rate / 32)) + 0.5);
 
-                    mix = this.mixer_buffer;
+                    mix = this.mixerBuffer;
                     mixPtr = 0;
 
                     // add our contribution
@@ -171,7 +171,7 @@ public class K051649 extends Instrument.BaseInstrument {
             }
 
             // mix it down
-            mix = this.mixer_buffer;
+            mix = this.mixerBuffer;
             mixPtr = 0;
             for (int i = 0; i < samples; i++) {
                 buffer[i] = buffer2[i] = this.mixerTable[this.mixerLookupPtr + mix[mixPtr++]];
@@ -185,7 +185,7 @@ public class K051649 extends Instrument.BaseInstrument {
             this.rate = this.mclock / 16;
 
             /* allocate a buffer to mix into - 1 second's worth should be more than enough */
-            this.mixer_buffer = new short[this.rate];
+            this.mixerBuffer = new short[this.rate];
 
             /* build the mixer table */
             makeMixerTable( 5);
@@ -242,7 +242,7 @@ public class K051649 extends Instrument.BaseInstrument {
             if ((this.test & 0x40) != 0)
                 return;
 
-            this.channelList[offset >> 5].waveRam[offset & 0x1f] = (byte) data;
+            this.channelList[offset >> 5].waveRam[offset & 0x1f] = data;
         }
 
         private byte readWaveFormK05239(int offset) {
@@ -262,7 +262,7 @@ public class K051649 extends Instrument.BaseInstrument {
 
             // test-register bit 5 resets the internal counter
             if ((this.test & 0x20) != 0)
-                chn.counter = 0xffffffffffffffffl;//~0
+                chn.counter = 0xffffffffffffffffL; // ~0
             else if (chn.frequency < 9)
                 chn.counter |= ((1 << FREQ_BITS) - 1);
 
@@ -335,121 +335,115 @@ public class K051649 extends Instrument.BaseInstrument {
     }
 
     /* generate Sound to the mix buffer */
-    private void k051649_update(byte chipID, int[][] outputs, int samples) {
-        K051649State info = scc1Data[chipID];
+    private void k051649_update(byte chipId, int[][] outputs, int samples) {
+        K051649State info = scc1Data[chipId];
         info.update(outputs, samples);
     }
 
-    private int device_start_k051649(byte chipID, int clock) {
-        if (chipID >= MAX_CHIPS)
+    private int device_start_k051649(byte chipId, int clock) {
+        if (chipId >= MAX_CHIPS)
             return 0;
 
-        K051649State info = scc1Data[chipID];
+        K051649State info = scc1Data[chipId];
         return info.start(clock);
     }
 
-    private void device_stop_k051649(byte chipID) {
-        K051649State info = scc1Data[chipID];
+    private void device_stop_k051649(byte chipId) {
+        K051649State info = scc1Data[chipId];
     }
 
-    private void device_reset_k051649(byte chipID) {
-        K051649State info = scc1Data[chipID];
+    private void device_reset_k051649(byte chipId) {
+        K051649State info = scc1Data[chipId];
         info.reset();
     }
 
     //
-    private void k051649_waveform_w(byte chipID, int offset, byte data) {
-        K051649State info = scc1Data[chipID];
+    private void k051649_waveform_w(byte chipId, int offset, byte data) {
+        K051649State info = scc1Data[chipId];
         info.writeWaveForm(offset, data);
     }
 
-    private byte k051649_waveform_r(byte chipID, int offset) {
-        K051649State info = scc1Data[chipID];
+    private byte k051649_waveform_r(byte chipId, int offset) {
+        K051649State info = scc1Data[chipId];
         return info.readWaveForm(offset);
     }
 
     /* SY 20001114: Channel 5 doesn't share the waveform with channel 4 on this chip */
-    private void k052539_waveform_w(byte chipID, int offset, byte data) {
-        K051649State info = scc1Data[chipID];
+    private void k052539_waveform_w(byte chipId, int offset, byte data) {
+        K051649State info = scc1Data[chipId];
         info.writeWaveFormK05239(offset, data);
     }
 
-    private byte k052539_waveform_r(byte chipID, int offset) {
-        K051649State info = scc1Data[chipID];
+    private byte k052539_waveform_r(byte chipId, int offset) {
+        K051649State info = scc1Data[chipId];
         return info.readWaveFormK05239(offset);
     }
 
-    private void k051649_volume_w(byte chipID, int offset, byte data) {
-        K051649State info = scc1Data[chipID];
+    private void k051649_volume_w(byte chipId, int offset, byte data) {
+        K051649State info = scc1Data[chipId];
         info.writeVolume(offset, data);
     }
 
-    private void k051649_frequency_w(byte chipID, int offset, byte data) {
-        K051649State info = scc1Data[chipID];
+    private void k051649_frequency_w(byte chipId, int offset, byte data) {
+        K051649State info = scc1Data[chipId];
         info.writeFrequency(offset, data);
     }
 
-    private void k051649_keyonoff_w(byte chipID, int offset, byte data) {
-        K051649State info = scc1Data[chipID];
+    private void k051649_keyonoff_w(byte chipId, int offset, byte data) {
+        K051649State info = scc1Data[chipId];
         info.wtiteKeyOnOff(offset, data);
     }
 
-    private void k051649_test_w(byte chipID, int offset, byte data) {
-        K051649State info = scc1Data[chipID];
+    private void k051649_test_w(byte chipId, int offset, byte data) {
+        K051649State info = scc1Data[chipId];
         info.writeTest(offset, data);
     }
 
-    private byte k051649_test_r(byte chipID, int offset) {
+    private byte k051649_test_r(byte chipId, int offset) {
         // reading the test register sets it to $ff!
-        k051649_test_w(chipID, offset, (byte) 0xff);
+        k051649_test_w(chipId, offset, (byte) 0xff);
         return (byte) 0xff;
     }
 
-    private void k051649_w(byte chipID, int offset, byte data) {
-        K051649State info = scc1Data[chipID];
+    private void k051649_w(byte chipId, int offset, byte data) {
+        K051649State info = scc1Data[chipId];
         info.write(offset, data);
     }
 
-    private void k051649_set_mute_mask(byte chipID, int muteMask) {
-        K051649State info = scc1Data[chipID];
+    private void k051649_set_mute_mask(byte chipId, int muteMask) {
+        K051649State info = scc1Data[chipId];
         info.setMuteMask(muteMask);
     }
 
     @Override
-    public int write(byte chipID, int port, int adr, int data) {
-        k051649_w(chipID, adr, (byte) data);
+    public int write(byte chipId, int port, int adr, int data) {
+        k051649_w(chipId, adr, (byte) data);
         return 0;
     }
 
-    public K051649State GetK051649_State(byte chipID) {
-        return scc1Data[chipID];
+    public K051649State GetK051649_State(byte chipId) {
+        return scc1Data[chipId];
     }
 
     /**
      * Generic get_info
      */
-        /*DEVICE_GET_INFO( k051649 )
-        {
-            switch (state)
-            {
-                // --- the following bits of info are returned as 64-bit signed integers ---
-                case DEVINFO_INT_TOKEN_BYTES:     info.i = sizeof(K051649State);    break;
+    /*DEVICE_GET_INFO( k051649 ) {
+        switch (state) {
+            // --- the following bits of info are returned as 64-bit signed integers ---
+            case DEVINFO_INT_TOKEN_BYTES:     info.i = sizeof(K051649State);    break;
 
-                // --- the following bits of info are returned as pointers to data or functions ---
-                case DEVINFO_FCT_START:       info.start = DEVICE_START_NAME( k051649 );  break;
-                case DEVINFO_FCT_STOP:       // nothing //         break;
-                case DEVINFO_FCT_RESET:       info.reset = DEVICE_RESET_NAME( k051649 );  break;
+            // --- the following bits of info are returned as pointers to data or functions ---
+            case DEVINFO_FCT_START:       info.start = DEVICE_START_NAME( k051649 );  break;
+            case DEVINFO_FCT_STOP: // nothing //         break;
+            case DEVINFO_FCT_RESET:       info.reset = DEVICE_RESET_NAME( k051649 );  break;
 
-                // --- the following bits of info are returned as NULL-terminated strings ---
-                case DEVINFO_STR_NAME:       strcpy(info.s, "K051649");      break;
-                case DEVINFO_STR_FAMILY:     strcpy(info.s, "Konami custom");    break;
-                case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;
-                case DEVINFO_STR_SOURCE_FILE:      strcpy(info.s, __FILE__);      break;
-                case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
-            }
-        }*/
-
-
-    //DEFINE_LEGACY_SOUND_DEVICE(K051649, k051649);
-
+            // --- the following bits of info are returned as NULL-terminated strings ---
+            case DEVINFO_STR_NAME:       strcpy(info.s, "K051649");      break;
+            case DEVINFO_STR_FAMILY:     strcpy(info.s, "Konami custom");    break;
+            case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;
+            case DEVINFO_STR_SOURCE_FILE:      strcpy(info.s, __FILE__);      break;
+            case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
+        }
+    }*/
 }

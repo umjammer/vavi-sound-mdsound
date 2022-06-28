@@ -4,6 +4,7 @@ package test;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 
 import dotnet4j.io.File;
 import dotnet4j.io.FileMode;
@@ -23,11 +24,11 @@ public class Log {
 
     public static boolean consoleEchoBack = false;
 
-    private static Charset encoding = StandardCharsets.UTF_8;
+    private static final Charset encoding = StandardCharsets.UTF_8;
 
     public static void ForcedWrite(String msg) {
         try {
-            if (path == "") {
+            if (path.isEmpty()) {
                 String fullPath = Common.settingFilePath;
                 path = Path.combine(fullPath, System.getProperty("cntLogFilename"));
                 if (File.exists(path))
@@ -40,13 +41,13 @@ public class Log {
                 if (consoleEchoBack)
                     System.err.println(timefmt + msg);
             }
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
     }
 
     public static void ForcedWrite(Exception e) {
         try {
-            if (path == "") {
+            if (path.isEmpty()) {
                 String fullPath = Common.settingFilePath;
                 path = Path.combine(fullPath, System.getProperty("cntLogFilename"));
                 if (File.exists(path))
@@ -55,26 +56,26 @@ public class Log {
             String timefmt = LocalDateTime.now().toString();
 
             try (StreamWriter writer = new StreamWriter(new FileStream(path, FileMode.Append), encoding)) {
-                String msg = String.format("%s %s %s %s",
-                                           e.getClass().getName(),
-                                           e.getMessage(),
-                                           e.getCause(),
-                                           e.getStackTrace());
+                StringBuilder msg = new StringBuilder(String.format("%s %s %s %s",
+                        e.getClass().getName(),
+                        e.getMessage(),
+                        e.getCause(),
+                        Arrays.toString(e.getStackTrace())));
                 Throwable ie = e;
                 while (ie.getCause() != null) {
                     ie = ie.getCause();
-                    msg += String.format("%s %s %s %s",
-                                         ie.getClass().getName(),
-                                         ie.getMessage(),
-                                         ie.getCause(),
-                                         ie.getStackTrace());
+                    msg.append(String.format("%s %s %s %s",
+                            ie.getClass().getName(),
+                            ie.getMessage(),
+                            ie.getCause(),
+                            Arrays.toString(ie.getStackTrace())));
                 }
 
                 writer.writeLine(timefmt + msg);
                 if (consoleEchoBack)
                     System.err.println(timefmt + msg);
             }
-        } catch (Exception ex) {
+        } catch (Exception ignored) {
         }
     }
 
@@ -83,7 +84,7 @@ public class Log {
             return;
 
         try {
-            if (path == "") {
+            if (path.isEmpty()) {
                 String fullPath = Common.settingFilePath;
                 path = Path.combine(fullPath, System.getProperty("cntLogFilename"));
                 if (File.exists(path))
@@ -97,7 +98,7 @@ public class Log {
                 if (consoleEchoBack)
                     System.err.println(timefmt + msg);
             }
-        } catch (Exception e) {
+        } catch (Exception ignored) {
         }
     }
 

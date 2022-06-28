@@ -26,100 +26,100 @@ public class Ym2610 extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void reset(byte chipID) {
-        if (chip[chipID] == null) return;
-        chip[chipID].reset();
+    public void reset(byte chipId) {
+        if (chip[chipId] == null) return;
+        chip[chipId].reset();
     }
 
     @Override
-    public int start(byte chipID, int clock) {
-        chip[chipID] = new OPNB();
-        chip[chipID].init(DefaultYM2610ClockValue, clock);
+    public int start(byte chipId, int clock) {
+        chip[chipId] = new OPNB();
+        chip[chipId].init(DefaultYM2610ClockValue, clock);
 
         return clock;
     }
 
     @Override
-    public int start(byte chipID, int clock, int clockValue, Object... option) {
-        chip[chipID] = new OPNB();
-        chip[chipID].init(clockValue, clock, false, new byte[0x20ffff], 0x20ffff, new byte[0x20ffff], 0x20ffff);
+    public int start(byte chipId, int clock, int clockValue, Object... option) {
+        chip[chipId] = new OPNB();
+        chip[chipId].init(clockValue, clock, false, new byte[0x20ffff], 0x20ffff, new byte[0x20ffff], 0x20ffff);
 
         return clock;
     }
 
     @Override
-    public void stop(byte chipID) {
-        chip[chipID] = null;
+    public void stop(byte chipId) {
+        chip[chipId] = null;
     }
 
     @Override
-    public void update(byte chipID, int[][] outputs, int samples) {
-        if (chip[chipID] == null) return;
+    public void update(byte chipId, int[][] outputs, int samples) {
+        if (chip[chipId] == null) return;
         int[] buffer = new int[2];
         buffer[0] = 0;
         buffer[1] = 0;
-        chip[chipID].mix(buffer, 1);
+        chip[chipId].mix(buffer, 1);
         for (int i = 0; i < 1; i++) {
             outputs[0][i] = buffer[i * 2 + 0];
             outputs[1][i] = buffer[i * 2 + 1];
-            //System.err.printf("[{0:d8}] : [{1:d8}] [{2}]\r\n", outputs[0][i], outputs[1][i],i);
+            //System.err.printf("[%8d] : [%8d] [%d]\r\n", outputs[0][i], outputs[1][i],i);
         }
 
-        visVolume[chipID][0][0] = outputs[0][0];
-        visVolume[chipID][0][1] = outputs[1][0];
-        visVolume[chipID][1][0] = chip[chipID].visVolume[0];
-        visVolume[chipID][1][1] = chip[chipID].visVolume[1];
-        visVolume[chipID][2][0] = chip[chipID].psg.visVolume;
-        visVolume[chipID][2][1] = chip[chipID].psg.visVolume;
-        visVolume[chipID][3][0] = chip[chipID].visRtmVolume[0];
-        visVolume[chipID][3][1] = chip[chipID].visRtmVolume[1];
-        visVolume[chipID][4][0] = chip[chipID].visAPCMVolume[0];
-        visVolume[chipID][4][1] = chip[chipID].visAPCMVolume[1];
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
+        visVolume[chipId][1][0] = chip[chipId].visVolume[0];
+        visVolume[chipId][1][1] = chip[chipId].visVolume[1];
+        visVolume[chipId][2][0] = chip[chipId].psg.visVolume;
+        visVolume[chipId][2][1] = chip[chipId].psg.visVolume;
+        visVolume[chipId][3][0] = chip[chipId].visRtmVolume[0];
+        visVolume[chipId][3][1] = chip[chipId].visRtmVolume[1];
+        visVolume[chipId][4][0] = chip[chipId].visAPCMVolume[0];
+        visVolume[chipId][4][1] = chip[chipId].visAPCMVolume[1];
     }
 
-    private int YM2610_Write(byte chipID, int adr, byte data) {
-        if (chip[chipID] == null) return 0;
-        chip[chipID].setReg(adr, data);
+    private int YM2610_Write(byte chipId, int adr, byte data) {
+        if (chip[chipId] == null) return 0;
+        chip[chipId].setReg(adr, data);
         return 0;
     }
 
-    public void YM2610_setAdpcmA(byte chipID, byte[] _adpcma, int _adpcma_size) {
-        if (chip[chipID] == null) return;
-        chip[chipID].setAdpcmA(_adpcma, _adpcma_size);
+    public void YM2610_setAdpcmA(byte chipId, byte[] _adpcma, int _adpcma_size) {
+        if (chip[chipId] == null) return;
+        chip[chipId].setAdpcmA(_adpcma, _adpcma_size);
     }
 
-    public void YM2610_setAdpcmB(byte chipID, byte[] _adpcmb, int _adpcmb_size) {
-        if (chip[chipID] == null) return;
-        chip[chipID].setAdpcmB(_adpcmb, _adpcmb_size);
+    public void YM2610_setAdpcmB(byte chipId, byte[] _adpcmb, int _adpcmb_size) {
+        if (chip[chipId] == null) return;
+        chip[chipId].setAdpcmB(_adpcmb, _adpcmb_size);
     }
 
-    public void SetFMVolume(byte chipID, int db) {
-        if (chip[chipID] == null) return;
+    public void SetFMVolume(byte chipId, int db) {
+        if (chip[chipId] == null) return;
 
-        chip[chipID].setVolumeFM(db);
+        chip[chipId].setVolumeFM(db);
     }
 
-    public void SetPSGVolume(byte chipID, int db) {
-        if (chip[chipID] == null) return;
+    public void SetPSGVolume(byte chipId, int db) {
+        if (chip[chipId] == null) return;
 
-        chip[chipID].setVolumePSG(db);
+        chip[chipId].setVolumePSG(db);
     }
 
-    public void SetAdpcmAVolume(byte chipID, int db) {
-        if (chip[chipID] == null) return;
+    public void SetAdpcmAVolume(byte chipId, int db) {
+        if (chip[chipId] == null) return;
 
-        chip[chipID].setVolumeADPCMATotal(db);
+        chip[chipId].setVolumeADPCMATotal(db);
     }
 
-    public void SetAdpcmBVolume(byte chipID, int db) {
-        if (chip[chipID] == null) return;
+    public void SetAdpcmBVolume(byte chipId, int db) {
+        if (chip[chipId] == null) return;
 
-        chip[chipID].setVolumeADPCMB(db);
+        chip[chipId].setVolumeADPCMB(db);
     }
 
     @Override
-    public int write(byte chipID, int port, int adr, int data) {
-        return YM2610_Write(chipID, (int) adr, (byte) data);
+    public int write(byte chipId, int port, int adr, int data) {
+        return YM2610_Write(chipId, adr, (byte) data);
     }
 }
 

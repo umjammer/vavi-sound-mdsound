@@ -121,7 +121,7 @@ public class NesMmc5 implements SoundChip {
 
     @Override
     public void setOption(int id, int val) {
-        if (id < (int) OPT.END.ordinal()) option[id] = val;
+        if (id < OPT.END.ordinal()) option[id] = val;
     }
 
     @Override
@@ -184,7 +184,7 @@ public class NesMmc5 implements SoundChip {
             // note MMC5 does not silence the highest 8 frequencies like APU,
             // because this is done by the sweep unit.
 
-            int v = envelopeDisable[i] ? (int) volume[i] : envelopeCounter[i];
+            int v = envelopeDisable[i] ? volume[i] : envelopeCounter[i];
             ret = sqrTbl[duty[i]][sPhase[i]] != 0 ? v : 0;
         }
 
@@ -289,28 +289,28 @@ public class NesMmc5 implements SoundChip {
         switch (adr) {
         case 0x5000:
         case 0x5004:
-            ch = (int) ((adr >> 2) & 1);
+            ch = (adr >> 2) & 1;
             volume[ch] = val & 15;
             envelopeDisable[ch] = ((val >> 4) & 1) != 0;
             envelopeLoop[ch] = ((val >> 5) & 1) != 0;
-            envelopeDivPeriod[ch] = (int) ((val & 15));
+            envelopeDivPeriod[ch] = (val & 15);
             duty[ch] = (val >> 6) & 3;
             break;
 
         case 0x5002:
         case 0x5006:
-            ch = (int) ((adr >> 2) & 1);
+            ch = (adr >> 2) & 1;
             freq[ch] = val + (freq[ch] & 0x700);
             if (sCounter[ch] > freq[ch]) sCounter[ch] = freq[ch];
             break;
 
         case 0x5003:
         case 0x5007:
-            ch = (int) ((adr >> 2) & 1);
+            ch = (adr >> 2) & 1;
             freq[ch] = (freq[ch] & 0xff) + ((val & 7) << 8);
             if (sCounter[ch] > freq[ch]) sCounter[ch] = freq[ch];
             // phase reset
-            if (option[(int) OPT.PHASE_REFRESH.ordinal()] != 0)
+            if (option[OPT.PHASE_REFRESH.ordinal()] != 0)
                 sPhase[ch] = 0;
             envelopeWrite[ch] = true;
             if (enable[ch]) {

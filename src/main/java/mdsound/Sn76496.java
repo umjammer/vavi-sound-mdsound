@@ -18,19 +18,19 @@ public class Sn76496 extends Instrument.BaseInstrument {
     private List<Sn76496State> chips = new ArrayList<>();
 
     @Override
-    public void reset(byte chipID) {
-        if (chips.get(chipID) == null) return;
-        chips.get(chipID).reset();
+    public void reset(byte chipId) {
+        if (chips.get(chipId) == null) return;
+        chips.get(chipId).reset();
     }
 
     @Override
-    public int start(byte chipID, int clock) {
+    public int start(byte chipId, int clock) {
         Sn76496State chip = new Sn76496State();
-        int i = (int) chip.start((int) 3579545, 0, 0, 0, 0, 0, 0);
-        chip.limitFreq(3579545 & 0x3FFFFFFF, 0, (int) clock);
+        int i = (int) chip.start(3579545, 0, 0, 0, 0, 0, 0);
+        chip.limitFreq(3579545 & 0x3FFFFFFF, 0, clock);
 
-        while (chipID >= chips.size()) chips.add(null);
-        chips.set(chipID, chip);
+        while (chipId >= chips.size()) chips.add(null);
+        chips.set(chipId, chip);
 
         return i;
     }
@@ -40,7 +40,7 @@ public class Sn76496 extends Instrument.BaseInstrument {
      * @param clockValue masterClock
      */
     @Override
-    public int start(byte chipID, int clock, int clockValue, Object... option) {
+    public int start(byte chipId, int clock, int clockValue, Object... option) {
         int stereo = 0;
         int negate = 0;
         int freq0 = 0;
@@ -59,48 +59,48 @@ public class Sn76496 extends Instrument.BaseInstrument {
 
         }
 
-        if (chipID == 0) {
+        if (chipId == 0) {
             Sn76496State.lastChipInit = null;
         }
 
         Sn76496State chip = new Sn76496State();
-        int i = (int) chip.start((int) clockValue, shiftreg, noisetaps, negate, stereo, divider, freq0);
+        int i = (int) chip.start(clockValue, shiftreg, noisetaps, negate, stereo, divider, freq0);
         chip.limitFreq(clockValue & 0x3FFFFFFF, 0, clock);
 
-        while (chipID >= chips.size()) chips.add(null);
-        chips.set(chipID, chip);
+        while (chipId >= chips.size()) chips.add(null);
+        chips.set(chipId, chip);
 
         return i;
     }
 
     @Override
-    public void stop(byte chipID) {
-        if (chips.get(chipID) == null) return;
-        chips.get(chipID).stop();
+    public void stop(byte chipId) {
+        if (chips.get(chipId) == null) return;
+        chips.get(chipId).stop();
     }
 
     @Override
-    public void update(byte chipID, int[][] outputs, int samples) {
-        if (chips.get(chipID) == null) return;
-        chips.get(chipID).update(outputs, samples);
+    public void update(byte chipId, int[][] outputs, int samples) {
+        if (chips.get(chipId) == null) return;
+        chips.get(chipId).update(outputs, samples);
     }
 
     /**
      * @param adr 未使用
      */
     @Override
-    public int write(byte chipID, int port, int adr, int data) {
-        if (chips.get(chipID) == null) return 0;
-        chips.get(chipID).writeReg(adr, (byte) data);
+    public int write(byte chipId, int port, int adr, int data) {
+        if (chips.get(chipId) == null) return 0;
+        chips.get(chipId).writeReg(adr, (byte) data);
         return 0;
     }
 
     /**
      * @param adr 未使用
      */
-    public int SN76496_GGStereoWrite(byte chipID, int port, int adr, int data) {
-        if (chips.get(chipID) == null) return 0;
-        chips.get(chipID).writeStereo(adr, (byte) data);
+    public int SN76496_GGStereoWrite(byte chipId, int port, int adr, int data) {
+        if (chips.get(chipId) == null) return 0;
+        chips.get(chipId).writeStereo(adr, (byte) data);
         return 0;
     }
 
@@ -112,8 +112,8 @@ public class Sn76496 extends Instrument.BaseInstrument {
     //  Routines to emulate the:
     //  Texas Instruments SN76489, SN76489A, SN76494/Sn76496
     //  ( Also known as, or at least compatible with, the TMS9919 and SN94624.)
-    //  and the Sega 'PSG' used on the Master System, Game Gear, and Megadrive/Genesis
-    //  This chip is known as the Programmable Sound Generator, or PSG, and is a 4
+    //  and the Sega 'Psg' used on the Master System, Game Gear, and Megadrive/Genesis
+    //  This chip is known as the Programmable Sound Generator, or Psg, and is a 4
     //  channel Sound generator, with three squarewave channels and a noise/arbitrary
     //  duty cycle channel.
      *
@@ -131,23 +131,23 @@ public class Sn76496 extends Instrument.BaseInstrument {
     //  ** SN76494 is the same as SN76489A but lacks the /8 divider on its clock input.
     //  ** Sn76496 is identical in operation to the SN76489A, but the audio input is
     //  documented.
-    //  All the TI-made PSG chips have an audio input line which is mixed with the 4 channels
+    //  All the TI-made Psg chips have an audio input line which is mixed with the 4 channels
     //  of output. (It is undocumented and may not function properly on the Sn76489, 76489a
     //  and 76494; the sn76489a input is mentioned in datasheets for the tms5200)
-    //  All the TI-made PSG chips act as if the frequency was set to 0x400 if 0 is
+    //  All the TI-made Psg chips act as if the frequency was set to 0x400 if 0 is
     //  written to the frequency register.
-    //  ** Sega Master System III/MD/Genesis PSG uses a 16-bit shift register with taps
+    //  ** Sega Master System III/MD/Genesis Psg uses a 16-bit shift register with taps
     //  on bits C and F, output on F
     //  It uses a 16-bit ring buffer for periodic noise/arbitrary duty cycle.
     //  (whether it uses an XOR or XNOR needs to be verified, assumed XOR)
     //  (whether output is inverted or not needs to be verified, assumed to be inverted)
-    //  ** Sega Game Gear PSG is identical to the SMS3/MD/Genesis one except it has an
+    //  ** Sega Game Gear Psg is identical to the SMS3/MD/Genesis one except it has an
     //  extra register for mapping which channels go to which speaker.
     //  The register, connected to a z80 port, means:
     //  for bits 7  6  5  4  3  2  1  0
     //           L3 L2 L1 L0 R3 R2 R1 R0
     //  Noise is an XOR function, and audio output is negated before being output.
-    //  All the Sega-made PSG chips act as if the frequency was set to 0 if 0 is written
+    //  All the Sega-made Psg chips act as if the frequency was set to 0 if 0 is written
     //  to the frequency register.
     //  ** NCR7496 (as used on the Tandy 1000) is similar to the SN76489 but with a
     //  different noise LFSR patttern: taps on bits A and E, output on E
@@ -205,7 +205,7 @@ public class Sn76496 extends Instrument.BaseInstrument {
     //  Thanks to PlgDavid and Michael Zapf for providing samples which helped immensely here.
      *
     //  23/02/2011: Lord Nightmare & Enik
-    //  Made it so the Sega PSG chips have a frequency of 0 if 0 is written to the
+    //  Made it so the Sega Psg chips have a frequency of 0 if 0 is written to the
     //  frequency register, while the others have 0x400 as before. Should fix a bug
     //  or two on sega games, particularly Vigilante on Sega Master System. Verified
     //  on SMS hardware.
@@ -226,7 +226,7 @@ public class Sn76496 extends Instrument.BaseInstrument {
 
         private static final int MAX_OUTPUT = 0x8000;
 
-        /* volume table (for 4-bit to db conversion)*/
+        /** volume table (for 4-bit to db conversion) */
         public int[] volTable = new int[16];
         /* registers */
         public int[] register = new int[8];
@@ -326,7 +326,7 @@ public class Sn76496 extends Instrument.BaseInstrument {
                 // this.Count[c] = this.Period[c];
                 // disabled for now - sounds awful
                 break;
-            case 6: /* noise  : frequency, mode */ {
+            case 6: { // noise  : frequency, mode
 // #if DEBUG
                 //if ((data & 0x80) == 0) System.err.printf("Sn76489: write to reg 6 with bit 7 clear; data was %03x, new write is %02x! report this to LN!\n", this.Register[6], data);
 // #endif
@@ -408,11 +408,11 @@ public class Sn76496 extends Instrument.BaseInstrument {
                                     (((this.rng & this.whiteNoiseTap2) != 0 ? 1 : 0) * ((this.register[6] & 4) != 0 ? 1 : 0))
                     ) != 0) {
                         this.rng >>= 1;
-                        this.rng |= (int) this.feedbackMask;
+                        this.rng |= this.feedbackMask;
                     } else {
                         this.rng >>= 1;
                     }
-                    this.output[3] = (int) (this.rng & 1);
+                    this.output[3] = this.rng & 1;
     
                     this.count[3] = this.period[3];
                 }
@@ -484,7 +484,7 @@ public class Sn76496 extends Instrument.BaseInstrument {
                             // Freq. 0 isn't disabled becaus it would also disable PCM
                             if (this.period[i] <= fNumLimit && this.period[i] != 0)
                                 vol[i] = 0;
-                            vol[i] &= (int) this.muteMsk[i];
+                            vol[i] &= this.muteMsk[i];
                             // --- Preparation End ---
     
                             //out += vol[i] * this.Volume[i];
@@ -504,7 +504,7 @@ public class Sn76496 extends Instrument.BaseInstrument {
                         vol[i] = this.output[i] != 0 ? +1 : -1;
     
                         //vol[i] &= this.MuteMsk[i];
-                        vol[i] &= (int) r2.muteMsk[i];   // use muteMask from chip 0
+                        vol[i] &= r2.muteMsk[i]; // use muteMask from chip 0
                         // --- Preparation End ---
     
                         // Noise Channel
@@ -528,7 +528,7 @@ public class Sn76496 extends Instrument.BaseInstrument {
                     _out2 = -_out2;
                 }
     
-                lBuffer[ptr] = _out >> 1;    // Output is Bipolar
+                lBuffer[ptr] = _out >> 1; // Output is Bipolar
                 rBuffer[ptr] = _out2 >> 1;
                 ptr++;
                 samples--;
@@ -567,7 +567,7 @@ public class Sn76496 extends Instrument.BaseInstrument {
             this.lastRegister = 0;
             for (int i = 0; i < 8; i += 2) {
                 this.register[i] = 0;
-                this.register[i + 1] = 0x0f;  /* volume = 0 */
+                this.register[i + 1] = 0x0f; // volume = 0 */
             }
     
             for (int i = 0; i < 4; i++) {
@@ -659,7 +659,7 @@ public class Sn76496 extends Instrument.BaseInstrument {
             this.lastRegister = 0;
             for (byte i = 0; i < 8; i += 2) {
                 this.register[i] = 0;
-                this.register[i + 1] = 0x0f;  /* volume = 0 */
+                this.register[i + 1] = 0x0f; // volume = 0 */
             }
     
             for (byte i = 0; i < 4; i++) {
@@ -683,27 +683,14 @@ public class Sn76496 extends Instrument.BaseInstrument {
         }
     }
 
-    /**
+    /*
      * Generic get_info
      */
-        /*DEVICE_GET_INFO( sn76496 )
-        {
-            switch (state)
-            {
-                // --- the following bits of info are returned as 64-bit signed integers ---
-                case DEVINFO_INT_TOKEN_BYTES:     info.i = sizeof(Sn76496State);    break;
-
-                // --- the following bits of info are returned as pointers to data or functions ---
-                case DEVINFO_FCT_START:       info.start = DEVICE_START_NAME( sn76496 );  break;
-                case DEVINFO_FCT_STOP:       // Nothing          break;
-                case DEVINFO_FCT_RESET:       // Nothing          break;
-
-                // --- the following bits of info are returned as NULL-terminated strings ---
-                case DEVINFO_STR_NAME:       strcpy(info.s, "Sn76496");      break;
-                case DEVINFO_STR_FAMILY:     strcpy(info.s, "TI PSG");      break;
-                case DEVINFO_STR_VERSION:     strcpy(info.s, "1.1");       break;
-                case DEVINFO_STR_SOURCE_FILE:      strcpy(info.s, __FILE__);      break;
-                case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
-            }
-        }*/
+    /*DEVICE_GET_INFO( sn76496 ) {
+            case DEVINFO_STR_NAME:       strcpy(info.s, "Sn76496");      break;
+            case DEVINFO_STR_FAMILY:     strcpy(info.s, "TI Psg");      break;
+            case DEVINFO_STR_VERSION:     strcpy(info.s, "1.1");       break;
+            case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
+        }
+    }*/
 }

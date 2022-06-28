@@ -4,12 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiFunction;
 
-import mdsound.fmvgen.effect.Compressor;
-import mdsound.fmvgen.effect.HPFLPF;
-import mdsound.fmvgen.effect.Reverb;
 import mdsound.fmvgen.effect.ReversePhase;
-import mdsound.fmvgen.effect.Chorus;
-import mdsound.fmvgen.effect.Distortion;
 
 
 public class PSG2 extends mdsound.fmgen.PSG {
@@ -18,12 +13,7 @@ public class PSG2 extends mdsound.fmgen.PSG {
     protected byte[] phaseReset = new byte[3];
     protected boolean[] phaseResetBefore = new boolean[3];
     protected byte[] duty = new byte[3];
-    private Reverb reverb;
-    private Distortion distortion;
-    private Chorus chorus;
-    private HPFLPF hpflpf;
-    private ReversePhase reversePhase;
-    private Compressor compressor;
+    private Fmvgen.Effects effects;
     private int efcStartCh;
     private byte[][] user = new byte[][] {new byte[64], new byte[64], new byte[64], new byte[64], new byte[64], new byte[64]};
     private int userDefCounter = 0;
@@ -32,19 +22,32 @@ public class PSG2 extends mdsound.fmgen.PSG {
     protected double ncountDbl;
     private static final double ncountDiv = 32.0;
 
-    public PSG2(int num, Reverb reverb, Distortion distortion, Chorus chorus, HPFLPF hpflpf, ReversePhase reversePhase, Compressor compressor, int efcStartCh) {
-        this.num = num;
-        this.reverb = reverb;
-        this.distortion = distortion;
-        this.chorus = chorus;
-        this.hpflpf = hpflpf;
-        this.reversePhase = reversePhase;
-        this.compressor = compressor;
-        this.efcStartCh = efcStartCh;
-        makeTblGetSample();
+    {
+        final List<BiFunction<Integer, Integer, Integer>> a = Arrays.asList(
+                this::getSampleFromDuty,
+                this::getSampleFromDuty,
+                this::getSampleFromDuty,
+                this::getSampleFromDuty,
+                this::getSampleFromDuty,
+                this::getSampleFromDuty,
+                this::getSampleFromDuty,
+                this::getSampleFromDuty,
+                this::getSampleFromTriangle,
+                this::getSampleFromSaw,
+                this::getSampleFromUserDef,
+                this::getSampleFromUserDef,
+                this::getSampleFromUserDef,
+                this::getSampleFromUserDef,
+                this::getSampleFromUserDef,
+                this::getSampleFromUserDef
+        );
+        tblGetSample = a.toArray(new BiFunction[0]);
     }
 
-    protected void finalinze() {
+    public PSG2(int num, Fmvgen.Effects effects, int efcStartCh) {
+        this.num = num;
+        this.effects = effects;
+        this.efcStartCh = efcStartCh;
     }
 
     @Override
@@ -54,31 +57,31 @@ public class PSG2 extends mdsound.fmgen.PSG {
         reg[regnum] = data;
         int tmp;
         switch (regnum) {
-        case 0:     // ChA Fine Tune
-        case 1:     // ChA Coarse Tune
+        case 0: // ChA Fine Tune
+        case 1: // ChA Coarse Tune
             tmp = ((reg[0] + reg[1] * 256) & 0xfff);
-            speriod[0] = (int) (tmp != 0 ? tPeriodBase / tmp : tPeriodBase);
+            speriod[0] = tmp != 0 ? tPeriodBase / tmp : tPeriodBase;
             duty[0] = (byte) (reg[1] >> 4);
             duty[0] = (byte) (duty[0] < 8 ? (7 - duty[0]) : duty[0]);
             break;
 
-        case 2:     // ChB Fine Tune
-        case 3:     // ChB Coarse Tune
+        case 2: // ChB Fine Tune
+        case 3: // ChB Coarse Tune
             tmp = ((reg[2] + reg[3] * 256) & 0xfff);
-            speriod[1] = (int) (tmp != 0 ? tPeriodBase / tmp : tPeriodBase);
+            speriod[1] = tmp != 0 ? tPeriodBase / tmp : tPeriodBase;
             duty[1] = (byte) (reg[3] >> 4);
             duty[1] = (byte) (duty[1] < 8 ? (7 - duty[1]) : duty[1]);
             break;
 
-        case 4:     // ChC Fine Tune
-        case 5:     // ChC Coarse Tune
+        case 4: // ChC Fine Tune
+        case 5: // ChC Coarse Tune
             tmp = ((reg[4] + reg[5] * 256) & 0xfff);
-            speriod[2] = (int) (tmp != 0 ? tPeriodBase / tmp : tPeriodBase);
+            speriod[2] = tmp != 0 ? tPeriodBase / tmp : tPeriodBase;
             duty[2] = (byte) (reg[5] >> 4);
             duty[2] = (byte) (duty[2] < 8 ? (7 - duty[2]) : duty[2]);
             break;
 
-        case 6:     // Noise generator control
+        case 6: // Noise generator control
             data &= 0x1f;
             nPeriod = data != 0 ? nPeriodBase / data : nPeriodBase;
             break;
@@ -115,21 +118,21 @@ public class PSG2 extends mdsound.fmgen.PSG {
             phaseReset[2] = (byte) ((data & 0x20) != 0 ? 1 : 0);
             break;
 
-        case 11:    // Envelop period
+        case 11: // Envelop period
         case 12:
             tmp = ((reg[11] + reg[12] * 256) & 0xffff);
-            eperiod = (int) (tmp != 0 ? eperiodbase / tmp : eperiodbase * 2);
+            eperiod = tmp != 0 ? eperiodbase / tmp : eperiodbase * 2;
             break;
 
-        case 13:    // Envelop shape
+        case 13: // Envelop shape
             ecount = 0;
             envelop = envelopTable[data & 15];
             break;
 
-        case 14:    // Define Wave Data
+        case 14: // Define Wave Data
             if ((data & 0x80) != 0) userDefCounter = 0;
             user[((data & 0x70) >> 4) % 6][userDefCounter & 63] = (byte) (data & 0xf);
-            //System.err.printf("{3} : WF {0} {1} {2} ", ((data & 0x70) >> 4) % 6, userDefCounter & 63, (byte)(data & 0xf), data);
+            //System.err.printf("%d : WF %d %d %d ", ((data & 0x70) >> 4) % 6, userDefCounter & 63, (byte)(data & 0xf), data);
             userDefCounter++;
             break;
         }
@@ -186,15 +189,15 @@ public class PSG2 extends mdsound.fmgen.PSG {
                                 sample = tblGetSample[duty[k]].apply(k, olevel[k]);
                                 int[] l = new int[] {sample};
                                 int[] r = new int[] {sample};
-                                distortion.mix(efcStartCh + k, l, r);
-                                chorus.mix(efcStartCh + k, l, r);
-                                hpflpf.mix(efcStartCh + k, l, r);
+                                effects.distortion.mix(efcStartCh + k, l, r);
+                                effects.chorus.mix(efcStartCh + k, l, r);
+                                effects.hpflpf.mix(efcStartCh + k, l, r);
                                 l[0] = (panpot[k] & 2) != 0 ? l[0] : 0;
                                 r[0] = (panpot[k] & 1) != 0 ? r[0] : 0;
-                                l[0] *= reversePhase.ssg[num][k][0];
-                                r[0] *= reversePhase.ssg[num][k][1];
-                                revSampleL += (int) (l[0] * reverb.sendLevel[efcStartCh + k] * 0.6);
-                                revSampleR += (int) (r[0] * reverb.sendLevel[efcStartCh + k] * 0.6);
+                                l[0] *= ReversePhase.ssg[num][k][0];
+                                r[0] *= ReversePhase.ssg[num][k][1];
+                                revSampleL += (int) (l[0] * effects.reverb.sendLevel[efcStartCh + k] * 0.6);
+                                revSampleR += (int) (r[0] * effects.reverb.sendLevel[efcStartCh + k] * 0.6);
                                 sampleL += l[0];
                                 sampleR += r[0];
                                 sCount[k] += speriod[k];
@@ -206,9 +209,9 @@ public class PSG2 extends mdsound.fmgen.PSG {
                         revSampleL /= (1 << overSampling);
                         revSampleR /= (1 << overSampling);
 
-                        storeSample(dest[ptrDest + 0], sampleL);
-                        storeSample(dest[ptrDest + 1], sampleR);
-                        reverb.storeDataC(revSampleL, revSampleR);
+                        dest[ptrDest + 0] += sampleL;
+                        dest[ptrDest + 1] += sampleR;
+                        effects.reverb.storeDataC(revSampleL, revSampleR);
                         ptrDest += 2;
 
                         visVolume = sampleL;
@@ -223,7 +226,7 @@ public class PSG2 extends mdsound.fmgen.PSG {
                         revSampleR = 0;
                         sample = 0;
                         for (int j = 0; j < (1 << overSampling); j++) {
-                            noise = noiseTable[((int) ncountDbl >> (int) ((noiseShift + overSampling + 6)) & (noiseTableSize - 1))]
+                            noise = noiseTable[((int) ncountDbl >> (noiseShift + overSampling + 6) & (noiseTableSize - 1))]
                                     >> ((int) ncountDbl >> (noiseShift + overSampling + 1));
 
                             ncountDbl += ((double) nPeriod / ((reg[6] & 0x20) != 0 ? ncountDiv : 1.0));
@@ -235,20 +238,20 @@ public class PSG2 extends mdsound.fmgen.PSG {
 
                                 //ノイズ
                                 nv = ((sCount[k] >> (toneShift + overSampling)) & 0 | (nEnable[k] & noise)) - 1;
-                                sample = (int) ((olevel[k] + nv) ^ nv);
+                                sample = (olevel[k] + nv) ^ nv;
                                 l[0] += sample;
                                 r[0] += sample;
 
-                                distortion.mix(efcStartCh + k, l, r);
-                                chorus.mix(efcStartCh + k, l, r);
-                                hpflpf.mix(efcStartCh + k, l, r);
-                                compressor.mix(efcStartCh + k, l, r);
+                                effects.distortion.mix(efcStartCh + k, l, r);
+                                effects.chorus.mix(efcStartCh + k, l, r);
+                                effects.hpflpf.mix(efcStartCh + k, l, r);
+                                effects.compressor.mix(efcStartCh + k, l, r);
                                 l[0] = (panpot[k] & 2) != 0 ? l[0] : 0;
                                 r[0] = (panpot[k] & 1) != 0 ? r[0] : 0;
-                                l[0] *= reversePhase.ssg[num][k][0];
-                                r[0] *= reversePhase.ssg[num][k][1];
-                                revSampleL += (int) (l[0] * reverb.sendLevel[efcStartCh + k] * 0.6);
-                                revSampleR += (int) (r[0] * reverb.sendLevel[efcStartCh + k] * 0.6);
+                                l[0] *= ReversePhase.ssg[num][k][0];
+                                r[0] *= ReversePhase.ssg[num][k][1];
+                                revSampleL += (int) (l[0] * effects.reverb.sendLevel[efcStartCh + k] * 0.6);
+                                revSampleR += (int) (r[0] * effects.reverb.sendLevel[efcStartCh + k] * 0.6);
                                 sampleL += l[0];
                                 sampleR += r[0];
                                 sCount[k] += speriod[k];
@@ -257,9 +260,9 @@ public class PSG2 extends mdsound.fmgen.PSG {
 
                         sampleL /= (1 << overSampling);
                         sampleR /= (1 << overSampling);
-                        storeSample(dest[ptrDest + 0], sampleL);
-                        storeSample(dest[ptrDest + 1], sampleR);
-                        reverb.storeDataC(revSampleL, revSampleR);
+                        dest[ptrDest + 0] += sampleL;
+                        dest[ptrDest + 1] += sampleR;
+                        effects.reverb.storeDataC(revSampleL, revSampleR);
                         ptrDest += 2;
 
                         visVolume = sampleL;
@@ -267,7 +270,7 @@ public class PSG2 extends mdsound.fmgen.PSG {
                 }
 
                 // エンベロープの計算をさぼった帳尻あわせ
-                ecount = (int) ((ecount >> 8) + (eperiod >> (8 - overSampling)) * nsamples);
+                ecount = (ecount >> 8) + (eperiod >> (8 - overSampling)) * nsamples;
                 if (ecount >= (1 << (envShift + 6 + overSampling - 8))) {
                     if ((reg[0x0d] & 0x0b) != 0x0a)
                         ecount |= (1 << (envShift + 5 + overSampling - 8));
@@ -291,7 +294,7 @@ public class PSG2 extends mdsound.fmgen.PSG {
                                 ecount |= (1 << (envShift + 5 + overSampling));
                             ecount &= (1 << (envShift + 6 + overSampling)) - 1;
                         }
-                        noise = noiseTable[((int) ncountDbl >> (int) ((noiseShift + overSampling + 6)) & (noiseTableSize - 1))]
+                        noise = noiseTable[((int) ncountDbl >> (noiseShift + overSampling + 6) & (noiseTableSize - 1))]
                                 >> ((int) ncountDbl >> (noiseShift + overSampling + 1));
                         ncountDbl += (nPeriod / ((reg[6] & 0x20) != 0 ? ncountDiv : 1.0));
 
@@ -307,16 +310,16 @@ public class PSG2 extends mdsound.fmgen.PSG {
                             l[0] += sample;
                             r[0] += sample;
 
-                            distortion.mix(efcStartCh + k, l, r);
-                            chorus.mix(efcStartCh + k, l, r);
-                            hpflpf.mix(efcStartCh + k, l, r);
-                            compressor.mix(efcStartCh + k, l, r);
+                            effects.distortion.mix(efcStartCh + k, l, r);
+                            effects.chorus.mix(efcStartCh + k, l, r);
+                            effects.hpflpf.mix(efcStartCh + k, l, r);
+                            effects.compressor.mix(efcStartCh + k, l, r);
                             l[0] = (panpot[k] & 2) != 0 ? l[0] : 0;
                             r[0] = (panpot[k] & 1) != 0 ? r[0] : 0;
-                            l[0] *= reversePhase.ssg[num][k][0];
-                            r[0] *= reversePhase.ssg[num][k][1];
-                            revSampleL += (int) (l[0] * reverb.sendLevel[efcStartCh + k] * 0.6);
-                            revSampleR += (int) (r[0] * reverb.sendLevel[efcStartCh + k] * 0.6);
+                            l[0] *= ReversePhase.ssg[num][k][0];
+                            r[0] *= ReversePhase.ssg[num][k][1];
+                            revSampleL += (int) (l[0] * effects.reverb.sendLevel[efcStartCh + k] * 0.6);
+                            revSampleR += (int) (r[0] * effects.reverb.sendLevel[efcStartCh + k] * 0.6);
                             sampleL += l[0];
                             sampleR += r[0];
                             sCount[k] += speriod[k];
@@ -327,37 +330,15 @@ public class PSG2 extends mdsound.fmgen.PSG {
                     revSampleL /= (1 << overSampling);
                     revSampleR /= (1 << overSampling);
 
-                    storeSample(dest[ptrDest + 0], sampleL);
-                    storeSample(dest[ptrDest + 1], sampleR);
-                    reverb.storeDataC(revSampleL, revSampleR);
+                    dest[ptrDest + 0] += sampleL;
+                    dest[ptrDest + 1] += sampleR;
+                    effects.reverb.storeDataC(revSampleL, revSampleR);
                     ptrDest += 2;
 
                     visVolume = sampleL;
                 }
             }
         }
-    }
-
-    private void makeTblGetSample() {
-        final List<BiFunction<Integer, Integer, Integer>> a = Arrays.asList(
-                this::getSampleFromDuty,
-                this::getSampleFromDuty,
-                this::getSampleFromDuty,
-                this::getSampleFromDuty,
-                this::getSampleFromDuty,
-                this::getSampleFromDuty,
-                this::getSampleFromDuty,
-                this::getSampleFromDuty,
-                this::getSampleFromTriangle,
-                this::getSampleFromSaw,
-                this::getSampleFromUserDef,
-                this::getSampleFromUserDef,
-                this::getSampleFromUserDef,
-                this::getSampleFromUserDef,
-                this::getSampleFromUserDef,
-                this::getSampleFromUserDef
-        );
-        tblGetSample = a.toArray(new BiFunction[0]);
     }
 
     private int getSampleFromUserDef(int k, int lv) {

@@ -166,8 +166,7 @@ public class NesVrc6 implements SoundChip {
                 if (count14 >= 14) {
                     count14 = 0;
                     phase[2] = 0;
-                } else if (0 == (count14 & 1)) // only accumulate on even ticks
-                {
+                } else if (0 == (count14 & 1)) { // only accumulate on even ticks
                     phase[2] = (phase[2] + volume[2]) & 0xFF; // note 8-bit wrapping behaviour
                 }
             }
@@ -233,7 +232,7 @@ public class NesVrc6 implements SoundChip {
             gate[ch] = (val >> 7) & 1;
             break;
         case 0xb000:
-            volume[2] = (int) (val & 63);
+            volume[2] = val & 63;
             break;
 
         case 0x9001:
@@ -258,7 +257,7 @@ public class NesVrc6 implements SoundChip {
                 }
                 phase[ch] = 0;
             }
-            enable[ch] = (int) ((val >> 7) & 1);
+            enable[ch] = (val >> 7) & 1;
             break;
 
         case 0x9003:

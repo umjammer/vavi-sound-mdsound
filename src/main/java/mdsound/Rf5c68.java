@@ -13,7 +13,7 @@ public class Rf5c68 extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void reset(byte chipID) {
+    public void reset(byte chipId) {
         visVolume = new int[][][] {
                 {new int[] {0, 0}},
                 {new int[] {0, 0}}
@@ -21,31 +21,31 @@ public class Rf5c68 extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(byte chipID, int clock) {
-        return start(chipID, clock, 0, null);
+    public int start(byte chipId, int clock) {
+        return start(chipId, clock, 0);
     }
 
     @Override
-    public int start(byte chipID, int clock, int clockValue, Object... option) {
-        return device_start_rf5c68(chipID, clockValue);
+    public int start(byte chipId, int clock, int clockValue, Object... option) {
+        return device_start_rf5c68(chipId, clockValue);
     }
 
     @Override
-    public void stop(byte chipID) {
-        device_stop_rf5c68(chipID);
+    public void stop(byte chipId) {
+        device_stop_rf5c68(chipId);
     }
 
     @Override
-    public void update(byte chipID, int[][] outputs, int samples) {
-        rf5c68_update(chipID, outputs, samples);
+    public void update(byte chipId, int[][] outputs, int samples) {
+        rf5c68_update(chipId, outputs, samples);
 
-        visVolume[chipID][0][0] = outputs[0][0];
-        visVolume[chipID][0][1] = outputs[1][0];
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
     }
 
     @Override
-    public int write(byte chipID, int port, int adr, int data) {
-        rf5c68_w(chipID, adr, (byte) data);
+    public int write(byte chipId, int port, int adr, int data) {
+        rf5c68_w(chipId, adr, (byte) data);
         return 0;
     }
 
@@ -162,43 +162,43 @@ public class Rf5c68 extends Instrument.BaseInstrument {
             int[] left = outputs[0];
             int[] right = outputs[1];
 
-            /* start with clean buffers */
+            // start with clean buffers
             for (int ind = 0; ind < samples; ind++) {
                 left[ind] = 0;
                 right[ind] = 0;
             }
 
-            /* bail if not enabled */
+            // bail if not enabled
             if (this.enable == 0)
                 return;
 
-            /* loop over channels */
+            // loop over channels
             for (int i = 0; i < NUM_CHANNELS; i++) {
                 Channel chan = this.chan[i];
 
-                /* if this channel is active, accumulate samples */
+                // if this channel is active, accumulate samples
                 if (chan.enable != 0) {
                     int lv = (chan.pan & 0x0f) * chan.env;
                     int rv = ((chan.pan >> 4) & 0x0f) * chan.env;
 
-                    /* loop over the sample buffer */
+                    // loop over the sample buffer
                     for (int j = 0; j < samples; j++) {
                         int sample;
 
-                        /* trigger sample callback */
+                        // trigger sample Callback
                         /*if(this.sample_callback) {
                             if(((chan.addr >> 11) & 0xfff) == 0xfff)
                                 this.sample_callback(this.device,((chan.addr >> 11)/0x2000));
                         }*/
 
                         this.memstrm.checkSample((chan.addr >> 11) & 0xFFFF, chan.step, this.data);
-                        /* fetch the sample and handle looping */
+                        // fetch the sample and handle looping
                         sample = this.data[(chan.addr >> 11) & 0xffff];
                         if (sample == (byte) 0xff) {
                             chan.addr = chan.loopst << 11;
                             sample = this.data[(chan.addr >> 11) & 0xffff];
 
-                            /* if we loop to a loop point, we're effectively dead */
+                            // if we loop to a loop point, we're effectively dead
                             if (sample == (byte) 0xff) {
                                 chan.key = false;
                                 break;
@@ -208,7 +208,7 @@ public class Rf5c68 extends Instrument.BaseInstrument {
                         chan.addr += chan.step;
 
                         if (chan.muted == 0) {
-                            /* add to the buffer */
+                            // add to the buffer
                             if ((sample & 0x80) != 0) {
                                 sample &= 0x7f;
                                 left[j] += (sample * lv) >> 5;
@@ -252,7 +252,7 @@ public class Rf5c68 extends Instrument.BaseInstrument {
             this.cbank = 0;
             this.wbank = 0;
 
-            /* clear channel registers */
+            // clear channel registers
             for (int i = 0; i < NUM_CHANNELS; i++) {
                 this.chan[i].reset();
             }
@@ -267,42 +267,42 @@ public class Rf5c68 extends Instrument.BaseInstrument {
             Channel chan = this.chan[this.cbank];
             int i;
 
-            /* force the stream to update first */
+            // force the stream to update first
             //stream_update(this.stream);
 
-            /* switch off the address */
+            // switch off the address
             switch (offset) {
-            case 0x00:  /* envelope */
+            case 0x00: // envelope
                 chan.env = data;
                 break;
 
-            case 0x01:  /* pan */
+            case 0x01: // pan
                 chan.pan = data;
                 break;
 
-            case 0x02:  /* FDL */
+            case 0x02: // FDL
                 chan.step = (chan.step & 0xff00) | (data & 0x00ff);
                 break;
 
-            case 0x03:  /* FDH */
+            case 0x03: // FDH
                 chan.step = (chan.step & 0x00ff) | ((data << 8) & 0xff00);
                 break;
 
-            case 0x04:  /* LSL */
+            case 0x04: // LSL
                 chan.loopst = (chan.loopst & 0xff00) | (data & 0x00ff);
                 break;
 
-            case 0x05:  /* LSH */
+            case 0x05: // LSH
                 chan.loopst = (chan.loopst & 0x00ff) | ((data << 8) & 0xff00);
                 break;
 
-            case 0x06:  /* ST */
+            case 0x06: // ST
                 chan.start = data;
                 if (chan.enable == 0)
                     chan.addr = chan.start << (8 + 11);
                 break;
 
-            case 0x07:  /* control reg */
+            case 0x07: // control reg
                 this.enable = (byte) ((data >> 7) & 1);
                 if ((data & 0x40) != 0)
                     this.cbank = (byte) (data & 7);
@@ -310,7 +310,7 @@ public class Rf5c68 extends Instrument.BaseInstrument {
                     this.wbank = (byte) (data & 15);
                 break;
 
-            case 0x08:  /* channel on/off reg */
+            case 0x08: // channel on/off reg
                 for (i = 0; i < 8; i++) {
                     byte old = this.chan[i].enable;
 
@@ -348,7 +348,7 @@ public class Rf5c68 extends Instrument.BaseInstrument {
             if (dataStart >= this.datasize)
                 return;
             if (dataStart + dataLength > this.datasize)
-                dataLength = (int) (this.datasize - dataStart);
+                dataLength = this.datasize - dataStart;
 
             this.memstrm.flush(this.data);
 
@@ -358,9 +358,9 @@ public class Rf5c68 extends Instrument.BaseInstrument {
             ms.curStep = 0x0000;
             ms.memPnt = ramData;
 
-            bytCnt = 0x40;  // SegaSonic Arcade: Run! Run! Run! needs such a high value
+            bytCnt = 0x40; // SegaSonic Arcade: Run! Run! Run! needs such a high value
             if (ms.curAddr + bytCnt > ms.endAddr)
-                bytCnt = (int) (ms.endAddr - ms.curAddr);
+                bytCnt = ms.endAddr - ms.curAddr;
 
             System.arraycopy(ms.memPnt, (ms.curAddr - ms.baseAddr), this.data, ms.curAddr, bytCnt);
             ms.curAddr += bytCnt;
@@ -374,7 +374,7 @@ public class Rf5c68 extends Instrument.BaseInstrument {
             if (dataStart >= this.datasize)
                 return;
             if (dataStart + dataLength > this.datasize)
-                dataLength = (int) (this.datasize - dataStart);
+                dataLength = this.datasize - dataStart;
 
             this.memstrm.flush(this.data);
 
@@ -403,80 +403,67 @@ public class Rf5c68 extends Instrument.BaseInstrument {
     private static final int MAX_CHIPS = 0x02;
     public Rf5c68State[] rf5C68Data = new Rf5c68State[] {new Rf5c68State(), new Rf5c68State()};
 
-    private void rf5c68_update(byte chipID, int[][] outputs, int samples) {
-        Rf5c68State chip = rf5C68Data[chipID];
+    private void rf5c68_update(byte chipId, int[][] outputs, int samples) {
+        Rf5c68State chip = rf5C68Data[chipId];
         chip.update(outputs, samples);
     }
 
-    private int device_start_rf5c68(byte chipID, int clock) {
-        if (chipID >= MAX_CHIPS)
+    private int device_start_rf5c68(byte chipId, int clock) {
+        if (chipId >= MAX_CHIPS)
             return 0;
 
-        Rf5c68State chip = rf5C68Data[chipID];
+        Rf5c68State chip = rf5C68Data[chipId];
         return chip.start(clock);
     }
 
-    private void device_stop_rf5c68(byte chipID) {
-        Rf5c68State chip = rf5C68Data[chipID];
+    private void device_stop_rf5c68(byte chipId) {
+        Rf5c68State chip = rf5C68Data[chipId];
         chip.stop();
     }
 
-    private void device_reset_rf5c68(byte chipID) {
-        Rf5c68State chip = rf5C68Data[chipID];
+    private void device_reset_rf5c68(byte chipId) {
+        Rf5c68State chip = rf5C68Data[chipId];
         chip.reset();
     }
 
-    public void rf5c68_w(byte chipID, int offset, byte data) {
-        Rf5c68State chip = rf5C68Data[chipID];
+    public void rf5c68_w(byte chipId, int offset, byte data) {
+        Rf5c68State chip = rf5C68Data[chipId];
         chip.write(offset, data);
     }
 
-    private byte rf5c68_mem_r(byte chipID, int offset) {
-        Rf5c68State chip = rf5C68Data[chipID];
+    private byte rf5c68_mem_r(byte chipId, int offset) {
+        Rf5c68State chip = rf5C68Data[chipId];
         return chip.readMemory(offset);
     }
 
-    public void rf5c68_mem_w(byte chipID, int offset, byte data) {
-        Rf5c68State chip = rf5C68Data[chipID];
+    public void rf5c68_mem_w(byte chipId, int offset, byte data) {
+        Rf5c68State chip = rf5C68Data[chipId];
         chip.writeMemory(offset, data);
     }
 
-    private void rf5c68_write_ram(byte chipID, int dataStart, int dataLength, byte[] ramData) {
-        Rf5c68State chip = rf5C68Data[chipID];
+    private void rf5c68_write_ram(byte chipId, int dataStart, int dataLength, byte[] ramData) {
+        Rf5c68State chip = rf5C68Data[chipId];
         chip.writeRam(dataStart, dataLength, ramData);
     }
 
-    public void rf5c68_write_ram2(byte chipID, int dataStart, int dataLength, byte[] ramData, int srcStartAdr) {
-        Rf5c68State chip = rf5C68Data[chipID];
+    public void rf5c68_write_ram2(byte chipId, int dataStart, int dataLength, byte[] ramData, int srcStartAdr) {
+        Rf5c68State chip = rf5C68Data[chipId];
         chip.writeRam2(dataStart, dataLength, ramData, srcStartAdr);
     }
 
-    private void rf5c68_set_mute_mask(byte chipID, int muteMask) {
-        Rf5c68State chip = rf5C68Data[chipID];
+    private void rf5c68_set_mute_mask(byte chipId, int muteMask) {
+        Rf5c68State chip = rf5C68Data[chipId];
         chip.setMuteMask(muteMask);
     }
 
-    /**
+    /*
      * Generic get_info
      */
-        /*DEVICE_GET_INFO( Rf5c68 )
-        {
-            switch (state)
-            {
-                // --- the following bits of info are returned as 64-bit signed integers ---
-                case DEVINFO_INT_TOKEN_BYTES:     info.i = sizeof(Rf5c68State);    break;
-
-                // --- the following bits of info are returned as pointers to data or functions ---
-                case DEVINFO_FCT_START:       info.start = DEVICE_START_NAME( Rf5c68 );   break;
-                case DEVINFO_FCT_STOP:       // Nothing          break;
-                case DEVINFO_FCT_RESET:       // Nothing          break;
-
-                // --- the following bits of info are returned as NULL-terminated strings ---
-                case DEVINFO_STR_NAME:       strcpy(info.s, "RF5C68");      break;
-                case DEVINFO_STR_FAMILY:     strcpy(info.s, "Ricoh PCM");     break;
-                case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;
-                case DEVINFO_STR_SOURCE_FILE:      strcpy(info.s, __FILE__);      break;
-                case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
-            }
-        }*/
+    /*DEVICE_GET_INFO( Rf5c68 ) {
+            case DEVINFO_STR_NAME:       strcpy(info.s, "RF5C68");      break;
+            case DEVINFO_STR_FAMILY:     strcpy(info.s, "Ricoh PCM");     break;
+            case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;
+            case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
+        }
+    }*/
 }

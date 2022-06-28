@@ -32,7 +32,8 @@ public class NpNesApu {
         SQR1_MASK,
     }
 
-    public int[] option = new int[OPT.END.ordinal()];        // 各種オプション
+    // 各種オプション
+    public int[] option = new int[OPT.END.ordinal()];
     public int mask;
     public int[][] sm = new int[][] {new int[2], new int[2]};
 
@@ -122,13 +123,13 @@ public class NpNesApu {
 
                     --this.sweepDiv[i];
                     if (this.sweepDiv[i] <= 0) {
-                        sweepSqr(i);  // calculate new sweep target
+                        sweepSqr(i); // calculate new sweep target
 
                         //System.err.printf("sweep_div[%d] (0/%d)\n",i,this.sweep_div_period[i]);
                         //System.err.printf("freq[%d]=%d > sfreq[%d]=%d\n",i,this.freq[i],i,this.sfreq[i]);
 
                         if (this.freq[i] >= 8 && this.sfreq[i] < 0x800 && this.sweepAmount[i] > 0) { // update frequency if appropriate
-                            this.freq[i] = this.sfreq[i] < 0 ? 0 : this.sfreq[i];
+                            this.freq[i] = Math.max(this.sfreq[i], 0);
                             if (this.sCounter[i] > this.freq[i]) this.sCounter[i] = this.freq[i];
                         }
                         this.sweepDiv[i] = this.sweepDivPeriod[i] + 1;
@@ -288,7 +289,7 @@ public class NpNesApu {
         this.envelopeCounter[1] = 0;
 
         for (i = 0x4000; i < 0x4008; i++)
-            write((int) i, 0);
+            write(i, 0);
 
         write(0x4015, 0);
         if (this.option[OPT.UNMUTE_ON_RESET.ordinal()] != 0)

@@ -36,9 +36,9 @@ System.err.println("48: " + Global.OPMLOWPASS_44.length);
             IntStream.range(0, ps.length).forEach(j -> d[i][j] = Short.parseShort(ps[j]));
         });
 
-        for (int i = 0; i < d.length; i++) {
-            for (int j = 0; j < d[i].length; j++) {
-                System.out.printf("%d, ", d[i][j]);
+        for (short[] shorts : d) {
+            for (int j = 0; j < shorts.length; j++) {
+                System.out.printf("%d, ", shorts[j]);
             }
             System.out.println();
         }

@@ -160,7 +160,7 @@ public class ScdPcm extends Instrument.BaseInstrument {
                 break;
 
             case 0x05:
-                /* loop address registers */
+                /** loop address registers  */
                 chan.loopAddr &= 0x00FF;
                 chan.loopAddr += data << 8;
 
@@ -178,10 +178,10 @@ public class ScdPcm extends Instrument.BaseInstrument {
                 // mod is H
                 if ((data & 0x40) != 0) {
                     // select channel
-                    this.curChan = (int) (data & 0x07);
+                    this.curChan = data & 0x07;
                 } else { // mod is L
                     // pcm ram bank select
-                    this.bank = (int) ((data & 0x0F) << 12);
+                    this.bank = (data & 0x0F) << 12;
                 }
 
                 // sounding bit
@@ -206,7 +206,7 @@ public class ScdPcm extends Instrument.BaseInstrument {
                 }
 
                 for (i = 0; i < 8; i++) {
-                    this.channels[i].enable = (int) (data & (1 << i));
+                    this.channels[i].enable = data & (1 << i);
                 }
                 break;
             }
@@ -334,28 +334,28 @@ public class ScdPcm extends Instrument.BaseInstrument {
     //private static final int MAX_CHIPS = 0x02;
     public PcmChip[] PCM_Chip = new PcmChip[] {new PcmChip(), new PcmChip()};
 
-    private int PCM_Init(byte chipID, int rate) {
-        PcmChip chip = PCM_Chip[chipID];
+    private int PCM_Init(byte chipId, int rate) {
+        PcmChip chip = PCM_Chip[chipId];
         return chip.init(rate);
     }
 
-    private void PCM_Reset(byte chipID) {
-        PcmChip chip = PCM_Chip[chipID];
+    private void PCM_Reset(byte chipId) {
+        PcmChip chip = PCM_Chip[chipId];
         chip.reset();
     }
 
-    private void PCM_Set_Rate(byte chipID, int rate) {
-        PcmChip chip = PCM_Chip[chipID];
+    private void PCM_Set_Rate(byte chipId, int rate) {
+        PcmChip chip = PCM_Chip[chipId];
         chip.setRate(rate);
     }
 
-    private void PCM_Write_Reg(byte chipID, int reg, int data) {
-        PcmChip chip = PCM_Chip[chipID];
+    private void PCM_Write_Reg(byte chipId, int reg, int data) {
+        PcmChip chip = PCM_Chip[chipId];
         chip.writeReg(reg, data);
     }
 
-    private int PCM_Update(byte chipID, int[][] buf, int length) {
-        PcmChip chip = PCM_Chip[chipID];
+    private int PCM_Update(byte chipId, int[][] buf, int length) {
+        PcmChip chip = PCM_Chip[chipId];
         return chip.update(buf, length);
     }
 
@@ -378,79 +378,79 @@ public class ScdPcm extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void update(byte chipID, int[][] outputs, int samples) {
-        PcmChip chip = PCM_Chip[chipID];
+    public void update(byte chipId, int[][] outputs, int samples) {
+        PcmChip chip = PCM_Chip[chipId];
 
-        PCM_Update(chipID, outputs, samples);
+        PCM_Update(chipId, outputs, samples);
 
-        visVolume[chipID][0][0] = outputs[0][0];
-        visVolume[chipID][0][1] = outputs[1][0];
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
     }
 
     // samplingrate 未使用
     @Override
-    public int start(byte chipID, int samplingrate, int clockValue, Object... option) {
-        return start(chipID, clockValue);
+    public int start(byte chipId, int samplingrate, int clockValue, Object... option) {
+        return start(chipId, clockValue);
     }
 
     @Override
-    public int start(byte chipID, int clock) {
-        if (chipID >= 0x02)
+    public int start(byte chipId, int clock) {
+        if (chipId >= 0x02)
             return 0;
 
         int rate = (clock & 0x7FFFFFFF) / 384;
         if (((CHIP_SAMPLING_MODE & 0x01) != 0 && rate < CHIP_SAMPLE_RATE) ||
                 CHIP_SAMPLING_MODE == 0x02)
             rate = CHIP_SAMPLE_RATE;
-        PCM_Init(chipID, rate);
+        PCM_Init(chipId, rate);
 
-        PcmChip chip = PCM_Chip[chipID];
+        PcmChip chip = PCM_Chip[chipId];
         chip.start(clock);
         return rate;
     }
 
     @Override
-    public void stop(byte chipID) {
-        PcmChip chip = PCM_Chip[chipID];
+    public void stop(byte chipId) {
+        PcmChip chip = PCM_Chip[chipId];
     }
 
     @Override
-    public void reset(byte chipID) {
-        PCM_Reset(chipID);
+    public void reset(byte chipId) {
+        PCM_Reset(chipId);
     }
 
-    private void rf5c164_w(byte chipID, int offset, byte data) {
-        PCM_Write_Reg(chipID, offset, data);
+    private void rf5c164_w(byte chipId, int offset, byte data) {
+        PCM_Write_Reg(chipId, offset, data);
     }
 
-    public void rf5c164_mem_w(byte chipID, int offset, byte data) {
-        PcmChip chip = PCM_Chip[chipID];
+    public void rf5c164_mem_w(byte chipId, int offset, byte data) {
+        PcmChip chip = PCM_Chip[chipId];
         chip.writeMem(offset, data);
     }
 
-    public void rf5c164_write_ram(byte chipID, int dataStart, int dataLength, byte[] ramData) {
-        PcmChip chip = PCM_Chip[chipID];
+    public void rf5c164_write_ram(byte chipId, int dataStart, int dataLength, byte[] ramData) {
+        PcmChip chip = PCM_Chip[chipId];
         chip.writeRam(dataStart, dataLength, ramData);
     }
 
-    public void rf5c164_write_ram2(byte chipID, int RAMStartAdr, int RAMdataLength, byte[] SrcData, int SrcStartAdr) {
-        PcmChip chip = PCM_Chip[chipID];
+    public void rf5c164_write_ram2(byte chipId, int RAMStartAdr, int RAMdataLength, byte[] SrcData, int SrcStartAdr) {
+        PcmChip chip = PCM_Chip[chipId];
         chip.writeRam2(RAMStartAdr, RAMdataLength, SrcData, SrcStartAdr);
     }
 
-    public void rf5c164_set_mute_mask(byte chipID, int muteMask) {
-        PcmChip chip = PCM_Chip[chipID];
+    public void rf5c164_set_mute_mask(byte chipId, int muteMask) {
+        PcmChip chip = PCM_Chip[chipId];
         chip.setMuteMask(muteMask);
     }
 
-    public void rf5c164_set_mute_Ch(byte chipID, int ch, int mute) {
-        PcmChip chip = PCM_Chip[chipID];
+    public void rf5c164_set_mute_Ch(byte chipId, int ch, int mute) {
+        PcmChip chip = PCM_Chip[chipId];
         chip.setMuteCh(ch, mute);
     }
 
     @Override
-    public int write(byte chipID, int port, int adr, int data) {
-        rf5c164_w(chipID, (int) adr, (byte) data);
+    public int write(byte chipId, int port, int adr, int data) {
+        rf5c164_w(chipId, adr, (byte) data);
         return 0;
     }
 }

@@ -8,8 +8,8 @@ package mdsound;
 public class QSound extends Instrument.BaseInstrument {
 
     @Override
-    public void reset(byte chipID) {
-        QSoundState chip = qSoundData[chipID];
+    public void reset(byte chipId) {
+        QSoundState chip = qSoundData[chipId];
         chip.reset();
 
         visVolume = new int[][][] {
@@ -19,36 +19,36 @@ public class QSound extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(byte chipID, int clock) {
-        if (chipID >= MAX_CHIPS)
+    public int start(byte chipId, int clock) {
+        if (chipId >= MAX_CHIPS)
             return 0;
 
-        QSoundState chip = qSoundData[chipID];
+        QSoundState chip = qSoundData[chipId];
         return chip.start(QSoundState.CLOCK);
     }
 
     @Override
-    public int start(byte chipID, int clock, int clockValue, Object... option) {
-        if (chipID >= MAX_CHIPS)
+    public int start(byte chipId, int clock, int clockValue, Object... option) {
+        if (chipId >= MAX_CHIPS)
             return 0;
 
-        QSoundState chip = qSoundData[chipID];
+        QSoundState chip = qSoundData[chipId];
         return chip.start(clockValue);
     }
 
     @Override
-    public void stop(byte chipID) {
-        QSoundState chip = qSoundData[chipID];
+    public void stop(byte chipId) {
+        QSoundState chip = qSoundData[chipId];
         chip.stop();
     }
 
     @Override
-    public void update(byte chipID, int[][] outputs, int samples) {
-        QSoundState chip = qSoundData[chipID];
+    public void update(byte chipId, int[][] outputs, int samples) {
+        QSoundState chip = qSoundData[chipId];
         chip.update(outputs, samples);
 
-        visVolume[chipID][0][0] = outputs[0][0];
-        visVolume[chipID][0][1] = outputs[1][0];
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
     }
 
     /*
@@ -82,10 +82,10 @@ public class QSound extends Instrument.BaseInstrument {
      */
     public static class QSoundState {
 
-        /* default 4MHz clock */
+        /** default 4MHz clock  */
         private static final int CLOCK = 4000000;
 
-        /* Clock divider */
+        /** Clock divider  */
         private static final int CLOCKDIV = 166;
         private static final int CHANNELS = 16;
 
@@ -136,7 +136,7 @@ public class QSound extends Instrument.BaseInstrument {
 
                                     // Make sure we don't overflow (what does the real chip do in this case?)
                                     if (this.address >= this.end)
-                                        this.address = (int) (this.end - this.loop);
+                                        this.address = this.end - this.loop;
 
                                     this.address &= 0xffff;
                                 } else {
@@ -162,18 +162,18 @@ public class QSound extends Instrument.BaseInstrument {
 
         // Private variables
 
-        /* Audio stream */
+        /** Audio stream  */
         //sound_stream * stream;
 
         Channel[] channel = new Channel[CHANNELS];
 
-        /* register latch data */
+        /** register latch data  */
         public int data;
-        /* Q Sound sample ROM */
+        /** Q Sound sample ROM  */
         public byte[] sampleRom;
         public int sampleRomLength;
 
-        /* Pan volume table */
+        /** Pan volume table  */
         static int[] panTable = new int[33];
 
         static {
@@ -198,7 +198,7 @@ public class QSound extends Instrument.BaseInstrument {
                 ch = address - 0xba;
                 reg = 9;
             } else {
-                /* Unknown registers */
+                // Unknown registers
                 ch = 99;
                 reg = 99;
             }
@@ -206,8 +206,8 @@ public class QSound extends Instrument.BaseInstrument {
             switch (reg) {
             case 0:
                 // bank, high bits unknown
-                ch = (ch + 1) & 0x0f;   /* strange ... */
-                this.channel[ch].bank = (data & 0x7f) << 16;   // Note: The most recent MAME doesn't do "& 0x7F"
+                ch = (ch + 1) & 0x0f; // strange ...
+                this.channel[ch].bank = (data & 0x7f) << 16; // Note: The most recent MAME doesn't do "& 0x7F"
 //# ifdef _DEBUG
 //if (data && !(data & 0x8000))
 // System.err.printf("QSound Ch %u: Bank = %04x\n", ch, data);
@@ -316,7 +316,7 @@ public class QSound extends Instrument.BaseInstrument {
         }
 
         public byte read(int offset) {
-            /* Port ready bit (0x80 if ready) */
+            // Port ready bit (0x80 if ready)
             return (byte) 0x80;
         }
 
@@ -391,62 +391,45 @@ public class QSound extends Instrument.BaseInstrument {
         return "QSND";
     }
 
-    public void qsound_w(byte chipID, int offset, byte data) {
-        QSoundState chip = qSoundData[chipID];
+    public void qsound_w(byte chipId, int offset, byte data) {
+        QSoundState chip = qSoundData[chipId];
         chip.write(offset, data);
     }
 
-    public byte qsound_r(byte chipID, int offset) {
-        QSoundState chip = qSoundData[chipID];
+    public byte qsound_r(byte chipId, int offset) {
+        QSoundState chip = qSoundData[chipId];
         return chip.read(offset);
     }
 
-    public void qsound_write_rom(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData) {
-        QSoundState info = qSoundData[chipID];
+    public void qsound_write_rom(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
+        QSoundState info = qSoundData[chipId];
         info.writeRom(romSize, dataStart, dataLength, romData);
     }
 
-    public void qsound_write_rom(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddress) {
-        QSoundState info = qSoundData[chipID];
+    public void qsound_write_rom(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddress) {
+        QSoundState info = qSoundData[chipId];
         info.writeRom(romSize, dataStart, dataLength, romData, srcStartAddress);
     }
 
-    public void qsound_set_mute_mask(byte chipID, int muteMask) {
-        QSoundState info = qSoundData[chipID];
+    public void qsound_set_mute_mask(byte chipId, int muteMask) {
+        QSoundState info = qSoundData[chipId];
         info.setMuteMask(muteMask);
     }
 
     @Override
-    public int write(byte chipID, int port, int adr, int data) {
-        qsound_w(chipID, adr, (byte) data);
+    public int write(byte chipId, int port, int adr, int data) {
+        qsound_w(chipId, adr, (byte) data);
         return 0;
     }
 
     /**
      * Generic get_info
      */
-        /*DEVICE_GET_INFO( QSound )
-        {
-            switch (state)
-            {
-                // --- the following bits of info are returned as 64-bit signed integers --- //
-                case DEVINFO_INT_TOKEN_BYTES:     info.i = sizeof(QSoundState);   break;
-
-                // --- the following bits of info are returned as pointers to data or functions --- //
-                case DEVINFO_FCT_START:       info.start = DEVICE_START_NAME( QSound );   break;
-                case DEVINFO_FCT_STOP:       info.stop = DEVICE_STOP_NAME( QSound );   break;
-                case DEVINFO_FCT_RESET:       // Nothing //         break;
-
-                // --- the following bits of info are returned as NULL-terminated strings --- //
-                case DEVINFO_STR_NAME:       strcpy(info.s, "Q-Sound");      break;
-                case DEVINFO_STR_FAMILY:     strcpy(info.s, "Capcom custom");    break;
-                case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;
-                case DEVINFO_STR_SOURCE_FILE:      strcpy(info.s, __FILE__);      break;
-                case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
-            }
-        }*/
-
-    /**************** end of file ****************/
-
-    //DEFINE_LEGACY_SOUND_DEVICE(QSOUND, QSound);
+    /*DEVICE_GET_INFO( QSound ) {
+            case DEVINFO_STR_NAME:       strcpy(info.s, "Q-Sound");      break;
+            case DEVINFO_STR_FAMILY:     strcpy(info.s, "Capcom custom");    break;
+            case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;
+            case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
+        }
+    }*/
 }

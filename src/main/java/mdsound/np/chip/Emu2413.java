@@ -88,11 +88,11 @@ public class Emu2413 {
 
             Patch patch;
 
-            int type;          /* 0 : modulator 1 : carrier */
+            int type; // 0 : modulator 1 : carrier */
 
             /* OUTPUT */
             int feedback;
-            int[] output = new int[2];   /* Output value of slot */
+            int[] output = new int[2]; // Output value of slot */
 
             /* for Phase Generator (PG) */
 
@@ -236,7 +236,7 @@ public class Emu2413 {
                     //System.err.printf("calc_slot_car: output over");
                     this.output[0] = 0;
                 } else {
-                    //System.err.printf("calc_slot_car: this.egout {0}", this.egout);
+                    //System.err.printf("calc_slot_car: this.egout %d", this.egout);
                     this.output[0] = db2linTable[this.sinTbl[(this.pgOut + wave2_8pi(fm)) & (PG_WIDTH - 1)] + this.egOut];
                 }
 
@@ -253,7 +253,7 @@ public class Emu2413 {
                 if (this.egOut >= (DB_MUTE - 1)) {
                     this.output[0] = 0;
                 } else if (this.patch.fb != 0) {
-                    fm = wave2_4pi(this.feedback) >> (int) (7 - this.patch.fb);
+                    fm = wave2_4pi(this.feedback) >> (7 - this.patch.fb);
                     this.output[0] = db2linTable[this.sinTbl[(this.pgOut + fm) & (PG_WIDTH - 1)] + this.egOut];
                 } else {
                     this.output[0] = db2linTable[this.sinTbl[this.pgOut] + this.egOut];
@@ -825,7 +825,7 @@ public class Emu2413 {
                 egout = EG2DB(egout + slot.tll) + lfo;
             else {
                 egout = EG2DB(egout + slot.tll);
-                //System.err.printf("egout {0} slot.tll {1} (e_int32)(EG_STEP/DB_STEP) {2}", egout, slot.tll, (short)(EG_STEP / DB_STEP));
+                //System.err.printf("egout %d slot.tll %d (e_int32)(EG_STEP/DB_STEP) %d", egout, slot.tll, (short)(EG_STEP / DB_STEP));
             }
 
             if (egout >= DB_MUTE)
@@ -872,7 +872,7 @@ public class Emu2413 {
 
             /* CH8 */
             if (this.patchNumber[8] <= 15) {
-                if ((this.mask & maskCh(8)) == 0 && (this.car(8).egMode != (int) EgState.FINISH.ordinal()))
+                if ((this.mask & maskCh(8)) == 0 && (this.car(8).egMode != EgState.FINISH.ordinal()))
                     inst += this.car(8).calcCar(this.mod(8).calcMod());
             } else {
                 if ((this.mask & MASK_TOM) == 0 && (this.mod(8).egMode != EgState.FINISH.ordinal()))
@@ -919,7 +919,7 @@ public class Emu2413 {
          I/O Ctrl
          */
         private void writeReg(int reg, int data) {
-            //System.err.printf("OPLL_writeReg:reg:{0}:data:{1}", reg,data);
+            //System.err.printf("OPLL_writeReg:reg:%d:data:%d", reg,data);
 
             int i, v, ch;
 
@@ -1145,8 +1145,8 @@ public class Emu2413 {
         }
 
         private void calcStereo(int[] out) {
-            int[] b = new int[] {0, 0, 0, 0};        /* Ignore, Right, Left, Center */
-            int[] r = new int[] {0, 0, 0, 0};        /* Ignore, Right, Left, Center */
+            int[] b = new int[] {0, 0, 0, 0}; // Ignore, Right, Left, Center */
+            int[] r = new int[] {0, 0, 0, 0}; // Ignore, Right, Left, Center */
 
             updateAmpm();
             updateNoise();
@@ -1173,7 +1173,7 @@ public class Emu2413 {
                     b[this.pan[7]] += this.car(7).calcCar(this.mod(7).calcMod());
             } else {
                 if ((this.mask & MASK_HH) == 0 && (this.mod(7).egMode != EgState.FINISH.ordinal()))
-                    r[this.pan[10]] += this.mod(7).calcHat((int) this.car(8).pgOut, this.noiseSeed & 1);
+                    r[this.pan[10]] += this.mod(7).calcHat(this.car(8).pgOut, this.noiseSeed & 1);
                 if ((this.mask & MASK_SD) == 0 && (this.car(7).egMode != EgState.FINISH.ordinal()))
                     r[this.pan[11]] -= this.car(7).calcSnare(this.noiseSeed & 1);
             }
@@ -1635,7 +1635,7 @@ public class Emu2413 {
             if (d == 0)
                 return (DB_MUTE - 1);
             else
-                return Math.min(-(int) (20.0 * Math.log10(d) / DB_STEP), DB_MUTE - 1);  /* 0 -- 127 */
+                return Math.min(-(int) (20.0 * Math.log10(d) / DB_STEP), DB_MUTE - 1); // 0 -- 127 */
         }
 
         /* Sin Table */
@@ -1772,7 +1772,7 @@ public class Emu2413 {
                         dPhaseARTable[ar][rks] = 0;/*EG_DP_WIDTH;*/
                         break;
                     default:
-                        dPhaseARTable[ar][rks] = adjustRate((int) (3 * (rl + 4) << (rm + 1)));
+                        dPhaseARTable[ar][rks] = adjustRate(3 * (rl + 4) << (rm + 1));
                         break;
                     }
                 }

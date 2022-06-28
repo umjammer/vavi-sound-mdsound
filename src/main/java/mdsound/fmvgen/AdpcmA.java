@@ -1,12 +1,7 @@
 package mdsound.fmvgen;
 
 import mdsound.fmgen.Opna.OPNABase;
-import mdsound.fmvgen.effect.Compressor;
-import mdsound.fmvgen.effect.HPFLPF;
-import mdsound.fmvgen.effect.Reverb;
 import mdsound.fmvgen.effect.ReversePhase;
-import mdsound.fmvgen.effect.Chorus;
-import mdsound.fmvgen.effect.Distortion;
 
 
 public class AdpcmA {
@@ -70,23 +65,21 @@ public class AdpcmA {
             new Channel(), new Channel(), new Channel()
     };
 
-    public byte[] buf; // AdpcmA ROM
+    // AdpcmA ROM
+    public byte[] buf;
     public int size;
-    public byte tl; // AdpcmA 全体の音量
+    // AdpcmA 全体の音量
+    public byte tl;
     public int tVol;
-    public byte key; // AdpcmA のキー
+    // AdpcmA のキー
+    public byte key;
     public int step;
     public byte[] reg = new byte[32];
     public static short[] jediTable = new short[(48 + 1) * 16];
 
-    private Reverb reverb;
-    private Distortion distortion;
-    private Chorus chorus;
-    private HPFLPF hpflpf;
+    private Fmvgen.Effects effects;
     private int revStartCh;
     private int num = 0;
-    private ReversePhase reversePhase;
-    private Compressor compressor;
 
     private static final byte[] table2 = new byte[] {
             1, 3, 5, 7, 9, 11, 13, 15,
@@ -101,14 +94,9 @@ public class AdpcmA {
     private boolean currentIsLSB;
     //protected float[] panTable = new float[4] { 1.0f, 0.5012f, 0.2512f, 0.1000f };
 
-    public AdpcmA(int num, Reverb reverb, Distortion distortion, Chorus chorus, HPFLPF hpflpf, ReversePhase reversePhase, Compressor compressor, int revStartCh) {
+    public AdpcmA(int num, Fmvgen.Effects effects, int revStartCh) {
         this.num = num;
-        this.reversePhase = reversePhase;
-        this.reverb = reverb;
-        this.distortion = distortion;
-        this.chorus = chorus;
-        this.hpflpf = hpflpf;
-        this.compressor = compressor;
+        this.effects = effects;
 
         this.revStartCh = revStartCh;
         this.buf = null;
@@ -150,7 +138,7 @@ public class AdpcmA {
 
                     int dest = 0;
                     for (; dest < limit; dest += 2) {
-                        r.step += (int) step;
+                        r.step += step;
                         if (r.pos >= r.stop) {
                             //setStatus((int)(0x100 << i));
                             key &= (byte) ~(1 << i);
@@ -161,9 +149,9 @@ public class AdpcmA {
                             int data;
                             if ((r.pos & 1) == 0) {
                                 r.nibble = buf[r.pos >> 1];
-                                data = (int) (r.nibble >> 4);
+                                data = r.nibble >> 4;
                             } else {
-                                data = (int) (r.nibble & 0x0f);
+                                data = r.nibble & 0x0f;
                             }
                             r.pos++;
 
@@ -175,21 +163,21 @@ public class AdpcmA {
 
                         int[] sampleL = new int[] { (r.adpcmX * vol) >> 10 };
                         int[] sampleR = new int[] { (r.adpcmX * vol) >> 10 };
-                        distortion.mix(revStartCh + i, sampleL, sampleR);
-                        chorus.mix(revStartCh + i, sampleL, sampleR);
-                        hpflpf.mix(revStartCh + i, sampleL, sampleR);
-                        compressor.mix(revStartCh + i, sampleL, sampleR);
+                        effects.distortion.mix(revStartCh + i, sampleL, sampleR);
+                        effects.chorus.mix(revStartCh + i, sampleL, sampleR);
+                        effects.hpflpf.mix(revStartCh + i, sampleL, sampleR);
+                        effects.compressor.mix(revStartCh + i, sampleL, sampleR);
 
-                        sampleL[0] = (int) (sampleL[0] * r.panL) * reversePhase.adpcmA[i][0];
-                        sampleR[0] = (int) (sampleR[0] * r.panR) * reversePhase.adpcmA[i][1];
-                        Fmvgen.storeSample(buffer[dest + 0], sampleL[0]);
-                        Fmvgen.storeSample(buffer[dest + 1], sampleR[0]);
-                        revSampleL += (int) (sampleL[0] * reverb.sendLevel[revStartCh + i] * 0.6);
-                        revSampleR += (int) (sampleR[0] * reverb.sendLevel[revStartCh + i] * 0.6);
+                        sampleL[0] = (int) (sampleL[0] * r.panL) * ReversePhase.adpcmA[i][0];
+                        sampleR[0] = (int) (sampleR[0] * r.panR) * ReversePhase.adpcmA[i][1];
+                        buffer[dest + 0] += sampleL[0];
+                        buffer[dest + 1] += sampleR[0];
+                        revSampleL += (int) (sampleL[0] * effects.reverb.sendLevel[revStartCh + i] * 0.6);
+                        revSampleR += (int) (sampleR[0] * effects.reverb.sendLevel[revStartCh + i] * 0.6);
                     }
                 }
             }
-            reverb.storeDataC(revSampleL, revSampleR);
+            effects.reverb.storeDataC(revSampleL, revSampleR);
         }
     }
 

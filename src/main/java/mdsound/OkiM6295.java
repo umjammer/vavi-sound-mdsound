@@ -1,6 +1,8 @@
 package mdsound;
 
+import java.util.Arrays;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 
 
 /**
@@ -33,47 +35,47 @@ public class OkiM6295 extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(byte chipID, int clock) {
-        return device_start_okim6295(chipID, (int) clock);
+    public int start(byte chipId, int clock) {
+        return device_start_okim6295(chipId, clock);
     }
 
     @Override
-    public int start(byte chipID, int samplingrate, int clockValue, Object... option) {
-        return device_start_okim6295(chipID, (int) clockValue);
+    public int start(byte chipId, int samplingrate, int clockValue, Object... option) {
+        return device_start_okim6295(chipId, clockValue);
     }
 
     @Override
-    public void stop(byte chipID) {
-        device_stop_okim6295(chipID);
+    public void stop(byte chipId) {
+        device_stop_okim6295(chipId);
     }
 
     @Override
-    public void reset(byte chipID) {
-        device_reset_okim6295(chipID);
+    public void reset(byte chipId) {
+        device_reset_okim6295(chipId);
     }
 
     @Override
-    public void update(byte chipID, int[][] outputs, int samples) {
-        okim6295_update(chipID, outputs, samples);
+    public void update(byte chipId, int[][] outputs, int samples) {
+        okim6295_update(chipId, outputs, samples);
 
-        visVolume[chipID][0][0] = outputs[0][0];
-        visVolume[chipID][0][1] = outputs[1][0];
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
     }
 
     /**
-     *  OKIM 6295 ADPCM chip:
+     * OKIM 6295 ADPCM chip:
      *
-     *  Command bytes are sent:
+     * Command bytes are sent:
      *
-     *      1xxx xxxx = start of 2-byte command sequence, xxxxxxx is the sample number to trigger
-     *      abcd vvvv = second half of command; one of the abcd bits is set to indicate which Voice
-     *                  the v bits seem to be volumed
+     *     1xxx xxxx = start of 2-byte command sequence, xxxxxxx is the sample number to trigger
+     *     abcd vvvv = second half of command; one of the abcd bits is set to indicate which Voice
+     *                 the v bits seem to be volumed
      *
-     *      0abc d000 = stop playing; one or more of the abcd bits is set to indicate which Voice(s)
+     *     0abc d000 = stop playing; one or more of the abcd bits is set to indicate which Voice(s)
      *
-     *  Status is read:
+     * Status is read:
      *
-     *      ???? abcd = one bit per Voice, set to 0 if nothing is playing, or 1 if it is active
+     *     ???? abcd = one bit per Voice, set to 0 if nothing is playing, or 1 if it is active
      */
     public static class OkiM6295State {
 
@@ -88,10 +90,10 @@ public class OkiM6295 extends Instrument.BaseInstrument {
             public int step;
 
             /* step size index shift table */
-            private static final int[] index_shift = new int[] {-1, -1, -1, -1, 2, 4, 6, 8};
+            private static final int[] indexShift = new int[] {-1, -1, -1, -1, 2, 4, 6, 8};
 
             /* lookup table for the precomputed difference */
-            private static int[] diff_lookup = new int[49 * 16];
+            private static int[] diffLookup = new int[49 * 16];
 
             /*
              * compute the difference tables
@@ -108,15 +110,15 @@ public class OkiM6295 extends Instrument.BaseInstrument {
                 /* loop over all possible steps */
                 for (int step = 0; step <= 48; step++) {
                     /* compute the step value */
-                    int stepval = (int) Math.floor(16.0 * Math.pow(11.0 / 10.0, (double) step));
+                    int stepVal = (int) Math.floor(16.0 * Math.pow(11.0 / 10.0, step));
 
                     /* loop over all nibbles and compute the difference */
                     for (int nib = 0; nib < 16; nib++) {
-                        diff_lookup[step * 16 + nib] = nbl2bit[nib][0] *
-                                (stepval * nbl2bit[nib][1] +
-                                        stepval / 2 * nbl2bit[nib][2] +
-                                        stepval / 4 * nbl2bit[nib][3] +
-                                        stepval / 8);
+                        diffLookup[step * 16 + nib] = nbl2bit[nib][0] *
+                                (stepVal * nbl2bit[nib][1] +
+                                 stepVal / 2 * nbl2bit[nib][2] +
+                                 stepVal / 4 * nbl2bit[nib][3] +
+                                 stepVal / 8);
                     }
                 }
             }
@@ -134,26 +136,26 @@ public class OkiM6295 extends Instrument.BaseInstrument {
              * clock the next ADPCM byte
              */
             public short clock(byte nibble) {
-//            System.err.printf("nibble=%d diff_lookup[%d]=%d\n", nibble, this.step * 16 + (nibble & 15), diff_lookup[this.step * 16 + (nibble & 15)]);
-//            System.err.printf("1this.signal=%d\n", this.signal);
-                this.signal += diff_lookup[this.step * 16 + (nibble & 15)];
+//System.err.printf("nibble=%d diff_lookup[%d]=%d\n", nibble, this.step * 16 + (nibble & 15), diff_lookup[this.step * 16 + (nibble & 15)]);
+//System.err.printf("1this.signal=%d\n", this.signal);
+                this.signal += diffLookup[this.step * 16 + (nibble & 15)];
 
-                /* clamp to the maximum */
+                // clamp to the maximum
                 if (this.signal > 2047)
                     this.signal = 2047;
                 else if (this.signal < -2048)
                     this.signal = -2048;
 
-//            System.err.printf("2this.signal=%d\n", this.signal);
-                /* adjust the step size and clamp */
-                this.step += index_shift[nibble & 7];
-//            System.err.printf("3this.signal=%d\n", this.signal);
+//System.err.printf("2this.signal=%d\n", this.signal);
+                // adjust the step size and clamp
+                this.step += indexShift[nibble & 7];
+//System.err.printf("3this.signal=%d\n", this.signal);
                 if (this.step > 48)
                     this.step = 48;
                 else if (this.step < 0)
                     this.step = 0;
 
-//            System.err.printf("4this.signal=%d\n", this.signal);
+//System.err.printf("4this.signal=%d\n", this.signal);
                 /* return the signal */
                 return (short) this.signal;
             }
@@ -161,9 +163,10 @@ public class OkiM6295 extends Instrument.BaseInstrument {
 
         /**
          * volume lookup table. The manual lists only 9 steps, ~3dB per step. Given the dB values,
-           that seems to map to a 5-bit volume control. Any volume parameter beyond the 9th index
-           results in silent playback. */
-        private static final int[] volume_table = new int[] {
+         * that seems to map to a 5-bit volume control. Any volume parameter beyond the 9th index
+         * results in silent playback.
+         */
+        private static final int[] volumeTable = new int[] {
                 0x20, //   0 dB
                 0x16, //  -3.2 dB
                 0x10, //  -6.0 dB
@@ -182,127 +185,125 @@ public class OkiM6295 extends Instrument.BaseInstrument {
                 0x00,
         };
 
-        // that's enough for VGMPlay's update rate
+        /** that's enough for VGMPlay's update rate */
         private static final int MAX_SAMPLE_CHUNK = 0x10;
 
-        /* struct describing a single playing ADPCM Voice */
+        /** struct describing a single playing ADPCM Voice */
         public static class Voice {
-            /* 1 if we are actively playing */
+            /** 1 if we are actively playing */
             public byte playing;
 
-            /* pointer to the base memory location */
+            /** pointer to the base memory location */
             public int baseOffset;
-            /* current sample number */
+            /** current sample number */
             public int sample;
-            /* total samples to play */
+            /** total samples to play */
             public int count;
 
-            public Adpcm adpcm = new Adpcm();/* current ADPCM state */
-            public int volume;          /* output volume */
-            public byte Muted;
+            /** current ADPCM state */
+            public Adpcm adpcm = new Adpcm();
+            /** output volume */
+            public int volume;
+            public byte muted;
+
+            private void generateAdpcm(short[] buffer, int samples, Function<Integer, Byte> read) {
+                int ptrBuffer = 0;
+
+                /* if this Voice is active */
+                if (playing != 0) {
+                    //System.err.printf("base_offset[%x] sample[%x] count[%x]\n", Voice.base_offset, Voice.sample, Voice.count);
+                    int iBase = baseOffset;
+                    int sample = this.sample;
+                    int count = this.count;
+
+                    /* loop while we still have samples to generate */
+                    while (samples != 0) {
+                        // compute the new amplitude and update the current step
+                        //int nibble = memory_raw_read_byte(this.device.space(), base + sample / 2) >> (((sample & 1) << 2) ^ 4);
+                        //System.err.printf("nibblecal1[%d]2[%d]\n", iBase + sample / 2, (((sample & 1) << 2) ^ 4));
+                        byte nibble = read.apply((iBase + sample / 2) >> (((sample & 1) << 2) ^ 4));
+                        //System.err.printf( "nibble[%x]\n", nibble);
+
+                        // output to the buffer, scaling by the volume
+                        // signal in range -2048..2047, volume in range 2..32 => signal * volume / 2 in range -32768..32767
+                        buffer[ptrBuffer++] = (short) (adpcm.clock(nibble) * volume / 2);
+                        //System.err.printf("*buffer[%d]\n", buffer[ptrBuffer-1]);
+                        samples--;
+
+                        // next!
+                        if (++sample >= count) {
+                            playing = 0;
+                            break;
+                        }
+                    }
+
+                    // update the parameters
+                    this.sample = sample;
+                }
+
+                // fill the rest with silence
+                while (samples-- != 0) {
+                    buffer[ptrBuffer++] = 0;
+                }
+            }
         }
 
-        //running_device *device;
         public int command;
-        public byte bank_installed;
+        public byte bankInstalled;
         public int bankOffs;
         public byte pin7State;
         public byte nmkMode;
         public byte[] nmkBank = new byte[4];
-        //sound_stream *stream; /* which stream are we playing on? */
-        public int masterClock;    /* master clock frequency */
+        /** master clock frequency */
+        public int masterClock;
         public int initialClock;
 
         public int romSize = 0;
         public int ptrROM;
-        public byte[] ROM;
+        public byte[] rom;
 
-        public dlgSRATE_CALLBACK smpRateFunc;
+        public SRATE_CALLBACK smpRateFunc;
         public MDSound.Chip smpRateData;
 
-        public interface dlgSRATE_CALLBACK extends BiConsumer<MDSound.Chip, Integer> {
+        public interface SRATE_CALLBACK extends BiConsumer<MDSound.Chip, Integer> {
         }
 
-        /*
-         * general ADPCM decoding routine
-         */
+        // general ADPCM decoding routine
 
         private static final int NMK_BNKTBLBITS = 8;
-        private static final int NMK_BNKTBLSIZE = 0x100;//(1 << NMK_BNKTBLBITS);  // 0x100
-        private static final int NMK_TABLESIZE = (4 * NMK_BNKTBLSIZE);    // 0x400
-        private static final int NMK_TABLEMASK = (NMK_TABLESIZE - 1);     // 0x3FF
+        private static final int NMK_BNKTBLSIZE = 0x100;
+        private static final int NMK_TABLESIZE = 4 * NMK_BNKTBLSIZE;
+        private static final int NMK_TABLEMASK = NMK_TABLESIZE - 1;
 
         private static final int NMK_BANKBITS = 16;
-        private static final int NMK_BANKSIZE = 0x10000;//(1 << NMK_BANKBITS);      // 0x10000
-        private static final int NMK_BANKMASK = (NMK_BANKSIZE - 1);       // 0xFFFF
-        private static final int NMK_ROMBASE = (4 * NMK_BANKSIZE);        // 0x40000
+        private static final int NMK_BANKSIZE = 0x10000;
+        private static final int NMK_BANKMASK = NMK_BANKSIZE - 1;
+        private static final int NMK_ROMBASE = 4 * NMK_BANKSIZE;
 
-        private byte memory_raw_read_byte(int offset) {
+        private byte readRawMemoryByte(int offset) {
             int curOfs;
 
             if (this.nmkMode == 0) {
                 curOfs = this.bankOffs | offset;
             } else {
-                byte BankID;
-
+                byte bankID;
                 if (offset < NMK_TABLESIZE && (this.nmkMode & 0x80) != 0) {
                     // pages sample table
-                    BankID = (byte) (offset >> NMK_BNKTBLBITS);
-                    curOfs = offset & NMK_TABLEMASK;    // 0x3FF, not 0xFF
+                    bankID = (byte) (offset >> NMK_BNKTBLBITS);
+                    curOfs = offset & NMK_TABLEMASK; // 0x3FF, not 0xFF
                 } else {
-                    BankID = (byte) (offset >> NMK_BANKBITS);
+                    bankID = (byte) (offset >> NMK_BANKBITS);
                     curOfs = offset & NMK_BANKMASK;
                 }
-                curOfs |= (this.nmkBank[BankID & 0x03] << NMK_BANKBITS);
+                curOfs |= (this.nmkBank[bankID & 0x03] << NMK_BANKBITS);
                 // I modified MAME to write a clean sample ROM.
                 // (Usually it moves the data by NMK_ROMBASE.)
                 //curOfs += NMK_ROMBASE;
             }
             if (curOfs < this.romSize)
-                return this.ROM[curOfs];
+                return this.rom[curOfs];
             else
                 return 0x00;
-        }
-
-        private void generate_adpcm(Voice voice, short[] buffer, int samples) {
-            int ptrBuffer = 0;
-
-            /* if this Voice is active */
-            if (voice.playing != 0) {
-                //System.err.printf("base_offset[%x] sample[%x] count[%x]\n", Voice.base_offset, Voice.sample, Voice.count);
-                int iBase = voice.baseOffset;
-                int sample = voice.sample;
-                int count = voice.count;
-
-                /* loop while we still have samples to generate */
-                while (samples != 0) {
-                    /* compute the new amplitude and update the current step */
-                    //int nibble = memory_raw_read_byte(this.device.space(), base + sample / 2) >> (((sample & 1) << 2) ^ 4);
-                    //System.err.printf("nibblecal1[%d]2[%d]\n", iBase + sample / 2, (((sample & 1) << 2) ^ 4));
-                    byte nibble = (byte) (memory_raw_read_byte(iBase + sample / 2) >> (((sample & 1) << 2) ^ 4));
-                    //System.err.printf( "nibble[%x]\n", nibble);
-
-                    /* output to the buffer, scaling by the volume */
-                    /* signal in range -2048..2047, volume in range 2..32 => signal * volume / 2 in range -32768..32767 */
-                    buffer[ptrBuffer++] = (short) (voice.adpcm.clock(nibble) * voice.volume / 2);
-                    //System.err.printf("*buffer[%d]\n", buffer[ptrBuffer-1]);
-                    samples--;
-
-                    /* next! */
-                    if (++sample >= count) {
-                        voice.playing = 0;
-                        break;
-                    }
-                }
-
-                /* update the parameters */
-                voice.sample = sample;
-            }
-
-            /* fill the rest with silence */
-            while (samples-- != 0) {
-                buffer[ptrBuffer++] = 0;
-            }
         }
 
         private void update(int[][] outputs, int samples) {
@@ -313,24 +314,22 @@ public class OkiM6295 extends Instrument.BaseInstrument {
 
             for (int i = 0; i < VOICES; i++) {
                 Voice voice = this.voices[i];
-                chInfo.chInfo[i].mask = voice.Muted == 0;
-                if (voice.Muted == 0) {
-                    int[][] buffer = outputs;
+                chInfo.chInfo[i].mask = voice.muted == 0;
+                if (voice.muted == 0) {
                     int ptrBuffer = 0;
-                    short[] sample_data = new short[MAX_SAMPLE_CHUNK];
+                    short[] sampleData = new short[MAX_SAMPLE_CHUNK];
                     int remaining = samples;
 
-                    /* loop while we have samples remaining */
+                    // loop while we have samples remaining
                     while (remaining != 0) {
-                        int Samples = Math.min(remaining, MAX_SAMPLE_CHUNK);
-                        int samp;
+                        int _samples = Math.min(remaining, MAX_SAMPLE_CHUNK);
 
-                        generate_adpcm(voice, sample_data, Samples);
-                        for (samp = 0; samp < Samples; samp++) {
-                            buffer[0][ptrBuffer++] += sample_data[samp];
-                            //if (sample_data[samp] != 0) {
+                        voice.generateAdpcm(sampleData, _samples, this::readRawMemoryByte);
+                        for (int samp = 0; samp < _samples; samp++) {
+                            outputs[0][ptrBuffer++] += sampleData[samp];
+                            //if (sampleData[samp] != 0) {
                             //    System.err.printf("ch:%d sampledata[%d]=%d count:%d sample:%d"
-                            //    , i, samp, sample_data[samp]
+                            //    , i, samp, sampleData[samp]
                             //    , Voice.count, Voice.sample);
                             //}
                         }
@@ -340,32 +339,31 @@ public class OkiM6295 extends Instrument.BaseInstrument {
                 }
             }
 
-            if (samples >= 0) System.arraycopy(outputs[0], 0, outputs[1], 0, samples);
+            System.arraycopy(outputs[0], 0, outputs[1], 0, samples);
         }
 
         private int start(int clock) {
             this.command = -1;
             this.bankOffs = 0;
             this.nmkMode = 0x00;
-            //memset(this.nmk_bank, 0x00, 4 * sizeof((int)8));
             for (int i = 0; i < 4; i++) {
                 this.nmkBank[i] = 0x00;
             }
 
             this.initialClock = clock;
             this.masterClock = clock & 0x7FFF_FFFF;
-            this.pin7State = (byte) (((int) clock & 0x80000000) >> 31);
+            this.pin7State = (byte) ((clock & 0x80000000) >> 31);
             chInfo.masterClock = this.masterClock;
             chInfo.pin7State = this.pin7State;
 
-            /* generate the name and create the stream */
+            // generate the name and create the stream
             int divisor = this.pin7State != 0 ? 132 : 165;
 
             return this.masterClock / divisor;
         }
 
         private void stop() {
-            this.ROM = null;
+            this.rom = null;
             this.romSize = 0x00;
         }
 
@@ -373,7 +371,6 @@ public class OkiM6295 extends Instrument.BaseInstrument {
             this.command = -1;
             this.bankOffs = 0;
             this.nmkMode = 0x00;
-            //memset(this.nmk_bank, 0x00, 4 * sizeof((int)8));
             for (int i = 0; i < 4; i++) {
                 this.nmkBank[i] = 0x00;
             }
@@ -395,19 +392,17 @@ public class OkiM6295 extends Instrument.BaseInstrument {
          */
         private void setBankBase(int iBase) {
 
-            /* if we are setting a non-zero base, and we have no bank, allocate one */
-            //if (this.bank_installed == 0 && iBase != 0)
-            //{
-            /* @Override our memory map with a bank */
-            //memory_install_read_bank(device.space(), 0x00000, 0x3ffff, 0, 0, device.tag());
-            //this.bank_installed = 1;// TRUE;
+            // if we are setting a non-zero base, and we have no bank, allocate one
+            //if (this.bank_installed == 0 && iBase != 0) {
+               // override our memory map with a bank
+            // memory_install_read_bank(device.space(), 0x00000, 0x3ffff, 0, 0, device.tag());
+            // this.bank_installed = 1;// TRUE;
             //}
 
-            /* if we have a bank number, set the base pointer */
-            //if (this.bank_installed != 0)
-            //{
-            //this.bank_offs = iBase;
-            //memory_set_bankptr(device.machine, device.tag(), device.region.super.u8 + base);
+            // if we have a bank number, set the base pointer
+            //if (this.bank_installed != 0) {
+            // this.bank_offs = iBase;
+            // memory_set_bankptr(device.machine, device.tag(), device.region.super.u8 + base);
             //}
             this.bankOffs = iBase;
         }
@@ -430,13 +425,13 @@ public class OkiM6295 extends Instrument.BaseInstrument {
         }
 
         private byte read(int offset) {
-            int result = 0xf0;  /* naname expects bits 4-7 to be 1 */
+            int result = 0xf0; // naname expects bits 4-7 to be 1
 
-            /* set the bit to 1 if something is playing on a given channel */
+            // set the bit to 1 if something is playing on a given channel
             for (int i = 0; i < VOICES; i++) {
                 Voice voice = this.voices[i];
 
-                /* set the bit if it's playing */
+                // set the bit if it's playing
                 if (voice.playing != 0)
                     result |= 1 << i;
             }
@@ -448,77 +443,70 @@ public class OkiM6295 extends Instrument.BaseInstrument {
          * write to the data port of an OKIM6295-compatible chip
          */
         private void writeCommand(byte data) {
-            /* if a command is pending, process the second half */
+            // if a command is pending, process the second half
             if (this.command != -1) {
                 int temp = data >> 4, i, start, stop;
-                int iBase;
 
-                /* the manual explicitly says that it's not possible to start multiple voices at the same time */
-//    if (temp != 0 && temp != 1 && temp != 2 && temp != 4 && temp != 8)
-//     System.err.printf("OKI6295 start %x contact MAMEDEV\n", temp);
+                // the manual explicitly says that it's not possible to start multiple voices at the same time
+//if (temp != 0 && temp != 1 && temp != 2 && temp != 4 && temp != 8)
+// System.err.printf("OKI6295 start %x contact MAMEDEV\n", temp);
 
-                /* determine which Voice(s) (Voice is set by a 1 bit in the upper 4 bits of the second byte) */
+                // determine which Voice(s) (Voice is set by a 1 bit in the upper 4 bits of the second byte)
                 for (i = 0; i < VOICES; i++, temp >>= 1) {
                     if ((temp & 1) != 0) {
                         Voice voice = this.voices[i];
 
-                        /* determine the start/stop positions */
-                        iBase = this.command * 8;
+                        // determine the start/stop positions
+                        int iBase = this.command * 8;
 
-                        //start  = memory_raw_read_byte(device.space(), base + 0) << 16;
-                        start = memory_raw_read_byte(iBase + 0) << 16;
-                        start |= memory_raw_read_byte(iBase + 1) << 8;
-                        start |= memory_raw_read_byte(iBase + 2) << 0;
+                        start = readRawMemoryByte(iBase + 0) << 16;
+                        start |= readRawMemoryByte(iBase + 1) << 8;
+                        start |= readRawMemoryByte(iBase + 2) << 0;
                         start &= 0x3ffff;
                         chInfo.chInfo[i].stAdr = start;
 
-                        stop = memory_raw_read_byte(iBase + 3) << 16;
-                        stop |= memory_raw_read_byte(iBase + 4) << 8;
-                        stop |= memory_raw_read_byte(iBase + 5) << 0;
+                        stop = readRawMemoryByte(iBase + 3) << 16;
+                        stop |= readRawMemoryByte(iBase + 4) << 8;
+                        stop |= readRawMemoryByte(iBase + 5) << 0;
                         stop &= 0x3ffff;
                         chInfo.chInfo[i].edAdr = stop;
 
-                        /* set up the Voice to play this sample */
+                        // set up the Voice to play this sample
                         if (start < stop) {
-                            if (voice.playing == 0) /* fixes Got-cha and Steel Force */ {
+                            if (voice.playing == 0) { // fixes Got-cha and Steel Force
                                 voice.playing = 1;
                                 voice.baseOffset = start;
                                 voice.sample = 0;
                                 voice.count = 2 * (stop - start + 1);
 
-                                /* also reset the ADPCM parameters */
+                                // also reset the ADPCM parameters
                                 voice.adpcm.reset();
-                                voice.volume = volume_table[data & 0x0f];
+                                voice.volume = volumeTable[data & 0x0f];
                                 chInfo.keyon[i] = true;
                             } else {
                                 //System.err.printf("OKIM6295:'%s' requested to play sample %02x on non-stopped Voice\n",device.tag(),this.command);
                                 // just displays warnings when seeking
                                 //System.err.printf("OKIM6295: Voice %u requested to play sample %02x on non-stopped Voice\n",i,this.command);
                             }
-                        }
-                        /* invalid samples go here */
-                        else {
+                        } else { // invalid samples go here
                             //System.err.printf("OKIM6295:'%s' requested to play invalid sample %02x\n",device.tag(),this.command);
-                            //System.err.printf("OKIM6295: Voice %d  requested to play invalid sample {1:X2} StartAddr {2:X} StopAdr {3:X} \n", i, this.command, start, stop);
+                            //System.err.printf("OKIM6295: Voice %d  requested to play invalid sample %2X StartAddr %X StopAdr %X \n", i, this.command, start, stop);
                             voice.playing = 0;
                         }
                     }
                 }
 
-                /* reset the command */
+                // reset the command
                 this.command = -1;
             } else if ((data & 0x80) != 0) {
-                /* if this is the start of a command, remember the sample number for next time */
+                // if this is the start of a command, remember the sample number for next time
                 this.command = data & 0x7f;
             } else {
-                /* otherwise, see if this is a silence command */
+                // otherwise, see if this is a silence command
                 int temp = data >> 3, i;
 
-                /* update the stream, then turn it off */
-                //stream_update(this.stream);
-
-                /* determine which Voice(s) (Voice is set by a 1 bit in bits 3-6 of the command */
-                for (i = 0; i < OkiM6295State.VOICES; i++, temp >>= 1) {
+                // determine which Voice(s) (Voice is set by a 1 bit in bits 3-6 of the command
+                for (i = 0; i < VOICES; i++, temp >>= 1) {
                     if ((temp & 1) != 0) {
                         Voice voice = this.voices[i];
 
@@ -558,7 +546,7 @@ public class OkiM6295 extends Instrument.BaseInstrument {
             case 0x0C:
                 setPin7(data);
                 break;
-            case 0x0E:  // NMK112 bank switch enable
+            case 0x0E: // NMK112 bank switch enable
                 this.nmkMode = data;
                 break;
             case 0x0F:
@@ -576,48 +564,42 @@ public class OkiM6295 extends Instrument.BaseInstrument {
 
         public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData) {
             if (this.romSize != romSize) {
-                this.ROM = new byte[romSize];// (byte*)realloc(this.ROM, romSize);
-                this.romSize = (int) romSize;
-                //printf("OKIM6295: New ROM Size: 0x%05X\n", romSize);
-                //memset(this.ROM, 0xFF, romSize);
-                for (int i = 0; i < romSize; i++) {
-                    this.ROM[i] = (byte) 0xff;
-                }
+                this.rom = new byte[romSize];
+                this.romSize = romSize;
+                //System.err.printf("OKIM6295: New ROM Size: 0x%05X\n", romSize);
+                Arrays.fill(this.rom, 0, romSize, (byte) 0xff);
             }
             if (dataStart > romSize)
                 return;
             if (dataStart + dataLength > romSize)
                 dataLength = romSize - dataStart;
 
-            if (dataLength >= 0) System.arraycopy(romData, 0, this.ROM, 0 + dataStart, dataLength);
+            System.arraycopy(romData, 0, this.rom, dataStart, dataLength);
         }
 
         public void writeRom2(int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddr) {
-            //System.err.printf("OKIM6295:okim6295_write_rom2: chipID:%d romSize:{1:X} dataStart:{2:X} dataLength:{3:X} srcStartAddr:{4:X}\n", chipID, romSize, dataStart, dataLength, srcStartAddr);
+            //System.err.printf("OKIM6295::writeRom2: chipId:%d romSize:%x dataStart:%x dataLength:%x srcStartAddr:%x\n", chipId, romSize, dataStart, dataLength, srcStartAddr);
             if (this.romSize != romSize) {
-                this.ROM = new byte[romSize];// (byte*)realloc(this.ROM, romSize);
-                this.romSize = (int) romSize;
-                //printf("OKIM6295: New ROM Size: 0x%05X\n", romSize);
-                //memset(this.ROM, 0xFF, romSize);
-                for (int i = 0; i < romSize; i++) {
-                    this.ROM[i] = (byte) 0xff;
-                }
+                this.rom = new byte[romSize];
+                this.romSize = romSize;
+                //System.err.printf("OKIM6295: New ROM Size: 0x%05X\n", romSize);
+                Arrays.fill(this.rom, 0, romSize, (byte) 0xff);
             }
             if (dataStart > romSize)
                 return;
             if (dataStart + dataLength > romSize)
                 dataLength = romSize - dataStart;
 
-            //System.err.printf("{0:X02} ", this.ROM[i + dataStart]);
-            if (dataLength >= 0) System.arraycopy(romData, 0 + srcStartAddr, this.ROM, 0 + dataStart, dataLength);
+            //System.err.printf("%02x ", this.ROM[i + dataStart]);
+            if (dataLength >= 0) System.arraycopy(romData, 0 + srcStartAddr, this.rom, 0 + dataStart, dataLength);
         }
 
         public void setMuteMask(int muteMask) {
-            for (byte curChn = 0; curChn < OkiM6295State.VOICES; curChn++)
-                this.voices[curChn].Muted = (byte) ((muteMask >> curChn) & 0x01);
+            for (byte curChn = 0; curChn < VOICES; curChn++)
+                this.voices[curChn].muted = (byte) ((muteMask >> curChn) & 0x01);
         }
 
-        public void setCallback(dlgSRATE_CALLBACK callbackFunc, MDSound.Chip dataPtr) {
+        public void setCallback(SRATE_CALLBACK callbackFunc, MDSound.Chip dataPtr) {
             // set Sample Rate Change Callback routine
             this.smpRateFunc = callbackFunc;
             this.smpRateData = dataPtr;
@@ -649,7 +631,7 @@ public class OkiM6295 extends Instrument.BaseInstrument {
     }
 
     private static final int MAX_CHIPS = 0x02;
-    public OkiM6295State[] OKIM6295Data = new OkiM6295State[] {new OkiM6295State(), new OkiM6295State()};
+    public OkiM6295State[] chips = new OkiM6295State[] {new OkiM6295State(), new OkiM6295State()};
 
     @Override
     public String getName() {
@@ -664,103 +646,103 @@ public class OkiM6295 extends Instrument.BaseInstrument {
     /**
      * update the Sound chip so that it is in sync with CPU execution
      */
-    private void okim6295_update(byte chipID, int[][] outputs, int samples) {
-        OkiM6295State chip = OKIM6295Data[chipID];
+    private void okim6295_update(byte chipId, int[][] outputs, int samples) {
+        OkiM6295State chip = chips[chipId];
         chip.update(outputs, samples);
     }
 
     /**
      * start emulation of an OKIM6295-compatible chip
      */
-    private int device_start_okim6295(byte chipID, int clock) {
-        if (chipID >= MAX_CHIPS)
+    private int device_start_okim6295(byte chipId, int clock) {
+        if (chipId >= MAX_CHIPS)
             return 0;
 
-        OkiM6295State info = OKIM6295Data[chipID];
+        OkiM6295State info = chips[chipId];
         return info.start(clock);
     }
 
-    private void device_stop_okim6295(byte chipID) {
-        OkiM6295State chip = OKIM6295Data[chipID];
+    private void device_stop_okim6295(byte chipId) {
+        OkiM6295State chip = chips[chipId];
         chip.stop();
     }
 
     /**
      * stop emulation of an OKIM6295-compatible chip
      */
-    private void device_reset_okim6295(byte chipID) {
-        OkiM6295State info = OKIM6295Data[chipID];
+    private void device_reset_okim6295(byte chipId) {
+        OkiM6295State info = chips[chipId];
         info.reset();
     }
 
     /**
      * read the status port of an OKIM6295-compatible chip
      */
-    private byte okim6295_r(byte chipID, int offset) {
-        OkiM6295State info = OKIM6295Data[chipID];
+    private byte okim6295_r(byte chipId, int offset) {
+        OkiM6295State info = chips[chipId];
         return info.read(offset);
     }
 
-    private void okim6295_w(byte chipID, int offset, byte data) {
-        OkiM6295State chip = OKIM6295Data[chipID];
+    private void okim6295_w(byte chipId, int offset, byte data) {
+        OkiM6295State chip = chips[chipId];
         chip.write(offset, data);
     }
 
-    public void okim6295_write_rom(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData) {
-        OkiM6295State chip = OKIM6295Data[chipID];
+    public void okim6295_write_rom(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
+        OkiM6295State chip = chips[chipId];
         chip.writeRom(romSize, dataStart, dataLength, romData);
     }
 
-    public void okim6295_write_rom2(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddr) {
-        OkiM6295State chip = OKIM6295Data[chipID];
+    public void okim6295_write_rom2(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddr) {
+        OkiM6295State chip = chips[chipId];
         chip.writeRom2(romSize, dataStart, dataLength, romData, srcStartAddr);
     }
 
-    public void okim6295_set_mute_mask(byte chipID, int muteMask) {
-        OkiM6295State chip = OKIM6295Data[chipID];
+    public void okim6295_set_mute_mask(byte chipId, int muteMask) {
+        OkiM6295State chip = chips[chipId];
         chip.setMuteMask(muteMask);
     }
 
-    public void okim6295_set_srchg_cb(byte chipID, OkiM6295State.dlgSRATE_CALLBACK CallbackFunc, MDSound.Chip DataPtr) {
-        OkiM6295State info = OKIM6295Data[chipID];
+    public void okim6295_set_srchg_cb(byte chipId, OkiM6295State.SRATE_CALLBACK CallbackFunc, MDSound.Chip DataPtr) {
+        OkiM6295State info = chips[chipId];
         info.setCallback(CallbackFunc, DataPtr);
     }
 
     @Override
-    public int write(byte chipID, int port, int adr, int data) {
-        okim6295_w(chipID, adr, (byte) data);
+    public int write(byte chipId, int port, int adr, int data) {
+        okim6295_w(chipId, adr, (byte) data);
         return 0;
     }
 
-    public OkiM6295State.ChannelInfo readChInfo(byte chipID) {
-        OkiM6295State info = OKIM6295Data[chipID];
+    public OkiM6295State.ChannelInfo readChInfo(byte chipId) {
+        OkiM6295State info = chips[chipId];
         return info.readChInfo();
     }
 
     /**
-         * Generic get_info
-         */
-        /*DEVICE_GET_INFO( OkiM6295 ) {
-   switch (state) {
-    // --- the following bits of info are returned as 64-bit signed integers --- //
-    case DEVINFO_INT_TOKEN_BYTES:    info.i = sizeof(OkiM6295State);    break;
-    case DEVINFO_INT_DATABUS_WIDTH_0:   info.i = 8;         break;
-    case DEVINFO_INT_ADDRBUS_WIDTH_0:   info.i = 18;         break;
-    case DEVINFO_INT_ADDRBUS_SHIFT_0:   info.i = 0;         break;
+     * Generic get_info
+     */
+    /*DEVICE_GET_INFO( OkiM6295 ) {
+       switch (state) {
+        // --- the following bits of info are returned as 64-bit signed integers --- //
+        case DEVINFO_INT_TOKEN_BYTES:    info.i = sizeof(OkiM6295State);    break;
+        case DEVINFO_INT_DATABUS_WIDTH_0:   info.i = 8;         break;
+        case DEVINFO_INT_ADDRBUS_WIDTH_0:   info.i = 18;         break;
+        case DEVINFO_INT_ADDRBUS_SHIFT_0:   info.i = 0;         break;
 
-    // --- the following bits of info are returned as pointers to data --- //
-    case DEVINFO_PTR_DEFAULT_MEMORY_MAP_0:  info.default_map8 = ADDRESS_MAP_NAME(OkiM6295);break;
+        // --- the following bits of info are returned as pointers to data --- //
+        case DEVINFO_PTR_DEFAULT_MEMORY_MAP_0:  info.default_map8 = ADDRESS_MAP_NAME(OkiM6295);break;
 
-    // --- the following bits of info are returned as pointers to functions --- //
-    case DEVINFO_FCT_START:      info.start = DEVICE_START_NAME( OkiM6295 ); break;
-    case DEVINFO_FCT_RESET:      info.reset = DEVICE_RESET_NAME( OkiM6295 ); break;
+        // --- the following bits of info are returned as pointers to functions --- //
+        case DEVINFO_FCT_START:      info.start = DEVICE_START_NAME( OkiM6295 ); break;
+        case DEVINFO_FCT_RESET:      info.reset = DEVICE_RESET_NAME( OkiM6295 ); break;
 
-    // --- the following bits of info are returned as NULL-terminated strings --- //
-    case DEVINFO_STR_NAME:      strcpy(info.s, "OKI6295");      break;
-    case DEVINFO_STR_FAMILY:     strcpy(info.s, "OKI ADPCM");     break;
-    case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;
-    case DEVINFO_STR_SOURCE_FILE:    strcpy(info.s, __FILE__);      break;
-    case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
-   }
-  }*/
+        // --- the following bits of info are returned as NULL-terminated strings --- //
+        case DEVINFO_STR_NAME:      strcpy(info.s, "OKI6295");      break;
+        case DEVINFO_STR_FAMILY:     strcpy(info.s, "OKI ADPCM");     break;
+        case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;
+        case DEVINFO_STR_SOURCE_FILE:    strcpy(info.s, __FILE__);      break;
+        case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
+       }
+    }*/
 }

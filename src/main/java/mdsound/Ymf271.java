@@ -1,9 +1,13 @@
 package mdsound;
 
+import java.util.Arrays;
+import java.util.function.Function;
+
+
 public class Ymf271 extends Instrument.BaseInstrument {
     @Override
-    public void reset(byte chipID) {
-        device_reset_ymf271(chipID);
+    public void reset(byte chipId) {
+        device_reset_ymf271(chipId);
 
         visVolume = new int[][][] {
                 new int[][] {new int[] {0, 0}},
@@ -12,34 +16,27 @@ public class Ymf271 extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(byte chipID, int clock) {
-        return device_start_ymf271(chipID, 16934400);
+    public int start(byte chipId, int clock) {
+        return device_start_ymf271(chipId, 16934400);
     }
 
     @Override
-    public int start(byte chipID, int clock, int clockValue, Object... option) {
-        return device_start_ymf271(chipID, clockValue);
+    public int start(byte chipId, int clock, int clockValue, Object... option) {
+        return device_start_ymf271(chipId, clockValue);
     }
 
     @Override
-    public void stop(byte chipID) {
-        device_stop_ymf271(chipID);
+    public void stop(byte chipId) {
+        device_stop_ymf271(chipId);
     }
 
     @Override
-    public void update(byte chipID, int[][] outputs, int samples) {
-        ymf271_update(chipID, outputs, samples);
+    public void update(byte chipId, int[][] outputs, int samples) {
+        ymf271_update(chipId, outputs, samples);
 
-        visVolume[chipID][0][0] = outputs[0][0];
-        visVolume[chipID][0][1] = outputs[1][0];
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
     }
-
-    private int YMF271_Write(byte chipID, int Port, byte Offset, byte Data) {
-        ymf271_w(chipID, (Port << 1) | 0x00, Offset);
-        ymf271_w(chipID, (Port << 1) | 0x01, Data);
-        return 0;
-    }
-
 
     /*
         Yamaha YMF271-F "OPX" emulator v0.1
@@ -110,7 +107,7 @@ public class Ymf271 extends Instrument.BaseInstrument {
             // envelope generator
             public int volume;
             public int envState;
-            public int envAttackStep;      // volume increase step in attack state
+            public int envAttackStep; // volume increase step in attack state
             public int envDecay1Step;
             public int envDecay2Step;
             public int envReleaseStep;
@@ -126,7 +123,7 @@ public class Ymf271 extends Instrument.BaseInstrument {
             private static final double[] pow_table = new double[] {128, 256, 512, 1024, 2048, 4096, 8192, 16384, 0.5, 1, 2, 4, 8, 16, 32, 64};
             private static final double[] fs_frequency = new double[] {1.0 / 1.0, 1.0 / 2.0, 1.0 / 4.0, 1.0 / 8.0};
 
-            private void calculate_step() {
+            private void calculateStep() {
                 double st;
 
                 if (this.waveForm == 7) {
@@ -137,7 +134,7 @@ public class Ymf271 extends Instrument.BaseInstrument {
                     // LFO phase modulation
                     st *= this.lfoPhasemod;
 
-                    st /= 524288 / 65536;     // pre-multiply with 65536
+                    st /= 524288d / 65536; // pre-multiply with 65536
 
                     this.step = (int) st;
                 } else {
@@ -148,7 +145,7 @@ public class Ymf271 extends Instrument.BaseInstrument {
                     // LFO phase modulation
                     st *= this.lfoPhasemod;
 
-                    st /= 536870912 / 65536;  // pre-multiply with 65536
+                    st /= 536870912d / 65536; // pre-multiply with 65536
 
                     this.step = (int) st;
                 }
@@ -163,7 +160,7 @@ public class Ymf271 extends Instrument.BaseInstrument {
                 return false;
             }
 
-            private void update_envelope() {
+            private void updateEnvelope() {
                 switch (this.envState) {
                 case ENV_ATTACK: {
                     this.volume += this.envAttackStep;
@@ -176,10 +173,10 @@ public class Ymf271 extends Instrument.BaseInstrument {
                 }
 
                 case ENV_DECAY1: {
-                    int decay_level = 255 - (this.decay1lvl << 4);
+                    int decayLevel = 255 - (this.decay1lvl << 4);
                     this.volume -= this.envDecay1Step;
 
-                    if (!checkEnvelopeEnd() && (this.volume >> ENV_VOLUME_SHIFT) <= decay_level) {
+                    if (!checkEnvelopeEnd() && (this.volume >> ENV_VOLUME_SHIFT) <= decayLevel) {
                         this.envState = ENV_DECAY2;
                     }
                     break;
@@ -207,13 +204,167 @@ public class Ymf271 extends Instrument.BaseInstrument {
                 this.lfoStep = (int) ((((double) LFO_LENGTH * lutLfo[this.lfoFreq]) / 44100.0) * 256.0);
             }
 
-            private void update(int[][] lutAlfo, double[][][] lutPlfo) {
+            private void update() {
                 this.lfoPhase += this.lfoStep;
 
-                this.lfoAmplitude = lutAlfo[this.lfoWave][(this.lfoPhase >> LFO_SHIFT) & (LFO_LENGTH - 1)];
+                this.lfoAmplitude = lutALfo[this.lfoWave][(this.lfoPhase >> LFO_SHIFT) & (LFO_LENGTH - 1)];
                 this.lfoPhasemod = lutPlfo[this.lfoWave][this.pms][(this.lfoPhase >> LFO_SHIFT) & (LFO_LENGTH - 1)];
 
-                this.calculate_step();
+                this.calculateStep();
+            }
+
+            public long calculateOp(long inp) {
+                long env, slotOutput, slotInput = 0;
+
+                this.updateEnvelope();
+                this.update();
+                env = calculateVolume();
+
+                if (inp == OP_INPUT_FEEDBACK) {
+                    // from own feedback
+                    slotInput = (this.feedbackModulation0 + this.feedbackModulation1) / 2;
+                    this.feedbackModulation0 = this.feedbackModulation1;
+                } else if (inp != OP_INPUT_NONE) {
+                    // from previous slot output
+                    slotInput = ((inp << (SIN_BITS - 2)) * modulationLevel[this.feedback]);
+                }
+
+                slotOutput = lutWaves[this.waveForm][(int) ((this.stepPtr + slotInput) >> 16) & SIN_MASK];
+                slotOutput = (slotOutput * env) >> 16;
+                this.stepPtr += this.step;
+
+                return slotOutput;
+            }
+
+            private int calculateVolume() {
+                // Note: Actually everyone of these stores only int (16.16 fixed point),
+                //       but the calculations need long.
+                int volume;
+                long envVolume;
+                long lfoVolume = 65536;
+
+                switch (ams) {
+                case 0:
+                    lfoVolume = 65536;
+                    break; // 0dB
+                case 1:
+                    lfoVolume = 65536 - ((lfoAmplitude * 33124L) >> 16);
+                    break; // 5.90625dB
+                case 2:
+                    lfoVolume = 65536 - ((lfoAmplitude * 16742L) >> 16);
+                    break; // 11.8125dB
+                case 3:
+                    lfoVolume = 65536 - ((lfoAmplitude * 4277L) >> 16);
+                    break; // 23.625dB
+                }
+
+                envVolume = (lutEnvVolume[255 - (this.volume >> ENV_VOLUME_SHIFT)] * lfoVolume) >> 16;
+
+                volume = (int) ((envVolume * lutTotalLevel[tl]) >> 16);
+
+                return volume;
+            }
+
+            public void keyOn(double[] lutLfo, double[] lutAr, double[] lutDc) {
+                this.step = 0;
+                this.stepPtr = 0;
+
+                this.active = 1;
+
+                this.calculateStep();
+                initEnvelope(lutAr, lutDc);
+                this.init(lutLfo);
+                this.feedbackModulation0 = 0;
+                this.feedbackModulation1 = 0;
+            }
+
+            private void initEnvelope(double[] lutAr, double[] lutDc) {
+                int keycode, rate;
+                int decay_level = 255 - (decay1lvl << 4);
+
+                if (waveForm != 7) {
+                    keycode = getInternalKeycode(block, fns);
+                } else {
+                    keycode = getExternalKeycode(block, fns & 0x7ff);
+                    /* keycode = (keycode + slot.srcb * 4 + slot.srcnote) / 2; */ // not sure
+                }
+
+                // init attack state
+                rate = getKeyscaledRate(ar * 2, keycode, keyScale);
+                envAttackStep = (rate < 4) ? 0 : (int) (((double) (255 - 0) / lutAr[rate]) * 65536.0);
+
+                // init decay1 state
+                rate = getKeyscaledRate(decay1rate * 2, keycode, keyScale);
+                envDecay1Step = (rate < 4) ? 0 : (int) (((double) (255 - decay_level) / lutDc[rate]) * 65536.0);
+
+                // init decay2 state
+                rate = getKeyscaledRate(decay2rate * 2, keycode, keyScale);
+                envDecay2Step = (rate < 4) ? 0 : (int) (((double) (255 - 0) / lutDc[rate]) * 65536.0);
+
+                // init release state
+                rate = getKeyscaledRate(relrate * 4, keycode, keyScale);
+                envReleaseStep = (rate < 4) ? 0 : (int) (((double) (255 - 0) / lutAr[rate]) * 65536.0);
+
+                volume = (255 - 160) << ENV_VOLUME_SHIFT; // -60db
+                envState = ENV_ATTACK;
+            }
+
+            public void updatePcm(int[] mixP, int length, int ptrMixP, Function<Integer, Byte> readMemory) {
+                if (this.active == 0) {
+                    return;
+                }
+
+                //if (this.waveform != 7) {
+                // System.err.printf("Waveform %d in update_pcm !!!\n", this.waveform);
+                //}
+
+                for (int i = 0; i < length; i++) {
+                    // loop
+                    if ((this.stepPtr >> 16) > this.endAddr) {
+                        this.stepPtr = this.stepPtr - (((long) this.endAddr << 16) + (long) this.loopAddr << 16);
+                        if ((this.stepPtr >> 16) > this.endAddr) {
+                            // overflow
+                            this.stepPtr &= 0xffff;
+                            this.stepPtr |= ((long) this.loopAddr << 16);
+                            if ((this.stepPtr >> 16) > this.endAddr) {
+                                // still overflow? (triggers in rdft2, rarely)
+                                this.stepPtr &= 0xffff;
+                                this.stepPtr |= ((long) this.endAddr << 16);
+                            }
+                        }
+                    }
+
+                    short sample;
+                    if (this.bits == 8) {
+                        // 8bit
+                        sample = (short) (readMemory.apply((int) (this.startAddr + (this.stepPtr >> 16))) << 8);
+                    } else {
+                        // 12bit
+                        if ((this.stepPtr & 0x10000) != 0)
+                            sample = (short) (readMemory.apply((int) (this.startAddr + (this.stepPtr >> 17) * 3 + 2)) << 8
+                                    | ((readMemory.apply((int) (this.startAddr + (this.stepPtr >> 17) * 3 + 1)) << 4) & 0xf0));
+                        else
+                            sample = (short) (readMemory.apply((int) (this.startAddr + (this.stepPtr >> 17) * 3)) << 8
+                                    | (readMemory.apply((int) (this.startAddr + (this.stepPtr >> 17) * 3 + 1)) & 0xf0));
+                    }
+
+                    this.updateEnvelope();
+                    this.update();
+
+                    long finalVolume = this.calculateVolume();
+
+                    long ch0Vol = (finalVolume * lutAttenuation[this.ch0Level]) >> 16;
+                    long ch1Vol = (finalVolume * lutAttenuation[this.ch1Level]) >> 16;
+
+                    if (ch0Vol > 65536) ch0Vol = 65536;
+                    if (ch1Vol > 65536) ch1Vol = 65536;
+
+                    mixP[ptrMixP++] += (int) ((sample * ch0Vol) >> 16);
+                    mixP[ptrMixP++] += (int) ((sample * ch1Vol) >> 16);
+
+                    // go to next step
+                    this.stepPtr += this.step;
+                }
             }
         }
 
@@ -270,36 +421,35 @@ public class Ymf271 extends Instrument.BaseInstrument {
                 11.41, 9.12, 7.60, 6.51, 5.69, 5.69, 5.69, 5.69
         };
 
-        /* Notes about the LFO Frequency Table below:
-
-            There are 2 known errors in the LFO table listed in the original manual.
-
-            Both 201 & 202 are listed as 3.74490.  202 has been computed/corrected to 3.91513
-            232 was listed as 13.35547 but has been replaced with the correct value of 14.35547.
-
-          Corrections are computed values based on formulas by Olivier Galibert & Nicola Salmoria listed below:
-
-        LFO period seems easy to compute:
-
-        Olivier Galibert's version                       Nicola Salmoria's version
-
-        int lfo_period(int entry)             or         int calc_lfo_period(int entry)
-        {                                                {
-          int ma, ex;                                      entry = 256 - entry;
-          entry = 256-entry;
-          ma = entry & 15;                                 if (entry < 16)
-                                                           {
-          ex = entry >> 4;                                    return (entry & 0x0f) << 7;
-          if(ex)                                           }
-            return (ma | 16) << (ex+6);                    else
-          else                                             {
-            return ma << 7;                                   int shift = 6 + (entry >> 4);
-        }                                                     return (0x10 + (entry & 0x0f)) << shift;
-                                                           }
-        lfo_freq = 44100 / lfo_period                    }
-
-        */
-
+        /*
+         * Notes about the LFO Frequency Table below:
+         *
+         * There are 2 known errors in the LFO table listed in the original manual.
+         *
+         * Both 201 & 202 are listed as 3.74490.  202 has been computed/corrected to 3.91513
+         * 232 was listed as 13.35547 but has been replaced with the correct value of 14.35547.
+         *
+         * Corrections are computed values based on formulas by Olivier Galibert & Nicola Salmoria listed below:
+         * </pre>
+         *
+         *  LFO period seems easy to compute:
+         *
+         *  Olivier Galibert's version                       Nicola Salmoria's version
+         *
+         *  int lfo_period(int entry) {           or         int calc_lfo_period(int entry) {
+         *    int ma, ex;                                      entry = 256 - entry;
+         *    entry = 256-entry;
+         *    ma = entry & 15;                                 if (entry < 16) {
+         *    ex = entry >> 4;                                    return (entry & 0x0f) << 7;
+         *    if(ex)                                           }
+         *      return (ma | 16) << (ex+6);                    else {
+         *    else                                               int shift = 6 + (entry >> 4);
+         *      return ma << 7;                                  return (0x10 + (entry & 0x0f)) << shift;
+         *  }                                                  }
+         *  lfo_freq = 44100 / lfo_period                    }
+         *
+         *   <pre>
+         */
         private static final double[] LFO_frequency_table = new double[] {
                 0.00066, 0.00068, 0.00070, 0.00073, 0.00075, 0.00078, 0.00081, 0.00084,
                 0.00088, 0.00091, 0.00096, 0.00100, 0.00105, 0.00111, 0.00117, 0.00124,
@@ -384,15 +534,15 @@ public class Ymf271 extends Instrument.BaseInstrument {
         private static final int[] pcmTab = new int[] {0, 4, 8, -1, 12, 16, 20, -1, 24, 28, 32, -1, 36, 40, 44, -1};
 
         // lookup tables
-        public short[][] lutWaves = new short[8][];
-        public double[][][] lutPlfo = new double[][][] {new double[8][], new double[8][], new double[8][], new double[8][]};
-        public int[][] lutAlfo = new int[4][];
+        public static short[][] lutWaves = new short[8][];
+        public static double[][][] lutPlfo = new double[][][] {new double[8][], new double[8][], new double[8][], new double[8][]};
+        public static int[][] lutALfo = new int[4][];
         public double[] lutAr = new double[64];
         public double[] lutDc = new double[64];
         public double[] lutLfo = new double[256];
-        public int[] lutAttenuation = new int[16];
-        public int[] lutTotalLevel = new int[128];
-        public int[] lutEnvVolume = new int[256];
+        public static int[] lutAttenuation = new int[16];
+        public static int[] lutTotalLevel = new int[128];
+        public static int[] lutEnvVolume = new int[256];
 
         public Slot[] slots = new Slot[] {
                 new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(),
@@ -401,7 +551,7 @@ public class Ymf271 extends Instrument.BaseInstrument {
                 new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(),
                 new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(),
                 new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot()
-                };
+        };
         public Group[] groups = new Group[] {
                 new Group(), new Group(), new Group(), new Group(),
                 new Group(), new Group(), new Group(), new Group(),
@@ -424,18 +574,18 @@ public class Ymf271 extends Instrument.BaseInstrument {
         public int memSize;
         public int clock;
 
-        public int[] mix_buffer;
+        public int[] mixBuffer;
 
-        private static int getKeyscaledRate(int rate, int keycode, int keyscale) {
-            int newrate = rate + RKS_Table[keycode][keyscale];
+        private static int getKeyscaledRate(int rate, int keyCode, int keyScale) {
+            int newRate = rate + RKS_Table[keyCode][keyScale];
 
-            if (newrate > 63) {
-                newrate = 63;
+            if (newRate > 63) {
+                newRate = 63;
             }
-            if (newrate < 0) {
-                newrate = 0;
+            if (newRate < 0) {
+                newRate = 0;
             }
-            return newrate;
+            return newRate;
         }
 
         private static int getInternalKeycode(int block, int fns) {
@@ -468,158 +618,15 @@ public class Ymf271 extends Instrument.BaseInstrument {
             return ((block & 7) * 4) + n43;
         }
 
-        private void initEnvelope(Slot slot) {
-            int keycode, rate;
-            int decay_level = 255 - (slot.decay1lvl << 4);
-
-            if (slot.waveForm != 7) {
-                keycode = getInternalKeycode(slot.block, (int) slot.fns);
-            } else {
-                keycode = getExternalKeycode(slot.block, (int) (slot.fns & 0x7ff));
-                /* keycode = (keycode + slot.srcb * 4 + slot.srcnote) / 2; */ // not sure
-            }
-
-            // init attack state
-            rate = getKeyscaledRate(slot.ar * 2, keycode, slot.keyScale);
-            slot.envAttackStep = (rate < 4) ? 0 : (int) (((double) (255 - 0) / this.lutAr[rate]) * 65536.0);
-
-            // init decay1 state
-            rate = getKeyscaledRate(slot.decay1rate * 2, keycode, slot.keyScale);
-            slot.envDecay1Step = (rate < 4) ? 0 : (int) (((double) (255 - decay_level) / this.lutDc[rate]) * 65536.0);
-
-            // init decay2 state
-            rate = getKeyscaledRate(slot.decay2rate * 2, keycode, slot.keyScale);
-            slot.envDecay2Step = (rate < 4) ? 0 : (int) (((double) (255 - 0) / this.lutDc[rate]) * 65536.0);
-
-            // init release state
-            rate = getKeyscaledRate(slot.relrate * 4, keycode, slot.keyScale);
-            slot.envReleaseStep = (rate < 4) ? 0 : (int) (((double) (255 - 0) / this.lutAr[rate]) * 65536.0);
-
-            slot.volume = (255 - 160) << ENV_VOLUME_SHIFT;     // -60db
-            slot.envState = ENV_ATTACK;
-        }
-
-        private int calculateSlotVolume(Slot slot) {
-            // Note: Actually everyone of these stores only int (16.16 fixed point),
-            //       but the calculations need long.
-            int volume;
-            long env_volume;
-            long lfo_volume = 65536;
-
-            switch (slot.ams) {
-            case 0:
-                lfo_volume = 65536;
-                break;  // 0dB
-            case 1:
-                lfo_volume = 65536 - ((slot.lfoAmplitude * 33124) >> 16);
-                break;  // 5.90625dB
-            case 2:
-                lfo_volume = 65536 - ((slot.lfoAmplitude * 16742) >> 16);
-                break;  // 11.8125dB
-            case 3:
-                lfo_volume = 65536 - ((slot.lfoAmplitude * 4277) >> 16);
-                break;   // 23.625dB
-            }
-
-            env_volume = (this.lutEnvVolume[255 - (slot.volume >> ENV_VOLUME_SHIFT)] * lfo_volume) >> 16;
-
-            volume = (int) ((env_volume * this.lutTotalLevel[slot.tl]) >> 16);
-
-            return volume;
-        }
-
-        private void updatePcm(int slotnum, int[] mixp, int length, int ptrMixp) {
-            int i;
-            long final_volume;
-            short sample;
-            long ch0_vol, ch1_vol; //, ch2_vol, ch3_vol;
-
-            Slot slot = this.slots[slotnum];
-
-            if (slot.active == 0) {
-                return;
-            }
-
-            //# ifdef _DEBUG
-            //if (slot.waveform != 7)
-            //{
-            //logerror("Waveform %d in update_pcm !!!\n", slot.waveform);
-            //}
-            //#endif
-
-            for (i = 0; i < length; i++) {
-                // loop
-                if ((slot.stepPtr >> 16) > slot.endAddr) {
-                    slot.stepPtr = slot.stepPtr - (((long) slot.endAddr << 16) + (long) slot.loopAddr << 16);
-                    if ((slot.stepPtr >> 16) > slot.endAddr) {
-                        // overflow
-                        slot.stepPtr &= 0xffff;
-                        slot.stepPtr |= ((long) slot.loopAddr << 16);
-                        if ((slot.stepPtr >> 16) > slot.endAddr) {
-                            // still overflow? (triggers in rdft2, rarely)
-                            slot.stepPtr &= 0xffff;
-                            slot.stepPtr |= ((long) slot.endAddr << 16);
-                        }
-                    }
-                }
-
-                if (slot.bits == 8) {
-                    // 8bit
-                    sample = (short) (readMemory((int) (slot.startAddr + (slot.stepPtr >> 16))) << 8);
-                } else {
-                    // 12bit
-                    if ((slot.stepPtr & 0x10000) != 0)
-                        sample = (short) (readMemory((int) (slot.startAddr + (slot.stepPtr >> 17) * 3 + 2)) << 8
-                                | ((readMemory((int) (slot.startAddr + (slot.stepPtr >> 17) * 3 + 1)) << 4) & 0xf0));
-                    else
-                        sample = (short) (readMemory((int) (slot.startAddr + (slot.stepPtr >> 17) * 3)) << 8
-                                | (readMemory((int) (slot.startAddr + (slot.stepPtr >> 17) * 3 + 1)) & 0xf0));
-                }
-
-                slot.update_envelope();
-                slot.update(this.lutAlfo, this.lutPlfo);
-
-                final_volume = calculateSlotVolume(slot);
-
-                ch0_vol = (final_volume * this.lutAttenuation[slot.ch0Level]) >> 16;
-                ch1_vol = (final_volume * this.lutAttenuation[slot.ch1Level]) >> 16;
-                //  ch2_vol = (final_volume * this.lut_attenuation[slot.ch2_level]) >> 16;
-                //  ch3_vol = (final_volume * this.lut_attenuation[slot.ch3_level]) >> 16;
-
-                if (ch0_vol > 65536) ch0_vol = 65536;
-                if (ch1_vol > 65536) ch1_vol = 65536;
-
-                mixp[ptrMixp++] += (int) ((sample * ch0_vol) >> 16);
-                mixp[ptrMixp++] += (int) ((sample * ch1_vol) >> 16);
-
-                // go to next step
-                slot.stepPtr += slot.step;
-            }
+        private void updatePcm(int slotNum, int[] mixP, int length, int ptrMixP) {
+            Slot slot = this.slots[slotNum];
+            slot.updatePcm(mixP, length, ptrMixP, this::readMemory);
         }
 
         // calculates the output of one FM Operator
-        private long calculate_op(int slotnum, long inp) {
-            Slot slot = this.slots[slotnum];
-            long env, slot_output, slot_input = 0;
-
-            slot.update_envelope();
-            slot.update(this.lutAlfo, this.lutPlfo);
-            env = calculateSlotVolume(slot);
-
-            if (inp == OP_INPUT_FEEDBACK) {
-                // from own feedback
-                slot_input = (slot.feedbackModulation0 + slot.feedbackModulation1) / 2;
-                slot.feedbackModulation0 = slot.feedbackModulation1;
-            } else if (inp != OP_INPUT_NONE) {
-                // from previous slot output
-                slot_input = ((inp << (SIN_BITS - 2)) * modulationLevel[slot.feedback]);
-            }
-
-            slot_output = this.lutWaves[slot.waveForm][(int) ((slot.stepPtr + (long) slot_input) >> 16) & SIN_MASK];
-            slot_output = (slot_output * env) >> 16;
-            slot.stepPtr += slot.step;
-
-            return slot_output;
+        private long calculateOp(int slotNum, long inp) {
+            Slot slot = this.slots[slotNum];
+            return slot.calculateOp(inp);
         }
 
         private void setFeedback(int slotnum, long inp) {
@@ -628,62 +635,53 @@ public class Ymf271 extends Instrument.BaseInstrument {
         }
 
         public void update(int[][] outputs, int samples) {
-            int i, j;
-            int op;
-            int[] mixp;
-            int ptrMixp;
 
-            for (i = 0; i < samples * 2; i++) this.mix_buffer[i] = 0;
-            //memset(this.mix_buffer, 0, sizeof(this.mix_buffer[0]) * samples * 2);
+            Arrays.fill(this.mixBuffer, 0, samples * 2, (byte) 0);
 
-            for (j = 0; j < 12; j++) {
-                Group slot_group = this.groups[j];
-                mixp = this.mix_buffer;//[0];
-                ptrMixp = 0;
+            for (int j = 0; j < 12; j++) {
+                Group slotGroup = this.groups[j];
+                int[] mixP = this.mixBuffer;
+                int ptrMixp = 0;
 
-                if (slot_group.muted != 0)
+                if (slotGroup.muted != 0)
                     continue;
 
-                //# ifdef _DEBUG
-                //if (slot_group.pfm && slot_group.sync != 3)
-                //{
-                //logerror("Ymf271 Group %d: PFM, Sync = %d, Waveform Slot1 = %d, Slot2 = %d, Slot3 = %d, Slot4 = %d\n",
-                //j, slot_group.sync, this.slots[j + 0].waveform, this.slots[j + 12].waveform, this.slots[j + 24].waveform, this.slots[j + 36].waveform);
-                //}
-                //#endif
+//if (slotGroup.pfm && slotGroup.sync != 3) {
+// System.err.printf("Ymf271 Group %d: PFM, Sync = %d, Waveform Slot1 = %d, Slot2 = %d, Slot3 = %d, Slot4 = %d\n",
+//  j, slotGroup.sync, this.slots[j + 0].waveform, this.slots[j + 12].waveform, this.slots[j + 24].waveform, this.slots[j + 36].waveform);
+//}
 
-                switch (slot_group.sync) {
+                switch (slotGroup.sync) {
                 // 4 Operator FM
                 case 0: {
                     int slot1 = j + (0 * 12);
                     int slot2 = j + (1 * 12);
                     int slot3 = j + (2 * 12);
                     int slot4 = j + (3 * 12);
-                    //mixp = this.mix_buffer;
 
                     if (this.slots[slot1].active != 0) {
-                        for (i = 0; i < samples; i++) {
+                        for (int i = 0; i < samples; i++) {
                             long output1 = 0, output2 = 0, output3 = 0, output4 = 0;
-                            long phase_mod1 = 0, phase_mod2 = 0, phase_mod3 = 0;
+                            long phaseMod1 = 0, phaseMod2 = 0, phaseMod3 = 0;
                             switch (this.slots[slot1].algorithm) {
                             // <--------|
                             // +--[S1]--|--+--[S3]--+--[S2]--+--[S4]-.
                             case 0:
-                                phase_mod1 = calculate_op(slot1, OP_INPUT_FEEDBACK);
-                                setFeedback(slot1, phase_mod1);
-                                phase_mod3 = calculate_op(slot3, phase_mod1);
-                                phase_mod2 = calculate_op(slot2, phase_mod3);
-                                output4 = calculate_op(slot4, phase_mod2);
+                                phaseMod1 = calculateOp(slot1, OP_INPUT_FEEDBACK);
+                                setFeedback(slot1, phaseMod1);
+                                phaseMod3 = calculateOp(slot3, phaseMod1);
+                                phaseMod2 = calculateOp(slot2, phaseMod3);
+                                output4 = calculateOp(slot4, phaseMod2);
                                 break;
 
                             // <-----------------|
                             // +--[S1]--+--[S3]--|--+--[S2]--+--[S4]-.
                             case 1:
-                                phase_mod1 = calculate_op(slot1, OP_INPUT_FEEDBACK);
-                                phase_mod3 = calculate_op(slot3, phase_mod1);
-                                setFeedback(slot1, phase_mod3);
-                                phase_mod2 = calculate_op(slot2, phase_mod3);
-                                output4 = calculate_op(slot4, phase_mod2);
+                                phaseMod1 = calculateOp(slot1, OP_INPUT_FEEDBACK);
+                                phaseMod3 = calculateOp(slot3, phaseMod1);
+                                setFeedback(slot1, phaseMod3);
+                                phaseMod2 = calculateOp(slot2, phaseMod3);
+                                output4 = calculateOp(slot4, phaseMod2);
                                 break;
 
                             // <--------|
@@ -691,11 +689,11 @@ public class Ymf271 extends Instrument.BaseInstrument {
                             //          |
                             //  --[S3]--+--[S2]--+--[S4]-.
                             case 2:
-                                phase_mod1 = calculate_op(slot1, OP_INPUT_FEEDBACK);
-                                setFeedback(slot1, phase_mod1);
-                                phase_mod3 = calculate_op(slot3, OP_INPUT_NONE);
-                                phase_mod2 = calculate_op(slot2, (phase_mod1 + phase_mod3) / 1);
-                                output4 = calculate_op(slot4, phase_mod2);
+                                phaseMod1 = calculateOp(slot1, OP_INPUT_FEEDBACK);
+                                setFeedback(slot1, phaseMod1);
+                                phaseMod3 = calculateOp(slot3, OP_INPUT_NONE);
+                                phaseMod2 = calculateOp(slot2, (phaseMod1 + phaseMod3) / 1);
+                                output4 = calculateOp(slot4, phaseMod2);
                                 break;
 
                             //          <--------|
@@ -703,33 +701,33 @@ public class Ymf271 extends Instrument.BaseInstrument {
                             //                   |
                             //  --[S3]--+--[S2]--+--[S4]-.
                             case 3:
-                                phase_mod1 = calculate_op(slot1, OP_INPUT_FEEDBACK);
-                                setFeedback(slot1, phase_mod1);
-                                phase_mod3 = calculate_op(slot3, OP_INPUT_NONE);
-                                phase_mod2 = calculate_op(slot2, phase_mod3);
-                                output4 = calculate_op(slot4, (phase_mod1 + phase_mod2) / 1);
+                                phaseMod1 = calculateOp(slot1, OP_INPUT_FEEDBACK);
+                                setFeedback(slot1, phaseMod1);
+                                phaseMod3 = calculateOp(slot3, OP_INPUT_NONE);
+                                phaseMod2 = calculateOp(slot2, phaseMod3);
+                                output4 = calculateOp(slot4, (phaseMod1 + phaseMod2) / 1);
                                 break;
 
                             //              --[S2]--|
                             // <--------|           |
                             // +--[S1]--|--+--[S3]--+--[S4]-.
                             case 4:
-                                phase_mod1 = calculate_op(slot1, OP_INPUT_FEEDBACK);
-                                setFeedback(slot1, phase_mod1);
-                                phase_mod3 = calculate_op(slot3, phase_mod1);
-                                phase_mod2 = calculate_op(slot2, OP_INPUT_NONE);
-                                output4 = calculate_op(slot4, (phase_mod3 + phase_mod2) / 1);
+                                phaseMod1 = calculateOp(slot1, OP_INPUT_FEEDBACK);
+                                setFeedback(slot1, phaseMod1);
+                                phaseMod3 = calculateOp(slot3, phaseMod1);
+                                phaseMod2 = calculateOp(slot2, OP_INPUT_NONE);
+                                output4 = calculateOp(slot4, (phaseMod3 + phaseMod2) / 1);
                                 break;
 
                             //           --[S2]-----|
                             // <-----------------|  |
                             // +--[S1]--+--[S3]--|--+--[S4]-.
                             case 5:
-                                phase_mod1 = calculate_op(slot1, OP_INPUT_FEEDBACK);
-                                phase_mod3 = calculate_op(slot3, phase_mod1);
-                                setFeedback(slot1, phase_mod3);
-                                phase_mod2 = calculate_op(slot2, OP_INPUT_NONE);
-                                output4 = calculate_op(slot4, (phase_mod3 + phase_mod2) / 1);
+                                phaseMod1 = calculateOp(slot1, OP_INPUT_FEEDBACK);
+                                phaseMod3 = calculateOp(slot3, phaseMod1);
+                                setFeedback(slot1, phaseMod3);
+                                phaseMod2 = calculateOp(slot2, OP_INPUT_NONE);
+                                output4 = calculateOp(slot4, (phaseMod3 + phaseMod2) / 1);
                                 break;
 
                             //  --[S2]-----+--[S4]--|
@@ -737,11 +735,11 @@ public class Ymf271 extends Instrument.BaseInstrument {
                             // <--------|           |
                             // +--[S1]--|--+--[S3]--+-.
                             case 6:
-                                phase_mod1 = calculate_op(slot1, OP_INPUT_FEEDBACK);
-                                setFeedback(slot1, phase_mod1);
-                                output3 = calculate_op(slot3, phase_mod1);
-                                phase_mod2 = calculate_op(slot2, OP_INPUT_NONE);
-                                output4 = calculate_op(slot4, phase_mod2);
+                                phaseMod1 = calculateOp(slot1, OP_INPUT_FEEDBACK);
+                                setFeedback(slot1, phaseMod1);
+                                output3 = calculateOp(slot3, phaseMod1);
+                                phaseMod2 = calculateOp(slot2, OP_INPUT_NONE);
+                                output4 = calculateOp(slot4, phaseMod2);
                                 break;
 
                             //  --[S2]--+--[S4]-----|
@@ -749,12 +747,12 @@ public class Ymf271 extends Instrument.BaseInstrument {
                             // <-----------------|  |
                             // +--[S1]--+--[S3]--|--+-.
                             case 7:
-                                phase_mod1 = calculate_op(slot1, OP_INPUT_FEEDBACK);
-                                phase_mod3 = calculate_op(slot3, phase_mod1);
-                                setFeedback(slot1, phase_mod3);
-                                output3 = phase_mod3;
-                                phase_mod2 = calculate_op(slot2, OP_INPUT_NONE);
-                                output4 = calculate_op(slot4, phase_mod2);
+                                phaseMod1 = calculateOp(slot1, OP_INPUT_FEEDBACK);
+                                phaseMod3 = calculateOp(slot3, phaseMod1);
+                                setFeedback(slot1, phaseMod3);
+                                output3 = phaseMod3;
+                                phaseMod2 = calculateOp(slot2, OP_INPUT_NONE);
+                                output4 = calculateOp(slot4, phaseMod2);
                                 break;
 
                             //  --[S3]--+--[S2]--+--[S4]--|
@@ -762,12 +760,12 @@ public class Ymf271 extends Instrument.BaseInstrument {
                             // <--------|                 |
                             // +--[S1]--|-----------------+-.
                             case 8:
-                                phase_mod1 = calculate_op(slot1, OP_INPUT_FEEDBACK);
-                                setFeedback(slot1, phase_mod1);
-                                output1 = phase_mod1;
-                                phase_mod3 = calculate_op(slot3, OP_INPUT_NONE);
-                                phase_mod2 = calculate_op(slot2, phase_mod3);
-                                output4 = calculate_op(slot4, phase_mod2);
+                                phaseMod1 = calculateOp(slot1, OP_INPUT_FEEDBACK);
+                                setFeedback(slot1, phaseMod1);
+                                output1 = phaseMod1;
+                                phaseMod3 = calculateOp(slot3, OP_INPUT_NONE);
+                                phaseMod2 = calculateOp(slot2, phaseMod3);
+                                output4 = calculateOp(slot4, phaseMod2);
                                 break;
 
                             //          <--------|
@@ -776,12 +774,12 @@ public class Ymf271 extends Instrument.BaseInstrument {
                             //  --[S3]--|        |
                             //  --[S2]--+--[S4]--+-.
                             case 9:
-                                phase_mod1 = calculate_op(slot1, OP_INPUT_FEEDBACK);
-                                setFeedback(slot1, phase_mod1);
-                                output1 = phase_mod1;
-                                phase_mod3 = calculate_op(slot3, OP_INPUT_NONE);
-                                phase_mod2 = calculate_op(slot2, OP_INPUT_NONE);
-                                output4 = calculate_op(slot4, (phase_mod3 + phase_mod2) / 1);
+                                phaseMod1 = calculateOp(slot1, OP_INPUT_FEEDBACK);
+                                setFeedback(slot1, phaseMod1);
+                                output1 = phaseMod1;
+                                phaseMod3 = calculateOp(slot3, OP_INPUT_NONE);
+                                phaseMod2 = calculateOp(slot2, OP_INPUT_NONE);
+                                output4 = calculateOp(slot4, (phaseMod3 + phaseMod2) / 1);
                                 break;
 
                             //              --[S4]--|
@@ -789,11 +787,11 @@ public class Ymf271 extends Instrument.BaseInstrument {
                             // <--------|           |
                             // +--[S1]--|--+--[S3]--+-.
                             case 10:
-                                phase_mod1 = calculate_op(slot1, OP_INPUT_FEEDBACK);
-                                setFeedback(slot1, phase_mod1);
-                                output3 = calculate_op(slot3, phase_mod1);
-                                output2 = calculate_op(slot2, OP_INPUT_NONE);
-                                output4 = calculate_op(slot4, OP_INPUT_NONE);
+                                phaseMod1 = calculateOp(slot1, OP_INPUT_FEEDBACK);
+                                setFeedback(slot1, phaseMod1);
+                                output3 = calculateOp(slot3, phaseMod1);
+                                output2 = calculateOp(slot2, OP_INPUT_NONE);
+                                output4 = calculateOp(slot4, OP_INPUT_NONE);
                                 break;
 
                             //           --[S4]-----|
@@ -801,23 +799,23 @@ public class Ymf271 extends Instrument.BaseInstrument {
                             // <-----------------|  |
                             // +--[S1]--+--[S3]--|--+-.
                             case 11:
-                                phase_mod1 = calculate_op(slot1, OP_INPUT_FEEDBACK);
-                                phase_mod3 = calculate_op(slot3, phase_mod1);
-                                setFeedback(slot1, phase_mod3);
-                                output3 = phase_mod3;
-                                output2 = calculate_op(slot2, OP_INPUT_NONE);
-                                output4 = calculate_op(slot4, OP_INPUT_NONE);
+                                phaseMod1 = calculateOp(slot1, OP_INPUT_FEEDBACK);
+                                phaseMod3 = calculateOp(slot3, phaseMod1);
+                                setFeedback(slot1, phaseMod3);
+                                output3 = phaseMod3;
+                                output2 = calculateOp(slot2, OP_INPUT_NONE);
+                                output4 = calculateOp(slot4, OP_INPUT_NONE);
                                 break;
 
                             //             |--+--[S4]--|
                             // <--------|  |--+--[S3]--|
                             // +--[S1]--|--|--+--[S2]--+-.
                             case 12:
-                                phase_mod1 = calculate_op(slot1, OP_INPUT_FEEDBACK);
-                                setFeedback(slot1, phase_mod1);
-                                output3 = calculate_op(slot3, phase_mod1);
-                                output2 = calculate_op(slot2, phase_mod1);
-                                output4 = calculate_op(slot4, phase_mod1);
+                                phaseMod1 = calculateOp(slot1, OP_INPUT_FEEDBACK);
+                                setFeedback(slot1, phaseMod1);
+                                output3 = calculateOp(slot3, phaseMod1);
+                                output2 = calculateOp(slot2, phaseMod1);
+                                output4 = calculateOp(slot4, phaseMod1);
                                 break;
 
                             //  --[S3]--+--[S2]--|
@@ -826,12 +824,12 @@ public class Ymf271 extends Instrument.BaseInstrument {
                             // <--------|        |
                             // +--[S1]--|--------+-.
                             case 13:
-                                phase_mod1 = calculate_op(slot1, OP_INPUT_FEEDBACK);
-                                setFeedback(slot1, phase_mod1);
-                                output1 = phase_mod1;
-                                phase_mod3 = calculate_op(slot3, OP_INPUT_NONE);
-                                output2 = calculate_op(slot2, phase_mod3);
-                                output4 = calculate_op(slot4, OP_INPUT_NONE);
+                                phaseMod1 = calculateOp(slot1, OP_INPUT_FEEDBACK);
+                                setFeedback(slot1, phaseMod1);
+                                output1 = phaseMod1;
+                                phaseMod3 = calculateOp(slot3, OP_INPUT_NONE);
+                                output2 = calculateOp(slot2, phaseMod3);
+                                output4 = calculateOp(slot4, OP_INPUT_NONE);
                                 break;
 
                             //  --[S2]-----+--[S4]--|
@@ -839,12 +837,12 @@ public class Ymf271 extends Instrument.BaseInstrument {
                             // <--------|  +--[S3]--|
                             // +--[S1]--|--|--------+-.
                             case 14:
-                                phase_mod1 = calculate_op(slot1, OP_INPUT_FEEDBACK);
-                                setFeedback(slot1, phase_mod1);
-                                output1 = phase_mod1;
-                                output3 = calculate_op(slot3, phase_mod1);
-                                phase_mod2 = calculate_op(slot2, OP_INPUT_NONE);
-                                output4 = calculate_op(slot4, phase_mod2);
+                                phaseMod1 = calculateOp(slot1, OP_INPUT_FEEDBACK);
+                                setFeedback(slot1, phaseMod1);
+                                output1 = phaseMod1;
+                                output3 = calculateOp(slot3, phaseMod1);
+                                phaseMod2 = calculateOp(slot2, OP_INPUT_NONE);
+                                output4 = calculateOp(slot4, phaseMod2);
                                 break;
 
                             //  --[S4]-----|
@@ -853,23 +851,23 @@ public class Ymf271 extends Instrument.BaseInstrument {
                             // <--------|  |
                             // +--[S1]--|--+-.
                             case 15:
-                                phase_mod1 = calculate_op(slot1, OP_INPUT_FEEDBACK);
-                                setFeedback(slot1, phase_mod1);
-                                output1 = phase_mod1;
-                                output3 = calculate_op(slot3, OP_INPUT_NONE);
-                                output2 = calculate_op(slot2, OP_INPUT_NONE);
-                                output4 = calculate_op(slot4, OP_INPUT_NONE);
+                                phaseMod1 = calculateOp(slot1, OP_INPUT_FEEDBACK);
+                                setFeedback(slot1, phaseMod1);
+                                output1 = phaseMod1;
+                                output3 = calculateOp(slot3, OP_INPUT_NONE);
+                                output2 = calculateOp(slot2, OP_INPUT_NONE);
+                                output4 = calculateOp(slot4, OP_INPUT_NONE);
                                 break;
                             }
 
-                            mixp[ptrMixp++] += (int) ((output1 * this.lutAttenuation[this.slots[slot1].ch0Level]) +
-                                    (output2 * this.lutAttenuation[this.slots[slot2].ch0Level]) +
-                                    (output3 * this.lutAttenuation[this.slots[slot3].ch0Level]) +
-                                    (output4 * this.lutAttenuation[this.slots[slot4].ch0Level])) >> 16;
-                            mixp[ptrMixp++] += (int) ((output1 * this.lutAttenuation[this.slots[slot1].ch1Level]) +
-                                    (output2 * this.lutAttenuation[this.slots[slot2].ch1Level]) +
-                                    (output3 * this.lutAttenuation[this.slots[slot3].ch1Level]) +
-                                    (output4 * this.lutAttenuation[this.slots[slot4].ch1Level])) >> 16;
+                            mixP[ptrMixp++] += (int) ((output1 * lutAttenuation[this.slots[slot1].ch0Level]) +
+                                    (output2 * lutAttenuation[this.slots[slot2].ch0Level]) +
+                                    (output3 * lutAttenuation[this.slots[slot3].ch0Level]) +
+                                    (output4 * lutAttenuation[this.slots[slot4].ch0Level])) >> 16;
+                            mixP[ptrMixp++] += (int) ((output1 * lutAttenuation[this.slots[slot1].ch1Level]) +
+                                    (output2 * lutAttenuation[this.slots[slot2].ch1Level]) +
+                                    (output3 * lutAttenuation[this.slots[slot3].ch1Level]) +
+                                    (output4 * lutAttenuation[this.slots[slot4].ch1Level])) >> 16;
                         }
                     }
                     break;
@@ -877,57 +875,57 @@ public class Ymf271 extends Instrument.BaseInstrument {
 
                 // 2x 2 Operator FM
                 case 1: {
-                    for (op = 0; op < 2; op++) {
+                    for (int op = 0; op < 2; op++) {
                         int slot1 = j + ((op + 0) * 12);
                         int slot3 = j + ((op + 2) * 12);
 
-                        mixp = this.mix_buffer;
+                        mixP = this.mixBuffer;
                         if (this.slots[slot1].active != 0) {
-                            for (i = 0; i < samples; i++) {
+                            for (int i = 0; i < samples; i++) {
                                 long output1 = 0, output3 = 0;
-                                long phase_mod1, phase_mod3 = 0;
+                                long phaseMod1, phaseMod3;
                                 switch (this.slots[slot1].algorithm & 3) {
                                 // <--------|
                                 // +--[S1]--|--+--[S3]-.
                                 case 0:
-                                    phase_mod1 = calculate_op(slot1, OP_INPUT_FEEDBACK);
-                                    setFeedback(slot1, phase_mod1);
-                                    output3 = calculate_op(slot3, phase_mod1);
+                                    phaseMod1 = calculateOp(slot1, OP_INPUT_FEEDBACK);
+                                    setFeedback(slot1, phaseMod1);
+                                    output3 = calculateOp(slot3, phaseMod1);
                                     break;
 
                                 // <-----------------|
                                 // +--[S1]--+--[S3]--|-.
                                 case 1:
-                                    phase_mod1 = calculate_op(slot1, OP_INPUT_FEEDBACK);
-                                    phase_mod3 = calculate_op(slot3, phase_mod1);
-                                    setFeedback(slot1, phase_mod3);
-                                    output3 = phase_mod3;
+                                    phaseMod1 = calculateOp(slot1, OP_INPUT_FEEDBACK);
+                                    phaseMod3 = calculateOp(slot3, phaseMod1);
+                                    setFeedback(slot1, phaseMod3);
+                                    output3 = phaseMod3;
                                     break;
 
                                 //  --[S3]-----|
                                 // <--------|  |
                                 // +--[S1]--|--+-.
                                 case 2:
-                                    phase_mod1 = calculate_op(slot1, OP_INPUT_FEEDBACK);
-                                    setFeedback(slot1, phase_mod1);
-                                    output1 = phase_mod1;
-                                    output3 = calculate_op(slot3, OP_INPUT_NONE);
+                                    phaseMod1 = calculateOp(slot1, OP_INPUT_FEEDBACK);
+                                    setFeedback(slot1, phaseMod1);
+                                    output1 = phaseMod1;
+                                    output3 = calculateOp(slot3, OP_INPUT_NONE);
                                     break;
                                 //
                                 // <--------|  +--[S3]--|
                                 // +--[S1]--|--|--------+-.
                                 case 3:
-                                    phase_mod1 = calculate_op(slot1, OP_INPUT_FEEDBACK);
-                                    setFeedback(slot1, phase_mod1);
-                                    output1 = phase_mod1;
-                                    output3 = calculate_op(slot3, phase_mod1);
+                                    phaseMod1 = calculateOp(slot1, OP_INPUT_FEEDBACK);
+                                    setFeedback(slot1, phaseMod1);
+                                    output1 = phaseMod1;
+                                    output3 = calculateOp(slot3, phaseMod1);
                                     break;
                                 }
 
-                                mixp[ptrMixp++] += (int) ((output1 * this.lutAttenuation[this.slots[slot1].ch0Level]) +
-                                        (output3 * this.lutAttenuation[this.slots[slot3].ch0Level])) >> 16;
-                                mixp[ptrMixp++] += (int) ((output1 * this.lutAttenuation[this.slots[slot1].ch1Level]) +
-                                        (output3 * this.lutAttenuation[this.slots[slot3].ch1Level])) >> 16;
+                                mixP[ptrMixp++] += (int) ((output1 * lutAttenuation[this.slots[slot1].ch0Level]) +
+                                        (output3 * lutAttenuation[this.slots[slot3].ch0Level])) >> 16;
+                                mixP[ptrMixp++] += (int) ((output1 * lutAttenuation[this.slots[slot1].ch1Level]) +
+                                        (output3 * lutAttenuation[this.slots[slot3].ch1Level])) >> 16;
                             }
                         }
                     }
@@ -939,71 +937,71 @@ public class Ymf271 extends Instrument.BaseInstrument {
                     int slot1 = j + (0 * 12);
                     int slot2 = j + (1 * 12);
                     int slot3 = j + (2 * 12);
-                    //mixp = this.mix_buffer;
+                    //mixP = this.mix_buffer;
 
                     if (this.slots[slot1].active != 0) {
-                        for (i = 0; i < samples; i++) {
+                        for (int i = 0; i < samples; i++) {
                             long output1 = 0, output2 = 0, output3 = 0;
-                            long phase_mod1 = 0, phase_mod3 = 0;
+                            long phaseMod1 = 0, phaseMod3 = 0;
                             switch (this.slots[slot1].algorithm & 7) {
                             // <--------|
                             // +--[S1]--|--+--[S3]--+--[S2]-.
                             case 0:
-                                phase_mod1 = calculate_op(slot1, OP_INPUT_FEEDBACK);
-                                setFeedback(slot1, phase_mod1);
-                                phase_mod3 = calculate_op(slot3, phase_mod1);
-                                output2 = calculate_op(slot2, phase_mod3);
+                                phaseMod1 = calculateOp(slot1, OP_INPUT_FEEDBACK);
+                                setFeedback(slot1, phaseMod1);
+                                phaseMod3 = calculateOp(slot3, phaseMod1);
+                                output2 = calculateOp(slot2, phaseMod3);
                                 break;
 
                             // <-----------------|
                             // +--[S1]--+--[S3]--|--+--[S2]-.
                             case 1:
-                                phase_mod1 = calculate_op(slot1, OP_INPUT_FEEDBACK);
-                                phase_mod3 = calculate_op(slot3, phase_mod1);
-                                setFeedback(slot1, phase_mod3);
-                                output2 = calculate_op(slot2, phase_mod3);
+                                phaseMod1 = calculateOp(slot1, OP_INPUT_FEEDBACK);
+                                phaseMod3 = calculateOp(slot3, phaseMod1);
+                                setFeedback(slot1, phaseMod3);
+                                output2 = calculateOp(slot2, phaseMod3);
                                 break;
 
                             //  --[S3]-----|
                             // <--------|  |
                             // +--[S1]--|--+--[S2]-.
                             case 2:
-                                phase_mod1 = calculate_op(slot1, OP_INPUT_FEEDBACK);
-                                setFeedback(slot1, phase_mod1);
-                                phase_mod3 = calculate_op(slot3, OP_INPUT_NONE);
-                                output2 = calculate_op(slot2, (phase_mod1 + phase_mod3) / 1);
+                                phaseMod1 = calculateOp(slot1, OP_INPUT_FEEDBACK);
+                                setFeedback(slot1, phaseMod1);
+                                phaseMod3 = calculateOp(slot3, OP_INPUT_NONE);
+                                output2 = calculateOp(slot2, (phaseMod1 + phaseMod3) / 1);
                                 break;
 
                             //  --[S3]--+--[S2]--|
                             // <--------|        |
                             // +--[S1]--|--------+-.
                             case 3:
-                                phase_mod1 = calculate_op(slot1, OP_INPUT_FEEDBACK);
-                                setFeedback(slot1, phase_mod1);
-                                output1 = phase_mod1;
-                                phase_mod3 = calculate_op(slot3, OP_INPUT_NONE);
-                                output2 = calculate_op(slot2, phase_mod3);
+                                phaseMod1 = calculateOp(slot1, OP_INPUT_FEEDBACK);
+                                setFeedback(slot1, phaseMod1);
+                                output1 = phaseMod1;
+                                phaseMod3 = calculateOp(slot3, OP_INPUT_NONE);
+                                output2 = calculateOp(slot2, phaseMod3);
                                 break;
 
                             //              --[S2]--|
                             // <--------|           |
                             // +--[S1]--|--+--[S3]--+-.
                             case 4:
-                                phase_mod1 = calculate_op(slot1, OP_INPUT_FEEDBACK);
-                                setFeedback(slot1, phase_mod1);
-                                output3 = calculate_op(slot3, phase_mod1);
-                                output2 = calculate_op(slot2, OP_INPUT_NONE);
+                                phaseMod1 = calculateOp(slot1, OP_INPUT_FEEDBACK);
+                                setFeedback(slot1, phaseMod1);
+                                output3 = calculateOp(slot3, phaseMod1);
+                                output2 = calculateOp(slot2, OP_INPUT_NONE);
                                 break;
 
                             //              --[S2]--|
                             // <-----------------|  |
                             // +--[S1]--+--[S3]--|--+-.
                             case 5:
-                                phase_mod1 = calculate_op(slot1, OP_INPUT_FEEDBACK);
-                                phase_mod3 = calculate_op(slot3, phase_mod1);
-                                setFeedback(slot1, phase_mod3);
-                                output3 = phase_mod3;
-                                output2 = calculate_op(slot2, OP_INPUT_NONE);
+                                phaseMod1 = calculateOp(slot1, OP_INPUT_FEEDBACK);
+                                phaseMod3 = calculateOp(slot3, phaseMod1);
+                                setFeedback(slot1, phaseMod3);
+                                output3 = phaseMod3;
+                                output2 = calculateOp(slot2, OP_INPUT_NONE);
                                 break;
 
                             //  --[S2]-----|
@@ -1011,55 +1009,55 @@ public class Ymf271 extends Instrument.BaseInstrument {
                             // <--------|  |
                             // +--[S1]--|--+-.
                             case 6:
-                                phase_mod1 = calculate_op(slot1, OP_INPUT_FEEDBACK);
-                                setFeedback(slot1, phase_mod1);
-                                output1 = phase_mod1;
-                                output3 = calculate_op(slot3, OP_INPUT_NONE);
-                                output2 = calculate_op(slot2, OP_INPUT_NONE);
+                                phaseMod1 = calculateOp(slot1, OP_INPUT_FEEDBACK);
+                                setFeedback(slot1, phaseMod1);
+                                output1 = phaseMod1;
+                                output3 = calculateOp(slot3, OP_INPUT_NONE);
+                                output2 = calculateOp(slot2, OP_INPUT_NONE);
                                 break;
 
                             //              --[S2]--|
                             // <--------|  +--[S3]--|
                             // +--[S1]--|--|--------+-.
                             case 7:
-                                phase_mod1 = calculate_op(slot1, OP_INPUT_FEEDBACK);
-                                setFeedback(slot1, phase_mod1);
-                                output1 = phase_mod1;
-                                output3 = calculate_op(slot3, phase_mod1);
-                                output2 = calculate_op(slot2, OP_INPUT_NONE);
+                                phaseMod1 = calculateOp(slot1, OP_INPUT_FEEDBACK);
+                                setFeedback(slot1, phaseMod1);
+                                output1 = phaseMod1;
+                                output3 = calculateOp(slot3, phaseMod1);
+                                output2 = calculateOp(slot2, OP_INPUT_NONE);
                                 break;
                             }
 
-                            mixp[ptrMixp++] += (int) ((output1 * this.lutAttenuation[this.slots[slot1].ch0Level]) +
-                                    (output2 * this.lutAttenuation[this.slots[slot2].ch0Level]) +
-                                    (output3 * this.lutAttenuation[this.slots[slot3].ch0Level])) >> 16;
-                            mixp[ptrMixp++] += (int) ((output1 * this.lutAttenuation[this.slots[slot1].ch1Level]) +
-                                    (output2 * this.lutAttenuation[this.slots[slot2].ch1Level]) +
-                                    (output3 * this.lutAttenuation[this.slots[slot3].ch1Level])) >> 16;
+                            mixP[ptrMixp++] += (int) ((output1 * lutAttenuation[this.slots[slot1].ch0Level]) +
+                                    (output2 * lutAttenuation[this.slots[slot2].ch0Level]) +
+                                    (output3 * lutAttenuation[this.slots[slot3].ch0Level])) >> 16;
+                            mixP[ptrMixp++] += (int) ((output1 * lutAttenuation[this.slots[slot1].ch1Level]) +
+                                    (output2 * lutAttenuation[this.slots[slot2].ch1Level]) +
+                                    (output3 * lutAttenuation[this.slots[slot3].ch1Level])) >> 16;
                         }
                     }
 
-                    mixp = this.mix_buffer;
-                    updatePcm(j + (3 * 12), mixp, samples, ptrMixp);
+                    mixP = this.mixBuffer;
+                    updatePcm(j + (3 * 12), mixP, samples, ptrMixp);
                     break;
                 }
 
                 // PCM
                 case 3: {
-                    updatePcm(j + (0 * 12), mixp, samples, ptrMixp);
-                    updatePcm(j + (1 * 12), mixp, samples, ptrMixp);
-                    updatePcm(j + (2 * 12), mixp, samples, ptrMixp);
-                    updatePcm(j + (3 * 12), mixp, samples, ptrMixp);
+                    updatePcm(j + (0 * 12), mixP, samples, ptrMixp);
+                    updatePcm(j + (1 * 12), mixP, samples, ptrMixp);
+                    updatePcm(j + (2 * 12), mixP, samples, ptrMixp);
+                    updatePcm(j + (3 * 12), mixP, samples, ptrMixp);
                     break;
                 }
                 }
             }
 
-            mixp = this.mix_buffer;
-            ptrMixp = 0;
-            for (i = 0; i < samples; i++) {
-                outputs[0][i] = mixp[ptrMixp++] >> 2;
-                outputs[1][i] = mixp[ptrMixp++] >> 2;
+            int[] mixP = this.mixBuffer;
+            int ptrMixp = 0;
+            for (int i = 0; i < samples; i++) {
+                outputs[0][i] = mixP[ptrMixp++] >> 2;
+                outputs[1][i] = mixP[ptrMixp++] >> 2;
             }
         }
 
@@ -1073,16 +1071,7 @@ public class Ymf271 extends Instrument.BaseInstrument {
 
                 if ((data & 1) != 0) {
                     // key on
-                    slot.step = 0;
-                    slot.stepPtr = 0;
-
-                    slot.active = 1;
-
-                    slot.calculate_step();
-                    initEnvelope(slot);
-                    slot.init(this.lutLfo);
-                    slot.feedbackModulation0 = 0;
-                    slot.feedbackModulation1 = 0;
+                    slot.keyOn(this.lutLfo, this.lutAr, this.lutDc);
                 } else {
                     if (slot.active != 0) {
                         slot.envState = ENV_RELEASE;
@@ -1129,7 +1118,7 @@ public class Ymf271 extends Instrument.BaseInstrument {
 
             case 0x9:
                 // write frequency and block here
-                slot.fns = (int) ((slot.fnsHi << 8 & 0x0f00) | data);
+                slot.fns = (slot.fnsHi << 8 & 0x0f00) | data;
                 slot.block = (byte) (slot.fnsHi >> 4 & 0xf);
                 break;
 
@@ -1163,18 +1152,18 @@ public class Ymf271 extends Instrument.BaseInstrument {
         }
 
         private void writeFm(int bank, byte address, byte data) {
-            int groupnum = fmTab[address & 0xf];
+            int groupNum = fmTab[address & 0xf];
             int reg = (address >> 4) & 0xf;
-            int sync_reg;
-            int sync_mode;
+            int syncReg;
+            int syncMode;
 
-            if (groupnum == -1) {
-                //System.err.printf("ymf271_write_fm invalid group {0:X02} {1:X02}", address, data);
+            if (groupNum == -1) {
+                //System.err.printf("ymf271_write_fm invalid group %02X %02X", address, data);
                 return;
             }
 
             // check if the register is a synchronized register
-            sync_reg = 0;
+            syncReg = 0;
             switch (reg) {
             case 0:
             case 9:
@@ -1182,7 +1171,7 @@ public class Ymf271 extends Instrument.BaseInstrument {
             case 12:
             case 13:
             case 14:
-                sync_reg = 1;
+                syncReg = 1;
                 break;
 
             default:
@@ -1190,24 +1179,24 @@ public class Ymf271 extends Instrument.BaseInstrument {
             }
 
             // check if the slot is key on slot for synchronizing
-            sync_mode = 0;
-            switch (this.groups[groupnum].sync) {
+            syncMode = 0;
+            switch (this.groups[groupNum].sync) {
             // 4 slot mode
             case 0:
                 if (bank == 0)
-                    sync_mode = 1;
+                    syncMode = 1;
                 break;
 
             // 2x 2 slot mode
             case 1:
                 if (bank == 0 || bank == 1)
-                    sync_mode = 1;
+                    syncMode = 1;
                 break;
 
             // 3 slot + 1 slot mode
             case 2:
                 if (bank == 0)
-                    sync_mode = 1;
+                    syncMode = 1;
                 break;
 
             default:
@@ -1215,39 +1204,39 @@ public class Ymf271 extends Instrument.BaseInstrument {
             }
 
             // key-on slot & synced register
-            if (sync_mode != 0 && sync_reg != 0) {
-                switch (this.groups[groupnum].sync) {
+            if (syncMode != 0 && syncReg != 0) {
+                switch (this.groups[groupNum].sync) {
                 // 4 slot mode
                 case 0:
-                    writeRegister((12 * 0) + groupnum, reg, data);
-                    writeRegister((12 * 1) + groupnum, reg, data);
-                    writeRegister((12 * 2) + groupnum, reg, data);
-                    writeRegister((12 * 3) + groupnum, reg, data);
+                    writeRegister((12 * 0) + groupNum, reg, data);
+                    writeRegister((12 * 1) + groupNum, reg, data);
+                    writeRegister((12 * 2) + groupNum, reg, data);
+                    writeRegister((12 * 3) + groupNum, reg, data);
                     break;
 
                 // 2x 2 slot mode
                 case 1:
                     if (bank == 0) {
                         // Slot 1 - Slot 3
-                        writeRegister((12 * 0) + groupnum, reg, data);
-                        writeRegister((12 * 2) + groupnum, reg, data);
+                        writeRegister((12 * 0) + groupNum, reg, data);
+                        writeRegister((12 * 2) + groupNum, reg, data);
                     } else {
                         // Slot 2 - Slot 4
-                        writeRegister((12 * 1) + groupnum, reg, data);
-                        writeRegister((12 * 3) + groupnum, reg, data);
+                        writeRegister((12 * 1) + groupNum, reg, data);
+                        writeRegister((12 * 3) + groupNum, reg, data);
                     }
                     break;
 
                 // 3 slot + 1 slot mode (1 slot is handled normally)
                 case 2:
-                    writeRegister((12 * 0) + groupnum, reg, data);
-                    writeRegister((12 * 1) + groupnum, reg, data);
-                    writeRegister((12 * 2) + groupnum, reg, data);
+                    writeRegister((12 * 0) + groupNum, reg, data);
+                    writeRegister((12 * 1) + groupNum, reg, data);
+                    writeRegister((12 * 2) + groupNum, reg, data);
                     break;
                 }
             } else {
                 // write register normally
-                writeRegister((12 * bank) + groupnum, reg, data);
+                writeRegister((12 * bank) + groupNum, reg, data);
             }
         }
 
@@ -1255,58 +1244,58 @@ public class Ymf271 extends Instrument.BaseInstrument {
             int slotnum = pcmTab[address & 0xf];
             Slot slot;
             if (slotnum == -1) {
-                //System.err.printf("ymf271_write_pcm invalid slot {0:X02} {1:X02}", address, data);
+                //System.err.printf("ymf271_write_pcm invalid slot %02X %02X", address, data);
                 return;
             }
             slot = this.slots[slotnum];
 
             switch ((address >> 4) & 0xf) {
             case 0x0:
-                slot.startAddr &= 0xffffff00;// ~0xff;
+                slot.startAddr &= 0xffffff00; // ~0xff;
                 slot.startAddr |= data;
                 break;
 
             case 0x1:
-                slot.startAddr &= 0xffff00ff;// ~0xff00;
-                slot.startAddr |= (int) (data << 8);
+                slot.startAddr &= 0xffff00ff; // ~0xff00;
+                slot.startAddr |= data << 8;
                 break;
 
             case 0x2:
-                slot.startAddr &= 0xff00ffff;// ~0xff0000;
-                slot.startAddr |= (int) ((data & 0x7f) << 16);
+                slot.startAddr &= 0xff00ffff; // ~0xff0000;
+                slot.startAddr |= (data & 0x7f) << 16;
                 slot.altLoop = (byte) ((data & 0x80) != 0 ? 1 : 0);
                 //if (slot.altloop)
                 // System.err.println("Ymf271 A/L, contact MAMEdev");
                 break;
 
             case 0x3:
-                slot.endAddr &= 0xffffff00;// ~0xff;
+                slot.endAddr &= 0xffffff00; // ~0xff;
                 slot.endAddr |= data;
                 break;
 
             case 0x4:
-                slot.endAddr &= 0xffff00ff;// ~0xff00;
-                slot.endAddr |= (int) (data << 8);
+                slot.endAddr &= 0xffff00ff; // ~0xff00;
+                slot.endAddr |= data << 8;
                 break;
 
             case 0x5:
-                slot.endAddr &= 0xff00ffff;// ~0xff0000;
-                slot.endAddr |= (int) ((data & 0x7f) << 16);
+                slot.endAddr &= 0xff00ffff; // ~0xff0000;
+                slot.endAddr |= (data & 0x7f) << 16;
                 break;
 
             case 0x6:
-                slot.loopAddr &= 0xffffff00;// ~0xff;
+                slot.loopAddr &= 0xffffff00; // ~0xff;
                 slot.loopAddr |= data;
                 break;
 
             case 0x7:
-                slot.loopAddr &= 0xffff00ff;// ~0xff00;
-                slot.loopAddr |= (int) (data << 8);
+                slot.loopAddr &= 0xffff00ff; // ~0xff00;
+                slot.loopAddr |= data << 8;
                 break;
 
             case 0x8:
-                slot.loopAddr &= 0xff00ffff;// ~0xff0000;
-                slot.loopAddr |= (int) ((data & 0x7f) << 16);
+                slot.loopAddr &= 0xff00ffff; // ~0xff0000;
+                slot.loopAddr |= (data & 0x7f) << 16;
                 break;
 
             case 0x9:
@@ -1321,48 +1310,7 @@ public class Ymf271 extends Instrument.BaseInstrument {
             }
         }
 
-        /*static TIMER_CALLBACK( ymf271_timer_a_tick )
-        {
-            YMF271Chip *chip = (YMF271Chip *)ptr;
-
-            this.status |= 1;
-
-            if (this.enable & 4)
-            {
-                this.irqstate |= 1;
-                if (this.irq_callback) this.irq_callback(this.device, 1);
-            }
-        }
-
-        static TIMER_CALLBACK( ymf271_timer_b_tick )
-        {
-            YMF271Chip *chip = (YMF271Chip *)ptr;
-
-            this.status |= 2;
-
-            if (this.enable & 8)
-            {
-                this.irqstate |= 2;
-                if (this.irq_callback) this.irq_callback(this.device, 1);
-            }
-        }*/
-
         private byte readMemory(int offset) {
-            /*if (m_ext_read_handler.isnull())
-            {
-                if (offset < this.mem_size)
-                    return this.mem_base[offset];
-
-                // 8MB chip limit (shouldn't happen)
-                else if (offset > 0x7fffff)
-                    return this.mem_base[offset & 0x7fffff];
-
-                else
-                    return 0;
-            }
-            else
-                return m_ext_read_handler(offset);*/
-
             offset &= 0x7FFFFF;
             if (offset < this.memSize)
                 return this.memBase[offset];
@@ -1372,13 +1320,12 @@ public class Ymf271 extends Instrument.BaseInstrument {
 
         private void writeTimer(byte address, byte data) {
             if ((address & 0xf0) == 0) {
-                int groupnum = fmTab[address & 0xf];
-                Group group;
-                if (groupnum == -1) {
-                    //System.err.printf("ymf271_write_timer invalid group {0:X02} {1:X02}", address, data);
+                int groupNum = fmTab[address & 0xf];
+                if (groupNum == -1) {
+                    //System.err.printf("ymf271_write_timer invalid group %2x %2x", address, data);
                     return;
                 }
-                group = this.groups[groupnum];
+                Group group = this.groups[groupNum];
 
                 group.sync = (byte) (data & 0x3);
                 group.pfm = (byte) (data >> 7);
@@ -1414,8 +1361,8 @@ public class Ymf271 extends Instrument.BaseInstrument {
 
                     // timer A reset
                     if ((data & 0x10) != 0) {
-                        this.irqState &= 0xfffffffe;// ~1;
-                        this.status &= 0xfe; //~1;
+                        this.irqState &= 0xfffffffe; // ~1;
+                        this.status &= 0xfe; // ~1;
 
                         //if (!this.irq_handler.isnull() && ~this.irqstate & 2)
                         // this.irq_handler(0);
@@ -1423,8 +1370,8 @@ public class Ymf271 extends Instrument.BaseInstrument {
 
                     // timer B reset
                     if ((data & 0x20) != 0) {
-                        this.irqState &= 0xfffffffd;//~2;
-                        this.status &= 0xfd;// ~2;
+                        this.irqState &= 0xfffffffd; // ~2;
+                        this.status &= 0xfd; // ~2;
 
                         //if (!this.irq_handler.isnull() && ~this.irqstate & 1)
                         // this.irq_handler(0);
@@ -1434,16 +1381,16 @@ public class Ymf271 extends Instrument.BaseInstrument {
                     break;
 
                 case 0x14:
-                    this.extAddress &= 0xffffff00;// ~0xff;
+                    this.extAddress &= 0xffffff00; // ~0xff;
                     this.extAddress |= data;
                     break;
                 case 0x15:
-                    this.extAddress &= 0xffff00ff;// ~0xff00;
-                    this.extAddress |= (int) (data << 8);
+                    this.extAddress &= 0xffff00ff; // ~0xff00;
+                    this.extAddress |= data << 8;
                     break;
                 case 0x16:
-                    this.extAddress &= 0xff00ffff;// ~0xff0000;
-                    this.extAddress |= (int) ((data & 0x7f) << 16);
+                    this.extAddress &= 0xff00ffff; // ~0xff0000;
+                    this.extAddress |= (data & 0x7f) << 16;
                     this.extRw = (byte) ((data & 0x80) != 0 ? 1 : 0);
                     break;
                 case 0x17:
@@ -1524,127 +1471,125 @@ public class Ymf271 extends Instrument.BaseInstrument {
             return (byte) 0xff;
         }
 
+        static {
+            for (int i = 0; i < 8; i++)
+                lutWaves[i] = new short[SIN_LEN];
 
-        private void initTables() {
-            int i, j;
-            double clock_correction;
+            for (int i = 0; i < 4 * 8; i++)
+                lutPlfo[i >> 3][i & 7] = new double[LFO_LENGTH];
 
-            for (i = 0; i < 8; i++)
-                this.lutWaves[i] = new short[SIN_LEN];
+            for (int i = 0; i < 4; i++)
+                lutALfo[i] = new int[LFO_LENGTH];
 
-            for (i = 0; i < 4 * 8; i++)
-                this.lutPlfo[i >> 3][i & 7] = new double[LFO_LENGTH];
-
-            for (i = 0; i < 4; i++)
-                this.lutAlfo[i] = new int[LFO_LENGTH];
-
-            for (i = 0; i < SIN_LEN; i++) {
+            for (int i = 0; i < SIN_LEN; i++) {
                 double m = Math.sin(((i * 2) + 1) * Math.PI / SIN_LEN);
                 double m2 = Math.sin(((i * 4) + 1) * Math.PI / SIN_LEN);
 
                 // Waveform 0: sin(wt)    (0 <= wt <= 2PI)
-                this.lutWaves[0][i] = (short) (m * MAXOUT);
+                lutWaves[0][i] = (short) (m * MAXOUT);
 
                 // Waveform 1: sin?(wt)   (0 <= wt <= PI)     -sin?(wt)  (PI <= wt <= 2PI)
-                this.lutWaves[1][i] = (i < (SIN_LEN / 2)) ? (short) ((m * m) * MAXOUT) : (short) ((m * m) * MINOUT);
+                lutWaves[1][i] = (i < (SIN_LEN / 2)) ? (short) ((m * m) * MAXOUT) : (short) ((m * m) * MINOUT);
 
                 // Waveform 2: sin(wt)    (0 <= wt <= PI)     -sin(wt)   (PI <= wt <= 2PI)
-                this.lutWaves[2][i] = (i < (SIN_LEN / 2)) ? (short) (m * MAXOUT) : (short) (-m * MAXOUT);
+                lutWaves[2][i] = (i < (SIN_LEN / 2)) ? (short) (m * MAXOUT) : (short) (-m * MAXOUT);
 
                 // Waveform 3: sin(wt)    (0 <= wt <= PI)     0
-                this.lutWaves[3][i] = (i < (SIN_LEN / 2)) ? (short) (m * MAXOUT) : (short) 0;
+                lutWaves[3][i] = (i < (SIN_LEN / 2)) ? (short) (m * MAXOUT) : (short) 0;
 
                 // Waveform 4: sin(2wt)   (0 <= wt <= PI)     0
-                this.lutWaves[4][i] = (i < (SIN_LEN / 2)) ? (short) (m2 * MAXOUT) : (short) 0;
+                lutWaves[4][i] = (i < (SIN_LEN / 2)) ? (short) (m2 * MAXOUT) : (short) 0;
 
                 // Waveform 5: |sin(2wt)| (0 <= wt <= PI)     0
-                this.lutWaves[5][i] = (i < (SIN_LEN / 2)) ? (short) (Math.abs(m2) * MAXOUT) : (short) 0;
+                lutWaves[5][i] = (i < (SIN_LEN / 2)) ? (short) (Math.abs(m2) * MAXOUT) : (short) 0;
 
                 // Waveform 6:     1      (0 <= wt <= 2PI)
-                this.lutWaves[6][i] = (short) (1 * MAXOUT);
+                lutWaves[6][i] = (short) (1 * MAXOUT);
 
-                this.lutWaves[7][i] = 0;
+                lutWaves[7][i] = 0;
             }
 
-            for (i = 0; i < LFO_LENGTH; i++) {
-                int tri_wave;
-                double ftri_wave, fsaw_wave;
-                double[] plfo = new double[4];
+            for (int i = 0; i < LFO_LENGTH; i++) {
+                int triWave;
+                double ftriWave, fsawWave;
+                double[] pLfo = new double[4];
 
                 // LFO phase modulation
-                plfo[0] = 0;
+                pLfo[0] = 0;
 
-                fsaw_wave = ((i % (LFO_LENGTH / 2)) * PLFO_MAX) / (double) ((LFO_LENGTH / 2) - 1);
-                plfo[1] = (i < (LFO_LENGTH / 2)) ? fsaw_wave : fsaw_wave - PLFO_MAX;
+                fsawWave = ((i % (LFO_LENGTH / 2)) * PLFO_MAX) / (double) ((LFO_LENGTH / 2) - 1);
+                pLfo[1] = (i < (LFO_LENGTH / 2)) ? fsawWave : fsawWave - PLFO_MAX;
 
-                plfo[2] = (i < (LFO_LENGTH / 2)) ? PLFO_MAX : PLFO_MIN;
+                pLfo[2] = (i < (LFO_LENGTH / 2)) ? PLFO_MAX : PLFO_MIN;
 
-                ftri_wave = ((i % (LFO_LENGTH / 4)) * PLFO_MAX) / (double) (LFO_LENGTH / 4);
+                ftriWave = ((i % (LFO_LENGTH / 4)) * PLFO_MAX) / (double) (LFO_LENGTH / 4);
                 switch (i / (LFO_LENGTH / 4)) {
                 case 0:
-                    plfo[3] = ftri_wave;
+                    pLfo[3] = ftriWave;
                     break;
                 case 1:
-                    plfo[3] = PLFO_MAX - ftri_wave;
+                    pLfo[3] = PLFO_MAX - ftriWave;
                     break;
                 case 2:
-                    plfo[3] = 0 - ftri_wave;
+                    pLfo[3] = 0 - ftriWave;
                     break;
                 case 3:
-                    plfo[3] = 0 - (PLFO_MAX - ftri_wave);
+                    pLfo[3] = 0 - (PLFO_MAX - ftriWave);
                     break;
                 default:
-                    plfo[3] = 0; /*assert(0);*/
+                    pLfo[3] = 0; // assert(0);
                     break;
                 }
 
-                for (j = 0; j < 4; j++) {
-                    this.lutPlfo[j][0][i] = Math.pow(2.0, 0.0);
-                    this.lutPlfo[j][1][i] = Math.pow(2.0, (3.378 * plfo[j]) / 1200.0);
-                    this.lutPlfo[j][2][i] = Math.pow(2.0, (5.0646 * plfo[j]) / 1200.0);
-                    this.lutPlfo[j][3][i] = Math.pow(2.0, (6.7495 * plfo[j]) / 1200.0);
-                    this.lutPlfo[j][4][i] = Math.pow(2.0, (10.1143 * plfo[j]) / 1200.0);
-                    this.lutPlfo[j][5][i] = Math.pow(2.0, (20.1699 * plfo[j]) / 1200.0);
-                    this.lutPlfo[j][6][i] = Math.pow(2.0, (40.1076 * plfo[j]) / 1200.0);
-                    this.lutPlfo[j][7][i] = Math.pow(2.0, (79.307 * plfo[j]) / 1200.0);
+                for (int j = 0; j < 4; j++) {
+                    lutPlfo[j][0][i] = Math.pow(2.0, 0.0);
+                    lutPlfo[j][1][i] = Math.pow(2.0, (3.378 * pLfo[j]) / 1200.0);
+                    lutPlfo[j][2][i] = Math.pow(2.0, (5.0646 * pLfo[j]) / 1200.0);
+                    lutPlfo[j][3][i] = Math.pow(2.0, (6.7495 * pLfo[j]) / 1200.0);
+                    lutPlfo[j][4][i] = Math.pow(2.0, (10.1143 * pLfo[j]) / 1200.0);
+                    lutPlfo[j][5][i] = Math.pow(2.0, (20.1699 * pLfo[j]) / 1200.0);
+                    lutPlfo[j][6][i] = Math.pow(2.0, (40.1076 * pLfo[j]) / 1200.0);
+                    lutPlfo[j][7][i] = Math.pow(2.0, (79.307 * pLfo[j]) / 1200.0);
                 }
 
                 // LFO amplitude modulation
-                this.lutAlfo[0][i] = 0;
+                lutALfo[0][i] = 0;
 
-                this.lutAlfo[1][i] = ALFO_MAX - ((i * ALFO_MAX) / LFO_LENGTH);
+                lutALfo[1][i] = ALFO_MAX - ((i * ALFO_MAX) / LFO_LENGTH);
 
-                this.lutAlfo[2][i] = (i < (LFO_LENGTH / 2)) ? ALFO_MAX : ALFO_MIN;
+                lutALfo[2][i] = (i < (LFO_LENGTH / 2)) ? ALFO_MAX : ALFO_MIN;
 
-                tri_wave = ((i % (LFO_LENGTH / 2)) * ALFO_MAX) / (LFO_LENGTH / 2);
-                this.lutAlfo[3][i] = (i < (LFO_LENGTH / 2)) ? ALFO_MAX - tri_wave : tri_wave;
+                triWave = ((i % (LFO_LENGTH / 2)) * ALFO_MAX) / (LFO_LENGTH / 2);
+                lutALfo[3][i] = (i < (LFO_LENGTH / 2)) ? ALFO_MAX - triWave : triWave;
             }
 
-            for (i = 0; i < 256; i++) {
-                this.lutEnvVolume[i] = (int) (65536.0 / Math.pow(10.0, ((double) i / (256.0 / 96.0)) / 20.0));
+            for (int i = 0; i < 256; i++) {
+                lutEnvVolume[i] = (int) (65536.0 / Math.pow(10.0, ((double) i / (256.0 / 96.0)) / 20.0));
             }
 
-            for (i = 0; i < 16; i++) {
-                this.lutAttenuation[i] = (int) (65536.0 / Math.pow(10.0, channelAttenuationTable[i] / 20.0));
+            for (int i = 0; i < 16; i++) {
+                lutAttenuation[i] = (int) (65536.0 / Math.pow(10.0, channelAttenuationTable[i] / 20.0));
             }
-            for (i = 0; i < 128; i++) {
+            for (int i = 0; i < 128; i++) {
                 double db = 0.75 * (double) i;
-                this.lutTotalLevel[i] = (int) (65536.0 / Math.pow(10.0, db / 20.0));
+                lutTotalLevel[i] = (int) (65536.0 / Math.pow(10.0, db / 20.0));
             }
+        }
 
+        private void initTables() {
             // timing may use a non-standard XTAL
-            clock_correction = (double) (STD_CLOCK) / (double) (this.clock);
-            for (i = 0; i < 256; i++) {
-                this.lutLfo[i] = LFO_frequency_table[i] * clock_correction;
+            double clockCorrection = (double) (STD_CLOCK) / (double) (this.clock);
+            for (int i = 0; i < 256; i++) {
+                this.lutLfo[i] = LFO_frequency_table[i] * clockCorrection;
             }
 
-            for (i = 0; i < 64; i++) {
+            for (int i = 0; i < 64; i++) {
                 // attack/release rate in number of samples
-                this.lutAr[i] = (ARTime[i] * clock_correction * 44100.0) / 1000.0;
+                this.lutAr[i] = (ARTime[i] * clockCorrection * 44100.0) / 1000.0;
             }
-            for (i = 0; i < 64; i++) {
+            for (int i = 0; i < 64; i++) {
                 // decay rate in number of samples
-                this.lutDc[i] = (DCTime[i] * clock_correction * 44100.0) / 1000.0;
+                this.lutDc[i] = (DCTime[i] * clockCorrection * 44100.0) / 1000.0;
             }
         }
 
@@ -1661,7 +1606,7 @@ public class Ymf271 extends Instrument.BaseInstrument {
             //this.stream = stream_create(device, 0, 2, device.clock/384, ymf271_update);
 
             //this.mix_buffer = auto_alloc_array(machine, int, 44100*2);
-            this.mix_buffer = new int[44100 * 2];// (int*)malloc(44100 * 2 * sizeof(int));
+            this.mixBuffer = new int[44100 * 2];// (int*)malloc(44100 * 2 * sizeof(int));
 
             for (int i = 0; i < 12; i++)
                 this.groups[i].muted = 0x00;
@@ -1673,17 +1618,17 @@ public class Ymf271 extends Instrument.BaseInstrument {
             this.memBase = null;
 
             for (int i = 0; i < 8; i++) {
-                this.lutWaves[i] = null;
+                lutWaves[i] = null;
             }
             for (int i = 0; i < 4 * 8; i++) {
-                this.lutPlfo[i >> 3][i & 7] = null;
+                lutPlfo[i >> 3][i & 7] = null;
             }
 
             for (int i = 0; i < 4; i++) {
-                this.lutAlfo[i] = null;
+                lutALfo[i] = null;
             }
 
-            this.mix_buffer = null;
+            this.mixBuffer = null;
         }
 
         public void reset() {
@@ -1706,33 +1651,30 @@ public class Ymf271 extends Instrument.BaseInstrument {
 
         public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData) {
             if (this.memSize != romSize) {
-                this.memBase = new byte[romSize];// (byte*)realloc(this.mem_base, romSize);
+                this.memBase = new byte[romSize];
                 this.memSize = romSize;
-                for (int i = 0; i < romSize; i++) this.memBase[i] = (byte) 0xff;
-                //memset(this.mem_base, 0xFF, romSize);
+                Arrays.fill(this.memBase, 0, romSize, (byte) 0xff);
             }
             if (dataStart > romSize)
                 return;
             if (dataStart + dataLength > romSize)
                 dataLength = romSize - dataStart;
 
-            if (dataLength >= 0) System.arraycopy(romData, 0, this.memBase, dataStart, dataLength);
+            System.arraycopy(romData, 0, this.memBase, dataStart, dataLength);
         }
 
         public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddress) {
             if (this.memSize != romSize) {
-                this.memBase = new byte[romSize];// (byte*)realloc(this.mem_base, romSize);
+                this.memBase = new byte[romSize];
                 this.memSize = romSize;
-                for (int i = 0; i < romSize; i++) this.memBase[i] = (byte) 0xff;
-                //memset(this.mem_base, 0xFF, romSize);
+                Arrays.fill(this.memBase, 0, romSize, (byte) 0xff);
             }
             if (dataStart > romSize)
                 return;
             if (dataStart + dataLength > romSize)
                 dataLength = romSize - dataStart;
 
-            if (dataLength >= 0)
-                System.arraycopy(romData, srcStartAddress, this.memBase, dataStart, dataLength);
+            System.arraycopy(romData, srcStartAddress, this.memBase, dataStart, dataLength);
         }
 
         public void setMuteMask(int muteMask) {
@@ -1742,7 +1684,7 @@ public class Ymf271 extends Instrument.BaseInstrument {
     }
 
     private static final int MAX_CHIPS = 0x10;
-    public YMF271Chip[] YMF271Data = new YMF271Chip[] {new YMF271Chip(), new YMF271Chip(),};// MAX_CHIPS];
+    public YMF271Chip[] ymf271Chips = new YMF271Chip[] {new YMF271Chip(), new YMF271Chip(),};
 
     @Override
     public String getName() {
@@ -1754,81 +1696,80 @@ public class Ymf271 extends Instrument.BaseInstrument {
         return "OPX";
     }
 
-    public void ymf271_update(byte chipID, int[][] outputs, int samples) {
-        YMF271Chip chip = YMF271Data[chipID];
+    public void ymf271_update(byte chipId, int[][] outputs, int samples) {
+        YMF271Chip chip = ymf271Chips[chipId];
         chip.update(outputs, samples);
     }
 
-    public void ymf271_w(byte chipID, int offset, byte data) {
-        YMF271Chip chip = YMF271Data[chipID];
+    public void ymf271_w(byte chipId, int offset, byte data) {
+        YMF271Chip chip = ymf271Chips[chipId];
         chip.write(offset, data);
     }
 
-    public byte ymf271_r(byte chipID, int offset) {
-        YMF271Chip chip = YMF271Data[chipID];
+    public byte ymf271_r(byte chipId, int offset) {
+        YMF271Chip chip = ymf271Chips[chipId];
         return chip.read(offset);
     }
 
-    public int device_start_ymf271(byte chipID, int clock) {
-        if (chipID >= MAX_CHIPS)
+    public int device_start_ymf271(byte chipId, int clock) {
+        if (chipId >= MAX_CHIPS)
             return 0;
 
-        YMF271Chip chip = YMF271Data[chipID];
+        YMF271Chip chip = ymf271Chips[chipId];
         return chip.start(clock);
     }
 
-    public void device_stop_ymf271(byte chipID) {
-        YMF271Chip chip = YMF271Data[chipID];
+    public void device_stop_ymf271(byte chipId) {
+        YMF271Chip chip = ymf271Chips[chipId];
         chip.stop();
     }
 
-    public void device_reset_ymf271(byte chipID) {
-        YMF271Chip chip = YMF271Data[chipID];
+    public void device_reset_ymf271(byte chipId) {
+        YMF271Chip chip = ymf271Chips[chipId];
         chip.reset();
     }
 
-    public void ymf271_write_rom(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData) {
-        YMF271Chip chip = YMF271Data[chipID];
+    public void ymf271_write_rom(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
+        YMF271Chip chip = ymf271Chips[chipId];
         chip.writeRom(romSize, dataStart, dataLength, romData);
     }
 
-    public void ymf271_write_rom(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddress) {
-        YMF271Chip chip = YMF271Data[chipID];
+    public void ymf271_write_rom(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddress) {
+        YMF271Chip chip = ymf271Chips[chipId];
         chip.writeRom(romSize, dataStart, dataLength, romData, srcStartAddress);
     }
 
-    public void ymf271_set_mute_mask(byte chipID, int muteMask) {
-        YMF271Chip chip = YMF271Data[chipID];
+    public void ymf271_set_mute_mask(byte chipId, int muteMask) {
+        YMF271Chip chip = ymf271Chips[chipId];
         chip.setMuteMask(muteMask);
     }
 
     @Override
-    public int write(byte chipID, int port, int adr, int data) {
-        YMF271_Write(chipID, port, (byte) adr, (byte) data);
+    public int write(byte chipId, int port, int adr, int data) {
+        ymf271_w(chipId, (port << 1) | 0x00, (byte) adr);
+        ymf271_w(chipId, (port << 1) | 0x01, (byte) data);
         return 0;
     }
 
     /**
      * Generic get_info
      */
-        /*DEVICE_GET_INFO( Ymf271 )
-        {
-            switch (state)
-            {
-                // --- the following bits of info are returned as 64-bit signed integers ---
-                case DEVINFO_INT_TOKEN_BYTES:     info.i = sizeof(YMF271Chip);      break;
+    /*DEVICE_GET_INFO( Ymf271 ) {
+        switch (state) {
+            // --- the following bits of info are returned as 64-bit signed integers ---
+            case DEVINFO_INT_TOKEN_BYTES:     info.i = sizeof(YMF271Chip);      break;
 
-                // --- the following bits of info are returned as pointers to data or functions
-                case DEVINFO_FCT_START:       info.start = DEVICE_START_NAME( Ymf271 );   break;
-                case DEVINFO_FCT_STOP:       // Nothing         break;
-                case DEVINFO_FCT_RESET:       info.reset = DEVICE_RESET_NAME( Ymf271 );   break;
+            // --- the following bits of info are returned as pointers to data or functions
+            case DEVINFO_FCT_START:       info.start = DEVICE_START_NAME( Ymf271 );   break;
+            case DEVINFO_FCT_STOP: // Nothing         break;
+            case DEVINFO_FCT_RESET:       info.reset = DEVICE_RESET_NAME( Ymf271 );   break;
 
-                // --- the following bits of info are returned as NULL-terminated strings ---
-                case DEVINFO_STR_NAME:       strcpy(info.s, "YMF271");      break;
-                case DEVINFO_STR_FAMILY:     strcpy(info.s, "Yamaha FM");     break;
-                case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;
-                case DEVINFO_STR_SOURCE_FILE:      strcpy(info.s, __FILE__);      break;
-                case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
-            }
-        }*/
+            // --- the following bits of info are returned as NULL-terminated strings ---
+            case DEVINFO_STR_NAME:       strcpy(info.s, "YMF271");      break;
+            case DEVINFO_STR_FAMILY:     strcpy(info.s, "Yamaha FM");     break;
+            case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;
+            case DEVINFO_STR_SOURCE_FILE:      strcpy(info.s, __FILE__);      break;
+            case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
+        }
+    }*/
 }

@@ -33,23 +33,23 @@ public class Ay8910Mame extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void reset(byte chipID) {
-        chip[chipID].reset();
+    public void reset(byte chipId) {
+        chip[chipId].reset();
     }
 
     @Override
-    public int start(byte chipID, int clock) {
-        return start(chipID, clock, DefaultAY8910ClockValue, null);
+    public int start(byte chipId, int clock) {
+        return start(chipId, clock, DefaultAY8910ClockValue);
     }
 
     @Override
-    public int start(byte chipID, int clock, int clockValue, Object... option) {
+    public int start(byte chipId, int clock, int clockValue, Object... option) {
         Ay8910Context ch = new Ay8910Context();
         sampleRate = clock;
         masterClock = clockValue / 4;
         ch.init(clockValue, (byte) 0, (byte) 0);
 
-        chip[chipID] = ch;
+        chip[chipId] = ch;
 
         visVolume = new int[2][][];
         visVolume[0] = new int[2][];
@@ -63,12 +63,12 @@ public class Ay8910Mame extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void stop(byte chipID) {
-        chip[chipID].stop();
+    public void stop(byte chipId) {
+        chip[chipId].stop();
     }
 
     @Override
-    public void update(byte chipID, int[][] outputs, int samples) {
+    public void update(byte chipId, int[][] outputs, int samples) {
         for (int i = 0; i < samples; i++) {
             outputs[0][i] = 0;
             outputs[1][i] = 0;
@@ -76,7 +76,7 @@ public class Ay8910Mame extends Instrument.BaseInstrument {
             sampleCounter += (double) masterClock / sampleRate;
             int upc = (int) sampleCounter;
             while (sampleCounter >= 1) {
-                chip[chipID].updateOne(1, frm);
+                chip[chipId].updateOne(1, frm);
 
                 outputs[0][i] += frm[0][0];
                 outputs[1][i] += frm[1][0];
@@ -98,18 +98,18 @@ public class Ay8910Mame extends Instrument.BaseInstrument {
             //outputs[1][i] <<= 0;
         }
 
-        visVolume[chipID][0][0] = outputs[0][0];
-        visVolume[chipID][0][1] = outputs[1][0];
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
     }
 
     @Override
-    public int write(byte chipID, int port, int adr, int data) {
-        chip[chipID].writeReg((byte) adr, (byte) data);
+    public int write(byte chipId, int port, int adr, int data) {
+        chip[chipId].writeReg((byte) adr, (byte) data);
         return 0;
     }
 
-    public void setMute(byte chipID, int mask) {
-        chip[chipID].setMuteMask((byte) mask);
+    public void setMute(byte chipId, int mask) {
+        chip[chipId].setMuteMask((byte) mask);
     }
 
     /*
@@ -353,10 +353,10 @@ has twice the steps, happening twice as fast.
                 Inactive            NACT      0     0     0
                 Latch address       ADAR      0     0     1
                 Inactive            IAB       0     1     0
-                Read from PSG       DTB       0     1     1
+                Read from Psg       DTB       0     1     1
                 Latch address       BAR       1     0     0
                 Inactive            DW        1     0     1
-                Write to PSG        DWS       1     1     0
+                Write to Psg        DWS       1     1     0
                 Latch address       INTAK     1     1     1
 
 */
@@ -489,7 +489,7 @@ has twice the steps, happening twice as fast.
     [4] This is claimed to be equivalent to TEST 2 on the datasheet
 
 
-    GI AY-3-8910/A Programmable Sound Generator (PSG): 2 I/O ports
+    GI AY-3-8910/A Programmable Sound Generator (Psg): 2 I/O ports
               A7 thru A4 enable state for selecting a register can be changed with a
                 factory mask adjustment but default was 0000 for the "common" part shipped
                 (probably die "-100").
@@ -652,7 +652,7 @@ has twice the steps, happening twice as fast.
             YM2149(0x10), YM3439(0x11), YMZ284(0x12), YMZ294(0x13),
             //OPN/OPNA SSG
             YM2203(0x20), YM2608(0x21), YM2610(0x22);
-            int v;
+            final int v;
 
             AyType(int v) {
                 this.v = v;
@@ -665,7 +665,7 @@ has twice the steps, happening twice as fast.
 
         // cfg.chipFlags: pin26 state
         private static final int YM2149_PIN26_HIGH = 0x00;
-        private static final int YM2149_PIN26_LOW = 0x10;  // additional clock divider /2
+        private static final int YM2149_PIN26_LOW = 0x10; // additional clock divider /2
 
         private static final int AY8910_ZX_STEREO = 0x80;
 
@@ -741,8 +741,8 @@ has twice the steps, happening twice as fast.
         //private static final int YM2149_PIN26_LOW = (0x10);
 
         private static class Ay8910Interface {
-            public int flags;          /* Flags */
-            public int[] resLoad = new int[3];    /* Load on channel in ohms */
+            public int flags; // Flags */
+            public int[] resLoad = new int[3]; // Load on channel in ohms */
             //devcb_read8            portAread;
             //devcb_read8            portBread;
             //devcb_write8        portAwrite;
@@ -753,7 +753,7 @@ has twice the steps, happening twice as fast.
          *  Defines
          */
 
-        private static final int ENABLE_REGISTER_TEST = 0;     /* Enable preprogrammed registers */
+        private static final int ENABLE_REGISTER_TEST = 0; // Enable preprogrammed registers */
         private static final int LOG_IGNORED_WRITES = 0;
         private static final int ENABLE_CUSTOM_OUTPUTS = 0;
 
@@ -836,8 +836,8 @@ has twice the steps, happening twice as fast.
         // #if ENABLE_CUSTOM_OUTPUTS
         int[] vol3DTable = new int[8 * 32 * 32 * 32];
         // #endif
-        public int flags;          /* Flags */
-        public int[] resLoad = new int[3];    /* Load on channel in ohms */
+        public int flags; // Flags */
+        public int[] resLoad = new int[3]; // Load on channel in ohms */
         //devcb_read8 port_a_read_cb;
         //devcb_read8 port_b_read_cb;
         //devcb_write8 port_a_write_cb;
@@ -1034,7 +1034,7 @@ has twice the steps, happening twice as fast.
                                 if (this.alternate != 0 && (this.envStep & (this.envStepMask + 1)) != 0)
                                     this.attack ^= this.envStepMask;
 
-                                this.envStep &= (byte) this.envStepMask;
+                                this.envStep &= this.envStepMask;
                             }
                         }
 
@@ -1043,16 +1043,14 @@ has twice the steps, happening twice as fast.
                 this.envVolume = this.envStep ^ this.attack;
 
 // #if ENABLE_CUSTOM_OUTPUTS
-                if (this.streams == 3)
+                if (this.streams == 3) {
 // #endif
-                {
                     int chnOut;
                     for (int chan = 0; chan < NUM_CHANNELS; chan++) {
                         if (this.muteMask[chan] == 0)
                             continue;
                         if (getToneEnvelope(chan) != 0) {
-                            if (this.chipType == (byte) AyType.AY8914.v) // AY8914 Has a two bit tone_envelope field
-                            {
+                            if (this.chipType == (byte) AyType.AY8914.v) { // AY8914 Has a two bit tone_envelope field
                                 chnOut = this.envTable[chan][this.volEnabled[chan] != 0 ? this.envVolume >> (3 - getToneEnvelope(chan)) : 0];
                             } else {
                                 chnOut = this.envTable[chan][this.volEnabled[chan] != 0 ? this.envVolume : 0];
@@ -1065,9 +1063,8 @@ has twice the steps, happening twice as fast.
                         if ((this.stereoMask[chan] & 0x02) != 0)
                             bufR[curSmpl] += chnOut;
                     }
-                }
 // #if ENABLE_CUSTOM_OUTPUTS
-                else {
+                } else {
                     int chnOut = mix3D();
                     bufL[curSmpl] += chnOut;
                     bufR[curSmpl] += chnOut;
@@ -1179,7 +1176,7 @@ has twice the steps, happening twice as fast.
                 this.parEnv = ay8910_param;
                 this.zeroIsOff = 1;
                 this.envStepMask = 0x0f;
-            } else { //if (this.type = PSG_TYPE_YM)    // AYTYPE_YMxxxx variants (also YM2203/2608/2610 SSG)
+            } else { //if (this.type = PSG_TYPE_YM) // AYTYPE_YMxxxx variants (also YM2203/2608/2610 SSG)
                 this.step = 1;
                 this.par = ym2149Param;
                 this.parEnv = ym2149_param_env;
@@ -1249,7 +1246,7 @@ has twice the steps, happening twice as fast.
             this.countNoise = 0;
             this.countEnv = 0;
             this.preScaleNoise = 0;
-            this.lastEnable = (byte) 0xFF;    /* force a write */
+            this.lastEnable = (byte) 0xFF; // force to write
             for (i = 0; i < AY_PORTA; i++)
                 writeReg(i, (byte) 0);
             //this.ready = 1;
@@ -1286,7 +1283,7 @@ has twice the steps, happening twice as fast.
                     master_clock /= 2;
             }
             /* The envelope is pacing twice as fast for the YM2149 as for the AY-3-8910,    */
-            /* This handled by the step parameter. Consequently we use a divider of 8 here. */
+            /* This handled by the step parameter. Consequently, we use a divider of 8 here. */
             return master_clock / 8;
         }
 
@@ -1332,7 +1329,7 @@ has twice the steps, happening twice as fast.
                        FIXME: The io ports are designed as open collector outputs. Bits 7 and 8 of AY_ENABLE
                        only enable (low) or disable (high) the pull up resistors. The YM2149 datasheet
                        specifies those pull up resistors as 60k to 600k (min / max).
-                       We do need a callback for those two flags. Kid Niki (Irem m62) is one such
+                       We do need a Callback for those two flags. Kid Niki (Irem m62) is one such
                        case were it makes a difference in comparison to a standard TTL output.
                      */
                 //if (this.port_a_read_cb != NULL)

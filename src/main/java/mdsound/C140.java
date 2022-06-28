@@ -46,7 +46,7 @@ public class C140 extends Instrument.BaseInstrument {
         public int sampleRate;
         //sound_stream *stream;
         public Type bankingType;
-        /* internal buffers */
+        /** internal buffers */
         public int[] mixerBufferLeft;
         public int[] mixerBufferRight;
 
@@ -77,7 +77,7 @@ public class C140 extends Instrument.BaseInstrument {
         private static final int[] asic219banks = new int[] {0x1f7, 0x1f1, 0x1f3, 0x1f5};
 
         /**
-         * compute the actual address of a sample given it's
+         * compute the actual address of a sample given its
          * address and banking registers, as well as the board type.
          * <p>
          * I suspect in "real life" this works like the Sega MultiPCM where the banking
@@ -120,7 +120,7 @@ public class C140 extends Instrument.BaseInstrument {
                 if ((offset & 0xf) == 0x5) {
                     if ((data & 0x80) != 0) {
                         //voice_registers vreg = (voice_registers)this.REG[offset & 0x1f0];
-                        int vreg = (int) (offset & 0x1f0);
+                        int vreg = offset & 0x1f0;
                         v.key = 1;
                         v.ptoffset = 0;
                         v.pos = 0;
@@ -137,7 +137,7 @@ public class C140 extends Instrument.BaseInstrument {
                             v.sample_end = ((this.reg[vreg + 8] * 256) | this.reg[vreg + 9]) * 2;
 
                             //#if 0
-                            //logerror("219: play v %d mode %02x start %x loop %x end %x\n",
+                            //System.err.printf("219: play v %d mode %02x start %x loop %x end %x\n",
                             // offset>>4, v.mode,
                             // find_sample(info, v.sample_start, v.bank, offset>>4),
                             // find_sample(info, v.sample_loop, v.bank, offset>>4),
@@ -194,7 +194,7 @@ public class C140 extends Instrument.BaseInstrument {
 
             if (dataLength >= 0) System.arraycopy(romData, srcStartAdr, this.pRom, dataStart, dataLength);
 
-            //System.err.printf("c140_write_rom2:%d:%d:%d:%d:%d", chipID, romSize, dataStart, dataLength, srcStartAdr);
+            //System.err.printf("c140_write_rom2:%d:%d:%d:%d:%d", chipId, romSize, dataStart, dataLength, srcStartAdr);
         }
 
         public void setMuteMask(int muteMask) {
@@ -218,7 +218,7 @@ public class C140 extends Instrument.BaseInstrument {
 
             if (samples > this.sampleRate) samples = this.sampleRate;
 
-            /* zap the contents of the mixer buffer */
+            // zap the contents of the mixer buffer
             for (int ind = 0; ind < samples; ind++) {
                 this.mixerBufferLeft[ind] = 0;
                 this.mixerBufferRight[ind] = 0;
@@ -226,7 +226,7 @@ public class C140 extends Instrument.BaseInstrument {
             if (this.pRom == null)
                 return;
 
-            /* get the number of voices to update */
+            // get the number of voices to update
             voiceCnt = (this.bankingType == Type.ASIC219) ? 16 : 24;
 
             //--- audio update
@@ -237,49 +237,49 @@ public class C140 extends Instrument.BaseInstrument {
                 if (v.key == 0 || v.muted != 0) continue;
                 frequency = (this.reg[vreg + 2] << 8) | this.reg[vreg + 3];
 
-                /* Abort Voice if no frequency value set */
+                // Abort Voice if no frequency value set
                 if (frequency == 0) continue;
 
-                /* Delta =  frequency * ((8MHz/374)*2 / sample rate) */
+                // Delta =  frequency * ((8MHz/374)*2 / sample rate)
                 delta = (int) (frequency * pbase);
 
-                /* Calculate left/right channel volumes */
+                // Calculate left/right channel volumes
                 lvol = (this.reg[vreg + 1] << 5) / MAX_VOICE; //32ch . 24ch
                 rvol = (this.reg[vreg + 0] << 5) / MAX_VOICE;
 
-                /* Set mixer outputs base pointers */
+                // Set mixer outputs base pointers
                 lmix = this.mixerBufferLeft;
                 rmix = this.mixerBufferRight;
 
-                /* Retrieve sample start/end and calculate size */
+                // Retrieve sample start/end and calculate size
                 st = (int) v.sample_start;
                 ed = (int) v.sample_end;
                 sz = ed - st;
 
-                /* Retrieve base pointer to the sample data */
+                // Retrieve base pointer to the sample data
                 pSampleData = findSample(st, v.bank, i);
 
-                /* Fetch back previous data pointers */
+                // Fetch back previous data pointers
                 offset = (int) v.ptoffset;
                 pos = (int) v.pos;
                 lastdt = (int) v.lastdt;
                 prevdt = (int) v.prevdt;
                 dltdt = (int) v.dltdt;
 
-                /* Switch on data type - compressed PCM is only for C140 */
+                // Switch on data type - compressed PCM is only for C140
                 if ((v.mode & 8) != 0 && (this.bankingType != Type.ASIC219)) {
                     // compressed PCM (maybe correct...)
-                    /* Loop for enough to fill sample buffer as requested */
+                    // Loop for enough to fill sample buffer as requested
                     for (int j = 0; j < samples; j++) {
                         offset += delta;
                         cnt = (offset >> 16) & 0x7fff;
                         offset &= 0xffff;
                         pos += cnt;
-                        /* Check for the end of the sample */
+                        // Check for the end of the sample
                         if (pos >= sz) {
                             //System.err.printf("C140 pos[%x]", pos);
                             //debugCnt = 20;
-                            /* Check if its a looping sample, either stop or loop */
+                            // Check if it's a looping sample, either stop or loop
                             if ((v.mode & 0x10) != 0) {
                                 pos = (int) (v.sample_loop - st);
                             } else {
@@ -288,10 +288,10 @@ public class C140 extends Instrument.BaseInstrument {
                             }
                         }
 
-                        /* Read the chosen sample byte */
-                        dt = (byte) this.pRom[(int) (pSampleData + pos)];
+                        // Read the chosen sample byte
+                        dt = this.pRom[(int) (pSampleData + pos)];
 
-                        /* decompress to 13bit range */        //2000.06.26 CAB
+                        // decompress to 13bit range         //2000.06.26 CAB
                         sdt = dt >> 3; // signed
                         if (sdt < 0) sdt = (sdt << (dt & 7)) - this.pcmTbl[dt & 7];
                         else sdt = (sdt << (dt & 7)) + this.pcmTbl[dt & 7];
@@ -300,25 +300,25 @@ public class C140 extends Instrument.BaseInstrument {
                         lastdt = sdt;
                         dltdt = (lastdt - prevdt);
 
-                        /* Caclulate the sample value */
+                        // Caclulate the sample value
                         dt = ((dltdt * offset) >> 16) + prevdt;
 
-                        /* Write the data to the sample buffers */
+                        // Write the data to the sample buffers
                         lmix[j] += (dt * lvol) >> (5 + 5);
                         rmix[j] += (dt * rvol) >> (5 + 5);
                     }
                 } else {
-                    /* linear 8bit signed PCM */
+                    // linear 8bit signed PCM
                     for (int j = 0; j < samples; j++) {
                         offset += delta;
                         cnt = (offset >> 16) & 0x7fff;
                         offset &= 0xffff;
                         pos += cnt;
-                        /* Check for the end of the sample */
+                        // Check for the end of the sample
                         if (pos >= sz) {
                             //System.err.printf("C140 pos[%x]", pos);
                             //debugCnt = 20;
-                            /* Check if its a looping sample, either stop or loop */
+                            // Check if it's a looping sample, either stop or loop
                             if ((v.mode & 0x10) != 0) {
                                 pos = (int) (v.sample_loop - st);
                             } else {
@@ -331,7 +331,7 @@ public class C140 extends Instrument.BaseInstrument {
                             prevdt = lastdt;
 
                             if (this.bankingType == Type.ASIC219) {
-                                lastdt = (byte) this.pRom[(int) (pSampleData + (pos ^ 0x01))];
+                                lastdt = this.pRom[(int) (pSampleData + (pos ^ 0x01))];
 
                                 // Sign + magnitude format
                                 if ((v.mode & 0x01) != 0 && ((lastdt & 0x80) != 0)) {
@@ -342,22 +342,22 @@ public class C140 extends Instrument.BaseInstrument {
                                     lastdt = -lastdt;
 
                             } else {
-                                lastdt = (byte) this.pRom[(int) (pSampleData + pos)];
+                                lastdt = this.pRom[(int) (pSampleData + pos)];
                             }
 
                             dltdt = (lastdt - prevdt);
                         }
 
-                        /* Caclulate the sample value */
+                        // Caclulate the sample value
                         dt = ((dltdt * offset) >> 16) + prevdt;
 
-                        /* Write the data to the sample buffers */
+                        // Write the data to the sample buffers
                         lmix[j] += (dt * lvol) >> 5;
                         rmix[j] += (dt * rvol) >> 5;
                     }
                 }
 
-                /* Save positional data for next callback */
+                // Save positional data for next Callback
                 v.ptoffset = offset;
                 v.pos = pos;
                 v.lastdt = lastdt;
@@ -365,20 +365,19 @@ public class C140 extends Instrument.BaseInstrument {
                 v.dltdt = dltdt;
             }
 
-            /* render to MAME's stream buffer */
+            // render to MAME's stream buffer
             lmix = this.mixerBufferLeft;
             rmix = this.mixerBufferRight;
-            {
-                int[] dest1 = outputs[0];
-                int[] dest2 = outputs[1];
-                for (int i = 0; i < samples; i++) {
-                    dest1[i] = lmix[i] << 3;
-                    dest2[i] = rmix[i] << 3;
-                    //if (debugCnt > 0) {
-                    //    debugCnt--;
-                    //    System.err.printf("{0:x}  {0:d}", lmix[i]);
-                    //}
-                }
+
+            int[] dest1 = outputs[0];
+            int[] dest2 = outputs[1];
+            for (int i = 0; i < samples; i++) {
+                dest1[i] = lmix[i] << 3;
+                dest2[i] = rmix[i] << 3;
+                //if (debugCnt > 0) {
+                //    debugCnt--;
+                //    System.err.printf("%x  %d", lmix[i]);
+                //}
             }
         }
 
@@ -400,19 +399,17 @@ public class C140 extends Instrument.BaseInstrument {
             this.pRomSize = 0x00;
             this.pRom = null;
 
-            /* make decompress pcm table */        //2000.06.26 CAB
-            {
-                int segbase = 0;
-                for (int i = 0; i < 8; i++) {
-                    this.pcmTbl[i] = segbase;  //segment base value
-                    segbase += 16 << i;
-                }
+            // make decompress pcm table 2000.06.26 CAB
+            int segbase = 0;
+            for (int i = 0; i < 8; i++) {
+                this.pcmTbl[i] = segbase; //segment base value
+                segbase += 16 << i;
             }
 
             // done at device_reset
             for (int i = 0; i < MAX_VOICE; i++) this.voi[i].init_voice();
 
-            /* allocate a Pair of buffers to mix into - 1 second's worth should be more than enough */
+            // allocate a Pair of buffers to mix into - 1 second's worth should be more than enough
             this.mixerBufferLeft = new int[this.sampleRate];
             this.mixerBufferRight = new int[this.sampleRate];
 
@@ -441,33 +438,33 @@ public class C140 extends Instrument.BaseInstrument {
         //0..Main
     }
 
-    public byte c140_r(byte chipID, int offset) {
-        C140State info = c140Data[chipID];
+    public byte c140_r(byte chipId, int offset) {
+        C140State info = c140Data[chipId];
         return info.read(offset);
     }
 
-    private void c140_w(byte chipID, int offset, byte data) {
-        C140State info = c140Data[chipID];
+    private void c140_w(byte chipId, int offset, byte data) {
+        C140State info = c140Data[chipId];
         info.write(offset, data);
     }
 
-    public void c140_set_base(byte chipID, byte[] Base) {
-        C140State info = c140Data[chipID];
+    public void c140_set_base(byte chipId, byte[] Base) {
+        C140State info = c140Data[chipId];
         info.pRom = Base;
     }
 
-    public void c140_write_rom(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData) {
-        C140State info = c140Data[chipID];
+    public void c140_write_rom(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
+        C140State info = c140Data[chipId];
         info.writeRom(romSize, dataStart, dataLength, romData);
     }
 
-    public void c140_write_rom2(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
-        C140State info = c140Data[chipID];
+    public void c140_write_rom2(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
+        C140State info = c140Data[chipId];
         info.writeRom2(romSize, dataStart, dataLength, romData, srcStartAdr);
     }
 
-    public void c140_set_mute_mask(byte chipID, int muteMask) {
-        C140State info = c140Data[chipID];
+    public void c140_set_mute_mask(byte chipId, int muteMask) {
+        C140State info = c140Data[chipId];
         info.setMuteMask(muteMask);
     }
 
@@ -482,41 +479,41 @@ public class C140 extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void update(byte chipID, int[][] outputs, int samples) {
-        C140State info = c140Data[chipID];
+    public void update(byte chipId, int[][] outputs, int samples) {
+        C140State info = c140Data[chipId];
         info.update(outputs, samples);
 
-        visVolume[chipID][0][0] = outputs[0][0];
-        visVolume[chipID][0][1] = outputs[1][0];
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
     }
 
     @Override
-    public int start(byte chipID, int clock) {
-        return start(chipID, 44100, clock, C140State.Type.SYSTEM2);
+    public int start(byte chipId, int clock) {
+        return start(chipId, 44100, clock, C140State.Type.SYSTEM2);
     }
 
     @Override
-    public int start(byte chipID, int samplingrate, int clockValue, Object... option) {
-        if (chipID >= MAX_CHIPS)
+    public int start(byte chipId, int samplingrate, int clockValue, Object... option) {
+        if (chipId >= MAX_CHIPS)
             return 0;
 
-        C140State info = c140Data[chipID];
+        C140State info = c140Data[chipId];
         return info.start(clockValue, (C140State.Type) option[0]);
     }
 
     @Override
-    public void stop(byte chipID) {
-        C140State info = c140Data[chipID];
+    public void stop(byte chipId) {
+        C140State info = c140Data[chipId];
         info.stop();
     }
 
     @Override
-    public void reset(byte chipID) {
+    public void reset(byte chipId) {
     }
 
     @Override
-    public int write(byte chipID, int port, int adr, int data) {
-        c140_w(chipID, adr, (byte) data);
+    public int write(byte chipId, int port, int adr, int data) {
+        c140_w(chipId, adr, (byte) data);
         return 0;
     }
 }

@@ -21,43 +21,43 @@ public class SinWave extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void reset(byte chipID) {
-        if (chip[chipID] == null) {
-            chip[chipID] = new SinWaveGen();
+    public void reset(byte chipId) {
+        if (chip[chipId] == null) {
+            chip[chipId] = new SinWaveGen();
         }
-        // chip[chipID].render = false;
+        // chip[chipId].render = false;
     }
 
     @Override
-    public int start(byte chipID, int clock) {
-        return start(chipID, clock, DefaultClockValue, null);
+    public int start(byte chipId, int clock) {
+        return start(chipId, clock, DefaultClockValue);
     }
 
     @Override
-    public int start(byte chipID, int clock, int clockValue, Object... option) {
-        reset(chipID);
-        chip[chipID].clock = clock;
-        chip[chipID].render = true;
+    public int start(byte chipId, int clock, int clockValue, Object... option) {
+        reset(chipId);
+        chip[chipId].clock = clock;
+        chip[chipId].render = true;
 
         return clock; // samplingRate
     }
 
     @Override
-    public void stop(byte chipID) {
-        if (chip[chipID] == null) return;
-        chip[chipID].render = false;
+    public void stop(byte chipId) {
+        if (chip[chipId] == null) return;
+        chip[chipId].render = false;
     }
 
     @Override
-    public void update(byte chipID, int[][] outputs, int samples) {
-        if (chip[chipID] == null) return;
-        chip[chipID].update(outputs, samples);
+    public void update(byte chipId, int[][] outputs, int samples) {
+        if (chip[chipId] == null) return;
+        chip[chipId].update(outputs, samples);
     }
 
     @Override
-    public int write(byte chipID, int port, int adr, int data) {
-        if (chip[chipID] == null) return 0;
-        return chip[chipID].write(data);
+    public int write(byte chipId, int port, int adr, int data) {
+        if (chip[chipId] == null) return 0;
+        return chip[chipId].write(data);
     }
 
     private static final int DefaultClockValue = 0;

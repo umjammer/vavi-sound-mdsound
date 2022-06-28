@@ -34,8 +34,8 @@ public class Global {
 
     public static int samprate = 44100;
     public static int waveOutSamp = 44100;
-    public static int OpmWait = 240;  // 24.0μｓ
-    public int opmRate = 62500;    // 入力クロック÷64
+    public static int OpmWait = 240; // 24.0μｓ
+    public int opmRate = 62500; // 入力クロック÷64
 
     public int[] STEPTBL = new int[11 * 12 * 64];
     public final int ALPHAZERO = (SIZEALPHATBL * 3);
@@ -253,7 +253,7 @@ public class Global {
     }
 
     public static int bswapw(int data) {
-        return (int) ((data << 8) + (data >> 8));
+        return (data << 8) + (data >> 8);
     }
 
     public static int memReadDefault(int adrs) {
@@ -297,9 +297,9 @@ public class Global {
     public short[][] OPMLOWPASS = null;// OPMLOWPASS_44[0]; //コンストラクタで実施
 
 
-    public int Betw_Time;       // 5 ms
-    public int Late_Time;       // (200+Bet_time) ms
-    public int lateSamples;    // (44100*Late_Time/1000)
+    public int Betw_Time; // 5 ms
+    public int Late_Time; // (200+Bet_time) ms
+    public int lateSamples; // (44100*Late_Time/1000)
     public int blkSamples; // 44100/N_waveblk
     public int betwSamplesSlower; // floor(44100.0*5/1000.0-rev)
     public int betwSamplesFaster; // ceil(44100.0*5/1000.0+rev)
@@ -335,7 +335,7 @@ public class Global {
 
         //if (opm.PcmBufPtr/Blk_Samples == ((playingblk-1)&(N_waveblk-1))) return;
         if (setPcmBufPtr != -1) {
-            opm.pcmBufPtr = (int) setPcmBufPtr;
+            opm.pcmBufPtr = setPcmBufPtr;
             setPcmBufPtr = -1;
         }
 
@@ -343,10 +343,10 @@ public class Global {
 
         if (waveOutSamp == 44100 || waveOutSamp == 48000) {
             //opm.pcmset62((int)nSamples);
-            opm.pcmset62(buffer, offset, (int) sampleCount, null);
+            opm.pcmset62(buffer, offset, sampleCount, null);
         } else {
             //opm.pcmset22((int)nSamples);
-            opm.pcmset22(buffer, offset, (int) sampleCount);
+            opm.pcmset22(buffer, offset, sampleCount);
         }
 
         //  opm.timer();

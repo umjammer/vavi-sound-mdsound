@@ -16,8 +16,8 @@ public class QSoundCtr extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void reset(byte chipID) {
-        device_reset_qsound(chipID);
+    public void reset(byte chipId) {
+        device_reset_qsound(chipId);
 
         visVolume = new int[][][] {
                 new int[][] {new int[] {0, 0}},
@@ -26,69 +26,69 @@ public class QSoundCtr extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(byte chipID, int clock) {
-        return device_start_qsound(chipID, 4000000);
+    public int start(byte chipId, int clock) {
+        return device_start_qsound(chipId, 4000000);
     }
 
     @Override
-    public int start(byte chipID, int clock, int clockValue, Object... option) {
-        return device_start_qsound(chipID, (int) clockValue);
+    public int start(byte chipId, int clock, int clockValue, Object... option) {
+        return device_start_qsound(chipId, clockValue);
     }
 
     @Override
-    public void stop(byte chipID) {
-        device_stop_qsound(chipID);
+    public void stop(byte chipId) {
+        device_stop_qsound(chipId);
     }
 
     @Override
-    public void update(byte chipID, int[][] outputs, int samples) {
-        qsound_update(chipID, outputs, samples);
+    public void update(byte chipId, int[][] outputs, int samples) {
+        qsound_update(chipId, outputs, samples);
 
-        visVolume[chipID][0][0] = outputs[0][0];
-        visVolume[chipID][0][1] = outputs[1][0];
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
     }
 
     @Override
-    public int write(byte chipID, int port, int adr, int data) {
-        qsound_w(chipID, adr, (byte) data);
+    public int write(byte chipId, int port, int adr, int data) {
+        qsound_w(chipId, adr, (byte) data);
         return 0;
     }
 
-    private int device_start_qsound(byte chipID, int clock) {
-        QsoundChip chip = QSoundData[chipID];
+    private int device_start_qsound(byte chipId, int clock) {
+        QsoundChip chip = QSoundData[chipId];
         return chip.start2(clock);
     }
 
-    private void device_stop_qsound(byte chipID) {
-        device_stop_qsound_ctr(chipID);
+    private void device_stop_qsound(byte chipId) {
+        device_stop_qsound_ctr(chipId);
     }
 
-    private void device_reset_qsound(byte chipID) {
-        device_reset_qsound_ctr(chipID);
+    private void device_reset_qsound(byte chipId) {
+        device_reset_qsound_ctr(chipId);
         // need to wait until the chip is ready before we start writing to it ...
         // we do this by time travel.
-        qsoundc_wait_busy(chipID);
+        qsoundc_wait_busy(chipId);
     }
 
-    public void qsound_w(byte chipID, int offset, byte data) {
-        QsoundChip chip = QSoundData[chipID];
+    public void qsound_w(byte chipId, int offset, byte data) {
+        QsoundChip chip = QSoundData[chipId];
         chip.write2(offset, data);
     }
 
-    private void qsound_update(byte chipID, int[][] outputs, int samples) {
-        qsoundc_update(chipID, outputs, samples);
+    private void qsound_update(byte chipId, int[][] outputs, int samples) {
+        qsoundc_update(chipId, outputs, samples);
     }
 
-    public void qsound_write_rom(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData) {
-        qsoundc_write_rom(chipID, romSize, dataStart, dataLength, romData, 0);
+    public void qsound_write_rom(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
+        qsoundc_write_rom(chipId, romSize, dataStart, dataLength, romData, 0);
     }
 
-    public void qsound_write_rom(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddress) {
-        qsoundc_write_rom(chipID, romSize, dataStart, dataLength, romData, srcStartAddress);
+    public void qsound_write_rom(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddress) {
+        qsoundc_write_rom(chipId, romSize, dataStart, dataLength, romData, srcStartAddress);
     }
 
-    public void qsound_set_mute_mask(byte chipID, int muteMask) {
-        qsoundc_set_mute_mask(chipID, muteMask);
+    public void qsound_set_mute_mask(byte chipId, int muteMask) {
+        qsoundc_set_mute_mask(chipId, muteMask);
     }
 
     /*
@@ -113,7 +113,7 @@ public class QSoundCtr extends Instrument.BaseInstrument {
 
         // Q1 Fir
         static class Fir {
-            public int tapCount = 0;  // usually 95
+            public int tapCount = 0; // usually 95
             public int delayPos = 0;
             //public short table_pos = 0;
             public short[] taps = new short[95];
@@ -315,7 +315,7 @@ public class QSoundCtr extends Instrument.BaseInstrument {
             REFRESH2(0x04f),
             NORMAL1(0x314),
             NORMAL2(0x6b2);
-            int v;
+            final int v;
 
             State(int v) {
                 this.v = v;
@@ -331,7 +331,7 @@ public class QSoundCtr extends Instrument.BaseInstrument {
             RIGHT(1),
             DRY(0),
             WET(1);
-            int v;
+            final int v;
 
             Pan(int v) {
                 this.v = v;
@@ -349,9 +349,7 @@ public class QSoundCtr extends Instrument.BaseInstrument {
         private static int clamp(int x, int low, int high) {
             if (x > high)
                 return high;
-            if (x < low)
-                return low;
-            return x;
+            return Math.max(x, low);
         }
 
         private void init_pan_tables() {
@@ -405,7 +403,7 @@ public class QSoundCtr extends Instrument.BaseInstrument {
             //register_map[0xd9] = (int)this.echo.end_pos;
             //register_map[0xe2] = (int)this.delay_update; // non-zero to update delays
             //register_map[0xe3] = (int)this.next_state;
-            //for (i = 0; i < 2; i++)  // left, right
+            //for (i = 0; i < 2; i++) // left, right
             //{
             // Wet
             //register_map[(i << 1) + 0xda] = (int)this.filter[i].table_pos;
@@ -422,16 +420,16 @@ public class QSoundCtr extends Instrument.BaseInstrument {
             int rom_addr;
             byte sample_data;
 
-            if (this.romMask == 0) return 0;    // no ROM loaded
+            if (this.romMask == 0) return 0; // no ROM loaded
             if ((bank & 0x8000) == 0) return 0; // ignore attempts to read from DSP program ROM
 
             bank &= 0x7FFF;
             rom_addr = (bank << 16) | (address << 0);
 
             sample_data = rom_addr < this.romData.length ? this.romData[rom_addr] : (byte) 0;
-            //System.err.printf("adr:{0:x10} dat:{1:x02}", rom_addr, sample_data);
+            //System.err.printf("adr:%10x dat:%02x", rom_addr, sample_data);
 
-            return (short) ((sample_data << 8) | (sample_data << 0));    // MAME currently expands the 8 bit ROM data to 16 bits this way.
+            return (short) ((sample_data << 8) | (sample_data << 0)); // MAME currently expands the 8 bit ROM data to 16 bits this way.
         }
 
         //private short[] get_filter_table(, int offset) {
@@ -442,9 +440,9 @@ public class QSoundCtr extends Instrument.BaseInstrument {
 
         // index = (offset - 0xd53) / 95;
         // if (index >= 0 && index < 5)
-        //  return qsound_filter_data[index];   // normal tables
+        //  return qsound_filter_data[index]; // normal tables
 
-        // return null;    // no filter found.
+        // return null; // no filter found.
         //}
 
         private Short get_filter_table(int offset) {
@@ -453,9 +451,9 @@ public class QSoundCtr extends Instrument.BaseInstrument {
 
             int index = (offset - 0xd53) / 95;
             if (index >= 0 && index < 5)
-                return filterData[index][(offset - 0xd53) % 95];   // normal tables
+                return filterData[index][(offset - 0xd53) % 95]; // normal tables
 
-            return null;    // no filter found.
+            return null; // no filter found.
         }
 
         // updates one DSP sample
@@ -629,10 +627,10 @@ public class QSoundCtr extends Instrument.BaseInstrument {
             //output = (short)((v.volume * get_sample(chip, v.bank, v.addr)) >> 14);
             output = (short) ((registerMap[(voiceNo << 3) + 6]
                     * get_sample(registerMap[(((voiceNo - 1 + 16) % 16) << 3) + 0], registerMap[(voiceNo << 3) + 1])) >> 14);
-            //System.err.printf("output:{0} vadr:{1}", output, register_map[(voiceNo << 3) + 1]);
+            //System.err.printf("output:%d vadr:%d", output, register_map[(voiceNo << 3) + 1]);
 
             //if (voiceNo == 2) {
-            //MDSound.debugMsg = String.format("{0}:{1}:{2}:{3}",
+            //MDSound.debugMsg = String.format("%d:%d:%d:%d",
             //register_map[(voiceNo << 3) + 6], register_map[(voiceNo << 3) + 0], register_map[(voiceNo << 3) + 1], register_map[(voiceNo << 3) + 5]);
             //}
 
@@ -643,7 +641,7 @@ public class QSoundCtr extends Instrument.BaseInstrument {
             //new_phase = v.rate + ((v.addr << 12) | (v.phase >> 4));
             int a = (registerMap[(voiceNo << 3) + 1] << 12) | (registerMap[(voiceNo << 3) + 3] >> 4);
             a = (a & 0x0800_0000) != 0 ? (a | 0xf000_0000) : a;
-            new_phase = registerMap[(voiceNo << 3) + 2] + (int) a;
+            new_phase = registerMap[(voiceNo << 3) + 2] + a;
 
             //if ((new_phase >> 12) >= v.end_addr)
             if ((new_phase >> 12) >= (short) registerMap[(voiceNo << 3) + 5]) {
@@ -654,13 +652,13 @@ public class QSoundCtr extends Instrument.BaseInstrument {
             }
 
             //if (voiceNo == 0) {
-            //System.err.printf("Bf:{0}", new_phase);
+            //System.err.printf("Bf:%d", new_phase);
             //}
 
             new_phase = clamp(new_phase, -0x800_0000, 0x7FF_FFFF);
 
             //if (voiceNo == 0) {
-            //System.err.printf("Af:{0}", new_phase);
+            //System.err.printf("Af:%d", new_phase);
             //}
             //v.addr = (int)(new_phase >> 12);
             registerMap[(voiceNo << 3) + 1] = new_phase >> 12;
@@ -739,7 +737,7 @@ public class QSoundCtr extends Instrument.BaseInstrument {
             this.readyFlag = (byte) 0x80;
 
             // recalculate echo length
-            if (this.state == (int) State.NORMAL2.v)
+            if (this.state == State.NORMAL2.v)
                 //this.echo.length = (short)(this.echo.end_pos - 0x53c);
                 this.echo.length = (short) (registerMap[0xd9] - 0x53c);
             else
@@ -767,13 +765,13 @@ public class QSoundCtr extends Instrument.BaseInstrument {
 
                 for (int v = 0; v < 19; v++) {
                     //int pan_index = (int)(this.voice_pan[v] - 0x110);
-                    int pan_index = (int) (registerMap[v + 0x80] - 0x110);
+                    int pan_index = registerMap[v + 0x80] - 0x110;
                     if (pan_index > 97)
                         pan_index = 97;
 
                     // Apply different volume tables on the dry and wet inputs.
-                    dry -= (this.voiceOutput[v] * this.panTables[ch][(int) Pan.DRY.v][pan_index]);
-                    wet -= (this.voiceOutput[v] * this.panTables[ch][(int) Pan.WET.v][pan_index]);
+                    dry -= (this.voiceOutput[v] * this.panTables[ch][Pan.DRY.v][pan_index]);
+                    wet -= (this.voiceOutput[v] * this.panTables[ch][Pan.WET.v][pan_index]);
                 }
 
                 // Saturate accumulated voices
@@ -896,7 +894,7 @@ public class QSoundCtr extends Instrument.BaseInstrument {
         private void write_rom(int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddress) {
             if (this.romSize != romSize) {
                 this.romData = new byte[romSize];
-                this.romSize = (int) romSize;
+                this.romSize = romSize;
                 Arrays.fill(this.romData, (byte) 0xff);
                 this.romMask = 0xffff_ffff;
             }
@@ -988,54 +986,54 @@ public class QSoundCtr extends Instrument.BaseInstrument {
     private static final int MAX_CHIPS = 0x02;
     QsoundChip[] QSoundData = new QsoundChip[MAX_CHIPS];
 
-    private int device_start_qsound_ctr(byte chipID, int clock) {
-        QSoundData[chipID] = new QsoundChip();
-        QsoundChip chip = QSoundData[chipID];
+    private int device_start_qsound_ctr(byte chipId, int clock) {
+        QSoundData[chipId] = new QsoundChip();
+        QsoundChip chip = QSoundData[chipId];
         return chip.start(clock);
     }
 
-    private void device_stop_qsound_ctr(byte chipID) {
-        QsoundChip chip = QSoundData[chipID];
+    private void device_stop_qsound_ctr(byte chipId) {
+        QsoundChip chip = QSoundData[chipId];
     }
 
-    private void device_reset_qsound_ctr(byte chipID) {
-        QsoundChip chip = QSoundData[chipID];
+    private void device_reset_qsound_ctr(byte chipId) {
+        QsoundChip chip = QSoundData[chipId];
         chip.reset();
     }
 
-    private byte qsoundc_r(byte chipID, int offset) {
-        QsoundChip chip = QSoundData[chipID];
+    private byte qsoundc_r(byte chipId, int offset) {
+        QsoundChip chip = QSoundData[chipId];
         return chip.read(offset);
     }
 
-    private void qsoundc_w(byte chipID, int offset, byte data) {
-        QsoundChip chip = QSoundData[chipID];
+    private void qsoundc_w(byte chipId, int offset, byte data) {
+        QsoundChip chip = QSoundData[chipId];
         chip.write(offset, data);
     }
 
-    private void qsoundc_write_data(byte chipID, byte address, int data) {
-        QsoundChip chip = QSoundData[chipID];
+    private void qsoundc_write_data(byte chipId, byte address, int data) {
+        QsoundChip chip = QSoundData[chipId];
         chip.write_data(address, data);
     }
 
-    private void qsoundc_update(byte chipID, int[][] outputs, int samples) {
-        QsoundChip chip = QSoundData[chipID];
+    private void qsoundc_update(byte chipId, int[][] outputs, int samples) {
+        QsoundChip chip = QSoundData[chipId];
         chip.update(outputs, samples);
     }
 
-    private void qsoundc_write_rom(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddress) {
-        QsoundChip chip = QSoundData[chipID];
+    private void qsoundc_write_rom(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddress) {
+        QsoundChip chip = QSoundData[chipId];
         chip.write_rom(romSize, dataStart, dataLength, romData, srcStartAddress);
     }
 
-    private void qsoundc_set_mute_mask(byte chipID, int muteMask) {
-        QsoundChip chip = QSoundData[chipID];
+    private void qsoundc_set_mute_mask(byte chipId, int muteMask) {
+        QsoundChip chip = QSoundData[chipId];
         if (chip == null) return;
         chip.set_mute_mask(muteMask);
     }
 
-    private void qsoundc_wait_busy(byte chipID) {
-        QsoundChip chip = QSoundData[chipID];
+    private void qsoundc_wait_busy(byte chipId) {
+        QsoundChip chip = QSoundData[chipId];
         chip.wait_busy();
     }
 }

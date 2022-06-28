@@ -42,7 +42,7 @@ public class NpNesDmc {
 
     private Random rnd = new Random();
 
-    public int[][][][] tndTable;            //[2][16][16][128];
+    public int[][][][] tndTable; //[2][16][16][128];
 
     public int[] option = new int[10];// OPT_END];
     public int mask;
@@ -214,7 +214,7 @@ public class NpNesDmc {
     private void sequenceFrame(int s) {
         //System.err.printf("FrameSequence: %d\n",s);
 
-        if (s > 3) return;  // no operation in step 4
+        if (s > 3) return; // no operation in step 4
 
         if (this.apu != null) {
             this.apu.sequenceFrame(s);
@@ -226,43 +226,41 @@ public class NpNesDmc {
         }
 
         // 240hz clock
-        {
-            // triangle linear counter
-            if (this.linearCounterHalt) {
-                this.linearCounter = this.linearCounterReload;
-            } else {
-                if (this.linearCounter > 0) --this.linearCounter;
-            }
-            if (!this.linearCounterControl) {
-                this.linearCounterHalt = false;
-            }
+        // triangle linear counter
+        if (this.linearCounterHalt) {
+            this.linearCounter = this.linearCounterReload;
+        } else {
+            if (this.linearCounter > 0) --this.linearCounter;
+        }
+        if (!this.linearCounterControl) {
+            this.linearCounterHalt = false;
+        }
 
-            ////$4009 unuse address
-            //this.reg[1] = (byte)(
-            //    (this.linear_counter != 0 ? 4 : 0) //triangle
-            //    | (this.length_counter[1]!=0 ? 8:0) //noise
-            //    | (this.active ? 0x10 : 0) //dmc
-            //    );
+        // $4009 unuse address
+        //this.reg[1] = (byte)(
+        //    (this.linear_counter != 0 ? 4 : 0) //triangle
+        //    | (this.length_counter[1]!=0 ? 8:0) //noise
+        //    | (this.active ? 0x10 : 0) //dmc
+        //    );
 
-            // noise envelope
-            boolean divider = false;
-            if (this.envelopeWrite) {
-                this.envelopeWrite = false;
-                this.envelopeCounter = 15;
+        // noise envelope
+        boolean divider = false;
+        if (this.envelopeWrite) {
+            this.envelopeWrite = false;
+            this.envelopeCounter = 15;
+            this.envelopeDiv = 0;
+        } else {
+            ++this.envelopeDiv;
+            if (this.envelopeDiv > this.envelopeDivPeriod) {
+                divider = true;
                 this.envelopeDiv = 0;
-            } else {
-                ++this.envelopeDiv;
-                if (this.envelopeDiv > this.envelopeDivPeriod) {
-                    divider = true;
-                    this.envelopeDiv = 0;
-                }
             }
-            if (divider) {
-                if (this.envelopeLoop && this.envelopeCounter == 0)
-                    this.envelopeCounter = 15;
-                else if (this.envelopeCounter > 0)
-                    --this.envelopeCounter;    // TODO: Make this work.
-            }
+        }
+        if (divider) {
+            if (this.envelopeLoop && this.envelopeCounter == 0)
+                this.envelopeCounter = 15;
+            else if (this.envelopeCounter > 0)
+                --this.envelopeCounter; // TODO: Make this work.
         }
 
         // 120hz clock
@@ -284,16 +282,16 @@ public class NpNesDmc {
             8, 9, 10, 11, 12, 13, 14, 15
     };
 
-    // 三角波チャンネルの計算 戻り値は0-15
+    /** 三角波チャンネルの計算 戻り値は0-15 */
     private int calcTri(int clocks) {
         byte tri = 0;
         if (this.linearCounter > 0 && this.lengthCounter[0] > 0
-                && (this.option[(int) OPT.TRI_MUTE.ordinal()] == 0 || this.triFreq > 0)) {
+                && (this.option[OPT.TRI_MUTE.ordinal()] == 0 || this.triFreq > 0)) {
             tri = 1;
-            this.counter[0] -= (int) clocks;
+            this.counter[0] -= clocks;
             while (this.counter[0] < 0) {
                 this.tPhase = (this.tPhase + 1) & 31;
-                this.counter[0] += (int) (this.triFreq + 1);
+                this.counter[0] += this.triFreq + 1;
             }
         }
         // Note: else-block added by VB
@@ -313,10 +311,11 @@ public class NpNesDmc {
         return triTbl[this.tPhase];
     }
 
-    // ノイズチャンネルの計算 戻り値は0-127
+    /** ノイズチャンネルの計算 戻り値は0-127
     // 低サンプリングレートで合成するとエイリアスノイズが激しいので
     // ノイズだけはこの関数内で高クロック合成し、簡易なサンプリングレート
     // 変換を行っている。
+     */
     private int calcNoise(int clocks) {
         byte noi = 1;
 
@@ -515,7 +514,7 @@ public class NpNesDmc {
 
         if (this.option[OPT.NONLINEAR_MIXER.ordinal()] != 0) {
             int _ref = m[0] + m[1] + m[2];
-            int voltage = (int) this.tndTable[1][this.out[0]][this.out[1]][this.out[2]];
+            int voltage = this.tndTable[1][this.out[0]][this.out[1]][this.out[2]];
             int i;
             if (_ref != 0) {
                 for (i = 0; i < 3; ++i)
@@ -574,7 +573,7 @@ public class NpNesDmc {
 
         if (this.option[OPT.NONLINEAR_MIXER.ordinal()] != 0) {
             int _ref = m[0] + m[1] + m[2];
-            int voltage = (int) this.tndTable[1][this.out[0]][this.out[1]][this.out[2]];
+            int voltage = this.tndTable[1][this.out[0]][this.out[1]][this.out[2]];
             int i;
             if (_ref != 0) {
                 for (i = 0; i < 3; ++i)
@@ -843,7 +842,7 @@ public class NpNesDmc {
 
         case 0x4008:
             this.linearCounterControl = ((val >> 7) & 1) != 0;
-            this.linearCounterReload = (int) (val & 0x7F);
+            this.linearCounterReload = val & 0x7F;
             break;
 
         case 0x4009:

@@ -5,32 +5,32 @@ public class Ym3438X extends Ym3438 {
     private int sampleRate = 0;
 
     @Override
-    public int start(byte chipID, int clock, int clockValue, Object... option) {
-        sampleRate = super.start(chipID, clock, clockValue, option);
+    public int start(byte chipId, int clock, int clockValue, Object... option) {
+        sampleRate = super.start(chipId, clock, clockValue, option);
         return clock;
     }
 
     @Override
-    public void reset(byte chipID) {
-        xgmFunction.reset(chipID, sampleRate);
-        super.reset(chipID);
+    public void reset(byte chipId) {
+        xgmFunction.reset(chipId, sampleRate);
+        super.reset(chipId);
     }
 
     @Override
-    public void stop(byte chipID) {
-        xgmFunction.stop(chipID);
-        super.stop(chipID);
+    public void stop(byte chipId) {
+        xgmFunction.stop(chipId);
+        super.stop(chipId);
     }
 
     @Override
-    public int write(byte chipID, int port, int adr, int data) {
-        xgmFunction.write(chipID, port, adr, data);
-        return super.write(chipID, port, (byte) adr, (byte) data);
+    public int write(byte chipId, int port, int adr, int data) {
+        xgmFunction.write(chipId, port, adr, data);
+        return super.write(chipId, port, (byte) adr, (byte) data);
     }
 
     @Override
-    public void update(byte chipID, int[][] outputs, int samples) {
-        xgmFunction.update(chipID, samples, this::write);
-        super.update(chipID, outputs, samples);
+    public void update(byte chipId, int[][] outputs, int samples) {
+        xgmFunction.update(chipId, samples, this::write);
+        super.update(chipId, outputs, samples);
     }
 }

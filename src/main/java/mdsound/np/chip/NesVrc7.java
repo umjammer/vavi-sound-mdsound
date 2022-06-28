@@ -75,7 +75,7 @@ public class NesVrc7 implements SoundChip {
         if (opll != null && trk < 6) {
             trkInfo[trk].maxVolume = 15;
             trkInfo[trk].volume = 15 - ((opll.reg[0x30 + trk]) & 15);
-            trkInfo[trk]._freq = (int) (opll.reg[0x10 + trk] + ((opll.reg[0x20 + trk] & 1) << 8));
+            trkInfo[trk]._freq = opll.reg[0x10 + trk] + ((opll.reg[0x20 + trk] & 1) << 8);
             int blk = (opll.reg[0x20 + trk] >> 1) & 7;
             trkInfo[trk].freq = clock * trkInfo[trk]._freq / (double) (0x80000 >> blk);
             trkInfo[trk].tone = (opll.reg[0x30 + trk] >> 4) & 15;
@@ -89,7 +89,7 @@ public class NesVrc7 implements SoundChip {
         return opll.reg;
     }
 
-    public class ChipKeyInfo {
+    public static class ChipKeyInfo {
         public boolean[] on;
         public boolean[] off;
 
@@ -103,7 +103,7 @@ public class NesVrc7 implements SoundChip {
     private ChipKeyInfo ki = new ChipKeyInfo(6);
     private ChipKeyInfo kiRet = new ChipKeyInfo(6);
 
-    public ChipKeyInfo getKeyInfo(int chipID) {
+    public ChipKeyInfo getKeyInfo(int chipId) {
         for (int ch = 0; ch < 6; ch++) {
             kiRet.off[ch] = ki.off[ch];
             kiRet.on[ch] = ki.on[ch];

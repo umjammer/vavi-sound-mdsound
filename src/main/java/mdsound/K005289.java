@@ -16,32 +16,32 @@ public class K005289 extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void reset(byte chipID) {
+    public void reset(byte chipId) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public int start(byte chipID, int clock) {
+    public int start(byte chipId, int clock) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public int start(byte chipID, int clock, int clockValue, Object... option) {
+    public int start(byte chipId, int clock, int clockValue, Object... option) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void stop(byte chipID) {
+    public void stop(byte chipId) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void update(byte chipID, int[][] outputs, int samples) {
+    public void update(byte chipId, int[][] outputs, int samples) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public int write(byte chipID, int port, int adr, int data) {
+    public int write(byte chipId, int port, int adr, int data) {
         throw new UnsupportedOperationException();
     }
 
@@ -107,7 +107,7 @@ public class K005289 extends Instrument.BaseInstrument {
                 counter[i] = 0;
                 frequency[i] = 0;
                 freqLatch[i] = 0;
-                waveForm[i] = (int) (i * 0x100);
+                waveForm[i] = i * 0x100;
                 volume[i] = 0;
             }
         }
@@ -167,7 +167,7 @@ public class K005289 extends Instrument.BaseInstrument {
                 }
 
                 /* update the counter for this Voice */
-                counter[1] = (int) (c % (f * 0x20));
+                counter[1] = c % (f * 0x20);
             }
 
             /* mix it down */

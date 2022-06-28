@@ -16,7 +16,7 @@ public class Emu2149 {
             }
     };
 
-    static class PSG {
+    static class Psg {
         private static int PSG_MASK_CH(int x) {
             return (1 << (x));
         }
@@ -34,8 +34,8 @@ public class Emu2149 {
         public int[] volume = new int[3];
         public int[] freq = new int[3];
         public int[] edge = new int[3];
-        public int[] tmask = new int[3];
-        public int[] nmask = new int[3];
+        public int[] tMask = new int[3];
+        public int[] nMask = new int[3];
         public int mask;
 
         public int baseCount;
@@ -169,7 +169,7 @@ public class Emu2149 {
                         this.envPtr = (this.envPtr + 0x3f) & 0x3f;
                 }
 
-                if ((this.envPtr & 0x20) != 0) /* if carry or borrow */ {
+                if ((this.envPtr & 0x20) != 0) { // if carry or borrow
                     if (this.envContinue != 0) {
                         if ((this.envAlternate ^ this.envHold) != 0) this.envFace ^= 1;
                         if (this.envHold != 0) this.envPause = 1;
@@ -191,7 +191,7 @@ public class Emu2149 {
                 this.noiseSeed >>= 1;
                 this.noiseCount -= this.noiseFreq;
             }
-            noise = (int) (this.noiseSeed & 1);
+            noise = this.noiseSeed & 1;
 
             // Tone/
             for (i = 0; i < 3; i++) {
@@ -210,7 +210,7 @@ public class Emu2149 {
                 if ((this.mask & PSG_MASK_CH(i)) != 0)
                     continue;
 
-                if ((this.tmask[i] != 0 || this.edge[i] != 0) && (this.nmask[i] != 0 || noise != 0)) {
+                if ((this.tMask[i] != 0 || this.edge[i] != 0) && (this.nMask[i] != 0 || noise != 0)) {
                     if ((this.volume[i] & 32) == 0)
                         this.cout[i] = this.volTbl[this.volume[i] & 31];
                     else
@@ -223,7 +223,7 @@ public class Emu2149 {
             return (short) mix;
         }
 
-        public short calcPSG() {
+        public short calcPsg() {
             if (this.quality == 0)
                 return (short) (this.calc() << 4);
 
@@ -261,12 +261,12 @@ public class Emu2149 {
                 break;
 
             case 7:
-                this.tmask[0] = (val & 1);
-                this.tmask[1] = (val & 2);
-                this.tmask[2] = (val & 4);
-                this.nmask[0] = (val & 8);
-                this.nmask[1] = (val & 16);
-                this.nmask[2] = (val & 32);
+                this.tMask[0] = (val & 1);
+                this.tMask[1] = (val & 2);
+                this.tMask[2] = (val & 4);
+                this.nMask[0] = (val & 8);
+                this.nMask[1] = (val & 16);
+                this.nMask[2] = (val & 32);
                 break;
 
             case 8:
@@ -300,10 +300,10 @@ public class Emu2149 {
         }
     }
 
-    PSG psg;
+    Psg psg;
 
     public Emu2149(int c, int r) {
-        psg = new PSG();
+        psg = new Psg();
 
         setVolumeMode(VOL_DEFAULT);
         psg.clk = c;

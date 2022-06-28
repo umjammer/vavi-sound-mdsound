@@ -37,12 +37,16 @@ public class OkiM6258 extends Instrument.BaseInstrument {
 
         public byte status;
 
-        public int masterClock;    /* master clock frequency */
-        public int divider;         /* master clock divider */
-        public byte adpcmType;       /* 3/4 bit ADPCM select */
-        public byte dataIn;          /* ADPCM data-in register */
-        public byte nibbleShift;     /* nibble select */
-        //sound_stream *stream; /* which stream are we playing on? */
+        /* master clock frequency */
+        public int masterClock;
+        /* master clock divider */
+        public int divider;
+        /* 3/4 bit ADPCM select */
+        public byte adpcmType;
+        /* ADPCM data-in register */
+        public byte dataIn;
+        /* nibble select */
+        public byte nibbleShift;
 
         public byte outputBits;
         public int outputMask;
@@ -67,7 +71,7 @@ public class OkiM6258 extends Instrument.BaseInstrument {
         public int initialClock;
         public byte initialDiv;
 
-        public dlgSRATE_CALLBACK smpRateFunc;
+        public SRATE_CALLBACK smpRateFunc;
         public MDSound.Chip smpRateData;
 
         /**
@@ -77,12 +81,12 @@ public class OkiM6258 extends Instrument.BaseInstrument {
             int clkRnd;
 
             clkRnd = this.masterClock;
-            clkRnd += this.divider / 2;    // for better rounding - should help some of the streams
+            clkRnd += this.divider / 2; // for better rounding - should help some of the streams
             return clkRnd / this.divider;
         }
 
         private short clockAdpcm(byte nibble) {
-            int max = (int) this.outputMask - 1;
+            int max = this.outputMask - 1;
             int min = -(int) this.outputMask;
 
             int sample = diffLookup[this.step * 16 + (nibble & 15)];
@@ -105,7 +109,7 @@ public class OkiM6258 extends Instrument.BaseInstrument {
             return (short) (this.signal << 4);
         }
 
-        public interface dlgSRATE_CALLBACK extends BiConsumer<MDSound.Chip, Integer> {
+        public interface SRATE_CALLBACK extends BiConsumer<MDSound.Chip, Integer> {
         }
 
         /* step size index shift table */
@@ -159,13 +163,13 @@ public class OkiM6258 extends Instrument.BaseInstrument {
                 int nibbleShift = this.nibbleShift;
 
                 while (samples != 0) {
-                    //System.System.err.printf("status={0} this.nibbleShift={1} ", this.status, this.nibbleShift);
+                    //System.System.err.printf("status=%d this.nibbleShift=%d ", this.status, this.nibbleShift);
                     /* Compute the new amplitude and update the current step */
                     //int nibble = (this.data_in >> nibbleShift) & 0xf;
                     int nibble;
                     short sample;
 
-                    //System.System.err.printf("this.data_empty={0} ", this.data_empty);
+                    //System.System.err.printf("this.data_empty=%d ", this.data_empty);
                     if (nibbleShift == 0) {
                         // 1st nibble - get data
                         if (this.dataEmpty == 0) {
@@ -203,10 +207,10 @@ public class OkiM6258 extends Instrument.BaseInstrument {
                     nibbleShift ^= 4;
 
                     //*buffer++ = sample;
-                    //System.System.err.printf("this.pan={0} sample={1} ", this.pan, sample);
+                    //System.System.err.printf("this.pan=%d sample=%d ", this.pan, sample);
                     bufL[ind] = ((this.pan & 0x02) != 0) ? 0x00 : sample;
                     bufR[ind] = ((this.pan & 0x01) != 0) ? 0x00 : sample;
-                    //System.err.printf("001  bufL[{0}]={1}  bufR[{2}]={3}", ind, bufL[ind], ind, bufR[ind]);
+                    //System.err.printf("001  bufL[%d]=%d  bufR[%d]=%d", ind, bufL[ind], ind, bufR[ind]);
                     samples--;
                     ind++;
                 }
@@ -322,7 +326,7 @@ public class OkiM6258 extends Instrument.BaseInstrument {
         /**
          * write to the control port of an OKIM6258-compatible chip
          */
-        private void ctrl_w(/*offs_t offset, */byte data) {
+        private void writeControl(/*offs_t offset, */byte data) {
             if ((data & COMMAND_STOP) != 0) {
                 //System.err.printf("COMMAND:STOP");
                 //this.status &= (byte)(~((byte)STATUS_PLAYING | (byte)STATUS_RECORDING)));
@@ -341,7 +345,7 @@ public class OkiM6258 extends Instrument.BaseInstrument {
                     this.nibbleShift = 0;
 
                     this.dataBuf[0x00] = data;
-                    this.dataBufPos = 0x01;  // write pos 01, read pos 00
+                    this.dataBufPos = 0x01; // write pos 01, read pos 00
                     this.dataEmpty = 0x00;
                 }
                 this.step = 0;
@@ -372,7 +376,7 @@ public class OkiM6258 extends Instrument.BaseInstrument {
             //System.System.err.printf("port=%2x data=%2x \n", port, data);
             switch (port) {
             case 0x00:
-                ctrl_w(/*0x00, */data);
+                writeControl(/*0x00, */data);
                 break;
             case 0x01:
                 write((byte) 0x00, data);
@@ -395,7 +399,7 @@ public class OkiM6258 extends Instrument.BaseInstrument {
             }
         }
 
-        public void setCallback(dlgSRATE_CALLBACK callbackFunc, MDSound.Chip chip) {
+        public void setCallback(SRATE_CALLBACK callbackFunc, MDSound.Chip chip) {
             // set Sample Rate Change Callback routine
             this.smpRateFunc = callbackFunc;
             this.smpRateData = chip;
@@ -406,75 +410,75 @@ public class OkiM6258 extends Instrument.BaseInstrument {
     public OkiM6258State[] okiM6258Data = new OkiM6258State[] {new OkiM6258State(), new OkiM6258State()};
 
     @Override
-    public void update(byte chipID, int[][] outputs, int samples) {
-        OkiM6258State chip = okiM6258Data[chipID];
+    public void update(byte chipId, int[][] outputs, int samples) {
+        OkiM6258State chip = okiM6258Data[chipId];
         chip.update(outputs, samples);
 
-        visVolume[chipID][0][0] = outputs[0][0];
-        visVolume[chipID][0][1] = outputs[1][0];
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
     }
 
-    private int device_start_okim6258(byte chipID, int clock, int divider, int adpcm_type, int output_12bits) {
-        if (chipID >= MAX_CHIPS)
+    private int device_start_okim6258(byte chipId, int clock, int divider, int adpcm_type, int output_12bits) {
+        if (chipId >= MAX_CHIPS)
             return 0;
 
-        OkiM6258State info = okiM6258Data[chipID];
+        OkiM6258State info = okiM6258Data[chipId];
         return info.start(clock, divider, adpcm_type, output_12bits);
     }
 
     /**
      * stop emulation of an OKIM6258-compatible chip
      */
-    private void device_stop_okim6258(byte chipID) {
-        okiM6258Data[chipID] = null;
+    private void device_stop_okim6258(byte chipId) {
+        okiM6258Data[chipId] = null;
     }
 
-    private void device_reset_okim6258(byte chipID) {
-        OkiM6258State info = okiM6258Data[chipID];
+    private void device_reset_okim6258(byte chipId) {
+        OkiM6258State info = okiM6258Data[chipId];
         info.reset();
     }
 
-    private void okim6258_set_divider(byte chipID, int val) {
-        OkiM6258State info = okiM6258Data[chipID];
+    private void okim6258_set_divider(byte chipId, int val) {
+        OkiM6258State info = okiM6258Data[chipId];
         info.setDivider(val);
     }
 
-    private void okim6258_set_clock(byte chipID, int val) {
-        OkiM6258State info = okiM6258Data[chipID];
+    private void okim6258_set_clock(byte chipId, int val) {
+        OkiM6258State info = okiM6258Data[chipId];
         info.setClock(val);
     }
 
-    private int okim6258_get_vclk(byte chipID) {
-        OkiM6258State info = okiM6258Data[chipID];
+    private int okim6258_get_vclk(byte chipId) {
+        OkiM6258State info = okiM6258Data[chipId];
         return info.getVclk();
     }
 
     /**
      * read the status port of an OKIM6258-compatible chip
      */
-        /*byte okim6258_status_r(byte chipID, offs_t offset) {
-            OkiM6258State info = &OKIM6258Data[chipID];
+        /*byte okim6258_status_r(byte chipId, offs_t offset) {
+            OkiM6258State info = &OKIM6258Data[chipId];
 
             return (info.status & STATUS_PLAYING) ? 0x00 : 0x80;
         }*/
 
-    private void okim6258_data_w(byte chipID, /*offs_t offset, */byte data) {
-        OkiM6258State info = okiM6258Data[chipID];
+    private void okim6258_data_w(byte chipId, /*offs_t offset, */byte data) {
+        OkiM6258State info = okiM6258Data[chipId];
         info.data_write(data);
     }
 
-    private void okim6258_ctrl_w(byte chipID, /*offs_t offset, */byte data) {
-        OkiM6258State info = okiM6258Data[chipID];
-        info.ctrl_w(data);
+    private void okim6258_ctrl_w(byte chipId, /*offs_t offset, */byte data) {
+        OkiM6258State info = okiM6258Data[chipId];
+        info.writeControl(data);
     }
 
-    private void okim6258_set_clock_byte(byte chipID, byte Byte, byte val) {
-        OkiM6258State info = okiM6258Data[chipID];
+    private void okim6258_set_clock_byte(byte chipId, byte Byte, byte val) {
+        OkiM6258State info = okiM6258Data[chipId];
         info.setClock(val);
     }
 
-    private void okim6258_pan_w(byte chipID, byte data) {
-        OkiM6258State info = okiM6258Data[chipID];
+    private void okim6258_pan_w(byte chipId, byte data) {
+        OkiM6258State info = okiM6258Data[chipId];
         info.writePan(data);
     }
 
@@ -488,7 +492,7 @@ public class OkiM6258 extends Instrument.BaseInstrument {
 
                 // --- the following bits of info are returned as pointers to data or functions --- //
                 case DEVINFO_FCT_START:       info.start = DEVICE_START_NAME(OkiM6258);  break;
-                case DEVINFO_FCT_STOP:       // nothing //        break;
+                case DEVINFO_FCT_STOP: // nothing //        break;
                 case DEVINFO_FCT_RESET:       info.reset = DEVICE_RESET_NAME(OkiM6258);  break;
 
                 // --- the following bits of info are returned as NULL-terminated strings --- //
@@ -511,16 +515,16 @@ public class OkiM6258 extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(byte chipID, int clock) {
-        return start(chipID, 44100, clock, 0);
+    public int start(byte chipId, int clock) {
+        return start(chipId, 44100, clock, 0);
     }
 
     @Override
-    public int start(byte chipID, int samplingrate, int clockValue, Object... option) {
+    public int start(byte chipId, int samplingrate, int clockValue, Object... option) {
         int divider = ((int) option[0] & 0x03) >> 0;
         int adpcm_type = ((int) option[0] & 0x04) >> 2;
         int output_12bits = ((int) option[0] & 0x08) >> 3;
-        return (int) device_start_okim6258(chipID, clockValue, divider, adpcm_type, output_12bits);
+        return device_start_okim6258(chipId, clockValue, divider, adpcm_type, output_12bits);
     }
 
     @Override
@@ -534,17 +538,17 @@ public class OkiM6258 extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void stop(byte chipID) {
-        device_stop_okim6258(chipID);
+    public void stop(byte chipId) {
+        device_stop_okim6258(chipId);
     }
 
     @Override
-    public void reset(byte chipID) {
-        device_reset_okim6258(chipID);
+    public void reset(byte chipId) {
+        device_reset_okim6258(chipId);
     }
 
-    private void okim6258_write(byte chipID, byte port, byte data) {
-        OkiM6258State info = okiM6258Data[chipID];
+    private void okim6258_write(byte chipId, byte port, byte data) {
+        OkiM6258State info = okiM6258Data[chipId];
         info.write(port, data);
     }
 
@@ -552,14 +556,14 @@ public class OkiM6258 extends Instrument.BaseInstrument {
         OkiM6258State.internal10Bit = (byte) ((options >> 0) & 0x01);
     }
 
-    public void okim6258_set_srchg_cb(byte chipID, OkiM6258State.dlgSRATE_CALLBACK callbackFunc, MDSound.Chip chip) {
-        OkiM6258State info = okiM6258Data[chipID];
+    public void okim6258_set_srchg_cb(byte chipId, OkiM6258State.SRATE_CALLBACK callbackFunc, MDSound.Chip chip) {
+        OkiM6258State info = okiM6258Data[chipId];
         info.setCallback(callbackFunc, chip);
     }
 
     @Override
-    public int write(byte chipID, int port, int adr, int data) {
-        okim6258_write(chipID, (byte) adr, (byte) data);
+    public int write(byte chipId, int port, int adr, int data) {
+        okim6258_write(chipId, (byte) adr, (byte) data);
         return 0;
     }
 }

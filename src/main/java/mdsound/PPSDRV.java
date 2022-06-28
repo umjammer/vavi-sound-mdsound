@@ -20,31 +20,31 @@ public class PPSDRV extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void reset(byte chipID) {
-        PPS chip = chips[chipID];
-        chip.reset();;
+    public void reset(byte chipId) {
+        PPS chip = chips[chipId];
+        chip.reset();
     }
 
     @Override
-    public int start(byte chipID, int clock) {
-        return start(chipID, clock, 0);
+    public int start(byte chipId, int clock) {
+        return start(chipId, clock, 0);
     }
 
     @Override
-    public int start(byte chipID, int clock, int clockValue, Object... option) {
-        PPS chip = chips[chipID];
+    public int start(byte chipId, int clock, int clockValue, Object... option) {
+        PPS chip = chips[chipId];
         return chip.start(clock, (option != null && option.length > 0) ? (BiConsumer<Integer, Integer>) option[0] : null);
     }
 
     @Override
-    public void stop(byte chipID) {
-        PPS chip = chips[chipID];
+    public void stop(byte chipId) {
+        PPS chip = chips[chipId];
         chip.stop();
     }
 
     @Override
-    public int write(byte chipID, int port, int adr, int data) {
-        PPS chip = chips[chipID];
+    public int write(byte chipId, int port, int adr, int data) {
+        PPS chip = chips[chipId];
         return chip.write(port, adr, data);
     }
 
@@ -136,7 +136,7 @@ public class PPSDRV extends Instrument.BaseInstrument {
 
             if (!singleFlag && keyonFlag) {
                 // 2 重発音処理
-                volume2 = volume1;                  // 1 音目を 2 音目に移動
+                volume2 = volume1; // 1 音目を 2 音目に移動
                 dataOffset2 = dataOffset1;
                 dataSize2 = dataSize1;
                 dataXor2 = dataXor1;
@@ -144,12 +144,12 @@ public class PPSDRV extends Instrument.BaseInstrument {
                 tickXor2 = tickXor1;
             } else {
                 // 1 音目で再生
-                dataSize2 = -1;                     // 2 音目は停止中
+                dataSize2 = -1; // 2 音目は停止中
             }
 
             volume1 = ppsHd[num].volumeOfs + volshift;
             dataOffset1 = ppsHd[num].address;
-            dataSize1 = ppsHd[num].length;    // 1 音目を消して再生
+            dataSize1 = ppsHd[num].length; // 1 音目を消して再生
             dataXor1 = 0;
             if (lowCpuCheckFlag) {
                 tick1 = (int) (((8000 * a / 225) << 16) / samplingRate);
@@ -242,7 +242,7 @@ public class PPSDRV extends Instrument.BaseInstrument {
                 //  psg.mix(dest, 1);
                 //  dest += 2;
 
-                if (dataSize2 > 1) {   // ２音合成再生
+                if (dataSize2 > 1) { // ２音合成再生
                     dataXor2 += tickXor2;
                     if (dataXor2 >= 0x10000) {
                         dataSize2--;
@@ -365,7 +365,7 @@ public class PPSDRV extends Instrument.BaseInstrument {
 
                 h.add(p);
             }
-            ppsHd = h.toArray(new Header[h.size()]);
+            ppsHd = h.toArray(new Header[0]);
 
             return 0;
         }
@@ -378,8 +378,8 @@ public class PPSDRV extends Instrument.BaseInstrument {
             keyonFlag = false; // Keyon 中か？
             dataOffset1 = -1;
             dataOffset2 = -1;
-            dataXor1 = 0;                              // 現在の位置(小数部)
-            dataXor2 = 0;                              // 現在の位置(小数部)
+            dataXor1 = 0; // 現在の位置(小数部)
+            dataXor2 = 0; // 現在の位置(小数部)
             tick1 = 0;
             tick2 = 0;
             tickXor1 = 0;
@@ -429,34 +429,34 @@ public class PPSDRV extends Instrument.BaseInstrument {
     }
 
     // 音量設定
-    private void setVolume(byte chipID, int vol) {
-        PPS chip = chips[chipID];
+    private void setVolume(byte chipId, int vol) {
+        PPS chip = chips[chipId];
         chip.setVolume(vol);
     }
 
-    private void play(byte chipID, byte al, byte bh, byte bl) {
-        PPS chip = chips[chipID];
+    private void play(byte chipId, byte al, byte bh, byte bl) {
+        PPS chip = chips[chipId];
         chip.play(al, bh, bl);
     }
 
-    private void stop_(byte chipID) {
-        PPS chip = chips[chipID];
+    private void stop_(byte chipId) {
+        PPS chip = chips[chipId];
         chip.stop();
     }
 
-    private boolean setParam(byte chipID, byte paramno, byte data) {
-        PPS chip = chips[chipID];
+    private boolean setParam(byte chipId, byte paramno, byte data) {
+        PPS chip = chips[chipId];
         return chip.setParam(paramno, data);
     }
 
     @Override
-    public void update(byte chipID, int[][] outputs, int samples) {
-        PPS chip = chips[chipID];
+    public void update(byte chipId, int[][] outputs, int samples) {
+        PPS chip = chips[chipId];
         chip.update(outputs, samples);
     }
 
-    public int load(byte chipID, byte[] pcmData) {
-        PPS chip = chips[chipID];
+    public int load(byte chipId, byte[] pcmData) {
+        PPS chip = chips[chipId];
         return chip.load(pcmData);
     }
 }

@@ -16,33 +16,33 @@ public class X1_010 extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void reset(byte chipID) {
-        device_reset_x1_010(chipID);
+    public void reset(byte chipId) {
+        device_reset_x1_010(chipId);
     }
 
     @Override
-    public int start(byte chipID, int clock) {
-        return device_start_x1_010(chipID, 16000000);
+    public int start(byte chipId, int clock) {
+        return device_start_x1_010(chipId, 16000000);
     }
 
     @Override
-    public int start(byte chipID, int clock, int clockValue, Object... option) {
-        return device_start_x1_010(chipID, clockValue);
+    public int start(byte chipId, int clock, int clockValue, Object... option) {
+        return device_start_x1_010(chipId, clockValue);
     }
 
     @Override
-    public void stop(byte chipID) {
-        device_stop_x1_010(chipID);
+    public void stop(byte chipId) {
+        device_stop_x1_010(chipId);
     }
 
     @Override
-    public void update(byte chipID, int[][] outputs, int samples) {
-        seta_update(chipID, outputs, samples);
+    public void update(byte chipId, int[][] outputs, int samples) {
+        seta_update(chipId, outputs, samples);
     }
 
     @Override
-    public int write(byte chipID, int port, int adr, int data) {
-        seta_sound_w(chipID, (port << 8) | adr, (byte) data);
+    public int write(byte chipId, int port, int adr, int data) {
+        seta_sound_w(chipId, (port << 8) | adr, (byte) data);
         return 0;
     }
 
@@ -109,7 +109,7 @@ public class X1_010 extends Instrument.BaseInstrument {
         // Volume base
         private static final int VOL_BASE = 2 * 32 * 256 / 30;
 
-        /* this structure defines the parameters for a channel */
+        // this structure defines the parameters for a channel
         private static class Channel {
             public byte status;
             // volume / wave form no.
@@ -125,13 +125,13 @@ public class X1_010 extends Instrument.BaseInstrument {
             public byte[] reserve = new byte[2];
         }
 
-        /* Variables only used here */
+        // Variables only used here
 
-        public int rate;                               // Output sampling rate (Hz)
+        public int rate; // Output sampling rate (Hz)
         public int romSize;
         public byte[] rom;
-        public int soundEnable;                       // Sound output enable/disable
-        public byte[] reg = new byte[0x2000];              // X1-010 Register & wave form area
+        public int soundEnable; // Sound output enable/disable
+        public byte[] reg = new byte[0x2000]; // X1-010 Register & wave form area
         public int[] smpOffset = new int[SETA_NUM_CHANNELS];
         public int[] envOffset = new int[SETA_NUM_CHANNELS];
 
@@ -182,7 +182,7 @@ public class X1_010 extends Instrument.BaseInstrument {
                                 this.reg[ch * 8 + 0] &= 0xfe; // ~0x01: Key off +0: reg.status
                                 break;
                             }
-                            byte data = (byte) this.rom[start + delta];
+                            byte data = this.rom[start + delta];
                             bufL[i] += (data * volL / 256);
                             bufR[i] += (data * volR / 256);
                             smpOffs += smpStep;
@@ -200,7 +200,7 @@ public class X1_010 extends Instrument.BaseInstrument {
                                 (float) this.baseClock / 128.0 / 1024.0 / 4.0
                                         * this.reg[ch * 8 + 4] * (1 << ENV_BASE_BITS) / (float) this.rate + 0.5f
                         );
-                        /* Print some more debug info */
+                        // Print some more debug info
                         if (smpOffs == 0) {
                             //System.err.printf("Play waveform %X, channel %X volume %X freq %4X step %X offset %X\n",
                             //reg.volume, ch, reg.end, freq, smpStep, smpOffs);
@@ -209,7 +209,7 @@ public class X1_010 extends Instrument.BaseInstrument {
                             int delta = envOffs >> ENV_BASE_BITS;
                             // Envelope one shot mode
                             if ((this.reg[ch * 8 + 0] & 4) != 0 && delta >= 0x80) {
-                                this.reg[ch * 8 + 0] &= 0xfe;// ~0x01;                   // Key off
+                                this.reg[ch * 8 + 0] &= 0xfe;// ~0x01; // Key off
                                 break;
                             }
                             int vol = this.reg[env + (delta & 0x7f)];
@@ -278,7 +278,7 @@ public class X1_010 extends Instrument.BaseInstrument {
         public void write_rom(int romSize, int dataStart, int dataLength, byte[] romData, int romDataStartAddress/* = 0*/) {
             if (this.romSize != romSize) {
                 this.rom = new byte[romSize];
-                this.romSize = (int) romSize;
+                this.romSize = romSize;
                 for (int i = 0; i < romSize; i++) this.rom[i] = (byte) 0xff;
             }
             if (dataStart > romSize)
@@ -299,26 +299,26 @@ public class X1_010 extends Instrument.BaseInstrument {
     private static final int MAX_CHIPS = 0x02;
     private X1010State[] x1010Data = new X1010State[] {new X1010State(), new X1010State()};
 
-    private void seta_update(byte chipID, int[][] outputs, int samples) {
-        X1010State info = x1010Data[chipID];
+    private void seta_update(byte chipId, int[][] outputs, int samples) {
+        X1010State info = x1010Data[chipId];
         info.update(outputs, samples);
     }
 
-    private int device_start_x1_010(byte chipID, int clock) {
-        if (chipID >= MAX_CHIPS)
+    private int device_start_x1_010(byte chipId, int clock) {
+        if (chipId >= MAX_CHIPS)
             return 0;
 
-        X1010State info = x1010Data[chipID];
+        X1010State info = x1010Data[chipId];
         return info.start(clock);
     }
 
-    private void device_stop_x1_010(byte chipID) {
-        X1010State info = x1010Data[chipID];
+    private void device_stop_x1_010(byte chipId) {
+        X1010State info = x1010Data[chipId];
         info.stop();
     }
 
-    private void device_reset_x1_010(byte chipID) {
-        X1010State info = x1010Data[chipID];
+    private void device_reset_x1_010(byte chipId) {
+        X1010State info = x1010Data[chipId];
         info.reset();
     }
 
@@ -327,33 +327,33 @@ public class X1_010 extends Instrument.BaseInstrument {
    info.sound_enable = data;
   }*/
 
-    /* Use these for 8 bit CPUs */
+    // Use these for 8 bit CPUs
 
-    private byte seta_sound_r(byte chipID, int offset) {
-        X1010State info = x1010Data[chipID];
+    private byte seta_sound_r(byte chipId, int offset) {
+        X1010State info = x1010Data[chipId];
         return info.sound_r(offset);
     }
 
-    private void seta_sound_w(byte chipID, int offset, byte data) {
-        X1010State info = x1010Data[chipID];
+    private void seta_sound_w(byte chipId, int offset, byte data) {
+        X1010State info = x1010Data[chipId];
         info.sound_w(offset, data);
     }
 
-    public void x1_010_write_rom(byte chipID, int romSize, int dataStart, int dataLength, byte[] romData, int romDataStartAddress/* = 0*/) {
-        X1010State info = x1010Data[chipID];
+    public void x1_010_write_rom(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int romDataStartAddress/* = 0*/) {
+        X1010State info = x1010Data[chipId];
         info.write_rom(romSize, dataStart, dataLength, romData, romDataStartAddress);
     }
 
-    public void x1_010_set_mute_mask(byte chipID, int muteMask) {
-        X1010State info = x1010Data[chipID];
+    public void x1_010_set_mute_mask(byte chipId, int muteMask) {
+        X1010State info = x1010Data[chipId];
         info.set_mute_mask(muteMask);
     }
 
-    /* Use these for 16 bit CPUs */
+    // Use these for 16 bit CPUs
 
   /*READ16_DEVICE_HANDLER( seta_sound_word_r ) {
    //X1010State *info = get_safe_token(device);
-   X1010State *info = &X1010Data[chipID];
+   X1010State *info = &X1010Data[chipId];
    int ret;
 
    ret = info.HI_WORD_BUF[offset]<<8;
@@ -364,7 +364,7 @@ public class X1_010 extends Instrument.BaseInstrument {
 
   WRITE16_DEVICE_HANDLER( seta_sound_word_w ) {
    //X1010State *info = get_safe_token(device);
-   X1010State *info = &X1010Data[chipID];
+   X1010State *info = &X1010Data[chipId];
    info.HI_WORD_BUF[offset] = (data>>8)&0xff;
    seta_sound_w( device, offset, data&0xff );
    System.err.printf(( "%s: Write X1-010 Offset:%04X Data:%04X\n", device.machine().describe_context(), offset, data ));
@@ -380,8 +380,8 @@ public class X1_010 extends Instrument.BaseInstrument {
 
     // --- the following bits of info are returned as pointers to data or functions ---
     case DEVINFO_FCT_START:       info.start = DEVICE_START_NAME( X1_010 );   break;
-    case DEVINFO_FCT_STOP:       // Nothing //         break;
-    case DEVINFO_FCT_RESET:       // Nothing //         break;
+    case DEVINFO_FCT_STOP: // Nothing //         break;
+    case DEVINFO_FCT_RESET: // Nothing //         break;
 
     // --- the following bits of info are returned as NULL-terminated strings ---
     case DEVINFO_STR_NAME:       strcpy(info.s, "X1-010");      break;

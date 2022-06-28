@@ -14,7 +14,7 @@ public class Chorus {
     private int currentCh = 0;
 
     public static class ChInfo {
-        public boolean sw = false;
+        public boolean sw;
 
         // コーラスのかかり具合。0.0～1.0の間
         public float mix = 0.3f;
@@ -29,26 +29,26 @@ public class Chorus {
          * リングバッファ
          * @see "https://vstcpp.wpblog.jp/?p=1505"
          */
-        public CRingBuffur ringbufL, ringbufR;
+        public RingBuffur ringBufL, ringBufR;
 
         // ディレイタイムをサンプル数に変換して設定
         // depth分だけ読み込むサンプル位置が動くので、動いた際にintervalが0以下にならないようにする
         // とりあえず1000サンプル程度とする
         // (intervalはリングバッファ https://vstcpp.wpblog.jp/?p=1505 参照)
-        public int delaysample;
+        public int delaySample;
 
         public float theta;
         // public float speed;
 
         public ChInfo(int clock) {
-            delaysample = 10;
+            delaySample = 10;
             theta = 0; // ディレイ読み込み位置を揺らすためのsin関数の角度 θ。初期値は0
 
             sw = false;
-            ringbufL = new CRingBuffur(clock, 0.02f);
-            ringbufR = new CRingBuffur(clock, 0.02f);
-            ringbufL.setInterval(delaysample);
-            ringbufR.setInterval(delaysample);
+            ringBufL = new RingBuffur(clock, 0.02f);
+            ringBufR = new RingBuffur(clock, 0.02f);
+            ringBufL.setInterval(delaySample);
+            ringBufR.setInterval(delaySample);
         }
     }
 
@@ -106,20 +106,20 @@ public class Chorus {
         int p2 = (int) (a + 1);
 
         // 前後の整数値から読み込み位置の値を線形補間で割り出す
-        float lerpL1 = lerp(ci.ringbufL.read(p1), ci.ringbufL.read(p2), a - (float) p1);
-        float lerpR1 = lerp(ci.ringbufR.read(p1), ci.ringbufR.read(p2), a - (float) p1);
+        float lerpL1 = lerp(ci.ringBufL.read(p1), ci.ringBufL.read(p2), a - (float) p1);
+        float lerpR1 = lerp(ci.ringBufR.read(p1), ci.ringBufR.read(p2), a - (float) p1);
 
         // 入力信号にディレイ信号を混ぜる
         float tmpL = (1.0f - ci.mix) * finL + ci.mix * lerpL1;
         float tmpR = (1.0f - ci.mix) * finR + ci.mix * lerpR1;
 
         // ディレイ信号として入力信号とフィードバック信号をリングバッファに書き込み
-        ci.ringbufL.write((1.0f - ci.feedback) * finL + ci.feedback * tmpL);
-        ci.ringbufR.write((1.0f - ci.feedback) * finR + ci.feedback * tmpR);
+        ci.ringBufL.write((1.0f - ci.feedback) * finL + ci.feedback * tmpL);
+        ci.ringBufR.write((1.0f - ci.feedback) * finR + ci.feedback * tmpR);
 
         // リングバッファの状態を更新する
-        ci.ringbufL.update();
-        ci.ringbufR.update();
+        ci.ringBufL.update();
+        ci.ringBufR.update();
 
         // 出力信号に書き込む
         finL = tmpL;

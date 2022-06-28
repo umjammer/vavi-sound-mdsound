@@ -17,7 +17,7 @@ public class FileIO {
         Open(0x000001),
         Readonly(0x000002),
         Create(0x000004);
-        int v;
+        final int v;
 
         Flags(int v) {
             this.v = v;
@@ -33,7 +33,7 @@ public class FileIO {
         file_not_found(1),
         sharing_violation(2),
         unknown(-1);
-        int v;
+        final int v;
 
         Error(int v) {
             this.v = v;
@@ -115,7 +115,7 @@ public class FileIO {
         flags = (hFile == null ? 0 : Flags.Open.v);
         setLogicalOrigin(0);
 
-        return (flags & (int) Flags.Open.v) > 0;
+        return (flags & Flags.Open.v) > 0;
     }
 
     /**
@@ -142,7 +142,7 @@ public class FileIO {
         flags = (hFile == null ? 0 : Flags.Open.v);
         setLogicalOrigin(0);
 
-        return (flags & (int) Flags.Open.v) > 0;
+        return (flags & Flags.Open.v) > 0;
     }
 
     /**
@@ -199,7 +199,7 @@ public class FileIO {
         switch (method) {
         case BEGIN:
             wmethod = SeekOrigin.Begin;
-            fpos += (int) lOrigin;
+            fpos += lOrigin;
             break;
         case CURRENT:
             wmethod = SeekOrigin.Current;

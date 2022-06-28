@@ -2,6 +2,7 @@ package mdsound.x68sound;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -28,11 +29,11 @@ public class Opm {
     private Op[][] op = new Op[][] {
             new Op[4], new Op[4], new Op[4], new Op[4],
             new Op[4], new Op[4], new Op[4], new Op[4]
-    };  // オペレータ0～31
-    private int envCounter1;    // エンベロープ用カウンタ1 (0,1,2,3,4,5,6,...)
-    private int envCounter2;    // エンベロープ用カウンタ2 (3,2,1,3,2,1,3,2,...)
+    }; // オペレータ0～31
+    private int envCounter1; // エンベロープ用カウンタ1 (0,1,2,3,4,5,6,...)
+    private int envCounter2; // エンベロープ用カウンタ2 (3,2,1,3,2,1,3,2,...)
     // int con[N_CH]; // アルゴリズム 0～7
-    private int[][] pan = new int[][] {new int[Global.N_CH], new int[Global.N_CH]};  // 0:無音 -1:出力
+    private int[][] pan = new int[][] {new int[Global.N_CH], new int[Global.N_CH]}; // 0:無音 -1:出力
     // int pms[N_CH]; // 0, 1, 2, 4, 10, 20, 80, 140
     // int ams[N_CH]; // 右シフト回数 31(0), 2(1), 1(2), 0(3)
     // int pmd;
@@ -74,22 +75,22 @@ public class Opm {
     // int LfoTime; // LFO専用 t
     // int LfoRndTime; // LFOランダム波専用t
     // int
-    // int Lfrq;  // LFO周波数設定値 LFRQ
+    // int Lfrq; // LFO周波数設定値 LFRQ
     // int LfoWaveForm; // LFO wave form
     // inline void CalcLfoStep();
     //inline void SetConnection(int ch, int alg);
     private int[][] opOut = new int[][] {new int[1], new int[1], new int[1], new int[1], new int[1], new int[1], new int[1], new int[1]};
     private int[] opOutDummy = new int[1];
 
-    private int timerAreg10;    // OPMreg$10の値
-    private int timerAreg11;    // OPMreg$11の値
-    private int timerA;         // タイマーAのオーバーフロー設定値
-    private int timerAcounter;  // タイマーAのカウンター値
-    private int timerB;         // タイマーBのオーバーフロー設定値
-    private int timerBcounter;  // タイマーBのカウンター値
-    private int timerReg;      // タイマー制御レジスタ (OPMreg$14の下位4ビット+7ビット)
-    private int statReg;       // OPMステータスレジスタ ($E90003の下位2ビット)
-    private Runnable opmIntProc;  // OPM割り込みコールバック関数
+    private int timerAreg10; // OPMreg$10の値
+    private int timerAreg11; // OPMreg$11の値
+    private int timerA; // タイマーAのオーバーフロー設定値
+    private int timerAcounter; // タイマーAのカウンター値
+    private int timerB; // タイマーBのオーバーフロー設定値
+    private int timerBcounter; // タイマーBのカウンター値
+    private int timerReg; // タイマー制御レジスタ (OPMreg$14の下位4ビット+7ビット)
+    private int statReg; // OPMステータスレジスタ ($E90003の下位2ビット)
+    private Runnable opmIntProc; // OPM割り込みコールバック関数
 
     public double inpopmbuf_dummy;
     private short[] inpOpmBuf0 = new short[global.OPMLPF_COL * 2], InpOpmBuf1 = new short[global.OPMLPF_COL * 2];
@@ -107,34 +108,34 @@ public class Opm {
     private int[] inpInpOpmPrev2 = new int[2], inpOpmPrev2 = new int[2];
     private int[] opmHpfInp = new int[2], opmHpfInpPrev = new int[2], opmHpfOut = new int[2];
     private int[] outInpAdpcm = new int[2], outInpAdpcmPrev = new int[2], outInpAdpcmPrev2 = new int[2],
-            outOutAdpcm = new int[2], outOutAdpcmPrev = new int[2], outOutAdpcmPrev2 = new int[2];  // 高音フィルター２用バッファ
+            outOutAdpcm = new int[2], outOutAdpcmPrev = new int[2], outOutAdpcmPrev2 = new int[2]; // 高音フィルター２用バッファ
     private int[] outInpOutAdpcm = new int[2], outInpOutAdpcmPrev = new int[2], outInpOutAdpcmPrev2 = new int[2],
-            outOutInpAdpcm = new int[2], outOutInpAdpcmPrev = new int[2];          // 高音フィルター３用バッファ
+            outOutInpAdpcm = new int[2], outOutInpAdpcmPrev = new int[2]; // 高音フィルター３用バッファ
 
     private byte ppiReg;
-    private byte adpcmBaseClock;   // ADPCMクロック切り替え(0:8MHz 1:4Mhz)
+    private byte adpcmBaseClock; // ADPCMクロック切り替え(0:8MHz 1:4Mhz)
     //inline void SetAdpcmRate();
 
-    private byte opmRegNo;     // 現在指定されているOPMレジスタ番号
-    private byte opmRegNoBackup;      // バックアップ用OPMレジスタ番号
+    private byte opmRegNo; // 現在指定されているOPMレジスタ番号
+    private byte opmRegNoBackup; // バックアップ用OPMレジスタ番号
     private Runnable betwIntProc; // マルチメディアタイマー割り込み
-    private Supplier<Integer> waveFunc;     // WaveFunc
+    private Supplier<Integer> waveFunc; // WaveFunc
 
-    private int useOpmFlag;     // OPMを利用するかどうかのフラグ
-    private int useAdpcmFlag;   // ADPCMを利用するかどうかのフラグ
+    private int useOpmFlag; // OPMを利用するかどうかのフラグ
+    private int useAdpcmFlag; // ADPCMを利用するかどうかのフラグ
     private int _betw;
     private int _pcmbuf;
     private int _late;
     private int _rev;
 
-    private int dousaMode;     // 0:非動作 1:X68Sound_Start中  2:X68Sound_PcmStart中
+    private int dousaMode; // 0:非動作 1:X68Sound_Start中  2:X68Sound_PcmStart中
 
-    private int opmChMask;      // Channel Mask
+    private int opmChMask; // Channel Mask
 
     //public:
     private Adpcm adpcm = null;
     //private:
-    private Pcm8[] pcm8 = new Pcm8[global.PCM8_NCH];
+    private Pcm8[] pcm8 = new Pcm8[Global.PCM8_NCH];
 
     // int TotalVolume; // 音量 x/256
 
@@ -247,29 +248,28 @@ public class Opm {
                 inpOpmPrev[0] = inpOpmPrev[1] =
                         inpOpmPrev2[0] = inpOpmPrev2[1] =
                                 outOpm[0] = outOpm[1] = 0;
-        {
-            int i;
-            for (i = 0; i < global.OPMLPF_COL * 2; ++i) {
-                inpOpmBuf0[i] = InpOpmBuf1[i] = 0;
-            }
-            inpOpmIdx = 0;
-            opmLPFidx = 0;
-            opmLPFpBuf = global.OPMLOWPASS;
-            opmLPFpPtr = 0;
+
+        for (int i = 0; i < global.OPMLPF_COL * 2; ++i) {
+            inpOpmBuf0[i] = InpOpmBuf1[i] = 0;
         }
+        inpOpmIdx = 0;
+        opmLPFidx = 0;
+        opmLPFpBuf = global.OPMLOWPASS;
+        opmLPFpPtr = 0;
+
         opmHpfInp[0] = opmHpfInp[1] =
                 opmHpfInpPrev[0] = opmHpfInpPrev[1] =
                         opmHpfOut[0] = opmHpfOut[1] = 0;
-            /* {
-                    int i,j;
-                    for (i=0; i<ADPCMLPF_COL*2; ++i) {
-                        InpAdpcmBuf0[i]=InpAdpcmBuf1[i]=0;
-                    }
-                    InpAdpcm_idx = 0;
-                    AdpcmLPFidx = 0;
-                    AdpcmLPFp = ADPCMLOWPASS[0];
+        /* {
+                int i,j;
+                for (i=0; i<ADPCMLPF_COL*2; ++i) {
+                    InpAdpcmBuf0[i]=InpAdpcmBuf1[i]=0;
                 }
-            */
+                InpAdpcm_idx = 0;
+                AdpcmLPFidx = 0;
+                AdpcmLPFp = ADPCMLOWPASS[0];
+            }
+        */
         outInpAdpcm[0] = outInpAdpcm[1] =
                 outInpAdpcmPrev[0] = outInpAdpcmPrev[1] =
                         outInpAdpcmPrev2[0] = outInpAdpcmPrev2[1] =
@@ -285,29 +285,23 @@ public class Opm {
                                                 0;
 
         // 全オペレータを初期化
-        {
-            int ch;
-            for (ch = 0; ch < Global.N_CH; ++ch) {
-                op[ch][0] = new Op(global);
-                op[ch][1] = new Op(global);
-                op[ch][2] = new Op(global);
-                op[ch][3] = new Op(global);
-                op[ch][0].init();
-                op[ch][1].init();
-                op[ch][2].init();
-                op[ch][3].init();
-                //   con[ch] = 0;
-                setConnection(ch, 0);
-                pan[0][ch] = pan[1][ch] = 0;
-            }
+        for (int ch = 0; ch < Global.N_CH; ++ch) {
+            op[ch][0] = new Op(global);
+            op[ch][1] = new Op(global);
+            op[ch][2] = new Op(global);
+            op[ch][3] = new Op(global);
+            op[ch][0].init();
+            op[ch][1].init();
+            op[ch][2].init();
+            op[ch][3].init();
+            //   con[ch] = 0;
+            setConnection(ch, 0);
+            pan[0][ch] = pan[1][ch] = 0;
         }
 
         // エンベロープ用カウンタを初期化
-        {
-            envCounter1 = 0;
-            envCounter2 = 3;
-        }
-
+        envCounter1 = 0;
+        envCounter2 = 3;
 
         // LFO初期化
         lfo.init();
@@ -315,7 +309,6 @@ public class Opm {
         // PcmBufポインターをリセット
         pcmBufPtr = 0;
         // PcmBufSize = PCMBUFSIZE;
-
 
         // タイマー関係の初期化
         timerAreg10 = 0;
@@ -331,22 +324,17 @@ public class Opm {
         ppiReg = 0x0B;
         adpcmBaseClock = 0;
 
-
         adpcm.init();
 
-        {
-            int i;
-            for (i = 0; i < global.PCM8_NCH; ++i) {
-                if (pcm8[i] == null) {
-                    pcm8[i] = new Pcm8(global);
-                }
-                pcm8[i].init();
+        for (int i = 0; i < Global.PCM8_NCH; ++i) {
+            if (pcm8[i] == null) {
+                pcm8[i] = new Pcm8(global);
             }
+            pcm8[i].init();
         }
 
         global.totalVolume = 256;
         // TotalVolume = 192;
-
 
         opmRegNo = 0;
         betwIntProc = null;
@@ -360,8 +348,7 @@ public class Opm {
 // #endif
 
 // #if ROMEO
-//        if (UseOpmFlag == 2)
-//        {
+//        if (UseOpmFlag == 2) {
 //            juliet_YM2151Reset();
 //            juliet_YM2151Mute(0);
 //        }
@@ -420,13 +407,11 @@ public class Opm {
                                                 0;
 
         // 全オペレータを初期化
-        {
-            for (int ch = 0; ch < Global.N_CH; ++ch) {
-                op[ch][0].initSamprate();
-                op[ch][1].initSamprate();
-                op[ch][2].initSamprate();
-                op[ch][3].initSamprate();
-            }
+        for (int ch = 0; ch < Global.N_CH; ++ch) {
+            op[ch][0].initSamprate();
+            op[ch][1].initSamprate();
+            op[ch][2].initSamprate();
+            op[ch][3].initSamprate();
         }
 
         // LFOを初期化
@@ -461,7 +446,7 @@ public class Opm {
         dousaMode = 0;
         opmChMask = 0;
 
-        final List<BiConsumer<Byte, Byte>> a = Arrays.asList(
+        @SuppressWarnings("RedundantTypeArguments (explicit type arguments speedup compilation and analysis time)") final List<BiConsumer<Byte, Byte>> a = Arrays.<BiConsumer<Byte, Byte>>asList(
                 this::dmy, this::ExeCmd_LfoReset, this::dmy, this::dmy              // 00-03
                 , this::dmy, this::dmy, this::dmy, this::dmy              // 04-07
                 , this::ExeCmd_KON, this::dmy, this::dmy, this::dmy              // 08-0B
@@ -527,7 +512,7 @@ public class Opm {
                 , this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr     // F8-FB
                 , this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr     // FC-FF
         );
-        cmdTbl = a.toArray(new BiConsumer[a.size()]);
+        cmdTbl = a.toArray(new BiConsumer[0]);
         //new BiConsumer<Byte, Byte>[]
 
 // #if C86CTL
@@ -565,92 +550,59 @@ public class Opm {
     private void makeTable() {
 
         // sinテーブルを作成
-        {
-            int i;
-            for (i = 0; i < Global.SIZESINTBL; ++i) {
-                global.SINTBL[i] = (short) (Math.sin(2.0 * Math.PI * (i + 0.0) / Global.SIZESINTBL) * (Global.MAXSINVAL) + 0.5);
-            }
-            //  for (i=0; i<SIZESINTBL/4; ++i) {
-            //   short s = sin(2.0*PI*i/(SIZESINTBL-0))*(MAXSINVAL+0.0) +0.9;
-            //   SINTBL[i] = s;
-            //   SINTBL[SIZESINTBL/2-1-i] = s;
-            //   SINTBL[i+SIZESINTBL/2] = -s;
-            //   SINTBL[SIZESINTBL-1-i] = -s;
-            //  }
-
+        for (int i = 0; i < Global.SIZESINTBL; ++i) {
+            global.SINTBL[i] = (short) (Math.sin(2.0 * Math.PI * (i + 0.0) / Global.SIZESINTBL) * (Global.MAXSINVAL) + 0.5);
         }
-
 
         // エンベロープ値 → α 変換テーブルを作成
-        {
-            int i;
-            for (i = 0; i <= global.ALPHAZERO + Global.SIZEALPHATBL; ++i) {
-                global.ALPHATBL[i] = 0;
-            }
-            for (i = 17; i <= Global.SIZEALPHATBL; ++i) {
-                global.ALPHATBL[global.ALPHAZERO + i] = (int) (Math.floor(
-                        Math.pow(2.0, -((Global.SIZEALPHATBL) - i) * (128.0 / 8.0) / (Global.SIZEALPHATBL))
-                                * 1.0 * 1.0 * Global.PRECISION + 0.0));
-            }
+        for (int i = 0; i <= global.ALPHAZERO + Global.SIZEALPHATBL; ++i) {
+            global.ALPHATBL[i] = 0;
         }
+        for (int i = 17; i <= Global.SIZEALPHATBL; ++i) {
+            global.ALPHATBL[global.ALPHAZERO + i] = (int) (Math.floor(
+                    Math.pow(2.0, -((Global.SIZEALPHATBL) - i) * (128.0 / 8.0) / (Global.SIZEALPHATBL))
+                            * 1.0 * 1.0 * Global.PRECISION + 0.0));
+        }
+
         // エンベロープ値 → Noiseα 変換テーブルを作成
-        {
-            int i;
-            for (i = 0; i <= global.ALPHAZERO + Global.SIZEALPHATBL; ++i) {
-                global.NOISEALPHATBL[i] = 0;
-            }
-            for (i = 17; i <= Global.SIZEALPHATBL; ++i) {
-                global.NOISEALPHATBL[global.ALPHAZERO + i] = (int) Math.floor(
-                        i * 1.0 / (Global.SIZEALPHATBL)
-                                * 1.0 * 0.25 * Global.PRECISION + 0.0); // Noise音量はOpの1/4
-            }
+        for (int i = 0; i <= global.ALPHAZERO + Global.SIZEALPHATBL; ++i) {
+            global.NOISEALPHATBL[i] = 0;
+        }
+        for (int i = 17; i <= Global.SIZEALPHATBL; ++i) {
+            global.NOISEALPHATBL[global.ALPHAZERO + i] = (int) Math.floor(
+                    i * 1.0 / (Global.SIZEALPHATBL)
+                            * 1.0 * 0.25 * Global.PRECISION + 0.0); // Noise音量はOpの1/4
         }
 
         // D1L → D1l 変換テーブルを作成
-        {
-            int i;
-            for (i = 0; i < 15; ++i) {
-                global.D1LTBL[i] = i * 2;
-            }
-            global.D1LTBL[15] = (15 + 16) * 2;
+        for (int i = 0; i < 15; ++i) {
+            global.D1LTBL[i] = i * 2;
         }
-
+        global.D1LTBL[15] = (15 + 16) * 2;
 
         // C1 <. M2 入れ替えテーブルを作成
-        {
-            int slot;
-            for (slot = 0; slot < 8; ++slot) {
-                SLOTTBL[slot] = slot * 4;
-                SLOTTBL[slot + 8] = slot * 4 + 2;
-                SLOTTBL[slot + 16] = slot * 4 + 1;
-                SLOTTBL[slot + 24] = slot * 4 + 3;
-            }
+        for (int slot = 0; slot < 8; ++slot) {
+            SLOTTBL[slot] = slot * 4;
+            SLOTTBL[slot + 8] = slot * 4 + 2;
+            SLOTTBL[slot + 16] = slot * 4 + 1;
+            SLOTTBL[slot + 24] = slot * 4 + 3;
         }
 
         // Pitch→Δt変換テーブルを作成
-        {
-            int oct, notekf, step;
-
-            for (oct = 0; oct <= 10; ++oct) {
-                for (notekf = 0; notekf < 12 * 64; ++notekf) {
-                    if (oct >= 3) {
-                        step = Global.STEPTBL_O2[notekf] << (oct - 3);
-                    } else {
-                        step = Global.STEPTBL_O2[notekf] >> (3 - oct);
-                    }
-                    global.STEPTBL[oct * 12 * 64 + notekf] = (int) (step * 64 * (long) (global.opmRate) / Global.samprate);
+        for (int oct = 0; oct <= 10; ++oct) {
+            for (int notekf = 0; notekf < 12 * 64; ++notekf) {
+                int step;
+                if (oct >= 3) {
+                    step = Global.STEPTBL_O2[notekf] << (oct - 3);
+                } else {
+                    step = Global.STEPTBL_O2[notekf] >> (3 - oct);
                 }
+                global.STEPTBL[oct * 12 * 64 + notekf] = (int) (step * 64 * (long) (global.opmRate) / Global.samprate);
             }
-            //  for (notekf=0; notekf<11*12*64; ++notekf) {
-            //   STEPTBL3[notekf] = STEPTBL[notekf]/3.0+0.5;
-            //  }
         }
 
-        {
-            int i;
-            for (i = 0; i <= 128 + 4 - 1; ++i) {
-                global.DT1TBL[i] = (int) (Global.DT1TBL_org[i] * 64 * (long) (global.opmRate) / Global.samprate);
-            }
+        for (int i = 0; i <= 128 + 4 - 1; ++i) {
+            global.DT1TBL[i] = (int) (Global.DT1TBL_org[i] * 64 * (long) (global.opmRate) / Global.samprate);
         }
     }
 
@@ -777,10 +729,10 @@ public class Opm {
                     int t1, t2;
                     byte regno, data;
                     t1 = 0;// timeGetTime();
-                    t2 = (int) ((cmndBuf[cmndReadIdx][0] * 0x1000000) +
+                    t2 = (cmndBuf[cmndReadIdx][0] * 0x1000000) +
                             (cmndBuf[cmndReadIdx][1] * 0x10000) +
                             (cmndBuf[cmndReadIdx][2] * 0x100) +
-                            (cmndBuf[cmndReadIdx][3] * 0x1));
+                            (cmndBuf[cmndReadIdx][3] * 0x1);
                     t1 -= t2;
                     if (t1 < _late) break;
                     regno = cmndBuf[cmndReadIdx][4];
@@ -1209,15 +1161,12 @@ public class Opm {
 
     static int rate = 0;
 
-    public void pcmset62(short[] buffer, int offset, int ndata, BiConsumer<Runnable, Boolean> oneFrameProc/* = null*/)
-    //public void pcmset62(int ndata)
-    {
+    public void pcmset62(short[] buffer, int offset, int ndata, BiConsumer<Runnable, Boolean> oneFrameProc/* = null*/) {
 
         //DetectMMX();
 
-        int i;
         pcmBufPtr = 0;
-        for (i = 0; i < ndata / 2; ++i) {
+        for (int i = 0; i < ndata / 2; ++i) {
             //int[] Out = new int[];
             out[0] = out[1] = 0;
             boolean firstFlg = true;
@@ -1226,10 +1175,8 @@ public class Opm {
             while (opmLPFidx >= Global.waveOutSamp) {
                 opmLPFidx -= Global.waveOutSamp;
 
-                //int[] OutInpOpm = new int[];
                 outInpOpm[0] = outInpOpm[1] = 0;
                 if (useOpmFlag != 0) {
-                    //static int rate = 0;
                     rate -= global.opmRate;
                     while (rate < 0) {
                         rate += global.opmRate;
@@ -1252,32 +1199,25 @@ public class Opm {
                     }
 
                     if (useOpmFlag == 1) {
-                        {
-                            lfo.update();
+                        for (int ch = 0; ch < 8; ++ch) {
+                            op[ch][1].inp[0] = op[ch][2].inp[0] = op[ch][3].inp[0] = opOut[ch][0] = 0;
 
-                            //int[] lfopitch = new int[];
-                            //int[] lfolevel = new int[];
-                            int ch;
-                            for (ch = 0; ch < 8; ++ch) {
-                                op[ch][1].inp[0] = op[ch][2].inp[0] = op[ch][3].inp[0] = opOut[ch][0] = 0;
-
-                                lfoPitch[ch] = lfo.getPmValue(ch);
-                                lfoLevel[ch] = lfo.getAmValue(ch);
-                            }
-                            for (ch = 0; ch < 8; ++ch) {
-                                op[ch][0].output0(lfoPitch[ch], lfoLevel[ch]);
-                            }
-                            for (ch = 0; ch < 8; ++ch) {
-                                op[ch][1].output(lfoPitch[ch], lfoLevel[ch]);
-                            }
-                            for (ch = 0; ch < 8; ++ch) {
-                                op[ch][2].output(lfoPitch[ch], lfoLevel[ch]);
-                            }
-                            for (ch = 0; ch < 7; ++ch) {
-                                op[ch][3].output(lfoPitch[ch], lfoLevel[ch]);
-                            }
-                            op[7][3].output32(lfoPitch[7], lfoLevel[7]);
+                            lfoPitch[ch] = lfo.getPmValue(ch);
+                            lfoLevel[ch] = lfo.getAmValue(ch);
                         }
+                        for (int ch = 0; ch < 8; ++ch) {
+                            op[ch][0].output0(lfoPitch[ch], lfoLevel[ch]);
+                        }
+                        for (int ch = 0; ch < 8; ++ch) {
+                            op[ch][1].output(lfoPitch[ch], lfoLevel[ch]);
+                        }
+                        for (int ch = 0; ch < 8; ++ch) {
+                            op[ch][2].output(lfoPitch[ch], lfoLevel[ch]);
+                        }
+                        for (int ch = 0; ch < 7; ++ch) {
+                            op[ch][3].output(lfoPitch[ch], lfoLevel[ch]);
+                        }
+                        op[7][3].output32(lfoPitch[7], lfoLevel[7]);
 
                         // OpmHpfInp[] に OPM の出力PCMをステレオ加算
                         if ((opmChMask & 0xff) != 0) {
@@ -1315,8 +1255,8 @@ public class Opm {
                                     + (opOut[6][0] & pan[1][6])
                                     + (opOut[7][0] & pan[1][7]);
                         }
-                        opmHpfInp[0] = (opmHpfInp[0] & -1024) << 4;// (int)0xFFFFFC00) << 4;
-                        opmHpfInp[1] = (opmHpfInp[1] & -1024) << 4;// (int)0xFFFFFC00) << 4;
+                        opmHpfInp[0] = (opmHpfInp[0] & -1024) << 4;
+                        opmHpfInp[1] = (opmHpfInp[1] & -1024) << 4;
 
                         opmHpfOut[0] = opmHpfInp[0] - opmHpfInpPrev[0]
                                 + opmHpfOut[0] - (opmHpfOut[0] >> 10) - (opmHpfOut[0] >> 12);
@@ -1328,11 +1268,6 @@ public class Opm {
                         inpInpOpm[0] = opmHpfOut[0] >> (4 + 5);
                         inpInpOpm[1] = opmHpfOut[1] >> (4 + 5);
 
-                        //     InpInpOpm[0] = (InpInpOpm[0]&(int)0xFFFFFC00)
-                        //         >> ((SIZESINTBL_BITS+PRECISION_BITS)-10-5); // 8*-2^17 ～ 8*+2^17
-                        //     InpInpOpm[1] = (InpInpOpm[1]&(int)0xFFFFFC00)
-                        //         >> ((SIZESINTBL_BITS+PRECISION_BITS)-10-5); // 8*-2^17 ～ 8*+2^17
-
                         inpInpOpm[0] = inpInpOpm[0] * 29;
                         inpInpOpm[1] = inpInpOpm[1] * 29;
                         inpOpm[0] = (inpInpOpm[0] + inpInpOpmPrev[0]
@@ -1342,47 +1277,32 @@ public class Opm {
                         inpInpOpmPrev[0] = inpInpOpm[0];
                         inpInpOpmPrev[1] = inpInpOpm[1];
 
+                        // OPMとADPCMの音量バランス調整
                         outInpOpm[0] = inpOpm[0] >> 5; // 8*-2^12 ～ 8*+2^12
                         outInpOpm[1] = inpOpm[1] >> 5; // 8*-2^12 ～ 8*+2^12
-                        //     OutInpOpm[0] = (InpOpm[0]*521) >> (5+9); // 8*-2^12 ～ 8*+2^12
-                        //     OutInpOpm[1] = (InpOpm[1]*521) >> (5+9); // OPMとADPCMの音量バランス調整
-                    }  // UseOpmFlags == 1
-                }   // UseOpmFlag
+                    }
+                }
 
                 if (useAdpcmFlag != 0) {
                     outInpAdpcm[0] = outInpAdpcm[1] = 0;
                     // OutInpAdpcm[] に Adpcm の出力PCMを加算
-                    {
-                        int o;
-                        o = adpcm.getPcm62();
-                        if ((opmChMask & 0x100) == 0)
-                            if (o != -2147483648)//0x80000000)
-                            {
-                                outInpAdpcm[0] += ((((int) (ppiReg) >> 1) & 1) - 1) & o;
-                                outInpAdpcm[1] += (((int) (ppiReg) & 1) - 1) & o;
-                            }
-                    }
+                    int o = adpcm.getPcm62();
+                    if ((opmChMask & 0x100) == 0)
+                        if (o != -2147483648) {
+                            outInpAdpcm[0] += ((((int) (ppiReg) >> 1) & 1) - 1) & o;
+                            outInpAdpcm[1] += (((int) (ppiReg) & 1) - 1) & o;
+                        }
 
                     // OutInpAdpcm[] に Pcm8 の出力PCMを加算
-                    {
-                        int ch;
-                        for (ch = 0; ch < Global.PCM8_NCH; ++ch) {
-                            int pan;
-                            pan = pcm8[ch].getMode();
-                            int o;
-                            o = pcm8[ch].getPcm62();
-                            if ((opmChMask & (0x100 << ch)) == 0)
-                                if (o != -2147483648)//0x80000000)
-                                {
-                                    outInpAdpcm[0] += (-(pan & 1)) & o;
-                                    outInpAdpcm[1] += (-((pan >> 1) & 1)) & o;
-                                }
-                        }
+                    for ( int ch = 0; ch < Global.PCM8_NCH; ++ch) {
+                        int pan = pcm8[ch].getMode();
+                        int o2 = pcm8[ch].getPcm62();
+                        if ((opmChMask & (0x100 << ch)) == 0)
+                            if (o2 != -2147483648) {
+                                outInpAdpcm[0] += (-(pan & 1)) & o;
+                                outInpAdpcm[1] += (-((pan >> 1) & 1)) & o;
+                            }
                     }
-
-
-                    //    OutInpAdpcm[0] >>= 4;
-                    //    OutInpAdpcm[1] >>= 4;
 
                     // 音割れ防止
                     int LIMITS = ((1 << (15 + 4)) - 1);
@@ -1429,30 +1349,28 @@ public class Opm {
                     outOutAdpcmPrev[0] = outOutAdpcm[0];
                     outOutAdpcmPrev[1] = outOutAdpcm[1];
 
-                    //    OutInpOpm[0] += OutOutAdpcm[0] >> 4; // -2048*16～+2048*16
-                    //    OutInpOpm[1] += OutOutAdpcm[1] >> 4; // -2048*16～+2048*16
-                    outInpOpm[0] += (outOutAdpcm[0] * 506) >> (4 + 9);  // -2048*16～+2048*16
-                    outInpOpm[1] += (outOutAdpcm[1] * 506) >> (4 + 9);  // OPMとADPCMの音量バランス調整
-                }   // UseAdpcmFlag
-
+                    // OPMとADPCMの音量バランス調整
+                    // -2048*16～+2048*16
+                    outInpOpm[0] += (outOutAdpcm[0] * 506) >> (4 + 9);
+                    outInpOpm[1] += (outOutAdpcm[1] * 506) >> (4 + 9);
+                }
 
                 // 音割れ防止
-                int PCM_LIMITS = ((1 << 15) - 1);
-                if ((int) (outInpOpm[0] + PCM_LIMITS) > (int) (PCM_LIMITS * 2)) {
-                    if ((int) (outInpOpm[0] + PCM_LIMITS) >= (int) (PCM_LIMITS * 2)) {
+                final int PCM_LIMITS = ((1 << 15) - 1);
+                if ((outInpOpm[0] + PCM_LIMITS) > (PCM_LIMITS * 2)) {
+                    if ((outInpOpm[0] + PCM_LIMITS) >= (PCM_LIMITS * 2)) {
                         outInpOpm[0] = PCM_LIMITS;
                     } else {
                         outInpOpm[0] = -PCM_LIMITS;
                     }
                 }
-                if ((int) (outInpOpm[1] + PCM_LIMITS) > (int) (PCM_LIMITS * 2)) {
-                    if ((int) (outInpOpm[1] + PCM_LIMITS) >= (int) (PCM_LIMITS * 2)) {
+                if ((outInpOpm[1] + PCM_LIMITS) > (PCM_LIMITS * 2)) {
+                    if ((outInpOpm[1] + PCM_LIMITS) >= (PCM_LIMITS * 2)) {
                         outInpOpm[1] = PCM_LIMITS;
                     } else {
                         outInpOpm[1] = -PCM_LIMITS;
                     }
                 }
-                //#undef PCM_LIMITS
 
                 --inpOpmIdx;
                 if (inpOpmIdx < 0) inpOpmIdx = global.OPMLPF_COL - 1;
@@ -1462,10 +1380,10 @@ public class Opm {
                         InpOpmBuf1[inpOpmIdx + global.OPMLPF_COL] = (short) outInpOpm[1];
             }
 
-            global.OpmFir(opmLPFpBuf[opmLPFpPtr], inpOpmBuf0, (int) inpOpmIdx, InpOpmBuf1, (int) inpOpmIdx, outOpm);
+            global.OpmFir(opmLPFpBuf[opmLPFpPtr], inpOpmBuf0, inpOpmIdx, InpOpmBuf1, inpOpmIdx, outOpm);
 
-            opmLPFpPtr += 1;// Global.OPMLPF_COL;
-            if (opmLPFpPtr >= global.OPMLPF_ROW) {// Global.OPMLOWPASS[Global.OPMLPF_ROW]) {
+            opmLPFpPtr += 1;
+            if (opmLPFpPtr >= global.OPMLPF_ROW) {
                 opmLPFpBuf = global.OPMLOWPASS;
                 opmLPFpPtr = 0;
             }
@@ -1474,14 +1392,12 @@ public class Opm {
             outOpm[0] = (outOpm[0] * global.totalVolume) >> 8;
             outOpm[1] = (outOpm[1] * global.totalVolume) >> 8;
 
-            out[0] -= outOpm[0];    // -4096 ～ +4096
+            out[0] -= outOpm[0]; // -4096 ～ +4096
             out[1] -= outOpm[1];
-
 
             // WaveFunc()の出力値を加算
             if (waveFunc != null) {
-                int ret;
-                ret = waveFunc.get();
+                int ret = waveFunc.get();
                 out[0] += (short) ret;
                 out[1] += (ret >> 16);
             }
@@ -1503,8 +1419,6 @@ public class Opm {
                 }
             }
 
-            //PcmBuf[PcmBufPtr * 2 + 0] = (short)Out[0];
-            //PcmBuf[PcmBufPtr * 2 + 1] = (short)Out[1];
             buffer[offset + pcmBufPtr * 2 + 0] = (short) out[0];
             buffer[offset + pcmBufPtr * 2 + 1] = (short) out[1];
 
@@ -1513,7 +1427,6 @@ public class Opm {
                 pcmBufPtr = 0;
             }
         }
-
     }
 
     private int[] out = new int[2];
@@ -1523,13 +1436,10 @@ public class Opm {
     int rate_b = 0;
     int rate2 = 0;
 
-    public void pcmset22(short[] buffer, int offset, int ndata)
-    //public void pcmset22(int ndata)
-    {
+    public void pcmset22(short[] buffer, int offset, int ndata) {
         pcmBufPtr = 0;
 
-        int i;
-        for (i = 0; i < ndata / 2; ++i) {
+        for (int i = 0; i < ndata / 2; ++i) {
             out[0] = out[1] = 0;
 
             if (useOpmFlag != 0) {
@@ -1546,40 +1456,33 @@ public class Opm {
                         ++envCounter1;
                         int slot;
                         for (slot = 0; slot < 32; ++slot) {
-                            //Op[0][slot].Envelope(EnvCounter1);
                             op[slot / 4][slot % 4].envelope(envCounter1);
                         }
                     }
                 }
 
                 if (useOpmFlag == 1) {
-                    {
-                        lfo.update();
+                    lfo.update();
 
-                        //int[] lfopitch = new int[];
-                        //int[] lfolevel = new int[];
-                        int ch;
-                        for (ch = 0; ch < 8; ++ch) {
-                            op[ch][1].inp[0] = op[ch][2].inp[0] = op[ch][3].inp[0] = opOut[ch][0] = 0;
+                    for (int ch = 0; ch < 8; ++ch) {
+                        op[ch][1].inp[0] = op[ch][2].inp[0] = op[ch][3].inp[0] = opOut[ch][0] = 0;
 
-                            lfoPitch[ch] = lfo.getPmValue(ch);
-                            lfoLevel[ch] = lfo.getAmValue(ch);
-                        }
-                        for (ch = 0; ch < 8; ++ch) {
-                            op[ch][0].output0(lfoPitch[ch], lfoLevel[ch]);
-                        }
-                        for (ch = 0; ch < 8; ++ch) {
-                            op[ch][1].output(lfoPitch[ch], lfoLevel[ch]);
-                        }
-                        for (ch = 0; ch < 8; ++ch) {
-                            op[ch][2].output(lfoPitch[ch], lfoLevel[ch]);
-                        }
-                        for (ch = 0; ch < 7; ++ch) {
-                            op[ch][3].output(lfoPitch[ch], lfoLevel[ch]);
-                        }
-                        op[7][3].output32(lfoPitch[7], lfoLevel[7]);
+                        lfoPitch[ch] = lfo.getPmValue(ch);
+                        lfoLevel[ch] = lfo.getAmValue(ch);
                     }
-
+                    for (int ch = 0; ch < 8; ++ch) {
+                        op[ch][0].output0(lfoPitch[ch], lfoLevel[ch]);
+                    }
+                    for (int ch = 0; ch < 8; ++ch) {
+                        op[ch][1].output(lfoPitch[ch], lfoLevel[ch]);
+                    }
+                    for (int ch = 0; ch < 8; ++ch) {
+                        op[ch][2].output(lfoPitch[ch], lfoLevel[ch]);
+                    }
+                    for (int ch = 0; ch < 7; ++ch) {
+                        op[ch][3].output(lfoPitch[ch], lfoLevel[ch]);
+                    }
+                    op[7][3].output32(lfoPitch[7], lfoLevel[7]);
 
                     // InpInpOpm[] に OPM の出力PCMをステレオ加算
                     if ((opmChMask & 0xff) != 0) {
@@ -1618,13 +1521,11 @@ public class Opm {
                                 + (opOut[7][0] & pan[1][7]);
                     }
 
-                    {
+                    inpInpOpm[0] = (inpInpOpm[0] & -1024)
+                            >> ((Global.SIZESINTBL_BITS + Global.PRECISION_BITS) - 10 - 5); // 8*-2^17 ～ 8*+2^17
+                    inpInpOpm[1] = (inpInpOpm[1] & -1024)
+                            >> ((Global.SIZESINTBL_BITS + Global.PRECISION_BITS) - 10 - 5); // 8*-2^17 ～ 8*+2^17
 
-                        inpInpOpm[0] = (inpInpOpm[0] & -1024)//(int)0xFFFFFC00)
-                                >> ((Global.SIZESINTBL_BITS + Global.PRECISION_BITS) - 10 - 5); // 8*-2^17 ～ 8*+2^17
-                        inpInpOpm[1] = (inpInpOpm[1] & -1024)//(int)0xFFFFFC00)
-                                >> ((Global.SIZESINTBL_BITS + Global.PRECISION_BITS) - 10 - 5); // 8*-2^17 ～ 8*+2^17
-                    }
                     inpOpm[0] = inpInpOpm[0];
                     inpOpm[1] = inpInpOpm[1];
 
@@ -1635,10 +1536,9 @@ public class Opm {
                     out[0] -= outOpm[0] >> (5); // -4096 ～ +4096
                     out[1] -= outOpm[1] >> (5);
 
-                    //System.err.printf("outOpm0:{0} outOpm1:{1}", OutOpm[0], OutOpm[1]);
-
-                }  // UseOpmFlags == 1
-            }  // UseOpmFlags
+                    //System.err.printf("outOpm0:%d outOpm1:%d", OutOpm[0], OutOpm[1]);
+                }
+            }
 
             if (useAdpcmFlag != 0) {
                 //static int rate2 = 0;
@@ -1648,42 +1548,33 @@ public class Opm {
 
                     outInpAdpcm[0] = outInpAdpcm[1] = 0;
                     // OutInpAdpcm[] に Adpcm の出力PCMを加算
-                    {
-                        int o;
-                        o = adpcm.getPcm();
-                        if ((opmChMask & 0x100) == 0)
-                            if (o != -2147483648)//0x80000000)
+                    int o = adpcm.getPcm();
+                    if ((opmChMask & 0x100) == 0)
+                        if (o != -2147483648) {
+                            outInpAdpcm[0] += ((((int) (ppiReg) >> 1) & 1) - 1) & o;
+                            outInpAdpcm[1] += (((int) (ppiReg) & 1) - 1) & o;
+                        }
+
+                    // OutInpAdpcm[] に Pcm8 の出力PCMを加算
+                    for (int ch = 0; ch < Global.PCM8_NCH; ++ch) {
+                        int pan = pcm8[ch].getMode();
+                        int o2 = pcm8[ch].getPcm();
+                        if ((opmChMask & (0x100 << ch)) == 0)
+                            if (o2 != -2147483648)//0x80000000)
                             {
-                                outInpAdpcm[0] += ((((int) (ppiReg) >> 1) & 1) - 1) & o;
-                                outInpAdpcm[1] += (((int) (ppiReg) & 1) - 1) & o;
+                                outInpAdpcm[0] += (-(pan & 1)) & o;
+                                outInpAdpcm[1] += (-((pan >> 1) & 1)) & o;
                             }
                     }
 
-                    // OutInpAdpcm[] に Pcm8 の出力PCMを加算
-                    {
-                        int ch;
-                        for (ch = 0; ch < global.PCM8_NCH; ++ch) {
-                            int pan;
-                            pan = pcm8[ch].getMode();
-                            int o;
-                            o = pcm8[ch].getPcm();
-                            if ((opmChMask & (0x100 << ch)) == 0)
-                                if (o != -2147483648)//0x80000000)
-                                {
-                                    outInpAdpcm[0] += (-(pan & 1)) & o;
-                                    outInpAdpcm[1] += (-((pan >> 1) & 1)) & o;
-                                }
-                        }
-                    }
-
                     // 全体の音量を調整
-                    //     OutInpAdpcm[0] = (OutInpAdpcm[0]*TotalVolume) >> 8;
-                    //     OutInpAdpcm[1] = (OutInpAdpcm[1]*TotalVolume) >> 8;
+                    //OutInpAdpcm[0] = (OutInpAdpcm[0]*TotalVolume) >> 8;
+                    //OutInpAdpcm[1] = (OutInpAdpcm[1]*TotalVolume) >> 8;
 
                     // 音割れ防止
-                    int PCM_LIMITS = ((1 << 19) - 1);
+                    final int PCM_LIMITS = ((1 << 19) - 1);
                     if ((outInpAdpcm[0] + PCM_LIMITS) > (PCM_LIMITS * 2)) {
-                        if ((outInpAdpcm[0] + PCM_LIMITS) >= (int) (PCM_LIMITS * 2)) {
+                        if ((outInpAdpcm[0] + PCM_LIMITS) >= (PCM_LIMITS * 2)) {
                             outInpAdpcm[0] = PCM_LIMITS;
                         } else {
                             outInpAdpcm[0] = -PCM_LIMITS;
@@ -1696,7 +1587,6 @@ public class Opm {
                             outInpAdpcm[1] = -PCM_LIMITS;
                         }
                     }
-                    //#undef PCM_LIMITS
 
                     outInpAdpcm[0] *= 40;
                     outInpAdpcm[1] *= 40;
@@ -1716,10 +1606,7 @@ public class Opm {
                 outOutAdpcmPrev[0] = outOutAdpcm[0];
                 outOutAdpcmPrev[1] = outOutAdpcm[1];
 
-
-                //   Out[0] += OutAdpcm[0] >> 4; // -2048*16～+2048*16
-                //   Out[1] += OutAdpcm[1] >> 4;
-                out[0] -= outOutAdpcm[0] >> 4;  // -2048*16～+2048*16
+                out[0] -= outOutAdpcm[0] >> 4; // -2048*16～+2048*16
                 out[1] -= outOutAdpcm[1] >> 4;
             }
 
@@ -1727,15 +1614,13 @@ public class Opm {
             //  Out[0] = (Out[0]*TotalVolume) >> 8;
             //  Out[1] = (Out[1]*TotalVolume) >> 8;
 
-
             // WaveFunc()の出力値を加算
             if (waveFunc != null) {
                 int ret;
                 ret = waveFunc.get();
-                out[0] += (int) (short) ret;
+                out[0] += (short) ret;
                 out[1] += (ret >> 16);
             }
-
 
             // 音割れ防止
             if ((out[0] + 32767) > (32767 * 2)) {
@@ -1746,18 +1631,16 @@ public class Opm {
                 }
             }
             if ((out[1] + 32767) > (32767 * 2)) {
-                if ((int) (out[1] + 32767) >= (32767 * 2)) {
+                if ((out[1] + 32767) >= (32767 * 2)) {
                     out[1] = 32767;
                 } else {
                     out[1] = -32767;
                 }
             }
 
-            //PcmBuf[PcmBufPtr * 2 + 0] = (short)Out[0];
-            //PcmBuf[PcmBufPtr * 2 + 1] = (short)Out[1];
             buffer[offset + pcmBufPtr * 2 + 0] = (short) out[0];
             buffer[offset + pcmBufPtr * 2 + 1] = (short) out[1];
-            //System.err.printf("PcmBufPtr:{0} out0:{1} out1:{2}",PcmBufPtr, PcmBuf[PcmBufPtr*2+0], PcmBuf[PcmBufPtr*2+1]);
+            //System.err.printf("PcmBufPtr:%d out0:%d out1:%d",PcmBufPtr, PcmBuf[PcmBufPtr*2+0], PcmBuf[PcmBufPtr*2+1]);
             ++pcmBufPtr;
             if (pcmBufPtr >= pcmBufSize) {
                 pcmBufPtr = 0;
@@ -1769,7 +1652,6 @@ public class Opm {
         if (dousaMode != 2) {
             return X68Sound.SNDERR_NOTACTIVE;
         }
-        //PcmBuf = (short(*)[2])buf;
         pcmBuf = buf;
         pcmBufPtr = 0;
         if (Global.waveOutSamp == 44100 || Global.waveOutSamp == 48000) {
@@ -1783,36 +1665,35 @@ public class Opm {
 
     private void timer() {
         //if (_InterlockedCompareExchange(&TimerSemapho, 1, 0) == 1) {
-        //return;
+        // return;
         //}
 
-        int prev_stat = statReg;
-        int flag_set = 0;
-        if ((timerReg & 0x01) != 0) {   // TimerA 動作中
+        int prevStat = statReg;
+        int flagSet = 0;
+        if ((timerReg & 0x01) != 0) { // TimerA 動作中
             ++timerAcounter;
             if (timerAcounter >= timerA) {
-                flag_set |= ((timerReg >> 2) & 0x01);
+                flagSet |= ((timerReg >> 2) & 0x01);
                 timerAcounter = 0;
                 if ((timerReg & 0x80) != 0) csmKeyOn();
             }
         }
-        if ((timerReg & 0x02) != 0) {   // TimerB 動作中
+        if ((timerReg & 0x02) != 0) { // TimerB 動作中
             ++timerBcounter;
             if (timerBcounter >= timerB) {
-                flag_set |= ((timerReg >> 2) & 0x02);
+                flagSet |= ((timerReg >> 2) & 0x02);
                 timerBcounter = 0;
             }
         }
 
-        // int next_stat = StatReg;
+        //int next_stat = StatReg;
 
-        statReg |= flag_set;
+        statReg |= flagSet;
 
         global.timerSemapho = 0;
 
-        if (flag_set != 0) {
-            if (
-                    prev_stat == 0) {
+        if (flagSet != 0) {
+            if (prevStat == 0) {
                 if (opmIntProc != null) {
                     opmIntProc.run();
                 }
@@ -1877,17 +1758,17 @@ public class Opm {
         _rev = (int) 1.0;
 
         if (samprate == 44100) {
-            global.samprate = global.opmRate;
+            Global.samprate = global.opmRate;
             global.OPMLPF_ROW = global.OPMLPF_ROW_44;
             global.OPMLOWPASS = Global.OPMLOWPASS_44;
         } else if (samprate == 48000) {
-            global.samprate = global.opmRate;
+            Global.samprate = global.opmRate;
             global.OPMLPF_ROW = global.OPMLPF_ROW_48;
             global.OPMLOWPASS = Global.OPMLOWPASS_48;
         } else {
-            global.samprate = samprate;
+            Global.samprate = samprate;
         }
-        global.waveOutSamp = samprate;
+        Global.waveOutSamp = samprate;
 
         makeTable();
         reset();
@@ -1906,17 +1787,17 @@ public class Opm {
         free();
 
         if (samprate == 44100) {
-            global.samprate = global.opmRate;
+            Global.samprate = global.opmRate;
             global.OPMLPF_ROW = global.OPMLPF_ROW_44;
             global.OPMLOWPASS = Global.OPMLOWPASS_44;
         } else if (samprate == 48000) {
-            global.samprate = global.opmRate;
+            Global.samprate = global.opmRate;
             global.OPMLPF_ROW = global.OPMLPF_ROW_48;
             global.OPMLOWPASS = Global.OPMLOWPASS_48;
         } else {
-            global.samprate = samprate;
+            Global.samprate = samprate;
         }
-        global.waveOutSamp = samprate;
+        Global.waveOutSamp = samprate;
 
         makeTable();
         resetSamprate();
@@ -1952,56 +1833,46 @@ public class Opm {
     private int waveAndTimerStart() {
 
         global.Betw_Time = _betw;
-        global.TimerResolution = (int) _betw;
+        global.TimerResolution = _betw;
         global.Late_Time = _late + _betw;
-        global.betwSamplesSlower = (int) Math.floor((double) (global.waveOutSamp) * _betw / 1000.0 - _rev);
-        global.betwSamplesFaster = (int) Math.ceil((double) (global.waveOutSamp) * _betw / 1000.0 + _rev);
-        global.betwSamplesVerySlower = (int) (Math.floor((double) (global.waveOutSamp) * _betw / 1000.0 - _rev) / 8.0);
-        global.lateSamples = global.waveOutSamp * global.Late_Time / 1000;
+        global.betwSamplesSlower = (int) Math.floor((double) (Global.waveOutSamp) * _betw / 1000.0 - _rev);
+        global.betwSamplesFaster = (int) Math.ceil((double) (Global.waveOutSamp) * _betw / 1000.0 + _rev);
+        global.betwSamplesVerySlower = (int) (Math.floor((double) (Global.waveOutSamp) * _betw / 1000.0 - _rev) / 8.0);
+        global.lateSamples = Global.waveOutSamp * global.Late_Time / 1000;
 
-        // Blk_Samples = WaveOutSamp/N_waveblk;
         global.blkSamples = global.lateSamples;
 
-        // Faster_Limit = Late_Samples;
-        // Faster_Limit = WaveOutSamp*50/1000;
-        if (global.lateSamples >= global.waveOutSamp * 175 / 1000) {
-            global.fasterLimit = global.lateSamples - global.waveOutSamp * 125 / 1000;
+        if (global.lateSamples >= Global.waveOutSamp * 175 / 1000) {
+            global.fasterLimit = global.lateSamples - Global.waveOutSamp * 125 / 1000;
         } else {
-            global.fasterLimit = global.waveOutSamp * 50 / 1000;
+            global.fasterLimit = Global.waveOutSamp * 50 / 1000;
         }
         if (global.fasterLimit > global.lateSamples) global.fasterLimit = global.lateSamples;
         global.Slower_Limit = global.fasterLimit;
-        // Slower_Limit = WaveOutSamp*100/1000;
-        // Slower_Limit = Late_Samples;
         if (global.Slower_Limit > global.lateSamples) global.Slower_Limit = global.lateSamples;
 
         if (dousaMode != 1) {
             return 0;
         }
 
-
-        pcmBufSize = (int) (global.blkSamples * global.N_waveblk);
-        global.nSamples = (int) (global.betwSamplesFaster);
+        pcmBufSize = global.blkSamples * global.N_waveblk;
+        global.nSamples = global.betwSamplesFaster;
 
         //if (naudio != null) naudio.Stop();
         //naudio = new NAudioWrap(Global.WaveOutSamp, Global.OpmTimeProc);
         // naudio.Start();
 
-        //try
-        //{
+        //try {
         //    Global.thread_handle = WinAPI.CreateThread(IntPtr.Zero, 0, Global.keepWaveOutThread, IntPtr.Zero, 0, out Global.thread_id);
         //    WinAPI.SetThreadPriority(Global.thread_handle, 1);// THREAD_PRIORITY_ABOVE_NORMAL);
         //    WinAPI.SetThreadPriority(Global.thread_handle, -1);// THREAD_PRIORITY_BELOW_NORMAL);
         //    WinAPI.SetThreadPriority(Global.thread_handle, 2);// THREAD_PRIORITY_HIGHEST);
-        //}
-        //catch
-        //{
+        //} catch {
         //    Free();
         //    Global.ErrorCode = 5;
         //    return X68Sound.X68SNDERR_TIMER;
         //}
         //while (Global.thread_flag == 0) System.Threading.Thread.Sleep(100);
-
 
         //WinAPI.MMRESULT ret;
 
@@ -2016,169 +1887,53 @@ public class Opm {
 
         //Global.timer_start_flag = 0;
         //if ((ret = WinAPI.waveOutOpen(Global.hwo, Global.WAVE_MAPPER, wfx, Global.keepWaveOutProc, 0, Global.CALLBACK_FUNCTION))
-        //!= WinAPI.MMRESULT.MMSYSERR_NOERROR)
-        //{
+        //!= WinAPI.MMRESULT.MMSYSERR_NOERROR) {
         //    Global.hwo = IntPtr.Zero;
         //    Free();
         //    Global.ErrorCode = 0x10000000 + (int)ret;
         //    return X68Sound.X68SNDERR_PCMOUT;
         //}
-        ////if (waveOutReset(hwo) != MMRESULT.MMSYSERR_NOERROR)
-        ////{
+        ////if (waveOutReset(hwo) != MMRESULT.MMSYSERR_NOERROR) {
         ////    waveOutClose(hwo);
         ////    hwo = IntPtr.Zero;
         ////    return X68Sound.X68SNDERR_PCMOUT;
         ////}
 
-
-        //PcmBuf = (short(*)[2])GlobalAllocPtr(GMEM_MOVEABLE | GMEM_SHARE, PcmBufSize * 2 * 2);
         pcmBuf = new short[pcmBufSize * 2];
-        //for (int i = 0; i < PcmBufSize; i++) PcmBuf[i] = new short[2];
-        if (pcmBuf == null) {
-            free();
-            global.ErrorCode = 2;
-            return X68Sound.SNDERR_MEMORY;
-        }
-        //lpwh = (LPWAVEHDR)GlobalAllocPtr(GMEM_MOVEABLE | GMEM_SHARE,
-        //(DWORD)sizeof(WAVEHDR) * N_waveblk);
-        //if (!lpwh)
-        //{
-        //Free();
-        //ErrorCode = 3;
-        //return X68SNDERR_MEMORY;
-        //}
 
         // pcmset(Late_Samples);
-        {
-            int i;
-            for (i = 0; i < pcmBufSize * 2; ++i) {
-                //PcmBuf[i][0] = PcmBuf[i][1] = 0;
-                pcmBuf[i] = 0;
-            }
+        for (int i = 0; i < pcmBufSize * 2; ++i) {
+            pcmBuf[i] = 0;
         }
 
-        //{
-        //    int i;
-        //    Global.N_wavehdr = 0;
-        //    GCHandle gch = GCHandle.Alloc(PcmBuf, GCHandleType.Pinned);
-        //    for (i = 0; i < Global.N_waveblk; ++i)
-        //    {
-        //        WinAPI.WaveHdr waveHdr = new WinAPI.WaveHdr();
-        //        Global.WaveHdrList.add(waveHdr);
-
-        //        waveHdr.lpData = gch.AddrOfPinnedObject() + Global.Blk_Samples * i * sizeof(short) * 2;
-        //        waveHdr.dwBufferLength = (int)(Global.Blk_Samples * sizeof(short) * 2);
-        //        waveHdr.dwUser = i == 0 ? GCHandle.ToIntPtr(gch) : IntPtr.Zero;
-        //        waveHdr.dwFlags = 0;
-        //        waveHdr.dwLoops = 0;
-
-        //        if ((ret = WinAPI.waveOutPrepareHeader(Global.hwo, waveHdr, Marshal.SizeOf(typeof(WinAPI.WaveHdr)))) != WinAPI.MMRESULT.MMSYSERR_NOERROR)
-        //        {
-        //            Free();
-        //            Global.ErrorCode = 0x20000000 + (int)ret;
-        //            return X68Sound.X68SNDERR_PCMOUT;
-        //        }
-        //        ++Global.N_wavehdr;
-        //    }
-        //}
-
-        pcmBufPtr = (int) (global.blkSamples + global.lateSamples + global.betwSamplesFaster);
+        pcmBufPtr = global.blkSamples + global.lateSamples + global.betwSamplesFaster;
         while (pcmBufPtr >= pcmBufSize) pcmBufPtr -= pcmBufSize;
         global.waveblk = 0;
         global.playingblk = 0;
         // playingblk_next = playingblk+1;
-        {
-            int i;
-            for (i = 0; i < global.N_waveblk; ++i) {
-                //WinAPI.PostThreadMessage(Global.thread_id, Global.THREADMES_WAVEOUTDONE, (int)Ptr.Zero, IntPtr.Zero);
-            }
+        for (int i = 0; i < global.N_waveblk; ++i) {
+            //WinAPI.PostThreadMessage(Global.thread_id, Global.THREADMES_WAVEOUTDONE, (int)Ptr.Zero, IntPtr.Zero);
         }
 
         //WinAPI.timeBeginPeriod(Global.TimerResolution);
         //int usrctx = 0;
         //TimerID = WinAPI.timeSetEvent((int)Global.Betw_Time, Global.TimerResolution, Global.keepOpmTimeProc, usrctx , Global.TIME_PERIODIC);
-        //if (TimerID == 0)
-        //{
+        //if (TimerID == 0) {
         //    Free();
         //    Global.ErrorCode = 4;
         //    return X68Sound.X68SNDERR_TIMER;
         //}
 
-        //while (Global.timer_start_flag == 0) System.Threading.Thread.Sleep(200);   // マルチメディアタイマーの処理が開始されるまで待つ
+        //while (Global.timer_start_flag == 0) System.Threading.Thread.Sleep(200); // マルチメディアタイマーの処理が開始されるまで待つ
 
         return 0;
     }
 
-
     public void free() {
-// #if C86CTL
-//    if (pChipBase)
-//    {
-//        if (pChipOPM)
-//        {
-//            pChipOPM.reset();
-//            pChipOPM = 0;
-//        }
-//        pChipBase.deinitialize();
-//        pChipBase = 0;
-//    }
-// #endif
-
-// #if ROMEO
-//    if (UseOpmFlag == 2)
-//    {
-//        juliet_YM2151Reset();
-//        juliet_unload();
-//    }
-// #endif
-        //if (naudio != null) naudio.Stop();
-
-        //if (TimerID != 0)
-        //{   // マルチメディアタイマー停止
-        //    WinAPI.timeKillEvent(TimerID);
-        //    TimerID = 0;
-        //    WinAPI.timeEndPeriod(Global.TimerResolution);
-        //}
-        //if (Global.thread_handle != IntPtr.Zero)
-        //{   // スレッド停止
-        //    WinAPI.PostThreadMessage(Global.thread_id,Global.THREADMES_KILL, (int)Ptr.Zero, IntPtr.Zero);
-        //    WinAPI.WaitForSingleObject(Global.thread_handle, 0xFFFFFFFF);// INFINITE);
-        //    WinAPI.CloseHandle(Global.thread_handle);
-        //    Global.thread_handle = IntPtr.Zero;
-        //}
-        global.timer_start_flag = 0;   // マルチメディアタイマーの処理を停止
-        //if (Global.hwo != IntPtr.Zero)
-        //{       // ウェーブ再生停止
-        //        //  waveOutReset(hwo);
-        //    if (Global.WaveHdrList.Count>0)
-        //    {
-        //        int i;
-        //        for (i = 0; i <Global.N_wavehdr; ++i)
-        //        {
-        //            WinAPI.waveOutUnprepareHeader(Global.hwo, Global.WaveHdrList[i], Marshal.SizeOf(typeof(WinAPI.WaveHdr)));
-        //            if (Global.WaveHdrList[i].dwUser != IntPtr.Zero)
-        //            {
-        //                GCHandle gch = GCHandle.FromIntPtr(Global.WaveHdrList[i].dwUser);
-        //                gch.Free();
-        //            }
-        //        }
-        //        Global.N_wavehdr = 0;
-        //        //GlobalFreePtr(lpwh);
-        //        Global.WaveHdrList.Clear();
-        //    }
-        //    WinAPI.waveOutClose(Global.hwo);
-        //    //if (PcmBuf) { GlobalFreePtr(PcmBuf); PcmBuf = NULL; }
-        //    Global.hwo = IntPtr.Zero;
-        //}
-
+        global.timer_start_flag = 0; // マルチメディアタイマーの処理を停止
 
         dousaMode = 0;
     }
-
-    protected void finalinze() {
-        free();
-    }
-
 
     public void opmInt(Runnable proc) {
         opmIntProc = proc;
@@ -2189,45 +1944,10 @@ public class Opm {
     }
 
     public void adpcmPoke(byte data) {
-        //#ifdef ADPCM_POLY
-// #if false
-        // PCM8テスト
-// if (data & 0x02) { // ADPCM再生開始
-//  static int pcm8_pantbl[]={3,1,2,0};
-//  int minch=0,ch;
-//   int minlen=0xFFFFFFFF;
-//  for (ch=0; ch<PCM8_NCH; ++ch) {
-//   if (( int)pcm8[ch].GetRest() < minlen) {
-//    minlen = pcm8[ch].GetRest();
-//    minch = ch;
-//   }
-//  }
-//  if (adpcm.DmaReg[0x05] & 0x08) { // チェイニング動作
-//   if (!(adpcm.DmaReg[0x05] & 0x04)) { // アレイチェイン
-//    pcm8[minch].Aot(bswapl((byte[][])adpcm.DmaReg[0x1C])),
-//     (8<<16)+(ADPCMRATETBL[AdpcmBaseClock][(PpiReg>>2)&3]<<8)+pcm8_pantbl[PpiReg&3],
-//     bswapw(( short[])(adpcm.DmaReg[0x1A])));
-//   } else {      // リンクアレイチェイン
-//    pcm8[minch].Lot(bswapl((byte[][])(adpcm.DmaReg[0x1C])),
-//     (8<<16)+(ADPCMRATETBL[AdpcmBaseClock][(PpiReg>>2)&3]<<8)+pcm8_pantbl[PpiReg&3]);
-//   }
-//  } else { // ノーマル転送
-//   pcm8[minch].Out(bswapl((byte[][])(adpcm.DmaReg[0x0C])),
-//    (8<<16)+(ADPCMRATETBL[AdpcmBaseClock][(PpiReg>>2)&3]<<8)+pcm8_pantbl[PpiReg&3],
-//    bswapw((short [])(adpcm.DmaReg[0x0A])));
-//  }
-//  if (adpcm.IntProc != null) {
-//   adpcm.IntProc();
-//  }
-// } else if (data & 0x01) { // 再生動作停止
-// }
-// return;
-// #endif
-
         // オリジナル
-        if ((data & 0x02) != 0) {   // ADPCM再生開始
+        if ((data & 0x02) != 0) { // ADPCM再生開始
             adpcm.adpcmReg &= 0x7F;
-        } else if ((data & 0x01) != 0) {   // 再生動作停止
+        } else if ((data & 0x01) != 0) { // 再生動作停止
             adpcm.adpcmReg |= 0x80;
             adpcm.reset();
         }
@@ -2256,7 +1976,7 @@ public class Opm {
     public byte dmaPeek(byte adrs) {
         if (adrs >= 0x40) return 0;
         if (adrs == 0x00) {
-            if ((adpcm.adpcmReg & 0x80) == 0) {   // ADPCM 再生中
+            if ((adpcm.adpcmReg & 0x80) == 0) { // ADPCM 再生中
                 adpcm.dmaReg[0x00] |= 0x02;
                 return (byte) (adpcm.dmaReg[0x00] | 0x01);
             }
@@ -2267,14 +1987,14 @@ public class Opm {
     public void dmaPoke(byte adrs, byte data) {
         if (adrs >= 0x40) return;
         switch (adrs) {
-        case 0x00:  // CSR
-            data &= 0xF6;                   // ACTとPCSはクリアしない
+        case 0x00: // CSR
+            data &= 0xF6; // ACTとPCSはクリアしない
             adpcm.dmaReg[adrs] &= (byte) ~data;
             if ((data & 0x10) != 0) {
                 adpcm.dmaReg[0x01] = 0;
             }
             return;
-        case 0x01:  // CER
+        case 0x01: // CER
             return;
         case 0x04: // DCR
         case 0x05: // OCR
@@ -2291,32 +2011,32 @@ public class Opm {
         case 0x17: // DAR
         case 0x29: // MFC
         case 0x31: // DFC
-            if ((adpcm.dmaReg[0x00] & 0x08) != 0) {   // ACT==1 ?
-                adpcm.dmaError((byte) 0x02);   // 動作タイミングエラー
+            if ((adpcm.dmaReg[0x00] & 0x08) != 0) { // ACT==1 ?
+                adpcm.dmaError((byte) 0x02); // 動作タイミングエラー
                 break;
             }
             adpcm.dmaReg[adrs] = data;
             break;
-        case 0x1A:  // BTC
-        case 0x1B:  // BTC
-        case 0x1C:  // BAR
-        case 0x1D:  // BAR
-        case 0x1E:  // BAR
-        case 0x1F:  // BAR
-        case 0x25:  // NIV
-        case 0x27:  // EIV
-        case 0x2D:  // CPR
-        case 0x39:  // BFC
-        case 0x3F:  // GCR
+        case 0x1A: // BTC
+        case 0x1B: // BTC
+        case 0x1C: // BAR
+        case 0x1D: // BAR
+        case 0x1E: // BAR
+        case 0x1F: // BAR
+        case 0x25: // NIV
+        case 0x27: // EIV
+        case 0x2D: // CPR
+        case 0x39: // BFC
+        case 0x3F: // GCR
             adpcm.dmaReg[adrs] = data;
             break;
 
         case 0x07:
             adpcm.dmaReg[0x07] = (byte) (data & 0x78);
-            if ((data & 0x80) != 0) {       // STR == 1 ?
+            if ((data & 0x80) != 0) { // STR == 1 ?
 
-                if ((adpcm.dmaReg[0x00] & 0xF8) != 0) {   // COC|BTC|NDT|ERR|ACT == 1 ?
-                    adpcm.dmaError((byte) 0x02);   // 動作タイミングエラー
+                if ((adpcm.dmaReg[0x00] & 0xF8) != 0) { // COC|BTC|NDT|ERR|ACT == 1 ?
+                    adpcm.dmaError((byte) 0x02); // 動作タイミングエラー
                     adpcm.dmaReg[0x07] = (byte) (data & 0x28);
                     break;
                 }
@@ -2331,50 +2051,50 @@ public class Opm {
                                 + adpcm.dmaReg[0x16] * 0x100
                                 + adpcm.dmaReg[0x17]
                 ) != 0x00E92003) {
-                    adpcm.dmaError((byte) 0x0A);   // バスエラー(デバイスアドレス)
+                    adpcm.dmaError((byte) 0x0A); // バスエラー(デバイスアドレス)
                     adpcm.dmaReg[0x07] = (byte) (data & 0x28);
                     break;
                 }
                 byte ocr;
                 ocr = (byte) (adpcm.dmaReg[0x05] & 0xB0);
-                if (ocr != 0x00 && ocr != 0x30) {   // DIR==1 || SIZE!=00&&SIZE!=11 ?
-                    adpcm.dmaError((byte) 0x01);   // コンフィグレーションエラー
+                if (ocr != 0x00 && ocr != 0x30) { // DIR==1 || SIZE!=00&&SIZE!=11 ?
+                    adpcm.dmaError((byte) 0x01); // コンフィグレーションエラー
                     adpcm.dmaReg[0x07] = (byte) (data & 0x28);
                     break;
                 }
 
             }
-            if ((data & 0x40) != 0) {   // CNT == 1 ?
-                if ((adpcm.dmaReg[0x00] & 0x48) != 0x08) {   // !(BTC==0&&ACT==1) ?
-                    adpcm.dmaError((byte) 0x02);   // 動作タイミングエラー
+            if ((data & 0x40) != 0) { // CNT == 1 ?
+                if ((adpcm.dmaReg[0x00] & 0x48) != 0x08) { // !(BTC==0&&ACT==1) ?
+                    adpcm.dmaError((byte) 0x02); // 動作タイミングエラー
                     adpcm.dmaReg[0x07] = (byte) (data & 0x28);
                     break;
                 }
 
-                if ((adpcm.dmaReg[0x05] & 0x08) != 0) {   // CHAIN == 10 or 11 ?
-                    adpcm.dmaError((byte) 0x01);   // コンフィグレーションエラー
+                if ((adpcm.dmaReg[0x05] & 0x08) != 0) { // CHAIN == 10 or 11 ?
+                    adpcm.dmaError((byte) 0x01); // コンフィグレーションエラー
                     adpcm.dmaReg[0x07] = (byte) (data & 0x28);
                     break;
                 }
 
             }
-            if ((data & 0x10) != 0) {   // SAB == 1 ?
-                if ((adpcm.dmaReg[0x00] & 0x08) != 0) {   // ACT == 1 ?
-                    adpcm.dmaError((byte) 0x11);   // ソフトウェア強制停止
+            if ((data & 0x10) != 0) { // SAB == 1 ?
+                if ((adpcm.dmaReg[0x00] & 0x08) != 0) { // ACT == 1 ?
+                    adpcm.dmaError((byte) 0x11); // ソフトウェア強制停止
                     adpcm.dmaReg[0x07] = (byte) (data & 0x28);
                     break;
                 }
             }
-            if ((data & 0x80) != 0) {   // STR == 1 ?
+            if ((data & 0x80) != 0) { // STR == 1 ?
                 data &= 0x7F;
 
-                if ((adpcm.dmaReg[0x05] & 0x08) != 0) {   // チェイニング動作
-                    if ((adpcm.dmaReg[0x05] & 0x04) == 0) {   // アレイチェイン
+                if ((adpcm.dmaReg[0x05] & 0x08) != 0) { // チェイニング動作
+                    if ((adpcm.dmaReg[0x05] & 0x04) == 0) { // アレイチェイン
                         if (adpcm.dmaArrayChainSetNextMtcMar() != 0) {
                             adpcm.dmaReg[0x07] = (byte) (data & 0x28);
                             break;
                         }
-                    } else {                       // リンクアレイチェイン
+                    } else { // リンクアレイチェイン
                         if (adpcm.dmaLinkArrayChainSetNextMtcMar() != 0) {
                             adpcm.dmaReg[0x07] = (byte) (data & 0x28);
                             break;
@@ -2382,9 +2102,9 @@ public class Opm {
                     }
                 }
 
-                //if ((*(int*)&adpcm.DmaReg[0x0A]) == 0) {    // MTC == 0 ?
-                if ((adpcm.dmaReg[0x0A] | adpcm.dmaReg[0x0B]) == 0) {    // MTC == 0 ?
-                    adpcm.dmaError((byte) 0x0D);   // カウントエラー(メモリアドレス/メモリカウンタ)
+                //if ((*(int*)&adpcm.DmaReg[0x0A]) == 0) { // MTC == 0 ?
+                if ((adpcm.dmaReg[0x0A] | adpcm.dmaReg[0x0B]) == 0) { // MTC == 0 ?
+                    adpcm.dmaError((byte) 0x0D); // カウントエラー(メモリアドレス/メモリカウンタ)
                     data &= 0x28;
                     break;
                 }
@@ -2436,7 +2156,7 @@ public class Opm {
     }
 
     public int setTotalVolume(int v) {
-        if ((int) v <= 65535) {
+        if (v <= 65535) {
             global.totalVolume = v;
         }
         return global.totalVolume;
@@ -2467,11 +2187,7 @@ public class Opm {
 
 
     public void memReadFunc(Function<Integer, Integer> func) {
-        if (func == null) {
-            global.memRead = Global::memReadDefault;
-        } else {
-            global.memRead = func;
-        }
+        global.memRead = Objects.requireNonNullElseGet(func, () -> Global::memReadDefault);
     }
 
     public void setMask(int v) {

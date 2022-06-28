@@ -102,7 +102,7 @@ public class LoopDetector implements Device {
             if (wspeed != 0)
                 wspeed = (wspeed + bIdx - bLast) / 2;
             else
-                wspeed = bIdx - bLast;      // 初回
+                wspeed = bIdx - bLast; // 初回
             bLast = bIdx;
 
             match_size = wspeed * match_second / match_interval;
@@ -111,13 +111,13 @@ public class LoopDetector implements Device {
             if (match_length < 0)
                 return false;
 
-            //System.err.printf("match_length:{0}", match_length);
-            //System.err.printf("match_size  :{0}", match_size);
+            //System.err.printf("match_length:%d", match_length);
+            //System.err.printf("match_size  :%d", match_size);
             for (i = 0; i < match_length; i++) {
                 for (j = 0; j < match_size; j++) {
                     if (streamBuf[(bIdx + j + match_length) & bufMask] !=
                             streamBuf[(bIdx + i + j) & bufMask]) {
-                        //System.err.printf("j  :{0}", j);
+                        //System.err.printf("j  :%d", j);
                         break;
                     }
                 }
@@ -163,15 +163,15 @@ public class LoopDetector implements Device {
                             || (0x9000 <= adr && adr <= 0x9002) // VRC6
                             || (0xA000 <= adr && adr <= 0xA002)
                             || (0xB000 <= adr && adr <= 0xB002)
-                            || (0x9010 == adr)                  // VRC7
+                            || (0x9010 == adr) // VRC7
                             || (0x9030 == adr)
                             || (0x4040 <= adr && adr <= 0x4092) // FDS
-                            || (0x4800 == adr)                  // N163
+                            || (0x4800 == adr) // N163
                             || (0xF800 == adr)
                             || (0x5000 <= adr && adr <= 0x5007) // MMC5
                             || (0x5010 == adr)
                             || (0x5011 == adr)
-                            || (0xC000 == adr)                  // 5B
+                            || (0xC000 == adr) // 5B
                             || (0xE000 == adr)
             ) {
                 return super.write(adr, val, id);

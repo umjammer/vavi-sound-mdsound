@@ -15,38 +15,38 @@ public class P86 extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void reset(byte chipID) {
+    public void reset(byte chipId) {
         info.init();
     }
 
     @Override
-    public int start(byte chipID, int clock) {
-        return start(chipID, clock, 0);
+    public int start(byte chipId, int clock) {
+        return start(chipId, clock, 0);
     }
 
     @Override
-    public int start(byte chipID, int clock, int clockValue, Object... option) {
+    public int start(byte chipId, int clock, int clockValue, Object... option) {
         info.samplingRate = clock;
-        reset(chipID);
+        reset(chipId);
         return clock;
     }
 
     @Override
-    public void stop(byte chipID) {
+    public void stop(byte chipId) {
         // none
     }
 
     @Override
-    public void update(byte chipID, int[][] outputs, int samples) {
+    public void update(byte chipId, int[][] outputs, int samples) {
         info.update(outputs, samples);
     }
 
     @Override
-    public int write(byte chipID, int port, int adr, int data) {
+    public int write(byte chipId, int port, int adr, int data) {
         return info.write(port, adr, data);
     }
 
-    public int loadPcm(byte chipID, byte address, byte data, byte[] pcmData) {
+    public int loadPcm(byte chipId, byte address, byte data, byte[] pcmData) {
         return info.loadPcm(0, address, data, pcmData);
     }
 
@@ -70,25 +70,25 @@ public class P86 extends Instrument.BaseInstrument {
         // P86 保存用メモリポインタ
         private int _addr;
         // 発音中PCMデータ番地
-        private int startOfs;
+        private int currentOffset;
         // 発音中PCMデータ番地（小数部）
-        private int startOfsX;
+        private int currestOffsetX;
         // 残りサイズ
-        private int size;
+        private int remainingSize;
         // 発音開始PCMデータ番地
-        private int _startOfs;
+        private int startOffset;
         // PCMデータサイズ
-        private int _size;
+        private int size;
         // PCMアドレス加算値 (整数部)
         private int addsize1;
         // PCMアドレス加算値 (小数部)
-        private int addsize2;
+        private int addSize2;
         // リピート開始位置
-        private int repeatOfs;
+        private int repeatOffset;
         // リピート後のサイズ
         private int repeatSize;
         // リリース開始位置
-        private int releaseOfs;
+        private int releaseOffset;
         // リリース後のサイズ
         private int releaseSize;
         // リピートするかどうかのflag
@@ -103,33 +103,33 @@ public class P86 extends Instrument.BaseInstrument {
         // パンデータ２(音量を下げるサイドの音量値)
         private int panDat;
         // 発音中?flag
-        private boolean play86Flag;
+        private boolean playing;
 
-        private int aVolume;
+        private int volume;
         // 音量テーブル
         private int[][] volumeTable;
-        private static final int[] ratetable = new int[] {4135, 5513, 8270, 11025, 16540, 22050, 33080, 44100};
+        private static final int[] rateTable = new int[] {4135, 5513, 8270, 11025, 16540, 22050, 33080, 44100};
 
         static class Inst {
             public int start = 0;
             public int size = 0;
+
+            public Inst(byte[] pcmData, int i) {
+                this.start = pcmData[i * 6 + 0 + 12 + 1 + 3] +
+                        pcmData[i * 6 + 1 + 12 + 1 + 3] * 0x100 +
+                        pcmData[i * 6 + 2 + 12 + 1 + 3] * 0x10000; // - 0x610;
+                this.size =  pcmData[i * 6 + 3 + 12 + 1 + 3] +
+                        pcmData[i * 6 + 4 + 12 + 1 + 3] * 0x100 +
+                        pcmData[i * 6 + 5 + 12 + 1 + 3] * 0x10000;
+            }
         }
 
-        //from PMDWin p86drv.cpp
+        // from PMDWin p86drv.cpp
         public int loadPcm(int port, byte address, byte data, byte[] pcmData) {
             this.pcmData = pcmData;
 
             for (int i = 0; i < MAXInst; i++) {
-                inst[i] = new Inst();
-
-                inst[i].start =
-                        pcmData[i * 6 + 0 + 12 + 1 + 3] +
-                                pcmData[i * 6 + 1 + 12 + 1 + 3] * 0x100 +
-                                pcmData[i * 6 + 2 + 12 + 1 + 3] * 0x10000; // - 0x610;
-                inst[i].size =
-                        pcmData[i * 6 + 3 + 12 + 1 + 3] +
-                                pcmData[i * 6 + 4 + 12 + 1 + 3] * 0x100 +
-                                pcmData[i * 6 + 5 + 12 + 1 + 3] * 0x10000;
+                inst[i] = new Inst(pcmData, i);
             }
 
             return 0;
@@ -142,20 +142,20 @@ public class P86 extends Instrument.BaseInstrument {
 
             interpolation = false;
             rate = (int) samplingRate;
-            srcRate = ratetable[4];     // 16.54kHz
+            srcRate = rateTable[4]; // 16.54kHz
             pitch = 0;
             vol = 0;
 
-            startOfs = 0;
-            startOfsX = 0;
+            currentOffset = 0;
+            currestOffsetX = 0;
+            remainingSize = 0;
+            startOffset = 0;
             size = 0;
-            _startOfs = 0;
-            _size = 0;
             addsize1 = 0;
-            addsize2 = 0;
-            repeatOfs = 0;
+            addSize2 = 0;
+            repeatOffset = 0;
             repeatSize = 0;
-            releaseOfs = 0;
+            releaseOffset = 0;
             releaseSize = 0;
             repeatFlag = false;
             releaseFlag1 = false;
@@ -163,9 +163,9 @@ public class P86 extends Instrument.BaseInstrument {
 
             panFlag = 0;
             panDat = 0;
-            play86Flag = false;
+            playing = false;
 
-            aVolume = 0;
+            volume = 0;
             setVolume(0);
         }
 
@@ -182,12 +182,12 @@ public class P86 extends Instrument.BaseInstrument {
         private void makeVolumeTable(int volume) {
             volumeTable = new int[16][];
             int aVolumeTemp = (int) (0x1000 * Math.pow(10.0, volume / 40.0));
-            if (aVolume != aVolumeTemp) {
-                aVolume = aVolumeTemp;
+            if (this.volume != aVolumeTemp) {
+                this.volume = aVolumeTemp;
                 for (int i = 0; i < 16; i++) {
                     volumeTable[i] = new int[256];
-                    //@ temp = pow(2.0, (i + 15) / 2.0) * AVolume / 0x18000;
-                    double temp = i * aVolume / 256;
+                    // temp = pow(2.0, (i + 15) / 2.0) * aVolume / 0x18000;
+                    double temp = i * this.volume / 256;
                     for (int j = 0; j < 256; j++) {
                         volumeTable[i][j] = (int) ((byte) j * temp);
                     }
@@ -198,16 +198,16 @@ public class P86 extends Instrument.BaseInstrument {
         /**
          * 真ん中（一次補間なし）
          */
-        private void doubleTrans(int[][] dest, int nsamples) {
-            for (int i = 0; i < nsamples; i++) {
-                int data = volumeTable[vol][pcmData[startOfs]];
+        private void doubleTrans(int[][] buffer, int samples) {
+            for (int i = 0; i < samples; i++) {
+                int data = volumeTable[vol][pcmData[currentOffset]];
 
                 data = (short) Math.max(Math.min(data, Short.MAX_VALUE), Short.MIN_VALUE);
-                dest[0][i] += data;
-                dest[1][i] += data;
+                buffer[0][i] += data;
+                buffer[1][i] += data;
 
                 if (addAddress()) {
-                    play86Flag = false;
+                    playing = false;
                     return;
                 }
             }
@@ -216,15 +216,15 @@ public class P86 extends Instrument.BaseInstrument {
         /**
          * 真ん中（逆相、一次補間なし）
          */
-        private void doubleTransG(int[][] dest, int nsamples) {
-            for (int i = 0; i < nsamples; i++) {
-                int data = volumeTable[vol][pcmData[startOfs]];
+        private void doubleTransG(int[][] buffer, int samples) {
+            for (int i = 0; i < samples; i++) {
+                int data = volumeTable[vol][pcmData[currentOffset]];
 
-                dest[0][i] += data;
-                dest[1][i] -= data;
+                buffer[0][i] += data;
+                buffer[1][i] -= data;
 
                 if (addAddress()) {
-                    play86Flag = false;
+                    playing = false;
                     return;
                 }
             }
@@ -233,16 +233,16 @@ public class P86 extends Instrument.BaseInstrument {
         /**
          * 左寄り（一次補間なし）
          */
-        private void leftTrans(int[][] dest, int nsamples) {
-            for (int i = 0; i < nsamples; i++) {
-                int data = volumeTable[vol][pcmData[startOfs]];
+        private void leftTrans(int[][] buffer, int samples) {
+            for (int i = 0; i < samples; i++) {
+                int data = volumeTable[vol][pcmData[currentOffset]];
 
-                dest[0][i] += data;
+                buffer[0][i] += data;
                 data = data * panDat / (256 / 2);
-                dest[1][i] += data;
+                buffer[1][i] += data;
 
                 if (addAddress()) {
-                    play86Flag = false;
+                    playing = false;
                     return;
                 }
             }
@@ -251,16 +251,16 @@ public class P86 extends Instrument.BaseInstrument {
         /**
          * 左寄り（逆相、一次補間なし）
          */
-        private void leftTransG(int[][] dest, int nsamples) {
-            for (int i = 0; i < nsamples; i++) {
-                int data = volumeTable[vol][pcmData[startOfs]];
+        private void leftTransG(int[][] buffer, int samples) {
+            for (int i = 0; i < samples; i++) {
+                int data = volumeTable[vol][pcmData[currentOffset]];
 
-                dest[0][i] += data;
+                buffer[0][i] += data;
                 data = data * panDat / (256 / 2);
-                dest[1][i] -= data;
+                buffer[1][i] -= data;
 
                 if (addAddress()) {
-                    play86Flag = false;
+                    playing = false;
                     return;
                 }
             }
@@ -269,16 +269,16 @@ public class P86 extends Instrument.BaseInstrument {
         /**
          * 右寄り（一次補間なし）
          */
-        private void rightTrans(int[][] dest, int nsamples) {
-            for (int i = 0; i < nsamples; i++) {
-                int data = volumeTable[vol][pcmData[startOfs]];
+        private void rightTrans(int[][] buffer, int samples) {
+            for (int i = 0; i < samples; i++) {
+                int data = volumeTable[vol][pcmData[currentOffset]];
 
-                dest[1][i] += data;
+                buffer[1][i] += data;
                 data = data * panDat / (256 / 2);
-                dest[0][i] += data;
+                buffer[0][i] += data;
 
                 if (addAddress()) {
-                    play86Flag = false;
+                    playing = false;
                     return;
                 }
             }
@@ -287,46 +287,46 @@ public class P86 extends Instrument.BaseInstrument {
         /**
          * 右寄り（逆相、一次補間なし）
          */
-        private void rightTransG(int[][] dest, int nsamples) {
-            for (int i = 0; i < nsamples; i++) {
-                int data = volumeTable[vol][pcmData[startOfs]];
+        private void rightTransG(int[][] buffer, int samples) {
+            for (int i = 0; i < samples; i++) {
+                int data = volumeTable[vol][pcmData[currentOffset]];
 
-                dest[1][i] -= data;
+                buffer[1][i] -= data;
                 data = data * panDat / (256 / 2);
-                dest[0][i] += data;
+                buffer[0][i] += data;
 
                 if (addAddress()) {
-                    play86Flag = false;
+                    playing = false;
                     return;
                 }
             }
         }
 
         private boolean addAddress() {
-            startOfsX += addsize2;
-            if (startOfsX >= 0x1000) {
-                startOfsX -= 0x1000;
-                startOfs++;
-                size--;
+            currestOffsetX += addSize2;
+            if (currestOffsetX >= 0x1000) {
+                currestOffsetX -= 0x1000;
+                currentOffset++;
+                remainingSize--;
             }
-            startOfs += addsize1;
-            size -= addsize1;
+            currentOffset += addsize1;
+            remainingSize -= addsize1;
 
-            if (size > 1) {       // 一次補間対策
+            if (remainingSize > 1) { // 一次補間対策
                 return false;
             } else if (!repeatFlag || releaseFlag2) {
                 return true;
             }
 
-            size = repeatSize;
-            startOfs = repeatOfs;
+            remainingSize = repeatSize;
+            currentOffset = repeatOffset;
             return false;
         }
 
         public void update(int[][] outputs, int samples) {
-            if (play86Flag == false) return;
-            if (size <= 1) {       // 一次補間対策
-                play86Flag = false;
+            if (!playing) return;
+            if (remainingSize <= 1) { // 一次補間対策
+                playing = false;
                 return;
             }
             switch (panFlag) {
@@ -364,8 +364,8 @@ public class P86 extends Instrument.BaseInstrument {
             case 0x01: // LoadPcm
                 break;
             case 0x02: // 音色
-                _startOfs = inst[data].start;
-                _size = inst[data].size;
+                startOffset = inst[data].start;
+                size = inst[data].size;
                 repeatFlag = false;
                 releaseFlag1 = false;
                 break;
@@ -377,42 +377,42 @@ public class P86 extends Instrument.BaseInstrument {
                 vol = (byte) data;
                 break;
             case 0x05: // ontei
-                int _srcrate = adr >> 5;
-                int _ontei = (adr & 0x1f) * 0x10000 + data;
-                if (_srcrate < 0 || _srcrate > 7)
+                int srcRate = adr >> 5;
+                int pitch = (adr & 0x1f) * 0x10000 + data;
+                if (srcRate < 0 || srcRate > 7)
                     break;
-                if (_ontei > 0x1f_ffff)
+                if (pitch > 0x1f_ffff)
                     break;
 
-                pitch = _ontei;
-                srcRate = ratetable[_srcrate];
+                this.pitch = pitch;
+                this.srcRate = rateTable[srcRate];
 
-                //System.err.printf("_ontei:%x srcrate:%x", _ontei, srcrate);
-                _ontei = (int) (_ontei * srcRate / (long) samplingRate);
+                //System.err.printf("pitch:%x srcrate:%x", pitch, srcrate);
+                pitch = (int) (pitch * this.srcRate / (long) samplingRate);
 
-                addsize2 = (_ontei & 0xffff) >> 4;
-                addsize1 = _ontei >> 16;
+                addSize2 = (pitch & 0xffff) >> 4;
+                addsize1 = pitch >> 16;
 
                 break;
             case 0x06: // loop
                 break;
             case 0x07: // play
-                startOfs = _startOfs;
-                startOfsX = 0;
-                size = _size;
-                play86Flag = true;
+                currentOffset = startOffset;
+                currestOffsetX = 0;
+                remainingSize = size;
+                playing = true;
                 releaseFlag2 = false;
                 break;
-            case 0x08://stop
-                play86Flag = false;
+            case 0x08: // stop
+                playing = false;
                 break;
-            case 0x09://keyoff
-                if (releaseFlag1) {       // リリースが設定されているか?
-                    startOfs = releaseOfs;
-                    size = releaseSize;
-                    releaseFlag2 = true;       // リリースした
+            case 0x09: // keyoff
+                if (releaseFlag1) { // リリースが設定されているか?
+                    currentOffset = releaseOffset;
+                    remainingSize = releaseSize;
+                    releaseFlag2 = true; // リリースした
                 } else {
-                    play86Flag = false;
+                    playing = false;
                 }
                 break;
             }

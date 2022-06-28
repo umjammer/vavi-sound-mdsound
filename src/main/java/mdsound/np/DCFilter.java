@@ -6,7 +6,7 @@ package mdsound.np;
 //
 
 
-//  dcf.SetParam(270,(*config)["HPF"]);    //DCFilter
+//  dcf.SetParam(270,(*config)["HPF"]); //DCFilter
 //  lpf.SetParam(4700.0,(*config)["LPF"]); //Filter
 
 

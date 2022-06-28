@@ -19,7 +19,6 @@ import dotnet4j.io.Stream;
 import mdsound.Common;
 
 import static mdsound.fmgen.Fmgen.limit;
-import static mdsound.fmgen.Fmgen.storeSample;
 
 
 /**
@@ -68,7 +67,7 @@ import static mdsound.fmgen.Fmgen.storeSample;
  * <p>
  * int GetReg(int reg)
  * 音源のレジスタ reg の内容を読み出す
- * 読み込むことが出来るレジスタは PSG, ADPCM の一部，ID(0xff) とか
+ * 読み込むことが出来るレジスタは Psg, ADPCM の一部，ID(0xff) とか
  * <p>
  * int ReadStatus()/ReadStatusEx()
  * 音源のステータスレジスタを読み出す
@@ -95,7 +94,7 @@ public class Opna {
         public OPNBase() {
             preScale = 0;
             psg = new PSG();
-            chip = new Fmgen.Chip();
+            chip = new Fmgen.Channel4.Chip();
         }
 
         // 初期化
@@ -138,7 +137,7 @@ public class Opna {
 
             if ((addr & 3) < 3) {
                 int slot = slotTable[(addr >> 2) & 3];
-                Fmgen.Operator op = ch.op[slot];
+                Fmgen.Channel4.Operator op = ch.op[slot];
 
                 switch ((addr >> 4) & 15) {
                 case 3: // 30-3E DT/MULTI
@@ -184,7 +183,7 @@ public class Opna {
                 preScale = (byte) p;
                 //assert(0 <= prescale && prescale< 3);
 
-                int fmClock = (int) (clock / table[p][0] / 12);
+                int fmClock = clock / table[p][0] / 12;
 
                 rate = psgRate;
 
@@ -208,7 +207,6 @@ public class Opna {
             preScale = (byte) 0xff;
             setPreScaler(p);
         }
-
 
         protected int fmVolume;
 
@@ -235,9 +233,8 @@ public class Opna {
 
         protected byte preScale;
 
-        protected Fmgen.Chip chip;
+        protected Fmgen.Channel4.Chip chip;
         public PSG psg;
-
     }
 
     // OPN2 Base
@@ -262,7 +259,7 @@ public class Opna {
             for (int i = 0; i < 6; i++) {
                 ch[i] = new Fmgen.Channel4();
                 ch[i].setChip(chip);
-                ch[i].setType(Fmgen.OpType.typeN);
+                ch[i].setType(Fmgen.Channel4.Chip.OpType.typeN);
             }
         }
 
@@ -334,7 +331,7 @@ public class Opna {
             super.init(c, r);
 
             adplBase = (int) ((int) (8192.0 * (clock / 72.0) / r));
-            adplD = (int) (deltaN * adplBase >> 16);
+            adplD = deltaN * adplBase >> 16;
 
             rebuildTimeTable();
 
@@ -396,7 +393,7 @@ public class Opna {
                 break;
 
             // Misc-
-            case 0x28:      // Key On/Off
+            case 0x28: // Key On/Off
                 if ((data & 3) < 3) {
                     c = (data & 3) + ((data & 4) != 0 ? 3 : 0);
                     ch[c].keyControl(data >> 4);
@@ -494,7 +491,7 @@ public class Opna {
                 lfoDCount = (reg22 & 8) != 0 ? lfoTable[reg22 & 7] : 0;
                 break;
 
-            // PSG--
+            // Psg--
             case 0:
             case 1:
             case 2:
@@ -530,7 +527,7 @@ public class Opna {
          */
         protected void setADPCMBReg(int addr, int data) {
             switch (addr) {
-            case 0x00: // Control Register 1
+            case 0x00: // Controller Register 1
                 if (((data & 0x80) != 0) && !adpcmPlay) {
                     adpcmPlay = true;
                     memAddr = startAddr;
@@ -544,7 +541,7 @@ public class Opna {
                 control1 = (byte) data;
                 break;
 
-            case 0x01: // Control Register 2
+            case 0x01: // Controller Register 2
                 control2 = (byte) data;
                 granuality = (byte) ((control2 & 2) != 0 ? 1 : 4);
                 break;
@@ -581,7 +578,7 @@ public class Opna {
                 adplD = deltaN * adplBase >> 16;
                 break;
 
-            case 0x0b: // Level Control
+            case 0x0b: // Level Controller
                 adpcmLevel = (byte) data;
                 adpcmVolume = (adpcmVol * adpcmLevel) >> 12;
                 break;
@@ -593,7 +590,7 @@ public class Opna {
                 //System.err.printf("  limitaddr %.6x", limitaddr);
                 break;
 
-            case 0x10: // Flag Control
+            case 0x10: // Flag Controller
                 if ((data & 0x80) != 0) {
                     status = 0;
                     updateStatus();
@@ -684,11 +681,11 @@ public class Opna {
                 }
 
                 int v = ((limit(ibuf[2] + ibuf[3], 0x7fff, -0x8000) * fmVolume) >> 14);
-                storeSample(buffer[dest + 0], v);
+                buffer[dest + 0] += v;
                 visVolume[0] = v;
 
                 v = ((limit(ibuf[1] + ibuf[3], 0x7fff, -0x8000) * fmVolume) >> 14);
-                storeSample(buffer[dest + 1], v);
+                buffer[dest + 1]  += v;
                 visVolume[1] = v;
             }
         }
@@ -791,8 +788,8 @@ public class Opna {
                                 break;
                         }
                         int s = (adplC * apOut0 + (8192 - adplC) * apOut1) >> 13;
-                        storeSample(dest[ptrDest + 0], s & maskL);
-                        storeSample(dest[ptrDest + 1], s & maskR);
+                        dest[ptrDest + 0] += s & maskL;
+                        dest[ptrDest + 1] += s & maskR;
                         visAPCMVolume[0] = s & maskL;
                         visAPCMVolume[1] = s & maskR;
                         ptrDest += 2;
@@ -805,8 +802,8 @@ public class Opna {
                             adplC += 8192;
                         }
                         int s = (adplC * apOut1) >> 13;
-                        storeSample(dest[ptrDest + 0], s & maskL);
-                        storeSample(dest[ptrDest + 1], s & maskR);
+                        dest[ptrDest + 0] += s & maskL;
+                        dest[ptrDest + 1] += s & maskR;
                         visAPCMVolume[0] = s & maskL;
                         visAPCMVolume[1] = s & maskR;
                         ptrDest += 2;
@@ -826,8 +823,8 @@ stop:
                         }
                         adplC -= 8192;
                         s >>= 13;
-                        storeSample(dest[ptrDest + 0], s & maskL);
-                        storeSample(dest[ptrDest + 1], s & maskR);
+                        dest[ptrDest + 0] += s & maskL;
+                        dest[ptrDest + 1] += s & maskR;
                         visAPCMVolume[0] = s & maskL;
                         visAPCMVolume[1] = s & maskR;
                         ptrDest += 2;
@@ -926,7 +923,7 @@ stop:
 
             if (memAddr == stopAddr) {
                 setStatus(4);
-                statusNext = 0x04;  // EOS
+                statusNext = 0x04; // EOS
                 memAddr &= 0x3fffff;
             }
             if (memAddr == limitAddr) {
@@ -953,9 +950,9 @@ stop:
                         data &= 0x0f;
                     } else {
                         //(int)8* p = &adpcmbuf[(memaddr >> 4) & 0x7fff] + ((~memaddr & 1) << 17);
-                        int p = (int) (((memAddr >> 4) & 0x7fff) + ((~memAddr & 1) << 17));
+                        int p = ((memAddr >> 4) & 0x7fff) + ((~memAddr & 1) << 17);
                         int bank = (memAddr >> 1) & 7;
-                        byte mask = (byte) (1 << (int) bank);
+                        byte mask = (byte) (1 << bank);
 
                         data = adpcmBuf[p + 0x18000] & mask;
                         data = data * 2 + (adpcmBuf[p + 0x10000] & mask);
@@ -968,7 +965,7 @@ stop:
                     }
                 } else {
                     data = adpcmBuf[(memAddr >> granuality) & adpcmMask];
-                    memAddr += (int) (1 << (granuality - 1));
+                    memAddr += 1 << (granuality - 1);
                     if ((memAddr & (1 << (granuality - 1))) != 0)
                         return decodeADPCMBSample(data >> 4);
                     data &= 0x0f;
@@ -1113,7 +1110,7 @@ stop:
 
             for (int i = 0; i < 3; i++) {
                 ch[i].setChip(chip);
-                ch[i].setType(Fmgen.OpType.typeN);
+                ch[i].setType(Fmgen.Channel4.Chip.OpType.typeN);
             }
         }
 
@@ -1173,12 +1170,11 @@ stop:
                     if ((actch & 0x04) != 0) s += ch[1].calc();
                     if ((actch & 0x10) != 0) s += ch[2].calc();
                     s = ((limit(s, 0x7fff, -0x8000) * fmVolume) >> 14);
-                    storeSample(buffer[dest + 0], s);
-                    storeSample(buffer[dest + 1], s);
+                    buffer[dest + 0] += s;
+                    buffer[dest + 1] += s;
 
                     visVolume[0] = s;
                     visVolume[1] = s;
-
                 }
             }
         }
@@ -1296,7 +1292,7 @@ stop:
         public void setChannelMask(int mask) {
             for (int i = 0; i < 3; i++)
                 ch[i].mute(!!((mask & (1 << i)) != 0));
-            psg.setChannelMask((int) (mask >> 6));
+            psg.setChannelMask(mask >> 6);
         }
 
         public int dbgGetOpOut(int c, int s) {
@@ -1342,7 +1338,7 @@ stop:
         /**
          * 構築
          */
-        public OPNA(byte chipID) {
+        public OPNA(byte chipId) {
             for (int i = 0; i < 6; i++) {
                 rhythm[i].sample = null;
                 rhythm[i].pos = 0;
@@ -1353,7 +1349,7 @@ stop:
             adpcmMask = 0x3ffff;
             adpcmNotice = 4;
             csmCh = ch[2];
-            this.chipID = chipID;
+            this.chipId = chipId;
         }
 
         protected void finalize() {
@@ -1428,9 +1424,9 @@ stop:
                 try {
                     int fsize;
                     boolean f = true;
-                    String buf1 = String.format("2608_%s_%d.wav", rhythmNames[i], chipID);
+                    String buf1 = String.format("2608_%s_%d.wav", rhythmNames[i], chipId);
                     String buf2 = String.format("2608_%s.wav", rhythmNames[i]);
-                    String rymBuf1 = String.format("2608_rym_%d.wav", chipID);
+                    String rymBuf1 = String.format("2608_rym_%d.wav", chipId);
                     String rymBuf2 = "2608_rym.wav";
                     byte[] file;
 
@@ -1470,7 +1466,8 @@ stop:
                     byte[] bufWhdr = new byte[4 + 2 + 2 + 4 + 4 + 2 + 2 + 2];
                     for (int j = 0; j < 4 + 2 + 2 + 4 + 4 + 2 + 2 + 2; j++) bufWhdr[j] = file[fInd++];
 
-                    whdr.chunkSize = bufWhdr[0] + bufWhdr[1] * 0x100 + bufWhdr[2] * 0x10000 + bufWhdr[3] * 0x10000;
+                    int chunkSize = bufWhdr[0] + bufWhdr[1] * 0x100 + bufWhdr[2] * 0x10000 + bufWhdr[3] * 0x10000;
+                    whdr.chunkSize = chunkSize;
                     whdr.tag = bufWhdr[4] + bufWhdr[5] * 0x100;
                     whdr.nch = bufWhdr[6] + bufWhdr[7] * 0x100;
                     whdr.rate = bufWhdr[8] + bufWhdr[9] * 0x100 + bufWhdr[10] * 0x10000 + bufWhdr[11] * 0x10000;
@@ -1486,7 +1483,7 @@ stop:
                         for (int j = 0; j < 4; j++) subchunkname[j] = file[fInd++];
                         for (int j = 0; j < 4; j++) bufWhdr[j] = file[fInd++];
 
-                        fsize = (int) (bufWhdr[0] + bufWhdr[1] * 0x100 + bufWhdr[2] * 0x10000 + bufWhdr[3] * 0x10000);
+                        fsize = chunkSize;
                     } while ('d' != subchunkname[0] || 'a' != subchunkname[1] || 't' != subchunkname[2] || 'a' != subchunkname[3]);
 
                     fsize /= 2;
@@ -1686,28 +1683,28 @@ stop:
          */
         private void rhythmMix(int[] buffer, int count) {
             if (rhythmTVol < 128 && rhythm[0].sample != null && ((rhythmKey & 0x3f) != 0)) {
-                int limit = (int) count * 2;
+                int limit = count * 2;
                 visRtmVolume[0] = 0;
                 visRtmVolume[1] = 0;
                 for (int i = 0; i < 6; i++) {
                     Rhythm r = rhythm[i];
-                    if ((rhythmKey & (1 << i)) != 0 && (byte) r.level < 128) {
+                    if ((rhythmKey & (1 << i)) != 0 && r.level < 128) {
                         int db = limit(rhythmTl + rhythmTVol + r.level + r.volume, 127, -31);
                         int vol = tlTable[Fmgen.FM_TLPOS + (db << (Fmgen.FM_TLBITS - 7))] >> 4;
-                        int maskl = -((r.pan >> 1) & 1);
-                        int maskr = -(r.pan & 1);
+                        int maskL = -((r.pan >> 1) & 1);
+                        int maskR = -(r.pan & 1);
 
                         if ((rhythmMask_ & (1 << i)) != 0) {
-                            maskl = maskr = 0;
+                            maskL = maskR = 0;
                         }
 
                         for (int dest = 0; dest < limit && r.pos < r.size; dest += 2) {
                             int sample = (r.sample[r.pos / 1024] * vol) >> 12;
                             r.pos += r.step;
-                            storeSample(buffer[dest + 0], sample & maskl);
-                            storeSample(buffer[dest + 1], sample & maskr);
-                            visRtmVolume[0] += sample & maskl;
-                            visRtmVolume[1] += sample & maskr;
+                            buffer[dest + 0] += sample & maskL;
+                            buffer[dest + 1] += sample & maskR;
+                            visRtmVolume[0] += sample & maskL;
+                            visRtmVolume[1] += sample & maskR;
                         }
                     }
                 }
@@ -1722,7 +1719,7 @@ stop:
         private int rhythmTVol;
         // リズムのキー
         private byte rhythmKey;
-        private byte chipID;
+        private byte chipId;
     }
 
     /** YM2610/B(OPNB) */
@@ -1812,8 +1809,8 @@ stop:
         public void mix(int[] buffer, int nsamples) {
             fmMix(buffer, nsamples);
             psg.mix(buffer, nsamples);
-            adpcmBMix(buffer, (int) nsamples);
-            adpcmAMix(buffer, (int) nsamples);
+            adpcmBMix(buffer, nsamples);
+            adpcmAMix(buffer, nsamples);
         }
 
         /**
@@ -1846,13 +1843,12 @@ stop:
                 break;
 
             // ADPCM A----
-            case 0x100:         // DM/KEYON
-                if ((data & 0x80) == 0)  // KEY ON
-                {
+            case 0x100: // DM/KEYON
+                if ((data & 0x80) == 0) { // KEY ON
                     adpcmAKey |= (byte) (data & 0x3f);
                     for (int c = 0; c < 6; c++) {
                         if ((data & (1 << c)) != 0) {
-                            resetStatus((int) (0x100 << c));
+                            resetStatus(0x100 << c);
                             adpcmA[c].pos = adpcmA[c].start;
                             //     adpcma[c].step = 0x10000 - adpcma[c].step;
                             adpcmA[c].step = 0;
@@ -1861,7 +1857,7 @@ stop:
                             adpcmA[c].nibble = 0;
                         }
                     }
-                } else {                   // DUMP
+                } else { // DUMP
                     adpcmAKey &= (byte) ~data;
                 }
                 break;
@@ -1894,7 +1890,7 @@ stop:
             case 0x11d:
                 adpcmAReg[addr - 0x110] = (byte) data;
                 adpcmA[addr & 7].pos = adpcmA[addr & 7].start =
-                        (int) ((adpcmAReg[(addr & 7) + 8] * 256 + adpcmAReg[addr & 7]) << 9);
+                        (adpcmAReg[(addr & 7) + 8] * 256 + adpcmAReg[addr & 7]) << 9;
                 break;
 
             case 0x120:
@@ -1911,7 +1907,7 @@ stop:
             case 0x12d:
                 adpcmAReg[addr - 0x110] = (byte) data;
                 adpcmA[addr & 7].stop =
-                        (int) ((adpcmAReg[(addr & 7) + 24] * 256 + adpcmAReg[(addr & 7) + 16] + 1) << 9);
+                        (adpcmAReg[(addr & 7) + 24] * 256 + adpcmAReg[(addr & 7) + 16] + 1) << 9;
                 break;
 
             // AdpcmB
@@ -1929,38 +1925,38 @@ stop:
                 break;
 
 
-            case 0x11:      // Control Register 2
+            case 0x11: // Controller Register 2
                 control2 = (byte) (data & 0xc0);
                 break;
 
-            case 0x12:      // Start Address L
-            case 0x13:      // Start Address H
+            case 0x12: // Start Address L
+            case 0x13: // Start Address H
                 adpcmReg[addr - 0x12 + 0] = (byte) data;
-                startAddr = (int) ((adpcmReg[1] * 256 + adpcmReg[0]) << 9);
+                startAddr = (adpcmReg[1] * 256 + adpcmReg[0]) << 9;
                 memAddr = startAddr;
                 break;
 
-            case 0x14:      // Stop Address L
-            case 0x15:      // Stop Address H
+            case 0x14: // Stop Address L
+            case 0x15: // Stop Address H
                 adpcmReg[addr - 0x14 + 2] = (byte) data;
-                stopAddr = (int) ((adpcmReg[3] * 256 + adpcmReg[2] + 1) << 9);
+                stopAddr = (adpcmReg[3] * 256 + adpcmReg[2] + 1) << 9;
                 //System.err.printf("  stopaddr %.6x", stopaddr);
                 break;
 
-            case 0x19:      // delta-N L
-            case 0x1a:      // delta-N H
+            case 0x19: // delta-N L
+            case 0x1a: // delta-N H
                 adpcmReg[addr - 0x19 + 4] = (byte) data;
-                deltaN = (int) (adpcmReg[5] * 256 + adpcmReg[4]);
+                deltaN = adpcmReg[5] * 256 + adpcmReg[4];
                 deltaN = Math.max(256, deltaN);
-                adplD = (int) (deltaN * adplBase >> 16);
+                adplD = deltaN * adplBase >> 16;
                 break;
 
-            case 0x1b:      // Level Control
+            case 0x1b: // Level Controller
                 adpcmLevel = (byte) data;
                 adpcmVolume = (adpcmVol * adpcmLevel) >> 12;
                 break;
 
-            case 0x1c:      // Flag Control
+            case 0x1c: // Flag Controller
                 stMask = ~((data & 0xbf) << 8);
                 status &= stMask;
                 updateStatus();
@@ -2066,7 +2062,7 @@ stop:
                 int limit = count * 2;
                 for (int i = 0; i < 6; i++) {
                     ADPCMA r = adpcmA[i];
-                    if ((adpcmAKey & (1 << i)) != 0 && (byte) r.level < 128) {
+                    if ((adpcmAKey & (1 << i)) != 0 && r.level < 128) {
                         int maskl = (r.pan & 2) != 0 ? -1 : 0;
                         int maskr = (r.pan & 1) != 0 ? -1 : 0;
                         if ((rhythmMask_ & (1 << i)) != 0) {
@@ -2079,9 +2075,9 @@ stop:
                         //Sample* dest = buffer;
                         int dest = 0;
                         for (; dest < limit; dest += 2) {
-                            r.step += (int) adpcmAStep;
+                            r.step += adpcmAStep;
                             if (r.pos >= r.stop) {
-                                setStatus((int) (0x100 << i));
+                                setStatus(0x100 << i);
                                 adpcmAKey &= (byte) ~(1 << i);
                                 break;
                             }
@@ -2090,9 +2086,9 @@ stop:
                                 int data;
                                 if ((r.pos & 1) == 0) {
                                     r.nibble = adpcmaBuf[r.pos >> 1];
-                                    data = (int) (r.nibble >> 4);
+                                    data = r.nibble >> 4;
                                 } else {
-                                    data = (int) (r.nibble & 0x0f);
+                                    data = r.nibble & 0x0f;
                                 }
                                 r.pos++;
 
@@ -2102,8 +2098,8 @@ stop:
                                 r.adpcmD = (short) limit(r.adpcmD, 48 * 16, 0);
                             }
                             int sample = (r.adpcmX * vol) >> 10;
-                            storeSample(buffer[dest + 0], sample & maskl);
-                            storeSample(buffer[dest + 1], sample & maskr);
+                            buffer[dest + 0] += sample & maskl;
+                            buffer[dest + 1] += sample & maskr;
                             visRtmVolume[0] = sample & maskl;
                             visRtmVolume[1] = sample & maskr;
                         }
@@ -2148,7 +2144,7 @@ stop:
         //public new Fmgen.Channel4[] ch = new Fmgen.Channel4[6];
     }
 
-    /** YM2612/3438(OPN2) */
+    /** Ym2612/3438(OPN2) */
     static class OPN2 extends OPNBase {
 
         public boolean init(int c, int r, boolean f /*= false*/, String s/* = null*/) {

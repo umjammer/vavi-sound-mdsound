@@ -1,5 +1,7 @@
 package mdsound.np.memory;
 
+import java.util.Arrays;
+
 import mdsound.np.Device;
 
 
@@ -38,8 +40,8 @@ public class NesBank implements Device {
             return false;
 
         image = new byte[0x1000 * bankMax];
-        for (int i = 0; i < image.length; i++) image[i] = 0;
-        for (int i = 0; i < size; i++) image[(offset & 0xfff) + i] = data[i];
+        Arrays.fill(image, (byte) 0);
+        if (size >= 0) System.arraycopy(data, 0, image, (offset & 0xfff) + 0, size);
 
         for (int i = 0; i < bankMax; i++)
             bank[i] = 0x1000 * i;
@@ -58,7 +60,7 @@ public class NesBank implements Device {
     @Override
     public boolean write(int adr, int val, int id) {
         if (0x5ff8 <= adr && adr < 0x6000) {
-            bankSwitch[(adr & 7) + 8] = (int) (val & 0xff);
+            bankSwitch[(adr & 7) + 8] = val & 0xff;
             return true;
         }
 

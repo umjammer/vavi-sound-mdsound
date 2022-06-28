@@ -4,7 +4,7 @@ public class Lfo {
 
     public Global global;
 
-    private static final int SIZELFOTBL = 512;             // 2^9
+    private static final int SIZELFOTBL = 512; // 2^9
     private static final int SIZELFOTBL_BITS = 9;
     private static final int LFOPRECISION = 4096; // 2^12
     //#define PMTBLMAXVAL (128)
@@ -13,31 +13,31 @@ public class Lfo {
     //#define AMTBLMAXVAL_BITS (8)
     //#define LFOTIMECYCLE  1073741824  // 2^30
     //#define LFOTIMECYCLE_BITS 30
-    //#define LFORNDTIMECYCLE  (LFOTIMECYCLE>>8)  // 2^22
-    //#define CYCLE2PMAM (30-8)    // log2(LFOTIMECYCLE/SIZEPMAMTBL)
+    //#define LFORNDTIMECYCLE  (LFOTIMECYCLE>>8) // 2^22
+    //#define CYCLE2PMAM (30-8) // log2(LFOTIMECYCLE/SIZEPMAMTBL)
     //#define LFOHZ  0.0009313900811
     //int  LFOSTEPTBL[256];
-    //int  LFOSTEPTBL3[256];  // Wave form 3 用
+    //int  LFOSTEPTBL3[256]; // Wave form 3 用
     //short PMSTBL[8]={ 0,1,2,4,8,16,64,128 };
     private static final int[] PMSMUL = new int[] {0, 1, 2, 4, 8, 16, 32, 32};
     private static final int[] PMSSHL = new int[] {0, 0, 0, 0, 0, 0, 1, 2};
 
-    private int[] pmsmul = new int[Global.N_CH];   // 0, 1, 2, 4, 8, 16, 32, 32
-    private int[] pmsshl = new int[Global.N_CH];   // 0, 0, 0, 0, 0,  0,  1,  2
-    private int[] ams = new int[Global.N_CH];  // 左シフト回数 31(0), 0(1), 1(2), 2(3)
-    private int[] pmdPmsmul = new int[Global.N_CH];    // Pmd*Pmsmul[]
+    private int[] pmsmul = new int[Global.N_CH]; // 0, 1, 2, 4, 8, 16, 32, 32
+    private int[] pmsshl = new int[Global.N_CH]; // 0, 0, 0, 0, 0,  0,  1,  2
+    private int[] ams = new int[Global.N_CH]; // 左シフト回数 31(0), 0(1), 1(2), 2(3)
+    private int[] pmdPmsmul = new int[Global.N_CH]; // Pmd*Pmsmul[]
     private int pmd;
     private int amd;
 
-    private int lfoStartingFlag;    // 0:LFO停止中  1:LFO動作中
-    private int lfoOverFlow;    // LFO tのオーバーフロー値
-    private int lfoTime;    // LFO専用 t
+    private int lfoStartingFlag; // 0:LFO停止中  1:LFO動作中
+    private int lfoOverFlow; // LFO tのオーバーフロー値
+    private int lfoTime; // LFO専用 t
     private int lfoTimeAdd; // LFO専用Δt
     private int lfoIdx; // LFOテーブルへのインデックス値
-    private int lfoSmallCounter;    // LFO周期微調整カウンタ (0～15の値をとる)
-    private int lfoSmallCounterStep;    // LFO周期微調整カウンタ用ステップ値 (16～31)
-    private int lfrq;       // LFO周波数設定値 LFRQ
-    private int lfoWaveForm;    // LFO wave form
+    private int lfoSmallCounter; // LFO周期微調整カウンタ (0～15の値をとる)
+    private int lfoSmallCounterStep; // LFO周期微調整カウンタ用ステップ値 (16～31)
+    private int lfrq; // LFO周波数設定値 LFRQ
+    private int lfoWaveForm; // LFO wave form
 
     private int pmTblValue, amTblValue;
     private int[] pmValue = new int[Global.N_CH], amValue = new int[Global.N_CH];
@@ -112,11 +112,8 @@ public class Lfo {
         setPMDAMD(0);
         setPMDAMD(128 + 0);
         setWaveForm(0);
-        {
-            int ch;
-            for (ch = 0; ch < Global.N_CH; ++ch) {
-                setPMSAMS(ch, 0);
-            }
+        for (int ch = 0; ch < Global.N_CH; ++ch) {
+            setPMSAMS(ch, 0);
         }
         lfoReset();
         lfoStart();
@@ -229,7 +226,7 @@ public class Lfo {
                 break;
             }
             case 3: {
-                lfoIdx = (int) (global.irnd() >> (32 - SIZELFOTBL_BITS));
+                lfoIdx = global.irnd() >> (32 - SIZELFOTBL_BITS);
                 pmTblValue = pmTbl0[lfoIdx];
                 amTblValue = amTbl0[lfoIdx];
                 break;
@@ -285,7 +282,7 @@ public class Lfo {
     }
 
     public void culcAmValue(int ch) {
-        amValue[ch] = (((amTblValue * amd) >> 7) << ams[ch]) & (int) 0x7FFFFFFF;
+        amValue[ch] = (((amTblValue * amd) >> 7) << ams[ch]) & 0x7FFFFFFF;
     }
 
     public void culcAllPmValue() {

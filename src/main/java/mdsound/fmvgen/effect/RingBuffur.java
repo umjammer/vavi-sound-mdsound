@@ -1,17 +1,17 @@
 package mdsound.fmvgen.effect;
 
-public class CRingBuffur {
+public class RingBuffur {
 
-    // 読み込み位置
+    /** 読み込み位置 */
     private int rpos;
-    // 書き込み位置
+    /** 書き込み位置 */
     private int wpos;
-    // 内部バッファ
+    /** 内部バッファ */
     private float[] buf;
     private int rbSize;
 
     /** 初期化を行う */
-    public CRingBuffur(int clock, float RB/* = 4.0f*/) {
+    public RingBuffur(int clock, float RB/* = 4.0f*/) {
         rbSize = (int) (clock * RB);
         rpos = 0;
         wpos = (int) (rbSize / 2.0); // とりあえずバッファサイズの半分ぐらいにしておく

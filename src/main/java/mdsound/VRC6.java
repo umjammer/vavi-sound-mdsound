@@ -18,26 +18,25 @@ public class VRC6 extends Instrument.BaseInstrument {
     private double apu_clock_rest = 0;
 
     @Override
-    public void reset(byte chipID) {
-        vrc6[chipID].reset();
+    public void reset(byte chipId) {
+        vrc6[chipId].reset();
     }
 
     @Override
-    public int start(byte chipID, int clock) {
-        return start(chipID, clock, 100, null);
+    public int start(byte chipId, int clock) {
+        return start(chipId, clock, 100);
     }
 
     @Override
-    public int start(byte chipID, int sampleRate, int clockValue, Object... option) {
-        vrc6[chipID].setClock(clockValue);
-        vrc6[chipID].setRate(sampleRate);
+    public int start(byte chipId, int sampleRate, int clockValue, Object... option) {
+        vrc6[chipId].setClock(clockValue);
+        vrc6[chipId].setRate(sampleRate);
 
         if (option != null && option.length > 0) {
-            for (int i = 0; i < option.length; i++) {
-                if (option[i] instanceof Tuple) // <Integer, Integer>
-                {
-                    Tuple<Integer, Integer> item = (Tuple<Integer, Integer>) option[i];
-                    vrc6[chipID].setOption(item.Item1, item.Item2);
+            for (Object o : option) {
+                if (o instanceof Tuple) { // <Integer, Integer>
+                    Tuple<Integer, Integer> item = (Tuple<Integer, Integer>) o;
+                    vrc6[chipId].setOption(item.Item1, item.Item2);
                 }
             }
         }
@@ -47,31 +46,31 @@ public class VRC6 extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void stop(byte chipID) {
-        vrc6[chipID].reset();
+    public void stop(byte chipId) {
+        vrc6[chipId].reset();
     }
 
     @Override
-    public void update(byte chipID, int[][] outputs, int samples) {
+    public void update(byte chipId, int[][] outputs, int samples) {
         b[0] = 0;
         b[1] = 0;
 
         double apu_clock_per_sample = 0;
-        apu_clock_per_sample = vrc6[chipID].clock / vrc6[chipID].rate;
+        apu_clock_per_sample = vrc6[chipId].clock / vrc6[chipId].rate;
         apu_clock_rest += apu_clock_per_sample;
         int apu_clocks = (int) (apu_clock_rest);
         if (apu_clocks > 0) apu_clock_rest -= apu_clocks;
 
-        vrc6[chipID].tick((int) apu_clocks);
-        vrc6[chipID].render(b);
+        vrc6[chipId].tick(apu_clocks);
+        vrc6[chipId].render(b);
 
         outputs[0][0] += (short) ((limit(b[0], 0x7fff, -0x8000) * volume) >> 12); // 12 以下だと音割れる
         outputs[1][0] += (short) ((limit(b[1], 0x7fff, -0x8000) * volume) >> 12); // 12 以下だと音割れる
     }
 
     @Override
-    public int write(byte chipID, int port, int adr, int data) {
-        vrc6[chipID].write(adr, data);
+    public int write(byte chipId, int port, int adr, int data) {
+        vrc6[chipId].write(adr, data);
         return 0;
     }
 

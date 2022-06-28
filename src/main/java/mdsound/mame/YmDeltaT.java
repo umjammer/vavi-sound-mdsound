@@ -41,7 +41,7 @@ import static mdsound.mame.Fm.OUTD_CENTER;
  *
  * 01-12-2002 Jarek Burczynski:
  *  - fixed first missing Sound in gigandes thanks to previous fix (interpolator) by ElSemi
- *  - renamed/removed some YM_DELTAT struct fields
+ *  - renamed/removed some DeltaT struct fields
  *
  * 28-12-2001 Acho A. Tang
  *  - added EOS status report on ADPCM playback.
@@ -82,7 +82,7 @@ public class YmDeltaT {
     public void reset2608(double freqBase, int[] outDelta) {
         this.freqBase = freqBase;
         this.outputPointer = outDelta;
-        this.portShift = 5;      /* always 5bits shift */ /* ASG */
+        this.portShift = 5; // always 5bits shift */ /* ASG */
         this.outputRange = 1 << 23;
         this.resetAdpcm(OUTD_CENTER, YmDeltaT.EMULATION_MODE_NORMAL);
     }
@@ -221,8 +221,8 @@ public class YmDeltaT {
                     if (this.statusChangeBRDYBit != 0)
                         this.statusResetHandler.accept(this.statusChangeBRDYBit);
 
-                /* setup a timer that will callback us in 10 master clock cycles for Y8950
-                 * in the callback set the BRDY flag to 1 , which means we have another data ready.
+                /* setup a timer that will Callback us in 10 master clock cycles for Y8950
+                 * in the Callback set the BRDY flag to 1 , which means we have another data ready.
                  * For now, we don't really do this; we simply reset and set the flag in zero time, so that the IRQ will work.
                  */
                 /* set BRDY bit in status register */
@@ -285,12 +285,12 @@ public class YmDeltaT {
                 */
             /* handle emulation mode */
             if (this.emulationMode == EMULATION_MODE_YM2610) {
-                v |= 0x20;      /*  YM2610 always uses external memory and doesn't even have memory flag bit. */
+                v |= 0x20; //  YM2610 always uses external memory and doesn't even have memory flag bit. */
             }
 
             this.portState = (byte) (v & (0x80 | 0x40 | 0x20 | 0x10 | 0x01)); /* start, rec, memory mode, repeat flag copy, reset(bit0) */
 
-            if ((this.portState & 0x80) != 0)/* START,REC,MEMDATA,REPEAT,SPOFF,--,--,RESET */ {
+            if ((this.portState & 0x80) != 0) { // START,REC,MEMDATA,REPEAT,SPOFF,--,--,RESET
                 /* set PCM BUSY bit */
                 this.pcmBsy = 1;
 
@@ -306,9 +306,9 @@ public class YmDeltaT {
             }
 
 
-            if ((this.portState & 0x20) != 0) /* do we access external memory? */ {
+            if ((this.portState & 0x20) != 0) { // do we access external memory?
                 this.nowAddr = this.start << 1;
-                this.memRead = 2;    /* two dummy reads needed before accesing external memory via register $08*/
+                this.memRead = 2; // two dummy reads needed before accesing external memory via register $08*/
 
                 /* if yes, then let's check if ADPCM memory is mapped and big enough */
                 if (this.memory == null) {
@@ -318,13 +318,13 @@ public class YmDeltaT {
                     this.portState = 0x00;
                     this.pcmBsy = 0;
                 } else {
-                    if (this.end >= this.memorySize) /* Check End in Range */ {
+                    if (this.end >= this.memorySize) { // Check End in Range
 // #if DEBUG
                         System.err.printf("YM Delta-T ADPCM end out of range: $%08x\n", this.end);
 // #endif
                         this.end = this.memorySize - 1;
                     }
-                    if (this.start >= this.memorySize)   /* Check Start in Range */ {
+                    if (this.start >= this.memorySize) { // Check Start in Range */
 // #if DEBUG
                         System.err.printf("YM Delta-T ADPCM start out of range: $%08x\n", this.start);
 // #endif
@@ -332,7 +332,7 @@ public class YmDeltaT {
                         this.pcmBsy = 0;
                     }
                 }
-            } else    /* we access CPU memory (ADPCM data register $08) so we only reset now_addr here */ {
+            } else { // we access CPU memory (ADPCM data register $08) so we only reset now_addr here
                 this.nowAddr = 0;
             }
 
@@ -348,10 +348,10 @@ public class YmDeltaT {
                         this.statusSetHandler.accept(this.statusChangeBRDYBit);
             }
             break;
-        case 0x01:  /* L,R,-,-,SAMPLE,DA/AD,RAMTYPE,ROM */
+        case 0x01: // L,R,-,-,SAMPLE,DA/AD,RAMTYPE,ROM */
             /* handle emulation mode */
             if (this.emulationMode == EMULATION_MODE_YM2610) {
-                v |= 0x01;      /*  YM2610 always uses ROM as an external memory and doesn't have ROM/RAM memory flag bit. */
+                v |= 0x01; //  YM2610 always uses ROM as an external memory and doesn't have ROM/RAM memory flag bit. */
             }
 
             this.pan = this.outputPointer;
@@ -377,21 +377,21 @@ public class YmDeltaT {
             }
             this.control2 = (byte) v;
             break;
-        case 0x02:  /* Start Address L */
-        case 0x03:  /* Start Address H */
+        case 0x02: // Start Address L */
+        case 0x03: // Start Address H */
             this.start = (this.reg[this.regPtr + 0x3] * 0x0100 | this.reg[this.regPtr + 0x2]) << (this.portShift - this.dromPortShift);
-            /*System.err.pritnf("DELTAT start: 02=%2x 03=%2x addr=%8x\n",this.reg[0x2], this.reg[0x3],this.start );*/
+            /*System.err.pritnf("DeltaT start: 02=%2x 03=%2x addr=%8x\n",this.reg[0x2], this.reg[0x3],this.start );*/
             break;
-        case 0x04:  /* Stop Address L */
-        case 0x05:  /* Stop Address H */
+        case 0x04: // Stop Address L */
+        case 0x05: // Stop Address H */
             this.end = (this.reg[this.regPtr + 0x5] * 0x0100 | this.reg[this.regPtr + 0x4]) << (this.portShift - this.dromPortShift);
             this.end += (1 << (this.portShift - this.dromPortShift)) - 1;
-            /*System.err.pritnf("DELTAT end  : 04=%2x 05=%2x addr=%8x\n",this.reg[0x4], this.reg[0x5],this.end   );*/
+            /*System.err.pritnf("DeltaT end  : 04=%2x 05=%2x addr=%8x\n",this.reg[0x4], this.reg[0x5],this.end   );*/
             break;
-        case 0x06:  /* Prescale L (ADPCM and Record frq) */
-        case 0x07:  /* Prescale H */
+        case 0x06: // Prescale L (ADPCM and Record frq) */
+        case 0x07: // Prescale H */
             break;
-        case 0x08:  /* ADPCM data */
+        case 0x08: // ADPCM data */
 
                     /*
                     some examples:
@@ -424,8 +424,8 @@ public class YmDeltaT {
                         if (this.statusChangeBRDYBit != 0)
                             this.statusResetHandler.accept(this.statusChangeBRDYBit);
 
-                    /* setup a timer that will callback us in 10 master clock cycles for Y8950
-                     * in the callback set the BRDY flag to 1 , which means we have written the data.
+                    /* setup a timer that will Callback us in 10 master clock cycles for Y8950
+                     * in the Callback set the BRDY flag to 1 , which means we have written the data.
                      * For now, we don't really do this; we simply reset and set the flag in zero time, so that the IRQ will work.
                      */
                     /* set BRDY bit in status register */
@@ -455,31 +455,30 @@ public class YmDeltaT {
             }
 
             break;
-        case 0x09:  /* DELTA-N L (ADPCM Playback Prescaler) */
-        case 0x0a:  /* DELTA-N H */
+        case 0x09: // DELTA-N L (ADPCM Playback Prescaler) */
+        case 0x0a: // DELTA-N H */
             this.delta = this.reg[this.regPtr + 0xa] * 0x0100 | this.reg[this.regPtr + 0x9];
             this.step = (int) ((double) (this.delta /* *(1<<(YM_DELTAT_SHIFT-16)) */) * (this.freqBase));
-            /*System.err.pritnf("DELTAT deltan:09=%2x 0a=%2x\n",this.reg[0x9], this.reg[0xa]);*/
+            /*System.err.pritnf("DeltaT deltan:09=%2x 0a=%2x\n",this.reg[0x9], this.reg[0xa]);*/
             break;
-        case 0x0b:  /* Output level control (volume, linear) */ {
+        case 0x0b: { // Output level control (volume, linear) */
             int oldvol = this.volume;
             this.volume = (v & 0xff) * (this.outputRange / 256) / DECODE_RANGE;
-            /*                              v     *     ((1<<16)>>8)        >>  15;
-             *                       thus:   v     *     (1<<8)              >>  15;
-             *                       thus: output_range must be (1 << (15+8)) at least
-             *                               v     *     ((1<<23)>>8)        >>  15;
-             *                               v     *     (1<<15)             >>  15;
-             */
-            /*System.err.pritnf("DELTAT vol = %2x\n",v&0xff);*/
+            //         v     *     ((1<<16)>>8)        >>  15;
+            // thus:   v     *     (1<<8)              >>  15;
+            // thus: output_range must be (1 << (15+8)) at least
+            //         v     *     ((1<<23)>>8)        >>  15;
+            //         v     *     (1<<15)             >>  15;
+            /*System.err.pritnf("DeltaT vol = %2x\n",v&0xff);*/
             if (oldvol != 0) {
                 this.adpCml = (int) ((double) this.adpCml / (double) oldvol * (double) this.volume);
             }
         }
         break;
-        case 0x0c:  /* Limit Address L */
-        case 0x0d:  /* Limit Address H */
+        case 0x0c: // Limit Address L */
+        case 0x0d: // Limit Address H */
             this.limit = (this.reg[this.regPtr + 0xd] * 0x0100 | this.reg[this.regPtr + 0xc]) << (this.portShift - this.dromPortShift);
-            /*System.err.pritnf("DELTAT limit: 0c=%2x 0d=%2x addr=%8x\n",this.reg[0xc], this.reg[0xd],this.limit );*/
+            /*System.err.pritnf("DeltaT limit: 0c=%2x 0d=%2x addr=%8x\n",this.reg[0xc], this.reg[0xd],this.limit );*/
             break;
         }
     }
@@ -500,7 +499,7 @@ public class YmDeltaT {
         this.adpCml = 0;
         this.emulationMode = (byte) emulationMode;
         this.portState = (byte) ((emulationMode == EMULATION_MODE_YM2610) ? 0x20 : 0);
-        this.control2 = (byte) ((emulationMode == EMULATION_MODE_YM2610) ? 0x01 : 0);  /* default setting depends on the emulation mode. MSX demo called "facdemo_4" doesn't setup control2 register at all and still works */
+        this.control2 = (byte) ((emulationMode == EMULATION_MODE_YM2610) ? 0x01 : 0); // default setting depends on the emulation mode. MSX demo called "facdemo_4" doesn't setup control2 register at all and still works */
         this.dromPortShift = dramRightShift[this.control2 & 3];
 
         /* The flag mask register disables the BRDY after the reset, however
@@ -609,9 +608,9 @@ public class YmDeltaT {
         }
 
         /* ElSemi: Fix interpolator. */
-        this.adpCml = this.prevAcc * (int) ((1 << SHIFT) - this.nowStep);
-        this.adpCml += (this.acc * (int) this.nowStep);
-        this.adpCml = (this.adpCml >> SHIFT) * (int) this.volume;
+        this.adpCml = this.prevAcc * ((1 << SHIFT) - this.nowStep);
+        this.adpCml += (this.acc * this.nowStep);
+        this.adpCml = (this.adpCml >> SHIFT) * this.volume;
 
         /* output for work of output channels (outd[OPNxxxx])*/
         this.pan[this.panPtr] += this.adpCml;
@@ -657,9 +656,9 @@ public class YmDeltaT {
         }
 
         /* ElSemi: Fix interpolator. */
-        this.adpCml = this.prevAcc * (int) ((1 << SHIFT) - this.nowStep);
-        this.adpCml += (this.acc * (int) this.nowStep);
-        this.adpCml = (this.adpCml >> SHIFT) * (int) this.volume;
+        this.adpCml = this.prevAcc * ((1 << SHIFT) - this.nowStep);
+        this.adpCml += (this.acc * this.nowStep);
+        this.adpCml = (this.adpCml >> SHIFT) * this.volume;
 
         /* output for work of output channels (outd[OPNxxxx])*/
         this.pan[this.panPtr] += this.adpCml;

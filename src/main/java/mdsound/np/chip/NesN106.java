@@ -24,7 +24,7 @@ public class NesN106 implements SoundChip {
             ti.tone = tone;
             ti.wavelen = wavelen;
             ti.wave = new short[256];
-            for (int i = 0; i < ti.wave.length; i++) ti.wave[i] = wave[i];
+            System.arraycopy(wave, 0, ti.wave, 0, ti.wave.length);
             return ti;
         }
     }
@@ -55,7 +55,7 @@ public class NesN106 implements SoundChip {
     protected int renderSubClock;
 
     public NesN106() {
-        option[(int) OPT.SERIAL.ordinal()] = 0;
+        option[OPT.SERIAL.ordinal()] = 0;
         setClock(DEFAULT_CLOCK);
         setRate(DEFAULT_RATE);
         for (int i = 0; i < 8; ++i) {
@@ -146,7 +146,7 @@ public class NesN106 implements SoundChip {
 
     @Override
     public void setOption(int id, int val) {
-        if (id < (int) OPT.END.ordinal()) option[id] = val;
+        if (id < OPT.END.ordinal()) option[id] = val;
     }
 
     @Override
@@ -177,8 +177,8 @@ public class NesN106 implements SoundChip {
 
         int channels = getChannels();
 
-        tickClock += (int) clocks;
-        renderClock += (int) clocks; // keep render in sync
+        tickClock += clocks;
+        renderClock += clocks; // keep render in sync
         while (tickClock > 0) {
             int channel = 7 - tickChannel;
 
@@ -200,7 +200,7 @@ public class NesN106 implements SoundChip {
 
             // fetch sample (note: N163 output is centred at 8, and inverted w.r.t 2A03)
             int sample = 8 - getSample(((phase >> 16) + off) & 0xFF);
-            fout[channel] = (int) (sample * vol);
+            fout[channel] = sample * vol;
 
             // cycle to next channel every 15 clocks
             tickClock -= 15;
@@ -213,8 +213,7 @@ public class NesN106 implements SoundChip {
     private static final int[] MIX = new int[] {256 / 1, 256 / 1, 256 / 2, 256 / 3, 256 / 4, 256 / 5, 256 / 6, 256 / 6, 256 / 6};
 
     @Override
-    public int render(int[] b)//b[2])
-    {
+    public int render(int[] b) {
         b[0] = 0;
         b[1] = 0;
         if (master_disable) return 2;

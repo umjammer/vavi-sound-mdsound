@@ -18,39 +18,39 @@ public class MPcmX68k extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void reset(byte chipID) {
-        reset_(chipID);
+    public void reset(byte chipId) {
+        reset_(chipId);
     }
 
     @Override
-    public int start(byte chipID, int clock) {
-        return start(chipID, 44100, clock, null);
+    public int start(byte chipId, int clock) {
+        return start(chipId, 44100, clock);
     }
 
     @Override
-    public int start(byte chipID, int samplingRate, int clockValue, Object... option) {
-        mountMpcmX68K(chipID);
-        initialize(chipID, (int) clockValue, samplingRate);
+    public int start(byte chipId, int samplingRate, int clockValue, Object... option) {
+        mountMpcmX68K(chipId);
+        initialize(chipId, clockValue, samplingRate);
         return samplingRate;
     }
 
     @Override
-    public void stop(byte chipID) {
-        unmountMpcmX68K(chipID);
+    public void stop(byte chipId) {
+        unmountMpcmX68K(chipId);
     }
 
     @Override
-    public void update(byte chipID, int[][] outputs, int samples) {
-        update_(chipID, outputs, samples);
+    public void update(byte chipId, int[][] outputs, int samples) {
+        update_(chipId, outputs, samples);
     }
 
     @Override
-    public int write(byte chipID, int port, int adr, int data) {
+    public int write(byte chipId, int port, int adr, int data) {
         return 0;
     }
 
     private static final int MAX_CHIPS = 0x02;
-    public MPcm[] m = new MPcm[] {new MPcm(), new MPcm()};
+    public MPcm[] chips = new MPcm[] {new MPcm(), new MPcm()};
 
     /*
      * MPCM (c)wachoman 互換えんじん(mndrvが使ってる機能のみ)
@@ -65,7 +65,7 @@ public class MPcmX68k extends Instrument.BaseInstrument {
             // 基本note
             public byte orig;
             public byte[] adrsBuf;
-            public int adrs_ptr;
+            public int adrsPtr;
             public int size;
             // ループ開始点
             public int start;
@@ -83,7 +83,7 @@ public class MPcmX68k extends Instrument.BaseInstrument {
             _16(1),
             _8(2),
             _ADPCM(0xff); // -1
-            int v;
+            final int v;
 
             TYPE(int v) {
                 this.v = v;
@@ -142,7 +142,7 @@ public class MPcmX68k extends Instrument.BaseInstrument {
                 this.type = ptr.type;
                 this.orig = ptr.orig << 6;
                 this.adrsBuf = ptr.adrsBuf;
-                this.adrsPtr = ptr.adrs_ptr;
+                this.adrsPtr = ptr.adrsPtr;
                 this.size = ptr.size;
                 this.lpStart = ptr.start;
                 this.lpEnd = ptr.end;
@@ -280,7 +280,7 @@ public class MPcmX68k extends Instrument.BaseInstrument {
         }
 
         public Channel[] channels;
-        public int[] diffTable;
+        public static int[] diffTable;
         public float rate;
         public float base;
         public int mask = 0;
@@ -407,11 +407,11 @@ public class MPcmX68k extends Instrument.BaseInstrument {
             for (int i = 0; i < VOICE_MAX; i++) {
                 this.channels[i] = new Channel();
             }
-            this.diffTable = new int[TBL_DIFF];
+            diffTable = new int[TBL_DIFF];
         }
 
         public void unmount() {
-            this.diffTable = null;
+            diffTable = null;
             this.channels = null;
         }
 
@@ -419,7 +419,6 @@ public class MPcmX68k extends Instrument.BaseInstrument {
             this.rate = samplingRate;
             this.base = (float) base_ / this.rate;
 
-            makeTable();
             reset();
 
             return true;
@@ -438,30 +437,29 @@ public class MPcmX68k extends Instrument.BaseInstrument {
         }
 
         // テーブル作成 (floor で丸めた方が panic 等で良い結果が得られる)
-        private void makeTable() {
-            int[] p = this.diffTable;
-            int pPtr = 0;
+        static {
+            int p = 0;
             for (int i = 0; i < 49; i++) {
-                int base_ = (int) Math.floor(16.0 * Math.pow(1.1, i));
+                int base = (int) Math.floor(16.0 * Math.pow(1.1, i));
 
                 // 演算もすべて int で行う
                 for (int j = 0; j < 16; j++) {
                     int diff = 0;
                     if ((j & 4) != 0) {
-                        diff += base_;
+                        diff += base;
                     }
                     if ((j & 2) != 0) {
-                        diff += (base_ >> 1);
+                        diff += (base >> 1);
                     }
                     if ((j & 1) != 0) {
-                        diff += (base_ >> 2);
+                        diff += (base >> 2);
                     }
-                    diff += (base_ >> 3);
+                    diff += (base >> 3);
                     if ((j & 8) != 0) {
                         diff = -diff;
                     }
 
-                    p[pPtr++] = diff;
+                    diffTable[p++] = diff;
                 }
             }
         }
@@ -482,15 +480,15 @@ public class MPcmX68k extends Instrument.BaseInstrument {
             }
         }
 
-        public boolean setPcm(int ch, PCM ptr) {
+        public boolean setPcm(int ch, PCM pcm) {
             if (ch == 0xff) {
-                for (int i = 0; i < VOICE_MAX; i++) setPcm(i, ptr);
+                for (int i = 0; i < VOICE_MAX; i++) setPcm(i, pcm);
             } else {
                 keyOff(ch);
 
-                this.channels[ch].setPcm(ptr);
+                this.channels[ch].setPcm(pcm);
 
-                if (ptr.orig >= 0) {
+                if (pcm.orig >= 0) {
                     setPitch(ch, this.channels[ch].orig);
                 } else {
                     setPitch(ch, 440 << 6);
@@ -560,7 +558,7 @@ public class MPcmX68k extends Instrument.BaseInstrument {
                 // 差分テーブルから得る
                 index = offset << 4;
                 index |= data;
-                diff = this.diffTable[index];
+                diff = diffTable[index];
 
                 // ストアデータを演算
                 sample += diff;
@@ -585,61 +583,61 @@ public class MPcmX68k extends Instrument.BaseInstrument {
             return sample;
         }
 
-        public void update(int[][] _buffer, int _count) {
+        public void update(int[][] buffer, int count) {
 
-            for (int i = 0; i < _count; i++) {
-                _buffer[0][i] = 0;
-                _buffer[1][i] = 0;
+            for (int i = 0; i < count; i++) {
+                buffer[0][i] = 0;
+                buffer[1][i] = 0;
             }
 
             for (int ch = 0; ch < VOICE_MAX; ch++) {
                 boolean mute = (this.mask & (1 << ch)) != 0;
                 short bufPtr = 0;
 
-                byte[] ptr_buf = this.channels[ch].adrsBuf;
-                int ptr_ptr = this.channels[ch].adrsPtr;
-                long ofst = this.channels[ch].pos;
+                byte[] ptrBuf = this.channels[ch].adrsBuf;
+                int ptrPtr = this.channels[ch].adrsPtr;
+                long offset = this.channels[ch].pos;
                 int pitch = this.channels[ch].pitch;
-                for (int bufsize = 0; (bufsize < _count) && (this.channels[ch].enable); bufsize++) {
+                for (int bufsize = 0; (bufsize < count) && (this.channels[ch].enable); bufsize++) {
                     int sample = 0;
-                    long pos = ofst >> 16;
+                    long pos = offset >> 16;
 
                     switch (TYPE.valueOf(this.channels[ch].type)) {
                     case _NONE:
                         break;
                     case _ADPCM:
-                        sample = decode(ch, ptr_buf, ptr_ptr, pos);
+                        sample = decode(ch, ptrBuf, ptrPtr, pos);
                         break;
                     case _16:
-                        sample = (short) ((ptr_buf[(int) (ptr_ptr + pos * 2)] << 8) + ptr_buf[(int) (ptr_ptr + pos * 2 + 1)]);
+                        sample = (short) ((ptrBuf[(int) (ptrPtr + pos * 2)] << 8) + ptrBuf[(int) (ptrPtr + pos * 2 + 1)]);
                         break;
                     case _8:
-                        sample = ptr_buf[(int) (ptr_ptr + pos)];
+                        sample = ptrBuf[(int) (ptrPtr + pos)];
                         break;
                     }
                     sample = (sample * this.channels[ch].vol) >> 3;
 
                     if (!mute) {
-                        _buffer[0][bufPtr] += (short) (sample * this.channels[ch].lr[0]);
-                        _buffer[1][bufPtr] += (short) (sample * this.channels[ch].lr[1]);
+                        buffer[0][bufPtr] += (short) (sample * this.channels[ch].lr[0]);
+                        buffer[1][bufPtr] += (short) (sample * this.channels[ch].lr[1]);
                         bufPtr++;
                     }
 
-                    ofst += pitch;
-                    if ((ofst >> 16) > this.channels[ch].lpEnd) {
+                    offset += pitch;
+                    if ((offset >> 16) > this.channels[ch].lpEnd) {
                         this.channels[ch].lpWork++;
                         if ((this.channels[ch].lpCount != 0) && (this.channels[ch].lpWork >= this.channels[ch].lpCount)) {
                             keyOff(ch);
                         } else {
-                            ofst &= 0xffff;
-                            ofst += (this.channels[ch].lpStart << 16);
-                            this.channels[ch].ppos = ofst;
+                            offset &= 0xffff;
+                            offset += ((long) this.channels[ch].lpStart << 16);
+                            this.channels[ch].ppos = offset;
                             this.channels[ch].sample = this.channels[ch].lpSample;
                             this.channels[ch].offset = this.channels[ch].lpOffset;
                         }
                     }
                 }
-                this.channels[ch].pos = ofst;
+                this.channels[ch].pos = offset;
             }
         }
 
@@ -660,68 +658,68 @@ public class MPcmX68k extends Instrument.BaseInstrument {
         }
     }
 
-    public void mountMpcmX68K(int chipID) {
-        MPcm chip = m[chipID];
+    public void mountMpcmX68K(int chipId) {
+        MPcm chip = chips[chipId];
         chip.mount();
     }
 
-    public void unmountMpcmX68K(int chipID) {
-        MPcm chip = m[chipID];
+    public void unmountMpcmX68K(int chipId) {
+        MPcm chip = chips[chipId];
         chip.unmount();
     }
 
-    public boolean initialize(int chipID, int base_, float samplingRate) {
-        MPcm chip = m[chipID];
+    public boolean initialize(int chipId, int base_, float samplingRate) {
+        MPcm chip = chips[chipId];
         return chip.initialize(base_, samplingRate);
     }
 
-    public void reset_(int chipID) {
-        MPcm chip = m[chipID];
+    public void reset_(int chipId) {
+        MPcm chip = chips[chipId];
         chip.reset();
     }
 
-    public void keyOn(int chipID, int ch) {
-        MPcm chip = m[chipID];
+    public void keyOn(int chipId, int ch) {
+        MPcm chip = chips[chipId];
         chip.keyOn(ch);
     }
 
-    public void keyOff(int chipID, int ch) {
-        MPcm chip = m[chipID];
+    public void keyOff(int chipId, int ch) {
+        MPcm chip = chips[chipId];
         chip.keyOff(ch);
     }
 
-    public boolean setPcm(int chipID, int ch, MPcm.PCM ptr) {
-        MPcm chip = m[chipID];
+    public boolean setPcm(int chipId, int ch, MPcm.PCM ptr) {
+        MPcm chip = chips[chipId];
         return chip.setPcm(ch, ptr);
     }
 
-    public void setPitch(int chipID, int ch, int note) {
-        MPcm chip = m[chipID];
+    public void setPitch(int chipId, int ch, int note) {
+        MPcm chip = chips[chipId];
         chip.setPitch(ch, note);
     }
 
-    public void setVol(int chipID, int ch, int vol) {
-        MPcm chip = m[chipID];
+    public void setVol(int chipId, int ch, int vol) {
+        MPcm chip = chips[chipId];
         chip.setVol(ch, vol);
     }
 
-    public void setPan(int chipID, int ch, int pan) {
-        MPcm chip = m[chipID];
+    public void setPan(int chipId, int ch, int pan) {
+        MPcm chip = chips[chipId];
         chip.setPan(ch, pan);
     }
 
-    public void setVolTable(int chipID, int sel, ByteBuffer tbl) {
-        MPcm chip = m[chipID];
+    public void setVolTable(int chipId, int sel, ByteBuffer tbl) {
+        MPcm chip = chips[chipId];
         chip.setVolTable(sel, tbl);
     }
 
-    private int decode(int chipID, int ch, byte[] adrs_buf, int adrs_ptr, long pos) {
-        MPcm chip = m[chipID];
-        return chip.decode(ch, adrs_buf, adrs_ptr, pos);
+    private int decode(int chipId, int ch, byte[] buffer, int bufferP, long pos) {
+        MPcm chip = chips[chipId];
+        return chip.decode(ch, buffer, bufferP, pos);
     }
 
-    public void update_(int chipID, int[][] _buffer, int _count) {
-        MPcm chip = m[chipID];
-        chip.update(_buffer, _count);
+    public void update_(int chipId, int[][] buffer, int count) {
+        MPcm chip = chips[chipId];
+        chip.update(buffer, count);
     }
 }

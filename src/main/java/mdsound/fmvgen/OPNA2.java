@@ -6,19 +6,14 @@ import java.util.function.Function;
 
 import mdsound.Common;
 import mdsound.fmgen.Opna;
-import mdsound.fmvgen.effect.Compressor;
-import mdsound.fmvgen.effect.HPFLPF;
-import mdsound.fmvgen.effect.Reverb;
-import mdsound.fmvgen.effect.ReversePhase;
-import mdsound.fmvgen.effect.Chorus;
-import mdsound.fmvgen.effect.Distortion;
-import mdsound.fmvgen.effect.Eq3band;
+import mdsound.fmvgen.Fmvgen.Effects;
 import dotnet4j.io.File;
 import dotnet4j.io.FileAccess;
 import dotnet4j.io.FileMode;
 import dotnet4j.io.FileStream;
 import dotnet4j.io.Path;
 import dotnet4j.io.Stream;
+import mdsound.fmvgen.effect.ReversePhase;
 
 import static mdsound.fmgen.Fmgen.limit;
 
@@ -31,7 +26,7 @@ public class OPNA2 extends Opna.OPNABase {
     private Rhythm[] rhythm;
 
     private byte rhythmTl; // リズム全体の音量
-    private int rhythmtVol;
+    private int rhythmTVol;
     private byte rhythmKey; // リズムのキー
 
     protected FM6[] fm6;
@@ -40,13 +35,8 @@ public class OPNA2 extends Opna.OPNABase {
     protected AdpcmA adpcmA;
 
     protected byte prescale;
-    private Reverb reverb;
-    private Distortion distortion;
-    private Chorus chorus;
-    private Eq3band ep3band;
-    private ReversePhase reversePhase;
-    private HPFLPF hpflpf;
-    private Compressor compressor;
+
+    public Effects effects;
 
     public static class Rhythm {
         // ぱん
@@ -65,23 +55,13 @@ public class OPNA2 extends Opna.OPNABase {
         public int step;
         // さんぷるのれーと
         public int rate;
-        public Reverb reverb;
-        public Distortion distortion;
-        public Chorus chorus;
-        public HPFLPF hpflpf;
         public int efcCh;
         public int num;
-        public ReversePhase reversePhase;
-        public Compressor compressor;
+        public Effects effects;
 
-        public Rhythm(int num, Reverb reverb, Distortion distortion, Chorus chorus, HPFLPF hpflpf, ReversePhase reversePhase, Compressor compressor, int efcCh) {
-            this.reverb = reverb;
-            this.distortion = distortion;
-            this.chorus = chorus;
-            this.hpflpf = hpflpf;
+        public Rhythm(int num, Effects effects, int efcCh) {
+            this.effects = effects;
             this.efcCh = efcCh;
-            this.reversePhase = reversePhase;
-            this.compressor = compressor;
             this.num = num;
         }
     }
@@ -100,35 +80,33 @@ public class OPNA2 extends Opna.OPNABase {
     /**
      * 構築
      */
-    public OPNA2(Reverb reverb, Distortion distortion, Chorus chorus, Eq3band ep3band, HPFLPF hpflpf, ReversePhase reversePhase, Compressor compressor) {
-        this.reverb = reverb;
-        this.distortion = distortion;
-        this.chorus = chorus;
-        this.ep3band = ep3band;
-        this.hpflpf = hpflpf;
-        this.reversePhase = reversePhase;
-        this.compressor = compressor;
+    public OPNA2(int clock) {
+        this.effects = new Effects(clock);
 
         fm6 = new FM6[] {
-                new FM6(0, reverb, distortion, chorus, hpflpf, reversePhase, compressor, 0),
-                new FM6(1, reverb, distortion, chorus, hpflpf, reversePhase, compressor, 6)};
+                new FM6(0, effects, 0),
+                new FM6(1, effects, 6)
+        };
         psg2 = new PSG2[] {
-                new PSG2(0, reverb, distortion, chorus, hpflpf, reversePhase, compressor, 12),
-                new PSG2(1, reverb, distortion, chorus, hpflpf, reversePhase, compressor, 15),
-                new PSG2(2, reverb, distortion, chorus, hpflpf, reversePhase, compressor, 18),
-                new PSG2(3, reverb, distortion, chorus, hpflpf, reversePhase, compressor, 21)};
+                new PSG2(0, effects, 12),
+                new PSG2(1, effects, 15),
+                new PSG2(2, effects, 18),
+                new PSG2(3, effects, 21)
+        };
         adpcmB = new AdpcmB[] {
-                new AdpcmB(0, reverb, distortion, chorus, hpflpf, reversePhase, compressor, 24),
-                new AdpcmB(1, reverb, distortion, chorus, hpflpf, reversePhase, compressor, 25),
-                new AdpcmB(2, reverb, distortion, chorus, hpflpf, reversePhase, compressor, 26)};
+                new AdpcmB(0, effects, 24),
+                new AdpcmB(1, effects, 25),
+                new AdpcmB(2, effects, 26)
+        };
         rhythm = new Rhythm[] {
-                new Rhythm(0, reverb, distortion, chorus, hpflpf, reversePhase, compressor, 27),
-                new Rhythm(1, reverb, distortion, chorus, hpflpf, reversePhase, compressor, 28),
-                new Rhythm(2, reverb, distortion, chorus, hpflpf, reversePhase, compressor, 29),
-                new Rhythm(3, reverb, distortion, chorus, hpflpf, reversePhase, compressor, 30),
-                new Rhythm(4, reverb, distortion, chorus, hpflpf, reversePhase, compressor, 31),
-                new Rhythm(5, reverb, distortion, chorus, hpflpf, reversePhase, compressor, 32)};
-        adpcmA = new AdpcmA(0, reverb, distortion, chorus, hpflpf, reversePhase, compressor, 33);
+                new Rhythm(0, effects, 27),
+                new Rhythm(1, effects, 28),
+                new Rhythm(2, effects, 29),
+                new Rhythm(3, effects, 30),
+                new Rhythm(4, effects, 31),
+                new Rhythm(5, effects, 32)
+        };
+        adpcmA = new AdpcmA(0, effects, 33);
 
         for (int i = 0; i < 6; i++) {
             rhythm[i].sample = null;
@@ -136,7 +114,7 @@ public class OPNA2 extends Opna.OPNABase {
             rhythm[i].size = 0;
             rhythm[i].volume = 0;
         }
-        rhythmtVol = 0;
+        rhythmTVol = 0;
 
         for (int i = 0; i < 2; i++) {
             fm6[i].parent = this;
@@ -166,13 +144,13 @@ public class OPNA2 extends Opna.OPNABase {
         return init(c, r, false, "");
     }
 
-    public boolean init(int c, int r, boolean ipflag, String path) {
-        return init(c, r, ipflag, fname -> createRhythmFileStream(path, fname), null, 0);
+    public boolean init(int c, int r, boolean ipFlag, String path) {
+        return init(c, r, ipFlag, fname -> createRhythmFileStream(path, fname), null, 0);
     }
 
-    public boolean init(int c, int r, boolean ipflag,
+    public boolean init(int c, int r, boolean ipFlag,
                         Function<String, Stream> appendFileReaderCallback/* = null*/,
-                        byte[] _adpcma/* = null*/, int _adpcma_size/* = 0*/) {
+                        byte[] adpcmA/* = null*/, int adpcmaSize/* = 0*/) {
         rate = 8000;
         try {
             loadRhythmSample(appendFileReaderCallback);
@@ -193,11 +171,11 @@ public class OPNA2 extends Opna.OPNABase {
         if (adpcmB[2].adpcmBuf == null)
             return false;
 
-        setAdpcmA(_adpcma, _adpcma_size);
+        setAdpcmA(adpcmA, adpcmaSize);
 
-        if (!setRate(c, r, ipflag))
+        if (!setRate(c, r, ipFlag))
             return false;
-        if (!super.init(c, r, ipflag))
+        if (!super.init(c, r, ipFlag))
             return false;
 
         reset();
@@ -242,22 +220,21 @@ public class OPNA2 extends Opna.OPNABase {
     /**
      * 合成
      * @param buffer 合成先
-     * @param nsamples 合成サンプル数
+     * @param samples 合成サンプル数
      */
-    public void mix(int[] buffer, int nsamples) {
-
-        fm6[0].mix(buffer, nsamples, regTc);
-        fm6[1].mix(buffer, nsamples, regTc);
-        psg2[0].mix(buffer, nsamples);
-        psg2[1].mix(buffer, nsamples);
-        psg2[2].mix(buffer, nsamples);
-        psg2[3].mix(buffer, nsamples);
-        adpcmB[0].mix(buffer, nsamples);
-        adpcmB[1].mix(buffer, nsamples);
-        adpcmB[2].mix(buffer, nsamples);
-        rhythmMix(buffer, nsamples);
-        adpcmA.mix(buffer, (int) nsamples);
-        ep3band.mix(buffer, nsamples);
+    public void mix(int[] buffer, int samples) {
+        fm6[0].mix(buffer, samples, regTc);
+        fm6[1].mix(buffer, samples, regTc);
+        psg2[0].mix(buffer, samples);
+        psg2[1].mix(buffer, samples);
+        psg2[2].mix(buffer, samples);
+        psg2[3].mix(buffer, samples);
+        adpcmB[0].mix(buffer, samples);
+        adpcmB[1].mix(buffer, samples);
+        adpcmB[2].mix(buffer, samples);
+        rhythmMix(buffer, samples);
+        adpcmA.mix(buffer, samples);
+        effects.ep3band.mix(buffer, samples);
     }
 
     /**
@@ -280,13 +257,7 @@ public class OPNA2 extends Opna.OPNABase {
         psg2[3].reset();
 
         for (int i = 0; i < 3; i++) {
-            adpcmB[i].statusNext = 0;
-            adpcmB[i].memAddr = 0;
-            adpcmB[i].adpcmD = 127;
-            adpcmB[i].adpcMx = 0;
-            adpcmB[i].adpcmPlay = false;
-            adpcmB[i].adplC = 0;
-            adpcmB[i].adplD = 0x100;
+            adpcmB[i].reset();
         }
     }
 
@@ -317,7 +288,7 @@ public class OPNA2 extends Opna.OPNABase {
             int ratio = ((fmclock << Fmvgen.FM_RATIOBITS) + rate / 2) / rate;
 
             setTimerBase(fmclock);
-            //  MakeTimeTable(ratio);
+            //makeTimeTable(ratio);
             fm6[0].chip.setRatio(ratio);
             fm6[1].chip.setRatio(ratio);
 
@@ -333,7 +304,7 @@ public class OPNA2 extends Opna.OPNABase {
     }
 
     /**
-     * // レジスタアレイにデータを設定
+     * レジスタアレイにデータを設定
      */
     public void setReg(int addr, int data) {
         addr &= 0x3ff;
@@ -345,10 +316,10 @@ public class OPNA2 extends Opna.OPNABase {
             rhythmSetReg(addr, (byte) data);
             return;
         } else if (addr >= 0xc0 && addr < 0xcc) {
-            ep3band.setReg(addr & 0xf, (byte) data);
+            effects.ep3band.setReg(addr & 0xf, (byte) data);
             return;
         } else if (addr >= 0xcc && addr < 0xd9) {
-            reversePhase.setReg(addr - 0xcc, (byte) data);
+            effects.reversePhase.setReg(addr - 0xcc, (byte) data);
             return;
         } else if (addr >= 0x100 && addr < 0x111) {
             adpcmbSetReg(0, addr - 0x100, (byte) data);
@@ -374,27 +345,27 @@ public class OPNA2 extends Opna.OPNABase {
             adpcmbSetReg(2, addr - 0x311, (byte) data);
             return;
         } else if (addr >= 0x322 && addr < 0x325) {
-            reverb.setReg(addr - 0x322, (byte) data);
+            effects.reverb.setReg(addr - 0x322, (byte) data);
             if (addr == 0x323) {
-                distortion.setReg(0, (byte) data); // channel 変更はアドレスを共有
-                chorus.setReg(0, (byte) data);
-                hpflpf.setReg(0, (byte) data);
-                compressor.setReg(0, (byte) data);
+                effects.distortion.setReg(0, (byte) data); // channel 変更はアドレスを共有
+                effects.chorus.setReg(0, (byte) data);
+                effects.hpflpf.setReg(0, (byte) data);
+                effects.compressor.setReg(0, (byte) data);
             }
             return;
         } else if (addr >= 0x325 && addr < 0x328) {
-            distortion.setReg(addr - 0x324, (byte) data); // distortion のアドレス 0 はリバーブと共有
+            effects.distortion.setReg(addr - 0x324, (byte) data); // distortion のアドレス 0 はリバーブと共有
             return;
         } else if (addr >= 0x328 && addr < 0x32C) {
-            chorus.setReg(addr - 0x327, (byte) data); // chorus のアドレス 0 はリバーブと共有
+            effects.chorus.setReg(addr - 0x327, (byte) data); // chorus のアドレス 0 はリバーブと共有
             return;
         } else if (addr >= 0x32C && addr < 0x330) {
             return;
         } else if (addr >= 0x3c0 && addr < 0x3c6) {
-            hpflpf.setReg(addr - 0x3bf, (byte) data);
+            effects.hpflpf.setReg(addr - 0x3bf, (byte) data);
             return;
         } else if (addr >= 0x3c6 && addr < 0x3cd) {
-            compressor.setReg(addr - 0x3c5, (byte) data);
+            effects.compressor.setReg(addr - 0x3c5, (byte) data);
             return;
         }
 
@@ -496,10 +467,10 @@ public class OPNA2 extends Opna.OPNABase {
             fm6[1].ch[i].mute(!((mask & (1 << i)) == 0));
         }
 
-        psg2[0].setChannelMask((int) (mask >> 6));
-        psg2[1].setChannelMask((int) (mask >> 6));
-        psg2[2].setChannelMask((int) (mask >> 6));
-        psg2[3].setChannelMask((int) (mask >> 6));
+        psg2[0].setChannelMask(mask >> 6);
+        psg2[1].setChannelMask(mask >> 6);
+        psg2[2].setChannelMask(mask >> 6);
+        psg2[3].setChannelMask(mask >> 6);
 
         adpcmB[0].adpcmMask_ = (mask & (1 << 9)) != 0;
         adpcmB[1].adpcmMask_ = (mask & (1 << 9)) != 0;
@@ -516,14 +487,14 @@ public class OPNA2 extends Opna.OPNABase {
      * リズム合成
      */
     private void rhythmMix(int[] buffer, int count) {
-        if (rhythmtVol < 128 && rhythm[0].sample != null && ((rhythmKey & 0x3f) != 0)) {
+        if (rhythmTVol < 128 && rhythm[0].sample != null && ((rhythmKey & 0x3f) != 0)) {
             int limit = count * 2;
             visRtmVolume[0] = 0;
             visRtmVolume[1] = 0;
             for (int i = 0; i < 6; i++) {
                 Rhythm r = rhythm[i];
                 if ((rhythmKey & (1 << i)) != 0 && r.level < 128) {
-                    int db = limit(rhythmTl + rhythmtVol + r.level + r.volume, 127, -31);
+                    int db = limit(rhythmTl + rhythmTVol + r.level + r.volume, 127, -31);
                     int vol = tlTable[Fmvgen.FM_TLPOS + (db << (Fmvgen.FM_TLBITS - 7))] >> 4;
                     int maskL = -((r.pan >> 1) & 1);
                     int maskR = -(r.pan & 1);
@@ -538,20 +509,20 @@ public class OPNA2 extends Opna.OPNABase {
 
                         int[] sL = new int[] {sample};
                         int[] sR = new int[] {sample};
-                        distortion.mix(r.efcCh, sL, sR);
-                        chorus.mix(r.efcCh, sL, sR);
-                        hpflpf.mix(r.efcCh, sL, sR);
-                        compressor.mix(r.efcCh, sL, sR);
+                        effects.distortion.mix(r.efcCh, sL, sR);
+                        effects.chorus.mix(r.efcCh, sL, sR);
+                        effects.hpflpf.mix(r.efcCh, sL, sR);
+                        effects.compressor.mix(r.efcCh, sL, sR);
 
                         sL[0] = sL[0] & maskL;
                         sR[0] = sR[0] & maskR;
-                        sL[0] *= reversePhase.rhythm[i][0];
-                        sR[0] *= reversePhase.rhythm[i][1];
-                        int revSampleL = (int) (sL[0] * reverb.sendLevel[r.efcCh]);
-                        int revSampleR = (int) (sR[0] * reverb.sendLevel[r.efcCh]);
-                        Fmvgen.storeSample(buffer[dest + 0], sL[0]);
-                        Fmvgen.storeSample(buffer[dest + 1], sR[0]);
-                        reverb.storeDataC(revSampleL, revSampleR);
+                        sL[0] *= ReversePhase.rhythm[i][0];
+                        sR[0] *= ReversePhase.rhythm[i][1];
+                        int revSampleL = (int) (sL[0] * effects.reverb.sendLevel[r.efcCh]);
+                        int revSampleR = (int) (sR[0] * effects.reverb.sendLevel[r.efcCh]);
+                        buffer[dest + 0] += sL[0];
+                        buffer[dest + 1] += sR[0];
+                        effects.reverb.storeDataC(revSampleL, revSampleR);
                         visRtmVolume[0] += sample & maskL;
                         visRtmVolume[1] += sample & maskR;
                     }
@@ -573,7 +544,7 @@ public class OPNA2 extends Opna.OPNABase {
      * リズム音を読みこむ
      */
     public boolean loadRhythmSample(Function<String, Stream> appendFileReaderCallback) throws IOException {
-        final String[] rhythmname = {
+        final String[] rhythmName = {
                 "bd", "sd", "top", "hh", "tom", "rim",
         };
 
@@ -582,11 +553,11 @@ public class OPNA2 extends Opna.OPNABase {
             rhythm[i].pos = ~(int) 0;
 
         for (i = 0; i < 6; i++) {
-            byte[] buf = null;
-            int filePtr = 0;
+            byte[] buf;
+            int filePtr;
 
             int fSize;
-            String fileName = String.format("2608_%s.wav", rhythmname[i]);
+            String fileName = String.format("2608_%s.wav", rhythmName[i]);
 
             try (Stream st = appendFileReaderCallback.apply(fileName)) {
                 buf = Common.readAllBytes(st);
@@ -664,7 +635,7 @@ public class OPNA2 extends Opna.OPNABase {
      */
     public void setVolumeRhythmTotal(int db) {
         db = Math.min(db, 20);
-        rhythmtVol = -(db * 2 / 3);
+        rhythmTVol = -(db * 2 / 3);
     }
 
     public void setVolumeRhythm(int index, int db) {
@@ -682,5 +653,21 @@ public class OPNA2 extends Opna.OPNABase {
 
     public void setTimerControl(int data) {
         super.setTimerControl(data);
+    }
+
+    // Ym2609
+    public int[] update() {
+        int[] updateBuffer = new int[2];
+        updateBuffer[0] = this.effects.reverb.getDataFromPosL() >> 1;
+        updateBuffer[1] = this.effects.reverb.getDataFromPosR() >> 1;
+
+        this.effects.reverb.storeDataC(this.effects.reverb.getDataFromPosL() >> 1, this.effects.reverb.getDataFromPosR() >> 1);
+        this.effects.reverb.clearDataAtPos();
+
+        this.mix(updateBuffer, 1);
+
+        this.effects.reverb.updatePos();
+
+        return updateBuffer;
     }
 }

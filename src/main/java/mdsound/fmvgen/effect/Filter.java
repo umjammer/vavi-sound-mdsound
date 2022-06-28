@@ -1,14 +1,11 @@
 
 package mdsound.fmvgen.effect;
 
-class CMyFilter {
+class Filter {
 
     public final static float convInt = 21474.83647f;
-
     public static float[] freqTable;
-
     public static float[] gainTable;
-
     public static float[] qTable;
 
     // フィルタの係数
@@ -16,10 +13,9 @@ class CMyFilter {
 
     // バッファ
     private float out1, out2;
-
     private float in1, in2;
 
-    public CMyFilter() {
+    public Filter() {
         // メンバー変数を初期化
         a0 = 1.0f; // 0以外にしておかないと除算でエラーになる
         a1 = 0.0f;
@@ -38,23 +34,23 @@ class CMyFilter {
     /**
      * 入力信号にフィルタを適用する関数
      */
-    public float process(float in_) {
+    public float process(float in) {
         // 入力信号にフィルタを適用し、出力信号変数に保存。
-        float out_ = b0 / a0 * in_ + b1 / a0 * in1 + b2 / a0 * in2 - a1 / a0 * out1 - a2 / a0 * out2;
+        float out = b0 / a0 * in + b1 / a0 * in1 + b2 / a0 * in2 - a1 / a0 * out1 - a2 / a0 * out2;
 
         in2 = in1; // 2つ前の入力信号を更新
-        in1 = in_; // 1つ前の入力信号を更新
+        in1 = in; // 1つ前の入力信号を更新
 
         out2 = out1; // 2つ前の出力信号を更新
-        out1 = out_; // 1つ前の出力信号を更新
+        out1 = out; // 1つ前の出力信号を更新
 
         // 出力信号を返す
-        return out_;
+        return out;
     }
 
-    public void lowPass(float freq, float q, float samplerate) {
+    public void lowPass(float freq, float q, float sampleRate) {
         // フィルタ係数計算で使用する中間値を求める。
-        float omega = 2.0f * (float) Math.PI * freq / samplerate;
+        float omega = 2.0f * (float) Math.PI * freq / sampleRate;
         float alpha = (float) (Math.sin(omega) / (2.0f * q));
 
         // フィルタ係数を求める。
@@ -66,9 +62,9 @@ class CMyFilter {
         b2 = (float) ((1.0f - Math.cos(omega)) / 2.0f);
     }
 
-    public void highPass(float freq, float q, float samplerate) {
+    public void highPass(float freq, float q, float sampleRate) {
         // フィルタ係数計算で使用する中間値を求める。
-        float omega = 2.0f * (float) Math.PI * freq / samplerate;
+        float omega = 2.0f * (float) Math.PI * freq / sampleRate;
         float alpha = (float) (Math.sin(omega) / (2.0f * q));
 
         // フィルタ係数を求める。
@@ -80,9 +76,9 @@ class CMyFilter {
         b2 = (float) ((1.0f + Math.cos(omega)) / 2.0f);
     }
 
-    public void bandPass(float freq, float bw, float samplerate) {
+    public void bandPass(float freq, float bw, float sampleRate) {
         // フィルタ係数計算で使用する中間値を求める。
-        float omega = 2.0f * (float) Math.PI * freq / samplerate;
+        float omega = 2.0f * (float) Math.PI * freq / sampleRate;
         float alpha = (float) (Math.sin(omega) * Math.sinh(Math.log(2.0f) / 2.0 * bw * omega / Math.sin(omega)));
 
         // フィルタ係数を求める。
@@ -94,9 +90,9 @@ class CMyFilter {
         b2 = -alpha;
     }
 
-    public void notch(float freq, float bw, float samplerate) {
+    public void notch(float freq, float bw, float sampleRate) {
         // フィルタ係数計算で使用する中間値を求める。
-        float omega = 2.0f * (float) Math.PI * freq / samplerate;
+        float omega = 2.0f * (float) Math.PI * freq / sampleRate;
         float alpha = (float) (Math.sin(omega) * Math.sinh(Math.log(2.0f) / 2.0 * bw * omega / Math.sin(omega)));
 
         // フィルタ係数を求める。
@@ -169,7 +165,7 @@ class CMyFilter {
         b2 = 1.0f + alpha;
     }
 
-    public static void makeTable() {
+    static {
         freqTable = new float[256];
         gainTable = new float[256];
         qTable = new float[256];

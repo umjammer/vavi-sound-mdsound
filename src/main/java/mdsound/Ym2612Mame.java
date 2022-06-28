@@ -7,8 +7,8 @@ import mdsound.mame.Fm2612;
 public class Ym2612Mame extends Instrument.BaseInstrument {
     private static final int MAX_CHIPS = 2;
     private static final int DefaultFMClockValue = 7670454;
-    public Fm2612[] YM2612_Chip = new Fm2612[] {null, null};
-    private Fm2612.YM2612[] ym2612 = new Fm2612.YM2612[MAX_CHIPS];
+    public Fm2612[] chips = new Fm2612[] {null, null};
+    private Fm2612.Ym2612[] ym2612 = new Fm2612.Ym2612[MAX_CHIPS];
 
     @Override
     public String getName() {
@@ -29,55 +29,51 @@ public class Ym2612Mame extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void reset(byte chipID) {
-        if (YM2612_Chip[chipID] == null) return;
+    public void reset(byte chipId) {
+        if (chips[chipId] == null) return;
 
-        YM2612_Chip[chipID].ym2612_reset_chip(ym2612[chipID]);
+        chips[chipId].ym2612_reset_chip(ym2612[chipId]);
     }
 
     @Override
-    public int start(byte chipID, int clock) {
-        YM2612_Chip[chipID] = new Fm2612();
-        ym2612[chipID] = new Fm2612.YM2612(DefaultFMClockValue, clock, null, null);
+    public int start(byte chipId, int clock) {
+        chips[chipId] = new Fm2612();
+        ym2612[chipId] = new Fm2612.Ym2612(DefaultFMClockValue, clock, null, null);
 
         return clock;
     }
 
     @Override
-    public int start(byte chipID, int clock, int clockValue, Object... option) {
-        YM2612_Chip[chipID] = new Fm2612();
-        ym2612[chipID] = new Fm2612.YM2612(clockValue, clock, null, null);
-        YM2612_Chip[chipID].updateRequest = this::ym2612_update_request;
+    public int start(byte chipId, int clock, int clockValue, Object... option) {
+        chips[chipId] = new Fm2612();
+        ym2612[chipId] = new Fm2612.Ym2612(clockValue, clock, null, null);
+        ym2612[chipId].updateRequest = () -> ym2612[chipId].updateOne(new int[2][], 0);
 
         return clock;
     }
 
-    void ym2612_update_request(byte chipID, Fm.BaseChip param) {
-        YM2612_Chip[chipID].ym2612_update_one(ym2612[chipID], new int[2][], 0);
+    @Override
+    public void stop(byte chipId) {
+        chips[chipId] = null;
     }
 
     @Override
-    public void stop(byte chipID) {
-        YM2612_Chip[chipID] = null;
+    public void update(byte chipId, int[][] outputs, int samples) {
+        chips[chipId].ym2612_update_one(ym2612[chipId], outputs, samples);
+
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
     }
 
     @Override
-    public void update(byte chipID, int[][] outputs, int samples) {
-        YM2612_Chip[chipID].ym2612_update_one(ym2612[chipID], outputs, samples);
+    public int write(byte chipId, int port, int adr, int data) {
+        if (chips[chipId] == null) return 0;
 
-        visVolume[chipID][0][0] = outputs[0][0];
-        visVolume[chipID][0][1] = outputs[1][0];
+        return chips[chipId].ym2612_write(chipId, ym2612[chipId], (byte) adr, (byte) data);
     }
 
-    @Override
-    public int write(byte chipID, int port, int adr, int data) {
-        if (YM2612_Chip[chipID] == null) return 0;
-
-        return YM2612_Chip[chipID].ym2612_write(chipID, ym2612[chipID], (byte) adr, (byte) data);
-    }
-
-    public void SetMute(byte chipID, int mask) {
-        if (YM2612_Chip[chipID] == null) return;
-        YM2612_Chip[chipID].ym2612_set_mutemask(chipID, ym2612[chipID], mask);
+    public void SetMute(byte chipId, int mask) {
+        if (chips[chipId] == null) return;
+        chips[chipId].ym2612_set_mutemask(chipId, ym2612[chipId], mask);
     }
 }

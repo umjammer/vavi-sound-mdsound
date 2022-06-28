@@ -211,12 +211,12 @@ public class NpNesFds {
             // execute all clocked steps
             for (p = start_pos; p < end_pos; ++p) {
                 int wv = this.wave[TG.TMOD.ordinal()][p & 0x3F];
-                if (wv == 4)    // 4 resets mod position
+                if (wv == 4) // 4 resets mod position
                     this.modPos = 0;
                 else {
                     final int[] bias = new int[] {0, 1, 2, 4, 0, -4, -2, -1};
                     this.modPos += bias[wv];
-                    this.modPos &= 0x7F;   // 7-bit clamp
+                    this.modPos &= 0x7F; // 7-bit clamp
                 }
             }
         }
@@ -259,7 +259,7 @@ public class NpNesFds {
             this.phase[TG.TWAV.ordinal()] = this.phase[TG.TWAV.ordinal()] & 0x3FFFFF; // wrap
 
             // store for trackinfo
-            this.lastFreq = (int) f;
+            this.lastFreq = f;
         }
 
         // output volume caps at 32
@@ -337,7 +337,7 @@ public class NpNesFds {
         if (adr < 0x4040 || adr > 0x408A)
             return false;
 
-        if (adr < 0x4080) {  // $4040-407F wave table write
+        if (adr < 0x4080) { // $4040-407F wave table write
             if (this.wavWrite)
                 this.wave[TG.TWAV.ordinal()][adr - 0x4040] = val & 0x3F;
             return true;
