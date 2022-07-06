@@ -23,7 +23,7 @@ public class RealChip {
                 nScci = null;
                 Log.ForcedWrite("RealChip:Ctr:Not found SCCI.");
             } else {
-                Log.ForcedWrite(String.format("RealChip:Ctr:Found SCCI.(Interface count={0})", n));
+                Log.ForcedWrite(String.format("RealChip:Ctr:Found SCCI.(Interface count=%d)", n));
                 getScciInstances();
                 nScci.NSoundInterfaceManager_.setLevelDisp(false);
             }
@@ -41,7 +41,7 @@ public class RealChip {
                 nc86ctl = null;
                 Log.ForcedWrite("RealChip:Ctr:Not found G.I.MPcm.I.C.");
             } else {
-                Log.ForcedWrite(String.format("RealChip:Ctr:Found G.I.MPcm.I.C.(Interface count={0})", n));
+                Log.ForcedWrite(String.format("RealChip:Ctr:Found G.I.MPcm.I.C.(Interface count=%d)", n));
                 Nc86ctl.NIRealChip nirc = nc86ctl.getChipInterface(0);
                 nirc.reset();
             }
@@ -148,7 +148,7 @@ public class RealChip {
             // {
             // Thread.Sleep(1);
             // timeOutCounter--;
-            // //Debug.WriteLine("{0:x}", rc.@in(0x0));
+            // //Debug.WriteLine("%x", rc.@in(0x0));
             // }
             // timeOutCounter = 10000;
             // while ((rc.@in(0x100) & 0xbf) != 0 && timeOutCounter > 0)

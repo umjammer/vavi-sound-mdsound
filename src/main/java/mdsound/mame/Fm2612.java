@@ -14,7 +14,7 @@ package mdsound.mame;
 import java.util.Arrays;
 import java.util.function.BiConsumer;
 
-import mdsound.Common.QuadConsumer;
+import dotnet4j.util.compat.QuadConsumer;
 import mdsound.mame.Fm.BaseChip;
 
 
@@ -2517,8 +2517,8 @@ public class Fm2612 {
                 this.waveOutMode = 0x01;
             else
                 this.waveOutMode = 0x03;
-//System.err.printf(hFile, "Clock: %d, Sample Rate: %d\n", clock, rate);
-//System.err.printf(hFile, "Sample\tCh 0\tCh 1\tCh 2\tCh 3\tCh 4\tCh 5\n");
+//Debug.printf(hFile, "Clock: %d, Sample Rate: %d\n", clock, rate);
+//Debug.printf(hFile, "Sample\tCh 0\tCh 1\tCh 2\tCh 3\tCh 4\tCh 5\n");
         }
 
         private void resetChannels(int num) {
@@ -2534,7 +2534,7 @@ public class Fm2612 {
             case 1:
             case 2:
             case 3:
-                //System.err.printf("Ym2612 #%p:A=%d read unmapped area\n",this.OPN.ST.param,a);
+                //Debug.printf("Ym2612 #%p:A=%d read unmapped area\n",this.OPN.ST.param,a);
                 return this.opn.st.setStatus();
             }
             return 0;
@@ -2706,10 +2706,10 @@ public class Fm2612 {
                     cch[5].advanceEg(opn.egCnt);
                 }
 
-//System.err.printf(hFile, "%u", FileSample, outFm[0]);
+//Debug.printf(hFile, "%u", FileSample, outFm[0]);
 //for (lt = 0; lt < 6; lt ++)
-// System.err.printf(hFile, "\t%d", outFm[lt]);
-//System.err.printf(hFile, "\n");
+// Debug.printf(hFile, "\t%d", outFm[lt]);
+//Debug.printf(hFile, "\n");
 
                 if (outFm[0].val > 8192) outFm[0].val = 8192;
                 else if (outFm[0].val < -8192) outFm[0].val = -8192;

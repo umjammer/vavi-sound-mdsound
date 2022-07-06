@@ -324,8 +324,4 @@ public class Emu2149 {
             break;
         }
     }
-
-    protected void finalize() {
-        psg = null;
-    }
 }

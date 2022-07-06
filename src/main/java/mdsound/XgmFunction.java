@@ -1,6 +1,6 @@
 package mdsound;
 
-import mdsound.Common.QuadFunction;
+import dotnet4j.util.compat.QuadFunction;
 
 
 public class XgmFunction {

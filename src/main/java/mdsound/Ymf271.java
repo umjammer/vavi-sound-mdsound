@@ -315,7 +315,7 @@ public class Ymf271 extends Instrument.BaseInstrument {
                 }
 
                 //if (this.waveform != 7) {
-                // System.err.printf("Waveform %d in update_pcm !!!\n", this.waveform);
+                // Debug.printf("Waveform %d in update_pcm !!!\n", this.waveform);
                 //}
 
                 for (int i = 0; i < length; i++) {
@@ -647,7 +647,7 @@ public class Ymf271 extends Instrument.BaseInstrument {
                     continue;
 
 //if (slotGroup.pfm && slotGroup.sync != 3) {
-// System.err.printf("Ymf271 Group %d: PFM, Sync = %d, Waveform Slot1 = %d, Slot2 = %d, Slot3 = %d, Slot4 = %d\n",
+// Debug.printf("Ymf271 Group %d: PFM, Sync = %d, Waveform Slot1 = %d, Slot2 = %d, Slot3 = %d, Slot4 = %d\n",
 //  j, slotGroup.sync, this.slots[j + 0].waveform, this.slots[j + 12].waveform, this.slots[j + 24].waveform, this.slots[j + 36].waveform);
 //}
 
@@ -1158,7 +1158,7 @@ public class Ymf271 extends Instrument.BaseInstrument {
             int syncMode;
 
             if (groupNum == -1) {
-                //System.err.printf("ymf271_write_fm invalid group %02X %02X", address, data);
+                //Debug.printf("ymf271_write_fm invalid group %02X %02X", address, data);
                 return;
             }
 
@@ -1244,7 +1244,7 @@ public class Ymf271 extends Instrument.BaseInstrument {
             int slotnum = pcmTab[address & 0xf];
             Slot slot;
             if (slotnum == -1) {
-                //System.err.printf("ymf271_write_pcm invalid slot %02X %02X", address, data);
+                //Debug.printf("ymf271_write_pcm invalid slot %02X %02X", address, data);
                 return;
             }
             slot = this.slots[slotnum];
@@ -1322,7 +1322,7 @@ public class Ymf271 extends Instrument.BaseInstrument {
             if ((address & 0xf0) == 0) {
                 int groupNum = fmTab[address & 0xf];
                 if (groupNum == -1) {
-                    //System.err.printf("ymf271_write_timer invalid group %2x %2x", address, data);
+                    //Debug.printf("ymf271_write_timer invalid group %2x %2x", address, data);
                     return;
                 }
                 Group group = this.groups[groupNum];

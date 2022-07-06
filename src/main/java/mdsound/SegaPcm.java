@@ -107,9 +107,9 @@ public class SegaPcm extends Instrument.BaseInstrument {
                 /* only process active channels */
                 if ((this.ram[ptrRegs + 0x86] & 1) == 0 && this.muted[ch] == 0) {
                     int ptrRom = this.ptrRom + ((this.ram[ptrRegs + 0x86] & this.bankMask) << this.bankShift);
-                    //System.err.printf("this.ram[ptrRegs + 0x86]:%x", this.ram[ptrRegs + 0x86]);
-                    //System.err.printf("this.bankmask:%x", this.bankmask);
-                    //System.err.printf("this.bankshift:%x", this.bankshift);
+                    //Debug.printf("this.ram[ptrRegs + 0x86]:%x", this.ram[ptrRegs + 0x86]);
+                    //Debug.printf("this.bankmask:%x", this.bankmask);
+                    //Debug.printf("this.bankshift:%x", this.bankshift);
                     int addr = (this.ram[ptrRegs + 0x85] << 16) | (this.ram[ptrRegs + 0x84] << 8) | this.low[ch];
                     int loop = (this.ram[ptrRegs + 0x05] << 16) | (this.ram[ptrRegs + 0x04] << 8);
                     byte end = (byte) (this.ram[ptrRegs + 6] + 1);

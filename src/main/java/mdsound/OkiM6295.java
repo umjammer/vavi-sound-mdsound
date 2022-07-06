@@ -136,8 +136,8 @@ public class OkiM6295 extends Instrument.BaseInstrument {
              * clock the next ADPCM byte
              */
             public short clock(byte nibble) {
-//System.err.printf("nibble=%d diff_lookup[%d]=%d\n", nibble, this.step * 16 + (nibble & 15), diff_lookup[this.step * 16 + (nibble & 15)]);
-//System.err.printf("1this.signal=%d\n", this.signal);
+//Debug.printf("nibble=%d diff_lookup[%d]=%d\n", nibble, this.step * 16 + (nibble & 15), diff_lookup[this.step * 16 + (nibble & 15)]);
+//Debug.printf("1this.signal=%d\n", this.signal);
                 this.signal += diffLookup[this.step * 16 + (nibble & 15)];
 
                 // clamp to the maximum
@@ -146,16 +146,16 @@ public class OkiM6295 extends Instrument.BaseInstrument {
                 else if (this.signal < -2048)
                     this.signal = -2048;
 
-//System.err.printf("2this.signal=%d\n", this.signal);
+//Debug.printf("2this.signal=%d\n", this.signal);
                 // adjust the step size and clamp
                 this.step += indexShift[nibble & 7];
-//System.err.printf("3this.signal=%d\n", this.signal);
+//Debug.printf("3this.signal=%d\n", this.signal);
                 if (this.step > 48)
                     this.step = 48;
                 else if (this.step < 0)
                     this.step = 0;
 
-//System.err.printf("4this.signal=%d\n", this.signal);
+//Debug.printf("4this.signal=%d\n", this.signal);
                 /* return the signal */
                 return (short) this.signal;
             }
@@ -211,7 +211,7 @@ public class OkiM6295 extends Instrument.BaseInstrument {
 
                 /* if this Voice is active */
                 if (playing != 0) {
-                    //System.err.printf("base_offset[%x] sample[%x] count[%x]\n", Voice.base_offset, Voice.sample, Voice.count);
+                    //Debug.printf("base_offset[%x] sample[%x] count[%x]\n", Voice.base_offset, Voice.sample, Voice.count);
                     int iBase = baseOffset;
                     int sample = this.sample;
                     int count = this.count;
@@ -220,14 +220,14 @@ public class OkiM6295 extends Instrument.BaseInstrument {
                     while (samples != 0) {
                         // compute the new amplitude and update the current step
                         //int nibble = memory_raw_read_byte(this.device.space(), base + sample / 2) >> (((sample & 1) << 2) ^ 4);
-                        //System.err.printf("nibblecal1[%d]2[%d]\n", iBase + sample / 2, (((sample & 1) << 2) ^ 4));
+                        //Debug.printf("nibblecal1[%d]2[%d]\n", iBase + sample / 2, (((sample & 1) << 2) ^ 4));
                         byte nibble = read.apply((iBase + sample / 2) >> (((sample & 1) << 2) ^ 4));
-                        //System.err.printf( "nibble[%x]\n", nibble);
+                        //Debug.printf( "nibble[%x]\n", nibble);
 
                         // output to the buffer, scaling by the volume
                         // signal in range -2048..2047, volume in range 2..32 => signal * volume / 2 in range -32768..32767
                         buffer[ptrBuffer++] = (short) (adpcm.clock(nibble) * volume / 2);
-                        //System.err.printf("*buffer[%d]\n", buffer[ptrBuffer-1]);
+                        //Debug.printf("*buffer[%d]\n", buffer[ptrBuffer-1]);
                         samples--;
 
                         // next!
@@ -307,7 +307,7 @@ public class OkiM6295 extends Instrument.BaseInstrument {
         }
 
         private void update(int[][] outputs, int samples) {
-            //System.err.printf("samples:%d\n"        , samples);
+            //Debug.printf("samples:%d\n"        , samples);
             for (int i = 0; i < samples; i++) {
                 outputs[0][i] = 0;
             }
@@ -328,7 +328,7 @@ public class OkiM6295 extends Instrument.BaseInstrument {
                         for (int samp = 0; samp < _samples; samp++) {
                             outputs[0][ptrBuffer++] += sampleData[samp];
                             //if (sampleData[samp] != 0) {
-                            //    System.err.printf("ch:%d sampledata[%d]=%d count:%d sample:%d"
+                            //    Debug.printf("ch:%d sampledata[%d]=%d count:%d sample:%d"
                             //    , i, samp, sampleData[samp]
                             //    , Voice.count, Voice.sample);
                             //}
@@ -449,7 +449,7 @@ public class OkiM6295 extends Instrument.BaseInstrument {
 
                 // the manual explicitly says that it's not possible to start multiple voices at the same time
 //if (temp != 0 && temp != 1 && temp != 2 && temp != 4 && temp != 8)
-// System.err.printf("OKI6295 start %x contact MAMEDEV\n", temp);
+// Debug.printf("OKI6295 start %x contact MAMEDEV\n", temp);
 
                 // determine which Voice(s) (Voice is set by a 1 bit in the upper 4 bits of the second byte)
                 for (i = 0; i < VOICES; i++, temp >>= 1) {
@@ -484,13 +484,13 @@ public class OkiM6295 extends Instrument.BaseInstrument {
                                 voice.volume = volumeTable[data & 0x0f];
                                 chInfo.keyon[i] = true;
                             } else {
-                                //System.err.printf("OKIM6295:'%s' requested to play sample %02x on non-stopped Voice\n",device.tag(),this.command);
+                                //Debug.printf("OKIM6295:'%s' requested to play sample %02x on non-stopped Voice\n",device.tag(),this.command);
                                 // just displays warnings when seeking
-                                //System.err.printf("OKIM6295: Voice %u requested to play sample %02x on non-stopped Voice\n",i,this.command);
+                                //Debug.printf("OKIM6295: Voice %u requested to play sample %02x on non-stopped Voice\n",i,this.command);
                             }
                         } else { // invalid samples go here
-                            //System.err.printf("OKIM6295:'%s' requested to play invalid sample %02x\n",device.tag(),this.command);
-                            //System.err.printf("OKIM6295: Voice %d  requested to play invalid sample %2X StartAddr %X StopAdr %X \n", i, this.command, start, stop);
+                            //Debug.printf("OKIM6295:'%s' requested to play invalid sample %02x\n",device.tag(),this.command);
+                            //Debug.printf("OKIM6295: Voice %d  requested to play invalid sample %2X StartAddr %X StopAdr %X \n", i, this.command, start, stop);
                             voice.playing = 0;
                         }
                     }
@@ -566,7 +566,7 @@ public class OkiM6295 extends Instrument.BaseInstrument {
             if (this.romSize != romSize) {
                 this.rom = new byte[romSize];
                 this.romSize = romSize;
-                //System.err.printf("OKIM6295: New ROM Size: 0x%05X\n", romSize);
+                //Debug.printf("OKIM6295: New ROM Size: 0x%05X\n", romSize);
                 Arrays.fill(this.rom, 0, romSize, (byte) 0xff);
             }
             if (dataStart > romSize)
@@ -578,11 +578,11 @@ public class OkiM6295 extends Instrument.BaseInstrument {
         }
 
         public void writeRom2(int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddr) {
-            //System.err.printf("OKIM6295::writeRom2: chipId:%d romSize:%x dataStart:%x dataLength:%x srcStartAddr:%x\n", chipId, romSize, dataStart, dataLength, srcStartAddr);
+            //Debug.printf("OKIM6295::writeRom2: chipId:%d romSize:%x dataStart:%x dataLength:%x srcStartAddr:%x\n", chipId, romSize, dataStart, dataLength, srcStartAddr);
             if (this.romSize != romSize) {
                 this.rom = new byte[romSize];
                 this.romSize = romSize;
-                //System.err.printf("OKIM6295: New ROM Size: 0x%05X\n", romSize);
+                //Debug.printf("OKIM6295: New ROM Size: 0x%05X\n", romSize);
                 Arrays.fill(this.rom, 0, romSize, (byte) 0xff);
             }
             if (dataStart > romSize)
@@ -590,7 +590,7 @@ public class OkiM6295 extends Instrument.BaseInstrument {
             if (dataStart + dataLength > romSize)
                 dataLength = romSize - dataStart;
 
-            //System.err.printf("%02x ", this.ROM[i + dataStart]);
+            //Debug.printf("%02x ", this.ROM[i + dataStart]);
             if (dataLength >= 0) System.arraycopy(romData, 0 + srcStartAddr, this.rom, 0 + dataStart, dataLength);
         }
 

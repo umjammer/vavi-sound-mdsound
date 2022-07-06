@@ -134,8 +134,8 @@ public class Sn76489 extends Instrument.BaseInstrument {
 
         public void GGStereoWrite(int data) {
             this.psgStereo = data;
-            //System.err.printf("WrPSGStereo:0:%d", SN76489Chip[0].psgStereo);
-            //System.err.printf("WrPSGStereo:1:%d", SN76489Chip[1].psgStereo);
+            //Debug.printf("WrPSGStereo:0:%d", SN76489Chip[0].psgStereo);
+            //Debug.printf("WrPSGStereo:1:%d", SN76489Chip[1].psgStereo);
         }
 
         public int start(int samplingRate, int clockValue) {
@@ -196,7 +196,7 @@ public class Sn76489 extends Instrument.BaseInstrument {
         }
 
         public int[][] update(int[][] buffer, int length) {
-            //System.err.printf("PSGStereo:1:%d", SN76489_Chip[1].PSGStereo);
+            //Debug.printf("PSGStereo:1:%d", SN76489_Chip[1].PSGStereo);
 
             SN76489Context chip2;
             SN76489Context chipT;
@@ -252,7 +252,7 @@ public class Sn76489 extends Instrument.BaseInstrument {
                     // For all 4 channels
                     for (i = 0; i <= 3; ++i) {
                         if (((this.psgStereo >> i) & 0x11) == 0x11) {
-                            //System.err.printf("ggpan1");
+                            //Debug.printf("ggpan1");
                             // no GG stereo for this channel
                             if (this.panning[i][0] == 1.0f) {
                                 bl = this.channels[i]; // left
@@ -264,11 +264,11 @@ public class Sn76489 extends Instrument.BaseInstrument {
 
                             }
                         } else {
-                            //System.err.printf("ggpan2");
+                            //Debug.printf("ggpan2");
                             // GG stereo overrides panning
                             bl = ((this.psgStereo >> (i + 4)) & 0x1) * this.channels[i]; // left
                             br = ((this.psgStereo >> i) & 0x1) * this.channels[i]; // right
-                            //System.err.printf("Ch:bl:br:%d:%d:%d:%d",i,bl,br, this.Channels[i]);
+                            //Debug.printf("Ch:bl:br:%d:%d:%d:%d",i,bl,br, this.Channels[i]);
                         }
 
                         buffer[0][j] += bl;

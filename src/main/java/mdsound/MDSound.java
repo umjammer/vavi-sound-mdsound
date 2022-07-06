@@ -7,9 +7,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
-import mdsound.Common.QuadConsumer;
-import mdsound.Common.QuadFunction;
-import mdsound.Common.TriConsumer;
+import dotnet4j.util.compat.QuadConsumer;
+import dotnet4j.util.compat.QuadFunction;
+import dotnet4j.util.compat.TriConsumer;
 import mdsound.np.NpNesFds;
 
 
@@ -29,7 +29,7 @@ public class MDSound {
     private int[][] buffer = null;
     private int[][] buff = new int[][] {new int[1], new int[1]};
 
-    private List<int[]> sn76489Mask = Arrays.asList(new int[][] {new int[] {15, 15}});// psgはmuteを基準にしているのでビットが逆です
+    private List<int[]> sn76489Mask = Arrays.asList(new int[][] {new int[] {15, 15}}); // psgはmuteを基準にしているのでビットが逆です
     private List<int[]> ym2612Mask = Arrays.asList(new int[][] {new int[] {0, 0}});
     private List<int[]> ym2203Mask = Arrays.asList(new int[][] {new int[] {0, 0}});
     private List<int[]> segapcmMask = Arrays.asList(new int[][] {new int[] {0, 0}});
@@ -45,8 +45,8 @@ public class MDSound {
     private final List<int[]> WSwanMask = Arrays.asList(new int[][] {new int[] {0, 0}});
 
     private final int[][][] rf5c164Vol = new int[][][] {
+            new int[][] {new int[2], new int[2], new int[2], new int[2], new int[2], new int[2], new int[2], new int[2]},
             new int[][] {new int[2], new int[2], new int[2], new int[2], new int[2], new int[2], new int[2], new int[2]}
-            , new int[][] {new int[2], new int[2], new int[2], new int[2], new int[2], new int[2], new int[2], new int[2]}
     };
 
     private final int[][] ym2612Key = new int[][] {new int[6], new int[6]};
@@ -164,27 +164,27 @@ public class MDSound {
     }
 
     public static class Chip {
-        public interface DlgUpdate extends TriConsumer<Byte, int[][], Integer> {
+        public interface Update extends TriConsumer<Byte, int[][], Integer> {
         }
 
-        public interface DlgStart extends QuadFunction<Byte, Integer, Integer, Object[], Integer> {
+        public interface Start extends QuadFunction<Byte, Integer, Integer, Object[], Integer> {
         }
 
-        public interface DlgStop extends Consumer<Byte> {
+        public interface Stop extends Consumer<Byte> {
         }
 
-        public interface DlgReset extends Consumer<Byte> {
+        public interface Reset extends Consumer<Byte> {
         }
 
-        public interface DlgAdditionalUpdate extends QuadConsumer<Chip, Byte, int[][], Integer> {
+        public interface AdditionalUpdate extends QuadConsumer<Chip, Byte, int[][], Integer> {
         }
 
         public Instrument instrument = null;
-        public DlgUpdate update = null;
-        public DlgStart start = null;
-        public DlgStop stop = null;
-        public DlgReset reset = null;
-        public DlgAdditionalUpdate additionalUpdate = null;
+        public Update update = null;
+        public Start start = null;
+        public Stop stop = null;
+        public Reset reset = null;
+        public AdditionalUpdate additionalUpdate = null;
 
         public InstrumentType type = InstrumentType.None;
         public byte id = 0;
@@ -244,7 +244,7 @@ public class MDSound {
 
             dicInst.clear();
 
-            //ボリューム値から実際の倍数を求める
+            // ボリューム値から実際の倍数を求める
             int total = 0;
             double[] mul = new double[1];
             for (Chip inst : insts) {
@@ -253,18 +253,14 @@ public class MDSound {
                 //16384 = 0x4000 = short.MAXValue + 1
                 total += (int) ((((int) (16384.0 * Math.pow(10.0, 0 / 40.0)) * balance) >> 8) * mul[0]) / insts.length;
             }
-            //総ボリューム値から最大ボリュームまでの倍数を求める
-            //volumeMul = (double)(16384.0 / insts.length) / total;
+            // 総ボリューム値から最大ボリュームまでの倍数を求める
             volumeMul = 16384.0 / total;
-            //ボリューム値から実際の倍数を求める
+            // ボリューム値から実際の倍数を求める
             for (Chip inst : insts) {
                 if ((inst.volumeBalance & 0x8000) != 0)
-                    inst.tVolumeBalance =
-                            (getRegulationVoulme(inst, mul) * (inst.volumeBalance & 0x7fff) + 0x80) >> 8;
+                    inst.tVolumeBalance = (getRegulationVoulme(inst, mul) * (inst.volumeBalance & 0x7fff) + 0x80) >> 8;
                 else
-                    inst.tVolumeBalance =
-                            inst.volumeBalance;
-                //int n = (((int)(16384.0 * Math.pow(10.0, inst.Volume / 40.0)) * inst.tVolumeBalance) >> 8) / insts.length;
+                    inst.tVolumeBalance = inst.volumeBalance;
                 int n = (((int) (16384.0 * Math.pow(10.0, inst.volume / 40.0)) * inst.tVolumeBalance) >> 8);
                 inst.tVolume = Math.max(Math.min((int) (n * volumeMul), Short.MAX_VALUE), Short.MIN_VALUE);
             }
@@ -274,9 +270,9 @@ public class MDSound {
                 inst.reset.accept(inst.id);
 
                 if (dicInst.containsKey(inst.type)) {
-                    List<Instrument> lst = Arrays.asList(dicInst.get(inst.type));
+                    List<Instrument> lst = new ArrayList<>(Arrays.asList(dicInst.get(inst.type)));
                     lst.add(inst.instrument);
-                    dicInst.put(inst.type, lst.toArray(new Instrument[0]));
+                    dicInst.put(inst.type, lst.toArray(Instrument[]::new));
                 } else {
                     dicInst.put(inst.type, new Instrument[] {inst.instrument});
                 }
@@ -319,12 +315,12 @@ public class MDSound {
 
     private int getRegulationVoulme(Chip inst, double[] mul) {
         mul[0] = 1;
-        int[] CHIP_VOLS = new int[] { //CHIP_COUNT
+        final int[] CHIP_VOLS = new int[] { // CHIP_COUNT
                 0x80, 0x200/*0x155*/, 0x100, 0x100, 0x180, 0xB0, 0x100, 0x80, // 00-07
-                0x80, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x98,   // 08-0F
-                0x80, 0xE0/*0xCD*/, 0x100, 0xC0, 0x100, 0x40, 0x11E, 0x1C0,  // 10-17
-                0x100/*110*/, 0xA0, 0x100, 0x100, 0x100, 0xB3, 0x100, 0x100, // 18-1F
-                0x20, 0x100, 0x100, 0x100, 0x40, 0x20, 0x100, 0x40,   // 20-27
+                0x80, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x98,         // 08-0F
+                0x80, 0xE0/*0xCD*/, 0x100, 0xC0, 0x100, 0x40, 0x11E, 0x1C0,   // 10-17
+                0x100/*110*/, 0xA0, 0x100, 0x100, 0x100, 0xB3, 0x100, 0x100,  // 18-1F
+                0x20, 0x100, 0x100, 0x100, 0x40, 0x20, 0x100, 0x40,           // 20-27
                 0x280
         };
 
@@ -425,18 +421,15 @@ public class MDSound {
             mul[0] = 1;
             return CHIP_VOLS[0x1f];
         }
-        //else if (inst.type == InstrumentType.SCSP)
-        //{
+        //else if (inst.type == InstrumentType.SCSP) {
         //    mul[0] = 8;
         //    return CHIP_VOLS[0x20];
         //}
-        //else if (inst.type == InstrumentType.WSwan)
-        //{
+        //else if (inst.type == InstrumentType.WSwan) {
         //    mul[0] = 1;
         //    return CHIP_VOLS[0x21];
         //}
-        //else if (inst.type == InstrumentType.VSU)
-        //{
+        //else if (inst.type == InstrumentType.VSU) {
         //    mul[0] = 1;
         //    return CHIP_VOLS[0x22];
         //}
@@ -444,13 +437,11 @@ public class MDSound {
             mul[0] = 1;
             return CHIP_VOLS[0x23];
         }
-        //else if (inst.type == InstrumentType.ES5503)
-        //{
+        //else if (inst.type == InstrumentType.ES5503) {
         //    mul[0] = 8;
         //    return CHIP_VOLS[0x24];
         //}
-        //else if (inst.type == InstrumentType.ES5506)
-        //{
+        //else if (inst.type == InstrumentType.ES5506) {
         //    mul[0] = 16;
         //    return CHIP_VOLS[0x25];
         //}
@@ -508,9 +499,7 @@ public class MDSound {
             chip.nsmpl[0] = 0x00;
             chip.nsmpl[1] = 0x00;
         }
-
     }
-
 
     private int a, b, i;
 
@@ -529,7 +518,7 @@ public class MDSound {
                 buffer[0][0] = 0;
                 buffer[1][0] = 0;
                 resampleChipStream(insts, buffer, 1);
-                //if (buffer[0][0] != 0) System.err.printf("%d", buffer[0][0]);
+                //if (buffer[0][0] != 0) Debug.printf("%d", buffer[0][0]);
                 a += buffer[0][0];
                 b += buffer[1][0];
 
@@ -549,64 +538,6 @@ public class MDSound {
         }
     }
 
-
-    //public int Update(short[] buf, int offset, int sampleCount, Runnable frame)
-    //{
-    //    synchronized (lockobj)
-    //    {
-    //        int a, b;
-
-    //        for (int i = 0; i < sampleCount; i += 2)
-    //        {
-
-    //            frame.Invoke();
-
-    //            a = 0;
-    //            b = 0;
-
-    //            buffer[0][0] = 0;
-    //            buffer[1][0] = 0;
-    //            ResampleChipStream(insts, buffer, 1);
-
-    //            if (insts != null && insts.length > 0)
-    //            {
-    //                for (int j = 0; j < insts.length; j++)
-    //                {
-    //                    buff[0][0] = 0;
-    //                    buff[1][0] = 0;
-
-    //                    int mul = insts[j].Volume;
-    //                    mul = (int)(16384.0 * Math.pow(10.0, mul / 40.0));
-
-    //                    insts[j].Update.Invoke(insts[j].ID, buff, 1);
-
-    //                    buffer[0][0] += (short)((Limit(buff[0][0], 0x7fff, -0x8000) * mul) >> 14);
-    //                    buffer[1][0] += (short)((Limit(buff[1][0], 0x7fff, -0x8000) * mul) >> 14);
-    //                }
-    //            }
-
-    //            a += buffer[0][0];
-    //            b += buffer[1][0];
-
-    //            if (incFlag)
-    //            {
-    //                a += buf[offset + i + 0];
-    //                b += buf[offset + i + 1];
-    //            }
-
-    //            Clip(a, b);
-
-    //            buf[offset + i + 0] = (short)a;
-    //            buf[offset + i + 1] = (short)b;
-
-    //        }
-
-    //        return sampleCount;
-
-    //    }
-    //}
-
-
     private void clip(int a, int b) {
         if ((a + 32767) > (32767 * 2)) {
             if ((a + 32767) >= (32767 * 2)) {
@@ -623,7 +554,6 @@ public class MDSound {
             }
         }
     }
-
 
     public static int limit(int v, int max, int min) {
         return v > max ? max : Math.max(v, min);
@@ -647,7 +577,6 @@ public class MDSound {
         Chip inst;
         int[] curBufL;
         int[] curBufR;
-        //int[][] StreamPnt = new int[0x02][] { new int[0x100], new int[0x100] };
         int inBase;
         int inPos;
         int InPosNext;
@@ -664,17 +593,6 @@ public class MDSound {
         int CurSmpl;
         long chipSmpRate;
 
-        //for (int i = 0; i < 0x100; i++)
-        //{
-        //    StreamBufs[0][i] = 0;
-        //    StreamBufs[1][i] = 0;
-        //}
-
-        //Arrays.fill(StreamBufs[0], 0, 0x100);
-        //Arrays.fill(StreamBufs[1], 0, 0x100);
-        //curBufL = StreamBufs[0x00];
-        //curBufR = StreamBufs[0x01];
-
         // This Do-While-Loop gets and resamples the chip output of one or more chips.
         // It's a loop to support the AY8910 paired with the YM2203/YM2608/YM2610.
         for (Chip chip : insts) {
@@ -684,14 +602,11 @@ public class MDSound {
             curBufR = streamBufs[0x01];
 
             inst = chip;
-            //double volume = inst.Volume/100.0;
             int mul = inst.tVolume;
-            //if (inst.type == InstrumentType.Nes) mul = 0;
-            //mul = (int)(16384.0 * Math.pow(10.0, mul / 40.0));//16384 = 0x4000 = short.MAXValue + 1
 
-            //if (i != 0 && insts[i].LSmpl[0] != 0) System.err.printf("%d %d", insts[i].LSmpl[0], insts[0].LSmpl == insts[i].LSmpl);
-            //System.err.printf("%d %d", inst.type, inst.Resampler);
-            //System.err.printf("%d", inst.Resampler);
+            //if (i != 0 && insts[i].LSmpl[0] != 0) Debug.printf("%d %d", insts[i].LSmpl[0], insts[0].LSmpl == insts[i].LSmpl);
+            //Debug.printf("%d %d", inst.type, inst.Resampler);
+            //Debug.printf("%d", inst.Resampler);
             switch (inst.resampler) {
             case 0x00: // old, but very fast resampler
                 inst.smpLast = inst.smpNext;
@@ -700,13 +615,9 @@ public class MDSound {
                 if (inst.smpLast >= inst.smpNext) {
                     tempSample[0][0] = limit((inst.lsmpl[0] * mul) >> 15, 0x7fff, -0x8000);
                     tempSample[1][0] = limit((inst.lsmpl[1] * mul) >> 15, 0x7fff, -0x8000);
-
-                    //retSample[0][0] += (int)(inst.LSmpl[0] * volume);
-                    //retSample[1][0] += (int)(inst.LSmpl[1] * volume);
                 } else {
                     smpCnt = inst.smpNext - inst.smpLast;
                     clearLength = smpCnt;
-                    //inst.Update(inst.ID, StreamBufs, smpCnt);
                     for (int ind = 0; ind < smpCnt; ind++) {
                         buff[0][0] = 0;
                         buff[1][0] = 0;
@@ -714,33 +625,18 @@ public class MDSound {
 
                         streamBufs[0][ind] += limit((buff[0][0] * mul) >> 15, 0x7fff, -0x8000);
                         streamBufs[1][ind] += limit((buff[1][0] * mul) >> 15, 0x7fff, -0x8000);
-                        //StreamBufs[0][ind] += (short)((Limit(buff[0][0], 0x7fff, -0x8000) * mul) >> 14);
-                        //StreamBufs[1][ind] += (short)((Limit(buff[1][0], 0x7fff, -0x8000) * mul) >> 14);
-
-                        //StreamBufs[0][ind] += (int)(buff[0][0] * volume);
-                        //StreamBufs[1][ind] += (int)(buff[1][0] * volume);
                     }
 
                     if (smpCnt == 1) {
                         tempSample[0][0] = limit((curBufL[0] * mul) >> 15, 0x7fff, -0x8000);
                         tempSample[1][0] = limit((curBufR[0] * mul) >> 15, 0x7fff, -0x8000);
 
-                        //tempSample[0][0] = (short)((Limit(curBufL[0x00], 0x7fff, -0x8000) * mul) >> 14);
-                        //tempSample[1][0] = (short)((Limit(curBufR[0x00], 0x7fff, -0x8000) * mul) >> 14);
-
-                        //retSample[0][0] += (int)(curBufL[0x00] * volume);
-                        //retSample[1][0] += (int)(curBufR[0x00] * volume);
                         inst.lsmpl[0] = curBufL[0x00];
                         inst.lsmpl[1] = curBufR[0x00];
                     } else if (smpCnt == 2) {
                         tempSample[0][0] = limit(((curBufL[0] + curBufL[1]) * mul) >> (15 + 1), 0x7fff, -0x8000);
                         tempSample[1][0] = limit(((curBufR[0] + curBufR[1]) * mul) >> (15 + 1), 0x7fff, -0x8000);
 
-                        //tempSample[0][0] = (short)(((Limit((curBufL[0x00] + curBufL[0x01]), 0x7fff, -0x8000) * mul) >> 14) >> 1);
-                        //tempSample[1][0] = (short)(((Limit((curBufR[0x00] + curBufR[0x01]), 0x7fff, -0x8000) * mul) >> 14) >> 1);
-
-                        //retSample[0][0] += (int)((int)((curBufL[0x00] + curBufL[0x01]) * volume) >> 1);
-                        //retSample[1][0] += (int)((int)((curBufR[0x00] + curBufR[0x01]) * volume) >> 1);
                         inst.lsmpl[0] = curBufL[0x01];
                         inst.lsmpl[1] = curBufR[0x01];
                     } else {
@@ -752,25 +648,20 @@ public class MDSound {
                         }
                         tempSample[0][0] = limit(((tempS32L * mul) >> 15) / smpCnt, 0x7fff, -0x8000);
                         tempSample[1][0] = limit(((tempS32R * mul) >> 15) / smpCnt, 0x7fff, -0x8000);
-                        //tempSample[0][0] = (short)(((Limit(tempS32L, 0x7fff, -0x8000) * mul) >> 14) / smpCnt);
-                        //tempSample[1][0] = (short)(((Limit(tempS32R, 0x7fff, -0x8000) * mul) >> 14) / smpCnt);
 
-                        //retSample[0][0] += (int)(tempS32L * volume / smpCnt);
-                        //retSample[1][0] += (int)(tempS32R * volume / smpCnt);
                         inst.lsmpl[0] = curBufL[smpCnt - 1];
                         inst.lsmpl[1] = curBufR[smpCnt - 1];
                     }
                 }
                 break;
-            case 0x01: // Upsampling
+            case 0x01: // up sampling
                 chipSmpRate = inst.samplingRate;
                 inPosL = (int) (FIXPNT_FACT * inst.smpP * chipSmpRate / samplingRate);
                 inPre = fp2i_floor(inPosL);
                 inNow = fp2i_ceil(inPosL);
 
-                //if (inst.type == InstrumentType.Ym2612)
-                //{
-                //    System.System.err.printf("inPosL=%d , inPre=%d , inNow=%d , inst.SmpNext=%d", inPosL, inPre, inNow, inst.SmpNext);
+                //if (inst.type == InstrumentType.Ym2612) {
+                //    Debug.printf("inPosL=%d , inPre=%d , inNow=%d , inst.SmpNext=%d", inPosL, inPre, inNow, inst.SmpNext);
                 //}
 
                 curBufL[0x00] = inst.lsmpl[0];
@@ -781,7 +672,6 @@ public class MDSound {
                     streamPnt[0x00][ind] = curBufL[0x02 + ind];
                     streamPnt[0x01][ind] = curBufR[0x02 + ind];
                 }
-                //inst.Update(inst.ID, StreamPnt, (int)(inNow - inst.SmpNext));
                 for (int ind = 0; ind < (inNow - inst.smpNext); ind++) {
                     buff[0][0] = 0;
                     buff[1][0] = 0;
@@ -789,10 +679,6 @@ public class MDSound {
 
                     streamPnt[0][0] = limit((buff[0][0] * mul) >> 15, 0x7fff, -0x8000);
                     streamPnt[1][0] = limit((buff[1][0] * mul) >> 15, 0x7fff, -0x8000);
-                    //StreamPnt[0][ind] += (short)((Limit(buff[0][0], 0x7fff, -0x8000) * mul) >> 14);
-                    //StreamPnt[1][ind] += (short)((Limit(buff[1][0], 0x7fff, -0x8000) * mul) >> 14);
-                    //StreamPnt[0][ind] += (int)(buff[0][0] * volume);
-                    //StreamPnt[1][ind] += (int)(buff[1][0] * volume);
                 }
                 for (int ind = 0; ind < (inNow - inst.smpNext); ind++) {
                     curBufL[0x02 + ind] = streamPnt[0x00][ind];
@@ -810,13 +696,11 @@ public class MDSound {
                     inNow = fp2i_ceil(inPos);
                     smpFrc = getfriction(inPos);
 
-                    // Linear interpolation
+                    // linear interpolation
                     tempSmpL = ((long) curBufL[inPre] * (FIXPNT_FACT - smpFrc)) +
                             ((long) curBufL[inNow] * smpFrc);
                     tempSmpR = ((long) curBufR[inPre] * (FIXPNT_FACT - smpFrc)) +
                             ((long) curBufR[inNow] * smpFrc);
-                    //retSample[0][outPos] += (int)(tempSmpL * volume / smpCnt);
-                    //retSample[1][outPos] += (int)(tempSmpR * volume / smpCnt);
                     tempSample[0][outPos] = (int) (tempSmpL / smpCnt);
                     tempSample[1][outPos] = (int) (tempSmpR / smpCnt);
                 }
@@ -826,9 +710,8 @@ public class MDSound {
                 inst.nsmpl[1] = curBufR[inNow];
                 inst.smpP += length;
                 break;
-            case 0x02: // Copying
+            case 0x02: // copying
                 inst.smpNext = inst.smpP * inst.samplingRate / samplingRate;
-                //inst.Update(inst.ID, StreamBufs, (int)length);
                 clearLength = length;
                 for (int ind = 0; ind < length; ind++) {
                     buff[0][0] = 0;
@@ -837,11 +720,6 @@ public class MDSound {
 
                     streamBufs[0][ind] = limit((buff[0][0] * mul) >> 15, 0x7fff, -0x8000);
                     streamBufs[1][ind] = limit((buff[1][0] * mul) >> 15, 0x7fff, -0x8000);
-                    //StreamBufs[0][ind] = (short)((Limit(buff[0][0], 0x7fff, -0x8000) * mul) >> 14);
-                    //StreamBufs[1][ind] = (short)((Limit(buff[1][0], 0x7fff, -0x8000) * mul) >> 14);
-
-                    //StreamBufs[0][ind] = (int)(buff[0][0] * volume);
-                    //StreamBufs[1][ind] = (int)(buff[1][0] * volume);
                 }
                 for (outPos = 0x00; outPos < length; outPos++) {
                     tempSample[0][outPos] = curBufL[outPos];
@@ -850,7 +728,7 @@ public class MDSound {
                 inst.smpP += length;
                 inst.smpLast = inst.smpNext;
                 break;
-            case 0x03: // Downsampling
+            case 0x03: // down sampling
                 chipSmpRate = inst.samplingRate;
                 inPosL = (int) (FIXPNT_FACT * (inst.smpP + length) * chipSmpRate / samplingRate);
                 inst.smpNext = fp2i_ceil(inPosL);
@@ -862,19 +740,14 @@ public class MDSound {
                     streamPnt[0x00][ind] = curBufL[0x01 + ind];
                     streamPnt[0x01][ind] = curBufR[0x01 + ind];
                 }
-                //inst.Update(inst.ID, StreamPnt, (int)(inst.SmpNext - inst.SmpLast));
                 for (int ind = 0; ind < (inst.smpNext - inst.smpLast); ind++) {
                     buff[0][0] = 0;
                     buff[1][0] = 0;
                     inst.update.accept(inst.id, buff, 1);
-                    //System.err.printf("%d : %d", i, buff[0][0]);
+                    //Debug.printf("%d : %d", i, buff[0][0]);
 
                     streamPnt[0][ind] = limit((buff[0][0] * mul) >> 15, 0x7fff, -0x8000);
                     streamPnt[1][ind] = limit((buff[1][0] * mul) >> 15, 0x7fff, -0x8000);
-                    //StreamPnt[0][ind] += (short)((Limit(buff[0][0], 0x7fff, -0x8000) * mul) >> 14);
-                    //StreamPnt[1][ind] += (short)((Limit(buff[1][0], 0x7fff, -0x8000) * mul) >> 14);
-                    //StreamPnt[0][ind] += (int)(buff[0][0] * volume);
-                    //StreamPnt[1][ind] += (int)(buff[1][0] * volume);
                 }
                 for (int ind = 0; ind < inst.smpNext - inst.smpLast; ind++) {
                     curBufL[0x01 + ind] = streamPnt[0x00][ind];
@@ -886,7 +759,6 @@ public class MDSound {
                 inBase = FIXPNT_FACT + (inPosL - inst.smpLast * FIXPNT_FACT);
                 InPosNext = inBase;
                 for (outPos = 0x00; outPos < length; outPos++) {
-                    //inPos = inBase + ((int)32)(FIXPNT_FACT * outPos * chipSmpRate / SampleRate);
                     inPos = InPosNext;
                     InPosNext = inBase + (int) (FIXPNT_FACT * (outPos + 1) * chipSmpRate / samplingRate);
 
@@ -911,18 +783,14 @@ public class MDSound {
                     }
 
                     // whole Samples in between
-                    //inPre = fp2i_floor(InPosNext);
                     inNow = fp2i_ceil(inPos);
                     smpCnt += (inPre - inNow) * FIXPNT_FACT; // this is faster
                     while (inNow < inPre) {
                         tempSmpL += (long) curBufL[inNow] * FIXPNT_FACT;
                         tempSmpR += (long) curBufR[inNow] * FIXPNT_FACT;
-                        //smpCnt ++;
                         inNow++;
                     }
 
-                    //retSample[0][outPos] += (int)(tempSmpL * volume / smpCnt);
-                    //retSample[1][outPos] += (int)(tempSmpR * volume / smpCnt);
                     tempSample[0][outPos] = (int) (tempSmpL / smpCnt);
                     tempSample[1][outPos] = (int) (tempSmpR / smpCnt);
                 }
@@ -943,13 +811,15 @@ public class MDSound {
                 inst.smpP -= samplingRate;
             }
 
-            inst.additionalUpdate.accept(inst, inst.id, tempSample, length);
-            for (int j = 0; j < length; j++) {
-                retSample[0][j] += tempSample[0][j];
-                retSample[1][j] += tempSample[1][j];
+            if (inst.additionalUpdate != null) {
+                inst.additionalUpdate.accept(inst, inst.id, tempSample, length);
+                for (int j = 0; j < length; j++) {
+                    retSample[0][j] += tempSample[0][j];
+                    retSample[1][j] += tempSample[1][j];
+                }
             }
 
-            //if (tempSample[0][0] != 0) System.err.printf("%d %d %d", i, tempSample[0][0], inst.Resampler);
+            //if (tempSample[0][0] != 0) Debug.printf(Level.FINE, "%d %d %d", i, tempSample[0][0], inst.Resampler);
         }
     }
 
@@ -1000,7 +870,6 @@ public class MDSound {
         if (chipCnt > 1)
             volume /= chipCnt;
 
-        //tempCX = VGMH_Extra.Volumes;
         for (curChp = 0x00; curChp < tempCX.chipCnt; curChp++) {
             tempCD = tempCX.ccData[curChp];
             if (tempCD.type == chipId && (tempCD.flags & 0x01) == chipNum) {
@@ -1032,15 +901,13 @@ public class MDSound {
         public VGMX_CHIP_DATA16[] ccData;
     }
 
-
-    // #region AY8910
+//#region AY8910
 
     public void writeAY8910(byte chipId, byte adr, byte data) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.AY8910)) return;
 
             dicInst.get(InstrumentType.AY8910)[0].write(chipId, 0, adr, data);
-            //((Ay8910Mame)(dicInst.get(InstrumentType.AY8910)[0])).Write(chipId, 0, adr, data);
         }
     }
 
@@ -1058,9 +925,7 @@ public class MDSound {
         for (Chip c : insts) {
             if (c.type != InstrumentType.AY8910) continue;
             c.volume = Math.max(Math.min(vol, 20), -192);
-            //int n = (((int)(16384.0 * Math.pow(10.0, c.Volume / 40.0)) * c.tVolumeBalance) >> 8) / insts.length;
             int n = (((int) (16384.0 * Math.pow(10.0, c.volume / 40.0)) * c.tVolumeBalance) >> 8);
-            //16384 = 0x4000 = short.MAXValue + 1
             c.tVolume = Math.max(Math.min((int) (n * volumeMul), Short.MAX_VALUE), Short.MIN_VALUE);
         }
     }
@@ -1107,10 +972,9 @@ public class MDSound {
         return dicInst.get(InstrumentType.AY8910)[chipIndex].getVisVolume();
     }
 
-    // #endregion
+//#endregion
 
-
-    // #region AY8910mame
+//#region AY8910mame
 
     public void writeAY8910Mame(byte chipId, byte adr, byte data) {
         synchronized (lockobj) {
@@ -1136,9 +1000,7 @@ public class MDSound {
         for (Chip c : insts) {
             if (c.type != InstrumentType.AY8910mame) continue;
             c.volume = Math.max(Math.min(vol, 20), -192);
-            //int n = (((int)(16384.0 * Math.pow(10.0, c.Volume / 40.0)) * c.tVolumeBalance) >> 8) / insts.length;
             int n = (((int) (16384.0 * Math.pow(10.0, c.volume / 40.0)) * c.tVolumeBalance) >> 8);
-            //16384 = 0x4000 = short.MAXValue + 1
             c.tVolume = Math.max(Math.min((int) (n * volumeMul), Short.MAX_VALUE), Short.MIN_VALUE);
         }
     }
@@ -1195,9 +1057,9 @@ public class MDSound {
         return dicInst.get(InstrumentType.AY8910mame)[chipIndex].getVisVolume();
     }
 
-    // #endregion
+//#endregion
 
-    // #region WSwan
+//#region WSwan
 
     public void writeWSwan(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
@@ -1297,10 +1159,9 @@ public class MDSound {
         return dicInst.get(InstrumentType.WSwan)[chipIndex].getVisVolume();
     }
 
-    // #endregion
+//#endregion
 
-
-    // #region SAA1099
+//#region SAA1099
 
     public void writeSAA1099(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
@@ -1317,7 +1178,6 @@ public class MDSound {
             dicInst.get(InstrumentType.SAA1099)[chipIndex].write(chipId, 0, Adr, Data);
         }
     }
-
 
     public void setVolumeSAA1099(int vol) {
         if (!dicInst.containsKey(InstrumentType.SAA1099)) return;
@@ -1374,9 +1234,9 @@ public class MDSound {
         return dicInst.get(InstrumentType.SAA1099)[chipIndex].getVisVolume();
     }
 
-    // #endregion
+//#endregion
 
-    // #region POKEY
+//#region POKEY
 
     public void writePOKEY(byte chipId, byte adr, byte data) {
         synchronized (lockobj) {
@@ -1394,10 +1254,9 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
-
-    // #region X1_010
+//#region X1_010
 
     public void writeX1_010(byte chipId, int adr, byte data) {
         synchronized (lockobj) {
@@ -1488,10 +1347,9 @@ public class MDSound {
         return dicInst.get(InstrumentType.X1_010)[chipIndex].getVisVolume();
     }
 
-    // #endregion
+//#endregion
 
-
-    // #region SN76489
+//#region SN76489
 
     public void writeSN76489(byte chipId, byte Data) {
         synchronized (lockobj) {
@@ -1525,10 +1383,9 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
-
-    // #region Sn76496
+//#region Sn76496
 
     public void writeSN76496(byte chipId, byte data) {
         synchronized (lockobj) {
@@ -1562,10 +1419,9 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
-
-    // #region Ym2612
+//#region Ym2612
 
     public void writeYM2612(byte chipId, byte port, byte adr, byte data) {
         synchronized (lockobj) {
@@ -1593,10 +1449,9 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
-
-    // #region YM3438
+//#region YM3438
 
     public void writeYM3438(byte chipId, byte port, byte adr, byte data) {
         synchronized (lockobj) {
@@ -1624,10 +1479,9 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
-
-    // #region Ym2612
+//#region Ym2612
 
     public void writeYM2612Mame(byte chipId, byte port, byte adr, byte data) {
         synchronized (lockobj) {
@@ -1655,10 +1509,9 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
-
-    // #region PWM
+//#region PWM
 
     public void writePWM(byte chipId, byte adr, int data) {
         synchronized (lockobj) {
@@ -1677,10 +1530,9 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
-
-    // #region RF5C164
+//#region RF5C164
 
     public void writeRF5C164(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
@@ -1730,10 +1582,9 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
-
-    // #region RF5C68
+//#region RF5C68
 
     public void WriteRF5C68(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
@@ -1783,10 +1634,9 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
-
-    // #region C140
+//#region C140
 
     public void WriteC140(byte chipId, int Adr, byte Data) {
         synchronized (lockobj) {
@@ -1820,10 +1670,9 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
-
-    // #region YM3812
+//#region YM3812
 
     public void writeYM3812(int chipId, int rAdr, int rDat) {
         synchronized (lockobj) {
@@ -1841,10 +1690,9 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
-
-    // #region C352
+//#region C352
 
     public void WriteC352(byte chipId, int Adr, int Data) {
         synchronized (lockobj) {
@@ -1878,10 +1726,9 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
-
-    // #region YMF271
+//#region YMF271
 
     public void WriteYMF271PCMData(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
@@ -1899,10 +1746,9 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
-
-    // #region YMF278B
+//#region YMF278B
 
     public void WriteYMF278BPCMData(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
@@ -1936,10 +1782,9 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
-
-    // #region YMZ280B
+//#region YMZ280B
 
     public void WriteYMZ280BPCMData(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
@@ -1957,10 +1802,9 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
-
-    // #region Y8950
+//#region Y8950
 
     public void WriteY8950PCMData(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
@@ -1978,10 +1822,9 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
-
-    // #region OKIM6258
+//#region OKIM6258
 
     public void writeOKIM6258(byte chipId, byte Port, byte Data) {
         synchronized (lockobj) {
@@ -1999,10 +1842,9 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
-
-    // #region OKIM6295
+//#region OKIM6295
 
     public void WriteOKIM6295(byte chipId, byte Port, byte Data) {
         synchronized (lockobj) {
@@ -2036,10 +1878,9 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
-
-    // #region SEGAPCM
+//#region SEGAPCM
 
     public void WriteSEGAPCM(byte chipId, int Adr, byte Data) {
         synchronized (lockobj) {
@@ -2073,10 +1914,9 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
-
-    // #region YM2151
+//#region YM2151
 
     public void writeYM2151(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
@@ -2126,10 +1966,9 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
-
-    // #region YM2203
+//#region YM2203
 
     public void writeYM2203(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
@@ -2147,10 +1986,9 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
-
-    // #region YM2608
+//#region YM2608
 
     public void writeYM2608(byte chipId, byte Port, byte Adr, byte Data) {
         synchronized (lockobj) {
@@ -2200,10 +2038,9 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
-
-    // #region YM2609
+//#region YM2609
 
     public void writeYM2609(byte chipId, byte Port, byte Adr, byte Data) {
         synchronized (lockobj) {
@@ -2237,10 +2074,10 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
 
-    // #region YM2610
+//#region YM2610
 
     public void writeYM2610(byte chipId, byte Port, byte Adr, byte Data) {
         synchronized (lockobj) {
@@ -2258,7 +2095,7 @@ public class MDSound {
         }
     }
 
-    public void WriteYM2610_SetAdpcmA(byte chipId, byte[] Buf) {
+    public void writeYM2610SetAdpcmA(byte chipId, byte[] Buf) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2610)) return;
 
@@ -2266,7 +2103,7 @@ public class MDSound {
         }
     }
 
-    public void WriteYM2610_SetAdpcmA(int chipIndex, byte chipId, byte[] Buf) {
+    public void writeYM2610SetAdpcmA(int chipIndex, byte chipId, byte[] Buf) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2610)) return;
 
@@ -2274,7 +2111,7 @@ public class MDSound {
         }
     }
 
-    public void WriteYM2610_SetAdpcmB(byte chipId, byte[] Buf) {
+    public void writeYM2610SetAdpcmB(byte chipId, byte[] Buf) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2610)) return;
 
@@ -2282,7 +2119,7 @@ public class MDSound {
         }
     }
 
-    public void WriteYM2610_SetAdpcmB(int chipIndex, byte chipId, byte[] Buf) {
+    public void writeYM2610SetAdpcmB(int chipIndex, byte chipId, byte[] Buf) {
         synchronized (lockobj) {
             if (!dicInst.containsKey(InstrumentType.YM2610)) return;
 
@@ -2290,10 +2127,10 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
 
-    // #region YMF262
+//#region YMF262
 
     public void writeYMF262(byte chipId, byte Port, byte Adr, byte Data) {
         synchronized (lockobj) {
@@ -2311,10 +2148,10 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
 
-    // #region YMF271
+//#region YMF271
 
     public void writeYMF271(byte chipId, byte Port, byte Adr, byte Data) {
         synchronized (lockobj) {
@@ -2332,10 +2169,10 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
 
-    // #region YMF278B
+//#region YMF278B
 
     public void writeYMF278B(byte chipId, byte Port, byte Adr, byte Data) {
         synchronized (lockobj) {
@@ -2351,10 +2188,10 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
 
-    // #region YM3526
+//#region YM3526
 
     public void writeYM3526(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
@@ -2372,10 +2209,10 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
 
-    // #region Y8950
+//#region Y8950
 
     public void writeY8950(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
@@ -2393,10 +2230,10 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
 
-    // #region YMZ280B
+//#region YMZ280B
 
     public void writeYMZ280B(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
@@ -2414,10 +2251,10 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
 
-    // #region HuC6280
+//#region HuC6280
 
     public void writeHuC6280(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
@@ -2451,10 +2288,10 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
 
-    // #region GA20
+//#region GA20
 
     public void WriteGA20(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
@@ -2472,10 +2309,10 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
 
-    // #region YM2413
+//#region YM2413
 
     public void writeYM2413(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
@@ -2493,10 +2330,10 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
 
-    // #region K051649
+//#region K051649
 
     public void WriteK051649(byte chipId, int Adr, byte Data) {
         synchronized (lockobj) {
@@ -2514,10 +2351,10 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
 
-    // #region K053260
+//#region K053260
 
     public void WriteK053260(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
@@ -2551,10 +2388,10 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
 
-    // #region K054539
+//#region K054539
 
     public void WriteK054539(byte chipId, int Adr, byte Data) {
         synchronized (lockobj) {
@@ -2588,10 +2425,10 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
 
-    // #region PPZ8
+//#region PPZ8
 
     public void WritePPZ8(byte chipId, int port, int address, int data, byte[] addtionalData) {
         synchronized (lockobj) {
@@ -2643,10 +2480,10 @@ public class MDSound {
         return dicInst.get(InstrumentType.PPZ8)[chipIndex].getVisVolume();
     }
 
-    // #endregion
+//#endregion
 
 
-    // #region PPSDRV
+//#region PPSDRV
 
     public void WritePPSDRV(byte chipId, int port, int address, int data, byte[] addtionalData) {
         synchronized (lockobj) {
@@ -2680,10 +2517,10 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
 
-    // #region P86
+//#region P86
 
     public void writeP86(byte chipId, int port, int address, int data, byte[] addtionalData) {
         synchronized (lockobj) {
@@ -2725,10 +2562,10 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
 
-    // #region QSound
+//#region QSound
 
     public void WriteQSound(byte chipId, int adr, byte dat) {
         synchronized (lockobj) {
@@ -2762,10 +2599,10 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
 
-    // #region QSoundCtr
+//#region QSoundCtr
 
     public void WriteQSoundCtr(byte chipId, int adr, byte dat) {
         synchronized (lockobj) {
@@ -2803,10 +2640,10 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
 
-    // #region GA20
+//#region GA20
 
     public void WriteGA20PCMData(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int SrcStartAdr) {
         synchronized (lockobj) {
@@ -2824,10 +2661,10 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
 
-    // #region DMG
+//#region DMG
 
     public void writeDMG(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
@@ -2907,10 +2744,10 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
 
-    // #region NES
+//#region NES
 
     public void writeNES(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
@@ -2976,10 +2813,10 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
 
-    // #region VRC6
+//#region VRC6
 
     int[] vrc6AddressTable = new int[] {
             0x9000, 0x9001, 0x9002, 0x9003,
@@ -2995,10 +2832,10 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
 
-    // #region MultiPCM
+//#region MultiPCM
 
     public void WriteMultiPCM(byte chipId, byte Adr, byte Data) {
         synchronized (lockobj) {
@@ -3048,10 +2885,10 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
 
-    // #region FDS
+//#region FDS
 
     public NpNesFds readFDS(byte chipId) {
         synchronized (lockobj) {
@@ -3069,7 +2906,7 @@ public class MDSound {
         }
     }
 
-    // #endregion
+//#endregion
 
 
     public void setVolumeYM2151(int vol) {

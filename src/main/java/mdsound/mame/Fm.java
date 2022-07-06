@@ -12,8 +12,8 @@ package mdsound.mame;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import mdsound.Common.QuadConsumer;
-import mdsound.Common.TriConsumer;
+import dotnet4j.util.compat.QuadConsumer;
+import dotnet4j.util.compat.TriConsumer;
 
 
 /*
@@ -1129,7 +1129,7 @@ public class Fm {
 
             /** initialize time tables */
             private void initTimeTables(byte[] dtTable) {
-                //System.err.printf("FM.C: samplerate=%8i chip clock=%8i  freqbase=%f  \n",
+                //Debug.printf("FM.C: samplerate=%8i chip clock=%8i  freqbase=%f  \n",
                 // this.rate, this.clock, this.freqbase );
 
                 // DeTune table 
@@ -1138,7 +1138,7 @@ public class Fm {
                         double rate = ((double) dtTable[d * 32 + i]) * SIN_LEN * this.freqBase * (1 << FREQ_SH) / ((double) (1 << 20));
                         this.dt_tab[d][i] = (int) rate;
                         this.dt_tab[d + 4][i] = -this.dt_tab[d][i];
-                        //System.err.printf("FM.C: DT [%2i %2i] = %8x  \n", d, i, this.dt_tab[d][i] );
+                        //Debug.printf("FM.C: DT [%2i %2i] = %8x  \n", d, i, this.dt_tab[d][i] );
                     }
                 }
             }
@@ -1362,7 +1362,7 @@ public class Fm {
                 // freq table for octave 7 
                 // OPN phase increment counter = 20bit 
                 this.fnTable[i] = (int) ((double) i * 32 * this.st.freqBase * (1 << (FREQ_SH - 10))); // -10 because chip works with 10.10 fixed point, while we use 16.16 
-//System.err.printf("FM.C: fn_table[%4i] = %08x (dec=%8i)\n",
+//Debug.printf("FM.C: fn_table[%4i] = %08x (dec=%8i)\n",
 // i, this.fn_table[i]>>6,this.fn_table[i]>>6 );
             }
 
@@ -1374,7 +1374,7 @@ public class Fm {
                 // Amplitude modulation: 64 output levels (triangle waveform); 1 level lasts for one of "lfo_samples_per_step" samples 
                 // Phase modulation: one entry from lfo_pm_output lasts for one of 4 * "lfo_samples_per_step" samples 
                 this.lfo_freq[i] = (int) ((1.0 / lfo_samples_per_step[i]) * (1 << LFO_SH) * this.st.freqBase);
-//System.err.printf("FM.C: lfo_freq[%i] = %08x (dec=%8i)\n",
+//Debug.printf("FM.C: lfo_freq[%i] = %08x (dec=%8i)\n",
 // i, this.lfo_freq[i],this.lfo_freq[i] );
             }
         }
@@ -1972,13 +1972,13 @@ public class Fm {
                     tl_tab[x * 2 + 1 + i * 2 * TL_RES_LEN] = (short) (-tl_tab[x * 2 + 0 + i * 2 * TL_RES_LEN]);
                 }
                 //#if 0
-                //           System.err.printf("tl %04i", x);
+                //           Debug.printf("tl %04i", x);
                 //           for (i=0; i<13; i++)
-                //            System.err.printf(", [%02i] %4x", i*2, tl_tab[ x*2 /*+1*/ + i*2*TL_RES_LEN ]);
-                //           System.err.printf("\n");
+                //            Debug.printf(", [%02i] %4x", i*2, tl_tab[ x*2 /*+1*/ + i*2*TL_RES_LEN ]);
+                //           Debug.printf("\n");
                 //#endif
             }
-            /*System.err.printf("FM.C: TL_TAB_LEN = %i elements (%i bytes)\n",TL_TAB_LEN, (int)sizeof(tl_tab));*/
+            /*Debug.printf("FM.C: TL_TAB_LEN = %i elements (%i bytes)\n",TL_TAB_LEN, (int)sizeof(tl_tab));*/
 
             for (short i = 0; i < SIN_LEN; i++) {
                 // non-standard sinus 
@@ -2001,10 +2001,10 @@ public class Fm {
                     n = (short) (n >> 1);
 
                 sin_tab[i] = n * 2 + (m >= 0.0 ? 0 : 1);
-//System.err.printf("FM.C: sin [%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[i],tl_tab[sin_tab[i]]);
+//Debug.printf("FM.C: sin [%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[i],tl_tab[sin_tab[i]]);
             }
 
-//System.err.printf("FM.C: ENV_QUIET= %08x\n",ENV_QUIET );
+//Debug.printf("FM.C: ENV_QUIET= %08x\n",ENV_QUIET );
 
             // build LFO PM modulation table 
             for (short i = 0; i < 8; i++) { // 8 PM depths
@@ -2024,10 +2024,10 @@ public class Fm {
                         lfo_pm_table[(fnum * 32 * 8) + (i * 32) + step + 16] = -value;
                         lfo_pm_table[(fnum * 32 * 8) + (i * 32) + (step ^ 7) + 24] = -value;
                     }
-//System.err.printf("LFO depth=%1x FNUM=%04x (<<4=%4x): ", i, fnum, fnum<<4);
+//Debug.printf("LFO depth=%1x FNUM=%04x (<<4=%4x): ", i, fnum, fnum<<4);
 //for (step=0; step<16; step++) // dump only positive part of waveforms 
-// System.err.printf("%02x ", lfo_pm_table[(fnum*32*8) + (i*32) + step] );
-//System.err.printf("\n");
+// Debug.printf("%02x ", lfo_pm_table[(fnum*32*8) + (i*32) + step] );
+//Debug.printf("\n");
                 }
             }
         }
@@ -3185,15 +3185,15 @@ public class Fm {
                             adpcm[c].flag = 1;
 
                             if (this.pcmBuf == null) { // Check ROM Mapped
-//System.err.printf("YM2608-YM2610: ADPCM-A rom not mapped\n");
+//Debug.printf("YM2608-YM2610: ADPCM-A rom not mapped\n");
                                 adpcm[c].flag = 0;
                             } else {
                                 if (adpcm[c].end >= this.pcmSize) { // Check End in Range
-//System.err.printf("YM2610: ADPCM-A end out of range: $%08x\n", adpcm[c].end);
+//Debug.printf("YM2610: ADPCM-A end out of range: $%08x\n", adpcm[c].end);
                                     /*adpcm[c].end = this.pcm_size-1;*/ // JB: DO NOT uncomment this, otherwise you will break the comparison in the ADPCM_CALC_CHA() 
                                 }
                                 if (adpcm[c].start >= this.pcmSize) { // Check Start in Range
-//System.err.printf("YM2608-YM2610: ADPCM-A start out of range: $%08x\n", adpcm[c].start);
+//Debug.printf("YM2608-YM2610: ADPCM-A start out of range: $%08x\n", adpcm[c].start);
                                     adpcm[c].flag = 0;
                                 }
                             }
@@ -3306,11 +3306,11 @@ public class Fm {
 
             // Check YM2610B warning message 
             if (this.ch[0].slots[3].key != 0) {
-                //System.err.printf(FM_MSG_YM2610B, this.opn.ST.param, 0));
+                //Debug.printf(FM_MSG_YM2610B, this.opn.ST.param, 0));
                 this.ch[0].slots[3].key = 0;
             }
             if (this.ch[3].slots[3].key != 0) {
-                //System.err.printf(FM_MSG_YM2610B, this.opn.ST.param, 3));
+                //Debug.printf(FM_MSG_YM2610B, this.opn.ST.param, 3));
                 this.ch[3].slots[3].key = 0;
             }
 
@@ -4042,7 +4042,7 @@ public class Fm {
             case 0x00: // DeltaT PORT
                 switch (addr) {
                 case 0x0e: // DAC data
-//System.err.printf("YM2608: write to DAC data (unimplemented) value=%02x\n", v);
+//Debug.printf("YM2608: write to DAC data (unimplemented) value=%02x\n", v);
                     break;
                 default:
                     // 0x00-0x0d 
@@ -4155,7 +4155,7 @@ public class Fm {
                 break;
 
                 default:
-//System.err.printf("YM2610: write to unknown DeltaT register %02x val=%02x\n", addr, v);
+//Debug.printf("YM2610: write to unknown DeltaT register %02x val=%02x\n", addr, v);
                     break;
                 }
 

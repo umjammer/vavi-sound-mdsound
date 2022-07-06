@@ -208,14 +208,14 @@ stop:
             adpcmReg[addr - 0x02 + 0] = (byte) data;
             startAddr = (adpcmReg[1] * 256 + adpcmReg[0]) << shiftBit;
             memAddr = startAddr;
-            // System.err.printf("  startaddr %.6x", startaddr);
+            // Debug.printf("  startaddr %.6x", startaddr);
             break;
 
         case 0x04: // Stop Address L
         case 0x05: // Stop Address H
             adpcmReg[addr - 0x04 + 2] = (byte) data;
             stopAddr = (adpcmReg[3] * 256 + adpcmReg[2] + 1) << shiftBit;
-            // System.err.printf("  stopaddr %.6x", stopaddr);
+            // Debug.printf("  stopaddr %.6x", stopaddr);
             break;
 
         case 0x07:
@@ -247,7 +247,7 @@ stop:
         case 0x0d: // Limit Address H
             adpcmReg[addr - 0x0c + 6] = (byte) data;
             limitAddr = (adpcmReg[7] * 256 + adpcmReg[6] + 1) << shiftBit;
-            // System.err.printf("  limitaddr %.6x", limitaddr);
+            // Debug.printf("  limitaddr %.6x", limitaddr);
             break;
 
         case 0x10: // Flag Controller
@@ -306,7 +306,7 @@ stop:
             memAddr &= (shiftBit == 6) ? 0x3fffff : 0x1ffffff;
         }
         if (memAddr == limitAddr) {
-            // System.err.printf("Limit ! (%.8x)\n", limitaddr);
+            // Debug.printf("Limit ! (%.8x)\n", limitaddr);
             memAddr = 0;
         }
         setStatus(8);
@@ -408,22 +408,22 @@ stop:
      */
     protected void setStatus(int bits) {
         if ((status & bits) == 0) {
-//System.err.printf("SetStatus(%.2x %.2x)\n", bits, stmask);
+//Debug.printf("SetStatus(%.2x %.2x)\n", bits, stmask);
             status |= bits & stMask;
             updateStatus();
         }
 //else
-// System.err.printf("SetStatus(%.2x) - ignored\n", bits);
+// Debug.printf("SetStatus(%.2x) - ignored\n", bits);
     }
 
     protected void resetStatus(int bits) {
         status &= ~bits;
-        // System.err.printf("ResetStatus(%.2x)\n", bits);
+        // Debug.printf("ResetStatus(%.2x)\n", bits);
         updateStatus();
     }
 
     protected void updateStatus() {
-//System.err.printf("%d:INT = %d\n", Diag::GetCPUTick(), (status & stmask & reg29) != 0);
+//Debug.printf("%d:INT = %d\n", Diag::GetCPUTick(), (status & stmask & reg29) != 0);
         //intr((status & stmask & reg29) != 0);
     }
 

@@ -8,9 +8,11 @@ import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.logging.Level;
 
-import dotnet4j.Tuple;
+import dotnet4j.util.compat.Tuple;
 import dotnet4j.io.Stream;
+import vavi.util.Debug;
 
 
 public class YmF278b extends Instrument.BaseInstrument {
@@ -593,7 +595,7 @@ public class YmF278b extends Instrument.BaseInstrument {
 
                 default:
                     //# ifdef _DEBUG
-                    //System.err.printf(...);
+                    //Debug.printf(...);
                     //#endif
                     break;
                 }
@@ -622,7 +624,7 @@ public class YmF278b extends Instrument.BaseInstrument {
             if (address < this.romSize) {
             } // can't write to ROM
             else if (address < this.romSize + this.ramSize) {
-                //System.err.printf("adr:%06x dat:%02x", address, value);
+                //Debug.printf("adr:%06x dat:%02x", address, value);
                 this.ram[address - this.romSize] = value;
             } else {
             } // can't write to unmapped memory
@@ -643,15 +645,15 @@ public class YmF278b extends Instrument.BaseInstrument {
                 addr = op.startAddr + ((op.pos / 2) * 3);
                 addrp = readMemAddr(addr);
                 if ((op.pos & 1) != 0)
-                    sample = (short) ((addrp.Item1[addrp.Item2 + 2] << 8) | ((addrp.Item1[addrp.Item2 + 1] << 4) & 0xF0));
+                    sample = (short) ((addrp.getItem1()[addrp.getItem2() + 2] << 8) | ((addrp.getItem1()[addrp.getItem2() + 1] << 4) & 0xF0));
                 else
-                    sample = (short) ((addrp.Item1[addrp.Item2 + 0] << 8) | (addrp.Item1[addrp.Item2 + 1] & 0xF0));
+                    sample = (short) ((addrp.getItem1()[addrp.getItem2() + 0] << 8) | (addrp.getItem1()[addrp.getItem2() + 1] & 0xF0));
                 break;
             case 2:
                 // 16 bit
                 addr = op.startAddr + (op.pos * 2);
                 addrp = readMemAddr(addr);
-                sample = (short) ((addrp.Item1[addrp.Item2 + 0] << 8) | addrp.Item1[addrp.Item2 + 1]);
+                sample = (short) ((addrp.getItem1()[addrp.getItem2() + 0] << 8) | addrp.getItem1()[addrp.getItem2() + 1]);
                 break;
             default:
                 // TODO unspecified
@@ -720,7 +722,7 @@ public class YmF278b extends Instrument.BaseInstrument {
                     ymf278b_irq_check(chip);*/
                 break;
             default:
-//System.err.printf("YMF278B:  Port A write %02x, %02x\n", reg, data);
+//Debug.printf("YMF278B:  Port A write %02x, %02x\n", reg, data);
                 this.ymf262.write(1, data);
                 //this.YmF262.Write(0, 0, reg, data);
                 if ((reg & 0xF0) == 0xB0 && (data & 0x20) != 0) // Key On set
@@ -745,12 +747,12 @@ public class YmF278b extends Instrument.BaseInstrument {
                 break;
             }
             //#ifdef _DEBUG
-            // System.err.printf("YMF278B:  Port B write %02x, %02x\n", reg, data);
+            // Debug.printf("YMF278B:  Port B write %02x, %02x\n", reg, data);
             //#endif
         }
 
         private void writeC(byte reg, byte data) {
-            //System.err.printf("ymf278b_C_w reg:%02x dat:%02x", reg, data);
+            //Debug.printf("ymf278b_C_w reg:%02x dat:%02x", reg, data);
 
             // Handle slot registers specifically
             if (reg >= 0x08 && reg <= 0xF7) {
@@ -771,19 +773,19 @@ public class YmF278b extends Instrument.BaseInstrument {
                             (this.waveTblHdr * 0x80000 + ((slot.wave - 384) * 12));
                     buf = this.readMemAddr(_base);
 
-                    slot.bits = (byte) ((buf.Item1[buf.Item2 + 0] & 0xC0) >> 6);
-                    slot.setLfo((buf.Item1[buf.Item2 + 7] >> 3) & 7);
-                    slot.vib = (byte) (buf.Item1[buf.Item2 + 7] & 7);
-                    slot.ar = (byte) (buf.Item1[buf.Item2 + 8] >> 4);
-                    slot.d1R = (byte) (buf.Item1[buf.Item2 + 8] & 0xF);
-                    slot.dl = dl_tab[buf.Item1[buf.Item2 + 9] >> 4];
-                    slot.d2R = (byte) (buf.Item1[buf.Item2 + 9] & 0xF);
-                    slot.rc = (byte) (buf.Item1[buf.Item2 + 10] >> 4);
-                    slot.rr = (byte) (buf.Item1[buf.Item2 + 10] & 0xF);
-                    slot.am = (byte) (buf.Item1[buf.Item2 + 11] & 7);
-                    slot.startAddr = buf.Item1[buf.Item2 + 2] | (buf.Item1[buf.Item2 + 1] << 8) | ((buf.Item1[buf.Item2 + 0] & 0x3F) << 16);
-                    slot.loopAddr = buf.Item1[buf.Item2 + 4] + (buf.Item1[buf.Item2 + 3] << 8);
-                    slot.endAddr = ((buf.Item1[buf.Item2 + 6] + (buf.Item1[buf.Item2 + 5] << 8)) ^ 0xFFFF);
+                    slot.bits = (byte) ((buf.getItem1()[buf.getItem2() + 0] & 0xC0) >> 6);
+                    slot.setLfo((buf.getItem1()[buf.getItem2() + 7] >> 3) & 7);
+                    slot.vib = (byte) (buf.getItem1()[buf.getItem2() + 7] & 7);
+                    slot.ar = (byte) (buf.getItem1()[buf.getItem2() + 8] >> 4);
+                    slot.d1R = (byte) (buf.getItem1()[buf.getItem2() + 8] & 0xF);
+                    slot.dl = dl_tab[buf.getItem1()[buf.getItem2() + 9] >> 4];
+                    slot.d2R = (byte) (buf.getItem1()[buf.getItem2() + 9] & 0xF);
+                    slot.rc = (byte) (buf.getItem1()[buf.getItem2() + 10] >> 4);
+                    slot.rr = (byte) (buf.getItem1()[buf.getItem2() + 10] & 0xF);
+                    slot.am = (byte) (buf.getItem1()[buf.getItem2() + 11] & 7);
+                    slot.startAddr = buf.getItem1()[buf.getItem2() + 2] | (buf.getItem1()[buf.getItem2() + 1] << 8) | ((buf.getItem1()[buf.getItem2() + 0] & 0x3F) << 16);
+                    slot.loopAddr = buf.getItem1()[buf.getItem2() + 4] + (buf.getItem1()[buf.getItem2() + 3] << 8);
+                    slot.endAddr = ((buf.getItem1()[buf.getItem2() + 6] + (buf.getItem1()[buf.getItem2() + 5] << 8)) ^ 0xFFFF);
 
                     if ((this.regs[reg + 4] & 0x080) != 0)
                         keyOnHelper(slot);
@@ -1106,7 +1108,7 @@ public class YmF278b extends Instrument.BaseInstrument {
                 break;
 
             default:
-System.err.printf("YMF278B: unexpected write at offset %X to YmF278b = %02X\n", offset, data);
+Debug.printf(Level.WARNING, "YMF278B: unexpected write at offset %X to YmF278b = %02X\n", offset, data);
                 break;
             }
         }

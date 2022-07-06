@@ -137,7 +137,7 @@ public class C140 extends Instrument.BaseInstrument {
                             v.sample_end = ((this.reg[vreg + 8] * 256) | this.reg[vreg + 9]) * 2;
 
                             //#if 0
-                            //System.err.printf("219: play v %d mode %02x start %x loop %x end %x\n",
+                            //Debug.printf("219: play v %d mode %02x start %x loop %x end %x\n",
                             // offset>>4, v.mode,
                             // find_sample(info, v.sample_start, v.bank, offset>>4),
                             // find_sample(info, v.sample_loop, v.bank, offset>>4),
@@ -194,7 +194,7 @@ public class C140 extends Instrument.BaseInstrument {
 
             if (dataLength >= 0) System.arraycopy(romData, srcStartAdr, this.pRom, dataStart, dataLength);
 
-            //System.err.printf("c140_write_rom2:%d:%d:%d:%d:%d", chipId, romSize, dataStart, dataLength, srcStartAdr);
+            //Debug.printf("c140_write_rom2:%d:%d:%d:%d:%d", chipId, romSize, dataStart, dataLength, srcStartAdr);
         }
 
         public void setMuteMask(int muteMask) {
@@ -277,7 +277,7 @@ public class C140 extends Instrument.BaseInstrument {
                         pos += cnt;
                         // Check for the end of the sample
                         if (pos >= sz) {
-                            //System.err.printf("C140 pos[%x]", pos);
+                            //Debug.printf("C140 pos[%x]", pos);
                             //debugCnt = 20;
                             // Check if it's a looping sample, either stop or loop
                             if ((v.mode & 0x10) != 0) {
@@ -316,7 +316,7 @@ public class C140 extends Instrument.BaseInstrument {
                         pos += cnt;
                         // Check for the end of the sample
                         if (pos >= sz) {
-                            //System.err.printf("C140 pos[%x]", pos);
+                            //Debug.printf("C140 pos[%x]", pos);
                             //debugCnt = 20;
                             // Check if it's a looping sample, either stop or loop
                             if ((v.mode & 0x10) != 0) {
@@ -376,7 +376,7 @@ public class C140 extends Instrument.BaseInstrument {
                 dest2[i] = rmix[i] << 3;
                 //if (debugCnt > 0) {
                 //    debugCnt--;
-                //    System.err.printf("%x  %d", lmix[i]);
+                //    Debug.printf("%x  %d", lmix[i]);
                 //}
             }
         }

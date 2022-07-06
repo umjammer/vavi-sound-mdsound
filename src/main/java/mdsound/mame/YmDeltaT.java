@@ -1,6 +1,9 @@
 package mdsound.mame;
 
 import java.util.function.Consumer;
+import java.util.logging.Level;
+
+import vavi.util.Debug;
 
 import static mdsound.mame.Fm.OUTD_CENTER;
 
@@ -302,7 +305,7 @@ public class YmDeltaT {
                 this.adpCmd = DELTA_DEF;
                 this.nowData = 0;
                 if (this.start > this.end)
-                    System.err.printf("DeltaT-Warning: Start: %06X, End: %06X\n", this.start, this.end);
+                    Debug.printf(Level.WARNING, "DeltaT: Start: %06X, End: %06X\n", this.start, this.end);
             }
 
 
@@ -312,22 +315,16 @@ public class YmDeltaT {
 
                 /* if yes, then let's check if ADPCM memory is mapped and big enough */
                 if (this.memory == null) {
-// #if DEBUG
-                    System.err.print("YM Delta-T ADPCM rom not mapped\n");
-// #endif
+                    Debug.print(Level.FINE, "YM Delta-T ADPCM rom not mapped\n");
                     this.portState = 0x00;
                     this.pcmBsy = 0;
                 } else {
                     if (this.end >= this.memorySize) { // Check End in Range
-// #if DEBUG
-                        System.err.printf("YM Delta-T ADPCM end out of range: $%08x\n", this.end);
-// #endif
+                        Debug.printf(Level.FINE, "YM Delta-T ADPCM end out of range: $%08x\n", this.end);
                         this.end = this.memorySize - 1;
                     }
                     if (this.start >= this.memorySize) { // Check Start in Range */
-// #if DEBUG
-                        System.err.printf("YM Delta-T ADPCM start out of range: $%08x\n", this.start);
-// #endif
+                        Debug.printf(Level.FINE, "YM Delta-T ADPCM start out of range: $%08x\n", this.start);
                         this.portState = 0x00;
                         this.pcmBsy = 0;
                     }

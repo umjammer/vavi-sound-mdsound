@@ -512,7 +512,7 @@ public class Opm {
                 , this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr     // F8-FB
                 , this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr     // FC-FF
         );
-        cmdTbl = a.toArray(new BiConsumer[0]);
+        cmdTbl = a.toArray(BiConsumer[]::new);
         //new BiConsumer<Byte, Byte>[]
 
 // #if C86CTL
@@ -1536,7 +1536,7 @@ public class Opm {
                     out[0] -= outOpm[0] >> (5); // -4096 ～ +4096
                     out[1] -= outOpm[1] >> (5);
 
-                    //System.err.printf("outOpm0:%d outOpm1:%d", OutOpm[0], OutOpm[1]);
+                    //Debug.printf("outOpm0:%d outOpm1:%d", OutOpm[0], OutOpm[1]);
                 }
             }
 
@@ -1640,7 +1640,7 @@ public class Opm {
 
             buffer[offset + pcmBufPtr * 2 + 0] = (short) out[0];
             buffer[offset + pcmBufPtr * 2 + 1] = (short) out[1];
-            //System.err.printf("PcmBufPtr:%d out0:%d out1:%d",PcmBufPtr, PcmBuf[PcmBufPtr*2+0], PcmBuf[PcmBufPtr*2+1]);
+            //Debug.printf("PcmBufPtr:%d out0:%d out1:%d",PcmBufPtr, PcmBuf[PcmBufPtr*2+0], PcmBuf[PcmBufPtr*2+1]);
             ++pcmBufPtr;
             if (pcmBufPtr >= pcmBufSize) {
                 pcmBufPtr = 0;

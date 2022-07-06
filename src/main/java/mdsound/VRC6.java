@@ -1,7 +1,7 @@
 package mdsound;
 
 import mdsound.np.chip.NesVrc6;
-import dotnet4j.Tuple;
+import dotnet4j.util.compat.Tuple;
 
 
 public class VRC6 extends Instrument.BaseInstrument {
@@ -36,7 +36,7 @@ public class VRC6 extends Instrument.BaseInstrument {
             for (Object o : option) {
                 if (o instanceof Tuple) { // <Integer, Integer>
                     Tuple<Integer, Integer> item = (Tuple<Integer, Integer>) o;
-                    vrc6[chipId].setOption(item.Item1, item.Item2);
+                    vrc6[chipId].setOption(item.getItem1(), item.getItem2());
                 }
             }
         }

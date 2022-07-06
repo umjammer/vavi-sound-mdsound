@@ -785,7 +785,7 @@ public class FrmMain extends JFrame {
             data.add(new Pack(dev, 0, 0x100 + i, 0xc0));
         }
 
-        return data.toArray(new Pack[0]);
+        return data.toArray(Pack[]::new);
     }
 
     private static Pack[] softResetYM2608(int dev) {
@@ -1517,7 +1517,7 @@ public class FrmMain extends JFrame {
             }
         }
 
-        chips = lstChip.toArray(new MDSound.Chip[0]);
+        chips = lstChip.toArray(MDSound.Chip[]::new);
         mds.init(SamplingRate, samplingBuffer, chips);
 
 //            sdl.Paused = false;
@@ -1556,7 +1556,7 @@ public class FrmMain extends JFrame {
 
             frames[i * 2 + 0] = emuRenderBuf[0];
             frames[i * 2 + 1] = emuRenderBuf[1];
-            //Console.Write("Adr[{0:x8}] : Wait[{1:d8}] : [{2:d8}]/[{3:d8}]\r\n", vgmAdr,0,0,0);
+            //Debug.print("Adr[%8x] : Wait[%8d] : [%8d]/[%8d]\r\n", vgmAdr,0,0,0);
             //dummy++;
             //dummy %= 500;
             //frames[i * 2 + 0] = (short)dummy;// (dummy < 100 ? 0xfff : 0x000);
@@ -1592,7 +1592,7 @@ public class FrmMain extends JFrame {
         }
 
         byte cmd = vgmBuf[vgmAdr];
-        //Console.Write(" Adr[{0:x}]:cmd[{1:x}]\r\n", vgmAdr, cmd);
+        //Debug.print(" Adr[%x]:cmd[%x]\r\n", vgmAdr, cmd);
         switch (cmd & 0xff) {
         case 0x4f: //GG Psg
         case 0x50: //Psg
@@ -1619,7 +1619,7 @@ public class FrmMain extends JFrame {
             rAdr = vgmBuf[vgmAdr + 1];
             rDat = vgmBuf[vgmAdr + 2];
             vgmAdr += 3;
-            //Console.Write(" Adr[{0:x}]:cmd[{1:x}]:Adr[{2:x}]:Dar[{3:x}]\r\n", vgmAdr, cmd,rAdr,rDat);
+            //Debug.print(" Adr[%x]:cmd[%x]:Adr[%x]:Dar[%x]\r\n", vgmAdr, cmd,rAdr,rDat);
             mds.writeYM2151((byte) 0, rAdr, rDat);
             break;
         case 0x55: //YM2203
@@ -1711,7 +1711,7 @@ public class FrmMain extends JFrame {
 
             mds.writeYMF262((byte) 0, (byte) 0, rAdr, rDat);
             //mds.WriteYMF278B(0, 0, rAdr, rDat);
-            //Console.WriteLine("P0:adr{0:x2}:dat{1:x2}", rAdr, rDat);
+            //Debug.printLine("P0:adr%2x:dat%2x", rAdr, rDat);
             break;
         case 0x5f: //YMF262 Port1
             rAdr = vgmBuf[vgmAdr + 1];
@@ -1720,7 +1720,7 @@ public class FrmMain extends JFrame {
 
             mds.writeYMF262((byte) 0, (byte) 1, rAdr, rDat);
             //mds.WriteYMF278B(0, 1, rAdr, rDat);
-            //Console.WriteLine("P1:adr{0:x2}:dat{1:x2}", rAdr, rDat);
+            //Debug.printLine("P1:adr%2x:dat%2x", rAdr, rDat);
 
             break;
         case 0x61: //Wait n samples

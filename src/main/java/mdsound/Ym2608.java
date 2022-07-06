@@ -81,7 +81,7 @@ public class Ym2608 extends Instrument.BaseInstrument {
         for (int i = 0; i < 1; i++) {
             outputs[0][i] = buffer[i * 2 + 0];
             outputs[1][i] = buffer[i * 2 + 1];
-            //System.err.printf("[%8d] : [%8d] [%d]\r\n", outputs[0][i], outputs[1][i],i);
+            //Debug.printf("[%8d] : [%8d] [%d]\r\n", outputs[0][i], outputs[1][i],i);
         }
 
         visVolume[chipId][0][0] = outputs[0][0];

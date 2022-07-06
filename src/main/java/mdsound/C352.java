@@ -160,7 +160,7 @@ public class C352 extends Instrument.BaseInstrument {
                 short volDelta = (short) (this.currVol[ch] - val);
                 if (volDelta != 0)
                     this.currVol[ch] = (byte) (this.currVol[ch] + ((volDelta > 0) ? -1 : 1));
-                //System.err.printf("this.curr_vol[ch%d] = %d val=%d", ch, this.curr_vol[ch], val);
+                //Debug.printf("this.curr_vol[ch%d] = %d val=%d", ch, this.curr_vol[ch], val);
             }
 
             public void fetchSample(byte s) {
@@ -209,7 +209,7 @@ public class C352 extends Instrument.BaseInstrument {
                     break;
                 case 2:
                     this.freq = val;
-                    //System.err.printf("this.v[ch%d].freq = %d", ch, val);
+                    //Debug.printf("this.v[ch%d].freq = %d", ch, val);
                     break;
                 case 3:
                     this.flags = val;
@@ -292,7 +292,7 @@ public class C352 extends Instrument.BaseInstrument {
         private static byte muteAllRear = 0x00;
 
         private void fetchSample(Voice v) {
-            //System.err.printf("v.sample = %d  v.pos = %d  this.wave_mask = %d  v.flags =%d ", v.sample, v.pos, this.wave_mask, v.flags);
+            //Debug.printf("v.sample = %d  v.pos = %d  this.wave_mask = %d  v.flags =%d ", v.sample, v.pos, this.wave_mask, v.flags);
 
             v.lastSample = v.sample;
 
@@ -323,14 +323,14 @@ public class C352 extends Instrument.BaseInstrument {
                     short s = 0;
                     flags[j] = v.flags;
 
-                    //System.err.printf(" v.flags=%d", v.flags);
+                    //Debug.printf(" v.flags=%d", v.flags);
                     if ((v.flags & 0x8000) != 0) {
                         int nextCounter = v.counter + v.freq;
 
                         if ((nextCounter & 0x10000) != 0) {
                             fetchSample(v);
-                            //System.err.printf("fetch");
-                            //System.err.printf(" ch=%d 0=%d  1=%d  2=%d  3=%d",j, _out[0], _out[1], _out[2], _out[3]);
+                            //Debug.printf("fetch");
+                            //Debug.printf(" ch=%d 0=%d  1=%d  2=%d  3=%d",j, _out[0], _out[1], _out[2], _out[3]);
                         }
 
                         if (((nextCounter ^ v.counter) & 0x18000) != 0) {
@@ -341,8 +341,8 @@ public class C352 extends Instrument.BaseInstrument {
                         }
 
                         v.counter = nextCounter & 0xffff;
-                        //System.err.printf(" v.freq=%d", v.freq);
-                        //System.err.printf(" v.counter=%d", v.counter);
+                        //Debug.printf(" v.freq=%d", v.freq);
+                        //Debug.printf(" v.counter=%d", v.counter);
 
                         s = v.sample;
 
@@ -360,7 +360,7 @@ public class C352 extends Instrument.BaseInstrument {
                         out[3] += ((((v.flags & 0x0200) != 0 ? -s : s) * v.currVol[3]) >> 9);
                     }
 
-                    //System.err.printf("out [0]=%d  [1]=%d  [2]=%d  [3]=%d", _out[0] , _out[1] , _out[2] , _out[3]);
+                    //Debug.printf("out [0]=%d  [1]=%d  [2]=%d  [3]=%d", _out[0] , _out[1] , _out[2] , _out[3]);
                 }
 
                 outputs[0][i] += out[0];
@@ -423,14 +423,14 @@ public class C352 extends Instrument.BaseInstrument {
         }
 
         private void write(int address, int val) {
-            //System.err.printf("address = %d  val = %d", address, val);
+            //Debug.printf("address = %d  val = %d", address, val);
 
             if (address < 0x100) { // Channel registers, see map above.
                 int ch = address / 8;
                 this.voices[ch].setRegisters(address, val);
             } else if (address == 0x200) {
                 this.control = val;
-                //System.err.printf("C352 control register write: %04x\n",val);
+                //Debug.printf("C352 control register write: %04x\n",val);
             } else if (address == 0x202) { // execute keyons/keyoffs
                 for (int i = 0; i < VOICES; i++) {
                     this.voices[i].keyOnOff();
@@ -458,7 +458,7 @@ public class C352 extends Instrument.BaseInstrument {
         }
 
         public void writeRom2(int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
-            //System.err.printf("romSize=%x , dataStart=%x , dataLength=%x", romSize, dataStart, dataLength);
+            //Debug.printf("romSize=%x , dataStart=%x , dataLength=%x", romSize, dataStart, dataLength);
             if (this.waveSize != romSize) {
                 this.wave = new byte[romSize];
                 this.waveSize = romSize;

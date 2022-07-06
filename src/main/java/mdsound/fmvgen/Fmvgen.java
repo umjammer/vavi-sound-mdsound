@@ -8,6 +8,7 @@ import mdsound.fmvgen.effect.Eq3band;
 import mdsound.fmvgen.effect.HPFLPF;
 import mdsound.fmvgen.effect.Reverb;
 import mdsound.fmvgen.effect.ReversePhase;
+import vavi.util.Debug;
 
 
 public class Fmvgen extends Fmgen {
@@ -359,12 +360,12 @@ public class Fmvgen extends Fmgen {
             }
             while (p < FM_CLENTS) {
                 clTable[p] = clTable[p - 512] / 2;
-                //System.err.System.err.printf("%d:", cltable[p]);
+                //System.err.Debug.printf("%d:", cltable[p]);
                 p++;
             }
 
             // for (i = 0; i < 13 * 256; i++)
-            //  System.err.printf("%4d, %d, %d\n", i, cltable[i*2], cltable[i*2+1]);
+            //  Debug.printf("%4d, %d, %d\n", i, cltable[i*2], cltable[i*2+1]);
 
             // サインテーブルの作成
             //double log2 = Math.log(2.0);
@@ -372,8 +373,8 @@ public class Fmvgen extends Fmgen {
             //double r = (i * 2 + 1) * FM_PI / FM_OPSINENTS;
             //double q = -256 * Math.log(Math.sin(r)) / log2;
             //int s = (int)((int)(Math.floor(q + 0.5)) + 1);
-            //System.err.System.err.printf("%d, %d", s, cltable[s * 2] / 8);
-            //System.err.System.err.printf("%6d , %6d , %6d , %4X , %4X"
+            //System.err.Debug.printf("%d, %d", s, cltable[s * 2] / 8);
+            //System.err.Debug.printf("%6d , %6d , %6d , %4X , %4X"
             //    , s
             //    , cltable[s * 2]
             //    , ((s * 2) % 2 == 0 ? 1 : -1) * (4095 - Math.abs((s * 2) / 2))
@@ -641,7 +642,7 @@ public class Fmvgen extends Fmgen {
             int pgin = pgCalc() >> (20 + FM_PGBITS - FM_OPSINBITS);
             if (fb < 31) {
                 pgin += ((In2 << (1 + IS2EC_SHIFT)) >> fb) >> (20 + FM_PGBITS - FM_OPSINBITS);
-                //System.err.System.err.printf("Calc:%d", pgin);
+                //System.err.Debug.printf("Calc:%d", pgin);
             } else {
                 pgin += In >> (20 + FM_PGBITS - FM_OPSINBITS - (2 + IS2EC_SHIFT));
             }
@@ -694,7 +695,7 @@ public class Fmvgen extends Fmgen {
             int pgin = pgCalc() >> (20 + FM_PGBITS - FM_OPSINBITS);
             if (fb < 31) {
                 pgin += ((In << (1 + IS2EC_SHIFT)) >> fb) >> (20 + FM_PGBITS - FM_OPSINBITS);
-                //System.err.System.err.printf("CalcFB:%d", pgin);
+                //System.err.Debug.printf("CalcFB:%d", pgin);
             }
             out = logToLin(egOut + SINE(ch, pgin));
             dbgOpOut = out2;
@@ -1011,12 +1012,12 @@ public class Fmvgen extends Fmgen {
         public void setKCKF(int kc, int kf) {
             int oct = 19 - ((kc >> 4) & 7);
 
-            //System.err.printf("%p", this);
+            //Debug.printf("%p", this);
             int kcv = kcTable[kc & 0x0f];
             kcv = (kcv + 2) / 4 * 4;
-            //System.err.printf(" %.4x", kcv);
+            //Debug.printf(" %.4x", kcv);
             int dp = kcv * kftable[kf & 0x3f];
-            //System.err.printf(" %.4x %.4x %.8x", kcv, kftable[kf & 0x3f], dp >> oct);
+            //Debug.printf(" %.4x %.4x %.8x", kcv, kftable[kf & 0x3f], dp >> oct);
             dp >>= 16 + 3;
             dp <<= 16 + 3;
             dp >>= oct;
@@ -1025,7 +1026,7 @@ public class Fmvgen extends Fmgen {
             op[1].setDPBN(dp, bn);
             op[2].setDPBN(dp, bn);
             op[3].setDPBN(dp, bn);
-            //System.err.printf(" %.8x\n", dp);
+            //Debug.printf(" %.8x\n", dp);
         }
 
         // キー制御
@@ -1314,8 +1315,8 @@ public class Fmvgen extends Fmgen {
 
             if (carrier != 0xf) {
                 for (int i = 0; i < 4; i++)
-                    System.err.printf("algLink:%d:%d", i, op[i].algLink);
-                System.err.printf("carrier:%d", carrier);
+                    Debug.printf("algLink:%d:%d", i, op[i].algLink);
+                Debug.printf("carrier:%d", carrier);
             }
         }
     }

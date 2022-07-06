@@ -141,7 +141,7 @@ public class ScdPcm extends Instrument.BaseInstrument {
                 chan.stepB += data;
                 chan.step = (int) ((float) chan.stepB * this.rate);
 
-                //System.err.printf("Step low = %.2X   Step calculated = %.8X", data, chan.Step);
+                //Debug.printf("Step low = %.2X   Step calculated = %.8X", data, chan.Step);
                 break;
 
             case 0x03: // frequency step (HB) registers
@@ -149,14 +149,14 @@ public class ScdPcm extends Instrument.BaseInstrument {
                 chan.stepB += data << 8;
                 chan.step = (int) ((float) chan.stepB * this.rate);
 
-                //System.err.printf("Step high = %.2X   Step calculated = %.8X", data, chan.Step);
+                //Debug.printf("Step high = %.2X   Step calculated = %.8X", data, chan.Step);
                 break;
 
             case 0x04:
                 chan.loopAddr &= 0xFF00;
                 chan.loopAddr += data;
 
-                //System.err.printf("Loop low = %.2X   Loop = %.8X", data, chan.Loop_Addr);
+                //Debug.printf("Loop low = %.2X   Loop = %.8X", data, chan.Loop_Addr);
                 break;
 
             case 0x05:
@@ -164,14 +164,14 @@ public class ScdPcm extends Instrument.BaseInstrument {
                 chan.loopAddr &= 0x00FF;
                 chan.loopAddr += data << 8;
 
-                //System.err.printf("Loop high = %.2X   Loop = %.8X", data, chan.Loop_Addr);
+                //Debug.printf("Loop high = %.2X   Loop = %.8X", data, chan.Loop_Addr);
                 break;
 
             case 0x06: // start address registers
                 chan.stAddr = data << (STEP_SHIFT + 8);
                 //chan.Addr = chan.St_Addr;
 
-                //System.err.printf("Start addr = %.2X   New Addr = %.8X", data, chan.Addr);
+                //Debug.printf("Start addr = %.2X   New Addr = %.8X", data, chan.Addr);
                 break;
 
             case 0x07: // control register
@@ -190,14 +190,14 @@ public class ScdPcm extends Instrument.BaseInstrument {
                 else
                     this.enable = 0;
 
-                //System.err.printf("General Enable = %.2X", data);
+                //Debug.printf("General Enable = %.2X", data);
                 break;
 
             case 0x08:
                 // Sound on/off register
                 data ^= 0xFF;
 
-                //System.err.printf("Channel Enable = %.2X", data);
+                //Debug.printf("Channel Enable = %.2X", data);
 
                 for (i = 0; i < 8; i++) {
                     chan = this.channels[i];

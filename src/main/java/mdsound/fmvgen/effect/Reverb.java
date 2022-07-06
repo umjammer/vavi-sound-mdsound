@@ -46,7 +46,7 @@ public class Reverb {
         // SendLevel[ch] = 1.0 / (2 << Math.max(Math.min((15 - n), 15), 0));
         n = Math.max(Math.min(n, 15), 0);
         sendLevel[ch] = 1.0 * sl[n];
-        // System.err.printf("%d %d", ch, SendLevel[ch]);
+        // Debug.printf("%d %d", ch, SendLevel[ch]);
     }
 
     private static final double[] sl = new double[] {

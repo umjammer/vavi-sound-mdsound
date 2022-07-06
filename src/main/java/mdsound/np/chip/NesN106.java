@@ -1,10 +1,12 @@
 package mdsound.np.chip;
 
 import java.util.Arrays;
+import java.util.logging.Level;
 
 import mdsound.MDSound;
 import mdsound.np.Device.SoundChip;
 import mdsound.np.chip.DeviceInfo.BasicTrackInfo;
+import vavi.util.Debug;
 
 
 public class NesN106 implements SoundChip {
@@ -115,6 +117,7 @@ public class NesN106 implements SoundChip {
 
             return trkInfo;
         } catch (Exception e) {
+e.printStackTrace();
             return null;
         }
     }

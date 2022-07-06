@@ -158,10 +158,10 @@ public class Ym2413 extends Instrument.BaseInstrument {
              */
             private int calcCar(int fm) {
                 if (egOut >= (DB_MUTE - 1)) {
-                    //System.err.printf("calc_slot_car: output over");
+                    //Debug.printf("calc_slot_car: output over");
                     output[0] = 0;
                 } else {
-                    //System.err.printf("calc_slot_car: slot.egout %d", slot.egout);
+                    //Debug.printf("calc_slot_car: slot.egout %d", slot.egout);
                     output[0] = db2LinTable[sinTbl[(pgOut + wave2_8pi(fm)) & (PG_WIDTH - 1)] + egOut];
                 }
 
@@ -323,7 +323,7 @@ public class Ym2413 extends Instrument.BaseInstrument {
                     egOut = eg2db(egOut + tll) + lfo;
                 else {
                     egOut = eg2db(egOut + tll);
-                    //System.err.printf("egOut %d slot.tll %d (e_int32)(EG_STEP/DB_STEP) %d", egOut, slot.tll, (short)(EG_STEP / DB_STEP));
+                    //Debug.printf("egOut %d slot.tll %d (e_int32)(EG_STEP/DB_STEP) %d", egOut, slot.tll, (short)(EG_STEP / DB_STEP));
                 }
 
                 if (egOut >= DB_MUTE)
@@ -1472,7 +1472,7 @@ public class Ym2413 extends Instrument.BaseInstrument {
         // I/O Ctrl
 
         private void writeReg(int reg, int data) {
-            //System.err.printf("OPLL_writeReg:reg:%d:data:%d", reg,data);
+            //Debug.printf("OPLL_writeReg:reg:%d:data:%d", reg,data);
 
             int v, ch;
 
@@ -1870,9 +1870,9 @@ public class Ym2413 extends Instrument.BaseInstrument {
                 bufMO[i] <<= 1;
                 bufRO[i] <<= 1;
 
-                //System.err.printf("OPLL_calc_stereo:out[0][%d]:%d:out[1][%d]:%d:samples:%d", i, out[0][i], out[1][i], samples);
+                //Debug.printf("OPLL_calc_stereo:out[0][%d]:%d:out[1][%d]:%d:samples:%d", i, out[0][i], out[1][i], samples);
             }
-            //System.err.printf("elapsed:%d:%d:%d:%d:%d:%d", e0,e1,e2,e3,e4,e5);
+            //Debug.printf("elapsed:%d:%d:%d:%d:%d:%d", e0,e1,e2,e3,e4,e5);
         }
 
 //#endif /* EMU2413_COMPACTION */

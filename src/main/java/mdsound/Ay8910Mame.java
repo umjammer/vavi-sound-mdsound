@@ -9,7 +9,10 @@ package mdsound;
 
 import java.util.Arrays;
 import java.util.function.BiConsumer;
+import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import vavi.util.Debug;
 
 
 public class Ay8910Mame extends Instrument.BaseInstrument {
@@ -941,7 +944,7 @@ has twice the steps, happening twice as fast.
                     //if (this.port_a_write_cb != NULL)
                     //    this.port_a_write_cb(psg, 0, this.regs[AY_PORTA]);
                     //else
-                    //    System.err.printf("warning: unmapped write %02x to %s Port A\n", v, "AY8910");
+                    //    Debug.printf("warning: unmapped write %02x to %s Port A\n", v, "AY8910");
                 } else {
 // #if LOG_IGNORED_WRITES
                     log.warning(String.format("write %02x to %s Port A set as input - ignored\n", v, "AY8910"));
@@ -953,7 +956,7 @@ has twice the steps, happening twice as fast.
                     //if (this.port_b_write_cb != NULL)
                     //    this.port_b_write_cb(psg, 0, this.regs[AY_PORTB]);
                     //else
-                    //    System.err.printf("warning: unmapped write %02x to %s Port B\n", v, "AY8910");
+                    //    Debug.printf("warning: unmapped write %02x to %s Port B\n", v, "AY8910");
                 } else {
 // #if LOG_IGNORED_WRITES
                     log.warning(String.format("write %02x to %s Port B set as input - ignored\n", v, "AY8910"));
@@ -1080,7 +1083,7 @@ has twice the steps, happening twice as fast.
 //
 //    if ((this.flags & AY8910_LEGACY_OUTPUT) != 0 || this.flags == 0)
 //    {
-//        //System.err.printf("AY-3-8910/YM2149 using legacy output levels!\n");
+//        //Debug.printf("AY-3-8910/YM2149 using legacy output levels!\n");
 //        normalize = 1;
 //    }
 //
@@ -1299,7 +1302,7 @@ has twice the steps, happening twice as fast.
                     /* Register port */
                     this.register_latch = (byte) (data & 0x0f);
                 } else {
-                    System.err.printf("warning - %s upper address mismatch\n", "AY8910");
+                    Debug.printf(Level.WARNING, "%s upper address mismatch\n", "AY8910");
                 }
             }
         }
@@ -1321,7 +1324,7 @@ has twice the steps, happening twice as fast.
             switch (r) {
             case AY_PORTA:
                 if ((this.regs[AY_ENABLE] & 0x40) != 0)
-                    System.err.printf("warning: read from %s Port A set as output\n", "AY8910");
+                    Debug.printf("warning: read from %s Port A set as output\n", "AY8910");
                     /*
                        even if the port is set as output, we still need to return the external
                        data. Some games, like kidniki, need this to work.
@@ -1335,15 +1338,15 @@ has twice the steps, happening twice as fast.
                 //if (this.port_a_read_cb != NULL)
                 //    this.regs[AY_PORTA] = this.port_a_read_cb(psg, 0);
                 //else
-                //    System.err.printf("Warning - read 8910 Port A\n");
+                //    Debug.printf("Warning - read 8910 Port A\n");
                 break;
             case AY_PORTB:
                 if ((this.regs[AY_ENABLE] & 0x80) != 0)
-                    System.err.printf("warning: read from %s Port B set as output\n", "AY8910");
+                    Debug.printf("warning: read from %s Port B set as output\n", "AY8910");
                 //if (this.port_b_read_cb != NULL)
                 //    this.regs[AY_PORTB] = this.port_b_read_cb(psg, 0);
                 //else
-                //    System.err.printf("Warning - read 8910 Port B\n");
+                //    Debug.printf("Warning - read 8910 Port B\n");
                 break;
             }
 

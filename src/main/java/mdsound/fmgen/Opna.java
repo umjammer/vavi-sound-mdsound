@@ -11,12 +11,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.function.Function;
+import java.util.logging.Level;
 
 import dotnet4j.io.FileAccess;
 import dotnet4j.io.FileMode;
 import dotnet4j.io.FileStream;
 import dotnet4j.io.Stream;
 import mdsound.Common;
+import vavi.util.Debug;
 
 import static mdsound.fmgen.Fmgen.limit;
 
@@ -553,19 +555,19 @@ public class Opna {
                 if ((control1 & 0x40) != 0) {
                     memAddr = startAddr;
                 }
-                //System.err.printf("  startaddr %.6x", startaddr);
+                //Debug.printf("  startaddr %.6x", startaddr);
                 break;
 
             case 0x04: // Stop Address L
             case 0x05: // Stop Address H
                 adpcmReg[addr - 0x04 + 2] = (byte) data;
                 stopAddr = (adpcmReg[3] * 256 + adpcmReg[2] + 1) << 6;
-                //System.err.printf("  stopaddr %.6x", stopaddr);
+                //Debug.printf("  stopaddr %.6x", stopaddr);
                 break;
 
             case 0x08: // ADPCM data
                 if ((control1 & 0x60) == 0x60) {
-                    //System.err.printf("  Wr [0x%.5x] = %.2x", memaddr, data);
+                    //Debug.printf("  Wr [0x%.5x] = %.2x", memaddr, data);
                     writeRAM(data);
                 }
                 break;
@@ -587,7 +589,7 @@ public class Opna {
             case 0x0d: // Limit Address H
                 adpcmReg[addr - 0x0c + 6] = (byte) data;
                 limitAddr = (adpcmReg[7] * 256 + adpcmReg[6] + 1) << 6;
-                //System.err.printf("  limitaddr %.6x", limitaddr);
+                //Debug.printf("  limitaddr %.6x", limitaddr);
                 break;
 
             case 0x10: // Flag Controller
@@ -610,15 +612,15 @@ public class Opna {
                 return psg.getReg(addr);
 
             if (addr == 0x108) {
-                //System.err.printf("%d:reg[108] .   ", Diag::GetCPUTick());
+                //Debug.printf("%d:reg[108] .   ", Diag::GetCPUTick());
 
                 int data = adpcmReadBuf & 0xff;
                 adpcmReadBuf >>= 8;
                 if ((control1 & 0x60) == 0x20) {
                     adpcmReadBuf |= readRAM() << 8;
-                    //System.err.printf("Rd [0x%.6x:%.2x] ", memaddr, adpcmreadbuf >> 8);
+                    //Debug.printf("Rd [0x%.6x:%.2x] ", memaddr, adpcmreadbuf >> 8);
                 }
-                //System.err.printf("%.2x\n");
+                //Debug.printf("%.2x\n");
                 return data;
             }
 
@@ -713,27 +715,27 @@ public class Opna {
          */
         protected void setStatus(int bits) {
             if ((status & bits) == 0) {
-                //  System.err.printf("SetStatus(%.2x %.2x)\n", bits, stmask);
+                //  Debug.printf("SetStatus(%.2x %.2x)\n", bits, stmask);
                 status |= bits & stMask;
                 updateStatus();
             }
             // else
-            //System.err.printf("SetStatus(%.2x) - ignored\n", bits);
+            //Debug.printf("SetStatus(%.2x) - ignored\n", bits);
         }
 
         protected void resetStatus(int bits) {
             status &= ~bits;
-            // System.err.printf("ResetStatus(%.2x)\n", bits);
+            // Debug.printf("ResetStatus(%.2x)\n", bits);
             updateStatus();
         }
 
         protected void updateStatus() {
-            // System.err.printf("%d:INT = %d\n", Diag::GetCPUTick(), (status & stmask & reg29) != 0);
+            // Debug.printf("%d:INT = %d\n", Diag::GetCPUTick(), (status & stmask & reg29) != 0);
             intr((status & stMask & reg29) != 0);
         }
 
         protected void lfo() {
-            // System.err.printf("%4d - %8d, %8d\n", c, lfocount, lfodcount);
+            // Debug.printf("%4d - %8d, %8d\n", c, lfocount, lfodcount);
 
             chip.setPML(pmTable[(lfoCount >> (Fmgen.FM_LFOCBITS + 1)) & 0xff]);
             chip.setAML(amTable[(lfoCount >> (Fmgen.FM_LFOCBITS + 1)) & 0xff]);
@@ -778,7 +780,7 @@ public class Opna {
 
             if (adpcmPlay) {
                 int ptrDest = 0;
-                //  System.err.printf("ADPCM Play: %d   DeltaN: %d\n", adpld, deltan);
+                //  Debug.printf("ADPCM Play: %d   DeltaN: %d\n", adpld, deltan);
                 if (adplD <= 8192) { // fplay < fsamp
                     for (; count > 0; count--) {
                         if (adplC < 0) {
@@ -882,7 +884,7 @@ stop:
                 memAddr &= 0x3fffff;
             }
             if (memAddr == limitAddr) {
-                //System.err.printf("Limit ! (%.8x)\n", limitaddr);
+                //Debug.printf("Limit ! (%.8x)\n", limitaddr);
                 memAddr = 0;
             }
             setStatus(8);
@@ -927,7 +929,7 @@ stop:
                 memAddr &= 0x3fffff;
             }
             if (memAddr == limitAddr) {
-                //System.err.printf("Limit ! (%.8x)\n", limitaddr);
+                //Debug.printf("Limit ! (%.8x)\n", limitaddr);
                 memAddr = 0;
             }
             if (memAddr < stopAddr)
@@ -1181,7 +1183,7 @@ stop:
 
         // レジスタアレイにデータを設定
         public void setReg(int addr, int data) {
-            // System.err.printf("reg[%.2x] <- %.2x\n", addr, data);
+            // Debug.printf("reg[%.2x] <- %.2x\n", addr, data);
             if (addr >= 0x100)
                 return;
 
@@ -1505,6 +1507,7 @@ stop:
                     rhythm[i].step = rhythm[i].rate * 1024 / rate;
                     rhythm[i].pos = rhythm[i].size = fsize * 1024;
                 } catch (Exception e) {
+e.printStackTrace();
                     // 無視
                 }
             }
@@ -1940,7 +1943,7 @@ stop:
             case 0x15: // Stop Address H
                 adpcmReg[addr - 0x14 + 2] = (byte) data;
                 stopAddr = (adpcmReg[3] * 256 + adpcmReg[2] + 1) << 9;
-                //System.err.printf("  stopaddr %.6x", stopaddr);
+                //Debug.printf("  stopaddr %.6x", stopaddr);
                 break;
 
             case 0x19: // delta-N L
@@ -1966,7 +1969,7 @@ stop:
                 super.setReg(addr, data);
                 break;
             }
-            // System.err.printf("\n");
+            // Debug.printf("\n");
         }
 
         /**

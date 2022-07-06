@@ -179,7 +179,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
         private void doIO() {
             this.writeAEn = (byte) ((this.writeA & 0x03) == 0x01 ? 1 : 0);
             this.writeDEn = (byte) ((this.writeD & 0x03) == 0x01 ? 1 : 0);
-            //System.err.printf("aen:%d den:%d\n", this.write_a_en, this.write_d_en);
+            //Debug.printf("aen:%d den:%d\n", this.write_a_en, this.write_d_en);
             this.writeA <<= 1;
             this.writeD <<= 1;
             //BUSY Counter
@@ -287,7 +287,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
                         this.writeFmAddress = 0;
                     }
                 }
-                //System.err.printf("d_en:%d wdata:%d adr:%d\n", this.write_d_en, this.write_data, this.address);
+                //Debug.printf("d_en:%d wdata:%d adr:%d\n", this.write_d_en, this.write_data, this.address);
                 if (this.writeDEn != 0 && (this.writeData & 0x100) == 0) {
                     switch (this.address) {
                     case 0x21: /* LSI test 1 */
@@ -334,7 +334,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
                         } else {
                             this.modeKonChannel = (byte) ((this.writeData & 0x03) + ((this.writeData >> 2) & 1) * 3);
                         }
-                        //System.err.printf("kon_ope:%d:%d:%d:%d kon_ch:%d\n"
+                        //Debug.printf("kon_ope:%d:%d:%d:%d kon_ch:%d\n"
                         //, this.mode_kon_operator[0]
                         //, this.mode_kon_operator[1]
                         //, this.mode_kon_operator[2]
@@ -403,7 +403,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
             fnum &= 0xfff;
 
             basefreq = (fnum << this.pgBlock) >> 2;
-            //System.err.printf("040   basefreq:%d fnum:%d this.pg_block:%d\n", basefreq, fnum, this.pg_block);
+            //Debug.printf("040   basefreq:%d fnum:%d this.pg_block:%d\n", basefreq, fnum, this.pg_block);
 
             /* Apply detune */
             if (dt_l != 0) {
@@ -491,7 +491,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
             int slot = (this.slot + 22) % 24;
 
             byte nkon = this.egKonLatch[slot];
-            //System.err.printf("nkon:%d\n", nkon);
+            //Debug.printf("nkon:%d\n", nkon);
             byte okon = this.egKon[slot];
             byte kon_event;
             byte koff_event;
@@ -527,7 +527,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
                 eg_off = (byte) ((level & 0x3f0) == 0x3f0 ? 1 : 0);
             }
             nextlevel = level;
-            //System.err.printf("nextlevel:%d this.eg_state[slot]:%d slot:%d\n", nextlevel, this.eg_state[slot],slot);
+            //Debug.printf("nextlevel:%d this.eg_state[slot]:%d slot:%d\n", nextlevel, this.eg_state[slot],slot);
             if (kon_event != 0) {
                 nextstate = (byte) EG_PARAM.Attack.ordinal();
                 /* Instant attack */
@@ -536,7 +536,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
                 } else if (this.egState[slot] == (byte) EG_PARAM.Attack.ordinal() && level != 0 && this.egInc != 0 && nkon != 0) {
                     inc = (short) ((~level << this.egInc) >> 5);
                 }
-                //System.err.printf("inc:%d\n", inc);
+                //Debug.printf("inc:%d\n", inc);
             } else {
                 switch (EG_PARAM.valueOf(this.egState[slot])) {
                 case Attack:
@@ -545,7 +545,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
                     } else if (this.egInc != 0 && this.egRateMax == 0 && nkon != 0) {
                         inc = (short) ((~level << this.egInc) >> 5);
                     }
-                    //System.err.printf("ainc:%d\n", inc);
+                    //Debug.printf("ainc:%d\n", inc);
                     break;
                 case Decay:
                     if ((level >> 5) == this.egSl[1]) {
@@ -556,7 +556,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
                             inc <<= 2;
                         }
                     }
-                    //System.err.printf("dinc:%d\n", inc);
+                    //Debug.printf("dinc:%d\n", inc);
                     break;
                 case Sustain:
                 case Release:
@@ -566,14 +566,14 @@ public class Ym3438 extends Instrument.BaseInstrument {
                             inc <<= 2;
                         }
                     }
-                    //System.err.printf("srinc:%d\n", inc);
+                    //Debug.printf("srinc:%d\n", inc);
                     break;
                 default:
                     break;
                 }
                 if (nkon == 0) {
                     nextstate = (byte) EG_PARAM.Release.ordinal();
-                    //System.err.printf("1rel\n", inc);
+                    //Debug.printf("1rel\n", inc);
                 }
             }
             if (this.egKonCsm[slot] != 0) {
@@ -584,16 +584,16 @@ public class Ym3438 extends Instrument.BaseInstrument {
             if (kon_event == 0 && this.egSsgHoldUpLatch[slot] == 0 && this.egState[slot] != (byte) EG_PARAM.Attack.ordinal() && eg_off != 0) {
                 nextstate = (byte) EG_PARAM.Release.ordinal();
                 nextlevel = 0x3ff;
-                //System.err.printf("2rel\n", inc);
+                //Debug.printf("2rel\n", inc);
             }
 
             nextlevel += inc;
-            //System.err.printf("nextlevel:%d\n", nextlevel);
+            //Debug.printf("nextlevel:%d\n", nextlevel);
 
             this.egKon[slot] = this.egKonLatch[slot];
             this.egLevel[slot] = (short) (nextlevel & 0x3ff);
             this.egState[slot] = nextstate;
-            //System.err.printf("this.eg_level[slot]:%d slot:%d\n", this.eg_level[slot], slot);
+            //Debug.printf("this.eg_level[slot]:%d slot:%d\n", this.eg_level[slot], slot);
         }
 
         private void envelopePrepare() {
@@ -676,7 +676,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
             short level;
 
             level = this.egLevel[slot];
-            //System.err.printf("level:%d\n", level);
+            //Debug.printf("level:%d\n", level);
 
             if (this.egSsgInv[slot] != 0) {
                 /* Inverse */
@@ -698,7 +698,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
                 level = 0x3ff;
             }
             this.egOut[slot] = level;
-            //System.err.printf("this.eg_out[slot]:%d slot:%d\n", this.eg_out[slot], slot);
+            //Debug.printf("this.eg_out[slot]:%d slot:%d\n", this.eg_out[slot], slot);
         }
 
         private void updateLFO() {
@@ -774,10 +774,10 @@ public class Ym3438 extends Instrument.BaseInstrument {
             }
             if (Ym3438Const.fmAlgorithm[op][5][this.connect[channel]] != 0 && test_dac == 0) {
                 add += (short) (this.fmOut[slot] >> 5);
-                //System.err.printf("040   this.fm_out[slot]:%d slot:%d\n", this.fm_out[slot], slot);
+                //Debug.printf("040   this.fm_out[slot]:%d slot:%d\n", this.fm_out[slot], slot);
             }
             sum = (short) (acc + add);
-            //System.err.printf("040   acc:%d add:%d\n", acc, add);
+            //Debug.printf("040   acc:%d add:%d\n", acc, add);
             /* Clamp */
             if (sum > 255) {
                 sum = 255;
@@ -841,7 +841,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
                 //else {
                 //    this.mol = sign;
                 //}
-                //System.err.printf("040   out:%d sign:%d\n", out_, sign);
+                //Debug.printf("040   out:%d sign:%d\n", out_, sign);
                 if (this.chLockR != 0 && out_en != 0) {
                     this.mor = out_;
                 }
@@ -873,7 +873,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
             int slot = (this.slot + 19) % 24;
             /* Calculate phase */
             short phase = (short) ((this.fmMod[slot] + (this.pgPhase[slot] >> 10)) & 0x3ff);
-            //System.err.printf("040   this.fm_mod[slot]:%d this.pg_phase[slot]:%d\n", this.fm_mod[slot], this.pg_phase[slot]);
+            //Debug.printf("040   this.fm_mod[slot]:%d this.pg_phase[slot]:%d\n", this.fm_mod[slot], this.pg_phase[slot]);
             short quarter;
             short level;
             short output;
@@ -885,13 +885,13 @@ public class Ym3438 extends Instrument.BaseInstrument {
             level = (short) Ym3438Const.logSinRom[quarter];
             /* Apply envelope */
             level += (short) (this.egOut[slot] << 2);
-            //System.err.printf("040   quarter:%d this.eg_out[slot]:%d slot:%d\n", quarter, this.eg_out[slot], slot);
+            //Debug.printf("040   quarter:%d this.eg_out[slot]:%d slot:%d\n", quarter, this.eg_out[slot], slot);
             /* Transform */
             if (level > 0x1fff) {
                 level = 0x1fff;
             }
             output = (short) (((Ym3438Const.expRom[(level & 0xff) ^ 0xff] | 0x400) << 2) >> (level >> 8));
-            //System.err.printf("040   output:%d level:%d\n", output, level);
+            //Debug.printf("040   output:%d level:%d\n", output, level);
             if ((phase & 0x200) != 0) {
                 output = (short) (((~output) ^ (this.modeTest21[4] << 13)) + 1);
             } else {
@@ -978,7 +978,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
             /* Key On */
             this.egKonLatch[this.slot] = this.modeKon[this.slot];
             this.egKonCsm[this.slot] = 0;
-            //System.err.printf("this.eg_kon_latch[this.slot]:%d slot:%d\n", this.eg_kon_latch[this.slot], this.slot);
+            //Debug.printf("this.eg_kon_latch[this.slot]:%d slot:%d\n", this.eg_kon_latch[this.slot], this.slot);
             if (this.channel == 2 && this.modeKonCsm != 0) {
                 /* CSM Key On */
                 this.egKonLatch[this.slot] = 1;
@@ -1023,12 +1023,12 @@ public class Ym3438 extends Instrument.BaseInstrument {
                 this.rateRatio = rateratio;
             }
             //System.err.printfsw = true;
-            //System.err.printf("rateratio%d rate%d clock%d\n", this.rateratio,rate,clock);
+            //Debug.printf("rateratio%d rate%d clock%d\n", this.rateratio,rate,clock);
             //System.err.printfsw = false;
         }
 
         private void clock(int[] buffer) {
-            //System.err.printf("010 mol:%d mor:%d\n", this.mol, this.mor);
+            //Debug.printf("010 mol:%d mor:%d\n", this.mol, this.mor);
 
             this.lfoInc = this.modeTest21[1];
             this.pgRead >>= 1;
@@ -1089,40 +1089,40 @@ public class Ym3438 extends Instrument.BaseInstrument {
                 this.egCycleStop = 0;
             }
 
-            //System.err.printf("020 mol:%d mor:%d\n", this.mol, this.mor);
+            //Debug.printf("020 mol:%d mor:%d\n", this.mol, this.mor);
 
             doIO();
 
-            //System.err.printf("030 mol:%d mor:%d\n", this.mol, this.mor);
+            //Debug.printf("030 mol:%d mor:%d\n", this.mol, this.mor);
 
             doTimerA();
             doTimerB();
             keyOn();
 
-            //System.err.printf("040 mol:%d mor:%d\n", this.mol, this.mor);
+            //Debug.printf("040 mol:%d mor:%d\n", this.mol, this.mor);
 
             chOutput();
-            //System.err.printf("045 mol:%d mor:%d\n", this.mol, this.mor);
+            //Debug.printf("045 mol:%d mor:%d\n", this.mol, this.mor);
             chGenerate();
 
-            //System.err.printf("050 mol:%d mor:%d\n", this.mol, this.mor);
+            //Debug.printf("050 mol:%d mor:%d\n", this.mol, this.mor);
 
             fmPrepare();
             fmGenerate();
 
-            //System.err.printf("060 mol:%d mor:%d\n", this.mol, this.mor);
+            //Debug.printf("060 mol:%d mor:%d\n", this.mol, this.mor);
 
             phaseGenerate();
             phaseCalcIncrement();
 
-            //System.err.printf("070 mol:%d mor:%d\n", this.mol, this.mor);
+            //Debug.printf("070 mol:%d mor:%d\n", this.mol, this.mor);
 
             envelopeADSR();
             envelopeGenerate();
             envelopeSSGEG();
             envelopePrepare();
 
-            //System.err.printf("080 mol:%d mor:%d\n", this.mol, this.mor);
+            //Debug.printf("080 mol:%d mor:%d\n", this.mol, this.mor);
 
             /* Prepare fnum & block */
             if (this.modeCh3 != 0) {
@@ -1156,7 +1156,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
                 this.pgKcode = this.kcode[(this.channel + 1) % 6];
             }
 
-            //System.err.printf("090 mol:%d mor:%d\n", this.mol, this.mor);
+            //Debug.printf("090 mol:%d mor:%d\n", this.mol, this.mor);
 
             updateLFO();
             doRegWrite();
@@ -1164,12 +1164,12 @@ public class Ym3438 extends Instrument.BaseInstrument {
             this.slot = this.cycles;
             this.channel = this.cycles % 6;
 
-            //System.err.printf("100 mol:%d mor:%d\n", this.mol, this.mor);
+            //Debug.printf("100 mol:%d mor:%d\n", this.mol, this.mor);
 
             buffer[0] = this.mol;
             buffer[1] = this.mor;
 
-            //System.err.printf("110 mol:%d mor:%d\n", this.mol, this.mor);
+            //Debug.printf("110 mol:%d mor:%d\n", this.mol, this.mor);
         }
 
         private void write(int port, byte data) {
@@ -1177,7 +1177,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
             //{
             //    System.err.printfOn();
             //}
-            //System.err.printf("port:%x data:%x\n", port, data);
+            //Debug.printf("port:%x data:%x\n", port, data);
 
             port &= 3;
             this.writeData = (short) (((port << 7) & 0x100) | data);
@@ -1321,7 +1321,7 @@ public class Ym3438 extends Instrument.BaseInstrument {
                         break;
                     }
                     this.clock(grBuffer);
-                    //System.err.printf("l%d r%d\n", buffer[0], buffer[1]);
+                    //Debug.printf("l%d r%d\n", buffer[0], buffer[1]);
                     if (mute == 0) {
                         this.samples[0] += grBuffer[0];
                         this.samples[1] += grBuffer[1];
@@ -1348,13 +1348,13 @@ public class Ym3438 extends Instrument.BaseInstrument {
                     this.samples[1] = (int) (this.oldSamples[1] + (1 - 0.512331301282628) * (this.samples[1] * 12 - this.oldSamples[1]));
                 }
                 this.sampleCnt -= this.rateRatio;
-                //System.err.printf("samplecnt%d\n", this.samplecnt);
+                //Debug.printf("samplecnt%d\n", this.samplecnt);
             }
             buf[0] = (this.oldSamples[0] * (this.rateRatio - this.sampleCnt)
                     + this.samples[0] * this.sampleCnt) / this.rateRatio;
             buf[1] = (this.oldSamples[1] * (this.rateRatio - this.sampleCnt)
                     + this.samples[1] * this.sampleCnt) / this.rateRatio;
-            //System.err.printf("bl%d br%d this.oldsamples[0]%d this.samples[0]%d\n", buf[0], buf[1], this.oldsamples[0], this.samples[0]);
+            //Debug.printf("bl%d br%d this.oldsamples[0]%d this.samples[0]%d\n", buf[0], buf[1], this.oldsamples[0], this.samples[0]);
             this.sampleCnt += 1 << 10;// RSM_FRAC;
         }
 

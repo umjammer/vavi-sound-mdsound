@@ -111,13 +111,13 @@ public class LoopDetector implements Device {
             if (match_length < 0)
                 return false;
 
-            //System.err.printf("match_length:%d", match_length);
-            //System.err.printf("match_size  :%d", match_size);
+            //Debug.printf("match_length:%d", match_length);
+            //Debug.printf("match_size  :%d", match_size);
             for (i = 0; i < match_length; i++) {
                 for (j = 0; j < match_size; j++) {
                     if (streamBuf[(bIdx + j + match_length) & bufMask] !=
                             streamBuf[(bIdx + i + j) & bufMask]) {
-                        //System.err.printf("j  :%d", j);
+                        //Debug.printf("j  :%d", j);
                         break;
                     }
                 }

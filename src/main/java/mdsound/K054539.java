@@ -215,7 +215,7 @@ public class K054539 extends Instrument.BaseInstrument {
 
             byte[] regBase = this.regs;
             boolean latch = (this.flags & K054539State.UPDATE_AT_KEYON) != 0 && (regBase[0x22f] & 1) != 0;
-            //System.err.printf("latch = %d \n", latch);
+            //Debug.printf("latch = %d \n", latch);
 
             if (latch && offset < 0x100) {
                 int offs = (offset & 0x1f) - 0xc;
@@ -224,7 +224,7 @@ public class K054539 extends Instrument.BaseInstrument {
                 if (offs >= 0 && offs <= 2) {
                     // latch writes to the position index registers
                     this.posRegLatch[ch][offs] = data;
-                    //System.err.printf("this.k054539_posreg_latch[%d][%d] = %d \n", ch, offs, data);
+                    //Debug.printf("this.k054539_posreg_latch[%d][%d] = %d \n", ch, offs, data);
                     return;
                 }
             } else
@@ -315,7 +315,7 @@ public class K054539 extends Instrument.BaseInstrument {
             case 0x22c:
                 break;
             default:
-                //System.err.printf("K054539 read %03x\n", offset);
+                //Debug.printf("K054539 read %03x\n", offset);
                 break;
             }
             return this.regs[offset];
@@ -423,7 +423,7 @@ public class K054539 extends Instrument.BaseInstrument {
                     lVal = rVal = val;
                 } else
                     lVal = rVal = 0;
-                //System.err.printf("rbase[this.reverb_pos(%d)] = %d \n", this.reverb_pos, lVal);
+                //Debug.printf("rbase[this.reverb_pos(%d)] = %d \n", this.reverb_pos, lVal);
                 this.ram[this.reverbPos * 2] = 0;
                 this.ram[this.reverbPos * 2 + 1] = 0;
 
@@ -465,7 +465,7 @@ public class K054539 extends Instrument.BaseInstrument {
                         if (rbVol > VOL_CAP)
                             rbVol = VOL_CAP;
 
-                        //System.err.printf("ch=%d lVol=%d rvol=%d\n", ch, lVol, rvol);
+                        //Debug.printf("ch=%d lVol=%d rvol=%d\n", ch, lVol, rvol);
 
                         int rDelta = (this.regs[regP1 + 6] | (this.regs[regP1 + 7] << 8)) >> 3;
                         rDelta = (rDelta + this.reverbPos) & 0x3fff;
@@ -513,7 +513,7 @@ public class K054539 extends Instrument.BaseInstrument {
                                     break;
                                 }
                             }
-                            //System.err.printf("ch=%d curPos=%d curVal=%d\n", ch, curPos, curVal);
+                            //Debug.printf("ch=%d curPos=%d curVal=%d\n", ch, curPos, curVal);
                             //if(ch!=6) curVal = 0;
                             break;
                         }
@@ -591,7 +591,7 @@ public class K054539 extends Instrument.BaseInstrument {
                         lVal += curVal * lVol;
                         rVal += curVal * rVol;
                         //if (ch == 6) {
-                        //    System.err.printf("ch=%d lVal=%d\n", ch, lVal);
+                        //    Debug.printf("ch=%d lVal=%d\n", ch, lVal);
                         //}
                         int ptr = (rDelta + this.reverbPos) & 0x1fff;
                         short valu = (short) (this.ram[ptr * 2] + this.ram[ptr * 2 + 1] * 0x100);
@@ -615,7 +615,7 @@ public class K054539 extends Instrument.BaseInstrument {
                 outputs[1][i] = (int) rVal;
                 outputs[0][i] <<= 1;
                 outputs[1][i] <<= 1;
-                //System.err.printf( "outputs[0][i] = %d\n", outputs[0][i]);
+                //Debug.printf( "outputs[0][i] = %d\n", outputs[0][i]);
             }
         }
 

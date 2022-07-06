@@ -2912,7 +2912,7 @@ public class Km6502 implements Device {
 //                bus.read((tpc + 0) & 0xFFFF, tb[0]);
 //                bus.read((tpc + 1) & 0xFFFF, tb[1]);
 //                bus.read((tpc + 2) & 0xFFFF, tb[2]);
-//                System.err.printf("%04x: A=%02x X=%02x Y=%02x P=%02x S=%02x %s > ",
+//                Debug.printf("%04x: A=%02x X=%02x Y=%02x P=%02x S=%02x %s > ",
 //                                  this.pc,
 //                                  this.a,
 //                                  this.x,
@@ -2923,11 +2923,11 @@ public class Km6502 implements Device {
 
                 exec();
 
-//                System.err.printf("%s", OP_NAME[this.lastcode]);
+//                Debug.printf("%s", OP_NAME[this.lastcode]);
 //                int oplen = this.pc - tpc;
 //                for (int i = 0; i < 3; ++i) {
 //                    if (i == 0 || i < oplen) {
-//                        System.err.printf(" %02x", tb[i][0]);
+//                        Debug.printf(" %02x", tb[i][0]);
 //                    }
 //                }
 //                System.err.println();
@@ -3047,7 +3047,7 @@ public class Km6502 implements Device {
 //            bus.read((tpc + 0) & 0xFFFF, tb[0]);
 //            bus.read((tpc + 1) & 0xFFFF, tb[1]);
 //            bus.read((tpc + 2) & 0xFFFF, tb[2]);
-//            System.err.printf("%04x: A=%02x X=%02x Y=%02x P=%02x S=%02x %s > ",
+//            Debug.printf("%04x: A=%02x X=%02x Y=%02x P=%02x S=%02x %s > ",
 //                              this.pc,
 //                              this.a,
 //                              this.x,

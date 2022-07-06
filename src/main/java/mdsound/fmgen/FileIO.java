@@ -2,12 +2,15 @@
 
 package mdsound.fmgen;
 
+import java.util.logging.Level;
+
 import dotnet4j.io.FileAccess;
 import dotnet4j.io.FileMode;
 import dotnet4j.io.FileNotFoundException;
 import dotnet4j.io.FileShare;
 import dotnet4j.io.FileStream;
 import dotnet4j.io.SeekOrigin;
+import vavi.util.Debug;
 
 
 public class FileIO {
@@ -109,6 +112,7 @@ public class FileIO {
         try {
             hFile = new FileStream(filename, creation, access, share);
         } catch (Exception e) {
+e.printStackTrace();
             hFile = null;
         }
 
@@ -136,6 +140,7 @@ public class FileIO {
         try {
             hFile = new FileStream(path, creation, access, share);
         } catch (Exception e) {
+e.printStackTrace();
             hFile = null;
         }
 
@@ -182,6 +187,7 @@ public class FileIO {
         try {
             hFile.write(src, 0, len);
         } catch (Exception e) {
+e.printStackTrace();
             return -1;
         }
 
@@ -214,6 +220,7 @@ public class FileIO {
         try {
             hFile.seek(fpos, wmethod);
         } catch (Exception e) {
+e.printStackTrace();
             return false;
         }
 

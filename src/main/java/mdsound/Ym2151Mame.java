@@ -693,14 +693,14 @@ public class Ym2151Mame extends Instrument.BaseInstrument {
                 tl_tab[x * 2 + 1 + i * 2 * TL_RES_LEN] = -tl_tab[x * 2 + 0 + i * 2 * TL_RES_LEN];
             }
 // #if false
-//  System.err.printf("tl %04i", x*2);
+//  Debug.printf("tl %04i", x*2);
 //  for (i=0; i<13; i++)
-//   System.err.printf(", [%02i] %4i", i*2, tl_tab[ x*2 /*+1*/ + i*2*TL_RES_LEN ]);
-//  System.err.printf("\n");
+//   Debug.printf(", [%02i] %4i", i*2, tl_tab[ x*2 /*+1*/ + i*2*TL_RES_LEN ]);
+//  Debug.printf("\n");
 // #endif
         }
-        /*System.err.printf("TL_TAB_LEN = %i (%i bytes)\n",TL_TAB_LEN, (int)sizeof(tl_tab));*/
-        /*System.err.printf("ENV_QUIET= %i\n",ENV_QUIET );*/
+        /*Debug.printf("TL_TAB_LEN = %i (%i bytes)\n",TL_TAB_LEN, (int)sizeof(tl_tab));*/
+        /*Debug.printf("ENV_QUIET= %i\n",ENV_QUIET );*/
 
 
         for (i = 0; i < SIN_LEN; i++) {
@@ -723,7 +723,7 @@ public class Ym2151Mame extends Instrument.BaseInstrument {
                 n = n >> 1;
 
             sin_tab[i] = n * 2 + (m >= 0.0 ? 0 : 1);
-            /*System.err.printf("sin [0x%4x]= %4i (tl_tab value=%8x)\n", i, sin_tab[i],tl_tab[sin_tab[i]]);*/
+            /*Debug.printf("sin [0x%4x]= %4i (tl_tab value=%8x)\n", i, sin_tab[i],tl_tab[sin_tab[i]]);*/
         }
 
 
@@ -731,7 +731,7 @@ public class Ym2151Mame extends Instrument.BaseInstrument {
         for (i = 0; i < 16; i++) {
             m = (i != 15 ? i : i + 16) * (4.0 / ENV_STEP); // every 3 'dB' except for all bits = 1 = 45+48 'dB' */
             d1l_tab[i] = (int) m;
-            /*System.err.printf("d1l_tab[%02x]=%08x\n",i,d1l_tab[i] );*/
+            /*Debug.printf("d1l_tab[%02x]=%08x\n",i,d1l_tab[i] );*/
         }
     }
 
@@ -744,7 +744,7 @@ public class Ym2151Mame extends Instrument.BaseInstrument {
         double pom;
 
         scaler = ((double) chip.clock / 64.0) / ((double) chip.sampfreq);
-        /*System.err.printf("scaler    = %20.15f\n", scaler);*/
+        /*Debug.printf("scaler    = %20.15f\n", scaler);*/
 
 
         /* this loop calculates Hertz values for notes from c-0 to b-7 */
@@ -782,7 +782,7 @@ public class Ym2151Mame extends Instrument.BaseInstrument {
 // #if false
 //   pom = (double)chip.freq[ 768+2*768+i ] / ((double)(1<<FREQ_SH));
 //   pom = pom * (double)chip.sampfreq / (double)SIN_LEN;
-//   System.err.printf("1freq[%4i][%08x]= real %20.15f Hz  emul %20.15f Hz\n", i, chip.freq[ 768+2*768+i ], Hz, pom);
+//   Debug.printf("1freq[%4i][%08x]= real %20.15f Hz  emul %20.15f Hz\n", i, chip.freq[ 768+2*768+i ], Hz, pom);
 // #endif
         }
 
@@ -803,7 +803,7 @@ public class Ym2151Mame extends Instrument.BaseInstrument {
 //  {
 //   pom = (double)chip.freq[i] / ((double)(1<<FREQ_SH));
 //   pom = pom * (double)chip.sampfreq / (double)SIN_LEN;
-//   System.err.printf("freq[%4i][%08x]= emul %20.15f Hz\n", i, chip.freq[i], pom);
+//   Debug.printf("freq[%4i][%08x]= emul %20.15f Hz\n", i, chip.freq[i], pom);
 //  }
 // #endif
 
@@ -824,7 +824,7 @@ public class Ym2151Mame extends Instrument.BaseInstrument {
 //    int x = j*32 + i;
 //    pom = (double)chip.dt1_freq[x] / mult;
 //    pom = pom * (double)chip.sampfreq / (double)SIN_LEN;
-//    System.err.printf("DT1(%03i)[%02i %02i][%08x]= real %19.15f Hz  emul %19.15f Hz\n",
+//    Debug.printf("DT1(%03i)[%02i %02i][%08x]= real %19.15f Hz  emul %19.15f Hz\n",
 //       x, j, i, chip.dt1_freq[x], Hz, pom);
 //   }
 // #endif
@@ -866,7 +866,7 @@ public class Ym2151Mame extends Instrument.BaseInstrument {
             j = (int) (65536.0 / (j * 32.0)); /* number of samples per one shift of the shift register */
             /*chip.noise_tab[i] = j * 64;*/    /* number of chip clock cycles per one shift */
             chip.noise_tab[i] = (int) (j * 64 * scaler);
-            /*System.err.printf("noise_tab[%02x]=%08x\n", i, chip.noise_tab[i]);*/
+            /*Debug.printf("noise_tab[%02x]=%08x\n", i, chip.noise_tab[i]);*/
         }
     }
 
@@ -989,7 +989,7 @@ static TIMER_CALLBACK( timer_callback_b ) {
 
         /* MEM is simply one sample delay */
 
-        //System.err.printf("v:%d c1:%d mem:%d c2:%d m2:%d chanout[cha]:%d"
+        //Debug.printf("v:%d c1:%d mem:%d c2:%d m2:%d chanout[cha]:%d"
         //    , v, c1.v, mem.v, c2.v, m2.v, chanout[cha]);
 
         switch (v & 7) {
@@ -1300,7 +1300,7 @@ static TIMER_CALLBACK( timer_callback_b ) {
 
             default:
 // #if _DEBUG
-                //System.err.printf("YM2151 Write %02x to undocumented register // #%02x\n",v,r);
+                //Debug.printf("YM2151 Write %02x to undocumented register // #%02x\n",v,r);
 // #endif
                 break;
             }
@@ -1613,7 +1613,7 @@ static void ym2151_state_save_register( YM2151 *chip, final DeviceConfig *device
 
         psg.eg_timer_add = (int) ((1 << EG_SH) * (clock / 64.0) / psg.sampfreq);
         psg.eg_timer_overflow = (3) * (1 << EG_SH);
-        /*System.err.printf("YM2151[init] eg_timer_add=%8x eg_timer_overflow=%8x\n", psg.eg_timer_add, psg.eg_timer_overflow);*/
+        /*Debug.printf("YM2151[init] eg_timer_add=%8x eg_timer_overflow=%8x\n", psg.eg_timer_add, psg.eg_timer_overflow);*/
 
 // #if USE_MAME_TIMERS
         /* this must be done _before_ a call to ym2151_reset_chip() */
@@ -1626,7 +1626,7 @@ static void ym2151_state_save_register( YM2151 *chip, final DeviceConfig *device
         for (chn = 0; chn < 8; chn++)
             psg.muted[chn] = 0x00;
         //ym2151_reset_chip(psg);
-        /*System.err.printf("YM2151[init] clock=%i sampfreq=%i\n", psg.clock, psg.sampfreq);*/
+        /*Debug.printf("YM2151[init] clock=%i sampfreq=%i\n", psg.clock, psg.sampfreq);*/
 
             /*LOG_CYM_FILE = (options_get_int(mame_options(), OPTION_VGMWRITE) > 0x00);
             if (LOG_CYM_FILE) {
@@ -1634,7 +1634,7 @@ static void ym2151_state_save_register( YM2151 *chip, final DeviceConfig *device
                 if (cymfile)
                     timer_pulse ( device.machine, ATTOTIME_IN_HZ(60), NULL, 0, cymfile_callback); //110 Hz pulse timer
                 else
-                    System.err.printf("Could not create file 2151_.cym\n");
+                    Debug.printf("Could not create file 2151_.cym\n");
             }*/
 
         return psg;
@@ -1739,16 +1739,16 @@ static void ym2151_state_save_register( YM2151 *chip, final DeviceConfig *device
     private int op_calc1(YM2151Operator op, int env, int pm) {
         int i = (op.phase & ~FREQ_MASK) + pm;
 
-        /*System.err.printf("i=%08x (i>>16)&511=%8i phase=%i [pm=%08x] ",i, (i>>16)&511, Op.phase>>FREQ_SH, pm);*/
+        /*Debug.printf("i=%08x (i>>16)&511=%8i phase=%i [pm=%08x] ",i, (i>>16)&511, Op.phase>>FREQ_SH, pm);*/
 
         int p = (env << 3) + sin_tab[(i >> FREQ_SH) & SIN_MASK];
 
-        /*System.err.printf("(p&255=%i p>>8=%i) out= %i\n", p&255,p>>8, tl_tab[p&255]>>(p>>8) );*/
+        /*Debug.printf("(p&255=%i p>>8=%i) out= %i\n", p&255,p>>8, tl_tab[p&255]>>(p>>8) );*/
 
         if (p >= TL_TAB_LEN)
             return 0;
 
-        //System.err.printf("p:%d tl_tab[p]:%d", p, tl_tab[p]);
+        //Debug.printf("p:%d tl_tab[p]:%d", p, tl_tab[p]);
         return tl_tab[p];
     }
 
@@ -1775,7 +1775,7 @@ static void ym2151_state_save_register( YM2151 *chip, final DeviceConfig *device
         if (op.ams != 0)
             am = psg.lfa << (op.ams - 1);
         //if (chan == 0) {
-        //System.err.printf("Ch:%d ENV_QUIET:%d Op.tl:%d Op.volume:%d Op.state:%d Psg.eg_cnt:%d Psg.eg_timer_add:%d Psg.eg_timer_overflow:%d \n"
+        //Debug.printf("Ch:%d ENV_QUIET:%d Op.tl:%d Op.volume:%d Op.state:%d Psg.eg_cnt:%d Psg.eg_timer_add:%d Psg.eg_timer_overflow:%d \n"
         //, chan, ENV_QUIET, Op.tl, Op.volume, Op.state, Psg.eg_cnt, Psg.eg_timer_add, Psg.eg_timer_overflow);
         //}
         env = volumeCalc(op, am);
@@ -1809,7 +1809,7 @@ static void ym2151_state_save_register( YM2151 *chip, final DeviceConfig *device
         env = volumeCalc(opBuf[opPtr + 3], am); // C2 */
         if (env < ENV_QUIET) {
             chanout[chan].v += opCalc(opBuf[opPtr + 3], env, c2.v);
-            //System.err.printf("chanout[chan]:%d env:%d c2:%d", chanout[chan].v, env, c2.v);
+            //Debug.printf("chanout[chan]:%d env:%d c2:%d", chanout[chan].v, env, c2.v);
         }
         if (chanout[chan].v > 16384) chanout[chan].v = 16384;
         else if (chanout[chan].v < -16384) chanout[chan].v = -16384;
@@ -1836,7 +1836,7 @@ static void ym2151_state_save_register( YM2151 *chip, final DeviceConfig *device
         if (op.ams != 0)
             am = psg.lfa << (op.ams - 1);
         env = volumeCalc(op, am);
-        //System.err.printf("1:env:%d ENV_QUIET:%d Op.tl:%d Op.volume:%d Op.state:%d Psg.eg_cnt:%d Psg.eg_timer_add:%d Psg.eg_timer_overflow:%d \n"
+        //Debug.printf("1:env:%d ENV_QUIET:%d Op.tl:%d Op.volume:%d Op.state:%d Psg.eg_cnt:%d Psg.eg_timer_add:%d Psg.eg_timer_overflow:%d \n"
         //, env, ENV_QUIET, Op.tl, Op.volume, Op.state, Psg.eg_cnt, Psg.eg_timer_add, Psg.eg_timer_overflow);
         int out = op.fbOutPrev + op.fbOutCurr;
         op.fbOutPrev = op.fbOutCurr;
@@ -1853,21 +1853,21 @@ static void ym2151_state_save_register( YM2151 *chip, final DeviceConfig *device
             if (op.fb_shift == 0)
                 out = 0;
             op.fbOutCurr = op_calc1(op, env, (out << op.fb_shift));
-            //System.err.printf("2:env:%d ENV_QUIET:%d \n", env, ENV_QUIET);
+            //Debug.printf("2:env:%d ENV_QUIET:%d \n", env, ENV_QUIET);
         }
 
         env = volumeCalc(opBuf[opPtr + 1], am); // M2 */
-        //System.err.printf("3:env:%d ENV_QUIET:%d \n", env, ENV_QUIET);
+        //Debug.printf("3:env:%d ENV_QUIET:%d \n", env, ENV_QUIET);
         if (env < ENV_QUIET)
             opBuf[opPtr + 1].connect.v += opCalc(opBuf[opPtr + 1], env, m2.v);
 
         env = volumeCalc(opBuf[opPtr + 2], am); // C1 */
-        //System.err.printf("4:env:%d ENV_QUIET:%d \n", env, ENV_QUIET);
+        //Debug.printf("4:env:%d ENV_QUIET:%d \n", env, ENV_QUIET);
         if (env < ENV_QUIET)
             opBuf[opPtr + 2].connect.v += opCalc(opBuf[opPtr + 2], env, c1.v);
 
         env = volumeCalc(opBuf[opPtr + 3], am); // C2 */
-        //System.err.printf("5:env:%d ENV_QUIET:%d \n", env, ENV_QUIET);
+        //Debug.printf("5:env:%d ENV_QUIET:%d \n", env, ENV_QUIET);
         if ((psg.noise & 0x80) != 0) {
             int noiseout;
 
@@ -2534,7 +2534,7 @@ static void ym2151_state_save_register( YM2151 *chip, final DeviceConfig *device
             // else if (outl < MINOUT) outl = MINOUT;
             //if (outr > MAXOUT) outr = MAXOUT;
             // else if (outr < MINOUT) outr = MINOUT;
-            //System.err.printf("%d %d", outl, outr);
+            //Debug.printf("%d %d", outl, outr);
             bufL[i] = (short) outl;
             bufR[i] = (short) outr;
 

@@ -41,7 +41,7 @@ public class PSG2 extends mdsound.fmgen.PSG {
                 this::getSampleFromUserDef,
                 this::getSampleFromUserDef
         );
-        tblGetSample = a.toArray(new BiFunction[0]);
+        tblGetSample = a.toArray(BiFunction[]::new);
     }
 
     public PSG2(int num, Fmvgen.Effects effects, int efcStartCh) {
@@ -132,7 +132,7 @@ public class PSG2 extends mdsound.fmgen.PSG {
         case 14: // Define Wave Data
             if ((data & 0x80) != 0) userDefCounter = 0;
             user[((data & 0x70) >> 4) % 6][userDefCounter & 63] = (byte) (data & 0xf);
-            //System.err.printf("%d : WF %d %d %d ", ((data & 0x70) >> 4) % 6, userDefCounter & 63, (byte)(data & 0xf), data);
+            //Debug.printf("%d : WF %d %d %d ", ((data & 0x70) >> 4) % 6, userDefCounter & 63, (byte)(data & 0xf), data);
             userDefCounter++;
             break;
         }

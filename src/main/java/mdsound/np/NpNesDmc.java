@@ -212,7 +212,7 @@ public class NpNesDmc {
     //}
 
     private void sequenceFrame(int s) {
-        //System.err.printf("FrameSequence: %d\n",s);
+        //Debug.printf("FrameSequence: %d\n",s);
 
         if (s > 3) return; // no operation in step 4
 
@@ -812,7 +812,7 @@ public class NpNesDmc {
         }
 
         if (adr == 0x4017) {
-            //System.err.printf("4017 = %02X\n", val);
+            //Debug.printf("4017 = %02X\n", val);
             this.frameIrqEnable = ((val & 0x40) != 0x40);
             if (this.frameIrqEnable) this.frameIrq = false;
             //cpu.updateIRQ(NES_CPU::IRQD_FRAME, false);
@@ -834,7 +834,7 @@ public class NpNesDmc {
 
         this.reg[adr - 0x4008] = (byte) (val & 0xff);
 
-        //System.err.printf("$%04X %02X\n", adr, val);
+        //Debug.printf("$%04X %02X\n", adr, val);
 
         switch (adr) {
 

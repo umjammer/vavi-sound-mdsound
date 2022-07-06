@@ -1,6 +1,10 @@
 
 package mdsound;
 
+/**
+ * @deprecated use {@link java.util.logging.Level}
+ */
+@Deprecated
 public enum LogLevel {
     FATAL(1),
     ERROR(2),

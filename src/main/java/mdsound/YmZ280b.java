@@ -8,6 +8,9 @@ package mdsound;
 
 import java.util.Arrays;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+
+import vavi.util.Debug;
 
 
 public class YmZ280b extends Instrument.BaseInstrument {
@@ -458,12 +461,12 @@ public class YmZ280b extends Instrument.BaseInstrument {
                 this.irqState = 1;
                 if (this.irqCallback != null)
                     this.irqCallback.accept(1);
-                //else System.err.printf("YMZ280B: IRQ generated, but no Callback specified!");
+                //else Debug.printf("YMZ280B: IRQ generated, but no Callback specified!");
             } else if (irqBits == 0 && this.irqState != 0) {
                 this.irqState = 0;
                 if (this.irqCallback != null)
                     this.irqCallback.accept(0);
-                //else System.err.printf("YMZ280B: IRQ generated, but no Callback specified!");
+                //else Debug.printf("YMZ280B: IRQ generated, but no Callback specified!");
             }
         }
 
@@ -582,7 +585,7 @@ public class YmZ280b extends Instrument.BaseInstrument {
                     break;
 
                 default:
-System.err.printf("YMZ280B: unknown register write %02X = %02X\n", this.currentRegister, data);
+Debug.printf(Level.WARNING, "YMZ280B: unknown register write %02X = %02X\n", this.currentRegister, data);
                     break;
                 }
             } else { // upper registers are special
@@ -591,7 +594,7 @@ System.err.printf("YMZ280B: unknown register write %02X = %02X\n", this.currentR
                 case 0x80: // d0-2: DSP Rch, d3: enable Rch (0: yes, 1: no), d4-6: DSP Lch, d7: enable Lch (0: yes, 1: no)
                 case 0x81: // d0: enable control of $82 (0: yes, 1: no)
                 case 0x82: // DSP data
-//System.err.printf("YMZ280B: DSP register write %02X = %02X\n", this.current_register, data);
+//Debug.printf("YMZ280B: DSP register write %02X = %02X\n", this.current_register, data);
                     break;
 
                 case 0x84: // ROM readback / RAM write (high)
@@ -613,7 +616,7 @@ System.err.printf("YMZ280B: unknown register write %02X = %02X\n", this.currentR
 //                        if (!this.ext_ram_write.isnull())
 //                            this.ext_ram_write(this.ext_mem_address, data);
 //                        else
-//                            System.err.printf("YMZ280B attempted RAM write to %X\n", this.ext_mem_address);
+//                            Debug.printf("YMZ280B attempted RAM write to %X\n", this.ext_mem_address);
                         this.extMemAddress = (this.extMemAddress + 1) & 0xffffff;
                     }
                     break;
@@ -647,7 +650,7 @@ System.err.printf("YMZ280B: unknown register write %02X = %02X\n", this.currentR
                     break;
 
                 default:
-System.err.printf("YMZ280B: unknown register write %02X = %02X\n", this.currentRegister, data);
+Debug.printf("YMZ280B: unknown register write %02X = %02X\n", this.currentRegister, data);
                     break;
                 }
             }

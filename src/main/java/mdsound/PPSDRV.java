@@ -121,7 +121,7 @@ public class PPSDRV extends Instrument.BaseInstrument {
         private void play(byte al, byte bh, byte bl) {
             int num = al;
             int shift = bh;
-            //System.err.printf(bh);
+            //Debug.printf(bh);
             int volshift = bl;
 
             if (ppsHd[num].address < 0) return;
@@ -234,7 +234,7 @@ public class PPSDRV extends Instrument.BaseInstrument {
 
                 if (!real) {
                     if (!keyonFlag) data += keyoffVol;
-                    //if(keyoff_vol!=0) System.err.printf("keyoff_vol%d", keyoff_vol);
+                    //if(keyoff_vol!=0) Debug.printf("keyoff_vol%d", keyoff_vol);
                     outputs[0][i] = (short) Math.max(Math.min(outputs[0][i] + data, Short.MAX_VALUE), Short.MIN_VALUE);
                     outputs[1][i] = (short) Math.max(Math.min(outputs[1][i] + data, Short.MAX_VALUE), Short.MIN_VALUE);
                 }
@@ -344,11 +344,11 @@ public class PPSDRV extends Instrument.BaseInstrument {
                 if (start_pps < address) start_pps = address;
 
                 for (int j = start_pps; j < end_pps; j++) {
-                    //System.err.printf("before%d", o[j]);
+                    //Debug.printf("before%d", o[j]);
                     o.set(j, (byte) (o.get(j) - (j - start_pps) * 16 / (end_pps - start_pps)));
                     if (o.get(j) < 0)
                         o.set(j, (byte) 0);
-                    //System.err.printf("after%d", o[j]);
+                    //Debug.printf("after%d", o[j]);
                 }
 
             }
@@ -365,7 +365,7 @@ public class PPSDRV extends Instrument.BaseInstrument {
 
                 h.add(p);
             }
-            ppsHd = h.toArray(new Header[0]);
+            ppsHd = h.toArray(Header[]::new);
 
             return 0;
         }

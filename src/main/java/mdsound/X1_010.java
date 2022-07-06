@@ -172,7 +172,7 @@ public class X1_010 extends Instrument.BaseInstrument {
                         int smpStep = (int) ((float) this.baseClock / 8192.0f
                                 * freq * (1 << FREQ_BASE_BITS) / (float) this.rate + 0.5f);
                         if (smpOffs == 0) {
-                            //System.err.printf("Play sample %p - %p, channel %X volume %d:%d freq %X step %X offset %X\n",
+                            //Debug.printf("Play sample %p - %p, channel %X volume %d:%d freq %X step %X offset %X\n",
                             // start, end, ch, volL, volR, freq, smpStep, smpOffs);
                         }
                         for (int i = 0; i < samples; i++) {
@@ -202,7 +202,7 @@ public class X1_010 extends Instrument.BaseInstrument {
                         );
                         // Print some more debug info
                         if (smpOffs == 0) {
-                            //System.err.printf("Play waveform %X, channel %X volume %X freq %4X step %X offset %X\n",
+                            //Debug.printf("Play waveform %X, channel %X volume %X freq %4X step %X offset %X\n",
                             //reg.volume, ch, reg.end, freq, smpStep, smpOffs);
                         }
                         for (int i = 0; i < samples; i++) {
@@ -242,7 +242,7 @@ public class X1_010 extends Instrument.BaseInstrument {
                 this.envOffset[i] = 0;
             }
             // Print some more debug info
-            //System.err.printf("masterclock = %d rate = %d\n", device.clock(), this.rate);
+            //Debug.printf("masterclock = %d rate = %d\n", device.clock(), this.rate);
 
             return this.rate;
         }
@@ -271,7 +271,7 @@ public class X1_010 extends Instrument.BaseInstrument {
                 this.smpOffset[channel] = 0;
                 this.envOffset[channel] = 0;
             }
-            //System.err.printf("%s: offset %6X : data %2X\n", device.machine().describe_context(), offset, data);
+            //Debug.printf("%s: offset %6X : data %2X\n", device.machine().describe_context(), offset, data);
             this.reg[offset] = data;
         }
 
@@ -367,7 +367,7 @@ public class X1_010 extends Instrument.BaseInstrument {
    X1010State *info = &X1010Data[chipId];
    info.HI_WORD_BUF[offset] = (data>>8)&0xff;
    seta_sound_w( device, offset, data&0xff );
-   System.err.printf(( "%s: Write X1-010 Offset:%04X Data:%04X\n", device.machine().describe_context(), offset, data ));
+   Debug.printf(( "%s: Write X1-010 Offset:%04X Data:%04X\n", device.machine().describe_context(), offset, data ));
   }*/
 
     /**

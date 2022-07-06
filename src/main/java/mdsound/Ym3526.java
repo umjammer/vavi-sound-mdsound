@@ -4,7 +4,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import mdsound.Common.TriConsumer;
+import dotnet4j.util.compat.TriConsumer;
 
 
 public class Ym3526 extends Instrument.BaseInstrument {
@@ -753,7 +753,7 @@ public class Ym3526 extends Instrument.BaseInstrument {
                         egShAr = 0;
                         egSelAr = 13 * RATE_STEPS;
                     }
-                    //System.err.printf("CALC_FCSLOT slot.eg_sel_ar:%d slot.ar:%d slot.ksr:%d\n", slot.eg_sel_ar, slot.ar, slot.ksr);
+                    //Debug.printf("CALC_FCSLOT slot.eg_sel_ar:%d slot.ar:%d slot.ksr:%d\n", slot.eg_sel_ar, slot.ar, slot.ksr);
                     egShDr = egRateShift[dr + this.ksr];
                     egSelDr = egRateSelect[dr + this.ksr];
                     egShRr = egRateShift[rr + this.ksr];
@@ -787,7 +787,7 @@ public class Ym3526 extends Instrument.BaseInstrument {
                     this.egShAr = 0;
                     this.egSelAr = 13 * Slot.RATE_STEPS;
                 }
-                //System.err.printf("this.eg_sel_ar:%d this.ar:%d this.ksr:%d\n", this.eg_sel_ar, this.ar, this.ksr);
+                //Debug.printf("this.eg_sel_ar:%d this.ar:%d this.ksr:%d\n", this.eg_sel_ar, this.ar, this.ksr);
 
                 this.dr = (v & 0x0f) != 0 ? (16 + ((v & 0x0f) << 2)) : 0;
                 this.egShDr = Slot.egRateShift[this.dr + this.ksr];
@@ -981,7 +981,7 @@ public class Ym3526 extends Instrument.BaseInstrument {
                 this.lfoAmCnt -= (Slot.LFO_AM_TAB_ELEMENTS << LFO_SH);
 
             byte tmp = Slot.lfoAmTable[this.lfoAmCnt >> LFO_SH];
-            //System.err.printf("tmp %d\n", tmp);
+            //Debug.printf("tmp %d\n", tmp);
 
             if (this.lfoAmDepth != 0)
                 this.lfoAm = tmp;
@@ -1058,7 +1058,7 @@ public class Ym3526 extends Instrument.BaseInstrument {
                     switch (op.state) {
                     case EG_ATT: // attack phase
                         if ((this.egCnt & ((1 << op.egShAr) - 1)) == 0) {
-                            //System.err.printf("eg_inc:%d Op.eg_sel_ar:%d this.eg_cnt:%d Op.eg_sh_ar:%d\n"
+                            //Debug.printf("eg_inc:%d Op.eg_sel_ar:%d this.eg_cnt:%d Op.eg_sh_ar:%d\n"
                             //    ,eg_inc[Op.eg_sel_ar + ((this.eg_cnt >> Op.eg_sh_ar) & 7)]
                             //    ,Op.eg_sel_ar, this.eg_cnt, Op.eg_sh_ar);
                             op.volume += ((~op.volume) *
@@ -1179,7 +1179,7 @@ public class Ym3526 extends Instrument.BaseInstrument {
             int p;
 
             p = (env << 4) + sinTab[wave_tab + ((((phase & ~FREQ_MASK) + (pm << 16)) >> FREQ_SH) & SIN_MASK)];
-            //System.err.printf("op_calc:%d",p);
+            //Debug.printf("op_calc:%d",p);
             if (p >= TL_TAB_LEN)
                 return 0;
             return tl_tab[p];
@@ -1189,7 +1189,7 @@ public class Ym3526 extends Instrument.BaseInstrument {
             int p;
 
             p = (env << 4) + sinTab[wave_tab + ((((phase & ~FREQ_MASK) + pm) >> FREQ_SH) & SIN_MASK)];
-            //System.err.printf("op_calc1:%d", p);
+            //Debug.printf("op_calc1:%d", p);
 
             if (p >= TL_TAB_LEN)
                 return 0;
@@ -1207,7 +1207,7 @@ public class Ym3526 extends Instrument.BaseInstrument {
             // slot 1
             Slot slot = ch.slots[SLOT1];
             int env = slot.calcVolume(this.lfoAm);
-            //System.err.printf("env1 %d %d %d %d %d\n", env, slot.TLL, slot.volume, this.LFO_AM, slot.AMmask);
+            //Debug.printf("env1 %d %d %d %d %d\n", env, slot.TLL, slot.volume, this.LFO_AM, slot.AMmask);
             int out = slot.op1Out[0] + slot.op1Out[1];
             slot.op1Out[0] = slot.op1Out[1];
             if (slot.ptrConnect1 == 0) this.output[0] += slot.op1Out[0];
@@ -1222,7 +1222,7 @@ public class Ym3526 extends Instrument.BaseInstrument {
             // slot 2
             slot = ch.slots[SLOT2];
             env = slot.calcVolume(this.lfoAm);
-            //System.err.printf("env2 %d\n", env);
+            //Debug.printf("env2 %d\n", env);
             if (env < ENV_QUIET)
                 this.output[0] += opCalc(slot.cnt, env, this.phaseModulation, slot.waveTable);
         }
@@ -1435,7 +1435,7 @@ public class Ym3526 extends Instrument.BaseInstrument {
                     tl_tab[x * 2 + 1 + i * 2 * TL_RES_LEN] = -tl_tab[x * 2 + 0 + i * 2 * TL_RES_LEN];
                 }
             }
-            // System.err.printf("FMthis.C: TL_TAB_LEN = %i elements (%i bytes)\n",TL_TAB_LEN, (int)sizeof(tl_tab));
+            // Debug.printf("FMthis.C: TL_TAB_LEN = %i elements (%i bytes)\n",TL_TAB_LEN, (int)sizeof(tl_tab));
 
             for (int i = 0; i < SIN_LEN; i++) {
                 /* non-standard sinus */
@@ -1459,7 +1459,7 @@ public class Ym3526 extends Instrument.BaseInstrument {
 
                 sinTab[i] = n * 2 + (m >= 0.0 ? 0 : 1);
 
-                // System.err.printf("FMthis.C: sin [%4i (hex=%03x)]= %4i (tl_tab value=%5i)\n", i, i, sin_tab[i], tl_tab[sin_tab[i]] );
+                // Debug.printf("FMthis.C: sin [%4i (hex=%03x)]= %4i (tl_tab value=%5i)\n", i, i, sin_tab[i], tl_tab[sin_tab[i]] );
             }
 
             for (int i = 0; i < SIN_LEN; i++) {
@@ -1487,25 +1487,25 @@ public class Ym3526 extends Instrument.BaseInstrument {
                 else
                     sinTab[3 * SIN_LEN + i] = sinTab[i & (SIN_MASK >> 2)];
 
-                /*System.err.printf("FMthis.C: sin1[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[1*SIN_LEN+i], tl_tab[sin_tab[1*SIN_LEN+i]] );
-                System.err.printf("FMthis.C: sin2[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[2*SIN_LEN+i], tl_tab[sin_tab[2*SIN_LEN+i]] );
-                System.err.printf("FMthis.C: sin3[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[3*SIN_LEN+i], tl_tab[sin_tab[3*SIN_LEN+i]] );*/
+                /*Debug.printf("FMthis.C: sin1[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[1*SIN_LEN+i], tl_tab[sin_tab[1*SIN_LEN+i]] );
+                Debug.printf("FMthis.C: sin2[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[2*SIN_LEN+i], tl_tab[sin_tab[2*SIN_LEN+i]] );
+                Debug.printf("FMthis.C: sin3[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[3*SIN_LEN+i], tl_tab[sin_tab[3*SIN_LEN+i]] );*/
             }
-            // System.err.printf("FMthis.C: ENV_QUIET= %08x (dec*8=%i)\n", ENV_QUIET, ENV_QUIET*8 );
+            // Debug.printf("FMthis.C: ENV_QUIET= %08x (dec*8=%i)\n", ENV_QUIET, ENV_QUIET*8 );
         }
 
         private void initialize() {
             /* frequency base */
             this.freqBase = (this.rate != 0) ? ((double) this.clock / 72.0) / this.rate : 0;
 
-            // System.err.printf("freqbase=%f\n", this.freqbase);
+            // Debug.printf("freqbase=%f\n", this.freqbase);
 
             /* make fnumber . increment counter table */
             for (int i = 0; i < 1024; i++) {
                 /* opn phase increment counter = 20bit */
                 this.fnTab[i] = (int) ((double) i * 64 * this.freqBase * (1 << (FREQ_SH - 10))); // -10 because chip works with 10.10 fixed point, while we use 16.16
 
-                //System.err.printf("FMthis.C: fn_tab[%d] = %x (dec=%d)\n",
+                //Debug.printf("FMthis.C: fn_tab[%d] = %x (dec=%d)\n",
                 // i, this.fn_tab[i] >> 6, this.fn_tab[i] >> 6);
             }
 
@@ -1528,7 +1528,7 @@ public class Ym3526 extends Instrument.BaseInstrument {
 
             this.egTimerAdd = (int) ((1 << EG_SH) * this.freqBase);
             this.egTimerOverflow = 1 * (1 << EG_SH);
-            // System.err.printf("OPLinit eg_timer_add=%8x eg_timer_overflow=%8x\n", this.eg_timer_add, this.eg_timer_overflow);
+            // Debug.printf("OPLinit eg_timer_add=%8x eg_timer_overflow=%8x\n", this.eg_timer_add, this.eg_timer_overflow);
         }
 
         private void keyOn(Slot slot, int keySet) {
@@ -1585,7 +1585,7 @@ public class Ym3526 extends Instrument.BaseInstrument {
         private void writeReg(int r, int v) {
             int slotNo;
 
-            //System.err.printf("writeReg:%d:%d\n", r, v);
+            //Debug.printf("writeReg:%d:%d\n", r, v);
 
             // adjust bus to 8 bits
             r &= 0xff;
@@ -1641,7 +1641,7 @@ public class Ym3526 extends Instrument.BaseInstrument {
 
                 default:
                     //# ifdef _DEBUG
-                    //System.err.printf("FMthis.C: write to unknown register: %02x\n", r);
+                    //Debug.printf("FMthis.C: write to unknown register: %02x\n", r);
                     //#endif
                     break;
                 }

@@ -80,13 +80,13 @@ public class NpNesApu {
         int shifted = this.freq[i] >> this.sweepAmount[i];
         if (i == 0 && this.sweepMode[i]) shifted += 1;
         this.sfreq[i] = this.freq[i] + (this.sweepMode[i] ? -shifted : shifted);
-        //System.err.printf("shifted[%d] = %d (%d >> %d)\n",i,shifted,this.freq[i],this.sweep_amount[i]);
+        //Debug.printf("shifted[%d] = %d (%d >> %d)\n",i,shifted,this.freq[i],this.sweep_amount[i]);
     }
 
     public void sequenceFrame(int s) {
         int i;
 
-        //System.err.printf("sequenceFrame(%d)\n", s);
+        //Debug.printf("sequenceFrame(%d)\n", s);
 
         if (s > 3) return; // no operation in step 4
 
@@ -119,14 +119,14 @@ public class NpNesApu {
                     --this.lengthCounter[i];
 
                 if (this.sweepEnable[i]) {
-                    //System.err.printf("Clock sweep: %d\n", i);
+                    //Debug.printf("Clock sweep: %d\n", i);
 
                     --this.sweepDiv[i];
                     if (this.sweepDiv[i] <= 0) {
                         sweepSqr(i); // calculate new sweep target
 
-                        //System.err.printf("sweep_div[%d] (0/%d)\n",i,this.sweep_div_period[i]);
-                        //System.err.printf("freq[%d]=%d > sfreq[%d]=%d\n",i,this.freq[i],i,this.sfreq[i]);
+                        //Debug.printf("sweep_div[%d] (0/%d)\n",i,this.sweep_div_period[i]);
+                        //Debug.printf("freq[%d]=%d > sfreq[%d]=%d\n",i,this.freq[i],i,this.sfreq[i]);
 
                         if (this.freq[i] >= 8 && this.sfreq[i] < 0x800 && this.sweepAmount[i] > 0) { // update frequency if appropriate
                             this.freq[i] = Math.max(this.sfreq[i], 0);
@@ -134,7 +134,7 @@ public class NpNesApu {
                         }
                         this.sweepDiv[i] = this.sweepDivPeriod[i] + 1;
 
-                        //System.err.printf("freq[%d]=%d\n",i,this.freq[i]);
+                        //Debug.printf("freq[%d]=%d\n",i,this.freq[i]);
                     }
 
                     if (this.sweepWrite[i]) {
@@ -350,7 +350,7 @@ public class NpNesApu {
         int ch;
 
         if (0x4000 <= adr && adr < 0x4008) {
-            //System.err.printf("$%04X = %02X\n",adr,val);
+            //Debug.printf("$%04X = %02X\n",adr,val);
 
             adr &= 0xf;
             ch = adr >> 2;

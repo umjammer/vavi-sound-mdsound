@@ -16,23 +16,15 @@ import dotnet4j.io.StreamWriter;
 
 
 public class Common {
-    @FunctionalInterface
-    public interface QuadConsumer<T, U, V, W> {
-        void accept(T t, U u, V v, W w);
-    }
-
-    @FunctionalInterface
-    public interface TriConsumer<T, U, V> {
-        void accept(T t, U u, V v);
-    }
-
-    @FunctionalInterface
-    public interface QuadFunction<T, U, V, W, R> {
-        R apply(T t, U u, V v, W w);
-    }
 
     public static byte[] toByteArray(List<Byte> o) {
         byte[] a = new byte[o.size()];
+        IntStream.range(0, o.size()).forEach(i -> a[i] = o.get(i));
+        return a;
+    }
+
+    public static int[] toIntArray(List<Integer> o) {
+        int[] a = new int[o.size()];
         IntStream.range(0, o.size()).forEach(i -> a[i] = o.get(i));
         return a;
     }
@@ -54,6 +46,7 @@ public class Common {
     public static final int SampleRate = 44100;
     public static final int NsfClock = 1789773;
 
+    @Deprecated
     public static void write(String fmt, Object... arg) {
         String msg = String.format(fmt, arg);
         try (StreamWriter writer = new StreamWriter(new FileStream("log.txt", FileMode.Append))) {
@@ -80,8 +73,6 @@ public class Common {
                 ms.write(buf, 0, r);
             }
             return ms.toArray();
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
         }
     }
 }

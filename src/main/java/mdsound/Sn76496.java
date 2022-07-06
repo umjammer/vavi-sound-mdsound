@@ -276,7 +276,7 @@ public class Sn76496 extends Instrument.BaseInstrument {
     
         private void writeStereo(int offset, byte data) {
             if (this.stereo != 0) this.stereoMask = data;
-            //else System.err.printf("Call to stereo write with mono chip!\n");
+            //else Debug.printf("Call to stereo write with mono chip!\n");
         }
     
         private void writeReg(int offset, byte data) {
@@ -328,7 +328,7 @@ public class Sn76496 extends Instrument.BaseInstrument {
                 break;
             case 6: { // noise  : frequency, mode
 // #if DEBUG
-                //if ((data & 0x80) == 0) System.err.printf("Sn76489: write to reg 6 with bit 7 clear; data was %03x, new write is %02x! report this to LN!\n", this.Register[6], data);
+                //if ((data & 0x80) == 0) Debug.printf("Sn76489: write to reg 6 with bit 7 clear; data was %03x, new write is %02x! report this to LN!\n", this.Register[6], data);
 // #endif
                 if ((data & 0x80) == 0) this.register[r] = (this.register[r] & 0x3f0) | (data & 0x0f);
                 n = this.register[6];

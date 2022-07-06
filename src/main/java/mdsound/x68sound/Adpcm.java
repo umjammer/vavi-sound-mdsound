@@ -1,5 +1,10 @@
 package mdsound.x68sound;
 
+import java.util.logging.Level;
+
+import vavi.util.Debug;
+
+
 public class Adpcm {
     private Global global = null;
 
@@ -312,7 +317,8 @@ public class Adpcm {
                     //   }
                 }
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         return dmaLastValue;

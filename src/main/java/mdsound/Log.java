@@ -5,6 +5,10 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 
+/**
+ * @deprecated use {@link java.util.logging.Logger}
+ */
+@Deprecated
 public class Log {
     public static BiConsumer<LogLevel, String> writeLine = null;
     public static LogLevel level = LogLevel.INFO;

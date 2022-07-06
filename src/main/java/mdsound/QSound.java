@@ -210,7 +210,7 @@ public class QSound extends Instrument.BaseInstrument {
                 this.channel[ch].bank = (data & 0x7f) << 16; // Note: The most recent MAME doesn't do "& 0x7F"
 //# ifdef _DEBUG
 //if (data && !(data & 0x8000))
-// System.err.printf("QSound Ch %u: Bank = %04x\n", ch, data);
+// Debug.printf("QSound Ch %u: Bank = %04x\n", ch, data);
 //#endif
                 break;
             case 1: // start/cur address
@@ -227,7 +227,7 @@ public class QSound extends Instrument.BaseInstrument {
                 break;
             case 3:
 //if (this.channel[ch].enabled && data != 0x8000)
-// System.err.printf("QSound Ch %u: KeyOn = %04x\n", ch, data);
+// Debug.printf("QSound Ch %u: KeyOn = %04x\n", ch, data);
                 // key on (does the value matter? it always writes 0x8000)
                 //this.channel[ch].enabled = 1;
                 this.channel[ch].enabled = (byte) ((data & 0x8000) >> 15);
@@ -241,11 +241,11 @@ public class QSound extends Instrument.BaseInstrument {
                 break;
             case 6: // master volume
 //if (!this.channel[ch].enabled && data)
-// System.err.printf("QSound update warning - please report!\n");
+// Debug.printf("QSound update warning - please report!\n");
                 this.channel[ch].vol = data;
                 break;
             case 7: // unused?
-//System.err.printf("UNUSED QSOUND REG 7=%04x", data);
+//Debug.printf("UNUSED QSOUND REG 7=%04x", data);
                 break;
             case 8: {
                 // panning (left=0x0110, centre=0x0120, right=0x0130)
@@ -261,13 +261,13 @@ public class QSound extends Instrument.BaseInstrument {
             }
             break;
             case 9: // unknown
-//System.err.printf("QSOUND REG 9=%04x",data);
+//Debug.printf("QSOUND REG 9=%04x",data);
                 break;
             default:
-//System.err.printf("%s: write_data %02x = %04x\n", machine().describe_context(), address, data);
+//Debug.printf("%s: write_data %02x = %04x\n", machine().describe_context(), address, data);
                 break;
             }
-//System.err.printf("QSOUND WRITE %02x CH%02d-R%02d =%04x\n", address, ch, reg, data);
+//Debug.printf("QSOUND WRITE %02x CH%02d-R%02d =%04x\n", address, ch, reg, data);
         }
 
         public int start(int clock) {
@@ -309,8 +309,8 @@ public class QSound extends Instrument.BaseInstrument {
                 break;
 
             default:
-                //System.err.printf("%s: unexpected QSound write to offset %d == %02X\n", device.machine().describe_context(), offset, data);
-                //System.err.printf("QSound: unexpected QSound write to offset %d == %02X\n", offset, data);
+                //Debug.printf("%s: unexpected QSound write to offset %d == %02X\n", device.machine().describe_context(), offset, data);
+                //Debug.printf("QSound: unexpected QSound write to offset %d == %02X\n", offset, data);
                 break;
             }
         }

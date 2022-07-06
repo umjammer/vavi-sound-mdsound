@@ -24,7 +24,7 @@ import java.util.Random;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-import mdsound.Common.TriConsumer;
+import dotnet4j.util.compat.TriConsumer;
 
 
 /*
@@ -584,7 +584,7 @@ public class YmF262 extends Instrument.BaseInstrument {
                     }
                     //this.connect += this.op1_out[1];
                     this.connect.setValue(this.connect.getValue() + this.op1Out[1]);
-//System.err.printf("out0=%5i vol0=%4i ", this.op1_out[1], env );
+//Debug.printf("out0=%5i vol0=%4i ", this.op1_out[1], env );
                 }
 
                 public void calc(int lfoAm, int phaseModulation) {
@@ -592,7 +592,7 @@ public class YmF262 extends Instrument.BaseInstrument {
                     if (env < ENV_QUIET) {
                         this.connect.setValue(this.connect.getValue() + calcOp(this.cnt, env, phaseModulation, this.waveTable));
                     }
-//System.err.printf("out1=%5i vol1=%4i\n", op_calc(this.Cnt, env, this.phase_modulation, this.wavetable), env );
+//Debug.printf("out1=%5i vol1=%4i\n", op_calc(this.Cnt, env, this.phase_modulation, this.wavetable), env );
                 }
 
                 public void calcRhythm(int lfoAm) {
@@ -1611,15 +1611,15 @@ public class YmF262 extends Instrument.BaseInstrument {
                     tlTab[x * 2 + 0 + i * 2 * TL_RES_LEN] = tlTab[x * 2 + 0] >> i;
                     tlTab[x * 2 + 1 + i * 2 * TL_RES_LEN] = ~tlTab[x * 2 + 0 + i * 2 * TL_RES_LEN]; // this *is* different from OPL2 (verified on real YMF262)
                 }
-//System.err.printf("tl %04i", x*2);
+//Debug.printf("tl %04i", x*2);
 //for (i=0; i<13; i++)
-// System.err.printf(", [%02i] %5i", i*2, tl_tab[ x*2 +0 + i*2*TL_RES_LEN ] ); // positive
-//System.err.printf("\n");
+// Debug.printf(", [%02i] %5i", i*2, tl_tab[ x*2 +0 + i*2*TL_RES_LEN ] ); // positive
+//Debug.printf("\n");
 
-//System.err.printf("tl %04i", x*2);
+//Debug.printf("tl %04i", x*2);
 //for (i=0; i<13; i++)
-// System.err.printf(", [%02i] %5i", i*2, tl_tab[ x*2 +1 + i*2*TL_RES_LEN ] ); /* negative
-//System.err.printf("\n");
+// Debug.printf(", [%02i] %5i", i*2, tl_tab[ x*2 +1 + i*2*TL_RES_LEN ] ); /* negative
+//Debug.printf("\n");
             }
 
             for (int i = 0; i < SIN_LEN; i++) {
@@ -1644,7 +1644,7 @@ public class YmF262 extends Instrument.BaseInstrument {
 
                 sinTab[i] = n * 2 + (m >= 0.0 ? 0 : 1);
 
-//System.err.printf("YMF262.C: sin [%4i (hex=%03x)]= %4i (tl_tab value=%5i)\n", i, i, sin_tab[i], tl_tab[sin_tab[i]]);
+//Debug.printf("YMF262.C: sin [%4i (hex=%03x)]= %4i (tl_tab value=%5i)\n", i, i, sin_tab[i], tl_tab[sin_tab[i]]);
             }
 
             for (int i = 0; i < SIN_LEN; i++) {
@@ -1719,15 +1719,15 @@ public class YmF262 extends Instrument.BaseInstrument {
 
                 sinTab[7 * SIN_LEN + i] = x;
 
-//System.err.printf("YMF262.C: sin1[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[1*SIN_LEN+i], tl_tab[sin_tab[1*SIN_LEN+i]]);
-//System.err.printf("YMF262.C: sin2[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[2*SIN_LEN+i], tl_tab[sin_tab[2*SIN_LEN+i]]);
-//System.err.printf("YMF262.C: sin3[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[3*SIN_LEN+i], tl_tab[sin_tab[3*SIN_LEN+i]]);
-//System.err.printf("YMF262.C: sin4[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[4*SIN_LEN+i], tl_tab[sin_tab[4*SIN_LEN+i]]);
-//System.err.printf("YMF262.C: sin5[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[5*SIN_LEN+i], tl_tab[sin_tab[5*SIN_LEN+i]]);
-//System.err.printf("YMF262.C: sin6[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[6*SIN_LEN+i], tl_tab[sin_tab[6*SIN_LEN+i]]);
-//System.err.printf("YMF262.C: sin7[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[7*SIN_LEN+i], tl_tab[sin_tab[7*SIN_LEN+i]]);
+//Debug.printf("YMF262.C: sin1[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[1*SIN_LEN+i], tl_tab[sin_tab[1*SIN_LEN+i]]);
+//Debug.printf("YMF262.C: sin2[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[2*SIN_LEN+i], tl_tab[sin_tab[2*SIN_LEN+i]]);
+//Debug.printf("YMF262.C: sin3[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[3*SIN_LEN+i], tl_tab[sin_tab[3*SIN_LEN+i]]);
+//Debug.printf("YMF262.C: sin4[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[4*SIN_LEN+i], tl_tab[sin_tab[4*SIN_LEN+i]]);
+//Debug.printf("YMF262.C: sin5[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[5*SIN_LEN+i], tl_tab[sin_tab[5*SIN_LEN+i]]);
+//Debug.printf("YMF262.C: sin6[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[6*SIN_LEN+i], tl_tab[sin_tab[6*SIN_LEN+i]]);
+//Debug.printf("YMF262.C: sin7[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[7*SIN_LEN+i], tl_tab[sin_tab[7*SIN_LEN+i]]);
             }
-//System.err.printf("YMF262.C: ENV_QUIET= %08x (dec*8=%i)\n", ENV_QUIET, ENV_QUIET*8 );
+//Debug.printf("YMF262.C: ENV_QUIET= %08x (dec*8=%i)\n", ENV_QUIET, ENV_QUIET*8 );
         }
 
         private void init() {
@@ -1736,7 +1736,7 @@ public class YmF262 extends Instrument.BaseInstrument {
             // frequency base
             this.freqbase = (this.rate) != 0 ? ((double) this.clock / (8.0 * 36)) / this.rate : 0;
 
-            // System.err.printf("YMF262: freqbase=%f\n", this.freqbase);
+            // Debug.printf("YMF262: freqbase=%f\n", this.freqbase);
 
             // Timer base time
             //this.TimerBase = attotime_mul(ATTOTIME_IN_HZ(this.clock), 8*36);
@@ -1745,7 +1745,7 @@ public class YmF262 extends Instrument.BaseInstrument {
             for (int i = 0; i < 1024; i++) {
                 // opn phase increment counter = 20bit
                 this.fnTab[i] = (int) ((double) i * 64 * this.freqbase * (1 << (FREQ_SH - 10))); // -10 because chip works with 10.10 fixed point, while we use 16.16
-//System.err.printf("YMF262.C: fn_tab[%4i] = %08x (dec=%8i)\n", i, this.fn_tab[i]>>6, this.fn_tab[i]>>6);
+//Debug.printf("YMF262.C: fn_tab[%4i] = %08x (dec=%8i)\n", i, this.fn_tab[i]>>6, this.fn_tab[i]>>6);
             }
 
             // Amplitude modulation: 27 output levels (triangle waveform); 1 level takes one of: 192, 256 or 448 samples
@@ -1762,7 +1762,7 @@ public class YmF262 extends Instrument.BaseInstrument {
 
             this.egTimerAdd = (int) ((1 << EG_SH) * this.freqbase);
             this.egTimerOverflow = (1) * (1 << EG_SH);
-//System.err.printf("YMF262init eg_timer_add=%8x eg_timer_overflow=%8x\n", this.eg_timer_add, this.eg_timer_overflow);
+//Debug.printf("YMF262init eg_timer_add=%8x eg_timer_overflow=%8x\n", this.eg_timer_add, this.eg_timer_overflow);
         }
 
         private void reset() {
@@ -2127,7 +2127,7 @@ public class YmF262 extends Instrument.BaseInstrument {
 
                 default:
 // if (r < 0x120)
-//  System.err.printf("YMF262: write to unknown register (set#2): %03x value=%02x\n", r, v);
+//  Debug.printf("YMF262: write to unknown register (set#2): %03x value=%02x\n", r, v);
                     break;
                 }
 
@@ -2179,7 +2179,7 @@ public class YmF262 extends Instrument.BaseInstrument {
                     break;
 
                 default:
-//System.err.printf("YMF262: write to unknown register: %02x value=%02x\n", r, v);
+//Debug.printf("YMF262: write to unknown register: %02x value=%02x\n", r, v);
                     break;
                 }
                 break;
@@ -2788,7 +2788,7 @@ public class YmF262 extends Instrument.BaseInstrument {
                 ch_a[i] = a + c;
                 ch_b[i] = b + d;
 
-//System.err.printf("%d %d", ch_a[i], ch_b[i]);
+//Debug.printf("%d %d", ch_a[i], ch_b[i]);
 
                 advance();
             }
@@ -3478,7 +3478,7 @@ public class YmF262 extends Instrument.BaseInstrument {
         }
 
         private Opl2(int clock, int sampleRate, UpdateHandler updateHandler) {
-            //System.err.printf("clock:%d rate:%d", clock, sampleRate);
+            //Debug.printf("clock:%d rate:%d", clock, sampleRate);
 
             this.chipClock = clock;
             this.intSamplerate = sampleRate;
@@ -3522,7 +3522,7 @@ public class YmF262 extends Instrument.BaseInstrument {
 
         private void writeIO(int addr, byte val) {
             if ((addr & 1) != 0) {
-                //System.err.printf("adr=%x  dat=%x", this.opl_addr, val);
+                //Debug.printf("adr=%x  dat=%x", this.opl_addr, val);
                 write(this.oplAddr, val);
             } else
                 this.oplAddr = val | ((addr & 2) << 7);
@@ -4579,7 +4579,7 @@ public class YmF262 extends Instrument.BaseInstrument {
 //                    }
 //                }
 
-                //System.err.printf("bufl:%d bufr:%d", outBufL[curSmp], outBufR[curSmp]);
+                //Debug.printf("bufl:%d bufr:%d", outBufL[curSmp], outBufR[curSmp]);
             }
         }
 

@@ -1,5 +1,10 @@
 package mdsound.x68sound;
 
+import java.util.logging.Level;
+
+import vavi.util.Debug;
+
+
 public class Pcm8 {
     private Global global;
 
@@ -162,7 +167,8 @@ public class Pcm8 {
                     }
                 }
             }
-        } catch (Exception ignored) {
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         return dmaLastValue;

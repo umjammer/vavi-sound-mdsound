@@ -617,13 +617,13 @@ public class Pokey extends Instrument.BaseInstrument {
                         if( this.ALLPOT & (1 << pot) ) {
                             //data = this.ptimer[pot].elapsed().attoseconds / AD_TIME.attoseconds;
                             data = this.POTx[pot];
-                            System.err.printf("POKEY '%s' read POT%d (interpolated) $%02x\n", this.device.tag(), pot, data);
+                            Debug.printf("POKEY '%s' read POT%d (interpolated) $%02x\n", this.device.tag(), pot, data);
                         } else {
                             data = this.POTx[pot];
-                            System.err.printf("POKEY '%s' read POT%d (final value)  $%02x\n", this.device.tag(), pot, data);
+                            Debug.printf("POKEY '%s' read POT%d (final value)  $%02x\n", this.device.tag(), pot, data);
                         }
                     } else
-                        System.err.printf("%s: warning - read '%s' POT%d\n", this.device.machine().describe_context(), this.device.tag(), pot);*/
+                        Debug.printf("%s: warning - read '%s' POT%d\n", this.device.machine().describe_context(), this.device.tag(), pot);*/
                 break;
 
             case ALLPOT_C:
@@ -631,13 +631,13 @@ public class Pokey extends Instrument.BaseInstrument {
                 // are disabled (SKRESET). Thanks to MikeJ for pointing this out.
                     /*if( (this.SKCTL & SK_RESET) == 0) {
                         data = 0;
-                        System.err.printf("POKEY '%s' ALLPOT internal $%02x (reset)\n", this.device.tag(), data);
+                        Debug.printf("POKEY '%s' ALLPOT internal $%02x (reset)\n", this.device.tag(), data);
                     } else if( !this.allpot_r.isnull() ) {
                         data = this.allpot_r(offset);
-                        System.err.printf("POKEY '%s' ALLPOT Callback $%02x\n", this.device.tag(), data);
+                        Debug.printf("POKEY '%s' ALLPOT Callback $%02x\n", this.device.tag(), data);
                     } else {
                         data = this.ALLPOT;
-                        System.err.printf("POKEY '%s' ALLPOT internal $%02x\n", this.device.tag(), data);
+                        Debug.printf("POKEY '%s' ALLPOT internal $%02x\n", this.device.tag(), data);
                     }*/
                 break;
 
@@ -678,24 +678,24 @@ public class Pokey extends Instrument.BaseInstrument {
                 //if( !this.serin_r.isnull() )
                 // this.SERIN = this.serin_r(offset);
                 data = this.serIn;
-                //System.err.printf(("POKEY '%s' SERIN  $%02x\n", this.device.tag(), data));
+                //Debug.printf(("POKEY '%s' SERIN  $%02x\n", this.device.tag(), data));
                 break;
 
             case IRQST_C:
                 // IRQST is an active low input port; we keep it active high
                 // internally to ease the (un-)masking of bits
                 data = this.irqSt ^ 0xff;
-                //System.err.printf(("POKEY '%s' IRQST  $%02x\n", this.device.tag(), data));
+                //Debug.printf(("POKEY '%s' IRQST  $%02x\n", this.device.tag(), data));
                 break;
 
             case SKSTAT_C:
                 // SKSTAT is also an active low input port
                 data = this.skStat ^ 0xff;
-                //System.err.printf(("POKEY '%s' SKSTAT $%02x\n", this.device.tag(), data));
+                //Debug.printf(("POKEY '%s' SKSTAT $%02x\n", this.device.tag(), data));
                 break;
 
             default:
-                //System.err.printf(("POKEY '%s' register $%02x\n", this.device.tag(), offset));
+                //Debug.printf(("POKEY '%s' register $%02x\n", this.device.tag(), offset));
                 break;
             }
 
@@ -860,17 +860,17 @@ public class Pokey extends Instrument.BaseInstrument {
 
             case SKREST_C:
                 // reset SKSTAT
-                //System.err.printf(("POKEY '%s' SKREST $%02x\n", this.device.tag(), data));
+                //Debug.printf(("POKEY '%s' SKREST $%02x\n", this.device.tag(), data));
                 this.skStat &= (byte) ~(SK_FRAME | SK_OVERRUN | SK_KBERR);
                 break;
 
             case POTGO_C:
-                //System.err.printf(("POKEY '%s' POTGO  $%02x\n", this.device.tag(), data));
+                //Debug.printf(("POKEY '%s' POTGO  $%02x\n", this.device.tag(), data));
                 //pokey_potgo(p);
                 break;
 
             case SEROUT_C:
-                //System.err.printf(("POKEY '%s' SEROUT $%02x\n", this.device.tag(), data));
+                //Debug.printf(("POKEY '%s' SEROUT $%02x\n", this.device.tag(), data));
                 //this.serout_w(offset, data);
                 //this.SKSTAT |= SK_SEROUT;
                 // These are arbitrary values, tested with some custom boot
@@ -882,7 +882,7 @@ public class Pokey extends Instrument.BaseInstrument {
                 break;
 
             case IRQEN_C:
-                //System.err.printf(("POKEY '%s' IRQEN  $%02x\n", this.device.tag(), data));
+                //Debug.printf(("POKEY '%s' IRQEN  $%02x\n", this.device.tag(), data));
 
                 // acknowledge one or more IRQST bits ?
                 if ((this.irqSt & ~data) != 0) {
@@ -905,7 +905,7 @@ public class Pokey extends Instrument.BaseInstrument {
             case SKCTL_C:
                 if (data == this.skCtl)
                     return;
-                //System.err.printf(("POKEY '%s' SKCTL  $%02x\n", this.device.tag(), data));
+                //Debug.printf(("POKEY '%s' SKCTL  $%02x\n", this.device.tag(), data));
                 this.skCtl = data;
                 if ((data & SK_RESET) == 0) {
                     write(IRQEN_C, (byte) 0);

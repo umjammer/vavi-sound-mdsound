@@ -427,7 +427,7 @@ public class QSoundCtr extends Instrument.BaseInstrument {
             rom_addr = (bank << 16) | (address << 0);
 
             sample_data = rom_addr < this.romData.length ? this.romData[rom_addr] : (byte) 0;
-            //System.err.printf("adr:%10x dat:%02x", rom_addr, sample_data);
+            //Debug.printf("adr:%10x dat:%02x", rom_addr, sample_data);
 
             return (short) ((sample_data << 8) | (sample_data << 0)); // MAME currently expands the 8 bit ROM data to 16 bits this way.
         }
@@ -627,7 +627,7 @@ public class QSoundCtr extends Instrument.BaseInstrument {
             //output = (short)((v.volume * get_sample(chip, v.bank, v.addr)) >> 14);
             output = (short) ((registerMap[(voiceNo << 3) + 6]
                     * get_sample(registerMap[(((voiceNo - 1 + 16) % 16) << 3) + 0], registerMap[(voiceNo << 3) + 1])) >> 14);
-            //System.err.printf("output:%d vadr:%d", output, register_map[(voiceNo << 3) + 1]);
+            //Debug.printf("output:%d vadr:%d", output, register_map[(voiceNo << 3) + 1]);
 
             //if (voiceNo == 2) {
             //MDSound.debugMsg = String.format("%d:%d:%d:%d",
@@ -652,13 +652,13 @@ public class QSoundCtr extends Instrument.BaseInstrument {
             }
 
             //if (voiceNo == 0) {
-            //System.err.printf("Bf:%d", new_phase);
+            //Debug.printf("Bf:%d", new_phase);
             //}
 
             new_phase = clamp(new_phase, -0x800_0000, 0x7FF_FFFF);
 
             //if (voiceNo == 0) {
-            //System.err.printf("Af:%d", new_phase);
+            //Debug.printf("Af:%d", new_phase);
             //}
             //v.addr = (int)(new_phase >> 12);
             registerMap[(voiceNo << 3) + 1] = new_phase >> 12;

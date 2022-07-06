@@ -1,6 +1,9 @@
 package mdsound;
 
 
+import dotnet4j.util.compat.TriConsumer;
+
+
 public class Ym2612 extends Instrument.BaseInstrument {
 
     private static final int MAX_CHIPS = 2;
@@ -238,7 +241,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
         /** LFO step table */
         int[] lfoIncTab = new int[8];
 
-        interface UpdateChan extends Common.TriConsumer<Channel, int[][], Integer> {
+        interface UpdateChan extends TriConsumer<Channel, int[][], Integer> {
         }
 
         /** Update Channel functions pointer table */
@@ -527,7 +530,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
                     ksr = kc >> this.ksrS; // keycode atténuation
 
-                    //System.err.printf(debug_file, "FINC = %d  this.Finc = %d\n", fInc, this.Finc);
+                    //Debug.printf(debug_file, "FINC = %d  this.Finc = %d\n", fInc, this.Finc);
 
                     if (this.ksr != ksr) { // si le KSR a changé alors
                         // les différents taux pour l'enveloppe sont mis à jour
@@ -545,7 +548,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
                             else if (this.eCurp == RELEASE) this.eInc = this.eIncR;
                         }
 
-                        //  System.err.printf(debug_file, "KSR = %.4X  EincA = %.8X EincD = %.8X EincS = %.8X EincR = %.8X\n", ksr, this.EincA, this.EincD, this.EincS, this.EincR);
+                        //  Debug.printf(debug_file, "KSR = %.4X  EincA = %.8X EincD = %.8X EincS = %.8X EincR = %.8X\n", ksr, this.EincA, this.EincD, this.EincS, this.EincR);
                     }
                 }
 
@@ -779,7 +782,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
                 ch.slots[0].fInc = -1;
 
-                //System.err.printf(debug_file, "CHANNEL[%d], SLOT[%d] DTMUL = %.2X\n", nch, nsl, data & 0x7F);
+                //Debug.printf(debug_file, "CHANNEL[%d], SLOT[%d] DTMUL = %.2X\n", nch, nsl, data & 0x7F);
                 break;
 
             case 0x40:
@@ -790,7 +793,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
                 slot.tll = slot.tl << (ENV_HBITS - 7);
 
-                //System.err.printf(debug_file, "CHANNEL[%d], SLOT[%d] TL = %.2X\n", nch, nsl, slot.TL);
+                //Debug.printf(debug_file, "CHANNEL[%d], SLOT[%d] TL = %.2X\n", nch, nsl, slot.TL);
                 break;
 
             case 0x50:
@@ -809,13 +812,13 @@ public class Ym2612 extends Instrument.BaseInstrument {
                 slot.eIncA = slot.ar[slot.arIndex + slot.ksr];
                 if (slot.eCurp == ATTACK) slot.eInc = slot.eIncA;
 
-                //System.err.printf(debug_file, "CHANNEL[%d], SLOT[%d] AR = %.2X  EincA = %.6X\n", nch, nsl, data, slot.EincA);
+                //Debug.printf(debug_file, "CHANNEL[%d], SLOT[%d] AR = %.2X  EincA = %.6X\n", nch, nsl, data, slot.EincA);
                 break;
 
             case 0x60:
                 slot.do0x60(data, ch.ams, drTab, nullRate);
 
-                //System.err.printf(debug_file, "CHANNEL[%d], SLOT[%d] AMS = %d  DR = %.2X  EincD = %.6X\n", nch, nsl, slot.AMSon, data, slot.EincD);
+                //Debug.printf(debug_file, "CHANNEL[%d], SLOT[%d] AMS = %d  DR = %.2X  EincD = %.6X\n", nch, nsl, slot.AMSon, data, slot.EincD);
                 break;
 
             case 0x70:
@@ -830,7 +833,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
                 slot.eIncS = slot.sr[slot.srIndex + slot.ksr];
                 if ((slot.eCurp == SUBSTAIN) && (slot.eCnt < ENV_END)) slot.eInc = slot.eIncS;
 
-                //System.err.printf(debug_file, "CHANNEL[%d], SLOT[%d] SR = %.2X  EincS = %.6X\n", nch, nsl, data, slot.EincS);
+                //Debug.printf(debug_file, "CHANNEL[%d], SLOT[%d] SR = %.2X  EincS = %.6X\n", nch, nsl, data, slot.EincS);
                 break;
 
             case 0x80:
@@ -842,8 +845,8 @@ public class Ym2612 extends Instrument.BaseInstrument {
                 slot.eIncR = slot.rr[slot.rrIndex + slot.ksr];
                 if ((slot.eCurp == RELEASE) && (slot.eCnt < ENV_END)) slot.eInc = slot.eIncR;
 
-                //System.err.printf(debug_file, "CHANNEL[%d], SLOT[%d] slot = %.8X\n", nch, nsl, slot.SLL);
-                //System.err.printf(debug_file, "CHANNEL[%d], SLOT[%d] RR = %.2X  EincR = %.2X\n", nch, nsl, ((data & 0xF) << 1) | 2, slot.EincR);
+                //Debug.printf(debug_file, "CHANNEL[%d], SLOT[%d] slot = %.8X\n", nch, nsl, slot.SLL);
+                //Debug.printf(debug_file, "CHANNEL[%d], SLOT[%d] RR = %.2X  EincR = %.2X\n", nch, nsl, ((data & 0xF) << 1) | 2, slot.EincR);
                 break;
 
             case 0x90:
@@ -875,7 +878,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
                     if ((data & 0x08) != 0) slot.SEG = data & 0x0F;
                     else slot.SEG = 0;
 
-                    //System.err.printf(debug_file, "CHANNEL[%d], SLOT[%d] SSG-EG = %.2X\n", nch, nsl, data);
+                    //Debug.printf(debug_file, "CHANNEL[%d], SLOT[%d] SSG-EG = %.2X\n", nch, nsl, data);
                 }
                 break;
             }
@@ -901,7 +904,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
                 ch.slots[0].fInc = -1;
 
-                //System.err.printf(debug_file, "CHANNEL[%d] part1 FNUM = %d  KC = %d\n", num, ch.FNUM[0], ch.KC[0]);
+                //Debug.printf(debug_file, "CHANNEL[%d] part1 FNUM = %d  KC = %d\n", num, ch.FNUM[0], ch.KC[0]);
                 break;
 
             case 0xA4:
@@ -916,7 +919,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
                 ch.slots[0].fInc = -1;
 
-                //System.err.printf(debug_file, "CHANNEL[%d] part2 FNUM = %d  FOCT = %d  KC = %d\n", num, ch.FNUM[0], ch.FOCT[0], ch.KC[0]);
+                //Debug.printf(debug_file, "CHANNEL[%d] part2 FNUM = %d  FOCT = %d  KC = %d\n", num, ch.FNUM[0], ch.FOCT[0], ch.KC[0]);
                 break;
 
             case 0xA8:
@@ -930,7 +933,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
                     this.channels[2].slots[0].fInc = -1;
 
-                    //System.err.printf(debug_file, "CHANNEL[2] part1 FNUM[%d] = %d  KC[%d] = %d\n", num, this.CHANNEL[2].FNUM[num], num, this.CHANNEL[2].KC[num]);
+                    //Debug.printf(debug_file, "CHANNEL[2] part1 FNUM[%d] = %d  KC[%d] = %d\n", num, this.CHANNEL[2].FNUM[num], num, this.CHANNEL[2].KC[num]);
                 }
                 break;
 
@@ -946,7 +949,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
                     this.channels[2].slots[0].fInc = -1;
 
-                    //System.err.printf(debug_file, "CHANNEL[2] part2 FNUM[%d] = %d  FOCT[%d] = %d  KC[%d] = %d\n", num, this.CHANNEL[2].FNUM[num], num, this.CHANNEL[2].FOCT[num], num, this.CHANNEL[2].KC[num]);
+                    //Debug.printf(debug_file, "CHANNEL[2] part2 FNUM[%d] = %d  FOCT[%d] = %d  KC[%d] = %d\n", num, this.CHANNEL[2].FNUM[num], num, this.CHANNEL[2].FOCT[num], num, this.CHANNEL[2].KC[num]);
                 }
                 break;
 
@@ -971,7 +974,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
                 //if(ch.FB = ((data >> 3) & 7)) ch.FB = 9 - ch.FB; // Thunder force 4 (music stage 8), Gynoug, Aladdin bug Sound...
                 //else ch.FB = 31;
 
-                //System.err.printf(debug_file, "CHANNEL[%d] ALGO = %d  FB = %d\n", num, ch.ALGO, ch.FB);
+                //Debug.printf(debug_file, "CHANNEL[%d] ALGO = %d  FB = %d\n", num, ch.ALGO, ch.FB);
                 break;
 
             case 0xB4:
@@ -982,7 +985,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
                 ch.do0xB4(data);
 
-                //System.err.printf(debug_file, "CHANNEL[%d] AMS = %d  FMS = %d\n", num, ch.AMS, ch.FMS);
+                //Debug.printf(debug_file, "CHANNEL[%d] AMS = %d  FMS = %d\n", num, ch.AMS, ch.FMS);
                 break;
             }
 
@@ -1001,11 +1004,11 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
                     this.lfoInc = lfoIncTab[data & 7];
 
-                    //System.err.printf(debug_file, "\nLFO Enable, LFOinc = %.8X   %d\n", this.LFOinc, data & 7);
+                    //Debug.printf(debug_file, "\nLFO Enable, LFOinc = %.8X   %d\n", this.LFOinc, data & 7);
                 } else {
                     this.lfoInc = this.lfoCnt = 0;
 
-                    //System.err.printf(debug_file, "\nLFO Disable\n");
+                    //Debug.printf(debug_file, "\nLFO Disable\n");
                 }
                 break;
 
@@ -1015,7 +1018,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
                 if (this.timerAL != (1024 - this.timerA) << 12) {
                     this.timerACnt = this.timerAL = (1024 - this.timerA) << 12;
 
-                    //System.err.printf(debug_file, "Timer A Set = %.8X\n", this.TimerAcnt);
+                    //Debug.printf(debug_file, "Timer A Set = %.8X\n", this.TimerAcnt);
                 }
                 break;
 
@@ -1025,7 +1028,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
                 if (this.timerAL != (1024 - this.timerA) << 12) {
                     this.timerACnt = this.timerAL = (1024 - this.timerA) << 12;
 
-                    //System.err.printf(debug_file, "Timer A Set = %.8X\n", this.TimerAcnt);
+                    //Debug.printf(debug_file, "Timer A Set = %.8X\n", this.TimerAcnt);
                 }
                 break;
 
@@ -1035,7 +1038,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
                 if (this.timerBL != (256 - this.timerB) << (4 + 12)) {
                     this.timerBCnt = this.timerBL = (256 - this.timerB) << (4 + 12);
 
-                    //System.err.printf(debug_file, "Timer B Set = %.8X\n", this.TimerBcnt);
+                    //Debug.printf(debug_file, "Timer B Set = %.8X\n", this.TimerBcnt);
                 }
                 break;
 
@@ -1066,7 +1069,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
                 this.mode = data;
 
-                //System.err.printf(debug_file, "Mode reg = %.2X\n", data);
+                //Debug.printf(debug_file, "Mode reg = %.2X\n", data);
                 break;
 
             case 0x28:
@@ -1086,7 +1089,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
                 if ((data & 0x80) != 0) ch.keyOn(S3); // On appuie sur la touche pour le slot 4
                 else ch.keyOff(S3); // On relâche la touche pour le slot 4
 
-                //System.err.printf(debug_file, "CHANNEL[%d]  KEY %.1X\n", nch, ((data & 0xf0) >> 4));
+                //Debug.printf(debug_file, "CHANNEL[%d]  KEY %.1X\n", nch, ((data & 0xf0) >> 4));
                 break;
 
             case 0x2A:
@@ -1335,7 +1338,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
         private void updateChanAlgo0(Channel ch, int[][] buf, int length) {
             if (ch.slots[S3].eCnt == ENV_END) return;
 
-            //System.err.printf(debug_file, "\n\nAlgo 0 len = %d\n\n", length);
+            //Debug.printf(debug_file, "\n\nAlgo 0 len = %d\n\n", length);
 
             for (int i = 0; i < length; i++) {
                 getCurrentPhase(ch);
@@ -1350,7 +1353,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
         private void updateChanAlgo1(Channel ch, int[][] buf, int length) {
             if (ch.slots[S3].eCnt == ENV_END) return;
 
-            //System.err.printf(debug_file, "\n\nAlgo 1 len = %d\n\n", length);
+            //Debug.printf(debug_file, "\n\nAlgo 1 len = %d\n\n", length);
 
             for (int i = 0; i < length; i++) {
                 getCurrentPhase(ch);
@@ -1365,7 +1368,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
         private void updateChanAlgo2(Channel ch, int[][] buf, int length) {
             if (ch.slots[S3].eCnt == ENV_END) return;
 
-            //System.err.printf(debug_file, "\n\nAlgo 2 len = %d\n\n", length);
+            //Debug.printf(debug_file, "\n\nAlgo 2 len = %d\n\n", length);
 
             for (int i = 0; i < length; i++) {
                 getCurrentPhase(ch);
@@ -1380,7 +1383,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
         private void updateChanAlgo3(Channel ch, int[][] buf, int length) {
             if (ch.slots[S3].eCnt == ENV_END) return;
 
-            //System.err.printf(debug_file, "\n\nAlgo 3 len = %d\n\n", length);
+            //Debug.printf(debug_file, "\n\nAlgo 3 len = %d\n\n", length);
 
             for (int i = 0; i < length; i++) {
                 getCurrentPhase(ch);
@@ -1395,7 +1398,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
         private void updateChanAlgo4(Channel ch, int[][] buf, int length) {
             if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END)) return;
 
-            //System.err.printf(debug_file, "\n\nAlgo 4 len = %d\n\n", length);
+            //Debug.printf(debug_file, "\n\nAlgo 4 len = %d\n\n", length);
 
             for (int i = 0; i < length; i++) {
                 getCurrentPhase(ch);
@@ -1412,7 +1415,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
             if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S2].eCnt == ENV_END) &&
                     (ch.slots[S3].eCnt == ENV_END)) return;
 
-            //System.err.printf(debug_file, "\n\nAlgo 5 len = %d\n\n", length);
+            //Debug.printf(debug_file, "\n\nAlgo 5 len = %d\n\n", length);
 
             for (int i = 0; i < length; i++) {
                 getCurrentPhase(ch);
@@ -1429,7 +1432,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
             if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S2].eCnt == ENV_END) &&
                     (ch.slots[S3].eCnt == ENV_END)) return;
 
-            //System.err.printf(debug_file, "\n\nAlgo 6 len = %d\n\n", length);
+            //Debug.printf(debug_file, "\n\nAlgo 6 len = %d\n\n", length);
 
             for (int i = 0; i < length; i++) {
                 getCurrentPhase(ch);
@@ -1447,7 +1450,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
                     (ch.slots[S2].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END))
                 return;
 
-            //System.err.printf(debug_file, "\n\nAlgo 7 len = %d\n\n", length);
+            //Debug.printf(debug_file, "\n\nAlgo 7 len = %d\n\n", length);
 
             for (int i = 0; i < length; i++) {
                 getCurrentPhase(ch);
@@ -1464,7 +1467,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
             if (ch.slots[S3].eCnt == ENV_END) return;
 
-            //System.err.printf(debug_file, "\n\nAlgo 0 LFO len = %d\n\n", length);
+            //Debug.printf(debug_file, "\n\nAlgo 0 LFO len = %d\n\n", length);
 
             for (int i = 0; i < length; i++) {
                 getCurrentPhase(ch);
@@ -1481,7 +1484,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
             if (ch.slots[S3].eCnt == ENV_END) return;
 
-            //System.err.printf(debug_file, "\n\nAlgo 1 LFO len = %d\n\n", length);
+            //Debug.printf(debug_file, "\n\nAlgo 1 LFO len = %d\n\n", length);
 
             for (int i = 0; i < length; i++) {
                 getCurrentPhase(ch);
@@ -1498,7 +1501,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
             if (ch.slots[S3].eCnt == ENV_END) return;
 
-            //System.err.printf(debug_file, "\n\nAlgo 2 LFO len = %d\n\n", length);
+            //Debug.printf(debug_file, "\n\nAlgo 2 LFO len = %d\n\n", length);
 
             for (i = 0; i < length; i++) {
                 getCurrentPhase(ch);
@@ -1515,7 +1518,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
             if (ch.slots[S3].eCnt == ENV_END) return;
 
-            //System.err.printf(debug_file, "\n\nAlgo 3 LFO len = %d\n\n", length);
+            //Debug.printf(debug_file, "\n\nAlgo 3 LFO len = %d\n\n", length);
 
             for (int i = 0; i < length; i++) {
                 getCurrentPhase(ch);
@@ -1532,7 +1535,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
             if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END)) return;
 
-            //System.err.printf(debug_file, "\n\nAlgo 4 LFO len = %d\n\n", length);
+            //Debug.printf(debug_file, "\n\nAlgo 4 LFO len = %d\n\n", length);
 
             for (int i = 0; i < length; i++) {
                 getCurrentPhase(ch);
@@ -1550,7 +1553,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
             if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S2].eCnt == ENV_END) &&
                     (ch.slots[S3].eCnt == ENV_END)) return;
 
-            //System.err.printf(debug_file, "\n\nAlgo 5 LFO len = %d\n\n", length);
+            //Debug.printf(debug_file, "\n\nAlgo 5 LFO len = %d\n\n", length);
 
             for (int i = 0; i < length; i++) {
                 getCurrentPhase(ch);
@@ -1567,7 +1570,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
             if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S2].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END)) return;
 
-            // System.err.printf(debug_file, "\n\nAlgo 6 LFO len = %d\n\n", length);
+            // Debug.printf(debug_file, "\n\nAlgo 6 LFO len = %d\n\n", length);
 
             for (i = 0; i < length; i++) {
                 getCurrentPhase(ch);
@@ -1586,7 +1589,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
                     (ch.slots[S2].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END))
                 return;
 
-            //System.err.printf(debug_file, "\n\nAlgo 7 LFO len = %d\n\n", length);
+            //Debug.printf(debug_file, "\n\nAlgo 7 LFO len = %d\n\n", length);
 
             for (int i = 0; i < length; i++) {
                 getCurrentPhase(ch);
@@ -1602,7 +1605,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
             if (ch.slots[S3].eCnt == ENV_END) return;
 
-            //System.err.printf(debug_file, "\n\nAlgo 0 len = %d\n\n", length);
+            //Debug.printf(debug_file, "\n\nAlgo 0 len = %d\n\n", length);
 
             intCnt = this.interCnt;
 
@@ -1620,7 +1623,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
             if (ch.slots[S3].eCnt == ENV_END) return;
 
-            //System.err.printf(debug_file, "\n\nAlgo 1 len = %d\n\n", length);
+            //Debug.printf(debug_file, "\n\nAlgo 1 len = %d\n\n", length);
 
             intCnt = this.interCnt;
 
@@ -1638,7 +1641,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
             if (ch.slots[S3].eCnt == ENV_END) return;
 
-            // System.err.printf(debug_file, "\n\nAlgo 2 len = %d\n\n", length);
+            // Debug.printf(debug_file, "\n\nAlgo 2 len = %d\n\n", length);
 
             intCnt = this.interCnt;
 
@@ -1656,7 +1659,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
             if (ch.slots[S3].eCnt == ENV_END) return;
 
-            //System.err.printf(debug_file, "\n\nAlgo 3 len = %d\n\n", length);
+            //Debug.printf(debug_file, "\n\nAlgo 3 len = %d\n\n", length);
 
             intCnt = this.interCnt;
 
@@ -1674,7 +1677,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
             if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END)) return;
 
-            //System.err.printf(debug_file, "\n\nAlgo 4 len = %d\n\n", length);
+            //Debug.printf(debug_file, "\n\nAlgo 4 len = %d\n\n", length);
 
             intCnt = this.interCnt;
 
@@ -1693,7 +1696,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
             if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S2].eCnt == ENV_END) &&
                     (ch.slots[S3].eCnt == ENV_END)) return;
 
-            //System.err.printf(debug_file, "\n\nAlgo 5 len = %d\n\n", length);
+            //Debug.printf(debug_file, "\n\nAlgo 5 len = %d\n\n", length);
 
             intCnt = this.interCnt;
 
@@ -1712,7 +1715,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
             if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S2].eCnt == ENV_END) &&
                     (ch.slots[S3].eCnt == ENV_END)) return;
 
-            //System.err.printf(debug_file, "\n\nAlgo 6 len = %d\n\n", length);
+            //Debug.printf(debug_file, "\n\nAlgo 6 len = %d\n\n", length);
 
             intCnt = this.interCnt;
 
@@ -1732,7 +1735,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
                     (ch.slots[S2].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END))
                 return;
 
-            //System.err.printf(debug_file, "\n\nAlgo 7 len = %d\n\n", length);
+            //Debug.printf(debug_file, "\n\nAlgo 7 len = %d\n\n", length);
 
             intCnt = this.interCnt;
 
@@ -1751,7 +1754,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
             if (ch.slots[S3].eCnt == ENV_END) return;
 
-            //System.err.printf(debug_file, "\n\nAlgo 0 LFO len = %d\n\n", length);
+            //Debug.printf(debug_file, "\n\nAlgo 0 LFO len = %d\n\n", length);
 
             intCnt = this.interCnt;
 
@@ -1770,7 +1773,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
             if (ch.slots[S3].eCnt == ENV_END) return;
 
-            //System.err.printf(debug_file, "\n\nAlgo 1 LFO len = %d\n\n", length);
+            //Debug.printf(debug_file, "\n\nAlgo 1 LFO len = %d\n\n", length);
 
             intCnt = this.interCnt;
 
@@ -1789,7 +1792,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
             if (ch.slots[S3].eCnt == ENV_END) return;
 
-            //System.err.printf(debug_file, "\n\nAlgo 2 LFO len = %d\n\n", length);
+            //Debug.printf(debug_file, "\n\nAlgo 2 LFO len = %d\n\n", length);
 
             intCnt = this.interCnt;
 
@@ -1808,7 +1811,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
             if (ch.slots[S3].eCnt == ENV_END) return;
 
-            //System.err.printf(debug_file, "\n\nAlgo 3 LFO len = %d\n\n", length);
+            //Debug.printf(debug_file, "\n\nAlgo 3 LFO len = %d\n\n", length);
 
             intCnt = this.interCnt;
 
@@ -1827,7 +1830,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
             if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END)) return;
 
-            //System.err.printf(debug_file, "\n\nAlgo 4 LFO len = %d\n\n", length);
+            //Debug.printf(debug_file, "\n\nAlgo 4 LFO len = %d\n\n", length);
 
             intCnt = this.interCnt;
 
@@ -1846,7 +1849,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
             if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S2].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END)) return;
 
-            //System.err.printf(debug_file, "\n\nAlgo 5 LFO len = %d\n\n", length);
+            //Debug.printf(debug_file, "\n\nAlgo 5 LFO len = %d\n\n", length);
 
             intCnt = this.interCnt;
 
@@ -1865,7 +1868,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
             if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S2].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END)) return;
 
-            //System.err.printf(debug_file, "\n\nAlgo 6 LFO len = %d\n\n", length);
+            //Debug.printf(debug_file, "\n\nAlgo 6 LFO len = %d\n\n", length);
 
             intCnt = this.interCnt;
 
@@ -1885,7 +1888,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
             if ((ch.slots[S0].eCnt == ENV_END) && (ch.slots[S1].eCnt == ENV_END) && (ch.slots[S2].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END))
                 return;
 
-            //System.err.printf(debug_file, "\n\nAlgo 7 LFO len = %d\n\n", length);
+            //Debug.printf(debug_file, "\n\nAlgo 7 LFO len = %d\n\n", length);
 
             intCnt = this.interCnt;
 
@@ -1902,7 +1905,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
         // Initialisation de l'émulateur Ym2612
         private Ym2612Context(int clock, int rate, int interpolation) {
 
-            //System.err.printf(debug_file, "Ym2612 logging :\n\n");
+            //Debug.printf(debug_file, "Ym2612 logging :\n\n");
 
             this.clock = clock;
             this.rate = rate;
@@ -1926,7 +1929,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
                 this.interCnt = 0;
             }
 
-            //System.err.printf(debug_file, "Ym2612 frequence = %g rate = %d  interp step = %.8X\n\n", this.Frequence, this.rate, this.Inter_Step);
+            //Debug.printf(debug_file, "Ym2612 frequence = %g rate = %d  interp step = %.8X\n\n", this.Frequence, this.rate, this.Inter_Step);
 
             // Tableau TL :
             // [0     -  4095] = +output  [4095  - ...] = +output overflow (fill with 0)
@@ -1944,10 +1947,10 @@ public class Ym2612 extends Instrument.BaseInstrument {
                     TL_TAB[TL_LENGHT + i] = -TL_TAB[i];
                 }
 
-                //System.err.printf(debug_file, "TL_TAB[%d] = %.8X    TL_TAB[%d] = %.8X\n", i, TL_TAB[i], TL_LENGHT + i, TL_TAB[TL_LENGHT + i]);
+                //Debug.printf(debug_file, "TL_TAB[%d] = %.8X    TL_TAB[%d] = %.8X\n", i, TL_TAB[i], TL_LENGHT + i, TL_TAB[TL_LENGHT + i]);
             }
 
-            //System.err.printf(debug_file, "\n\n\n\n");
+            //Debug.printf(debug_file, "\n\n\n\n");
 
             // Tableau SIN :
             // SIN_TAB[x][y] = sin(x) * y;
@@ -1966,10 +1969,10 @@ public class Ym2612 extends Instrument.BaseInstrument {
                 SIN_TAB[i] = SIN_TAB[(SIN_LENGHT / 2) - i] = j;
                 SIN_TAB[(SIN_LENGHT / 2) + i] = SIN_TAB[SIN_LENGHT - i] = TL_LENGHT + j;
 
-                //System.err.printf(debug_file, "SIN[%d][0] = %.8X    SIN[%d][0] = %.8X    SIN[%d][0] = %.8X    SIN[%d][0] = %.8X\n", i, SIN_TAB[i][0], (SIN_LENGHT / 2) - i, SIN_TAB[(SIN_LENGHT / 2) - i][0], (SIN_LENGHT / 2) + i, SIN_TAB[(SIN_LENGHT / 2) + i][0], SIN_LENGHT - i, SIN_TAB[SIN_LENGHT - i][0]);
+                //Debug.printf(debug_file, "SIN[%d][0] = %.8X    SIN[%d][0] = %.8X    SIN[%d][0] = %.8X    SIN[%d][0] = %.8X\n", i, SIN_TAB[i][0], (SIN_LENGHT / 2) - i, SIN_TAB[(SIN_LENGHT / 2) - i][0], (SIN_LENGHT / 2) + i, SIN_TAB[(SIN_LENGHT / 2) + i][0], SIN_LENGHT - i, SIN_TAB[SIN_LENGHT - i][0]);
             }
 
-            //System.err.printf(debug_file, "\n\n\n\n");
+            //Debug.printf(debug_file, "\n\n\n\n");
 
             // Tableau LFO (LFO wav) :
 
@@ -1986,10 +1989,10 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
                 LFO_FREQ_TAB[i] = (int) x;
 
-                //System.err.printf(debug_file, "LFO[%d] = %.8X\n", i, LFO_ENV_TAB[i]);
+                //Debug.printf(debug_file, "LFO[%d] = %.8X\n", i, LFO_ENV_TAB[i]);
             }
 
-            //System.err.printf(debug_file, "\n\n\n\n");
+            //Debug.printf(debug_file, "\n\n\n\n");
 
             // Tableau Enveloppe :
             // ENV_TAB[0] . ENV_TAB[ENV_LENGHT - 1] = attack curve
@@ -2008,7 +2011,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
                 ENV_TAB[ENV_LENGHT + i] = (int) x;
 
-                //System.err.printf(debug_file, "ATTACK[%d] = %d   DECAY[%d] = %d\n", i, ENV_TAB[i], i, ENV_TAB[ENV_LENGHT + i]);
+                //Debug.printf(debug_file, "ATTACK[%d] = %d   DECAY[%d] = %d\n", i, ENV_TAB[i], i, ENV_TAB[ENV_LENGHT + i]);
             }
 
             ENV_TAB[ENV_END >> ENV_LBITS] = ENV_LENGHT - 1; // for the stopped state
@@ -2106,7 +2109,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
         }
 
         private int reset() {
-            //  System.err.printf(debug_file, "\n\nStarting reseting Ym2612 ...\n\n");
+            //  Debug.printf(debug_file, "\n\nStarting reseting Ym2612 ...\n\n");
 
             this.lfoCnt = 0;
             this.timerA = 0;
@@ -2151,7 +2154,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
             write((byte) 0, (byte) 0x2A);
             write((byte) 1, (byte) 0x80);
 
-            //  System.err.printf(debug_file, "\n\nFinishing reseting Ym2612 ...\n\n");
+            //  Debug.printf(debug_file, "\n\nFinishing reseting Ym2612 ...\n\n");
 
             return 0;
         }
@@ -2272,7 +2275,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
             int i, j, algoType;
 
 // #if DEBUG
-            //System.err.printf(debug_file, "\n\nStarting generating Sound...\n\n");
+            //Debug.printf(debug_file, "\n\nStarting generating Sound...\n\n");
 // #endif
 
             // Mise ?jour des pas des compteurs-fréquences s'ils ont 騁?modifi駸
@@ -2305,7 +2308,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
                     this.lfoEnvUp[i] = LFO_ENV_TAB[j];
                     this.lfoFreqUp[i] = LFO_FREQ_TAB[j];
 
-                    //System.err.printf(debug_file, "LFO_ENV_UP[%d] = %d   LFO_FREQ_UP[%d] = %d\n", i, this.LFO_ENV_UP[i], i, this.LFO_FREQ_UP[i]);
+                    //Debug.printf(debug_file, "LFO_ENV_UP[%d] = %d   LFO_FREQ_UP[%d] = %d\n", i, this.LFO_ENV_UP[i], i, this.LFO_FREQ_UP[i]);
                 }
 
                 algoType |= 8;
@@ -2363,7 +2366,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
 
             this.interCnt = intCnt;
 
-            //System.err.printf(debug_file, "\n\nFinishing generating Sound...\n\n");
+            //Debug.printf(debug_file, "\n\nFinishing generating Sound...\n\n");
         }
 
         // higher values reduce highpass on DAC
@@ -2398,7 +2401,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
                     this.status |= (this.mode & 0x04) >> 2;
                     this.timerACnt += this.timerAL;
 
-                    //System.err.printf(debug_file, "Counter A overflow\n");
+                    //Debug.printf(debug_file, "Counter A overflow\n");
 
                     if ((this.mode & 0x80) != 0) controlCsmKey();
                 }
@@ -2409,7 +2412,7 @@ public class Ym2612 extends Instrument.BaseInstrument {
                     this.status |= (this.mode & 0x08) >> 2;
                     this.timerBCnt += this.timerBL;
 
-                    //System.err.printf(debug_file, "Counter B overflow\n");
+                    //Debug.printf(debug_file, "Counter B overflow\n");
                 }
             }
         }

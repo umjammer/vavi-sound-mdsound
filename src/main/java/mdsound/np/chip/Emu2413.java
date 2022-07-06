@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 
 /**
- * emu2413.c -- YM2413 emulator written by Mitsutaka Okazaki 2001
+ * YM2413 emulator
  * <pre>
  *  2001 01-08 : Version 0.10 -- 1st version.
  *  2001 01-15 : Version 0.20 -- semi-public version.
@@ -48,6 +48,8 @@ import java.util.Arrays;
  *    YMU757 data sheet
  *    YM2143 data sheet
  * </pre>
+ * @author Mitsutaka Okazaki
+ * @version 2001
  */
 public class Emu2413 {
 
@@ -129,14 +131,14 @@ public class Emu2413 {
             public int egOut;
 
             /**
-             Calc Parameters
+             * Calc Parameters
              */
             private int calcEgDPhase() {
                 return (EgState.valueOf(this.egMode)).calcEgDPhase(this);
             }
 
             /**
-             Opll internal interfaces
+             * Opll internal interfaces
              */
             static final int SLOT_BD1 = 12;
             static final int SLOT_BD2 = 13;
@@ -170,8 +172,8 @@ public class Emu2413 {
                 this.updateTll();
                 this.updateRks();
                 this.updateWf();
-                this.updateEg();
-            }/* EG should be updated last. */
+                this.updateEg(); // EG should be updated last.
+            }
 
             /** Slot key on  */
             private void slotOn() {
@@ -233,10 +235,10 @@ public class Emu2413 {
             /** CARRIOR */
             private int calcCar(int fm) {
                 if (this.egOut >= (DB_MUTE - 1)) {
-                    //System.err.printf("calc_slot_car: output over");
+                    //Debug.printf("calc_slot_car: output over");
                     this.output[0] = 0;
                 } else {
-                    //System.err.printf("calc_slot_car: this.egout %d", this.egout);
+                    //Debug.printf("calc_slot_car: this.egout %d", this.egout);
                     this.output[0] = db2linTable[this.sinTbl[(this.pgOut + wave2_8pi(fm)) & (PG_WIDTH - 1)] + this.egOut];
                 }
 
@@ -825,7 +827,7 @@ public class Emu2413 {
                 egout = EG2DB(egout + slot.tll) + lfo;
             else {
                 egout = EG2DB(egout + slot.tll);
-                //System.err.printf("egout %d slot.tll %d (e_int32)(EG_STEP/DB_STEP) %d", egout, slot.tll, (short)(EG_STEP / DB_STEP));
+                //Debug.printf("egout %d slot.tll %d (e_int32)(EG_STEP/DB_STEP) %d", egout, slot.tll, (short)(EG_STEP / DB_STEP));
             }
 
             if (egout >= DB_MUTE)
@@ -919,7 +921,7 @@ public class Emu2413 {
          I/O Ctrl
          */
         private void writeReg(int reg, int data) {
-            //System.err.printf("OPLL_writeReg:reg:%d:data:%d", reg,data);
+            //Debug.printf("OPLL_writeReg:reg:%d:data:%d", reg,data);
 
             int i, v, ch;
 

@@ -219,7 +219,7 @@ public class Rf5c68 extends Instrument.BaseInstrument {
                             }
                         }
 
-                        //System.err.printf("Ch:%d L:%d R:%d", i, outputs[0][j], outputs[1][j]);
+                        //Debug.printf("Ch:%d L:%d R:%d", i, outputs[0][j], outputs[1][j]);
                     }
                 }
             }

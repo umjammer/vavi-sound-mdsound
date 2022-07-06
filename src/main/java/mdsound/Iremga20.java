@@ -196,7 +196,7 @@ public class Iremga20 extends Instrument.BaseInstrument {
         }
 
         private void write(int offset, byte data) {
-//        System.err.printf("GA20:  Offset %02x, data %04x\n",offset,data);
+//        Debug.printf("GA20:  Offset %02x, data %04x\n",offset,data);
 
             int channel = offset >> 3;
 
@@ -213,7 +213,7 @@ public class Iremga20 extends Instrument.BaseInstrument {
                 return (byte) (this.channel[channel].play != 0 ? 1 : 0);
 
             default:
-                //System.err.printf("GA20: read unk. register %d, channel %d\n", offset & 0xf, channel);
+                //Debug.printf("GA20: read unk. register %d, channel %d\n", offset & 0xf, channel);
                 break;
             }
 

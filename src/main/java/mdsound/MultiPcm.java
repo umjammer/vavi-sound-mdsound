@@ -599,7 +599,7 @@ public class MultiPcm extends Instrument.BaseInstrument {
                 break;
             case 1:
                 this.curSlot = val2chan[data & 0x1f];
-                //System.err.printf("curSlot%s", this.curSlot);
+                //Debug.printf("curSlot%s", this.curSlot);
                 break;
             case 2:
                 this.address = (int) ((data > 7) ? 7 : data);
@@ -672,7 +672,7 @@ public class MultiPcm extends Instrument.BaseInstrument {
                     Slot.Sample tempSmpl = this.samples[curSmpl];
                     int ptSample = curSmpl * 12;
                     tempSmpl.writeRom(this.rom, ptSample);
-                    //System.err.printf("LFOVIB%d  AM%d", this.ROM[ptSample + 7], this.ROM[ptSample + 11]);
+                    //Debug.printf("LFOVIB%d  AM%d", this.ROM[ptSample + 7], this.ROM[ptSample + 11]);
                 }
             }
         }

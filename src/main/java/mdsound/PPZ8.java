@@ -428,7 +428,7 @@ public class PPZ8 extends Instrument.BaseInstrument {
                     if (chWk[i].pan == 0) continue;
 
                     if (i == 6) {
-                        //System.err.printf(VolumeTable[chWk[i].volume][pcmData[chWk[i].bank][chWk[i].ptr]]
+                        //Debug.printf(VolumeTable[chWk[i].volume][pcmData[chWk[i].bank][chWk[i].ptr]]
                         //* chWk[i].panL);
                     }
 
@@ -543,22 +543,22 @@ public class PPZ8 extends Instrument.BaseInstrument {
                     byte psrc = pcmData[bank][psrcPtr++];
 
                     int n = xN + table1[(psrc >> 4) & 0x0f] * deltaN / 8;
-                    //System.err.printf(n);
+                    //Debug.printf(n);
                     xN = Math.max(Math.min(n, 32767), -32768);
 
                     n = deltaN * table2[(psrc >> 4) & 0x0f] / 64;
-                    //System.err.printf(n);
+                    //Debug.printf(n);
                     deltaN = Math.max(Math.min(n, 24576), 127);
 
                     o.add((byte) (xN / (32768 / 128) + 128));
 
 
                     n = xN + table1[psrc & 0x0f] * deltaN / 8;
-                    //System.err.printf(n);
+                    //Debug.printf(n);
                     xN = Math.max(Math.min(n, 32767), -32768);
 
                     n = deltaN * table2[psrc & 0x0f] / 64;
-                    //System.err.printf(n);
+                    //Debug.printf(n);
                     deltaN = Math.max(Math.min(n, 24576), 127);
 
                     o.add((byte) (xN / (32768 / 128) + 128));
