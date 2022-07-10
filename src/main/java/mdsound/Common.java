@@ -17,18 +17,6 @@ import dotnet4j.io.StreamWriter;
 
 public class Common {
 
-    public static byte[] toByteArray(List<Byte> o) {
-        byte[] a = new byte[o.size()];
-        IntStream.range(0, o.size()).forEach(i -> a[i] = o.get(i));
-        return a;
-    }
-
-    public static int[] toIntArray(List<Integer> o) {
-        int[] a = new int[o.size()];
-        IntStream.range(0, o.size()).forEach(i -> a[i] = o.get(i));
-        return a;
-    }
-
     public static short[][] readArrays(String name) {
         Scanner s = new Scanner(Common.class.getResourceAsStream(name));
         List<String> ls = new ArrayList<>();

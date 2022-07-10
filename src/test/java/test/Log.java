@@ -13,6 +13,7 @@ import dotnet4j.io.Path;
 import dotnet4j.io.StreamWriter;
 
 
+@Deprecated
 public class Log {
 //#if DEBUG
 //        public static boolean debug = true;

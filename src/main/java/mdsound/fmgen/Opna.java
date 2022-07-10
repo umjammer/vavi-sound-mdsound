@@ -2147,7 +2147,7 @@ e.printStackTrace();
         //public new Fmgen.Channel4[] ch = new Fmgen.Channel4[6];
     }
 
-    /** Ym2612/3438(OPN2) */
+    /** Ym2612Inst/3438(OPN2) */
     static class OPN2 extends OPNBase {
 
         public boolean init(int c, int r, boolean f /*= false*/, String s/* = null*/) {

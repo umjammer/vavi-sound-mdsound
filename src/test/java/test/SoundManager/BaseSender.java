@@ -2,11 +2,11 @@
 package test.SoundManager;
 
 public class BaseSender extends BaseMakerSender {
-    protected long Counter = 0;
-    protected int Dev = 0;
-    protected int Typ = 0;
-    protected int Adr = 0;
-    protected int Val = 0;
-    protected Object[] Ex = null;
+    protected long counter = 0;
+    protected int dev = 0;
+    protected int typ = 0;
+    protected int adr = 0;
+    protected int val = 0;
+    protected Object[] ex = null;
     protected int ringBufferSize;
 }

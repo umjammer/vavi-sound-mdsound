@@ -10,7 +10,7 @@ import static mdsound.mame.Fm.OUTD_CENTER;
 
 /**
  * YAMAHA DELTA-T adpcm Sound emulation subroutine
- * used by fmopl.c (Y8950) and Fm.c (YM2608 and YM2610/B)
+ * used by fmopl.c (Y8950Inst) and Fm.c (YM2608 and YM2610/B)
  *
  * Base program is YM2610 emulator by Hiromitsu Shioya.
  * Written by Tatsuyuki Satoh
@@ -54,7 +54,7 @@ import static mdsound.mame.Fm.OUTD_CENTER;
  *
  * 12-06-2001 Jarek Burczynski:
  *  - corrected end of sample bug in YM_DELTAT_ADPCM_CALC.
- *    Checked on real YM2610 chip - address register is 24 bits wide.
+ *    Checked on real YM2610 chips - address register is 24 bits wide.
  *    Thanks go to Stefan Jokisch (stefan.jokisch@gmx.de) for tracking down the problem.
  *
  * TODO:
@@ -65,7 +65,7 @@ import static mdsound.mame.Fm.OUTD_CENTER;
  * Sound chips that have this unit:
  * YM2608   OPNA
  * YM2610/B OPNB
- * Y8950    MSX AUDIO
+ * Y8950Inst    MSX AUDIO
  */
 public class YmDeltaT {
 
@@ -138,7 +138,7 @@ public class YmDeltaT {
     public byte control2;
     /* address bits shift-left:
      ** 8 for YM2610,
-     ** 5 for Y8950 and YM2608 */
+     ** 5 for Y8950Inst and YM2608 */
     public byte portShift;
 
     /* address bits shift-right:
@@ -156,7 +156,7 @@ public class YmDeltaT {
     /* note that different chips have these flags on different
      ** bits of the status register
      */
-    /* this chip id */
+    /* this chips id */
     public Fm.BaseChip statusChangeWhichChip;
     /* 1 on End Of Sample (record/playback/cycle time of AD/DA converting has passed)*/
     public byte statusChangeEOSBit;
@@ -165,17 +165,17 @@ public class YmDeltaT {
     /* 1 if silence lasts for more than 290 miliseconds on ADPCM recording */
     public byte statusChangeZEROBit;
 
-    /* neither Y8950 nor YM2608 can generate IRQ when PCMBSY bit changes, so instead of above,
-     ** the statusflag gets ORed with PCM_BSY (below) (on each read of statusflag of Y8950 and YM2608)
+    /* neither Y8950Inst nor YM2608 can generate IRQ when PCMBSY bit changes, so instead of above,
+     ** the statusflag gets ORed with PCM_BSY (below) (on each read of statusflag of Y8950Inst and YM2608)
      */
 
-    /* 1 when ADPCM is playing; Y8950/YM2608 only */
+    /* 1 when ADPCM is playing; Y8950Inst/YM2608 only */
     public byte pcmBsy;
 
     /* adpcm registers      */
     public byte[] reg = new byte[16];
     public int regPtr = 0;
-    /* which chip we're emulating */
+    /* which chips we're emulating */
     public byte emulationMode;
 
     private static final int DELTA_MAX = 24576;
@@ -224,7 +224,7 @@ public class YmDeltaT {
                     if (this.statusChangeBRDYBit != 0)
                         this.statusResetHandler.accept(this.statusChangeBRDYBit);
 
-                /* setup a timer that will Callback us in 10 master clock cycles for Y8950
+                /* setup a timer that will Callback us in 10 master clock cycles for Y8950Inst
                  * in the Callback set the BRDY flag to 1 , which means we have another data ready.
                  * For now, we don't really do this; we simply reset and set the flag in zero time, so that the IRQ will work.
                  */
@@ -358,11 +358,11 @@ public class YmDeltaT {
                 if (this.dromPortShift != dramRightShift[v & 3]) {
                     this.dromPortShift = dramRightShift[v & 3];
 
-                            /* final shift value depends on chip type and memory type selected:
+                            /* final shift value depends on chips type and memory type selected:
                                     8 for YM2610 (ROM only),
-                                    5 for ROM for Y8950 and YM2608,
-                                    5 for x8bit DRAMs for Y8950 and YM2608,
-                                    2 for x1bit DRAMs for Y8950 and YM2608.
+                                    5 for ROM for Y8950Inst and YM2608,
+                                    5 for x8bit DRAMs for Y8950Inst and YM2608,
+                                    2 for x1bit DRAMs for Y8950Inst and YM2608.
                             */
 
                     /* refresh addresses */
@@ -421,7 +421,7 @@ public class YmDeltaT {
                         if (this.statusChangeBRDYBit != 0)
                             this.statusResetHandler.accept(this.statusChangeBRDYBit);
 
-                    /* setup a timer that will Callback us in 10 master clock cycles for Y8950
+                    /* setup a timer that will Callback us in 10 master clock cycles for Y8950Inst
                      * in the Callback set the BRDY flag to 1 , which means we have written the data.
                      * For now, we don't really do this; we simply reset and set the flag in zero time, so that the IRQ will work.
                      */
@@ -486,7 +486,7 @@ public class YmDeltaT {
         this.step = 0;
         this.start = 0;
         this.end = 0;
-        this.limit = ~0; /* this way YM2610 and Y8950 (both of which don't have limit address reg) will still work */
+        this.limit = ~0; /* this way YM2610 and Y8950Inst (both of which don't have limit address reg) will still work */
         this.volume = 0;
         this.pan = this.outputPointer;
         this.panPtr = pan;

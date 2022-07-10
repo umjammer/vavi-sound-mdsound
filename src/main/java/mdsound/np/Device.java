@@ -32,7 +32,7 @@ public interface Device {
         int render(int[] b);
 
         /**
-         * chip update/operation is now bound to CPU clocks
+         * chips update/operation is now bound to CPU clocks
          * Render() now simply mixes and outputs Sound
          */
         void tick(int clocks);

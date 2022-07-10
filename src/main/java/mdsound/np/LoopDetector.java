@@ -160,7 +160,7 @@ public class LoopDetector implements Device {
             if ((0x4000 <= adr && adr <= 0x4013) // APU / DMC
                             || (0x4015 == adr)
                             || (0x4017 == adr)
-                            || (0x9000 <= adr && adr <= 0x9002) // VRC6
+                            || (0x9000 <= adr && adr <= 0x9002) // Vrc6Inst
                             || (0xA000 <= adr && adr <= 0xA002)
                             || (0xB000 <= adr && adr <= 0xB002)
                             || (0x9010 == adr) // VRC7

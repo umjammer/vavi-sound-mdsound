@@ -125,7 +125,7 @@ public class Op {
         mul = 2;
         ame = 0;
 
-        noiseStep = (int) ((long) (1 << 26) * (long) global.opmRate / Global.samprate);
+        noiseStep = (int) ((long) (1 << 26) * (long) global.opmRate / Global.sampleRate);
         setNFRQ(0);
         noiseValue = 1;
 
@@ -181,7 +181,7 @@ public class Op {
     public void initSamprate() {
         lfoPitch = CULC_DELTA_T;
 
-        noiseStep = (int) ((long) (1 << 26) * (long) global.opmRate / Global.samprate);
+        noiseStep = (int) ((long) (1 << 26) * (long) global.opmRate / Global.sampleRate);
         culcNoiseCycle();
 
         culcArStep();

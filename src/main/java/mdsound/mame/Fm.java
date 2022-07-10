@@ -72,19 +72,19 @@ import dotnet4j.util.compat.TriConsumer;
  *  - added SSG-EG support (verified on real YM2203)
  *
  * 12-08-2001 Jarek Burczynski:
- *  - corrected sin_tab and tl_tab data (verified on real chip)
- *  - corrected feedback calculations (verified on real chip)
- *  - corrected phase generator calculations (verified on real chip)
- *  - corrected envelope generator calculations (verified on real chip)
+ *  - corrected sin_tab and tl_tab data (verified on real chips)
+ *  - corrected feedback calculations (verified on real chips)
+ *  - corrected phase generator calculations (verified on real chips)
+ *  - corrected envelope generator calculations (verified on real chips)
  *  - corrected FM volume level (YM2610 and YM2610B).
- *  - changed YMxxxUpdateOne() functions (YM2203, YM2608, YM2610, YM2610B, Ym2612) :
+ *  - changed YMxxxUpdateOne() functions (YM2203, YM2608, YM2610, YM2610B, Ym2612Inst) :
  *    this was needed to calculate YM2610 FM channels output correctly.
  *    (Each FM channel is calculated as in other chips, but the output of the channel
  *    gets shifted right by one *before* sending to accumulator. That was impossible to do
  *    with previous implementation).
  *
  * 23-07-2001 Jarek Burczynski, Nicola Salmoria:
- *  - corrected YM2610 ADPCM type A algorithm and tables (verified on real chip)
+ *  - corrected YM2610 ADPCM type A algorithm and tables (verified on real chips)
  *
  * 11-06-2001 Jarek Burczynski:
  *  - corrected end of sample bug in ADPCMA_calc_cha().
@@ -100,7 +100,7 @@ import dotnet4j.util.compat.TriConsumer;
  *
  * 09-12-98 hiro-shi:
  * change ADPCM volume. (8.16, 48.64)
- * replace Ym2610 ch0/3 (YM-2610B)
+ * replace Ym2610Inst ch0/3 (YM-2610B)
  * change ADPCM_SHIFT (10.8) missing bank change 0x4000-0xffff.
  * add ADPCM_SHIFT_MASK
  * change ADPCMA_DECODE_MIN/MAX.
@@ -190,13 +190,13 @@ public class Fm {
     }
 
     // FM_TIMERHANDLER : Stop or Start timer
-    // int n          = chip number
+    // int n          = chips number
     // int c          = Channel 0=TimerA,1=TimerB
     // int count      = timer count (0=stop)
     // doube stepTime = step time of one count (sec.)
 
     // FM_IRQHHANDLER : IRQ level changing sense 
-    // int n       = chip number 
+    // int n       = chips number
     // int irq     = IRQ level 0=OFF,1=ON 
 
     // include external DELTA-T unit (when needed)
@@ -213,7 +213,7 @@ public class Fm {
     private static final int TYPE_LFOPAN = 0x02;
     /** FM 6CH / 3CH */
     private static final int TYPE_6CH = 0x04;
-    /** Ym2612's DAC device */
+    /** Ym2612Inst's DAC device */
     private static final int TYPE_DAC = 0x08;
     /** two ADPCM units */
     private static final int TYPE_ADPCM = 0x10;
@@ -252,7 +252,7 @@ public class Fm {
     private static final int SIN_LEN = 1 << SIN_BITS;
     private static final int SIN_MASK = SIN_LEN - 1;
 
-    /** 8 bits addressing (real chip) */
+    /** 8 bits addressing (real chips) */
     private static final int TL_RES_LEN = 256;
 
     private static final int FINAL_SH = 0;
@@ -288,7 +288,7 @@ public class Fm {
             };
 
 
-    /** this is YM2151 and Ym2612 phase increment data (in 10.10 fixed point format) */
+    /** this is YM2151 and Ym2612Inst phase increment data (in 10.10 fixed point format) */
     private static final byte[] dt_tab = new byte[] {
             // FD=0 
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -920,7 +920,7 @@ public class Fm {
 
                                 if (this.volume >= MAX_ATT_INDEX) {
                                     this.volume = MAX_ATT_INDEX;
-                                    // do not change this.state (verified on real chip)
+                                    // do not change this.state (verified on real chips)
                                 }
                             }
                         }
@@ -1075,7 +1075,7 @@ public class Fm {
         }
 
         public static class State {
-            /** this chip parameter */
+            /** this chips parameter */
             public BaseChip param;
             /** master clock  (Hz) */
             public int clock;
@@ -1129,7 +1129,7 @@ public class Fm {
 
             /** initialize time tables */
             private void initTimeTables(byte[] dtTable) {
-                //Debug.printf("FM.C: samplerate=%8i chip clock=%8i  freqbase=%f  \n",
+                //Debug.printf("FM.C: samplerate=%8i chips clock=%8i  freqbase=%f  \n",
                 // this.rate, this.clock, this.freqbase );
 
                 // DeTune table 
@@ -1274,7 +1274,7 @@ public class Fm {
             }
         }
 
-        /** chip type */
+        /** chips type */
         public byte type;
         /** general state */
         public State st;
@@ -1291,7 +1291,7 @@ public class Fm {
         public int egTimer;
         /** step of eg_timer */
         public int egTimerAdd;
-        /** envelope generator timer overlfows every 3 samples (on real chip) */
+        /** envelope generator timer overlfows every 3 samples (on real chips) */
         public int egTimerOverflow;
 
         // there are 2048 FNUMs that can be generated using FNUM/BLK registers
@@ -1361,7 +1361,7 @@ public class Fm {
             for (int i = 0; i < 4096; i++) {
                 // freq table for octave 7 
                 // OPN phase increment counter = 20bit 
-                this.fnTable[i] = (int) ((double) i * 32 * this.st.freqBase * (1 << (FREQ_SH - 10))); // -10 because chip works with 10.10 fixed point, while we use 16.16 
+                this.fnTable[i] = (int) ((double) i * 32 * this.st.freqBase * (1 << (FREQ_SH - 10))); // -10 because chips works with 10.10 fixed point, while we use 16.16
 //Debug.printf("FM.C: fn_table[%4i] = %08x (dec=%8i)\n",
 // i, this.fn_table[i]>>6,this.fn_table[i]>>6 );
             }
@@ -1384,7 +1384,7 @@ public class Fm {
             switch (r) {
             case 0x21: // Test
                 break;
-            case 0x22: // LFO FREQ (YM2608/YM2610/YM2610B/Ym2612)
+            case 0x22: // LFO FREQ (YM2608/YM2610/YM2610B/Ym2612Inst)
                 if ((this.type & TYPE_LFOPAN) != 0) {
                     if ((v & 0x08) != 0) { // LFO enabled ?
                         this.lfoInc = this.lfo_freq[v & 7];
@@ -1590,7 +1590,7 @@ public class Fm {
                     setup_connection(ch, c);
                 }
                 break;
-                case 1: // 0xb4-0xb6 : L , R , AMS , PMS (Ym2612/YM2610B/YM2610/YM2608)
+                case 1: // 0xb4-0xb6 : L , R , AMS , PMS (Ym2612Inst/YM2610B/YM2610/YM2608)
                     if ((this.type & TYPE_LFOPAN) != 0) {
                         // b0-2 PMS 
                         ch.pms = (v & 7) * 32; // ch.pms = PM depth * 32 (index in lfo_pm_table) 
@@ -1610,7 +1610,7 @@ public class Fm {
         }
 
         /**
-         * prescaler circuit (best guess to verified chip behaviour)
+         * prescaler circuit (best guess to verified chips behaviour)
          * <pre>
          *                      +--------------+  +-sel2-+
          *                      |              +--|in20  |
@@ -1754,7 +1754,7 @@ public class Fm {
                 // update AM when LFO output changes 
 
                 // actually I can't optimize is this way without rewriting chan_calc()
-                // to use chip.lfo_am instead of Global lfo_am
+                // to use chips.lfo_am instead of Global lfo_am
                 {
                     // triangle 
                     // AM: 0 to 126 step +2, 126 to 0 step -2 
@@ -1767,7 +1767,7 @@ public class Fm {
                 // PM works with 4 times slower clock 
                 pos >>= 2;
                 // update PM when LFO output changes 
-                /*if (prev_pos != pos)*/ // can't use Global lfo_pm for this optimization, must be chip.lfo_pm instead*/
+                /*if (prev_pos != pos)*/ // can't use Global lfo_pm for this optimization, must be chips.lfo_pm instead*/
                 {
                     this.lfoPm = pos;
                 }
@@ -1963,7 +1963,7 @@ public class Fm {
                 else
                     n = (short) (n >> 1);
                 // 11 bits here (rounded) 
-                n <<= 2; // 13 bits here (as in real chip) 
+                n <<= 2; // 13 bits here (as in real chips)
                 tl_tab[x * 2 + 0] = n;
                 tl_tab[x * 2 + 1] = (short) -tl_tab[x * 2 + 0];
 
@@ -1982,7 +1982,7 @@ public class Fm {
 
             for (short i = 0; i < SIN_LEN; i++) {
                 // non-standard sinus 
-                double m = Math.sin(((i * 2) + 1) * Math.PI / SIN_LEN); // checked against the real chip 
+                double m = Math.sin(((i * 2) + 1) * Math.PI / SIN_LEN); // checked against the real chips
 
                 // we never reach zero here due to ((i*2)+1) 
 
@@ -2231,7 +2231,7 @@ public class Fm {
             this.opn.st.internalTimerB(length);
         }
 
-        /** reset one of chip */
+        /** reset one of chips */
         void reset() {
             this.opn.reset2203(this.ch);
         }
@@ -2274,7 +2274,7 @@ public class Fm {
         /**
          * Initialize YM2203 emulator(s).
          *
-         * @param clock is the chip clock in Hz
+         * @param clock is the chips clock in Hz
          * @param rate is sampling rate
          * @param timer_handler timer Callback handler when timer start and clear
          * @param IRQHandler IRQ Callback handler when changed IRQ level
@@ -2391,7 +2391,7 @@ public class Fm {
             };
 
             /**
-             This data is derived from the chip's output - internal ROM can't be read.
+             This data is derived from the chips's output - internal ROM can't be read.
              It was verified, using real YM2608, that this ADPCM stream produces 100% correct output signal.
              */
             private static final byte[] ADPCM_ROM = new byte[] {
@@ -3582,7 +3582,7 @@ public class Fm {
             this.deltaT.memory = null;
         }
 
-        /** reset one of chip */
+        /** reset one of chips */
         void reset() {
             opn.reset2610(this.ch);
 

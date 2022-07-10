@@ -597,12 +597,12 @@ public class Opm {
                 } else {
                     step = Global.STEPTBL_O2[notekf] >> (3 - oct);
                 }
-                global.STEPTBL[oct * 12 * 64 + notekf] = (int) (step * 64 * (long) (global.opmRate) / Global.samprate);
+                global.STEPTBL[oct * 12 * 64 + notekf] = (int) (step * 64 * (long) (global.opmRate) / Global.sampleRate);
             }
         }
 
         for (int i = 0; i <= 128 + 4 - 1; ++i) {
-            global.DT1TBL[i] = (int) (Global.DT1TBL_org[i] * 64 * (long) (global.opmRate) / Global.samprate);
+            global.DT1TBL[i] = (int) (Global.DT1TBL_org[i] * 64 * (long) (global.opmRate) / Global.sampleRate);
         }
     }
 
@@ -689,7 +689,7 @@ public class Opm {
             timerReg = data & 0x8F;
             statReg &= 0xFF - ((data >> 4) & 3);
 
-            global.timerSemapho = 0;
+            global.timerSemaphore = 0;
 
             break;
 
@@ -1171,7 +1171,7 @@ public class Opm {
             out[0] = out[1] = 0;
             boolean firstFlg = true;
 
-            opmLPFidx += Global.samprate;
+            opmLPFidx += Global.sampleRate;
             while (opmLPFidx >= Global.waveOutSamp) {
                 opmLPFidx -= Global.waveOutSamp;
 
@@ -1380,7 +1380,7 @@ public class Opm {
                         InpOpmBuf1[inpOpmIdx + global.OPMLPF_COL] = (short) outInpOpm[1];
             }
 
-            global.OpmFir(opmLPFpBuf[opmLPFpPtr], inpOpmBuf0, inpOpmIdx, InpOpmBuf1, inpOpmIdx, outOpm);
+            global.firOpm(opmLPFpBuf[opmLPFpPtr], inpOpmBuf0, inpOpmIdx, InpOpmBuf1, inpOpmIdx, outOpm);
 
             opmLPFpPtr += 1;
             if (opmLPFpPtr >= global.OPMLPF_ROW) {
@@ -1690,7 +1690,7 @@ public class Opm {
 
         statReg |= flagSet;
 
-        global.timerSemapho = 0;
+        global.timerSemaphore = 0;
 
         if (flagSet != 0) {
             if (prevStat == 0) {
@@ -1717,15 +1717,15 @@ public class Opm {
         _rev = (int) rev;
 
         if (samprate == 44100) {
-            Global.samprate = global.opmRate;
+            Global.sampleRate = global.opmRate;
             global.OPMLPF_ROW = global.OPMLPF_ROW_44;
             global.OPMLOWPASS = Global.OPMLOWPASS_44;
         } else if (samprate == 48000) {
-            Global.samprate = global.opmRate;
+            Global.sampleRate = global.opmRate;
             global.OPMLPF_ROW = global.OPMLPF_ROW_48;
             global.OPMLOWPASS = Global.OPMLOWPASS_48;
         } else {
-            Global.samprate = samprate;
+            Global.sampleRate = samprate;
         }
         Global.waveOutSamp = samprate;
 
@@ -1758,15 +1758,15 @@ public class Opm {
         _rev = (int) 1.0;
 
         if (samprate == 44100) {
-            Global.samprate = global.opmRate;
+            Global.sampleRate = global.opmRate;
             global.OPMLPF_ROW = global.OPMLPF_ROW_44;
             global.OPMLOWPASS = Global.OPMLOWPASS_44;
         } else if (samprate == 48000) {
-            Global.samprate = global.opmRate;
+            Global.sampleRate = global.opmRate;
             global.OPMLPF_ROW = global.OPMLPF_ROW_48;
             global.OPMLOWPASS = Global.OPMLOWPASS_48;
         } else {
-            Global.samprate = samprate;
+            Global.sampleRate = samprate;
         }
         Global.waveOutSamp = samprate;
 
@@ -1787,15 +1787,15 @@ public class Opm {
         free();
 
         if (samprate == 44100) {
-            Global.samprate = global.opmRate;
+            Global.sampleRate = global.opmRate;
             global.OPMLPF_ROW = global.OPMLPF_ROW_44;
             global.OPMLOWPASS = Global.OPMLOWPASS_44;
         } else if (samprate == 48000) {
-            Global.samprate = global.opmRate;
+            Global.sampleRate = global.opmRate;
             global.OPMLPF_ROW = global.OPMLPF_ROW_48;
             global.OPMLOWPASS = Global.OPMLOWPASS_48;
         } else {
-            Global.samprate = samprate;
+            Global.sampleRate = samprate;
         }
         Global.waveOutSamp = samprate;
 
@@ -2177,11 +2177,11 @@ public class Opm {
     }
 
 
-    public void PushRegs() {
+    public void pushRegs() {
         opmRegNoBackup = opmRegNo;
     }
 
-    public void PopRegs() {
+    public void popRegs() {
         opmRegNo = opmRegNoBackup;
     }
 

@@ -32,7 +32,7 @@ public class Global {
     public static final int SIZESINTBL = 1 << SIZESINTBL_BITS;
     public static final int MAXSINVAL = 1 << (SIZESINTBL_BITS + 2);
 
-    public static int samprate = 44100;
+    public static int sampleRate = 44100;
     public static int waveOutSamp = 44100;
     public static int OpmWait = 240; // 24.0μｓ
     public int opmRate = 62500; // 入力クロック÷64
@@ -272,8 +272,8 @@ public class Global {
 
     public int totalVolume; // 音量 x/256
 
-    //public int Semapho = 0;
-    public int timerSemapho = 0;
+    //public int Semaphore = 0;
+    public int timerSemaphore = 0;
 
     public final int OPMLPF_COL = 64;
     public final int OPMLPF_ROW_44 = 441;
@@ -293,9 +293,7 @@ public class Global {
     }
 
     public int OPMLPF_ROW = OPMLPF_ROW_44;
-    //public short (* OPMLOWPASS)[OPMLPF_COL] = OPMLOWPASS_44;
-    public short[][] OPMLOWPASS = null;// OPMLOWPASS_44[0]; //コンストラクタで実施
-
+    public short[][] OPMLOWPASS = null; //コンストラクタで実施
 
     public int Betw_Time; // 5 ms
     public int Late_Time; // (200+Bet_time) ms
@@ -329,7 +327,7 @@ public class Global {
     public static final int THREADMES_KILL = WM_USER + 2;
 
     // マルチメディアタイマー
-    public int OpmTimeProc(short[] buffer, int offset, int sampleCount) {
+    public int procOpmTimer(short[] buffer, int offset, int sampleCount) {
 
         //if (timer_start_flag==0) return sampleCount;
 
@@ -339,7 +337,7 @@ public class Global {
             setPcmBufPtr = -1;
         }
 
-        opm.PushRegs();
+        opm.pushRegs();
 
         if (waveOutSamp == 44100 || waveOutSamp == 48000) {
             //opm.pcmset62((int)nSamples);
@@ -353,7 +351,7 @@ public class Global {
         opm.betwint();
 
 
-        opm.PopRegs();
+        opm.popRegs();
 
 //        if (opm.adpcm.DmaReg[0x00] & 0x10) {
 //            if (opm.adpcm.DmaReg[0x07] & 0x08) { // INT == 1 ?
@@ -372,136 +370,136 @@ public class Global {
         return sampleCount;
     }
 
-    public void OpmFir(short[] p, short[] buf0, int buf0Ptr, short[] buf1, int buf1Ptr, int[] result) {
-        result[0] = (int) buf0[buf0Ptr + 0] * p[0]
-                + (int) buf0[buf0Ptr + 1] * p[1]
-                + (int) buf0[buf0Ptr + 2] * p[2]
-                + (int) buf0[buf0Ptr + 3] * p[3]
-                + (int) buf0[buf0Ptr + 4] * p[4]
-                + (int) buf0[buf0Ptr + 5] * p[5]
-                + (int) buf0[buf0Ptr + 6] * p[6]
-                + (int) buf0[buf0Ptr + 7] * p[7]
-                + (int) buf0[buf0Ptr + 8] * p[8]
-                + (int) buf0[buf0Ptr + 9] * p[9]
-                + (int) buf0[buf0Ptr + 10] * p[10]
-                + (int) buf0[buf0Ptr + 11] * p[11]
-                + (int) buf0[buf0Ptr + 12] * p[12]
-                + (int) buf0[buf0Ptr + 13] * p[13]
-                + (int) buf0[buf0Ptr + 14] * p[14]
-                + (int) buf0[buf0Ptr + 15] * p[15]
-                + (int) buf0[buf0Ptr + 16] * p[16]
-                + (int) buf0[buf0Ptr + 17] * p[17]
-                + (int) buf0[buf0Ptr + 18] * p[18]
-                + (int) buf0[buf0Ptr + 19] * p[19]
-                + (int) buf0[buf0Ptr + 20] * p[20]
-                + (int) buf0[buf0Ptr + 21] * p[21]
-                + (int) buf0[buf0Ptr + 22] * p[22]
-                + (int) buf0[buf0Ptr + 23] * p[23]
-                + (int) buf0[buf0Ptr + 24] * p[24]
-                + (int) buf0[buf0Ptr + 25] * p[25]
-                + (int) buf0[buf0Ptr + 26] * p[26]
-                + (int) buf0[buf0Ptr + 27] * p[27]
-                + (int) buf0[buf0Ptr + 28] * p[28]
-                + (int) buf0[buf0Ptr + 29] * p[29]
-                + (int) buf0[buf0Ptr + 30] * p[30]
-                + (int) buf0[buf0Ptr + 31] * p[31]
-                + (int) buf0[buf0Ptr + 32] * p[32]
-                + (int) buf0[buf0Ptr + 33] * p[33]
-                + (int) buf0[buf0Ptr + 34] * p[34]
-                + (int) buf0[buf0Ptr + 35] * p[35]
-                + (int) buf0[buf0Ptr + 36] * p[36]
-                + (int) buf0[buf0Ptr + 37] * p[37]
-                + (int) buf0[buf0Ptr + 38] * p[38]
-                + (int) buf0[buf0Ptr + 39] * p[39]
-                + (int) buf0[buf0Ptr + 40] * p[40]
-                + (int) buf0[buf0Ptr + 41] * p[41]
-                + (int) buf0[buf0Ptr + 42] * p[42]
-                + (int) buf0[buf0Ptr + 43] * p[43]
-                + (int) buf0[buf0Ptr + 44] * p[44]
-                + (int) buf0[buf0Ptr + 45] * p[45]
-                + (int) buf0[buf0Ptr + 46] * p[46]
-                + (int) buf0[buf0Ptr + 47] * p[47]
-                + (int) buf0[buf0Ptr + 48] * p[48]
-                + (int) buf0[buf0Ptr + 49] * p[49]
-                + (int) buf0[buf0Ptr + 50] * p[50]
-                + (int) buf0[buf0Ptr + 51] * p[51]
-                + (int) buf0[buf0Ptr + 52] * p[52]
-                + (int) buf0[buf0Ptr + 53] * p[53]
-                + (int) buf0[buf0Ptr + 54] * p[54]
-                + (int) buf0[buf0Ptr + 55] * p[55]
-                + (int) buf0[buf0Ptr + 56] * p[56]
-                + (int) buf0[buf0Ptr + 57] * p[57]
-                + (int) buf0[buf0Ptr + 58] * p[58]
-                + (int) buf0[buf0Ptr + 59] * p[59]
-                + (int) buf0[buf0Ptr + 60] * p[60]
-                + (int) buf0[buf0Ptr + 61] * p[61]
-                + (int) buf0[buf0Ptr + 62] * p[62]
-                + (int) buf0[buf0Ptr + 63] * p[63];
+    public void firOpm(short[] p, short[] buf0, int buf0Ptr, short[] buf1, int buf1Ptr, int[] result) {
+        result[0] = (int) buf0[buf0Ptr + 0] * p[0] +
+                (int) buf0[buf0Ptr + 1] * p[1] +
+                (int) buf0[buf0Ptr + 2] * p[2] +
+                (int) buf0[buf0Ptr + 3] * p[3] +
+                (int) buf0[buf0Ptr + 4] * p[4] +
+                (int) buf0[buf0Ptr + 5] * p[5] +
+                (int) buf0[buf0Ptr + 6] * p[6] +
+                (int) buf0[buf0Ptr + 7] * p[7] +
+                (int) buf0[buf0Ptr + 8] * p[8] +
+                (int) buf0[buf0Ptr + 9] * p[9] +
+                (int) buf0[buf0Ptr + 10] * p[10] +
+                (int) buf0[buf0Ptr + 11] * p[11] +
+                (int) buf0[buf0Ptr + 12] * p[12] +
+                (int) buf0[buf0Ptr + 13] * p[13] +
+                (int) buf0[buf0Ptr + 14] * p[14] +
+                (int) buf0[buf0Ptr + 15] * p[15] +
+                (int) buf0[buf0Ptr + 16] * p[16] +
+                (int) buf0[buf0Ptr + 17] * p[17] +
+                (int) buf0[buf0Ptr + 18] * p[18] +
+                (int) buf0[buf0Ptr + 19] * p[19] +
+                (int) buf0[buf0Ptr + 20] * p[20] +
+                (int) buf0[buf0Ptr + 21] * p[21] +
+                (int) buf0[buf0Ptr + 22] * p[22] +
+                (int) buf0[buf0Ptr + 23] * p[23] +
+                (int) buf0[buf0Ptr + 24] * p[24] +
+                (int) buf0[buf0Ptr + 25] * p[25] +
+                (int) buf0[buf0Ptr + 26] * p[26] +
+                (int) buf0[buf0Ptr + 27] * p[27] +
+                (int) buf0[buf0Ptr + 28] * p[28] +
+                (int) buf0[buf0Ptr + 29] * p[29] +
+                (int) buf0[buf0Ptr + 30] * p[30] +
+                (int) buf0[buf0Ptr + 31] * p[31] +
+                (int) buf0[buf0Ptr + 32] * p[32] +
+                (int) buf0[buf0Ptr + 33] * p[33] +
+                (int) buf0[buf0Ptr + 34] * p[34] +
+                (int) buf0[buf0Ptr + 35] * p[35] +
+                (int) buf0[buf0Ptr + 36] * p[36] +
+                (int) buf0[buf0Ptr + 37] * p[37] +
+                (int) buf0[buf0Ptr + 38] * p[38] +
+                (int) buf0[buf0Ptr + 39] * p[39] +
+                (int) buf0[buf0Ptr + 40] * p[40] +
+                (int) buf0[buf0Ptr + 41] * p[41] +
+                (int) buf0[buf0Ptr + 42] * p[42] +
+                (int) buf0[buf0Ptr + 43] * p[43] +
+                (int) buf0[buf0Ptr + 44] * p[44] +
+                (int) buf0[buf0Ptr + 45] * p[45] +
+                (int) buf0[buf0Ptr + 46] * p[46] +
+                (int) buf0[buf0Ptr + 47] * p[47] +
+                (int) buf0[buf0Ptr + 48] * p[48] +
+                (int) buf0[buf0Ptr + 49] * p[49] +
+                (int) buf0[buf0Ptr + 50] * p[50] +
+                (int) buf0[buf0Ptr + 51] * p[51] +
+                (int) buf0[buf0Ptr + 52] * p[52] +
+                (int) buf0[buf0Ptr + 53] * p[53] +
+                (int) buf0[buf0Ptr + 54] * p[54] +
+                (int) buf0[buf0Ptr + 55] * p[55] +
+                (int) buf0[buf0Ptr + 56] * p[56] +
+                (int) buf0[buf0Ptr + 57] * p[57] +
+                (int) buf0[buf0Ptr + 58] * p[58] +
+                (int) buf0[buf0Ptr + 59] * p[59] +
+                (int) buf0[buf0Ptr + 60] * p[60] +
+                (int) buf0[buf0Ptr + 61] * p[61] +
+                (int) buf0[buf0Ptr + 62] * p[62] +
+                (int) buf0[buf0Ptr + 63] * p[63];
         result[0] >>= (16 - 1);
-        result[1] = (int) buf1[buf1Ptr + 0] * p[0]
-                + (int) buf1[buf1Ptr + 1] * p[1]
-                + (int) buf1[buf1Ptr + 2] * p[2]
-                + (int) buf1[buf1Ptr + 3] * p[3]
-                + (int) buf1[buf1Ptr + 4] * p[4]
-                + (int) buf1[buf1Ptr + 5] * p[5]
-                + (int) buf1[buf1Ptr + 6] * p[6]
-                + (int) buf1[buf1Ptr + 7] * p[7]
-                + (int) buf1[buf1Ptr + 8] * p[8]
-                + (int) buf1[buf1Ptr + 9] * p[9]
-                + (int) buf1[buf1Ptr + 10] * p[10]
-                + (int) buf1[buf1Ptr + 11] * p[11]
-                + (int) buf1[buf1Ptr + 12] * p[12]
-                + (int) buf1[buf1Ptr + 13] * p[13]
-                + (int) buf1[buf1Ptr + 14] * p[14]
-                + (int) buf1[buf1Ptr + 15] * p[15]
-                + (int) buf1[buf1Ptr + 16] * p[16]
-                + (int) buf1[buf1Ptr + 17] * p[17]
-                + (int) buf1[buf1Ptr + 18] * p[18]
-                + (int) buf1[buf1Ptr + 19] * p[19]
-                + (int) buf1[buf1Ptr + 20] * p[20]
-                + (int) buf1[buf1Ptr + 21] * p[21]
-                + (int) buf1[buf1Ptr + 22] * p[22]
-                + (int) buf1[buf1Ptr + 23] * p[23]
-                + (int) buf1[buf1Ptr + 24] * p[24]
-                + (int) buf1[buf1Ptr + 25] * p[25]
-                + (int) buf1[buf1Ptr + 26] * p[26]
-                + (int) buf1[buf1Ptr + 27] * p[27]
-                + (int) buf1[buf1Ptr + 28] * p[28]
-                + (int) buf1[buf1Ptr + 29] * p[29]
-                + (int) buf1[buf1Ptr + 30] * p[30]
-                + (int) buf1[buf1Ptr + 31] * p[31]
-                + (int) buf1[buf1Ptr + 32] * p[32]
-                + (int) buf1[buf1Ptr + 33] * p[33]
-                + (int) buf1[buf1Ptr + 34] * p[34]
-                + (int) buf1[buf1Ptr + 35] * p[35]
-                + (int) buf1[buf1Ptr + 36] * p[36]
-                + (int) buf1[buf1Ptr + 37] * p[37]
-                + (int) buf1[buf1Ptr + 38] * p[38]
-                + (int) buf1[buf1Ptr + 39] * p[39]
-                + (int) buf1[buf1Ptr + 40] * p[40]
-                + (int) buf1[buf1Ptr + 41] * p[41]
-                + (int) buf1[buf1Ptr + 42] * p[42]
-                + (int) buf1[buf1Ptr + 43] * p[43]
-                + (int) buf1[buf1Ptr + 44] * p[44]
-                + (int) buf1[buf1Ptr + 45] * p[45]
-                + (int) buf1[buf1Ptr + 46] * p[46]
-                + (int) buf1[buf1Ptr + 47] * p[47]
-                + (int) buf1[buf1Ptr + 48] * p[48]
-                + (int) buf1[buf1Ptr + 49] * p[49]
-                + (int) buf1[buf1Ptr + 50] * p[50]
-                + (int) buf1[buf1Ptr + 51] * p[51]
-                + (int) buf1[buf1Ptr + 52] * p[52]
-                + (int) buf1[buf1Ptr + 53] * p[53]
-                + (int) buf1[buf1Ptr + 54] * p[54]
-                + (int) buf1[buf1Ptr + 55] * p[55]
-                + (int) buf1[buf1Ptr + 56] * p[56]
-                + (int) buf1[buf1Ptr + 57] * p[57]
-                + (int) buf1[buf1Ptr + 58] * p[58]
-                + (int) buf1[buf1Ptr + 59] * p[59]
-                + (int) buf1[buf1Ptr + 60] * p[60]
-                + (int) buf1[buf1Ptr + 61] * p[61]
-                + (int) buf1[buf1Ptr + 62] * p[62]
-                + (int) buf1[buf1Ptr + 63] * p[63];
+        result[1] = (int) buf1[buf1Ptr + 0] * p[0] +
+                (int) buf1[buf1Ptr + 1] * p[1] +
+                (int) buf1[buf1Ptr + 2] * p[2] +
+                (int) buf1[buf1Ptr + 3] * p[3] +
+                (int) buf1[buf1Ptr + 4] * p[4] +
+                (int) buf1[buf1Ptr + 5] * p[5] +
+                (int) buf1[buf1Ptr + 6] * p[6] +
+                (int) buf1[buf1Ptr + 7] * p[7] +
+                (int) buf1[buf1Ptr + 8] * p[8] +
+                (int) buf1[buf1Ptr + 9] * p[9] +
+                (int) buf1[buf1Ptr + 10] * p[10] +
+                (int) buf1[buf1Ptr + 11] * p[11] +
+                (int) buf1[buf1Ptr + 12] * p[12] +
+                (int) buf1[buf1Ptr + 13] * p[13] +
+                (int) buf1[buf1Ptr + 14] * p[14] +
+                (int) buf1[buf1Ptr + 15] * p[15] +
+                (int) buf1[buf1Ptr + 16] * p[16] +
+                (int) buf1[buf1Ptr + 17] * p[17] +
+                (int) buf1[buf1Ptr + 18] * p[18] +
+                (int) buf1[buf1Ptr + 19] * p[19] +
+                (int) buf1[buf1Ptr + 20] * p[20] +
+                (int) buf1[buf1Ptr + 21] * p[21] +
+                (int) buf1[buf1Ptr + 22] * p[22] +
+                (int) buf1[buf1Ptr + 23] * p[23] +
+                (int) buf1[buf1Ptr + 24] * p[24] +
+                (int) buf1[buf1Ptr + 25] * p[25] +
+                (int) buf1[buf1Ptr + 26] * p[26] +
+                (int) buf1[buf1Ptr + 27] * p[27] +
+                (int) buf1[buf1Ptr + 28] * p[28] +
+                (int) buf1[buf1Ptr + 29] * p[29] +
+                (int) buf1[buf1Ptr + 30] * p[30] +
+                (int) buf1[buf1Ptr + 31] * p[31] +
+                (int) buf1[buf1Ptr + 32] * p[32] +
+                (int) buf1[buf1Ptr + 33] * p[33] +
+                (int) buf1[buf1Ptr + 34] * p[34] +
+                (int) buf1[buf1Ptr + 35] * p[35] +
+                (int) buf1[buf1Ptr + 36] * p[36] +
+                (int) buf1[buf1Ptr + 37] * p[37] +
+                (int) buf1[buf1Ptr + 38] * p[38] +
+                (int) buf1[buf1Ptr + 39] * p[39] +
+                (int) buf1[buf1Ptr + 40] * p[40] +
+                (int) buf1[buf1Ptr + 41] * p[41] +
+                (int) buf1[buf1Ptr + 42] * p[42] +
+                (int) buf1[buf1Ptr + 43] * p[43] +
+                (int) buf1[buf1Ptr + 44] * p[44] +
+                (int) buf1[buf1Ptr + 45] * p[45] +
+                (int) buf1[buf1Ptr + 46] * p[46] +
+                (int) buf1[buf1Ptr + 47] * p[47] +
+                (int) buf1[buf1Ptr + 48] * p[48] +
+                (int) buf1[buf1Ptr + 49] * p[49] +
+                (int) buf1[buf1Ptr + 50] * p[50] +
+                (int) buf1[buf1Ptr + 51] * p[51] +
+                (int) buf1[buf1Ptr + 52] * p[52] +
+                (int) buf1[buf1Ptr + 53] * p[53] +
+                (int) buf1[buf1Ptr + 54] * p[54] +
+                (int) buf1[buf1Ptr + 55] * p[55] +
+                (int) buf1[buf1Ptr + 56] * p[56] +
+                (int) buf1[buf1Ptr + 57] * p[57] +
+                (int) buf1[buf1Ptr + 58] * p[58] +
+                (int) buf1[buf1Ptr + 59] * p[59] +
+                (int) buf1[buf1Ptr + 60] * p[60] +
+                (int) buf1[buf1Ptr + 61] * p[61] +
+                (int) buf1[buf1Ptr + 62] * p[62] +
+                (int) buf1[buf1Ptr + 63] * p[63];
         result[1] >>= (16 - 1);
     }
 }

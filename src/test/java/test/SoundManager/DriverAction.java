@@ -1,7 +1,7 @@
 package test.SoundManager;
 
 public class DriverAction {
-    public Runnable Init;
-    public Runnable Main;
-    public Runnable Final;
+    public Runnable init;
+    public Runnable main;
+    public Runnable final_;
 }

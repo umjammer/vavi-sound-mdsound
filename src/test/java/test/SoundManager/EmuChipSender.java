@@ -2,19 +2,20 @@
 package test.SoundManager;
 
 public class EmuChipSender extends ChipSender {
-    public EmuChipSender(int BufferSize/* = DATA_SEQUENCE_FREQUENCE */)
+
+    public EmuChipSender(int bufferSize/* = DATA_SEQUENCE_FREQUENCE */)
 
     {
-        super(null, BufferSize);
+        super(null, bufferSize);
     }
 
-    public RingBuffer recvBuffer = new RingBuffer(DATA_SEQUENCE_FREQUENCE);
+    public RingBuffer receiveBuffer = new RingBuffer(DATA_SEQUENCE_FREQUENCE);
 
     @Override
-    protected void Main() {
+    protected void main() {
         try {
             while (true) {
-                while (!GetStart()) {
+                while (!getStart()) {
                     Thread.sleep(100);
                 }
 
@@ -24,10 +25,10 @@ public class EmuChipSender extends ChipSender {
 
                 while (true) {
                     Thread.yield();
-                    if (ringBuffer.GetDataSize() == 0) {
+                    if (ringBuffer.getDataSize() == 0) {
                         // 送信データが無く、停止指示がある場合のみ停止する
-                        if (!GetStart()) {
-                            if (recvBuffer.GetDataSize() > 0) {
+                        if (!getStart()) {
+                            if (receiveBuffer.getDataSize() > 0) {
                                 continue;
                             }
                             break;
@@ -41,17 +42,17 @@ public class EmuChipSender extends ChipSender {
                     }
 
                     try {
-                        while (ringBuffer.deq(Counter, Dev, Typ, Adr, Val, Ex)) {
-                            // ActionOfChip?.Invoke(Counter, Dev, Typ, Adr, Val, Ex);
-                            if (!recvBuffer.Enq(Counter, Dev, Typ, Adr, Val, Ex)) {
+                        while (ringBuffer.deq(counter, dev, typ, adr, val, ex)) {
+                            //actionOfChip.run(counter, dev, typ, adr, val, ex);
+                            if (!receiveBuffer.enq(counter, dev, typ, adr, val, ex)) {
                                 parent.setInterrupt();
-                                while (!recvBuffer.Enq(Counter, Dev, Typ, Adr, Val, Ex)) {
+                                while (!receiveBuffer.enq(counter, dev, typ, adr, val, ex)) {
                                 }
                                 parent.resetInterrupt();
                             }
                         }
                     } catch (Exception e) {
-
+                        e.printStackTrace();
                     }
 
                     synchronized (lockObj) {
@@ -61,15 +62,15 @@ public class EmuChipSender extends ChipSender {
 
                 synchronized (lockObj) {
                     isRunning = false;
-                    ringBuffer.Init(ringBufferSize);
-                    recvBuffer.Init(DATA_SEQUENCE_FREQUENCE);
+                    ringBuffer.init(ringBufferSize);
+                    receiveBuffer.init(DATA_SEQUENCE_FREQUENCE);
                 }
-
             }
         } catch (Exception e) {
+            e.printStackTrace();
             synchronized (lockObj) {
                 isRunning = false;
-                Start = false;
+                start = false;
             }
         }
     }

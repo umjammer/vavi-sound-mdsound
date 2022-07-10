@@ -15,9 +15,9 @@ public abstract class BaseMakerSender {
     protected CompletableFuture<Void> task = null;
     protected RingBuffer ringBuffer = null;
     protected Runnable action = null;
-    protected volatile boolean Start = false;
+    protected volatile boolean start = false;
     protected volatile boolean isRunning = false;
-    protected Object lockObj = new Object();
+    protected final Object lockObj = new Object();
     public SoundManager parent = null;
 
     public long GetRingBufferCounter() {
@@ -25,10 +25,10 @@ public abstract class BaseMakerSender {
     }
 
     public long GetRingBufferSize() {
-        return ringBuffer.GetDataSize();
+        return ringBuffer.getDataSize();
     }
 
-    public boolean Mount() {
+    public boolean mount() {
         tokenSource = new CancellationTokenSource();
         cancellationToken = tokenSource.getToken();
 
@@ -37,7 +37,7 @@ public abstract class BaseMakerSender {
         return true;
     }
 
-    public boolean Unmount() {
+    public boolean unmount() {
         if (!task.isDone()) {
             tokenSource.cancel();
         }
@@ -45,33 +45,33 @@ public abstract class BaseMakerSender {
         return true;
     }
 
-    public boolean Enq(long Counter, int Dev, int Typ, int Adr, int Val, Object[] Ex) {
-        return ringBuffer.Enq(Counter, Dev, Typ, Adr, Val, Ex);
+    public boolean enq(long counter, int dev, int typ, int adr, int val, Object[] ex) {
+        return ringBuffer.enq(counter, dev, typ, adr, val, ex);
     }
 
-    public boolean Deq(long Counter, int Dev, int Typ, int Adr, int Val, Object[] Ex) {
-        return ringBuffer.deq(Counter, Dev, Typ, Adr, Val, Ex);
+    public boolean deq(long counter, int dev, int typ, int adr, int val, Object[] ex) {
+        return ringBuffer.deq(counter, dev, typ, adr, val, ex);
     }
 
-    public void RequestStart() {
+    public void requestStart() {
         synchronized (lockObj) {
-            Start = true;
+            start = true;
         }
     }
 
-    public void RequestStop() {
+    public void requestStop() {
         synchronized (lockObj) {
-            Start = false;
+            start = false;
         }
     }
 
-    protected boolean GetStart() {
+    protected boolean getStart() {
         synchronized (lockObj) {
-            return Start;
+            return start;
         }
     }
 
-    public boolean IsRunning() {
+    public boolean isRunning() {
         synchronized (lockObj) {
             return isRunning;
         }

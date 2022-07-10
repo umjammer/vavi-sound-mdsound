@@ -1,12 +1,12 @@
 /*
  *
- * software implementation of Yamaha Ym2612 FM Sound generator
+ * software implementation of Yamaha Ym2612Inst FM Sound generator
  * Split from Fm.c to keep 2612 fixes from infecting other OPN chips
  *
  * Copyright Jarek Burczynski (bujar at mame dot net)
  * Copyright Tatsuyuki Satoh , MultiArcadeMachineEmulator development
  *
- * Version 1.5.1 (Genesis Plus GX Ym2612.c rev. 368)
+ * Version 1.5.1 (Genesis Plus GX Ym2612Inst.c rev. 368)
  */
 
 package mdsound.mame;
@@ -42,7 +42,7 @@ import mdsound.mame.Fm.BaseChip;
  * - fixed EG behavior when Attack Rate is maximal
  * - fixed EG behavior when SL=0 (Mega Turrican tracks 03,09...) or/and Key ON occurs at minimal attenuation
  * - implemented EG output immediate changes on register writes
- * - fixed Ym2612 initial values (after the reset): fixes missing intro in B.O.B
+ * - fixed Ym2612Inst initial values (after the reset): fixes missing intro in B.O.B
  * - implemented Detune overflow (Ariel, Comix Zone, Shaq Fu, Spiderman & many other games using GEMS Sound engine)
  * - implemented accurate CSM mode emulation
  * - implemented accurate SSG-EG emulation (Asterix, Beavis&Butthead, Bubba'n Stix & many other games)
@@ -92,19 +92,19 @@ import mdsound.mame.Fm.BaseChip;
  * - added SSG-EG support (verified on real YM2203)
  * <p>
  * 12-08-2001 Jarek Burczynski:
- * - corrected sin_tab and tl_tab data (verified on real chip)
- * - corrected feedback calculations (verified on real chip)
- * - corrected phase generator calculations (verified on real chip)
- * - corrected envelope generator calculations (verified on real chip)
+ * - corrected sin_tab and tl_tab data (verified on real chips)
+ * - corrected feedback calculations (verified on real chips)
+ * - corrected phase generator calculations (verified on real chips)
+ * - corrected envelope generator calculations (verified on real chips)
  * - corrected FM volume level (YM2610 and YM2610B).
- * - changed YMxxxUpdateOne() functions (YM2203, YM2608, YM2610, YM2610B, Ym2612) :
+ * - changed YMxxxUpdateOne() functions (YM2203, YM2608, YM2610, YM2610B, Ym2612Inst) :
  * this was needed to calculate YM2610 FM channels output correctly.
  * (Each FM channel is calculated as in other chips, but the output of the channel
  * gets shifted right by one *before* sending to accumulator. That was impossible to do
  * with previous implementation).
  * <p>
  * 23-07-2001 Jarek Burczynski, Nicola Salmoria:
- * - corrected YM2610 ADPCM type A algorithm and tables (verified on real chip)
+ * - corrected YM2610 ADPCM type A algorithm and tables (verified on real chips)
  * <p>
  * 11-06-2001 Jarek Burczynski:
  * - corrected end of sample bug in ADPCMA_calc_cha().
@@ -120,7 +120,7 @@ import mdsound.mame.Fm.BaseChip;
  * <p>
  * 09-12-98 hiro-shi:
  * change ADPCM volume. (8.16, 48.64)
- * replace Ym2610 ch0/3 (YM-2610B)
+ * replace Ym2610Inst ch0/3 (YM-2610B)
  * change ADPCM_SHIFT (10.8) missing bank change 0x4000-0xffff.
  * add ADPCM_SHIFT_MASK
  * change ADPCMA_DECODE_MIN/MAX.
@@ -134,7 +134,7 @@ import mdsound.mame.Fm.BaseChip;
 public class Fm2612 {
 
     /**
-     * here's the virtual Ym2612
+     * here's the virtual Ym2612Inst
      */
     public static class Ym2612 extends BaseChip {
 
@@ -158,7 +158,7 @@ public class Fm2612 {
          */
         private static final int TYPE_6CH = 0x04;
         /**
-         * Ym2612's DAC device
+         * Ym2612Inst's DAC device
          */
         private static final int TYPE_DAC = 0x08;
         /**
@@ -212,7 +212,7 @@ public class Fm2612 {
         private static final int SIN_LEN = 1 << SIN_BITS;
         private static final int SIN_MASK = SIN_LEN - 1;
 
-        /** 8 bits addressing (real chip) */
+        /** 8 bits addressing (real chips) */
         private static final int TL_RES_LEN = 256;
 
         /**
@@ -261,7 +261,7 @@ public class Fm2612 {
         };
 
         /**
-         * this is YM2151 and Ym2612 phase increment data (in 10.10 fixed point format)
+         * this is YM2151 and Ym2612Inst phase increment data (in 10.10 fixed point format)
          */
         private static final byte[] dtTab = new byte[] {
                 // FD=0
@@ -945,7 +945,7 @@ public class Fm2612 {
                                 // check phase transition*/
                                 if (this.volume >= MAX_ATT_INDEX)
                                     this.volume = MAX_ATT_INDEX;
-                                // do not change this.state (verified on real chip)
+                                // do not change this.state (verified on real chips)
 
                                 // recalculate EG output
                                 this.volOut = this.volume + this.tl;
@@ -1069,7 +1069,7 @@ public class Fm2612 {
                             break;
                         }
 
-                        // Valley Bell: These few lines are missing in Genesis Plus GX' Ym2612 core file.
+                        // Valley Bell: These few lines are missing in Genesis Plus GX' Ym2612Inst core file.
                         //              Disabling them fixes the SSG-EG.
                         // Additional Note: Asterix and the Great Rescue: Level 1 sounds "better" with these lines,
                         //                  but less accurate.
@@ -1418,7 +1418,7 @@ public class Fm2612 {
 
             static class State {
                 /**
-                 * this chip parameter
+                 * this chips parameter
                  */
                 public Ym2612 param;
                 /**
@@ -1670,7 +1670,7 @@ public class Fm2612 {
             }
 
             /**
-             * chip type
+             * chips type
              */
             public byte type;
             /**
@@ -1703,7 +1703,7 @@ public class Fm2612 {
              */
             public int egTimerAdd;
             /**
-             * envelope generator timer overlfows every 3 samples (on real chip)
+             * envelope generator timer overlfows every 3 samples (on real chips)
              */
             public int egTimerOverflow;
 
@@ -2028,7 +2028,7 @@ public class Fm2612 {
                 switch (r) {
                 case 0x21: // Test
                     break;
-                case 0x22: // LFO FREQ (YM2608/YM2610/YM2610B/Ym2612)
+                case 0x22: // LFO FREQ (YM2608/YM2610/YM2610B/Ym2612Inst)
                     if ((v & 8) != 0) { // LFO enabled ?
 //                    if (!this.lfo_timer_overflow) {
 //                        // restart LFO
@@ -2277,7 +2277,7 @@ public class Fm2612 {
                         ch.setOps(this.setupConnection(ch.algo, c));
                     }
                     break;
-                    case 1: // 0xb4-0xb6 : L , R , AMS , PMS (Ym2612/YM2610B/YM2610/YM2608)
+                    case 1: // 0xb4-0xb6 : L , R , AMS , PMS (Ym2612Inst/YM2610B/YM2610/YM2608)
                         if ((this.type & TYPE_LFOPAN) != 0) {
                             // b0-2 PMS
                             ch.pms = (v & 7) * 32; // ch.pms = PM depth * 32 (index in lfo_pm_table)
@@ -2305,7 +2305,7 @@ public class Fm2612 {
                 // DeTune table
                 for (d = 0; d <= 3; d++) {
                     for (i = 0; i <= 31; i++) {
-                        rate = ((double) dtTab[d * 32 + i]) * freqBase * (1 << (FREQ_SH - 10)); // -10 because chip works with 10.10 fixed point, while we use 16.16
+                        rate = ((double) dtTab[d * 32 + i]) * freqBase * (1 << (FREQ_SH - 10)); // -10 because chips works with 10.10 fixed point, while we use 16.16
                         this.st.dt_tab[d][i] = (int) rate;
                         this.st.dt_tab[d + 4][i] = -this.st.dt_tab[d][i];
                     }
@@ -2320,8 +2320,8 @@ public class Fm2612 {
                     // the correct formula is : F-Number = (144 * fnote * 2^20 / MPcm) / 2^(B-1)
                     // where sample clock is  MPcm/144
                     // this means the increment value for one clock sample is FNUM * 2^(B-1) = FNUM * 64 for octave 7
-                    // we also need to handle the ratio between the chip frequency and the emulated frequency (can be 1.0)
-                    this.fnTable[i] = (int) ((double) i * 32 * freqBase * (1 << (FREQ_SH - 10))); // -10 because chip works with 10.10 fixed point, while we use 16.16
+                    // we also need to handle the ratio between the chips frequency and the emulated frequency (can be 1.0)
+                    this.fnTable[i] = (int) ((double) i * 32 * freqBase * (1 << (FREQ_SH - 10))); // -10 because chips works with 10.10 fixed point, while we use 16.16
                 }
 
                 // maximal frequency is required for Phase overflow calculation, register size is 17 bits (Nemesis)
@@ -2397,7 +2397,7 @@ public class Fm2612 {
             // build Logarithmic Sinus table
             for (short i = 0; i < SIN_LEN; i++) {
                 // non-standard sinus
-                double m = Math.sin(((i * 2) + 1) * Math.PI / SIN_LEN); // checked against the real chip
+                double m = Math.sin(((i * 2) + 1) * Math.PI / SIN_LEN); // checked against the real chips
                 // we never reach zero here due to ((i*2)+1)
 
                 double o;
@@ -2454,7 +2454,7 @@ public class Fm2612 {
 //}
         }
 
-        // Ym2612 local section
+        // Ym2612Inst local section
 
         Opn.Channel[] cch = new Opn.Channel[6];
 
@@ -2483,7 +2483,7 @@ public class Fm2612 {
          */
         public byte addr_A1;
 
-        // dac output (Ym2612)
+        // dac output (Ym2612Inst)
         //int   dacen;
         public byte dacen;
         public byte dac_test;
@@ -2495,7 +2495,7 @@ public class Fm2612 {
         public int waveR;
 
         /**
-         * initialize Ym2612 emulator(s)
+         * initialize Ym2612Inst emulator(s)
          */
         public Ym2612(int clock, int rate,
                       Opn.State.TimerHandler timer_handler, Opn.State.IrqHandler irqHandler) {
@@ -2534,7 +2534,7 @@ public class Fm2612 {
             case 1:
             case 2:
             case 3:
-                //Debug.printf("Ym2612 #%p:A=%d read unmapped area\n",this.OPN.ST.param,a);
+                //Debug.printf("Ym2612Inst #%p:A=%d read unmapped area\n",this.OPN.ST.param,a);
                 return this.opn.st.setStatus();
             }
             return 0;
@@ -2562,11 +2562,11 @@ public class Fm2612 {
                 switch (addr & 0xf0) {
                 case 0x20: // 0x20-0x2f Mode
                     switch (addr) {
-                    case 0x2a: // DAC data (Ym2612)
+                    case 0x2a: // DAC data (Ym2612Inst)
                         updateReq();
                         this.dacOut = ((int) v - 0x80) << 6; // level unknown
                         break;
-                    case 0x2b: // DAC Sel  (Ym2612)
+                    case 0x2b: // DAC Sel  (Ym2612Inst)
                         // b7 = dac enable
                         this.dacen = (byte) (v & 0x80);
                         break;
@@ -2860,7 +2860,7 @@ public class Fm2612 {
     }
 
     /**
-     * reset one of chip
+     * reset one of chips
      */
     public void ym2612_reset_chip(BaseChip chip) {
         Ym2612 f2612 = (Ym2612) chip;
@@ -2868,7 +2868,7 @@ public class Fm2612 {
     }
 
     /**
-     * Ym2612 write
+     * Ym2612Inst write
      *
      * @param chip number
      * @param a    address

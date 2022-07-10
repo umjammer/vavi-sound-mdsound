@@ -3,7 +3,7 @@ package test;
 
 import NScci;
 import Nc86ctl;
-import test.Common.EnmRealChipType;
+import test.Common.RealChipType;
 
 
 public class RealChip {
@@ -12,7 +12,7 @@ public class RealChip {
     private Nc86ctl.Nc86ctl nc86ctl;
 
     public RealChip() {
-        Log.ForcedWrite("RealChip:Ctr:STEP 00(Start)");
+        Log.ForcedWrite("RealChip:Ctr:STEP 00(start)");
 
         int n = 0;
         try {
@@ -88,7 +88,7 @@ public class RealChip {
             nScci.NSoundInterfaceManager_.setLevelDisp(v);
     }
 
-    // public void Init()
+    // public void init()
     // {
     // if (nScci != null)
     // {
@@ -274,7 +274,7 @@ public class RealChip {
 
             // chipの種類ごとに初期化コマンドを送りたい場合
             switch (nsc.getSoundChipType()) {
-            case (int) EnmRealChipType.YM2608.v:
+            case (int) RealChipType.YM2608.v:
                 // setRegister(0x2d, 00);
                 // setRegister(0x29, 82);
                 // setRegister(0x07, 38);

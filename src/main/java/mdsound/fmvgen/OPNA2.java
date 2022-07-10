@@ -655,7 +655,7 @@ public class OPNA2 extends Opna.OPNABase {
         super.setTimerControl(data);
     }
 
-    // Ym2609
+    // Ym2609Inst
     public int[] update() {
         int[] updateBuffer = new int[2];
         updateBuffer[0] = this.effects.reverb.getDataFromPosL() >> 1;

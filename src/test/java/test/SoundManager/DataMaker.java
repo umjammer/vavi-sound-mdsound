@@ -1,20 +1,20 @@
 
 package test.SoundManager;
 
-/// <summary>
-/// データ生成器
-/// ミュージックドライバーを駆動させ、生成するデータをDataSenderに送る
-/// </summary>
+/**
+ * データ生成器
+ * ミュージックドライバーを駆動させ、生成するデータをDataSenderに送る
+ */
 public class DataMaker extends BaseMakerSender {
-    private final DriverAction ActionOfDriver;
+    private final DriverAction actionOfDriver;
     private boolean pause = false;
 
-    public DataMaker(DriverAction ActionOfDriver) {
-        action = this::Main;
-        this.ActionOfDriver = ActionOfDriver;
+    public DataMaker(DriverAction actionOfDriver) {
+        action = this::main;
+        this.actionOfDriver = actionOfDriver;
     }
 
-    private void Main() {
+    private void main() {
         try {
             while (true) {
 
@@ -22,7 +22,7 @@ public class DataMaker extends BaseMakerSender {
 
                 while (true) {
                     Thread.sleep(100);
-                    if (GetStart()) {
+                    if (getStart()) {
                         break;
                     }
                 }
@@ -31,14 +31,14 @@ public class DataMaker extends BaseMakerSender {
                     isRunning = true;
                 }
 
-                ActionOfDriver.Init.run();
+                actionOfDriver.init.run();
 
                 while (true) {
-                    if (!GetStart())
+                    if (!getStart())
                         break;
 
                     if (pause) {
-                        if (parent.GetDataSenderBufferSize() >= DATA_SEQUENCE_FREQUENCE / 2) {
+                        if (parent.getDataSenderBufferSize() >= DATA_SEQUENCE_FREQUENCE / 2) {
                             Thread.yield();
                             continue;
                         }
@@ -47,14 +47,14 @@ public class DataMaker extends BaseMakerSender {
                     }
 
                     Thread.yield();
-                    ActionOfDriver.Main.run();
+                    actionOfDriver.main.run();
 
-                    if (parent.GetDataSenderBufferSize() >= DATA_SEQUENCE_FREQUENCE) {
+                    if (parent.getDataSenderBufferSize() >= DATA_SEQUENCE_FREQUENCE) {
                         pause = true;
                     }
                 }
 
-                ActionOfDriver.Final.run();
+                actionOfDriver.final_.run();
 
                 synchronized (lockObj) {
                     isRunning = false;
@@ -64,7 +64,7 @@ public class DataMaker extends BaseMakerSender {
         } catch (Exception e) {
             synchronized (lockObj) {
                 isRunning = false;
-                Start = false;
+                start = false;
             }
         }
     }

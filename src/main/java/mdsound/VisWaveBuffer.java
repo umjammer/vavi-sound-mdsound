@@ -1,7 +1,8 @@
-
 package mdsound;
 
+
 public class VisWaveBuffer {
+
     private short[][] buf;
 
     private int crntPos;

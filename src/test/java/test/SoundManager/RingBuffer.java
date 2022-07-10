@@ -1,22 +1,23 @@
 
 package test.SoundManager;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 
 public class RingBuffer {
 
-    private List<PPack> buf;
+    private List<Pack.PPack> buf;
 
-    private PPack enqPos = null;
-    private PPack deqPos = null;
-    private PPack srcPos = null;
-    private PPack tmpPos = null;
+    private Pack.PPack enqPos = null;
+    private Pack.PPack deqPos = null;
+    private Pack.PPack srcPos = null;
+    private Pack.PPack tmpPos = null;
 
     private int bLength = 0;
 
-    public boolean AutoExtend = true;
+    public boolean autoExtend = true;
 
     private final Object lockObj = new Object();
 
@@ -24,13 +25,13 @@ public class RingBuffer {
         if (size < 2)
             return;
 
-        Init(size);
+        init(size);
     }
 
-    public void Init(int size) {
-        buf = Arrays.asList(new PPack());
+    public void init(int size) {
+        buf = new ArrayList<>(Arrays.asList(new Pack.PPack()));
         for (int i = 1; i < size + 1; i++) {
-            buf.add(new PPack());
+            buf.add(new Pack.PPack());
             buf.get(i).prev = buf.get(i - 1);
             buf.get(i - 1).next = buf.get(i);
         }
@@ -42,15 +43,15 @@ public class RingBuffer {
         bLength = 0;
     }
 
-    public boolean Enq(long Counter, int Dev, int Typ, int Adr, int Val, Object[] Ex) {
+    public boolean enq(long counter, int dev, int typ, int adr, int val, Object[] ex) {
         synchronized (lockObj) {
             if (enqPos.next == deqPos) {
-                if (!AutoExtend) {
+                if (!autoExtend) {
                     return false;
                 }
                 // 自動拡張
                 try {
-                    PPack p = new PPack();
+                    Pack.PPack p = new Pack.PPack();
                     buf.add(p);
                     p.prev = enqPos;
                     p.next = enqPos.next;
@@ -64,10 +65,10 @@ public class RingBuffer {
             bLength++;
 
             // データをセット
-            enqPos.counter = Counter;
-            enqPos.pack.copy(Dev, Typ, Adr, Val, Ex);
+            enqPos.counter = counter;
+            enqPos.pack.copy(dev, typ, adr, val, ex);
 
-            if (Counter >= enqPos.prev.counter) {
+            if (counter >= enqPos.prev.counter) {
                 enqPos = enqPos.next;
 
                 // debugDispBuffer();
@@ -75,20 +76,20 @@ public class RingBuffer {
                 return true;
             }
 
-            PPack lastPos = enqPos.prev;
+            Pack.PPack lastPos = enqPos.prev;
             // サーチ
             srcPos = enqPos.prev;
-            while (Counter < srcPos.counter && srcPos != deqPos) {
+            while (counter < srcPos.counter && srcPos != deqPos) {
                 srcPos = srcPos.prev;
             }
 
-            if (Counter < srcPos.counter && srcPos == deqPos) {
+            if (counter < srcPos.counter && srcPos == deqPos) {
                 srcPos = srcPos.prev;
                 deqPos = enqPos;
             }
 
             // enqPosをリングから切り出す。
-            PPack nextPack = enqPos;
+            Pack.PPack nextPack = enqPos;
             enqPos.prev.next = enqPos.next;
             enqPos.next.prev = enqPos.prev;
 
@@ -107,15 +108,15 @@ public class RingBuffer {
         }
     }
 
-    public boolean deq(Long Counter, int Dev, int Typ, int Adr, int Val, Object[] Ex) {
+    public boolean deq(Long counter, int dev, int typ, int adr, int val, Object[] ex) {
         synchronized (lockObj) {
-            Counter = deqPos.counter;
+            counter = deqPos.counter;
 
-            Dev = deqPos.pack.dev;
-            Typ = deqPos.pack.typ;
-            Adr = deqPos.pack.adr;
-            Val = deqPos.pack.val;
-            Ex = deqPos.pack.ex;
+            dev = deqPos.pack.dev;
+            typ = deqPos.pack.typ;
+            adr = deqPos.pack.adr;
+            val = deqPos.pack.val;
+            ex = deqPos.pack.ex;
 
             if (enqPos == deqPos)
                 return false;
@@ -130,7 +131,7 @@ public class RingBuffer {
         }
     }
 
-    public int GetDataSize() {
+    public int getDataSize() {
         synchronized (lockObj) {
             return bLength;
         }
@@ -146,7 +147,7 @@ public class RingBuffer {
 
     public void debugDispBuffer() {
         synchronized (lockObj) {
-            PPack edbg = deqPos;
+            Pack.PPack edbg = deqPos;
             do {
                 System.err.printf("[%s:%s]::", edbg.counter, edbg.pack.dev);
                 edbg = edbg.next;
@@ -155,5 +156,5 @@ public class RingBuffer {
         }
     }
 
-    //#endif
+//#endif
 }

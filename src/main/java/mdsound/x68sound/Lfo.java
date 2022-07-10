@@ -104,7 +104,7 @@ public class Lfo {
     }
 
     public void init() {
-        lfoTimeAdd = LFOPRECISION * global.opmRate / Global.samprate;
+        lfoTimeAdd = LFOPRECISION * global.opmRate / Global.sampleRate;
 
         lfoSmallCounter = 0;
 
@@ -120,7 +120,7 @@ public class Lfo {
     }
 
     public void initSamprate() {
-        lfoTimeAdd = LFOPRECISION * global.opmRate / Global.samprate;
+        lfoTimeAdd = LFOPRECISION * global.opmRate / Global.sampleRate;
     }
 
     public void lfoReset() {

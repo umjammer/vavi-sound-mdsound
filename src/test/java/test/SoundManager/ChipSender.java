@@ -4,26 +4,26 @@ package test.SoundManager;
 import test.SoundManager.SoundManager.Snd;
 
 public class ChipSender extends BaseSender {
-    protected final Snd ActionOfChip;
+    protected final Snd actionOfChip;
     protected boolean busy = false;
 
-    public ChipSender(Snd ActionOfChip, int BufferSize/* DATA_SEQUENCE_FREQUENCE */) {
-        action = this::Main;
-        ringBuffer = new RingBuffer(BufferSize) {
+    public ChipSender(Snd actionOfChip, int bufferSize/* DATA_SEQUENCE_FREQUENCE */) {
+        action = this::main;
+        ringBuffer = new RingBuffer(bufferSize) {
             {
-                AutoExtend = false;
+                autoExtend = false;
             }
         };
-        this.ringBufferSize = BufferSize;
-        this.ActionOfChip = ActionOfChip;
+        this.ringBufferSize = bufferSize;
+        this.actionOfChip = actionOfChip;
     }
 
-    public boolean IsBusy() {
+    public boolean isBusy() {
         synchronized (lockObj) {
             return busy;
         }
     }
 
-    protected void Main() {
+    protected void main() {
     }
 }

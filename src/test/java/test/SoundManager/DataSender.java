@@ -6,80 +6,79 @@ import test.SoundManager.SoundManager.Enq;
 public class DataSender extends BaseSender {
     private static long sw = System.currentTimeMillis();
     private static final double swFreq = DATA_SEQUENCE_FREQUENCE;
-    private final int Frq;
-    private final long Def_SeqCounter = -500;
-    private long SeqCounter = Def_SeqCounter;
-    private final Enq EmuEnq;
-    private final Enq RealEnq;
+    private final int frq;
+    private static final long Def_SeqCounter = -500;
+    private long seqCounter;
+    private final Enq emuEnq;
+    private final Enq realEnq;
     private final Pack[] startData;
     private final Pack[] stopData;
 
-    public DataSender(Enq EmuEnq,
-                      Enq RealEnq,
+    public DataSender(Enq emuEnq,
+                      Enq realEnq,
                       Pack[] startData,
                       Pack[] stopData) {
-        this(EmuEnq,
-             RealEnq,
+        this(emuEnq,
+             realEnq,
              startData,
              stopData,
              DATA_SEQUENCE_FREQUENCE,
              DATA_SEQUENCE_FREQUENCE);
     }
 
-    public DataSender(Enq EmuEnq,
-            Enq RealEnq,
+    public DataSender(Enq emuEnq,
+            Enq realEnq,
             Pack[] startData,
             Pack[] stopData,
-            int BufferSize,
-            int Frq) {
+            int bufferSize,
+            int frq) {
         action = this::Main;
-        this.Frq = Frq;
-        ringBuffer = new RingBuffer(BufferSize);
-        ringBuffer.AutoExtend = false;
-        this.ringBufferSize = BufferSize;
-        SeqCounter = Def_SeqCounter;
-        this.EmuEnq = EmuEnq;
-        this.RealEnq = RealEnq;
+        this.frq = frq;
+        ringBuffer = new RingBuffer(bufferSize);
+        ringBuffer.autoExtend = false;
+        this.ringBufferSize = bufferSize;
+        seqCounter = Def_SeqCounter;
+        this.emuEnq = emuEnq;
+        this.realEnq = realEnq;
         this.startData = startData;
         this.stopData = stopData;
     }
 
-    public void ResetSeqCounter() {
+    public void resetSeqCounter() {
         synchronized (lockObj) {
-            SeqCounter = Def_SeqCounter;
+            seqCounter = Def_SeqCounter;
         }
     }
 
-    public long GetSeqCounter() {
+    public long getSeqCounter() {
         synchronized (lockObj) {
-            return SeqCounter;
+            return seqCounter;
         }
     }
 
-    public void Init() {
-        SeqCounter = Def_SeqCounter;
-        ringBuffer.Init(ringBufferSize);
+    public void init() {
+        seqCounter = Def_SeqCounter;
+        ringBuffer.init(ringBufferSize);
 
         // 開始時のデータの送信
         if (startData != null) {
             for (Pack dat : startData) {
                 // 振り分けてEnqueue
                 if (dat.dev >= 0)
-                    while (!EmuEnq.apply(0l, dat.dev, dat.typ, dat.adr, dat.val, null))
+                    while (!emuEnq.apply(0l, dat.dev, dat.typ, dat.adr, dat.val, null))
                         Thread.yield();
                 else
-                    while (!RealEnq.apply(0l, dat.dev, dat.typ, dat.adr, dat.val, null))
+                    while (!realEnq.apply(0l, dat.dev, dat.typ, dat.adr, dat.val, null))
                         Thread.yield();
             }
         }
-
     }
 
     private void Main() {
         try {
 
             while (true) {
-                while (!GetStart()) {
+                while (!getStart()) {
                     Thread.sleep(100);
                 }
 
@@ -89,11 +88,11 @@ public class DataSender extends BaseSender {
 
                 double o = (System.currentTimeMillis() - sw) / swFreq;
                 sw = System.currentTimeMillis();
-                double step = 1 / (double) Frq;
-                SeqCounter = Def_SeqCounter;
+                double step = 1 / (double) frq;
+                seqCounter = Def_SeqCounter;
 
                 while (true) {
-                    if (!GetStart())
+                    if (!getStart())
                         break;
                     Thread.yield();
 
@@ -101,8 +100,7 @@ public class DataSender extends BaseSender {
                     sw = System.currentTimeMillis();
                     if (el1 - o < step)
                         continue;
-                    if (el1 - o >= step * Frq / 100.0)// 閾値10ms
-                    {
+                    if (el1 - o >= step * frq / 100.0) { // 閾値10ms
                         do {
                             o += step;
                         } while (el1 - o >= step);
@@ -113,39 +111,39 @@ public class DataSender extends BaseSender {
                     // lock (lockObj)
                     {
                         // 待ち合わせ割り込み
-                        if (parent.GetInterrupt()) {
+                        if (parent.getInterrupt()) {
                             // Thread.Sleep(0);
                             continue;
                         }
 
-                        SeqCounter++;
-                        if (SeqCounter < 0)
+                        seqCounter++;
+                        if (seqCounter < 0)
                             continue;
 
-                        if (ringBuffer.GetDataSize() == 0) {
-                            if (!parent.IsRunningAtDataMaker()) {
+                        if (ringBuffer.getDataSize() == 0) {
+                            if (!parent.isRunningAtDataMaker()) {
                                 // RequestStop();
                                 break;
                             }
                             continue;
                         }
-                        if (SeqCounter < ringBuffer.lookUpCounter())
+                        if (seqCounter < ringBuffer.lookUpCounter())
                             continue;
                         // continue;
                     }
 
                     // dataが貯まってます！
-                    while (SeqCounter >= ringBuffer.lookUpCounter()) {
-                        if (!ringBuffer.deq(Counter, Dev, Typ, Adr, Val, Ex)) {
+                    while (seqCounter >= ringBuffer.lookUpCounter()) {
+                        if (!ringBuffer.deq(counter, dev, typ, adr, val, ex)) {
                             break;
                         }
 
                         // 振り分けてEnqueue
-                        if (Dev >= 0)
-                            while (!EmuEnq.apply(Counter, Dev, Typ, Adr, Val, Ex))
+                        if (dev >= 0)
+                            while (!emuEnq.apply(counter, dev, typ, adr, val, ex))
                                 Thread.yield();
                         else
-                            while (!RealEnq.apply(Counter, Dev, Typ, Adr, Val, Ex))
+                            while (!realEnq.apply(counter, dev, typ, adr, val, ex))
                                 Thread.yield();
                     }
                 }
@@ -155,26 +153,26 @@ public class DataSender extends BaseSender {
                     for (Pack dat : stopData) {
                         // 振り分けてEnqueue
                         if (dat.dev >= 0)
-                            while (!EmuEnq.apply(Counter, dat.dev, dat.typ, dat.adr, dat.val, null))
+                            while (!emuEnq.apply(counter, dat.dev, dat.typ, dat.adr, dat.val, null))
                                 Thread.yield();
                         else
-                            while (!RealEnq.apply(Counter, dat.dev, dat.typ, dat.adr, dat.val, null))
+                            while (!realEnq.apply(counter, dat.dev, dat.typ, dat.adr, dat.val, null))
                                 Thread.yield();
                     }
                 }
 
                 synchronized (lockObj) {
                     isRunning = false;
-                    Counter = 0;
-                    Start = false;
+                    counter = 0;
+                    start = false;
                 }
-                parent.RequestStopAtEmuChipSender();
-                parent.RequestStopAtRealChipSender();
+                parent.requestStopAtEmuChipSender();
+                parent.requestStopAtRealChipSender();
             }
         } catch (Exception e) {
             synchronized (lockObj) {
                 isRunning = false;
-                Start = false;
+                start = false;
             }
         }
     }

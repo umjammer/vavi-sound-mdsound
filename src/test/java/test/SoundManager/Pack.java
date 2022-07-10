@@ -35,14 +35,14 @@ public class Pack {
         this.val = val;
         this.ex = ex;
     }
-}
 
-class PPack {
-    public PPack prev;
+    static class PPack {
+        public PPack prev;
 
-    public PPack next;
+        public PPack next;
 
-    public long counter;
+        public long counter;
 
-    public Pack pack = new Pack();
+        public Pack pack = new Pack();
+    }
 }

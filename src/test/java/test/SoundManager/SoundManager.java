@@ -1,11 +1,13 @@
 
 package test.SoundManager;
 
-import test.Common.HexaConsumer;
-import test.Common.HexaFunction;
+
+import dotnet4j.util.compat.HexaConsumer;
+import dotnet4j.util.compat.HexaFunction;
 
 
 public class SoundManager {
+
     public interface Enq extends HexaFunction<Long, Integer, Integer, Integer, Integer, Object[], Boolean> {
     }
 
@@ -17,170 +19,167 @@ public class SoundManager {
 
     public static final int DATA_SEQUENCE_FREQUENCE = 44100;
 
-    /// <summary>
-    /// ミュージックデータ解析
-    /// 処理周期 : 無し
-    /// データ受取時 : DataSenderへ即送信
-    /// DataSenderが受け取ることができない状態の場合は、待ち合わせする
-    /// </summary>
+    /**
+     * ミュージックデータ解析
+     * 処理周期 : 無し
+     * データ受取時 : DataSenderへ即送信
+     * DataSenderが受け取ることができない状態の場合は、待ち合わせする
+     */
     private DataMaker dataMaker;
 
-    /// <summary>
-    /// データ送信
-    /// 処理周期 : 44100Hz(Default)
-    /// SeqCounter値に合わせて各ChipSenderへデータを振り分けながら送信。
-    /// ChipSenderが受け取ることができない状態の場合は、待ち合わせする
-    /// </summary>
+    /**
+     * データ送信
+     * 処理周期 : 44100Hz(Default)
+     * SeqCounter値に合わせて各ChipSenderへデータを振り分けながら送信。
+     * ChipSenderが受け取ることができない状態の場合は、待ち合わせする
+     */
     private DataSender dataSender;
 
-    /// <summary>
-    /// エミュチップ専門データ送信
-    /// 処理周期 : 無し
-    /// データが来たら、エミュレーションむけリングバッファにEnqueue
-    /// Enqueueできない場合は、待ち合わせする
-    /// </summary>
+    /**
+     * エミュチップ専門データ送信
+     * 処理周期 : 無し
+     * データが来たら、エミュレーションむけリングバッファにEnqueue
+     * Enqueueできない場合は、待ち合わせする
+     */
     private EmuChipSender emuChipSender;
 
-    /// <summary>
-    /// 実チップ専門データ送信
-    /// 処理周期 : 無し
-    /// データが来たら、実チップ向けコールバックを実施
-    /// 待ち合わせ無し
-    /// </summary>
+    /**
+     * 実チップ専門データ送信
+     * 処理周期 : 無し
+     * データが来たら、実チップ向けコールバックを実施
+     * 待ち合わせ無し
+     */
     private RealChipSender realChipSender;
 
-    /// <summary>
-    /// 割り込み処理カウンタ
-    /// 割り込みが発生している(1以上の)間、DataSenderは各チップへデータを送信しない
-    /// </summary>
+    /**
+     * 割り込み処理カウンタ
+     * 割り込みが発生している(1以上の)間、DataSenderは各チップへデータを送信しない
+     */
     private int interruptCounter = 0;
 
-    private volatile Object lockObj = new Object();
+    private final Object lockObj = new Object();
 
-    /// <summary>
-    /// セットアップ
-    /// </summary>
-    /// <param name="DriverAction">ミュージックドライバーの1フレームあたりの処理を指定してください</param>
-    /// <param name="RealChipAction">実チップ向けデータ送信処理を指定してください</param>
-    /// <param name="startData">DataSenderが初期化を行うときに出力するデータを指定してください</param>
-    /// <param name="stopData">DataSenderが演奏停止を行うときに出力するデータを指定してください</param>
-    public void Setup(DriverAction DriverAction, Snd RealChipAction, Pack[] startData, Pack[] stopData) {
-        dataMaker = new DataMaker(DriverAction);
+    /**
+     * セットアップ
+     * @param driverAction ミュージックドライバーの1フレームあたりの処理を指定してください
+     * @param realChipAction 実チップ向けデータ送信処理を指定してください
+     * @param startData DataSenderが初期化を行うときに出力するデータを指定してください
+     * @param stopData DataSenderが演奏停止を行うときに出力するデータを指定してください
+     */
+    public void setup(DriverAction driverAction, Snd realChipAction, Pack[] startData, Pack[] stopData) {
+        dataMaker = new DataMaker(driverAction);
         emuChipSender = new EmuChipSender(DATA_SEQUENCE_FREQUENCE);
-        realChipSender = new RealChipSender(RealChipAction, DATA_SEQUENCE_FREQUENCE);
-        dataSender = new DataSender(emuChipSender::Enq, realChipSender::Enq, startData, stopData);
+        realChipSender = new RealChipSender(realChipAction, DATA_SEQUENCE_FREQUENCE);
+        dataSender = new DataSender(emuChipSender::enq, realChipSender::enq, startData, stopData);
 
         dataMaker.parent = this;
         emuChipSender.parent = this;
         realChipSender.parent = this;
         dataSender.parent = this;
 
-        dataMaker.Mount();
-        dataSender.Mount();
-        emuChipSender.Mount();
-        realChipSender.Mount();
+        dataMaker.mount();
+        dataSender.mount();
+        emuChipSender.mount();
+        realChipSender.mount();
     }
 
     public void release() {
-        dataMaker.Unmount();
-        dataSender.Unmount();
-        emuChipSender.Unmount();
-        realChipSender.Unmount();
+        dataMaker.unmount();
+        dataSender.unmount();
+        emuChipSender.unmount();
+        realChipSender.unmount();
     }
 
-    public void RequestStart() {
-        dataSender.Init();
+    public void requestStart() {
+        dataSender.init();
 
-        dataMaker.RequestStart();
-        while (!dataMaker.IsRunning())
-            ;
-        dataSender.RequestStart();
-        while (!dataSender.IsRunning())
-            ;
+        dataMaker.requestStart();
+        while (!dataMaker.isRunning())
+            Thread.yield();
+        dataSender.requestStart();
+        while (!dataSender.isRunning())
+            Thread.yield();
 
-        emuChipSender.RequestStart();
-        realChipSender.RequestStart();
+        emuChipSender.requestStart();
+        realChipSender.requestStart();
     }
 
     public void requestStop() {
-        while (dataMaker.IsRunning())
-            dataMaker.RequestStop();
-        while (dataSender.IsRunning())
-            dataSender.RequestStop();
-        while (emuChipSender.IsRunning())
-            emuChipSender.RequestStop();
-        while (realChipSender.IsRunning())
-            realChipSender.RequestStop();
+        while (dataMaker.isRunning())
+            dataMaker.requestStop();
+        while (dataSender.isRunning())
+            dataSender.requestStop();
+        while (emuChipSender.isRunning())
+            emuChipSender.requestStop();
+        while (realChipSender.isRunning())
+            realChipSender.requestStop();
     }
 
-    public void RequestStopAtDataMaker() {
-        dataMaker.RequestStop();
+    public void requestStopAtDataMaker() {
+        dataMaker.requestStop();
     }
 
-    public void RequestStopAtEmuChipSender() {
-        emuChipSender.RequestStop();
+    public void requestStopAtEmuChipSender() {
+        emuChipSender.requestStop();
     }
 
-    public void RequestStopAtRealChipSender() {
-        realChipSender.RequestStop();
+    public void requestStopAtRealChipSender() {
+        realChipSender.requestStop();
     }
 
-    public boolean IsRunningAtDataMaker() {
-        return dataMaker.IsRunning();
+    public boolean isRunningAtDataMaker() {
+        return dataMaker.isRunning();
     }
 
-    public boolean IsRunningAtDataSender() {
-        return dataSender.IsRunning();
+    public boolean isRunningAtDataSender() {
+        return dataSender.isRunning();
     }
 
-    public boolean IsRunningAtRealChipSender() {
-        return realChipSender.IsRunning();
+    public boolean isRunningAtRealChipSender() {
+        return realChipSender.isRunning();
     }
 
-    public long GetDriverSeqCounterDelay() {
+    public long getDriverSeqCounterDelay() {
         return (long) (DATA_SEQUENCE_FREQUENCE * 0.1);
     }
 
-    public boolean IsRunningAtEmuChipSender() {
-        return emuChipSender.IsRunning();
+    public boolean isRunningAtEmuChipSender() {
+        return emuChipSender.isRunning();
     }
 
-    /// <summary>
-    /// DriverのデータをEnqueueするメソッドを取得する
-    /// </summary>
-    /// <returns></returns>
-    public Enq GetDriverDataEnqueue() {
-        return dataSender::Enq;
+    /**
+     * DriverのデータをEnqueueするメソッドを取得する
+     */
+    public Enq getDriverDataEnqueue() {
+        return dataSender::enq;
     }
 
-    /// <summary>
-    /// EmuのデータをDequeueするメソッドを取得する
-    /// </summary>
-    /// <returns></returns>
-    public Deq GetEmuDataDequeue() {
-        return emuChipSender::Deq;
+    /**
+     * EmuのデータをDequeueするメソッドを取得する
+     */
+    public Deq getEmuDataDequeue() {
+        return emuChipSender::deq;
     }
 
-    /// <summary>
-    /// RealのデータをDequeueするメソッドを取得する
-    /// </summary>
-    /// <returns></returns>
-    public Deq GetRealDataDequeue() {
-        return realChipSender::Deq;
+    /**
+     * RealのデータをDequeueするメソッドを取得する
+     */
+    public Deq getRealDataDequeue() {
+        return realChipSender::deq;
     }
 
-    public RingBuffer GetEmuRecvBuffer() {
-        return emuChipSender.recvBuffer;
+    public RingBuffer getEmuRecvBuffer() {
+        return emuChipSender.receiveBuffer;
     }
 
     public boolean isRunningAsync() {
-        if (dataMaker.IsRunning())
+        if (dataMaker.isRunning())
             return true;
-        if (dataSender.IsRunning())
+        if (dataSender.isRunning())
             return true;
-        if (emuChipSender.IsRunning())
+        if (emuChipSender.isRunning())
             return true;
-        if (realChipSender.IsRunning())
+        if (realChipSender.isRunning())
             return true;
 
         return false;
@@ -199,29 +198,29 @@ public class SoundManager {
         }
     }
 
-    public boolean GetInterrupt() {
+    public boolean getInterrupt() {
         synchronized (lockObj) {
             return (interruptCounter > 0);
         }
     }
 
-    public long GetSeqCounter() {
-        return dataSender.GetSeqCounter();
+    public long getSeqCounter() {
+        return dataSender.getSeqCounter();
     }
 
-    public long GetDataSenderBufferCounter() {
+    public long getDataSenderBufferCounter() {
         return dataSender.GetRingBufferCounter();
     }
 
-    public long GetDataSenderBufferSize() {
+    public long getDataSenderBufferSize() {
         return dataSender.GetRingBufferSize();
     }
 
-    public long GetEmuChipSenderBufferSize() {
+    public long getEmuChipSenderBufferSize() {
         return emuChipSender.GetRingBufferSize();
     }
 
-    public long GetRealChipSenderBufferSize() {
+    public long getRealChipSenderBufferSize() {
         return realChipSender.GetRingBufferSize();
     }
 }

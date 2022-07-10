@@ -5,7 +5,7 @@ public class Common {
 
     public static String settingFilePath = "";
 
-    public enum EnmRealChipType {
+    public enum RealChipType {
         YM2608(1),
         YM2151(2),
         YM2610(3),
@@ -16,18 +16,8 @@ public class Common {
         C140(43),
         SEGAPCM(44);
         int v;
-        EnmRealChipType(int v) {
+        RealChipType(int v) {
             this.v = v;
         }
-    }
-
-    @FunctionalInterface
-    public interface HexaFunction<T, U, V, W, X, Y, R> {
-        R apply(T t, U u, V v, W w, X x, Y y);
-    }
-
-    @FunctionalInterface
-    public interface HexaConsumer<T, U, V, W, X, Y> {
-        void accept(T t, U u, V v, W w, X x, Y y);
     }
 }

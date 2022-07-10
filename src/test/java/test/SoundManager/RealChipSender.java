@@ -6,16 +6,16 @@ import test.SoundManager.SoundManager.Snd;
 
 public class RealChipSender extends ChipSender {
 
-    public RealChipSender(Snd ActionOfRealChip,
-            int BufferSize /* = DATA_SEQUENCE_FREQUENCE */) {
-        super(ActionOfRealChip, BufferSize);
+    public RealChipSender(Snd actionOfRealChip,
+            int bufferSize /* = DATA_SEQUENCE_FREQUENCE */) {
+        super(actionOfRealChip, bufferSize);
     }
 
     @Override
-    protected void Main() {
+    protected void main() {
         try {
             while (true) {
-                while (!GetStart()) {
+                while (!getStart()) {
                     Thread.sleep(100);
                 }
 
@@ -25,9 +25,9 @@ public class RealChipSender extends ChipSender {
 
                 while (true) {
                     Thread.yield();
-                    if (ringBuffer.GetDataSize() == 0) {
+                    if (ringBuffer.getDataSize() == 0) {
                         // 送信データが無く、停止指示がある場合のみ停止する
-                        if (!GetStart())
+                        if (!getStart())
                             break;
                         continue;
                     }
@@ -38,11 +38,11 @@ public class RealChipSender extends ChipSender {
                     }
 
                     try {
-                        while (ringBuffer.deq(Counter, Dev, Typ, Adr, Val, Ex)) {
-                            ActionOfChip.accept(Counter, Dev, Typ, Adr, Val, Ex);
+                        while (ringBuffer.deq(counter, dev, typ, adr, val, ex)) {
+                            actionOfChip.accept(counter, dev, typ, adr, val, ex);
                         }
                     } catch (Exception e) {
-
+                        e.printStackTrace();
                     }
 
                     synchronized (lockObj) {
@@ -52,14 +52,15 @@ public class RealChipSender extends ChipSender {
 
                 synchronized (lockObj) {
                     isRunning = false;
-                    ringBuffer.Init(ringBufferSize);
+                    ringBuffer.init(ringBufferSize);
                 }
 
             }
         } catch (Exception e) {
+            e.printStackTrace();
             synchronized (lockObj) {
                 isRunning = false;
-                Start = false;
+                start = false;
             }
         }
     }
