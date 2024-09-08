@@ -25,17 +25,17 @@ public class WsAudioInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void reset(byte chipId) {
+    public void reset(int chipId) {
         chip[chipId].ws_audio_reset();
     }
 
     @Override
-    public int start(byte chipId, int clock) {
+    public int start(int chipId, int clock) {
         return start(chipId, clock, DefaultWSwanClockValue);
     }
 
     @Override
-    public int start(byte chipId, int clock, int clockValue, Object... option) {
+    public int start(int chipId, int clock, int clockValue, Object... option) {
         chip[chipId].init(clock, clockValue);
         sampleRate = clock;
         masterClock = clockValue;
@@ -52,7 +52,7 @@ public class WsAudioInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void stop(byte chipId) {
+    public void stop(int chipId) {
         chip[chipId].stop();
     }
 
@@ -61,7 +61,7 @@ public class WsAudioInst extends Instrument.BaseInstrument {
     private int[][] before = new int[][] {new int[1], new int[1]};
 
     @Override
-    public void update(byte chipId, int[][] outputs, int samples) {
+    public void update(int chipId, int[][] outputs, int samples) {
         for (int i = 0; i < samples; i++) {
             outputs[0][i] = 0;
             outputs[1][i] = 0;
@@ -96,17 +96,17 @@ public class WsAudioInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int write(byte chipId, int port, int adr, int data) {
-        chip[chipId].writeAudioPort((byte) (adr + 0x80), (byte) data);
+    public int write(int chipId, int port, int adr, int data) {
+        chip[chipId].writeAudioPort(adr + 0x80, data);
         return 0;
     }
 
-    public int WriteMem(byte chipId, int adr, int data) {
-        chip[chipId].writeRamByte(adr, (byte) data);
+    public int writeMem(int chipId, int adr, int data) {
+        chip[chipId].writeRamByte(adr, data);
         return 0;
     }
 
-    public void SetMute(byte chipId, int v) {
+    public void setMute(int chipId, int v) {
     }
 
     //----

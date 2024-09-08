@@ -17,33 +17,32 @@ public class K005289Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void reset(byte chipId) {
+    public void reset(int chipId) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public int start(byte chipId, int clock) {
+    public int start(int chipId, int clock) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public int start(byte chipId, int clock, int clockValue, Object... option) {
+    public int start(int chipId, int clock, int clockValue, Object... option) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void stop(byte chipId) {
+    public void stop(int chipId) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void update(byte chipId, int[][] outputs, int samples) {
+    public void update(int chipId, int[][] outputs, int samples) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public int write(byte chipId, int port, int adr, int data) {
+    public int write(int chipId, int port, int adr, int data) {
         throw new UnsupportedOperationException();
     }
-
 }

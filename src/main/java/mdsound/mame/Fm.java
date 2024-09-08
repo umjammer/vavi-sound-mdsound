@@ -169,7 +169,7 @@ public class Fm {
 
     public UpdateRequestCallback ym2608_update_request;
 
-    private void ym2608_update_req(byte chipId, YM2608 chip) {
+    private void ym2608_update_req(int chipId, YM2608 chip) {
         ym2608_update_request.run();
     }
 
@@ -177,7 +177,7 @@ public class Fm {
 
     public UpdateRequestCallback ym2610_update_request;
 
-    private void ym2610_update_req(byte chipId, YM2610 chip) {
+    private void ym2610_update_req(int chipId, YM2610 chip) {
         ym2610_update_request.run();
     }
 
@@ -185,7 +185,7 @@ public class Fm {
 
     public UpdateRequestCallback ym2612_update_request;
 
-    private void ym2612_update_req(byte chipId, Fm2612.Ym2612 chip) {
+    private void ym2612_update_req(int chipId, Fm2612.Ym2612 chip) {
         ym2612_update_request.run();
     }
 
@@ -1627,8 +1627,8 @@ public class Fm {
          * </pre>
          */
         private void setPreScaler(int addr, int preDivider) {
-            final int[] opnPreS = new int[] {2 * 12, 2 * 12, 6 * 12, 3 * 12};
-            final int[] ssgPreS = new int[] {1, 1, 4, 2};
+            int[] opnPreS = new int[] {2 * 12, 2 * 12, 6 * 12, 3 * 12};
+            int[] ssgPreS = new int[] {1, 1, 4, 2};
             int sel;
 
             switch (addr) {
@@ -2113,10 +2113,10 @@ public class Fm {
         }
 
         private void saveStState(FM_OPN.State ST) {
-// #if FM_BUSY_FLAG_SUPPORT
+//#if FM_BUSY_FLAG_SUPPORT
 //         state_save_register_device_item(0, ST.busy_expiry_time.seconds );
 //         state_save_register_device_item(0, ST.busy_expiry_time.attoseconds );
-// #endif
+//#endif
             state_save_register_device_item(0, ST.address);
             state_save_register_device_item(0, ST.irq);
             state_save_register_device_item(0, ST.irqmask);
@@ -2475,7 +2475,7 @@ public class Fm {
                     // Source: 04TOP.ROM 
                     // Length: 5952 / 0x00001740 
 
-                    0x07, (byte) 0xFF, 0x7C, 0x3C, 0x31, (byte) 0xC6, (byte) 0xC4, (byte) 0xBB, 0x7F, 0x7F, 0x7B, (byte) 0x82, (byte) 0x8A, 0x4D, 0x5F, 0x7C,
+                    0x07, (byte) 0xff, 0x7C, 0x3C, 0x31, (byte) 0xC6, (byte) 0xC4, (byte) 0xBB, 0x7F, 0x7F, 0x7B, (byte) 0x82, (byte) 0x8A, 0x4D, 0x5F, 0x7C,
                     0x3E, 0x44, (byte) 0xD2, (byte) 0xB3, (byte) 0xA0, 0x19, 0x1B, 0x6C, (byte) 0x81, 0x28, (byte) 0xC4, (byte) 0xA1, 0x1C, 0x4B, 0x18, 0x00,
                     0x2A, (byte) 0xA2, 0x0A, 0x7C, 0x2A, 0x00, 0x01, (byte) 0x89, (byte) 0x98, 0x48, (byte) 0x8A, 0x3C, 0x28, 0x2A, 0x5B, 0x3E,
                     0x3A, 0x1A, 0x3B, 0x3D, 0x4B, 0x3B, 0x4A, 0x08, 0x2A, 0x1A, 0x2C, 0x4A, 0x3B, (byte) 0x82, (byte) 0x99, 0x3C,
@@ -2923,7 +2923,7 @@ public class Fm {
                     // Source: 20RIM.ROM 
                     // Length: 128 / 0x00000080 
 
-                    0x0F, (byte) 0xFF, 0x73, (byte) 0x8E, 0x71, (byte) 0xCD, 0x00, 0x49, 0x10, (byte) 0x90, 0x21, 0x49, (byte) 0xA0, (byte) 0xDB, 0x02, 0x3A,
+                    0x0F, (byte) 0xff, 0x73, (byte) 0x8E, 0x71, (byte) 0xCD, 0x00, 0x49, 0x10, (byte) 0x90, 0x21, 0x49, (byte) 0xA0, (byte) 0xDB, 0x02, 0x3A,
                     (byte) 0xE3, 0x0A, 0x50, (byte) 0x98, (byte) 0xC0, 0x59, (byte) 0xA2, (byte) 0x99, 0x09, 0x22, (byte) 0xA2, (byte) 0x80, 0x10, (byte) 0xA8, 0x5B, (byte) 0xD2,
                     (byte) 0x88, 0x21, 0x09, (byte) 0x96, (byte) 0xA8, 0x10, 0x0A, (byte) 0xE0, 0x08, 0x48, 0x19, (byte) 0xAB, 0x52, (byte) 0xA8, (byte) 0x92, 0x0C,
                     0x03, 0x19, (byte) 0xE2, 0x0A, 0x12, (byte) 0xC2, (byte) 0x81, 0x1E, 0x01, (byte) 0xD0, 0x48, (byte) 0x88, (byte) 0x98, 0x01, 0x49, (byte) 0x91,
@@ -2934,9 +2934,10 @@ public class Fm {
             };
 
             /** limitter */
-            private static void limit(int val, int max, int min) {
-                if (val > max) val = max;
-                else if (val < min) val = min;
+            private static int limit(int val, int max, int min) {
+                if (val > max) return max;
+                else if (val < min) return min;
+                return val;
             }
 
             /** frequency step rate */
@@ -3045,7 +3046,7 @@ public class Fm {
                             this.adpcmAcc &= 0xfff;
 
                         this.adpcmStep += step_inc[data & 7];
-                        limit(this.adpcmStep, 48 * 16, 0 * 16);
+                        this.adpcmStep = limit(this.adpcmStep, 48 * 16, 0 * 16);
 
                     } while ((--step) != 0);
 
@@ -3971,7 +3972,7 @@ public class Fm {
     /** YM2608 write
     * @param a = address
     * @param v = value   */
-    private int ym2608_write(byte chipId, YM2608 chip, int a, byte v) {
+    private int ym2608_write(int chipId, YM2608 chip, int a, byte v) {
         YM2608 f2608 = chip;
         FM_OPN opn = f2608.opn;
         int addr;
@@ -4064,7 +4065,7 @@ public class Fm {
         return opn.st.irq;
     }
 
-    private int ym2608_timer_over(byte chipId, YM2608 chip, int c) {
+    private int ym2608_timer_over(int chipId, YM2608 chip, int c) {
         YM2608 f2608 = chip;
 
         switch (c) {
@@ -4095,7 +4096,7 @@ public class Fm {
      * @param a address
      * @param v value
      */
-    private int ym2610_write(byte chipId, YM2610 chip, int a, byte v) {
+    private int ym2610_write(int chipId, YM2610 chip, int a, byte v) {
         YM2610 f2610 = chip;
         FM_OPN opn = f2610.opn;
         int addr;
@@ -4194,7 +4195,7 @@ public class Fm {
         return opn.st.irq;
     }
 
-    private int ym2610_timer_over(byte chipId, YM2610 chip, int c) {
+    private int ym2610_timer_over(int chipId, YM2610 chip, int c) {
         YM2610 F2610 = chip;
 
         if (c != 0) { // Timer B

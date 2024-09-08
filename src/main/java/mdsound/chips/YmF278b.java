@@ -40,7 +40,7 @@ import vavi.util.Debug;
      2. 44.1kHz sampling rate for output Sound data
      3. Selectable from 8-bit, 12-bit and 16-bit word lengths for wave data
      4. Stereo output (16-stage panpot for each Voice)
-    Wave Data
+    Wave data
      1. Accepts 32M bit external memory at maximum
      2. Up to 512 wave tables
      3. External ROM or SRAM can be connected. With SRAM connected, the CPU can download wave data
@@ -139,7 +139,7 @@ public class YmF278b {
     };
 
     private static final int RATE_STEPS = 8;
-    private static final byte[] egInc = new byte[] {
+    private static final int[] egInc = new int[] {
             // cycle: 0  1  2  3  4  5  6  7
             0, 1, 0, 1, 0, 1, 0, 1, //  0  rates 00..12 0 (increment by 0 or 1)
             0, 1, 0, 1, 1, 1, 0, 1, //  1  rates 00..12 1
@@ -161,14 +161,14 @@ public class YmF278b {
             0, 0, 0, 0, 0, 0, 0, 0, // 14  infinity rates for attack and decay(s)
     };
 
-    private static byte o(int a) {
-        return (byte) (a * RATE_STEPS);
+    private static int o(int a) {
+        return a * RATE_STEPS;
     }
 
     // rate  0,    1,    2,    3,   4,   5,   6,  7,  8,  9,  10, 11, 12, 13, 14, 15
     // shift 12,   11,   10,   9,   8,   7,   6,  5,  4,  3,  2,  1,  0,  0,  0,  0
     // mask  4095, 2047, 1023, 511, 255, 127, 63, 31, 15, 7,  3,  1,  0,  0,  0,  0
-    private static final byte[] egRateSelect = new byte[] {
+    private static final int[] egRateSelect = new int[] {
             o(0), o(1), o(2), o(3),
             o(0), o(1), o(2), o(3),
             o(0), o(1), o(2), o(3),
@@ -187,11 +187,11 @@ public class YmF278b {
             o(12), o(12), o(12), o(12),
     };
 
-    private static byte o2(int a) {
-        return (byte) (a);
+    private static int o2(int a) {
+        return a;
     }
 
-    private static final byte[] egRateShift = new byte[] {
+    private static final int[] egRateShift = new int[] {
             o2(12), o2(12), o2(12), o2(12),
             o2(11), o2(11), o2(11), o2(11),
             o2(10), o2(10), o2(10), o2(10),
@@ -254,7 +254,7 @@ public class YmF278b {
         /** fixed-point pointer into the sample */
         private int stepPtr;
         private int pos;
-        private short sample1, sample2;
+        private int sample1, sample2;
 
         private int envVol;
 
@@ -262,43 +262,43 @@ public class YmF278b {
         private int lfoStep;
         private int lfoMax;
         /** wavetable number */
-        private short wave;
+        private int wave;
         /** f-number */
-        private short fn;
+        private int fn;
         /** octave */
-        private byte oct;
+        private int oct;
         /** pseudo-Reverb */
-        private byte prvb;
+        private int prvb;
         /** level direct */
-        private byte ld;
+        private int ld;
         /** total level */
-        private byte tl;
+        private int tl;
         /** panpot */
-        private byte pan;
+        private int pan;
         /** LFO */
-        private byte lfo;
+        private int lfo;
         /** vibrato */
-        private byte vib;
+        private int vib;
         /** AM level */
-        private byte am;
+        private int am;
 
-        private byte ar;
-        private byte d1R;
+        private int ar;
+        private int d1R;
         private int dl;
-        private byte d2R;
+        private int d2R;
         /** rate correction */
-        private byte rc;
-        private byte rr;
+        private int rc;
+        private int rr;
 
         /** width of the samples */
-        private byte bits;
+        private int bits;
         /** slot keyed on */
-        private byte active;
+        private int active;
 
-        private byte state;
-        private byte lfoActive;
+        private int state;
+        private int lfoActive;
 
-        private byte muted;
+        private int muted;
 
         private void reset() {
             this.wave = this.fn = this.oct = this.prvb = this.ld = this.tl = this.pan =
@@ -365,12 +365,12 @@ public class YmF278b {
             this.lfoStep = (((this.lfoStep << 8) / this.lfoMax) * newlfo) >> 8;
             this.lfoCnt = (((this.lfoCnt << 8) / this.lfoMax) * newlfo) >> 8;
 
-            this.lfo = (byte) newlfo;
+            this.lfo = newlfo;
             this.lfoMax = lfoPeriod[this.lfo];
         }
     }
 
-    private Slot[] slots = new Slot[] {
+    private final Slot[] slots = new Slot[] {
             new Slot(), new Slot(), new Slot(), new Slot(),
             new Slot(), new Slot(), new Slot(), new Slot(),
             new Slot(), new Slot(), new Slot(), new Slot(),
@@ -382,16 +382,16 @@ public class YmF278b {
     /** Global envelope generator counter. */
     private int egCnt;
 
-    private byte waveTblHdr;
-    private byte memMode;
+    private int waveTblHdr;
+    private int memMode;
     private int memAdr;
 
-    private byte exp;
+    private int exp;
 
     private int fmL, fmR;
     private int pcmL, pcmR;
 
-    private byte portA, portB, portC;
+    private int portA, portB, portC;
     private Callback irq_callback;
 
     private int romSize;
@@ -401,20 +401,20 @@ public class YmF278b {
     private int clock;
 
     /** precalculated attenuation values with some marging for enveloppe and pan levels */
-    private int[] volume = new int[256 * 4];
+    private final int[] volume = new int[256 * 4];
 
-    private byte[] regs = new byte[256];
+    private final byte[] regs = new byte[256];
 
     /** that saves a whole lot of CPU */
     private byte fmEnabled;
-    private YmF262 ymf262 = new YmF262();
+    private final YmF262 ymf262 = new YmF262();
 
     private void advance() {
         Slot op;
         int i;
-        byte rate;
-        byte shift;
-        byte select;
+        int rate;
+        int shift;
+        int select;
 
         this.egCnt++;
         for (i = 0; i < 24; i++) {
@@ -436,7 +436,7 @@ public class YmF278b {
             // Envelope Generator
             switch (op.state) {
             case EG_ATT: // attack phase
-                rate = (byte) op.computeRate(op.ar);
+                rate = op.computeRate(op.ar);
                 if (rate < 4)
                     break;
 
@@ -454,7 +454,7 @@ public class YmF278b {
                 }
                 break;
             case EG_DEC: // decay phase
-                rate = (byte) op.computeRate(op.d1R);
+                rate = op.computeRate(op.d1R);
                 if (rate < 4)
                     break;
 
@@ -472,7 +472,7 @@ public class YmF278b {
                 }
                 break;
             case EG_SUS: // sustain phase
-                rate = (byte) op.computeRate(op.d2R);
+                rate = op.computeRate(op.d2R);
                 if (rate < 4)
                     break;
 
@@ -492,7 +492,7 @@ public class YmF278b {
                 }
                 break;
             case EG_REL: // release phase
-                rate = (byte) op.computeRate(op.rr);
+                rate = op.computeRate(op.rr);
                 if (rate < 4)
                     break;
 
@@ -513,7 +513,7 @@ public class YmF278b {
                 break;
             case EG_REV: // pseudo Reverb
                 // TODO improve env_vol update
-                rate = (byte) op.computeRate(5);
+                rate = op.computeRate(5);
                 //if (rate < 4)
                 // break;
 
@@ -555,58 +555,58 @@ public class YmF278b {
         }
     }
 
-    private byte readMem(int address) {
+    private int readMem(int address) {
         if (address < this.romSize)
-            return this.rom[address & 0x3fffff];
+            return this.rom[address & 0x3f_ffff] & 0xff;
         else if (address < this.romSize + this.ramSize)
-            return this.ram[address - (this.romSize & 0x3fffff)];
+            return this.ram[address - (this.romSize & 0x3f_ffff)] & 0xff;
         else
-            return (byte) 255; // TODO check
+            return 255; // TODO check
     }
 
     private Tuple<byte[], Integer> readMemAddr(int address) {
         if (address < this.romSize) {
-            return new Tuple<>(this.rom, address & 0x3fffff);
+            return new Tuple<>(this.rom, address & 0x3f_ffff);
         } else if (address < this.romSize + this.ramSize) {
-            return new Tuple<>(this.ram, address - (this.romSize & 0x3fffff));
+            return new Tuple<>(this.ram, address - (this.romSize & 0x3f_ffff));
         } else
             return null; // TODO check
     }
 
-    private void writeMem(int address, byte value) {
+    private void writeMem(int address, int value) {
         if (address < this.romSize) {
         } // can't write to ROM
         else if (address < this.romSize + this.ramSize) {
             //Debug.printf("adr:%06x dat:%02x", address, value);
-            this.ram[address - this.romSize] = value;
+            this.ram[address - this.romSize] = (byte) value;
         } else {
         } // can't write to unmapped memory
     }
 
-    private short getSample(Slot op) {
-        short sample;
+    private int getSample(Slot op) {
+        int sample;
         int addr;
         Tuple<byte[], Integer> addrp;
 
         switch (op.bits) {
         case 0:
             // 8 bit
-            sample = (short) (readMem(op.startAddr + op.pos) << 8);
+            sample = readMem(op.startAddr + op.pos) << 8;
             break;
         case 1:
             // 12 bit
             addr = op.startAddr + ((op.pos / 2) * 3);
             addrp = readMemAddr(addr);
             if ((op.pos & 1) != 0)
-                sample = (short) ((addrp.getItem1()[addrp.getItem2() + 2] << 8) | ((addrp.getItem1()[addrp.getItem2() + 1] << 4) & 0xF0));
+                sample = (addrp.getItem1()[addrp.getItem2() + 2] << 8) | ((addrp.getItem1()[addrp.getItem2() + 1] << 4) & 0xF0);
             else
-                sample = (short) ((addrp.getItem1()[addrp.getItem2() + 0] << 8) | (addrp.getItem1()[addrp.getItem2() + 1] & 0xF0));
+                sample = (addrp.getItem1()[addrp.getItem2() + 0] << 8) | (addrp.getItem1()[addrp.getItem2() + 1] & 0xF0);
             break;
         case 2:
             // 16 bit
             addr = op.startAddr + (op.pos * 2);
             addrp = readMemAddr(addr);
-            sample = (short) ((addrp.getItem1()[addrp.getItem2() + 0] << 8) | addrp.getItem1()[addrp.getItem2() + 1]);
+            sample = ((addrp.getItem1()[addrp.getItem2() + 0] << 8) | addrp.getItem1()[addrp.getItem2() + 1]) & 0xffff;
             break;
         default:
             // TODO unspecified
@@ -650,29 +650,29 @@ public class YmF278b {
         slot.sample2 = this.getSample(slot);
     }
 
-    private void writeA(byte reg, byte data) {
+    private void writeA(int reg, int data) {
         switch (reg) {
         case 0x02:
-            //this.timer_a_count = data;
-            //ymf278b_timer_a_reset(chips);
+//            this.timer_a_count = data;
+//            ymf278b_timer_a_reset(chips);
             break;
         case 0x03:
-            //this.timer_b_count = data;
-            //ymf278b_timer_b_reset(chips);
+//            this.timer_b_count = data;
+//            ymf278b_timer_b_reset(chips);
             break;
         case 0x04:
-                /*if(data & 0x80)
-                    this.current_irq = 0;
-                else {
-                    byte old_enable = this.enable;
-                    this.enable = data;
-                    this.current_irq &= ~data;
-                    if((old_enable ^ data) & 1)
-                        ymf278b_timer_a_reset(chips);
-                    if((old_enable ^ data) & 2)
-                        ymf278b_timer_b_reset(chips);
-                }
-                ymf278b_irq_check(chips);*/
+//            if (data & 0x80)
+//                this.current_irq = 0;
+//            else {
+//                byte old_enable = this.enable;
+//                this.enable = data;
+//                this.current_irq &= ~data;
+//                if ((old_enable ^ data) & 1)
+//                    ymf278b_timer_a_reset(chips);
+//                if ((old_enable ^ data) & 2)
+//                    ymf278b_timer_b_reset(chips);
+//            }
+//            ymf278b_irq_check(chips);
             break;
         default:
 //Debug.printf("YMF278B:  Port A write %02x, %02x\n", reg, data);
@@ -686,12 +686,12 @@ public class YmF278b {
         }
     }
 
-    private void writeB(byte reg, byte data) {
+    private void writeB(int reg, int data) {
         switch (reg) {
         case 0x05: // Opl3/OPL4 Enable
             // Bit 1 enables OPL4 WaveTable Synth
             this.exp = data;
-            this.ymf262.write(3, (byte) (data & ~0x02));
+            this.ymf262.write(3, data & ~0x02);
             break;
         default:
             this.ymf262.write(3, data);
@@ -699,19 +699,19 @@ public class YmF278b {
                 this.fmEnabled = 0x01;
             break;
         }
-        //#ifdef _DEBUG
-        // Debug.printf("YMF278B:  Port B write %02x, %02x\n", reg, data);
-        //#endif
+//#ifdef _DEBUG
+// Debug.printf("YMF278B:  Port B write %02x, %02x\n", reg, data);
+//#endif
     }
 
-    private void writeC(byte reg, byte data) {
+    private void writeC(int reg, int data) {
         //Debug.printf("ymf278b_C_w reg:%02x dat:%02x", reg, data);
 
         // Handle slot registers specifically
         if (reg >= 0x08 && reg <= 0xF7) {
             int snum = (reg - 8) % 24;
             Slot slot = this.slots[snum];
-            int _base;
+            int base;
             Tuple<byte[], Integer> buf;
             int oct;
             int step;
@@ -720,32 +720,32 @@ public class YmF278b {
             case 0:
                 //loadTime = time + LOAD_DELAY;
 
-                slot.wave = (short) ((slot.wave & 0x100) | data);
-                _base = (slot.wave < 384 || this.waveTblHdr == 0) ?
+                slot.wave = (slot.wave & 0x100) | data;
+                base = (slot.wave < 384 || this.waveTblHdr == 0) ?
                         (slot.wave * 12) :
                         (this.waveTblHdr * 0x80000 + ((slot.wave - 384) * 12));
-                buf = this.readMemAddr(_base);
+                buf = this.readMemAddr(base);
 
-                slot.bits = (byte) ((buf.getItem1()[buf.getItem2() + 0] & 0xC0) >> 6);
+                slot.bits = (buf.getItem1()[buf.getItem2() + 0] & 0xC0) >> 6;
                 slot.setLfo((buf.getItem1()[buf.getItem2() + 7] >> 3) & 7);
-                slot.vib = (byte) (buf.getItem1()[buf.getItem2() + 7] & 7);
-                slot.ar = (byte) (buf.getItem1()[buf.getItem2() + 8] >> 4);
-                slot.d1R = (byte) (buf.getItem1()[buf.getItem2() + 8] & 0xF);
-                slot.dl = dl_tab[buf.getItem1()[buf.getItem2() + 9] >> 4];
-                slot.d2R = (byte) (buf.getItem1()[buf.getItem2() + 9] & 0xF);
-                slot.rc = (byte) (buf.getItem1()[buf.getItem2() + 10] >> 4);
-                slot.rr = (byte) (buf.getItem1()[buf.getItem2() + 10] & 0xF);
-                slot.am = (byte) (buf.getItem1()[buf.getItem2() + 11] & 7);
-                slot.startAddr = buf.getItem1()[buf.getItem2() + 2] | (buf.getItem1()[buf.getItem2() + 1] << 8) | ((buf.getItem1()[buf.getItem2() + 0] & 0x3F) << 16);
-                slot.loopAddr = buf.getItem1()[buf.getItem2() + 4] + (buf.getItem1()[buf.getItem2() + 3] << 8);
-                slot.endAddr = ((buf.getItem1()[buf.getItem2() + 6] + (buf.getItem1()[buf.getItem2() + 5] << 8)) ^ 0xFFFF);
+                slot.vib = buf.getItem1()[buf.getItem2() + 7] & 7;
+                slot.ar = (buf.getItem1()[buf.getItem2() + 8] >> 4) & 0xff;
+                slot.d1R = buf.getItem1()[buf.getItem2() + 8] & 0xF;
+                slot.dl = dl_tab[buf.getItem1()[buf.getItem2() + 9] >> 4] & 0xff;
+                slot.d2R = buf.getItem1()[buf.getItem2() + 9] & 0xF;
+                slot.rc = (buf.getItem1()[buf.getItem2() + 10] >> 4) & 0xff;
+                slot.rr = buf.getItem1()[buf.getItem2() + 10] & 0xF;
+                slot.am = buf.getItem1()[buf.getItem2() + 11] & 7;
+                slot.startAddr = (buf.getItem1()[buf.getItem2() + 2] & 0xff) | ((buf.getItem1()[buf.getItem2() + 1] & 0xff) << 8) | ((buf.getItem1()[buf.getItem2() + 0] & 0x3F) << 16);
+                slot.loopAddr = (buf.getItem1()[buf.getItem2() + 4] & 0xff) + ((buf.getItem1()[buf.getItem2() + 3] & 0xff) << 8);
+                slot.endAddr = (((buf.getItem1()[buf.getItem2() + 6] & 0xff) + ((buf.getItem1()[buf.getItem2() + 5] & 0xff) << 8)) ^ 0xffFF);
 
                 if ((this.regs[reg + 4] & 0x080) != 0)
                     keyOnHelper(slot);
                 break;
             case 1:
-                slot.wave = (short) ((slot.wave & 0xFF) | ((data & 0x1) << 8));
-                slot.fn = (short) ((slot.fn & 0x380) | (data >> 1));
+                slot.wave = (slot.wave & 0xff) | ((data & 0x1) << 8);
+                slot.fn = (slot.fn & 0x380) | (data >> 1);
 
                 oct = slot.oct;
                 if ((oct & 8) != 0)
@@ -759,9 +759,9 @@ public class YmF278b {
                 slot.step = step;
                 break;
             case 2:
-                slot.fn = (short) ((slot.fn & 0x07F) | ((data & 0x07) << 7));
-                slot.prvb = (byte) ((data & 0x08) >> 3);
-                slot.oct = (byte) ((data & 0xF0) >> 4);
+                slot.fn = (slot.fn & 0x07F) | ((data & 0x07) << 7);
+                slot.prvb = (data & 0x08) >> 3;
+                slot.oct = (data & 0xF0) >> 4;
 
                 oct = slot.oct;
                 if ((oct & 8) != 0)
@@ -775,8 +775,8 @@ public class YmF278b {
                 slot.step = step;
                 break;
             case 3:
-                slot.tl = (byte) (data >> 1);
-                slot.ld = (byte) (data & 0x1);
+                slot.tl = data >> 1;
+                slot.ld = data & 0x1;
 
                 // TODO
                 if (slot.ld != 0) {
@@ -792,7 +792,7 @@ public class YmF278b {
                     // we emulate this by muting the Sound
                     slot.pan = 8; // both left/right -inf dB
                 } else
-                    slot.pan = (byte) (data & 0x0F);
+                    slot.pan = data & 0x0F;
 
                 if ((data & 0x020) != 0) {
                     // LFO reset
@@ -821,23 +821,23 @@ public class YmF278b {
                 }
                 break;
             case 5:
-                slot.vib = (byte) (data & 0x7);
+                slot.vib = data & 0x7;
                 slot.setLfo((data >> 3) & 0x7);
                 break;
             case 6:
-                slot.ar = (byte) (data >> 4);
-                slot.d1R = (byte) (data & 0xF);
+                slot.ar = data >> 4;
+                slot.d1R = data & 0xF;
                 break;
             case 7:
                 slot.dl = dl_tab[data >> 4];
-                slot.d2R = (byte) (data & 0xF);
+                slot.d2R = data & 0xF;
                 break;
             case 8:
-                slot.rc = (byte) (data >> 4);
-                slot.rr = (byte) (data & 0xF);
+                slot.rc = data >> 4;
+                slot.rr = data & 0xF;
                 break;
             case 9:
-                slot.am = (byte) (data & 0x7);
+                slot.am = data & 0x7;
                 break;
             }
         } else {
@@ -848,26 +848,26 @@ public class YmF278b {
                 break;
 
             case 0x02:
-                this.waveTblHdr = (byte) ((data >> 2) & 0x7);
-                this.memMode = (byte) (data & 1);
+                this.waveTblHdr = (data >> 2) & 0x7;
+                this.memMode = data & 1;
                 break;
 
             case 0x03:
-                this.memAdr = (this.memAdr & 0x00FFFF) | (data << 16);
+                this.memAdr = (this.memAdr & 0x00_ffff) | (data << 16);
                 break;
 
             case 0x04:
-                this.memAdr = (this.memAdr & 0xFF00FF) | (data << 8);
+                this.memAdr = (this.memAdr & 0xff_00ff) | (data << 8);
                 break;
 
             case 0x05:
-                this.memAdr = (this.memAdr & 0xFFFF00) | data;
+                this.memAdr = (this.memAdr & 0xff_ff00) | data;
                 break;
 
             case 0x06: // memory data
                 //busyTime = time + MEM_WRITE_DELAY;
                 this.writeMem(this.memAdr, data);
-                this.memAdr = (this.memAdr + 1) & 0xFFFFFF;
+                this.memAdr = (this.memAdr + 1) & 0xff_ffff;
                 break;
 
             case 0xF8:
@@ -883,56 +883,47 @@ public class YmF278b {
             }
         }
 
-        this.regs[reg] = data;
+        this.regs[reg] = (byte) data;
     }
 
-    private byte readReg(byte reg) {
+    private int readReg(int reg) {
         // no need to call updateStream(time)
-        byte result;
+        int result;
         switch (reg) {
         case 2: // 3 upper bits are device ID
-            result = (byte) ((this.regs[2] & 0x1F) | 0x20);
+            result = ((this.regs[2] & 0x1F) | 0x20);
             break;
 
-        case 6: // Memory Data Register
+        case 6: // Memory data Register
             //busyTime = time + MEM_READ_DELAY;
             result = this.readMem(this.memAdr);
-            this.memAdr = (this.memAdr + 1) & 0xFFFFFF;
+            this.memAdr = (this.memAdr + 1) & 0xff_ffff;
             break;
 
         default:
-            result = this.regs[reg];
+            result = this.regs[reg] & 0xff;
             break;
         }
 
         return result;
     }
 
-    private byte peekReg(byte reg) {
-        byte result;
+    private int peekReg(int reg) {
+        int result = switch (reg) {
+            case 2 -> (this.regs[2] & 0x1f) | 0x20; // 3 upper bits are device ID
+            case 6 -> this.readMem(this.memAdr); // Memory data Register
+            default -> this.regs[reg] & 0xff;
+        };
 
-        switch (reg) {
-        case 2: // 3 upper bits are device ID
-            result = (byte) ((this.regs[2] & 0x1F) | 0x20);
-            break;
-
-        case 6: // Memory Data Register
-            result = this.readMem(this.memAdr);
-            break;
-
-        default:
-            result = this.regs[reg];
-            break;
-        }
         return result;
     }
 
-    private byte readStatus() {
-        byte result = 0;
-        //if (time < busyTime)
-        // result |= 0x01;
-        //if (time < loadTime)
-        // result |= 0x02;
+    private int readStatus() {
+        int result = 0;
+//        if (time < busyTime)
+//            result |= 0x01;
+//        if (time < loadTime)
+//            result |= 0x02;
         return result;
     }
 
@@ -970,7 +961,7 @@ public class YmF278b {
         for (int j = 0; j < samples; j++) {
             for (int i = 0; i < 24; i++) {
                 Slot sl;
-                short sample;
+                int sample;
                 int vol;
                 int volLeft;
                 int volRight;
@@ -982,7 +973,7 @@ public class YmF278b {
                     continue;
                 }
 
-                sample = (short) ((sl.sample1 * (0x10000 - sl.stepPtr) + sl.sample2 * sl.stepPtr) >> 16);
+                sample = (sl.sample1 * (0x10000 - sl.stepPtr) + sl.sample2 * sl.stepPtr) >> 16;
                 vol = sl.tl + (sl.envVol >> 2) + sl.computeAm();
 
                 volLeft = vol + panLeft[sl.pan] + vl;
@@ -990,8 +981,8 @@ public class YmF278b {
                 // TODO prob doesn't happen in real chips
                 //volLeft  = std::max(0, volLeft);
                 //volRight = std::max(0, volRight);
-                volLeft &= 0x3FF; // catch negative Volume values in a hardware-like way
-                volRight &= 0x3FF; // (anything beyond 0x100 results in *0)
+                volLeft &= 0x3ff; // catch negative Volume values in a hardware-like way
+                volRight &= 0x3ff; // (anything beyond 0x100 results in *0)
 
                 outputs[0][j] += (sample * this.volume[volLeft]) >> 17;
                 outputs[1][j] += (sample * this.volume[volRight]) >> 17;
@@ -1028,7 +1019,7 @@ public class YmF278b {
         }
     }
 
-    public void write(int offset, byte data) {
+    public void write(int offset, int data) {
         switch (offset) {
         case 0:
             this.portA = data;
@@ -1077,7 +1068,7 @@ public class YmF278b {
         }
 
         if (romFileSize == 0) {
-            romFileSize = 0x00200000;
+            romFileSize = 0x0020_0000;
 
             romFile = null;
             if (romStream == null) {
@@ -1128,7 +1119,7 @@ public class YmF278b {
         this.clock = clock;
 
         loadRom(romPath, romStream);
-        this.ramSize = 0x00080000;
+        this.ramSize = 0x0008_0000;
         this.ram = new byte[this.ramSize];
         clearRam();
 
@@ -1175,14 +1166,14 @@ public class YmF278b {
         for (int i = 0; i < 24; i++)
             this.slots[i].reset();
         for (int i = 255; i >= 0; i--) // reverse order to avoid UMR
-            this.writeC((byte) i, (byte) 0);
+            this.writeC(i, 0);
 
         this.waveTblHdr = this.memMode = 0;
         this.memAdr = 0;
         this.fmL = this.fmR = 3;
         this.pcmL = this.pcmR = 0;
-        //busyTime = time;
-        //loadTime = time;
+//        busyTime = time;
+//        loadTime = time;
     }
 
     public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData) {
@@ -1227,6 +1218,6 @@ public class YmF278b {
     public void setMuteMask(int muteMaskFM, int muteMaskWT) {
         this.ymf262.setMuteMask(muteMaskFM);
         for (byte curChn = 0; curChn < 24; curChn++)
-            this.slots[curChn].muted = (byte) ((muteMaskWT >> curChn) & 0x01);
+            this.slots[curChn].muted = (muteMaskWT >> curChn) & 0x01;
     }
 }

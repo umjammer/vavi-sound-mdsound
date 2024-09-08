@@ -23,9 +23,6 @@ public class NesBank implements Device {
         fdsEnable = false;
     }
 
-    protected void finalize() {
-    }
-
     public void setBankDefault(byte bank, int value) {
         bankDefault[bank] = value;
     }

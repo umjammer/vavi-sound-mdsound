@@ -66,17 +66,17 @@ public class X1_010 {
 
     // this structure defines the parameters for a channel */
     private static class Channel {
-        private byte status;
+        private int status;
         // volume / wave form no. */
-        private byte volume;
+        private int volume;
         // frequency / pitch lo */
-        private byte frequency;
+        private int frequency;
         // reserved / pitch hi */
-        private byte pitchHi;
+        private int pitchHi;
         // start address / envelope time */
-        private byte start;
+        private int start;
         // end address / envelope no. */
-        private byte end;
+        private int end;
         private byte[] reserve = new byte[2];
     }
 
@@ -92,7 +92,7 @@ public class X1_010 {
 
     private int baseClock;
 
-    private byte[] muted = new byte[SETA_NUM_CHANNELS];
+    private int[] muted = new int[SETA_NUM_CHANNELS];
 
     /**
      * generate Sound to the mix buffer
@@ -114,12 +114,12 @@ public class X1_010 {
 
                 int div = (this.reg[ch * 8 + 0] & 0x80) != 0 ? 1 : 0;
                 if ((this.reg[ch * 8 + 0] & 2) == 0) { // PCM sampling
-                    int start = this.reg[ch * 8 + 4] * 0x1000; // +4 reg.start
-                    int end = (0x100 - this.reg[ch * 8 + 5]) * 0x1000; // +5 reg.end
+                    int start = (this.reg[ch * 8 + 4] & 0xff) * 0x1000; // +4 reg.start
+                    int end = (0x100 - (this.reg[ch * 8 + 5] & 0xff)) * 0x1000; // +5 reg.end
                     int volL = ((this.reg[ch * 8 + 1] >> 4) & 0xf) * VOL_BASE; // +1 reg.volume
                     int volR = ((this.reg[ch * 8 + 1] >> 0) & 0xf) * VOL_BASE; // +1 reg.volume
                     int smpOffs = this.smpOffset[ch];
-                    int freq = this.reg[ch * 8 + 2] >> div; // +2 reg.frequency
+                    int freq = (this.reg[ch * 8 + 2] & 0xff) >> div; // +2 reg.frequency
                     // Meta Fox does write the frequency register, but this is a hack to make it "work" with the current setup
                     // This is broken for Arbalester (it writes 8), but that'll be fixed later.
                     if (freq == 0) freq = 4;
@@ -143,16 +143,16 @@ public class X1_010 {
                     }
                     this.smpOffset[ch] = smpOffs;
                 } else { // Wave form
-                    int start = this.reg[ch * 8 + 1] * 128 + 0x1000;
+                    int start = (this.reg[ch * 8 + 1] & 0xff) * 128 + 0x1000;
                     int smpOffs = this.smpOffset[ch];
                     int freq = ((this.reg[ch * 8 + 3] << 8) + this.reg[ch * 8 + 2]) >> div;
                     int smpStep = (int) ((float) this.baseClock / 128.0 / 1024.0 / 4.0 * freq * (1 << FREQ_BASE_BITS) / (float) this.rate + 0.5f);
 
-                    int env = this.reg[ch * 8 + 5] * 128;
+                    int env = (this.reg[ch * 8 + 5] & 0xff) * 128;
                     int envOffs = this.envOffset[ch];
                     int envStep = (int) (
                             (float) this.baseClock / 128.0 / 1024.0 / 4.0
-                                    * this.reg[ch * 8 + 4] * (1 << ENV_BASE_BITS) / (float) this.rate + 0.5f
+                                    * (this.reg[ch * 8 + 4] & 0xff) * (1 << ENV_BASE_BITS) / (float) this.rate + 0.5f
                     );
                     // Print some more debug info
                     if (smpOffs == 0) {
@@ -169,7 +169,7 @@ public class X1_010 {
                         int vol = this.reg[env + (delta & 0x7f)];
                         int volL = ((vol >> 4) & 0xf) * VOL_BASE;
                         int volR = ((vol >> 0) & 0xf) * VOL_BASE;
-                        byte data = this.reg[start + ((smpOffs >> FREQ_BASE_BITS) & 0x7f)];
+                        int data = this.reg[start + ((smpOffs >> FREQ_BASE_BITS) & 0x7f)] & 0xff;
                         bufL[i] += (data * volL / 256);
                         bufR[i] += (data * volR / 256);
                         smpOffs += smpStep;
@@ -207,11 +207,11 @@ public class X1_010 {
         for (int i = 0; i < SETA_NUM_CHANNELS; i++) this.envOffset[i] = 0;
     }
 
-    public byte read(int offset) {
-        return this.reg[offset];
+    public int read(int offset) {
+        return this.reg[offset] & 0xff;
     }
 
-    public void write(int offset, byte data) {
+    public void write(int offset, int data) {
         int channel = offset / 8;
         int reg = offset % 8;
 
@@ -221,10 +221,10 @@ public class X1_010 {
             this.envOffset[channel] = 0;
         }
         //Debug.printf("%s: offset %6X : data %2X\n", device.machine().describe_context(), offset, data);
-        this.reg[offset] = data;
+        this.reg[offset] = (byte) data;
     }
 
-    public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData, int romDataStartAddress/* = 0*/) {
+    public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData, int romDataStartAddress /* = 0 */) {
         if (this.romSize != romSize) {
             this.rom = new byte[romSize];
             this.romSize = romSize;
@@ -240,7 +240,7 @@ public class X1_010 {
     }
 
     public void setMuteMask(int muteMask) {
-        for (byte curChn = 0; curChn < SETA_NUM_CHANNELS; curChn++)
-            this.muted[curChn] = (byte) ((muteMask >> curChn) & 0x01);
+        for (int curChn = 0; curChn < SETA_NUM_CHANNELS; curChn++)
+            this.muted[curChn] = (muteMask >> curChn) & 0x01;
     }
 }

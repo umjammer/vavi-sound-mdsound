@@ -2,6 +2,8 @@ package mdsound.chips;
 
 import java.util.Arrays;
 
+import vavi.util.win32.WAVE.data;
+
 
 /**
  Konami 054539 (TOP) PCM Sound Chip
@@ -35,7 +37,7 @@ import java.util.Arrays;
    22a: ?
    22b: ?
    22c: Channel active? (b0-7 = channel 0-7)
-   22d: Data read/write port
+   22d: data read/write port
    22e: ROM/RAM select (00..7f == ROM banks, 80 = Reverb RAM)
    22f: Global control:
         .......x - Enable PCM
@@ -168,7 +170,7 @@ public class K054539 {
         this.curLimit = (data & 0xff) == 0x80 ? 0x4000 : 0x20000;
     }
 
-    public void write(int offset, byte data) {
+    public void write(int offset, int data) {
 
         byte[] regBase = this.regs;
         boolean latch = (this.flags & K054539.UPDATE_AT_KEYON) != 0 && (regBase[0x22f] & 1) != 0;
@@ -180,7 +182,7 @@ public class K054539 {
 
             if (offs >= 0 && offs <= 2) {
                 // latch writes to the position index registers
-                this.posRegLatch[ch][offs] = data;
+                this.posRegLatch[ch][offs] = (byte) data;
                 //Debug.printf("this.k054539_posreg_latch[%d][%d] = %d \n", ch, offs, data);
                 return;
             }
@@ -231,7 +233,7 @@ public class K054539 {
 
             case 0x22d:
                 if ((regBase[0x22e] & 0xff) == 0x80)
-                    this.curZone[this.ptrCurZone + this.curPtr] = data;
+                    this.curZone[this.ptrCurZone + this.curPtr] = (byte) data;
                 this.curPtr++;
                 if (this.curPtr == this.curLimit)
                     this.curPtr = 0;
@@ -244,18 +246,18 @@ public class K054539 {
                 this.curPtr = 0;
                 break;
 
-            /*case 0x22f:
-                if (!(data & 0x20)) // Disable timer output? {
-                    m_timer_state = 0;
-                    m_timer_handler(m_timer_state);
-                }
-            break;*/
+//            case 0x22f:
+//                if (!(data & 0x20)) // Disable timer output? {
+//                    m_timer_state = 0;
+//                    m_timer_handler(m_timer_state);
+//                }
+//                break;
 
             default:
                 break;
             }
 
-        regBase[offset] = data;
+        regBase[offset] = (byte) data;
     }
 
     public byte write(int offset) {
@@ -315,7 +317,7 @@ public class K054539 {
                 this.rom[i] = (byte) 0xff;
             }
 
-            this.romMask = 0xFFFFFFFF;
+            this.romMask = 0xffff_ffff;
             for (byte i = 0; i < 32; i++) {
                 if ((1 << i) >= this.romSize) {
                     this.romMask = (1 << i) - 1;
@@ -339,7 +341,7 @@ public class K054539 {
                 this.rom[ind] = (byte) 0xff;
             }
 
-            this.romMask = 0xFFFFFFFF;
+            this.romMask = 0xffff_ffff;
             for (byte i = 0; i < 32; i++) {
                 if ((1 << i) >= this.romSize) {
                     this.romMask = (1 << i) - 1;
@@ -358,7 +360,7 @@ public class K054539 {
     public void update(int[][] outputs, int samples) {
         final double VOL_CAP = 1.80;
 
-        final short[] dPcm = new short[] {
+        short[] dPcm = new short[] {
                 0 << 8, 1 << 8, 4 << 8, 9 << 8, 16 << 8, 25 << 8, 36 << 8, 49 << 8,
                 -64 << 8, -49 << 8, -36 << 8, -25 << 8, -16 << 8, -9 << 8, -4 << 8, -1 << 8
         };

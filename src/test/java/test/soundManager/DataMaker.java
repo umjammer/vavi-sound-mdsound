@@ -1,5 +1,8 @@
 
-package test.SoundManager;
+package test.soundManager;
+
+import vavi.util.Debug;
+
 
 /**
  * データ生成器
@@ -31,7 +34,7 @@ public class DataMaker extends BaseMakerSender {
                     isRunning = true;
                 }
 
-                actionOfDriver.init.run();
+                if (actionOfDriver != null) if (actionOfDriver.init != null) actionOfDriver.init.run();
 
                 while (true) {
                     if (!getStart())
@@ -47,14 +50,14 @@ public class DataMaker extends BaseMakerSender {
                     }
 
                     Thread.yield();
-                    actionOfDriver.main.run();
+                    if (actionOfDriver != null) if (actionOfDriver.main != null) actionOfDriver.main.run();
 
                     if (parent.getDataSenderBufferSize() >= DATA_SEQUENCE_FREQUENCE) {
                         pause = true;
                     }
                 }
 
-                actionOfDriver.final_.run();
+                if (actionOfDriver != null) if (actionOfDriver.main != null) actionOfDriver.final_.run();
 
                 synchronized (lockObj) {
                     isRunning = false;
@@ -62,6 +65,7 @@ public class DataMaker extends BaseMakerSender {
 
             }
         } catch (Exception e) {
+Debug.println(e);
             synchronized (lockObj) {
                 isRunning = false;
                 start = false;

@@ -3,6 +3,8 @@ package mdsound.chips;
 import java.util.Arrays;
 import java.util.function.Function;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
 
 /**
  * YmF271.
@@ -41,41 +43,41 @@ public class YmF271 {
     // TODO stop public access, toJson?
     public static class Slot {
 
-        private byte extEn;
-        private byte extOut;
-        public byte lfoFreq;
-        public byte lfoWave;
-        public byte pms;
-        public byte ams;
-        public byte detune;
-        public byte multiple;
-        public byte tl;
-        public byte keyScale;
-        public byte ar;
-        public byte decay1rate, decay2rate;
-        public byte decay1lvl;
-        public byte relrate;
-        public byte block;
-        private byte fnsHi;
+        private int extEn;
+        private int extOut;
+        public int lfoFreq;
+        public int lfoWave;
+        public int pms;
+        public int ams;
+        public int detune;
+        public int multiple;
+        public int tl;
+        public int keyScale;
+        public int ar;
+        public int decay1rate, decay2rate;
+        public int decay1lvl;
+        public int relrate;
+        public int block;
+        private int fnsHi;
         public int fns;
-        public byte feedback;
-        public byte waveForm;
-        public byte accon;
-        public byte algorithm;
-        public byte ch0Level, ch1Level, ch2Level, ch3Level;
+        public int feedback;
+        public int waveForm;
+        public int accon;
+        public int algorithm;
+        public int ch0Level, ch1Level, ch2Level, ch3Level;
 
         public int startAddr;
         public int loopAddr;
         public int endAddr;
-        private byte altLoop;
-        public byte fs;
-        public byte srcNote, srcb;
+        private int altLoop;
+        public int fs;
+        public int srcNote, srcb;
 
         private int step;
-        private long stepPtr;
+        private int stepPtr;
 
-        public byte active;
-        public byte bits;
+        public int active;
+        public int bits;
 
         // envelope generator
         public int volume;
@@ -85,8 +87,8 @@ public class YmF271 {
         private int envDecay2Step;
         private int envReleaseStep;
 
-        private long feedbackModulation0;
-        private long feedbackModulation1;
+        private int feedbackModulation0;
+        private int feedbackModulation1;
 
         private int lfoPhase, lfoStep;
         private int lfoAmplitude;
@@ -101,7 +103,7 @@ public class YmF271 {
 
             if (this.waveForm == 7) {
                 // external waveform (PCM)
-                st = (double) (2 * (this.fns | 2048)) * pow_table[this.block] * fs_frequency[this.fs];
+                st = (2 * (this.fns | 2048)) * pow_table[this.block] * fs_frequency[this.fs];
                 st = st * multiple_table[this.multiple];
 
                 // LFO phase modulation
@@ -133,6 +135,7 @@ public class YmF271 {
             return false;
         }
 
+        @SuppressFBWarnings("SF_SWITCH_NO_DEFAULT")
         private void updateEnvelope() {
             switch (this.envState) {
             case ENV_ATTACK: {
@@ -186,8 +189,8 @@ public class YmF271 {
             this.calculateStep();
         }
 
-        private long calculateOp(long inp) {
-            long env, slotOutput, slotInput = 0;
+        private int calculateOp(int inp) {
+            int env, slotOutput, slotInput = 0;
 
             this.updateEnvelope();
             this.update();
@@ -199,41 +202,42 @@ public class YmF271 {
                 this.feedbackModulation0 = this.feedbackModulation1;
             } else if (inp != OP_INPUT_NONE) {
                 // from previous slot output
-                slotInput = ((inp << (SIN_BITS - 2)) * modulationLevel[this.feedback]);
+                slotInput = (inp << (SIN_BITS - 2)) * modulationLevel[this.feedback];
             }
 
-            slotOutput = lutWaves[this.waveForm][(int) ((this.stepPtr + slotInput) >> 16) & SIN_MASK];
+            slotOutput = lutWaves[this.waveForm][((this.stepPtr + slotInput) >> 16) & SIN_MASK] & 0xffff;
             slotOutput = (slotOutput * env) >> 16;
             this.stepPtr += this.step;
 
             return slotOutput;
         }
 
+        @SuppressFBWarnings("SF_SWITCH_NO_DEFAULT")
         private int calculateVolume() {
-            // Note: Actually everyone of these stores only int (16.16 fixed point),
+            // Note: Actually every one of these stores only int (16.16 fixed point),
             //       but the calculations need long.
             int volume;
-            long envVolume;
-            long lfoVolume = 65536;
+            int envVolume;
+            int lfoVolume = 65536;
 
             switch (ams) {
             case 0:
                 lfoVolume = 65536;
                 break; // 0dB
             case 1:
-                lfoVolume = 65536 - ((lfoAmplitude * 33124L) >> 16);
+                lfoVolume = 65536 - ((lfoAmplitude * 33124) >> 16);
                 break; // 5.90625dB
             case 2:
-                lfoVolume = 65536 - ((lfoAmplitude * 16742L) >> 16);
+                lfoVolume = 65536 - ((lfoAmplitude * 16742) >> 16);
                 break; // 11.8125dB
             case 3:
-                lfoVolume = 65536 - ((lfoAmplitude * 4277L) >> 16);
+                lfoVolume = 65536 - ((lfoAmplitude * 4277) >> 16);
                 break; // 23.625dB
             }
 
             envVolume = (lutEnvVolume[255 - (this.volume >> ENV_VOLUME_SHIFT)] * lfoVolume) >> 16;
 
-            volume = (int) ((envVolume * lutTotalLevel[tl]) >> 16);
+            volume = (envVolume * lutTotalLevel[tl]) >> 16;
 
             return volume;
         }
@@ -259,30 +263,30 @@ public class YmF271 {
                 keycode = getInternalKeycode(block, fns);
             } else {
                 keycode = getExternalKeycode(block, fns & 0x7ff);
-                /* keycode = (keycode + slot.srcb * 4 + slot.srcnote) / 2; */ // not sure
+                // keycode = (keycode + slot.srcb * 4 + slot.srcnote) / 2; // not sure
             }
 
             // init attack state
             rate = getKeyscaledRate(ar * 2, keycode, keyScale);
-            envAttackStep = (rate < 4) ? 0 : (int) (((double) (255 - 0) / lutAr[rate]) * 65536.0);
+            envAttackStep = (rate < 4) ? 0 : (int) (((255 - 0) / lutAr[rate]) * 65536.0);
 
             // init decay1 state
             rate = getKeyscaledRate(decay1rate * 2, keycode, keyScale);
-            envDecay1Step = (rate < 4) ? 0 : (int) (((double) (255 - decay_level) / lutDc[rate]) * 65536.0);
+            envDecay1Step = (rate < 4) ? 0 : (int) (((255 - decay_level) / lutDc[rate]) * 65536.0);
 
             // init decay2 state
             rate = getKeyscaledRate(decay2rate * 2, keycode, keyScale);
-            envDecay2Step = (rate < 4) ? 0 : (int) (((double) (255 - 0) / lutDc[rate]) * 65536.0);
+            envDecay2Step = (rate < 4) ? 0 : (int) (((255 - 0) / lutDc[rate]) * 65536.0);
 
             // init release state
             rate = getKeyscaledRate(relrate * 4, keycode, keyScale);
-            envReleaseStep = (rate < 4) ? 0 : (int) (((double) (255 - 0) / lutAr[rate]) * 65536.0);
+            envReleaseStep = (rate < 4) ? 0 : (int) (((255 - 0) / lutAr[rate]) * 65536.0);
 
             volume = (255 - 160) << ENV_VOLUME_SHIFT; // -60db
             envState = ENV_ATTACK;
         }
 
-        private void updatePcm(int[] mixP, int length, int ptrMixP, Function<Integer, Byte> readMemory) {
+        private void updatePcm(int[] mixP, int length, int ptrMixP, Function<Integer, Integer> readMemory) {
             if (this.active == 0) {
                 return;
             }
@@ -294,46 +298,46 @@ public class YmF271 {
             for (int i = 0; i < length; i++) {
                 // loop
                 if ((this.stepPtr >> 16) > this.endAddr) {
-                    this.stepPtr = this.stepPtr - (((long) this.endAddr << 16) + (long) this.loopAddr << 16);
+                    this.stepPtr = this.stepPtr - ((this.endAddr << 16) + this.loopAddr << 16);
                     if ((this.stepPtr >> 16) > this.endAddr) {
                         // overflow
                         this.stepPtr &= 0xffff;
-                        this.stepPtr |= ((long) this.loopAddr << 16);
+                        this.stepPtr |= (this.loopAddr << 16);
                         if ((this.stepPtr >> 16) > this.endAddr) {
                             // still overflow? (triggers in rdft2, rarely)
                             this.stepPtr &= 0xffff;
-                            this.stepPtr |= ((long) this.endAddr << 16);
+                            this.stepPtr |= (this.endAddr << 16);
                         }
                     }
                 }
 
-                short sample;
+                int sample;
                 if (this.bits == 8) {
                     // 8bit
-                    sample = (short) (readMemory.apply((int) (this.startAddr + (this.stepPtr >> 16))) << 8);
+                    sample = (readMemory.apply(this.startAddr + (this.stepPtr >> 16)) & 0xff) << 8;
                 } else {
                     // 12bit
                     if ((this.stepPtr & 0x10000) != 0)
-                        sample = (short) (readMemory.apply((int) (this.startAddr + (this.stepPtr >> 17) * 3 + 2)) << 8
-                                | ((readMemory.apply((int) (this.startAddr + (this.stepPtr >> 17) * 3 + 1)) << 4) & 0xf0));
+                        sample = (readMemory.apply(this.startAddr + (this.stepPtr >> 17) * 3 + 2) & 0xff) << 8
+                                | (readMemory.apply(this.startAddr + (this.stepPtr >> 17) * 3 + 1) << 4) & 0xf0;
                     else
-                        sample = (short) (readMemory.apply((int) (this.startAddr + (this.stepPtr >> 17) * 3)) << 8
-                                | (readMemory.apply((int) (this.startAddr + (this.stepPtr >> 17) * 3 + 1)) & 0xf0));
+                        sample = (readMemory.apply(this.startAddr + (this.stepPtr >> 17) * 3) & 0xff) << 8
+                                | readMemory.apply(this.startAddr + (this.stepPtr >> 17) * 3 + 1) & 0xf0;
                 }
 
                 this.updateEnvelope();
                 this.update();
 
-                long finalVolume = this.calculateVolume();
+                int finalVolume = this.calculateVolume();
 
-                long ch0Vol = (finalVolume * lutAttenuation[this.ch0Level]) >> 16;
-                long ch1Vol = (finalVolume * lutAttenuation[this.ch1Level]) >> 16;
+                int ch0Vol = ((finalVolume * lutAttenuation[this.ch0Level]) >> 16) & 0xffff;
+                int ch1Vol = ((finalVolume * lutAttenuation[this.ch1Level]) >> 16) & 0xffff;
 
-                if (ch0Vol > 65536) ch0Vol = 65536;
-                if (ch1Vol > 65536) ch1Vol = 65536;
+//                if (ch0Vol > 65536) ch0Vol = 65536;
+//                if (ch1Vol > 65536) ch1Vol = 65536;
 
-                mixP[ptrMixP++] += (int) ((sample * ch0Vol) >> 16);
-                mixP[ptrMixP++] += (int) ((sample * ch1Vol) >> 16);
+                mixP[ptrMixP++] += (sample * ch0Vol) >> 16;
+                mixP[ptrMixP++] += (sample * ch1Vol) >> 16;
 
                 // go to next step
                 this.stepPtr += this.step;
@@ -342,8 +346,8 @@ public class YmF271 {
     }
 
     private static class Group {
-        private byte sync, pfm;
-        private byte muted;
+        private int sync, pfm;
+        private int muted;
     }
 
     private static final int VERBOSE = 1;
@@ -536,12 +540,12 @@ public class YmF271 {
     private int timerA, timerB;
     private int timerAVal = 0, timerBVal = 0;
     private int irqState;
-    private byte status;
-    private byte enable;
+    private int status;
+    private int enable;
 
     private int extAddress;
-    private byte extRw;
-    private byte extReadLatch;
+    private int extRw;
+    private int extReadLatch;
 
     private byte[] memBase;
     private int memSize;
@@ -597,12 +601,12 @@ public class YmF271 {
     }
 
     // calculates the output of one FM Operator
-    private long calculateOp(int slotNum, long inp) {
+    private int calculateOp(int slotNum, int inp) {
         Slot slot = this.slots[slotNum];
         return slot.calculateOp(inp);
     }
 
-    private void setFeedback(int slotnum, long inp) {
+    private void setFeedback(int slotnum, int inp) {
         Slot slot = this.slots[slotnum];
         slot.feedbackModulation1 = (((inp << (SIN_BITS - 2)) * feedbackLevel[slot.feedback]) / 16);
     }
@@ -634,8 +638,8 @@ public class YmF271 {
 
                 if (this.slots[slot1].active != 0) {
                     for (int i = 0; i < samples; i++) {
-                        long output1 = 0, output2 = 0, output3 = 0, output4 = 0;
-                        long phaseMod1 = 0, phaseMod2 = 0, phaseMod3 = 0;
+                        int output1 = 0, output2 = 0, output3 = 0, output4 = 0;
+                        int phaseMod1, phaseMod2, phaseMod3;
                         switch (this.slots[slot1].algorithm) {
                         // <--------|
                         // +--[S1]--|--+--[S3]--+--[S2]--+--[S4]-.
@@ -855,8 +859,8 @@ public class YmF271 {
                     mixP = this.mixBuffer;
                     if (this.slots[slot1].active != 0) {
                         for (int i = 0; i < samples; i++) {
-                            long output1 = 0, output3 = 0;
-                            long phaseMod1, phaseMod3;
+                            int output1 = 0, output3 = 0;
+                            int phaseMod1, phaseMod3;
                             switch (this.slots[slot1].algorithm & 3) {
                             // <--------|
                             // +--[S1]--|--+--[S3]-.
@@ -895,9 +899,9 @@ public class YmF271 {
                                 break;
                             }
 
-                            mixP[ptrMixp++] += (int) ((output1 * lutAttenuation[this.slots[slot1].ch0Level]) +
+                            mixP[ptrMixp++] += ((output1 * lutAttenuation[this.slots[slot1].ch0Level]) +
                                     (output3 * lutAttenuation[this.slots[slot3].ch0Level])) >> 16;
-                            mixP[ptrMixp++] += (int) ((output1 * lutAttenuation[this.slots[slot1].ch1Level]) +
+                            mixP[ptrMixp++] += ((output1 * lutAttenuation[this.slots[slot1].ch1Level]) +
                                     (output3 * lutAttenuation[this.slots[slot3].ch1Level])) >> 16;
                         }
                     }
@@ -914,8 +918,8 @@ public class YmF271 {
 
                 if (this.slots[slot1].active != 0) {
                     for (int i = 0; i < samples; i++) {
-                        long output1 = 0, output2 = 0, output3 = 0;
-                        long phaseMod1 = 0, phaseMod3 = 0;
+                        int output1 = 0, output2 = 0, output3 = 0;
+                        int phaseMod1, phaseMod3;
                         switch (this.slots[slot1].algorithm & 7) {
                         // <--------|
                         // +--[S1]--|--+--[S3]--+--[S2]-.
@@ -1034,13 +1038,13 @@ public class YmF271 {
         }
     }
 
-    private void writeRegister(int slotnum, int reg, byte data) {
+    private void writeRegister(int slotnum, int reg, int data) {
         Slot slot = this.slots[slotnum];
 
         switch (reg) {
         case 0x0:
-            slot.extEn = (byte) ((data & 0x80) != 0 ? 1 : 0);
-            slot.extOut = (byte) ((data >> 3) & 0xf);
+            slot.extEn = (data & 0x80) != 0 ? 1 : 0;
+            slot.extOut = (data >> 3) & 0xf;
 
             if ((data & 1) != 0) {
                 // key on
@@ -1057,42 +1061,42 @@ public class YmF271 {
             break;
 
         case 0x2:
-            slot.lfoWave = (byte) (data & 3);
-            slot.pms = (byte) ((data >> 3) & 0x7);
-            slot.ams = (byte) ((data >> 6) & 0x3);
+            slot.lfoWave = data & 3;
+            slot.pms = (data >> 3) & 0x7;
+            slot.ams = (data >> 6) & 0x3;
             break;
 
         case 0x3:
-            slot.multiple = (byte) (data & 0xf);
-            slot.detune = (byte) ((data >> 4) & 0x7);
+            slot.multiple = data & 0xf;
+            slot.detune = (data >> 4) & 0x7;
             break;
 
         case 0x4:
-            slot.tl = (byte) (data & 0x7f);
+            slot.tl = data & 0x7f;
             break;
 
         case 0x5:
-            slot.ar = (byte) (data & 0x1f);
-            slot.keyScale = (byte) ((data >> 5) & 0x7);
+            slot.ar = data & 0x1f;
+            slot.keyScale = (data >> 5) & 0x7;
             break;
 
         case 0x6:
-            slot.decay1rate = (byte) (data & 0x1f);
+            slot.decay1rate = data & 0x1f;
             break;
 
         case 0x7:
-            slot.decay2rate = (byte) (data & 0x1f);
+            slot.decay2rate = data & 0x1f;
             break;
 
         case 0x8:
-            slot.relrate = (byte) (data & 0xf);
-            slot.decay1lvl = (byte) ((data >> 4) & 0xf);
+            slot.relrate = data & 0xf;
+            slot.decay1lvl = (data >> 4) & 0xf;
             break;
 
         case 0x9:
             // write frequency and block here
             slot.fns = (slot.fnsHi << 8 & 0x0f00) | data;
-            slot.block = (byte) (slot.fnsHi >> 4 & 0xf);
+            slot.block = slot.fnsHi >> 4 & 0xf;
             break;
 
         case 0xa:
@@ -1100,23 +1104,23 @@ public class YmF271 {
             break;
 
         case 0xb:
-            slot.waveForm = (byte) (data & 0x7);
-            slot.feedback = (byte) ((data >> 4) & 0x7);
-            slot.accon = (byte) ((data & 0x80) != 0 ? 1 : 0);
+            slot.waveForm = data & 0x7;
+            slot.feedback = (data >> 4) & 0x7;
+            slot.accon = (data & 0x80) != 0 ? 1 : 0;
             break;
 
         case 0xc:
-            slot.algorithm = (byte) (data & 0xf);
+            slot.algorithm = data & 0xf;
             break;
 
         case 0xd:
-            slot.ch0Level = (byte) (data >> 4);
-            slot.ch1Level = (byte) (data & 0xf);
+            slot.ch0Level = data >> 4;
+            slot.ch1Level = data & 0xf;
             break;
 
         case 0xe:
-            slot.ch2Level = (byte) (data >> 4);
-            slot.ch3Level = (byte) (data & 0xf);
+            slot.ch2Level = data >> 4;
+            slot.ch3Level = data & 0xf;
             break;
 
         default:
@@ -1124,7 +1128,7 @@ public class YmF271 {
         }
     }
 
-    private void writeFm(int bank, byte address, byte data) {
+    private void writeFm(int bank, int address, int data) {
         int groupNum = fmTab[address & 0xf];
         int reg = (address >> 4) & 0xf;
         int syncReg;
@@ -1213,7 +1217,7 @@ public class YmF271 {
         }
     }
 
-    private void writePcm(byte address, byte data) {
+    private void writePcm(int address, int data) {
         int slotnum = pcmTab[address & 0xf];
         Slot slot;
         if (slotnum == -1) {
@@ -1224,58 +1228,58 @@ public class YmF271 {
 
         switch ((address >> 4) & 0xf) {
         case 0x0:
-            slot.startAddr &= 0xffffff00; // ~0xff;
+            slot.startAddr &= 0xffff_ff00; // ~0xff;
             slot.startAddr |= data;
             break;
 
         case 0x1:
-            slot.startAddr &= 0xffff00ff; // ~0xff00;
+            slot.startAddr &= 0xffff_00ff; // ~0xff00;
             slot.startAddr |= data << 8;
             break;
 
         case 0x2:
-            slot.startAddr &= 0xff00ffff; // ~0xff0000;
+            slot.startAddr &= 0xff00_ffff; // ~0xff0000;
             slot.startAddr |= (data & 0x7f) << 16;
-            slot.altLoop = (byte) ((data & 0x80) != 0 ? 1 : 0);
+            slot.altLoop = (data & 0x80) != 0 ? 1 : 0;
             //if (slot.altloop)
             // System.err.println("YmF271 A/L, contact MAMEdev");
             break;
 
         case 0x3:
-            slot.endAddr &= 0xffffff00; // ~0xff;
+            slot.endAddr &= 0xffff_ff00; // ~0xff;
             slot.endAddr |= data;
             break;
 
         case 0x4:
-            slot.endAddr &= 0xffff00ff; // ~0xff00;
+            slot.endAddr &= 0xffff_00ff; // ~0xff00;
             slot.endAddr |= data << 8;
             break;
 
         case 0x5:
-            slot.endAddr &= 0xff00ffff; // ~0xff0000;
+            slot.endAddr &= 0xff00_ffff; // ~0xff0000;
             slot.endAddr |= (data & 0x7f) << 16;
             break;
 
         case 0x6:
-            slot.loopAddr &= 0xffffff00; // ~0xff;
+            slot.loopAddr &= 0xffff_ff00; // ~0xff;
             slot.loopAddr |= data;
             break;
 
         case 0x7:
-            slot.loopAddr &= 0xffff00ff; // ~0xff00;
+            slot.loopAddr &= 0xffff_00ff; // ~0xff00;
             slot.loopAddr |= data << 8;
             break;
 
         case 0x8:
-            slot.loopAddr &= 0xff00ffff; // ~0xff0000;
+            slot.loopAddr &= 0xff00_ffff; // ~0xff0000;
             slot.loopAddr |= (data & 0x7f) << 16;
             break;
 
         case 0x9:
-            slot.fs = (byte) (data & 0x3);
-            slot.bits = (byte) ((data & 0x4) != 0 ? 12 : 8);
-            slot.srcNote = (byte) ((data >> 3) & 0x3);
-            slot.srcb = (byte) ((data >> 5) & 0x7);
+            slot.fs = data & 0x3;
+            slot.bits = (data & 0x4) != 0 ? 12 : 8;
+            slot.srcNote = (data >> 3) & 0x3;
+            slot.srcb = (data >> 5) & 0x7;
             break;
 
         default:
@@ -1283,15 +1287,16 @@ public class YmF271 {
         }
     }
 
-    private byte readMemory(int offset) {
-        offset &= 0x7FFFFF;
+    private int readMemory(int offset) {
+        offset &= 0x7f_ffff;
         if (offset < this.memSize)
-            return this.memBase[offset];
+            return this.memBase[offset] & 0xff;
         else
             return 0;
     }
 
-    private void writeTimer(byte address, byte data) {
+    @edu.umd.cs.findbugs.annotations.SuppressFBWarnings("SF_SWITCH_NO_DEFAULT")
+    private void writeTimer(int address, int data) {
         if ((address & 0xf0) == 0) {
             int groupNum = fmTab[address & 0xf];
             if (groupNum == -1) {
@@ -1300,8 +1305,8 @@ public class YmF271 {
             }
             Group group = this.groups[groupNum];
 
-            group.sync = (byte) (data & 0x3);
-            group.pfm = (byte) (data >> 7);
+            group.sync = data & 0x3;
+            group.pfm = data >> 7;
         } else {
             switch (address) {
             case 0x10:
@@ -1321,62 +1326,62 @@ public class YmF271 {
 
             case 0x13:
                 // timer A load
-                //if (~this.enable & data & 1) {
-                //attotime period = attotime::from_hz(this.clock) * (384 * 4 * (256 - this.timerA));
-                //this.timA.adjust((data & 1) ? period : attotime::never, 0);
-                //}
+//                if (~this.enable & data & 1) {
+//                    attotime period = attotime::from_hz (this.clock) * (384 * 4 * (256 - this.timerA));
+//                    this.timA.adjust((data & 1) ? period : attotime::never, 0);
+//                }
 
                 // timer B load
-                //if (~this.enable & data & 2) {
-                //attotime period = attotime::from_hz(this.clock) * (384 * 16 * (256 - this.timerB));
-                //this.timB.adjust((data & 2) ? period : attotime::never, 0);
-                //}
+//                if (~this.enable & data & 2) {
+//                    attotime period = attotime::from_hz (this.clock) * (384 * 16 * (256 - this.timerB));
+//                    this.timB.adjust((data & 2) ? period : attotime::never, 0);
+//                }
 
                 // timer A reset
                 if ((data & 0x10) != 0) {
-                    this.irqState &= 0xfffffffe; // ~1;
+                    this.irqState &= 0xffff_fffe; // ~1;
                     this.status &= 0xfe; // ~1;
 
-                    //if (!this.irq_handler.isnull() && ~this.irqstate & 2)
-                    // this.irq_handler(0);
+//                    if (!this.irq_handler.isnull() && ~this.irqstate & 2)
+//                        this.irq_handler(0);
                 }
 
                 // timer B reset
                 if ((data & 0x20) != 0) {
-                    this.irqState &= 0xfffffffd; // ~2;
+                    this.irqState &= 0xffff_fffd; // ~2;
                     this.status &= 0xfd; // ~2;
 
-                    //if (!this.irq_handler.isnull() && ~this.irqstate & 1)
-                    // this.irq_handler(0);
+//                    if (!this.irq_handler.isnull() && ~this.irqstate & 1)
+//                        this.irq_handler(0);
                 }
 
                 this.enable = data;
                 break;
 
             case 0x14:
-                this.extAddress &= 0xffffff00; // ~0xff;
+                this.extAddress &= 0xffff_ff00; // ~0xff;
                 this.extAddress |= data;
                 break;
             case 0x15:
-                this.extAddress &= 0xffff00ff; // ~0xff00;
+                this.extAddress &= 0xffff_00ff; // ~0xff00;
                 this.extAddress |= data << 8;
                 break;
             case 0x16:
-                this.extAddress &= 0xff00ffff; // ~0xff0000;
+                this.extAddress &= 0xff00_ffff; // ~0xff0000;
                 this.extAddress |= (data & 0x7f) << 16;
-                this.extRw = (byte) ((data & 0x80) != 0 ? 1 : 0);
+                this.extRw = (data & 0x80) != 0 ? 1 : 0;
                 break;
             case 0x17:
-                this.extAddress = (this.extAddress + 1) & 0x7fffff;
-                //if (!this.ext_rw && !this.ext_write_handler.isnull())
-                // this.ext_write_handler(this.ext_address, data);
+                this.extAddress = (this.extAddress + 1) & 0x7f_ffff;
+//                if (!this.ext_rw && !this.ext_write_handler.isnull())
+//                    this.ext_write_handler(this.ext_address, data);
                 break;
             }
         }
     }
 
-    public void write(int offset, byte data) {
-        this.regsMain[offset & 0xf] = data;
+    public void write(int offset, int data) {
+        this.regsMain[offset & 0xf] = (byte) data;
 
         switch (offset & 0xf) {
         case 0x0:
@@ -1389,27 +1394,27 @@ public class YmF271 {
             break;
 
         case 0x1:
-            writeFm(0, this.regsMain[0x0], data);
+            writeFm(0, this.regsMain[0x0] & 0xff, data);
             break;
 
         case 0x3:
-            writeFm(1, this.regsMain[0x2], data);
+            writeFm(1, this.regsMain[0x2] & 0xff, data);
             break;
 
         case 0x5:
-            writeFm(2, this.regsMain[0x4], data);
+            writeFm(2, this.regsMain[0x4] & 0xff, data);
             break;
 
         case 0x7:
-            writeFm(3, this.regsMain[0x6], data);
+            writeFm(3, this.regsMain[0x6] & 0xff, data);
             break;
 
         case 0x9:
-            writePcm(this.regsMain[0x8], data);
+            writePcm(this.regsMain[0x8] & 0xff, data);
             break;
 
         case 0xd:
-            writeTimer(this.regsMain[0xc], data);
+            writeTimer(this.regsMain[0xc] & 0xff, data);
             break;
 
         default:
@@ -1417,7 +1422,7 @@ public class YmF271 {
         }
     }
 
-    public byte read(int offset) {
+    public int read(int offset) {
         switch (offset & 0xf) {
         case 0x0:
             return this.status;
@@ -1427,12 +1432,12 @@ public class YmF271 {
             return 0;
 
         case 0x2: {
-            byte ret;
+            int ret;
             if (this.extRw == 0)
-                return (byte) 0xff;
+                return 0xff;
 
             ret = this.extReadLatch;
-            this.extAddress = (this.extAddress + 1) & 0x7fffff;
+            this.extAddress = (this.extAddress + 1) & 0x7f_ffff;
             this.extReadLatch = readMemory(this.extAddress);
             return ret;
         }
@@ -1441,7 +1446,7 @@ public class YmF271 {
             break;
         }
 
-        return (byte) 0xff;
+        return 0xff;
     }
 
     static {
@@ -1579,7 +1584,7 @@ public class YmF271 {
         //this.stream = stream_create(device, 0, 2, device.clock/384, ymf271_update);
 
         //this.mix_buffer = auto_alloc_array(machine, int, 44100*2);
-        this.mixBuffer = new int[44100 * 2];// (int*)malloc(44100 * 2 * sizeof(int));
+        this.mixBuffer = new int[44100 * 2]; // (int*)malloc(44100 * 2 * sizeof(int));
 
         for (int i = 0; i < 12; i++)
             this.groups[i].muted = 0x00;
@@ -1618,8 +1623,8 @@ public class YmF271 {
         this.status = 0;
         this.enable = 0;
 
-        //if (!this.irq_handler.isnull())
-        // this.irq_handler(0);
+        // if (!this.irq_handler.isnull())
+        //  this.irq_handler(0);
     }
 
     public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData) {
@@ -1652,14 +1657,14 @@ public class YmF271 {
 
     public void setMuteMask(int muteMask) {
         for (byte curChn = 0; curChn < 12; curChn++)
-            this.groups[curChn].muted = (byte) ((muteMask >> curChn) & 0x01);
+            this.groups[curChn].muted = (muteMask >> curChn) & 0x01;
     }
 
     public Slot getSlot(int slot) {
         return slots[slot];
     }
 
-    public byte getSync(int g) {
+    public int getSync(int g) {
         return groups[g].sync;
     }
 }

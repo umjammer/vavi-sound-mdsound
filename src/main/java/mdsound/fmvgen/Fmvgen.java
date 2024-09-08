@@ -939,7 +939,7 @@ public class Fmvgen extends Fmgen {
     public static class Channel4 {
         public static final byte[] fbtable = new byte[] {31, 7, 6, 5, 4, 3, 2, 1};
 
-        private final boolean tableHasMade = false;
+        private static final boolean tableHasMade = false;
         private static final int[] kftable = new int[64];
         private int fb;
         private int[] buf = new int[4];
@@ -992,8 +992,8 @@ public class Fmvgen extends Fmgen {
             op[3].prepare();
 
             pms = pmTable[op[0].type.ordinal()][op[0].ms & 7];
-            int key = op[0].isOn() | op[1].isOn() | op[2].isOn() | op[3].isOn() ? 1 : 0;
-            int lfo = (op[0].ms & ((op[0].amOn | op[1].amOn | op[2].amOn | op[3].amOn) ? 0x37 : 7)) != 0 ? 2 : 0;
+            int key = (op[0].isOn() || op[1].isOn() || op[2].isOn() || op[3].isOn()) ? 1 : 0;
+            int lfo = (op[0].ms & ((op[0].amOn || op[1].amOn || op[2].amOn || op[3].amOn) ? 0x37 : 7)) != 0 ? 2 : 0;
             return key | lfo;
         }
 

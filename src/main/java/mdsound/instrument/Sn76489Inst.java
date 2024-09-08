@@ -15,7 +15,7 @@ public class Sn76489Inst extends Instrument.BaseInstrument {
 
     public Sn76489[] chips = new Sn76489[] {new Sn76489(), new Sn76489()};
 
-    public void writeGGStereo(byte chipId, int data) {
+    public void writeGGStereo(int chipId, int data) {
         Sn76489 chip = chips[chipId];
         chip.writeGGStereo(data);
     }
@@ -31,7 +31,7 @@ public class Sn76489Inst extends Instrument.BaseInstrument {
     }
 
     public Sn76489Inst() {
-        //0..Main
+        // 0..Main
         visVolume = new int[][][] {
                 new int[][] {new int[] {0, 0}},
                 new int[][] {new int[] {0, 0}}
@@ -39,30 +39,30 @@ public class Sn76489Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(byte chipId, int clock) {
+    public int start(int chipId, int clock) {
         return start(chipId, DefaultPSGClockValue, clock);
     }
 
     @Override
-    public int start(byte chipId, int samplingRate, int clockValue, Object... option) {
+    public int start(int chipId, int samplingRate, int clockValue, Object... option) {
         chips[chipId] = new Sn76489();
         Sn76489 chip = chips[chipId];
         return chip.start(samplingRate, clockValue);
     }
 
     @Override
-    public void reset(byte chipId) {
+    public void reset(int chipId) {
         Sn76489 chip = chips[chipId];
         chip.reset();
     }
 
     @Override
-    public void stop(byte chipId) {
+    public void stop(int chipId) {
         chips[chipId] = null;
     }
 
     @Override
-    public void update(byte chipId, int[][] buffer, int length) {
+    public void update(int chipId, int[][] buffer, int length) {
         Sn76489 chip = chips[chipId];
         int[][] volumes = chip.update(buffer, length);
 
@@ -70,27 +70,30 @@ public class Sn76489Inst extends Instrument.BaseInstrument {
         visVolume[chipId][0][1] = volumes[0][1];
     }
 
-    private void writeSN76489(byte chipId, int data) {
+    private void writeSN76489(int chipId, int data) {
         Sn76489 chip = chips[chipId];
         chip.write(data);
     }
 
     /** @param val mask */
-    public void setMute(byte chipId, int val) {
+    public void setMute(int chipId, int val) {
         Sn76489 chip = chips[chipId];
         chip.setMute(val);
     }
 
     @Override
-    public int write(byte chipId, int port, int adr, int data) {
+    public int write(int chipId, int port, int adr, int data) {
         writeSN76489(chipId, data);
         return 0;
     }
 
     @Override
-    public Map<String, Integer> getVisVolume() {
-        Map<String, Integer> result = new HashMap<>();
-        result.put("sn76489", getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+    public Map<String, Object> getView(String key, Map<String, Object> args) {
+        Map<String, Object> result = new HashMap<>();
+        switch (key) {
+            case "volume" ->
+                    result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+        }
         return result;
     }
 }

@@ -158,7 +158,7 @@ public class NpNesDmc {
             0x03, 0x83, 0x43, 0xC3, 0x23, 0xA3, 0x63, 0xE3, 0x13, 0x93, 0x53, 0xD3, 0x33, 0xB3, 0x73, 0xF3,
             0x0B, 0x8B, 0x4B, 0xCB, 0x2B, 0xAB, 0x6B, 0xEB, 0x1B, 0x9B, 0x5B, 0xDB, 0x3B, 0xBB, 0x7B, 0xFB,
             0x07, 0x87, 0x47, 0xC7, 0x27, 0xA7, 0x67, 0xE7, 0x17, 0x97, 0x57, 0xD7, 0x37, 0xB7, 0x77, 0xF7,
-            0x0F, 0x8F, 0x4F, 0xCF, 0x2F, 0xAF, 0x6F, 0xEF, 0x1F, 0x9F, 0x5F, 0xDF, 0x3F, 0xBF, 0x7F, 0xFF,
+            0x0F, 0x8F, 0x4F, 0xCF, 0x2F, 0xAF, 0x6F, 0xEF, 0x1F, 0x9F, 0x5F, 0xDF, 0x3F, 0xBF, 0x7F, 0xff,
     };
 
     public void setMask(int m) {
@@ -396,11 +396,11 @@ public class NpNesDmc {
                     this.data[0] = this.memory[this.daddress + this.ptrMemory];
                     //cpu.StealCycles(4); // DMC read takes 3 or 4 CPU cycles, usually 4
                     // (checking for the 3-cycle case would require sub-instruction emulation)
-                    this.data[0] &= 0xFF; // read 8 bits
+                    this.data[0] &= 0xff; // read 8 bits
                     if (this.option[OPT.DPCM_REVERSE.ordinal()] != 0) this.data[0] = BitReverse[this.data[0]];
                     this.data[0] |= 0x10000; // use an extra bit to signal end of data
                     this.empty = false;
-                    this.daddress = ((this.daddress + 1) & 0xFFFF) | 0x8000;
+                    this.daddress = ((this.daddress + 1) & 0xffFF) | 0x8000;
                     --this.dLength;
                     if (this.dLength == 0) {
                         if ((this.mode & 1) != 0) { // looped DPCM = auto-reload
@@ -444,11 +444,11 @@ public class NpNesDmc {
                     //this.data = this.memory[this.daddress + this.ptrMemory];
                     //cpu.StealCycles(4); // DMC read takes 3 or 4 CPU cycles, usually 4
                     // (checking for the 3-cycle case would require sub-instruction emulation)
-                    this.data[0] &= 0xFF; // read 8 bits
+                    this.data[0] &= 0xff; // read 8 bits
                     if (this.option[OPT.DPCM_REVERSE.ordinal()] != 0) this.data[0] = BitReverse[this.data[0]];
                     this.data[0] |= 0x10000; // use an extra bit to signal end of data
                     this.empty = false;
-                    this.daddress = ((this.daddress + 1) & 0xFFFF) | 0x8000;
+                    this.daddress = ((this.daddress + 1) & 0xffFF) | 0x8000;
                     --this.dLength;
                     if (this.dLength == 0) {
                         if ((this.mode & 1) != 0) { // looped DPCM = auto-reload
@@ -499,7 +499,7 @@ public class NpNesDmc {
         int clocks;
 
         this.tickCount.iup(); // increase counter (overflows after 255)
-        clocks = (this.tickCount.value() - this.tickLast) & 0xFF;
+        clocks = (this.tickCount.value() - this.tickLast) & 0xff;
         tickFrameSequence(clocks);
         tick(clocks);
         this.tickLast = this.tickCount.value();

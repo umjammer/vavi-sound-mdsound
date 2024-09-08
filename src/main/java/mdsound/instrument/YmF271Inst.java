@@ -10,7 +10,7 @@ import mdsound.chips.YmF271;
 
 public class YmF271Inst extends Instrument.BaseInstrument {
     @Override
-    public void reset(byte chipId) {
+    public void reset(int chipId) {
         device_reset_ymf271(chipId);
 
         visVolume = new int[][][] {
@@ -20,22 +20,22 @@ public class YmF271Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(byte chipId, int clock) {
+    public int start(int chipId, int clock) {
         return device_start_ymf271(chipId, 16934400);
     }
 
     @Override
-    public int start(byte chipId, int clock, int clockValue, Object... option) {
+    public int start(int chipId, int clock, int clockValue, Object... option) {
         return device_start_ymf271(chipId, clockValue);
     }
 
     @Override
-    public void stop(byte chipId) {
+    public void stop(int chipId) {
         device_stop_ymf271(chipId);
     }
 
     @Override
-    public void update(byte chipId, int[][] outputs, int samples) {
+    public void update(int chipId, int[][] outputs, int samples) {
         ymf271_update(chipId, outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
@@ -55,22 +55,22 @@ public class YmF271Inst extends Instrument.BaseInstrument {
         return "OPX";
     }
 
-    public void ymf271_update(byte chipId, int[][] outputs, int samples) {
+    public void ymf271_update(int chipId, int[][] outputs, int samples) {
         YmF271 chip = ymf271Chips[chipId];
         chip.update(outputs, samples);
     }
 
-    public void ymf271_w(byte chipId, int offset, byte data) {
+    public void ymf271_w(int chipId, int offset, int data) {
         YmF271 chip = ymf271Chips[chipId];
         chip.write(offset, data);
     }
 
-    public byte ymf271_r(byte chipId, int offset) {
+    public int ymf271_r(int chipId, int offset) {
         YmF271 chip = ymf271Chips[chipId];
         return chip.read(offset);
     }
 
-    public int device_start_ymf271(byte chipId, int clock) {
+    public int device_start_ymf271(int chipId, int clock) {
         if (chipId >= MAX_CHIPS)
             return 0;
 
@@ -78,48 +78,48 @@ public class YmF271Inst extends Instrument.BaseInstrument {
         return chip.start(clock);
     }
 
-    public void device_stop_ymf271(byte chipId) {
+    public void device_stop_ymf271(int chipId) {
         YmF271 chip = ymf271Chips[chipId];
         chip.stop();
     }
 
-    public void device_reset_ymf271(byte chipId) {
+    public void device_reset_ymf271(int chipId) {
         YmF271 chip = ymf271Chips[chipId];
         chip.reset();
     }
 
-    public void ymf271_write_rom(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
+    public void ymf271_write_rom(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
         YmF271 chip = ymf271Chips[chipId];
         chip.writeRom(romSize, dataStart, dataLength, romData);
     }
 
-    public void ymf271_write_rom(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddress) {
+    public void ymf271_write_rom(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddress) {
         YmF271 chip = ymf271Chips[chipId];
         chip.writeRom(romSize, dataStart, dataLength, romData, srcStartAddress);
     }
 
-    public void ymf271_set_mute_mask(byte chipId, int muteMask) {
+    public void ymf271_set_mute_mask(int chipId, int muteMask) {
         YmF271 chip = ymf271Chips[chipId];
         chip.setMuteMask(muteMask);
     }
 
     @Override
-    public int write(byte chipId, int port, int adr, int data) {
-        ymf271_w(chipId, (port << 1) | 0x00, (byte) adr);
-        ymf271_w(chipId, (port << 1) | 0x01, (byte) data);
+    public int write(int chipId, int port, int adr, int data) {
+        ymf271_w(chipId, (port << 1) | 0x00, adr & 0xff);
+        ymf271_w(chipId, (port << 1) | 0x01, data & 0xff);
         return 0;
     }
 
-    /**
-     * Generic get_info
-     */
-    /*DEVICE_GET_INFO( YmF271Inst ) {
-            case DEVINFO_STR_NAME:       strcpy(info.s, "YMF271");      break;
-            case DEVINFO_STR_FAMILY:     strcpy(info.s, "Yamaha FM");     break;
-            case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;
-            case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
-        }
-    }*/
+//    /**
+//     * Generic get_info
+//     */
+//    DEVICE_GET_INFO( YmF271Inst ) {
+//            case DEVINFO_STR_NAME:       strcpy(info.s, "YMF271");      break;
+//            case DEVINFO_STR_FAMILY:     strcpy(info.s, "Yamaha FM");     break;
+//            case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;
+//            case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
+//        }
+//    }
 
     //----
 
@@ -129,9 +129,12 @@ public class YmF271Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public Map<String, Integer> getVisVolume() {
-        Map<String, Integer> result = new HashMap<>();
-        result.put("ymf271", getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+    public Map<String, Object> getView(String key, Map<String, Object> args) {
+        Map<String, Object> result = new HashMap<>();
+        switch (key) {
+            case "volume" ->
+                    result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+        }
         return result;
     }
 }

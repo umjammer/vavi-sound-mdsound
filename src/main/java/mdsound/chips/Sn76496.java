@@ -125,43 +125,43 @@ public class Sn76496 {
 
     /** volume table (for 4-bit to db conversion) */
     private int[] volTable = new int[16];
-    /* registers */
+    /** registers */
     private int[] register = new int[8];
-    /* last register written */
+    /** last register written */
     private int lastRegister;
-    /* db volume of Voice 0-2 and noise */
+    /** db volume of Voice 0-2 and noise */
     private int[] volume = new int[4];
-    /* noise generator LFSR */
+    /** noise generator LFSR */
     private int rng;
-    /* clock divider */
+    /** clock divider */
     private int clockDivider;
     private int currentClock;
-    /* mask for feedback */
+    /** mask for feedback */
     private int feedbackMask;
-    /* mask for white noise tap 1 (higher one, usually bit 14) */
+    /** mask for white noise tap 1 (higher one, usually bit 14) */
     private int whiteNoiseTap1;
-    /* mask for white noise tap 2 (lower one, usually bit 13) */
+    /** mask for white noise tap 2 (lower one, usually bit 13) */
     private int whiteNoiseTap2;
-    /* output negate flag */
+    /** output negate flag */
     private int negate;
-    /* whether we're dealing with stereo or not */
+    /** whether we're dealing with stereo or not */
     private int stereo;
-    /* the stereo output mask */
+    /** the stereo output mask */
     private int stereoMask;
-    /* Length of 1/2 of waveform */
+    /** Length of 1/2 of waveform */
     private int[] period = new int[4];
-    /* Position within the waveform */
+    /** Position within the waveform */
     private int[] count = new int[4];
-    /* 1-bit output of each channel, pre-volume */
+    /** 1-bit output of each channel, pre-volume */
     private int[] output = new int[4];
-    /* number of cycles until the READY line goes active */
+    /** number of cycles until the READY line goes active */
     private int cyclestoReady;
-    /* flag for if frequency zero acts as if it is one more than max (0x3ff+1) or if it acts like 0 */
+    /** flag for if frequency zero acts as if it is one more than max (0x3ff+1) or if it acts like 0 */
     private int freq0IsMax;
     private int[] muteMsk = new int[4];
-    /* bit 7 - NGP Mode on/off, bit 0 - is 2nd NGP chips */
-    private byte ngpFlags;
-    /* Pointer to other Chip */
+    /** bit 7 - NGP Mode on/off, bit 0 - is 2nd NGP chips */
+    private int ngpFlags;
+    /** Pointer to other Chip */
     private Sn76496 ngpChip2;
 
     public static Sn76496 lastChipInit = null;
@@ -171,14 +171,13 @@ public class Sn76496 {
         return (byte) (this.cyclestoReady != 0 ? 0 : 1);
     }
 
-    public void writeStereo(int offset, byte data) {
+    public void writeStereo(int offset, int data) {
         if (this.stereo != 0) this.stereoMask = data;
         //else Debug.printf("Call to stereo write with mono chips!\n");
     }
 
-    public void writeReg(int offset, byte data) {
+    public void writeReg(int offset, int data) {
         int n, r, c;
-
         // set number of cycles until READY is active; this is always one
         // 'sample', i.e. it equals the clock divider exactly; until the
         // clock divider is fully supported, we delay until one sample has
@@ -199,37 +198,37 @@ public class Sn76496 {
         }
         c = r / 2;
         switch (r) {
-        case 0: /* tone 0 : frequency */
-        case 2: /* tone 1 : frequency */
-        case 4: /* tone 2 : frequency */
+        case 0: // tone 0 : frequency
+        case 2: // tone 1 : frequency
+        case 4: // tone 2 : frequency
             if ((data & 0x80) == 0) this.register[r] = (this.register[r] & 0x0f) | ((data & 0x3f) << 4);
             if ((this.register[r] != 0) || (this.freq0IsMax == 0)) this.period[c] = this.register[r];
             else this.period[c] = 0x400;
             if (r == 4) {
-                /* update noise shift frequency */
+                // update noise shift frequency
                 if ((this.register[6] & 0x03) == 0x03)
                     this.period[3] = 2 * this.period[2];
             }
             break;
-        case 1: /* tone 0 : volume */
-        case 3: /* tone 1 : volume */
-        case 5: /* tone 2 : volume */
-        case 7: /* noise  : volume */
+        case 1: // tone 0 : volume
+        case 3: // tone 1 : volume
+        case 5: // tone 2 : volume
+        case 7: // noise  : volume
             this.volume[c] = this.volTable[data & 0x0f];
             if ((data & 0x80) == 0) this.register[r] = (this.register[r] & 0x3f0) | (data & 0x0f);
 
-            // // "Every volume write resets the waveform to High level.", TmEE, 2012-11-24 on SMSPower
+            // "Every volume write resets the waveform to High level.", TmEE, 2012-11-24 on SMSPower
             // this.Output[c] = 1;
             // this.Count[c] = this.Period[c];
             // disabled for now - sounds awful
             break;
         case 6: { // noise  : frequency, mode
-// #if DEBUG
-            //if ((data & 0x80) == 0) Debug.printf("Sn76489: write to reg 6 with bit 7 clear; data was %03x, new write is %02x! report this to LN!\n", this.Register[6], data);
-// #endif
+//#if DEBUG
+// if ((data & 0x80) == 0) Debug.printf("Sn76489: write to reg 6 with bit 7 clear; data was %03x, new write is %02x! report this to LN!\n", this.Register[6], data);
+//#endif
             if ((data & 0x80) == 0) this.register[r] = (this.register[r] & 0x3f0) | (data & 0x0f);
             n = this.register[6];
-            /* N/512,N/1024,N/2048,Tone // #3 output */
+            // N/512,N/1024,N/2048,Tone //#3 output
             this.period[3] = ((n & 3) == 3) ? 2 * this.period[2] : (1 << (5 + (n & 3)));
             this.rng = this.feedbackMask;
         }
@@ -245,25 +244,25 @@ public class Sn76496 {
         Sn76496 r2;
         int[] lBuffer = outputs[0];
         int[] rBuffer = outputs[1];
-        int _out = 0;
-        int _out2 = 0;
-        byte ngpMode;
+        int out;
+        int out2;
+        int ngpMode;
 
-        ngpMode = (byte) ((this.ngpFlags >> 7) & 0x01);
+        ngpMode = (this.ngpFlags >> 7) & 0x01;
         r2 = this.ngpChip2;
 
         if (ngpMode == 0) {
             // Speed Hack
-            _out = 0;
+            out = 0;
             for (i = 0; i < 3; i++) {
                 if (this.period[i] != 0 || this.volume[i] != 0) {
-                    _out = 1;
+                    out = 1;
                     break;
                 }
             }
             if (this.volume[3] != 0)
-                _out = 1;
-            if (_out == 0) {
+                out = 1;
+            if (out == 0) {
                 for (int j = 0; j < samples; j++) {
                     lBuffer[j] = 0x00;
                     rBuffer[j] = 0x00;
@@ -299,10 +298,8 @@ public class Sn76496 {
             if (this.count[3] <= 0) {
                 // if noisemode is 1, both taps are enabled
                 // if noisemode is 0, the lower tap, whitenoisetap2, is held at 0
-                if ((
-                        ((this.rng & this.whiteNoiseTap1) != 0 ? 1 : 0)
-                                ^
-                                (((this.rng & this.whiteNoiseTap2) != 0 ? 1 : 0) * ((this.register[6] & 4) != 0 ? 1 : 0))
+                if ((((this.rng & this.whiteNoiseTap1) != 0 ? 1 : 0) ^
+                        (((this.rng & this.whiteNoiseTap2) != 0 ? 1 : 0) * ((this.register[6] & 4) != 0 ? 1 : 0))
                 ) != 0) {
                     this.rng >>= 1;
                     this.rng |= this.feedbackMask;
@@ -333,7 +330,7 @@ public class Sn76496 {
 //            }
 
             // CUSTOM CODE START
-            _out = _out2 = 0;
+            out = out2 = 0;
             if (this.ngpFlags == 0) {
                 for (i = 0; i < 4; i++) {
                     // Preparation Start
@@ -354,12 +351,12 @@ public class Sn76496 {
                         ggst[1] = (this.stereoMask & (0x01 << i)) != 0 ? 0x01 : 0x00;
                     }
                     if (this.period[i] > 1 || i == 3) {
-                        _out += vol[i] * this.volume[i] * ggst[0];
-                        _out2 += vol[i] * this.volume[i] * ggst[1];
+                        out += vol[i] * this.volume[i] * ggst[0];
+                        out2 += vol[i] * this.volume[i] * ggst[1];
                     } else if (this.muteMsk[i] != 0) {
                         // Make Bipolar Output with PCM possible
-                        _out += this.volume[i] * ggst[0];
-                        _out2 += this.volume[i] * ggst[1];
+                        out += this.volume[i] * ggst[0];
+                        out2 += this.volume[i] * ggst[1];
                     }
                 }
             } else {
@@ -384,12 +381,12 @@ public class Sn76496 {
                         //out += vol[i] * this.Volume[i];
                         //out2 += vol[i] * r2.Volume[i];
                         if (this.period[i] != 0) {
-                            _out += vol[i] * this.volume[i] * ggst[0];
-                            _out2 += vol[i] * r2.volume[i] * ggst[1];
+                            out += vol[i] * this.volume[i] * ggst[0];
+                            out2 += vol[i] * r2.volume[i] * ggst[1];
                         } else if (this.muteMsk[i] != 0) {
                             // Make Bipolar Output with PCM possible
-                            _out += this.volume[i] * ggst[0];
-                            _out2 += r2.volume[i] * ggst[1];
+                            out += this.volume[i] * ggst[0];
+                            out2 += r2.volume[i] * ggst[1];
                         }
                     }
                 } else {
@@ -411,19 +408,19 @@ public class Sn76496 {
                     }
                     //out += vol[3] * r2.Volume[3];
                     //out2 += vol[3] * this.Volume[3];
-                    _out += vol[3] * r2.volume[3] * ggst[0];
-                    _out2 += vol[3] * this.volume[3] * ggst[1];
+                    out += vol[3] * r2.volume[3] * ggst[0];
+                    out2 += vol[3] * this.volume[3] * ggst[1];
                 }
             }
             // CUSTOM CODE END
 
             if (this.negate != 0) {
-                _out = -_out;
-                _out2 = -_out2;
+                out = -out;
+                out2 = -out2;
             }
 
-            lBuffer[ptr] = _out >> 1; // Output is Bipolar
-            rBuffer[ptr] = _out2 >> 1;
+            lBuffer[ptr] = out >> 1; // Output is Bipolar
+            rBuffer[ptr] = out2 >> 1;
             ptr++;
             samples--;
         }
@@ -431,24 +428,23 @@ public class Sn76496 {
 
     private void setGain(int gain) {
         int i;
-        double _out;
-
+        double out;
 
         gain &= 0xff;
 
         // increase max output basing on gain (0.2 dB per step)
-        _out = MAX_OUTPUT / 4; // four channels, each gets 1/4 of the total range
+        out = MAX_OUTPUT / 4.; // four channels, each gets 1/4 of the total range
         while (gain-- > 0)
-            _out *= 1.023292992; // = (10 ^ (0.2/20))
+            out *= 1.023292992; // = (10 ^ (0.2/20))
 
-        /* build volume table (2dB per step) */
+        // build volume table (2dB per step)
         for (i = 0; i < 15; i++) {
-            /* limit volume to avoid clipping */
-            if (_out > MAX_OUTPUT / 4) this.volTable[i] = MAX_OUTPUT / 4;
+            // limit volume to avoid clipping
+            if (out > MAX_OUTPUT / 4.) this.volTable[i] = MAX_OUTPUT / 4;
                 //else this.VolTable[i] = out;
-            else this.volTable[i] = (int) (_out + 0.5); // I like rounding
+            else this.volTable[i] = (int) (out + 0.5); // I like rounding
 
-            _out /= 1.258925412; // = 10 ^ (2/20) = 2dB
+            out /= 1.258925412; // = 10 ^ (2/20) = 2dB
         }
         this.volTable[15] = 0;
     }
@@ -477,7 +473,7 @@ public class Sn76496 {
         this.negate = 0; // channels are not negated
         this.stereo = stereo; // depends on init
         this.cyclestoReady = 1; // assume ready is not active immediately on init. is this correct?
-        this.stereoMask = 0xFF; // all channels enabled
+        this.stereoMask = 0xff; // all channels enabled
         this.freq0IsMax = 1; // frequency set to 0 results in freq = 0x400 rather than 0
 
         this.rng = this.feedbackMask;
@@ -490,12 +486,12 @@ public class Sn76496 {
     }
 
     private int startGeneric(int clock, int feedbackMask, int noiseTap1, int noiseTap2, int negate, int stereo, int clockDivider, int freq0) {
-        int sampleRate = init(clock & 0x7FFFFFFF, stereo);
-        if ((clock & 0x80000000) != 0 && lastChipInit != null) {
+        int sampleRate = init(clock & 0x7fff_ffff, stereo);
+        if ((clock & 0x8000_0000) != 0 && lastChipInit != null) {
             // Activate special NeoGeoPocket Mode
             Sn76496 chip2 = lastChipInit;
-            chip2.ngpFlags = (byte) 0x80 | 0x00;
-            this.ngpFlags = (byte) 0x80 | 0x01;
+            chip2.ngpFlags = 0x80 | 0x00;
+            this.ngpFlags = 0x80 | 0x01;
             this.ngpChip2 = chip2;
             chip2.ngpChip2 = this;
             lastChipInit = null;
@@ -520,7 +516,7 @@ public class Sn76496 {
         return sampleRate;
     }
 
-    public long start(int clock, int shiftRegWidth, int noiseTaps,
+    public int start(int clock, int shiftRegWidth, int noiseTaps,
                       int negate, int stereo, int clockDivider, int freq0) {
         int[] ntap = new int[2];
         int curbit;
@@ -548,20 +544,20 @@ public class Sn76496 {
     }
 
     public void reset() {
-        for (byte i = 0; i < 4; i++) this.volume[i] = 0;
+        for (int i = 0; i < 4; i++) this.volume[i] = 0;
 
         this.lastRegister = 0;
-        for (byte i = 0; i < 8; i += 2) {
+        for (int i = 0; i < 8; i += 2) {
             this.register[i] = 0;
             this.register[i + 1] = 0x0f; // volume = 0
         }
 
-        for (byte i = 0; i < 4; i++) {
+        for (int i = 0; i < 4; i++) {
             this.output[i] = this.period[i] = this.count[i] = 0;
         }
 
         this.cyclestoReady = 1;
-        this.stereoMask = 0xFF; // all channels enabled
+        this.stereoMask = 0xff; // all channels enabled
 
         this.rng = this.feedbackMask;
         this.output[3] = this.rng & 1;
@@ -572,7 +568,7 @@ public class Sn76496 {
     }
 
     private void setMuteMask(int muteMask) {
-        for (byte curChn = 0; curChn < 4; curChn++)
+        for (int curChn = 0; curChn < 4; curChn++)
             this.muteMsk[curChn] = (muteMask & (1 << curChn)) != 0 ? 0 : ~0;
     }
 }

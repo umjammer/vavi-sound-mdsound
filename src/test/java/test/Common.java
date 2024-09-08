@@ -15,7 +15,7 @@ public class Common {
         SPPCM(42),
         C140(43),
         SEGAPCM(44);
-        int v;
+        final int v;
         RealChipType(int v) {
             this.v = v;
         }

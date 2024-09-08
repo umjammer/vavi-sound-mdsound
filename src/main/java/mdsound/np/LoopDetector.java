@@ -202,7 +202,7 @@ public class LoopDetector implements Device {
         protected int loopStart, m_loop_end;
 
         public NESDetectorEx() {
-            final int[] bufsize_table = new int[] {
+            int[] bufsize_table = new int[] {
                     15, 15, 15, 15, 15, // SQR0, SQR1, TRI, NOIZ, DPCM
                     14, 14, 14, 14,// N106[0-3]
                     14, 14, 14, 14 // N106[4-7]

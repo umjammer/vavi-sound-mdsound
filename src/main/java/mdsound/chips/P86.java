@@ -63,8 +63,8 @@ public class P86 {
     private static final int[] rateTable = new int[] {4135, 5513, 8270, 11025, 16540, 22050, 33080, 44100};
 
     private static class Inst {
-        public int start = 0;
-        public int size = 0;
+        public int start;
+        public int size;
 
         public Inst(byte[] pcmData, int i) {
             this.start = pcmData[i * 6 + 0 + 12 + 1 + 3] +
@@ -139,7 +139,7 @@ public class P86 {
             for (int i = 0; i < 16; i++) {
                 volumeTable[i] = new int[256];
                 // temp = pow(2.0, (i + 15) / 2.0) * aVolume / 0x18000;
-                double temp = i * this.volume / 256;
+                double temp = i * this.volume / 256d;
                 for (int j = 0; j < 256; j++) {
                     volumeTable[i][j] = (int) ((byte) j * temp);
                 }

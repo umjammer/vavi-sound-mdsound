@@ -60,7 +60,7 @@ public class QSound {
         // work variables
 
         // key on / key off
-        private byte enabled;
+        private int enabled;
         // left volume
         private int lVol;
         // right volume
@@ -68,7 +68,7 @@ public class QSound {
         // current offset counter
         private int stepPtr;
 
-        private byte muted;
+        private int muted;
 
         void update(int[][] outputs, int samples, byte[] sampleRom, int sampleRomLength) {
             if (this.enabled != 0 && this.muted == 0) {
@@ -104,7 +104,7 @@ public class QSound {
                     }
 
                     int offset = (this.bank | this.address) % sampleRomLength;
-                    byte sample = sampleRom[offset];
+                    int sample = sampleRom[offset] & 0xff;
 
                     pOutL[ptr] += ((sample * this.lVol * this.vol) >> 14);
                     pOutR[ptr] += ((sample * this.rVol * this.vol) >> 14);
@@ -114,7 +114,7 @@ public class QSound {
         }
     }
 
-    private Channel[] channel = new Channel[CHANNELS];
+    private final Channel[] channel = new Channel[CHANNELS];
 
     /** register latch data */
     private int data;
@@ -131,8 +131,8 @@ public class QSound {
             panTable[i] = (int) ((256 / Math.sqrt(32.0)) * Math.sqrt(i));
     }
 
-    public void setCommand(byte address, int data) {
-        int ch = 0, reg = 0;
+    public void setCommand(int address, int data) {
+        int ch, reg;
 
         // direct Sound reg
         if ((address & 0xff) < 0x80) {
@@ -157,7 +157,7 @@ public class QSound {
             // bank, high bits unknown
             ch = (ch + 1) & 0x0f; // strange ...
             this.channel[ch].bank = (data & 0x7f) << 16; // Note: The most recent MAME doesn't do "& 0x7F"
-//# ifdef _DEBUG
+//#ifdef _DEBUG
 //if (data && !(data & 0x8000))
 // Debug.printf("QSound Ch %u: Bank = %04x\n", ch, data);
 //#endif
@@ -169,10 +169,10 @@ public class QSound {
             this.channel[ch].freq = data;
             // This was working with the old code, but breaks the songs with the new one.
             // And I'm pretty sure the hardware won't do this. -Valley Bell
-                /*if (!data) {
-                    // key off
-                    this.channel[ch].enabled = 0;
-                }*/
+//            if (!data) {
+//                // key off
+//                this.channel[ch].enabled = 0;
+//            }
             break;
         case 3:
 //if (this.channel[ch].enabled && data != 0x8000)
@@ -238,12 +238,12 @@ public class QSound {
         for (int i = 0; i < this.channel.length; i++) this.channel[i] = new Channel();
 
         for (int adr = 0x7f; adr >= 0; adr--)
-            this.setCommand((byte) adr, 0);
+            this.setCommand(adr, 0);
         for (int adr = 0x80; adr < 0x90; adr++)
-            this.setCommand((byte) adr, 0x120);
+            this.setCommand(adr, 0x120);
     }
 
-    public void write(int offset, byte data) {
+    public void write(int offset, int data) {
         switch (offset) {
         case 0:
             this.data = (this.data & 0xff) | (data << 8);
@@ -264,9 +264,9 @@ public class QSound {
         }
     }
 
-    public byte read(int offset) {
+    public int read(int offset) {
         // Port ready bit (0x80 if ready)
-        return (byte) 0x80;
+        return 0x80;
     }
 
     public void update(int[][] outputs, int samples) {
@@ -313,8 +313,8 @@ public class QSound {
     }
 
     public void setMuteMask(int muteMask) {
-        for (byte curChn = 0; curChn < CHANNELS; curChn++)
-            this.channel[curChn].muted = (byte) ((muteMask >> curChn) & 0x01);
+        for (int curChn = 0; curChn < CHANNELS; curChn++)
+            this.channel[curChn].muted = (muteMask >> curChn) & 0x01;
     }
 
     public void stop() {

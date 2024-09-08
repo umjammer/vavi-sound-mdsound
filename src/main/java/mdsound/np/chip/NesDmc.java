@@ -1,8 +1,9 @@
 package mdsound.np.chip;
 
+import java.util.function.Consumer;
+
 import mdsound.Common;
 import mdsound.Instrument;
-import mdsound.MDSound;
 import mdsound.np.Device;
 import mdsound.np.Device.SoundChip;
 import mdsound.np.NpNesDmc;
@@ -20,7 +21,7 @@ public class NesDmc implements SoundChip {
     @Override
     public int render(int[] b) {
         int ret = dmc.renderOrg(b);
-        MDSound.np_nes_dmc_volume = Math.abs(b[0]);
+        if (listener != null) listener.accept(new int[] {-1, Math.abs(b[0]), -1, -1, -1, -1, -1, -1});
         return ret;
     }
 
@@ -66,5 +67,11 @@ public class NesDmc implements SoundChip {
 
     public void setMemory(Device r) {
         dmc.setMemoryOrg(r);
+    }
+
+    private Consumer<int[]> listener;
+
+    public void setListener(Consumer<int[]> listener) {
+        this.listener = listener;
     }
 }

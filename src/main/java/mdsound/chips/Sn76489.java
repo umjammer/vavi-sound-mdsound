@@ -1,10 +1,14 @@
 package mdsound.chips;
 
-import java.util.Arrays;
-import java.util.List;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
+
+import static java.lang.System.getLogger;
 
 
 public class Sn76489 {
+
+    private static final Logger logger = getLogger(Sn76489.class.getName());
 
     /** per-channel muting */
     private int mute;
@@ -31,17 +35,17 @@ public class Sn76489 {
     // Output calculation variables
 
     /** Frequency register values (counters) */
-    private int[] toneFreqVals = new int[4];
+    private final int[] toneFreqVals = new int[4];
     /** Frequency channel flip-flops */
-    private int[] toneFreqPos = new int[4];
+    private final int[] toneFreqPos = new int[4];
     /** Value of each channel, before stereo is applied */
-    private int[] channels = new int[4];
-    /** intermediate values used at boundaries between + and - (does not need double accuracy)*/
-    private float[] intermediatePos = new float[4];
+    private final int[] channels = new int[4];
+    /** intermediate values used at boundaries between + and - (does not need double accuracy) */
+    private final float[] intermediatePos = new float[4];
 
     /** fake stereo */
-    private float[][] panning = new float[][] {new float[2], new float[2], new float[2], new float[2]};
-    private int[][] volume = new int[][] {new int[2], new int[2], new int[2], new int[2]};
+    private final float[][] panning = new float[][] {new float[2], new float[2], new float[2], new float[2]};
+    private final int[][] volume = new int[][] {new int[2], new int[2], new int[2], new int[2]};
 
     /** bit 7 - NGP Mode on/off, bit 0 - is 2nd NGP chips */
     private int ngpFlags;
@@ -109,7 +113,7 @@ public class Sn76489 {
     /** Value below which Psg does not output */
     private static final int PSG_CUTOFF = 0x6;
 
-    private static final List<Integer> PSGVolumeValues = Arrays.asList(
+    private static final int[] PSGVolumeValues = {
             // These values are taken from a real SMS2's output
             // {892,892,892,760,623,497,404,323,257,198,159,123,96,75,60,0},
             // I can't remember why 892... :P some scaling I did at some point
@@ -117,7 +121,7 @@ public class Sn76489 {
             // 1516,1205,957,760,603,479,381,303,240,191,152,120,96,76,60,0
             // The MAME core uses 0x2000 as maximum volume (0x1000 for bipolar output)
             4096, 3254, 2584, 2053, 1631, 1295, 1029, 817, 649, 516, 410, 325, 258, 205, 163, 0
-    );
+    };
 
     private void config(FeedbackPatterns feedback, SRWidths srWidth, int boostNoise) {
         this.whiteNoiseFeedback = feedback;
@@ -134,11 +138,11 @@ public class Sn76489 {
     /**
      * Reset the panning values to the centre position
      */
-    private void centerPanning(float[] channels) {
+    private static void centerPanning(float[] channels) {
         channels[0] = channels[1] = 1.0f;
     }
 
-    private void calcPanning(float[] channels, int position) {
+    private static void calcPanning(float[] channels, int position) {
         if (position > RANGE / 2)
             position = (int) (RANGE / 2);
         else if (position < -RANGE / 2)
@@ -150,28 +154,28 @@ public class Sn76489 {
         // left is equivalent to right with position = range - position
         // position is in the range 0 .. RANGE
         // RANGE / 2 = centre, result = 1.0f
-        channels[1] = (float) (Math.sin((double) position / RANGE * Math.PI / 2) * SQRT2);
+        channels[1] = (float) (Math.sin(position / RANGE * Math.PI / 2d) * SQRT2);
         position = (int) RANGE - position;
-        channels[0] = (float) (Math.sin((double) position / RANGE * Math.PI / 2) * SQRT2);
+        channels[0] = (float) (Math.sin(position / RANGE * Math.PI / 2d) * SQRT2);
     }
 
     public void writeGGStereo(int data) {
         this.psgStereo = data;
-        //Debug.printf("WrPSGStereo:0:%d", SN76489Chip[0].psgStereo);
-        //Debug.printf("WrPSGStereo:1:%d", SN76489Chip[1].psgStereo);
+        //logger.log(Level.DEBUG, String.format("WrPSGStereo:0:%d", SN76489Chip[0].psgStereo));
+        //logger.log(Level.DEBUG, String.format("WrPSGStereo:1:%d", SN76489Chip[1].psgStereo));
     }
 
     public int start(int samplingRate, int clockValue) {
-        this.dClock = (float) (clockValue & 0x7FFFFFF) / 16 / samplingRate;
+        this.dClock = (float) (clockValue & 0x7ff_ffff) / 16 / samplingRate;
 
         setMute(15);
-        config(/*MUTE_ALLON,*/ FeedbackPatterns.FB_SEGAVDP, SRWidths.SRW_SEGAVDP, 1);
+        config(/* MUTE_ALLON, */ FeedbackPatterns.FB_SEGAVDP, SRWidths.SRW_SEGAVDP, 1);
 
         for (int i = 0; i <= 3; i++)
             centerPanning(this.panning[i]);
         //reset(chips);
 
-        if ((clockValue & 0x80000000) != 0 && lastChipInit != null) {
+        if ((clockValue & 0x8000_0000) != 0 && lastChipInit != null) {
             // Activate special NeoGeoPocket Mode
             lastChipInit.ngpFlags = 0x80 | 0x00;
             this.ngpFlags = 0x80 | 0x01;
@@ -188,7 +192,7 @@ public class Sn76489 {
     }
 
     public void reset() {
-        this.psgStereo = 0xFF;
+        this.psgStereo = 0xff;
 
         for (int i = 0; i <= 3; i++) {
             // Initialise Psg state
@@ -219,7 +223,7 @@ public class Sn76489 {
     }
 
     public int[][] update(int[][] buffer, int length) {
-        //Debug.printf("PSGStereo:1:%d", SN76489_Chip[1].PSGStereo);
+//logger.log(Level.DEBUG, String.format("PSGStereo:1: %d", this.psgStereo));
 
         Sn76489 chip2;
         Sn76489 chipT;
@@ -245,37 +249,41 @@ public class Sn76489 {
             int i;
             for (i = 0; i <= 2; ++i)
                 if ((chipT.mute >> i & 1) != 0) {
-                    if (chipT.intermediatePos[i] != Float.MIN_VALUE)
+                    if (Float.floatToIntBits(chipT.intermediatePos[i]) != Float.floatToIntBits(Float.MIN_VALUE))
                         // Intermediate position (antialiasing)
-                        this.channels[i] = (short) (PSGVolumeValues.get(this.registers[2 * i + 1]) * chipT.intermediatePos[i]);
+                        this.channels[i] = (int) (PSGVolumeValues[this.registers[2 * i + 1]] * chipT.intermediatePos[i]);
                     else
                         // Flat (no antialiasing needed)
-                        this.channels[i] = PSGVolumeValues.get(this.registers[2 * i + 1]) * chipT.toneFreqPos[i];
-                } else
+                        this.channels[i] = PSGVolumeValues[this.registers[2 * i + 1]] * chipT.toneFreqPos[i];
+                } else {
                     // Muted channel
+logger.log(Level.DEBUG, String.format("T:ch[%d]: muted", i));
                     this.channels[i] = 0;
+                }
 
             // Noise channel
             if ((chipN.mute >> 3 & 1) != 0) {
-                //this.Channels[3] = PSGVolumeValues[this.Registers[7]] * ( chipN.NoiseShiftRegister & 0x1 ) * 2; /* double noise volume */
+                //this.Channels[3] = PSGVolumeValues[this.Registers[7]] * ( chipN.NoiseShiftRegister & 0x1 ) * 2; // double noise volume
                 // Now the noise is bipolar, too. -Valley Bell
-                this.channels[3] = PSGVolumeValues.get(this.registers[7]) * ((chipN.noiseShiftRegister & 0x1) * 2 - 1);
+                this.channels[3] = PSGVolumeValues[this.registers[7]] * ((chipN.noiseShiftRegister & 0x1) * 2 - 1);
                 // due to the way the white noise works here, it seems twice as loud as it should be
                 if ((this.registers[6] & 0x4) != 0)
                     this.channels[3] >>= 1;
-            } else
+            } else {
+logger.log(Level.DEBUG, String.format("N:ch[%d]: muted", i));
                 this.channels[i] = 0;
+            }
 
             // Build stereo result into buffer
             buffer[0][j] = 0;
             buffer[1][j] = 0;
-            int bl = 0;
-            int br = 0;
+            int bl;
+            int br;
             if (this.ngpFlags == 0) {
                 // For all 4 channels
                 for (i = 0; i <= 3; ++i) {
                     if (((this.psgStereo >> i) & 0x11) == 0x11) {
-                        //Debug.printf("ggpan1");
+                        //logger.log(Level.DEBUG, String.format("ggpan1");
                         // no GG stereo for this channel
                         if (this.panning[i][0] == 1.0f) {
                             bl = this.channels[i]; // left
@@ -287,11 +295,11 @@ public class Sn76489 {
 
                         }
                     } else {
-                        //Debug.printf("ggpan2");
+                        //logger.log(Level.DEBUG, String.format("ggpan2");
                         // GG stereo overrides panning
                         bl = ((this.psgStereo >> (i + 4)) & 0x1) * this.channels[i]; // left
                         br = ((this.psgStereo >> i) & 0x1) * this.channels[i]; // right
-                        //Debug.printf("Ch:bl:br:%d:%d:%d:%d",i,bl,br, this.Channels[i]);
+                        //logger.log(Level.DEBUG, String.format("Ch:bl:br:%d:%d:%d:%d",i,bl,br, this.Channels[i]);
                     }
 
                     buffer[0][j] += bl;
@@ -299,7 +307,7 @@ public class Sn76489 {
                     this.volume[i][0] = Math.abs(bl);
                     this.volume[i][1] = Math.abs(br);
                 }
-                //Log.WriteLine(LogLevel.TRACE,String.format("%d", this.Channels[3]));
+//logger.log(Level.TRACE, String.format("%d", this.channels[3]));
             } else {
                 if ((this.ngpFlags & 0x01) == 0) {
                     // For all 3 tone channels
@@ -322,7 +330,6 @@ public class Sn76489 {
                     this.volume[i][1] = Math.abs(br);
                 }
             }
-
 
             // Increment clock by 1 sample length
             this.clock += this.dClock;
@@ -401,10 +408,12 @@ public class Sn76489 {
             }
         }
 
+//logger.log(Level.DEBUG, "psg: " + Arrays.toString(buffer[0]) + ", " + Arrays.toString(buffer[1]) + ", " + chipT.mute + ", " + chipN.mute); // mute ok, TODO data always 0
         return this.volume;
     }
 
     public void write(int data) {
+logger.log(Level.TRACE, String.format("psg: %02x, mute: %02x", data & 0xff, mute)); // it seems ok
         if ((data & 0x80) != 0) {
             // Latch/data byte  %1 cc t dddd
             this.latchedRegister = (data >> 4) & 0x07;
@@ -412,7 +421,7 @@ public class Sn76489 {
                     (this.registers[this.latchedRegister] & 0x3f0) // zero low 4 bits
                             | (data & 0xf); // and replace with data
         } else {
-            // Data byte %0 - dddddd
+            // data byte %0 - dddddd
             if ((this.latchedRegister % 2) == 0 && (this.latchedRegister < 5))
                 // Tone register
                 this.registers[this.latchedRegister] =

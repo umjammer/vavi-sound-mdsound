@@ -3,6 +3,9 @@ package mdsound.chips;
 import java.util.Arrays;
 
 
+/**
+ * @see "https://github.com/abbruzze/sega-md/blob/3c8f24d62d6f533b65525b98e74d81530ef5393d/src/ucesoft/smd/audio/Ym3438.java"
+ */
 public class Ym3438 {
 
     private enum Eg {
@@ -18,68 +21,68 @@ public class Ym3438 {
 
     private static class Opn2WriteBuf {
         private long time;
-        private byte port;
-        private byte data;
+        private int port;
+        private int data;
     }
 
     private int cycles;
     private int slot;
     private int channel;
-    private short mol, mor;
+    private int mol, mor;
 
     // IO
 
-    private short writeData;
-    private byte writeA;
-    private byte writeD;
-    private byte writeAEn;
-    private byte writeDEn;
-    private byte writeBusy;
-    private byte writeBusyCnt;
-    private byte writeFmAddress;
-    private byte writeFmData;
-    private byte writeFmModeA;
-    private short address;
-    private byte data;
-    private byte pinTestIn;
-    private byte pinIrq;
-    private byte busy;
+    private int writeData;
+    private int writeA;
+    private int writeD;
+    private int writeAEn;
+    private int writeDEn;
+    private int writeBusy;
+    private int writeBusyCnt;
+    private int writeFmAddress;
+    private int writeFmData;
+    private int writeFmModeA;
+    private int address;
+    private int data;
+    private int pinTestIn;
+    private int pinIrq;
+    private int busy;
 
     // LFO
 
-    private byte lfoEn;
-    private byte lfoFreq;
-    private byte lfoPm;
-    private byte lfoAm;
-    private byte lfoCnt;
-    private byte lfoInc;
-    private byte lfoQuotient;
+    private int lfoEn;
+    private int lfoFreq;
+    private int lfoPm;
+    private int lfoAm;
+    private int lfoCnt;
+    private int lfoInc;
+    private int lfoQuotient;
 
     // Phase generator
 
     private short pgFnum;
-    private byte pgBlock;
-    private byte pgKcode;
+    private int pgBlock;
+    private int pgKcode;
     private int[] pgInc = new int[24];
     private int[] pgPhase = new int[24];
     private byte[] pgReset = new byte[24];
     private int pgRead;
     // Envelope generator
-    private byte egCycle;
-    private byte egCycleStop;
-    private byte egShift;
-    private byte egShiftLock;
-    private byte egTimerLowLock;
-    private short egTimer;
-    private byte egTimerInc;
-    private short egQuotient;
-    private byte egCustomTimer;
-    private byte egRate;
-    private byte egKsv;
-    private byte egInc;
-    private byte egRateMax;
+    private int egCycle;
+    private int egCycleStop;
+    private int egShift;
+    private int egShiftLock;
+    private int egTimerLowLock;
+    private int egTimer;
+    private int egTimerInc;
+    private int egQuotient;
+    private int egCustomTimer;
+    private int egRate;
+    private int egKsv;
+    private int egInc;
+    private int egRateMax;
     private byte[] egSl = new byte[2];
-    private byte egLfoAm;
+    private int egLfoAm;
     private byte[] egTl = new byte[2];
     private byte[] egState = new byte[24];
     private short[] egLevel = new short[24];
@@ -95,7 +98,7 @@ public class Ym3438 {
     private byte[] egSsgDir = new byte[24];
     private byte[] egSsgInv = new byte[24];
     private int[] egRead = new int[2];
-    private byte egReadInc;
+    private int egReadInc;
 
     // FM
 
@@ -108,46 +111,46 @@ public class Ym3438 {
 
     private short[] chAcc = new short[6];
     private short[] chOut = new short[6];
-    private short chLock;
-    private byte chLockL;
-    private byte chLockR;
-    private short chRead;
+    private int chLock;
+    private int chLockL;
+    private int chLockR;
+    private int chRead;
 
     // Timer
 
-    private short timerACnt;
-    private short timerAReg;
-    private byte timerALoadLock;
-    private byte timerALoad;
-    private byte timerAEnable;
-    private byte timerAReset;
-    private byte timerALoadLatch;
-    private byte timerAOverflowFlag;
-    private byte timerAOverflow;
+    private int timerACnt;
+    private int timerAReg;
+    private int timerALoadLock;
+    private int timerALoad;
+    private int timerAEnable;
+    private int timerAReset;
+    private int timerALoadLatch;
+    private int timerAOverflowFlag;
+    private int timerAOverflow;
 
-    private short timerBCnt;
-    private byte timerBSubCnt;
-    private short timerBReg;
-    private byte timerBLoadLock;
-    private byte timerBLoad;
-    private byte timerBEnable;
-    private byte timerBReset;
-    private byte timerBLoadLatch;
-    private byte timerBOverflowFlag;
-    private byte timerBOverflow;
+    private int timerBCnt;
+    private int timerBSubCnt;
+    private int timerBReg;
+    private int timerBLoadLock;
+    private int timerBLoad;
+    private int timerBEnable;
+    private int timerBReset;
+    private int timerBLoadLatch;
+    private int timerBOverflowFlag;
+    private int timerBOverflow;
 
     // Register set
 
     private byte[] modeTest21 = new byte[8];
     private byte[] modeTest2C = new byte[8];
-    private byte modeCh3;
-    private byte modeKonChannel;
+    private int modeCh3;
+    private int modeKonChannel;
     private byte[] modeKonOperator = new byte[4];
     private byte[] modeKon = new byte[24];
-    private byte modeCsm;
-    private byte modeKonCsm;
-    private byte dacEn;
-    private short dacData;
+    private int modeCsm;
+    private int modeKonCsm;
+    private int dacEn;
+    private int dacData;
 
     private byte[] ks = new byte[24];
     private byte[] ar = new byte[24];
@@ -167,8 +170,8 @@ public class Ym3438 {
     private short[] fnum3Ch = new short[6];
     private byte[] block3Ch = new byte[6];
     private byte[] kcode3Ch = new byte[6];
-    private byte regA4;
-    private byte regAc;
+    private int regA4;
+    private int regAc;
     private byte[] connect = new byte[6];
     private byte[] fb = new byte[6];
     private byte[] panL = new byte[6], panR = new byte[6];
@@ -194,15 +197,15 @@ public class Ym3438 {
     }
 
     private void doIO() {
-        this.writeAEn = (byte) ((this.writeA & 0x03) == 0x01 ? 1 : 0);
-        this.writeDEn = (byte) ((this.writeD & 0x03) == 0x01 ? 1 : 0);
+        this.writeAEn = (this.writeA & 0x03) == 0x01 ? 1 : 0;
+        this.writeDEn = (this.writeD & 0x03) == 0x01 ? 1 : 0;
         //Debug.printf("aen:%d den:%d\n", this.write_a_en, this.write_d_en);
         this.writeA <<= 1;
         this.writeD <<= 1;
         // BUSY Counter
         this.busy = this.writeBusy;
         this.writeBusyCnt += this.writeBusy;
-        this.writeBusy = (byte) (((this.writeBusy != 0 && ((this.writeBusyCnt >> 5) == 0)) || this.writeDEn != 0) ? 1 : 0);
+        this.writeBusy = ((this.writeBusy != 0 && ((this.writeBusyCnt >> 5) == 0)) || this.writeDEn != 0) ? 1 : 0;
         this.writeBusyCnt &= 0x1f;
     }
 
@@ -259,18 +262,18 @@ public class Ym3438 {
                 case 0xa0: //Fnum, Block, kcode
                     this.fnum[channel] = (short) ((this.data & 0xff) | ((this.regA4 & 0x07) << 8));
                     this.block[channel] = (byte) ((this.regA4 >> 3) & 0x07);
-                    this.kcode[channel] = (byte) ((byte) (this.block[channel] << 2) | Ym3438Const.fnNote[this.fnum[channel] >> 7]);
+                    this.kcode[channel] = (byte) (((this.block[channel] & 0xff) << 2) | Ym3438Const.fnNote[this.fnum[channel] >> 7]);
                     break;
                 case 0xa4: // a4?
-                    this.regA4 = (byte) (this.data & 0xff);
+                    this.regA4 = this.data & 0xff;
                     break;
                 case 0xa8: // fnum, block, kcode 3ch
                     this.fnum3Ch[channel] = (short) ((this.data & 0xff) | ((this.regAc & 0x07) << 8));
                     this.block3Ch[channel] = (byte) ((this.regAc >> 3) & 0x07);
-                    this.kcode3Ch[channel] = (byte) ((byte) (this.block3Ch[channel] << 2) | Ym3438Const.fnNote[this.fnum3Ch[channel] >> 7]);
+                    this.kcode3Ch[channel] = (byte) (((this.block3Ch[channel] & 0xff) << 2) | Ym3438Const.fnNote[this.fnum3Ch[channel] >> 7]);
                     break;
                 case 0xac: //ac?
-                    this.regAc = (byte) (this.data & 0xff);
+                    this.regAc = this.data & 0xff;
                     break;
                 case 0xb0: // Connect FeedBack
                     this.connect[channel] = (byte) (this.data & 0x07);
@@ -321,24 +324,24 @@ public class Ym3438 {
                     break;
                 case 0x24: // Timer A
                     this.timerAReg &= 0x03;
-                    this.timerAReg |= (byte) ((this.writeData & 0xff) << 2);
+                    this.timerAReg |= (this.writeData & 0xff) << 2;
                     break;
                 case 0x25:
                     this.timerAReg &= 0x3fc;
                     this.timerAReg |= (byte) (this.writeData & 0x03);
                     break;
                 case 0x26: // Timer B
-                    this.timerBReg = (byte) (this.writeData & 0xff);
+                    this.timerBReg = this.writeData & 0xff;
                     break;
                 case 0x27: // CSM, Timer control
-                    this.modeCh3 = (byte) ((this.writeData & 0xc0) >> 6);
-                    this.modeCsm = (byte) (this.modeCh3 == 2 ? 1 : 0);
-                    this.timerALoad = (byte) (this.writeData & 0x01);
-                    this.timerAEnable = (byte) ((this.writeData >> 2) & 0x01);
-                    this.timerAReset = (byte) ((this.writeData >> 4) & 0x01);
-                    this.timerBLoad = (byte) ((this.writeData >> 1) & 0x01);
-                    this.timerBEnable = (byte) ((this.writeData >> 3) & 0x01);
-                    this.timerBReset = (byte) ((this.writeData >> 5) & 0x01);
+                    this.modeCh3 = (this.writeData & 0xc0) >> 6;
+                    this.modeCsm = this.modeCh3 == 2 ? 1 : 0;
+                    this.timerALoad = this.writeData & 0x01;
+                    this.timerAEnable = (this.writeData >> 2) & 0x01;
+                    this.timerAReset = (this.writeData >> 4) & 0x01;
+                    this.timerBLoad = (this.writeData >> 1) & 0x01;
+                    this.timerBEnable = (this.writeData >> 3) & 0x01;
+                    this.timerBReset = (this.writeData >> 5) & 0x01;
                     break;
                 case 0x28: // Key on/off
                     for (int i = 0; i < 4; i++) {
@@ -346,19 +349,19 @@ public class Ym3438 {
                     }
                     if ((this.writeData & 0x03) == 0x03) {
                         // Invalid address
-                        this.modeKonChannel = (byte) 0xff;
+                        this.modeKonChannel = 0xff;
                     } else {
-                        this.modeKonChannel = (byte) ((this.writeData & 0x03) + ((this.writeData >> 2) & 1) * 3);
+                        this.modeKonChannel = (this.writeData & 0x03) + ((this.writeData >> 2) & 1) * 3;
                     }
 //Debug.printf("kon_ope:%d:%d:%d:%d kon_ch:%d\n", this.modeKonChannel[0], this.modeKonChannel[1]
 //, this.modeKonChannel[2], this.modeKonChannel[3], this.modeKonChannel);
                     break;
                 case 0x2a: // DAC data
                     this.dacData &= 0x01;
-                    this.dacData |= (short) ((this.writeData ^ 0x80) << 1);
+                    this.dacData |= (this.writeData ^ 0x80) << 1;
                     break;
                 case 0x2b: // DAC enable
-                    this.dacEn = (byte) (this.writeData >> 7);
+                    this.dacEn = this.writeData >> 7;
                     break;
                 case 0x2c: // LSI test 2
                     for (int i = 0; i < 8; i++) {
@@ -366,19 +369,19 @@ public class Ym3438 {
                     }
                     this.dacData &= 0x1fe;
                     this.dacData |= this.modeTest2C[3];
-                    this.egCustomTimer = (byte) (((this.modeTest2C[7] == 0) && (this.modeTest2C[6] != 0)) ? 1 : 0); //todo
+                    this.egCustomTimer = ((this.modeTest2C[7] == 0) && (this.modeTest2C[6] != 0)) ? 1 : 0; // todo
                     break;
                 default:
                     break;
                 }
             }
             if (this.writeAEn != 0) {
-                this.writeFmModeA = (byte) (this.writeData & 0xff);
+                this.writeFmModeA = this.writeData & 0xff;
             }
         }
 
         if (this.writeFmData != 0) {
-            this.data = (byte) (this.writeData & 0xff);
+            this.data = this.writeData & 0xff;
         }
     }
 
@@ -387,15 +390,15 @@ public class Ym3438 {
         int fnum_h = fnum >> 4;
         int fm;
         int basefreq;
-        byte lfo = this.lfoPm;
-        byte lfo_l = (byte) (lfo & 0x0f);
-        byte pms = this.pms[this.channel];
-        byte dt = this.dt[this.slot];
-        byte dt_l = (byte) (dt & 0x03);
-        byte detune = 0;
-        byte block, note;
-        byte sum, sum_h, sum_l;
-        byte kcode = this.pgKcode;
+        int lfo = this.lfoPm;
+        int lfo_l = lfo & 0x0f;
+        int pms = this.pms[this.channel] & 0xff;
+        int dt = this.dt[this.slot] & 0xff;
+        int dt_l = dt & 0x03;
+        int detune = 0;
+        int block, note;
+        int sum, sum_h, sum_l;
+        int kcode = this.pgKcode;
 
         fnum <<= 1;
         if ((lfo_l & 0x08) != 0) {
@@ -421,12 +424,12 @@ public class Ym3438 {
             if (kcode > 0x1c) {
                 kcode = 0x1c;
             }
-            block = (byte) (kcode >> 2);
-            note = (byte) (kcode & 0x03);
-            sum = (byte) (block + 9 + (((dt_l == 3) ? 1 : 0) | (dt_l & 0x02)));
-            sum_h = (byte) (sum >> 1);
-            sum_l = (byte) (sum & 0x01);
-            detune = (byte) (Ym3438Const.pgDetune[(sum_l << 2) | note] >> (9 - sum_h));
+            block = kcode >> 2;
+            note = kcode & 0x03;
+            sum = block + 9 + (((dt_l == 3) ? 1 : 0) | (dt_l & 0x02));
+            sum_h = sum >> 1;
+            sum_l = sum & 0x01;
+            detune = Ym3438Const.pgDetune[(sum_l << 2) | note] >> (9 - sum_h);
         }
         if ((dt & 0x04) != 0) {
             basefreq -= detune;
@@ -434,7 +437,7 @@ public class Ym3438 {
             basefreq += detune;
         }
         basefreq &= 0x1ffff;
-        this.pgInc[this.slot] = (basefreq * this.multi[this.slot]) >> 1;
+        this.pgInc[this.slot] = (basefreq * (this.multi[this.slot] & 0xff)) >> 1;
         this.pgInc[this.slot] &= 0xfffff;
     }
 
@@ -456,13 +459,13 @@ public class Ym3438 {
 
     private void envelopeSSGEG() {
         int slot = this.slot;
-        byte direction = 0;
+        int direction = 0;
         this.egSsgPgrstLatch[slot] = 0;
         this.egSsgRepeatLatch[slot] = 0;
         this.egSsgHoldUpLatch[slot] = 0;
         this.egSsgInv[slot] = 0;
         if ((this.ssgEg[slot] & 0x08) != 0) {
-            direction = this.egSsgDir[slot];
+            direction = this.egSsgDir[slot] & 0xff;
             if ((this.egLevel[slot] & 0x200) != 0) {
                 // Reset
                 if ((this.ssgEg[slot] & 0x03) == 0x00) {
@@ -486,83 +489,77 @@ public class Ym3438 {
                 this.egSsgHoldUpLatch[slot] = 1;
             }
             direction &= this.egKon[slot];
-            this.egSsgInv[slot] = (byte) (
-                    (
-                            this.egSsgDir[slot]
-                                    ^ ((this.ssgEg[slot] >> 2) & 0x01)
-                    )
-                            & this.egKon[slot]
-            );
+            this.egSsgInv[slot] = (byte) (((this.egSsgDir[slot] & 0xff) ^ (((this.ssgEg[slot] & 0xff) >> 2) & 0x01)) & (this.egKon[slot] & 0xff));
         }
-        this.egSsgDir[slot] = direction;
+        this.egSsgDir[slot] = (byte) direction;
         this.egSsgEnable[slot] = (byte) ((this.ssgEg[slot] >> 3) & 0x01);
     }
 
     private void envelopeADSR() {
         int slot = (this.slot + 22) % 24;
 
-        byte nkon = this.egKonLatch[slot];
+        int nkon = this.egKonLatch[slot] & 0xff;
         //Debug.printf("nkon:%d\n", nkon);
-        byte okon = this.egKon[slot];
-        byte kon_event;
-        byte koff_event;
-        byte eg_off;
-        short level;
-        short nextlevel = 0;
-        short ssg_level;
-        byte nextstate = this.egState[slot];
-        short inc = 0;
+        int okon = this.egKon[slot] & 0xff;
+        int kon_event;
+        int koff_event;
+        int eg_off;
+        int level;
+        int nextlevel;
+        int ssg_level;
+        int nextstate = this.egState[slot] & 0xff;
+        int inc = 0;
         this.egRead[0] = this.egReadInc;
-        this.egReadInc = (byte) (this.egInc > 0 ? 1 : 0);
+        this.egReadInc = this.egInc > 0 ? 1 : 0;
 
         // Reset phase generator
         this.pgReset[slot] = (byte) (((nkon != 0 && okon == 0) || this.egSsgPgrstLatch[slot] != 0) ? 1 : 0);
 
         // KeyOn/Off
-        kon_event = (byte) (((nkon != 0 && okon == 0) || (okon != 0 && this.egSsgRepeatLatch[slot] != 0)) ? 1 : 0);
-        koff_event = (byte) ((okon != 0 && nkon == 0) ? 1 : 0);
+        kon_event = ((nkon != 0 && okon == 0) || (okon != 0 && this.egSsgRepeatLatch[slot] != 0)) ? 1 : 0;
+        koff_event = (okon != 0 && nkon == 0) ? 1 : 0;
 
         ssg_level = level = this.egLevel[slot];
 
         if (this.egSsgInv[slot] != 0) {
             // Inverse
-            ssg_level = (short) (512 - level);
+            ssg_level = 512 - level;
             ssg_level &= 0x3ff;
         }
         if (koff_event != 0) {
             level = ssg_level;
         }
         if (this.egSsgEnable[slot] != 0) {
-            eg_off = (byte) (level >> 9);
+            eg_off = level >> 9;
         } else {
-            eg_off = (byte) ((level & 0x3f0) == 0x3f0 ? 1 : 0);
+            eg_off = (level & 0x3f0) == 0x3f0 ? 1 : 0;
         }
         nextlevel = level;
         //Debug.printf("nextlevel:%d this.eg_state[slot]:%d slot:%d\n", nextlevel, this.eg_state[slot],slot);
         if (kon_event != 0) {
-            nextstate = (byte) Eg.Attack.ordinal();
+            nextstate = Eg.Attack.ordinal();
             // Instant attack
             if (this.egRateMax != 0) {
                 nextlevel = 0;
-            } else if (this.egState[slot] == (byte) Eg.Attack.ordinal() && level != 0 && this.egInc != 0 && nkon != 0) {
-                inc = (short) ((~level << this.egInc) >> 5);
+            } else if ((this.egState[slot] & 0xff) == Eg.Attack.ordinal() && level != 0 && this.egInc != 0 && nkon != 0) {
+                inc = (~level << this.egInc) >> 5;
             }
             //Debug.printf("inc:%d\n", inc);
         } else {
             switch (Eg.valueOf(this.egState[slot])) {
             case Attack:
                 if (level == 0) {
-                    nextstate = (byte) Eg.Decay.ordinal();
+                    nextstate = Eg.Decay.ordinal();
                 } else if (this.egInc != 0 && this.egRateMax == 0 && nkon != 0) {
-                    inc = (short) ((~level << this.egInc) >> 5);
+                    inc = (~level << this.egInc) >> 5;
                 }
                 //Debug.printf("ainc:%d\n", inc);
                 break;
             case Decay:
                 if ((level >> 5) == this.egSl[1]) {
-                    nextstate = (byte) Eg.Sustain.ordinal();
+                    nextstate = Eg.Sustain.ordinal();
                 } else if (eg_off == 0 && this.egInc != 0) {
-                    inc = (short) (1 << (this.egInc - 1));
+                    inc = 1 << (this.egInc - 1);
                     if (this.egSsgEnable[slot] != 0) {
                         inc <<= 2;
                     }
@@ -572,7 +569,7 @@ public class Ym3438 {
             case Sustain:
             case Release:
                 if (eg_off == 0 && this.egInc != 0) {
-                    inc = (short) (1 << (this.egInc - 1));
+                    inc = 1 << (this.egInc - 1);
                     if (this.egSsgEnable[slot] != 0) {
                         inc <<= 2;
                     }
@@ -583,17 +580,17 @@ public class Ym3438 {
                 break;
             }
             if (nkon == 0) {
-                nextstate = (byte) Eg.Release.ordinal();
+                nextstate = Eg.Release.ordinal();
                 //Debug.printf("1rel\n", inc);
             }
         }
         if (this.egKonCsm[slot] != 0) {
-            nextlevel |= (short) (this.egTl[1] << 3);
+            nextlevel |= this.egTl[1] << 3;
         }
 
         // Envelope off
-        if (kon_event == 0 && this.egSsgHoldUpLatch[slot] == 0 && this.egState[slot] != (byte) Eg.Attack.ordinal() && eg_off != 0) {
-            nextstate = (byte) Eg.Release.ordinal();
+        if (kon_event == 0 && this.egSsgHoldUpLatch[slot] == 0 && (this.egState[slot] & 0xff) != Eg.Attack.ordinal() && eg_off != 0) {
+            nextstate = Eg.Release.ordinal();
             nextlevel = 0x3ff;
             //Debug.printf("2rel\n", inc);
         }
@@ -603,25 +600,25 @@ public class Ym3438 {
 
         this.egKon[slot] = this.egKonLatch[slot];
         this.egLevel[slot] = (short) (nextlevel & 0x3ff);
-        this.egState[slot] = nextstate;
+        this.egState[slot] = (byte) nextstate;
         //Debug.printf("this.eg_level[slot]:%d slot:%d\n", this.eg_level[slot], slot);
     }
 
     private void envelopePrepare() {
-        byte rate;
-        byte sum;
-        byte inc = 0;
+        int rate;
+        int sum;
+        int inc = 0;
         int slot = this.slot;
-        byte rate_sel;
+        int rate_sel;
 
         // Prepare increment
-        rate = (byte) ((this.egRate << 1) + this.egKsv);
+        rate = (this.egRate << 1) + this.egKsv;
 
         if (rate > 0x3f) {
             rate = 0x3f;
         }
 
-        sum = (byte) (((rate >> 2) + this.egShiftLock) & 0x0f);
+        sum = ((rate >> 2) + this.egShiftLock) & 0x0f;
         if (this.egRate != 0 && this.egQuotient == 2) {
             if (rate < 48) {
                 switch (sum) {
@@ -629,29 +626,29 @@ public class Ym3438 {
                     inc = 1;
                     break;
                 case 13:
-                    inc = (byte) ((rate >> 1) & 0x01);
+                    inc = (rate >> 1) & 0x01;
                     break;
                 case 14:
-                    inc = (byte) (rate & 0x01);
+                    inc = rate & 0x01;
                     break;
                 default:
                     break;
                 }
             } else {
-                inc = (byte) (Ym3438Const.egStephi[rate & 0x03][this.egTimerLowLock] + (rate >> 2) - 11);
+                inc = Ym3438Const.egStephi[rate & 0x03][this.egTimerLowLock] + (rate >> 2) - 11;
                 if (inc > 4) {
                     inc = 4;
                 }
             }
         }
         this.egInc = inc;
-        this.egRateMax = (byte) ((rate >> 1) == 0x1f ? 1 : 0);
+        this.egRateMax = (rate >> 1) == 0x1f ? 1 : 0;
 
         // Prepare rate & ksv
-        rate_sel = this.egState[slot];
+        rate_sel = this.egState[slot] & 0xff;
         if ((this.egKon[slot] != 0 && this.egSsgRepeatLatch[slot] != 0)
                 || (this.egKon[slot] == 0 && this.egKonLatch[slot] != 0)) {
-            rate_sel = (byte) Eg.Attack.ordinal();
+            rate_sel = Eg.Attack.ordinal();
         }
         switch (Eg.valueOf(rate_sel)) {
         case Attack:
@@ -664,14 +661,14 @@ public class Ym3438 {
             this.egRate = this.sr[slot];
             break;
         case Release:
-            this.egRate = (byte) ((this.rr[slot] << 1) | 0x01);
+            this.egRate = (this.rr[slot] << 1) | 0x01;
             break;
         default:
             break;
         }
-        this.egKsv = (byte) (this.pgKcode >> (this.ks[slot] ^ 0x03));
+        this.egKsv = this.pgKcode >> (this.ks[slot] ^ 0x03);
         if (this.am[slot] != 0) {
-            this.egLfoAm = (byte) (this.lfoAm >> Ym3438Const.egAmShift[this.ams[this.channel]]);
+            this.egLfoAm = this.lfoAm >> Ym3438Const.egAmShift[this.ams[this.channel]];
         } else {
             this.egLfoAm = 0;
         }
@@ -684,14 +681,14 @@ public class Ym3438 {
 
     private void envelopeGenerate() {
         int slot = (this.slot + 23) % 24;
-        short level;
+        int level;
 
-        level = this.egLevel[slot];
+        level = this.egLevel[slot] & 0xffff;
         //Debug.printf("level:%d\n", level);
 
         if (this.egSsgInv[slot] != 0) {
             // Inverse
-            level = (short) (512 - level);
+            level = 512 - level;
         }
         if (this.modeTest21[5] != 0) {
             level = 0;
@@ -703,12 +700,12 @@ public class Ym3438 {
 
         // Apply TL
         if (!(this.modeCsm != 0 && this.channel == 2 + 1)) {
-            level += (short) (this.egTl[0] << 3);
+            level += this.egTl[0] << 3;
         }
         if (level > 0x3ff) {
             level = 0x3ff;
         }
-        this.egOut[slot] = level;
+        this.egOut[slot] = (short) level;
         //Debug.printf("this.eg_out[slot]:%d slot:%d\n", this.eg_out[slot], slot);
     }
 
@@ -725,9 +722,9 @@ public class Ym3438 {
     private void fmPrepare() {
         int slot = (this.slot + 6) % 24;
         int channel = this.channel;
-        short mod, mod1, mod2;
+        int mod, mod1, mod2;
         int op = slot / 6;
-        byte connect = this.connect[channel];
+        int connect = this.connect[channel] & 0xff;
         int prevslot = (this.slot + 18) % 24;
 
         // Calculate modulation
@@ -748,17 +745,17 @@ public class Ym3438 {
         if (Ym3438Const.fmAlgorithm[op][4][connect] != 0) {
             mod1 |= this.fmOut[prevslot];
         }
-        mod = (short) (mod1 + mod2);
+        mod = mod1 + mod2;
         if (op == 0) {
             // Feedback
-            mod = (short) (mod >> (10 - this.fb[channel]));
+            mod = mod >> (10 - this.fb[channel] & 0xff);
             if (this.fb[channel] == 0) {
                 mod = 0;
             }
         } else {
             mod >>= 1;
         }
-        this.fmMod[slot] = mod;
+        this.fmMod[slot] = (short) mod;
 
         slot = (this.slot + 18) % 24;
         // OP1
@@ -776,10 +773,10 @@ public class Ym3438 {
         int slot = (this.slot + 18) % 24;
         int channel = this.channel;
         int op = slot / 6;
-        int test_dac = this.modeTest2C[5];
-        short acc = this.chAcc[channel];
-        short add = (short) test_dac;
-        short sum = 0;
+        int test_dac = this.modeTest2C[5] & 0xff;
+        int acc = this.chAcc[channel] & 0xffff;
+        int add = test_dac;
+        int sum;
         if (op == 0 && test_dac == 0) {
             acc = 0;
         }
@@ -787,7 +784,7 @@ public class Ym3438 {
             add += (short) (this.fmOut[slot] >> 5);
             //Debug.printf("040   this.fm_out[slot]:%d slot:%d\n", this.fm_out[slot], slot);
         }
-        sum = (short) (acc + add);
+        sum = acc + add;
         //Debug.printf("040   acc:%d add:%d\n", acc, add);
         // Clamp
         if (sum > 255) {
@@ -799,15 +796,15 @@ public class Ym3438 {
         if (op == 0 || test_dac != 0) {
             this.chOut[channel] = this.chAcc[channel];
         }
-        this.chAcc[channel] = sum;
+        this.chAcc[channel] = (short) sum;
     }
 
     private void chOutput() {
         int cycles = this.cycles;
         int channel = this.channel;
-        int test_dac = this.modeTest2C[5];
-        short out_;
-        short sign;
+        int test_dac = this.modeTest2C[5] & 0xff;
+        int out_;
+        int sign;
         int out_en;
         this.chRead = this.chLock;
         if (this.slot < 12) {
@@ -817,10 +814,10 @@ public class Ym3438 {
         if ((cycles & 3) == 0) {
             if (test_dac == 0) {
                 // Lock value
-                this.chLock = this.chOut[channel];
+                this.chLock = this.chOut[channel] & 0xffff;
             }
-            this.chLockL = this.panL[channel];
-            this.chLockR = this.panR[channel];
+            this.chLockL = this.panL[channel] & 0xff;
+            this.chLockR = this.panR[channel] & 0xff;
         }
         // Ch 6
         if (((cycles >> 2) == 1 && this.dacEn != 0) || test_dac != 0) {
@@ -837,7 +834,7 @@ public class Ym3438 {
 
             out_en = (((cycles & 3) == 3) || test_dac != 0) ? 1 : 0;
             // Ym2612Inst DAC emulation(not verified)
-            sign = (short) (out_ >> 8);
+            sign = out_ >> 8;
             if (out_ >= 0) {
                 out_++;
                 sign++;
@@ -883,43 +880,43 @@ public class Ym3438 {
     private void fmGenerate() {
         int slot = (this.slot + 19) % 24;
         // Calculate phase
-        short phase = (short) ((this.fmMod[slot] + (this.pgPhase[slot] >> 10)) & 0x3ff);
+        int phase = (this.fmMod[slot] + (this.pgPhase[slot] >> 10)) & 0x3ff;
         //Debug.printf("040   this.fm_mod[slot]:%d this.pg_phase[slot]:%d\n", this.fm_mod[slot], this.pg_phase[slot]);
-        short quarter;
-        short level;
-        short output;
+        int quarter;
+        int level;
+        int output;
         if ((phase & 0x100) != 0) {
-            quarter = (short) ((phase ^ 0xff) & 0xff);
+            quarter = (phase ^ 0xff) & 0xff;
         } else {
-            quarter = (short) (phase & 0xff);
+            quarter = phase & 0xff;
         }
-        level = (short) Ym3438Const.logSinRom[quarter];
+        level = Ym3438Const.logSinRom[quarter];
         // Apply envelope
-        level += (short) (this.egOut[slot] << 2);
+        level += (this.egOut[slot] & 0xffff) << 2;
         //Debug.printf("040   quarter:%d this.eg_out[slot]:%d slot:%d\n", quarter, this.eg_out[slot], slot);
         // Transform
         if (level > 0x1fff) {
             level = 0x1fff;
         }
-        output = (short) (((Ym3438Const.expRom[(level & 0xff) ^ 0xff] | 0x400) << 2) >> (level >> 8));
+        output = ((Ym3438Const.expRom[(level & 0xff) ^ 0xff] | 0x400) << 2) >> (level >> 8);
         //Debug.printf("040   output:%d level:%d\n", output, level);
         if ((phase & 0x200) != 0) {
-            output = (short) (((~output) ^ (this.modeTest21[4] << 13)) + 1);
+            output = ((~output) ^ (this.modeTest21[4] << 13)) + 1;
         } else {
-            output = (short) (output ^ (this.modeTest21[4] << 13));
+            output = output ^ (this.modeTest21[4] << 13);
         }
         output <<= 2;
         output >>= 2;
-        this.fmOut[slot] = output;
+        this.fmOut[slot] = (short) output;
     }
 
     private void doTimerA() {
-        short time;
-        byte load;
+        int time;
+        int load;
         load = this.timerAOverflow;
         if (this.cycles == 2) {
             // Lock load value
-            load |= (byte) ((this.timerALoadLock == 0 && this.timerALoad != 0) ? 1 : 0);
+            load |= (this.timerALoadLock == 0 && this.timerALoad != 0) ? 1 : 0;
             this.timerALoadLock = this.timerALoad;
             if (this.modeCsm != 0) {
                 // CSM KeyOn
@@ -944,19 +941,19 @@ public class Ym3438 {
             this.timerAReset = 0;
             this.timerAOverflowFlag = 0;
         } else {
-            this.timerAOverflowFlag |= (byte) (this.timerAOverflow & this.timerAEnable);
+            this.timerAOverflowFlag |= this.timerAOverflow & this.timerAEnable;
         }
-        this.timerAOverflow = (byte) (time >> 10);
-        this.timerACnt = (short) (time & 0x3ff);
+        this.timerAOverflow = time >> 10;
+        this.timerACnt = time & 0x3ff;
     }
 
     private void doTimerB() {
-        short time;
-        byte load;
+        int time;
+        int load;
         load = this.timerBOverflow;
         if (this.cycles == 2) {
             // Lock load value
-            load |= (byte) ((this.timerBLoadLock == 0 && this.timerBLoad != 0) ? 1 : 0);
+            load |= (this.timerBLoadLock == 0 && this.timerBLoad != 0) ? 1 : 0;
             this.timerBLoadLock = this.timerBLoad;
         }
         // Load counter
@@ -979,10 +976,10 @@ public class Ym3438 {
             this.timerBReset = 0;
             this.timerBOverflowFlag = 0;
         } else {
-            this.timerBOverflowFlag |= (byte) (this.timerBOverflow & this.timerBEnable);
+            this.timerBOverflowFlag |= this.timerBOverflow & this.timerBEnable;
         }
-        this.timerBOverflow = (byte) (time >> 8);
-        this.timerBCnt = (byte) (time & 0xff);
+        this.timerBOverflow = time >> 8;
+        this.timerBCnt = time & 0xff;
     }
 
     private void keyOn() {
@@ -1029,7 +1026,7 @@ public class Ym3438 {
             this.panR[i] = 1;
         }
         if (rate != 0) {
-            this.rateRatio = (int) (((144L * rate) << 10) / clock);// RSM_FRAC) / clock);
+            this.rateRatio = ((144 * rate) << 10) / clock; // RSM_FRAC) / clock);
         } else {
             this.rateRatio = rateratio;
         }
@@ -1050,18 +1047,18 @@ public class Ym3438 {
             if (this.egCycleStop != 0) {
                 this.egShiftLock = 0;
             } else {
-                this.egShiftLock = (byte) (this.egShift + 1);
+                this.egShiftLock = this.egShift + 1;
             }
-            this.egTimerLowLock = (byte) (this.egTimer & 0x03);
+            this.egTimerLowLock = this.egTimer & 0x03;
         }
         // Cycle specific functions
         switch (this.cycles) {
         case 0:
-            this.lfoPm = (byte) (this.lfoCnt >> 2);
+            this.lfoPm = this.lfoCnt >> 2;
             if ((this.lfoCnt & 0x40) != 0) {
-                this.lfoAm = (byte) (this.lfoCnt & 0x3f);
+                this.lfoAm = this.lfoCnt & 0x3f;
             } else {
-                this.lfoAm = (byte) (this.lfoCnt ^ 0x3f);
+                this.lfoAm = this.lfoCnt ^ 0x3f;
             }
             this.lfoAm <<= 1;
             break;
@@ -1071,9 +1068,9 @@ public class Ym3438 {
             this.egCycle = 0;
             this.egCycleStop = 1;
             this.egShift = 0;
-            this.egTimerInc |= (byte) (this.egQuotient >> 1);
-            this.egTimer = (short) (this.egTimer + this.egTimerInc);
-            this.egTimerInc = (byte) (this.egTimer >> 12);
+            this.egTimerInc |= this.egQuotient >> 1;
+            this.egTimer = this.egTimer + this.egTimerInc;
+            this.egTimerInc = this.egTimer >> 12;
             this.egTimer &= 0xfff;
             break;
         case 2:
@@ -1084,8 +1081,8 @@ public class Ym3438 {
             this.egCycle = 0;
             this.egCycleStop = 1;
             this.egShift = 0;
-            this.egTimer = (short) (this.egTimer + this.egTimerInc);
-            this.egTimerInc = (byte) (this.egTimer >> 12);
+            this.egTimer = this.egTimer + this.egTimerInc;
+            this.egTimerInc = this.egTimer >> 12;
             this.egTimer &= 0xfff;
             break;
         case 23:
@@ -1094,7 +1091,7 @@ public class Ym3438 {
         }
 
 
-        this.egTimer &= (short) (~(this.modeTest21[5] << this.egCycle));
+        this.egTimer &= ~(this.modeTest21[5] << this.egCycle);
         if ((((this.egTimer >> this.egCycle) | (this.pinTestIn & this.egCustomTimer)) & this.egCycleStop) != 0) {
             this.egShift = this.egCycle;
             this.egCycleStop = 0;
@@ -1183,17 +1180,16 @@ public class Ym3438 {
         //Debug.printf("110 mol:%d mor:%d\n", this.mol, this.mor);
     }
 
-    private void writeInternal(int port, byte data) {
-        //if (port == 1 && data == 0xf1)
-        //{
+    private void writeInternal(int port, int data) {
+        //if (port == 1 && data == 0xf1) {
         //    System.err.printfOn();
         //}
         //Debug.printf("port:%x data:%x\n", port, data);
 
         port &= 3;
-        this.writeData = (short) (((port << 7) & 0x100) | data);
+        this.writeData = ((port << 7) & 0x100) | data;
         if ((port & 1) != 0) {
-            // Data
+            // data
             this.writeD |= 1;
         } else {
             // Address
@@ -1216,26 +1212,26 @@ public class Ym3438 {
         return this.timerAOverflowFlag | this.timerBOverflowFlag;
     }
 
-    private byte read(int port) {
+    private int read(int port) {
         if ((port & 3) == 0 || Ym3438Const.chip_type == Ym3438Const.Type.asic) {
             if (this.modeTest21[6] != 0) {
                 // Read test data
                 //int slot = (this.cycles + 18) % 24;
-                short testdata = (short) (((this.pgRead & 0x01) << 15)
-                        | (((this.egRead[this.modeTest21[0]]) & 0x01) << 14));
+                int testdata = ((this.pgRead & 0x01) << 15)
+                        | (((this.egRead[this.modeTest21[0] & 0xff]) & 0x01) << 14);
                 if (this.modeTest2C[4] != 0) {
-                    testdata |= (short) (this.chRead & 0x1ff);
+                    testdata |= this.chRead & 0x1ff;
                 } else {
-                    testdata |= (short) (this.fmOut[(this.slot + 18) % 24] & 0x3fff);
+                    testdata |= this.fmOut[(this.slot + 18) % 24] & 0x3fff;
                 }
                 if (this.modeTest21[7] != 0) {
-                    return (byte) (testdata & 0xff);
+                    return testdata & 0xff;
                 } else {
-                    return (byte) (testdata >> 8);
+                    return (testdata >> 8) & 0xff;
                 }
             } else {
-                return (byte) ((this.busy << 7) | (this.timerBOverflowFlag << 1)
-                        | this.timerAOverflowFlag);
+                return ((this.busy << 7) | (this.timerBOverflowFlag << 1)
+                        | this.timerAOverflowFlag) & 0xff;
             }
         }
         return 0;
@@ -1269,7 +1265,7 @@ public class Ym3438 {
         Ym3438Const.chip_type = type;
     }
 
-    public void write(int port, byte data) {
+    public void write(int port, int data) {
         long time1, time2;
         long skip;
 
@@ -1285,7 +1281,7 @@ public class Ym3438 {
             }
         }
 
-        this.writeBuf[this.writeBufLast].port = (byte) ((port & 0x03) | 0x04);
+        this.writeBuf[this.writeBufLast].port = (port & 0x03) | 0x04;
         this.writeBuf[this.writeBufLast].data = data;
         time1 = this.writeBufLastTime + 15; // OPN_WRITEBUF_DELAY;
         time2 = this.writeBufSampleCnt;
@@ -1308,29 +1304,15 @@ public class Ym3438 {
             this.oldSamples[1] = this.samples[1];
             this.samples[0] = this.samples[1] = 0;
             for (i = 0; i < 24; i++) {
-                switch (this.cycles >> 2) {
-                case 0: // Ch 2
-                    mute = this.mute[1];
-                    break;
-                case 1: // Ch 6, DAC
-                    mute = this.mute[5 + this.dacEn];
-                    break;
-                case 2: // Ch 4
-                    mute = this.mute[3];
-                    break;
-                case 3: // Ch 1
-                    mute = this.mute[0];
-                    break;
-                case 4: // Ch 5
-                    mute = this.mute[4];
-                    break;
-                case 5: // Ch 3
-                    mute = this.mute[2];
-                    break;
-                default:
-                    mute = 0;
-                    break;
-                }
+                mute = switch (this.cycles >> 2) {
+                    case 0 -> this.mute[1]; // Ch 2
+                    case 1 -> this.mute[5 + this.dacEn]; // Ch 6, DAC
+                    case 2 -> this.mute[3]; // Ch 4
+                    case 3 -> this.mute[0]; // Ch 1
+                    case 4 -> this.mute[4]; // Ch 5
+                    case 5 -> this.mute[2]; // Ch 3
+                    default -> 0;
+                };
                 this.clock(grBuffer);
                 //Debug.printf("l%d r%d\n", buffer[0], buffer[1]);
                 if (mute == 0) {

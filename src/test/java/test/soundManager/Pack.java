@@ -1,4 +1,4 @@
-package test.SoundManager;
+package test.soundManager;
 
 public class Pack {
 
@@ -41,7 +41,7 @@ public class Pack {
 
         public PPack next;
 
-        public long counter;
+        public int counter;
 
         public Pack pack = new Pack();
     }

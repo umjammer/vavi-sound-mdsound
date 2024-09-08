@@ -35,7 +35,7 @@ public class YmF262 {
     private boolean OPLTYPE_IS_OPL3 = true;
 
     /** DosBox OPL (AdLibEmu) */
-    public final byte EC_DBOPL = 0x00;
+    public static final byte EC_DBOPL = 0x00;
     /** YMF262 core from MAME */
     public static final byte EC_MAME = 0x01;
 
@@ -73,7 +73,7 @@ public class YmF262 {
         return opl.read(offset & 0x03);
     }
 
-    public void write(int offset, byte data) {
+    public void write(int offset, int data) {
         opl.write(offset & 3, data);
     }
 
@@ -762,7 +762,7 @@ public class YmF262 {
          *  (12+1)=13 - sinus amplitude bits     (Y axis)
          *  additional 1: to compensate for calculations of negative part of waveform
          *  (if we don't add it then the greatest possible _negative_ value would be -2
-         *  and we really need -1 for waveform // #7)
+         *  and we really need -1 for waveform //#7)
          *  2  - sinus sign bit           (Y axis)
          *  TL_RES_LEN - sinus resolution (X axis)
          */
@@ -1652,7 +1652,7 @@ public class YmF262 {
             v &= 0xff;
 
             switch (a & 3) {
-            case 0: // address port 0 (register set // #1)
+            case 0: // address port 0 (register set //#1)
                 this.address = v;
                 break;
 
@@ -1662,7 +1662,7 @@ public class YmF262 {
                 writeReg(this.address, v);
                 break;
 
-            case 2: // address port 1 (register set // #2)
+            case 2: // address port 1 (register set //#2)
 
                 // verified on real YMF262:
                 // in Opl3 mode:
@@ -1677,11 +1677,11 @@ public class YmF262 {
                     // Opl3 mode
                     this.address = v | 0x100;
                 } else {
-                    // in OPL2 mode the only accessible in set // #2 is register 0x05
+                    // in OPL2 mode the only accessible in set //#2 is register 0x05
                     if (v == 5)
                         this.address = v | 0x100;
                     else
-                        this.address = v; // verified range: 0x01, 0x04, 0x20-0xef(set // #2 becomes set // #1 in opl2 mode)
+                        this.address = v; // verified range: 0x01, 0x04, 0x20-0xef(set //#2 becomes set //#1 in opl2 mode)
                 }
                 break;
             }
@@ -1940,7 +1940,7 @@ public class YmF262 {
                     break;
                 }
 
-                chOffset = 9; // register page // #2 starts from channel 9 (counting from 0)
+                chOffset = 9; // register page //#2 starts from channel 9 (counting from 0)
             }
 
             // adjust bus to 8 bits
@@ -2014,7 +2014,7 @@ public class YmF262 {
                 break;
             case 0xa0:
                 if (r == 0xbd) { // am depth, vibrato depth, r,bd,sd,tom,tc,hh
-                    if (chOffset != 0) // 0xbd register is present in set // #1 only
+                    if (chOffset != 0) // 0xbd register is present in set //#1 only
                         return;
 
                     this.lfoAmDepth = (byte) (v & 0x80);
@@ -2483,7 +2483,7 @@ public class YmF262 {
                     this.calcChannelRhythm(this.channels, 0, (this.noiseRng >> 0) & 1);
                 }
 
-                // register set // #2
+                // register set //#2
                 this.calcChannel(this.channels[9]);
                 if (this.channels[9].extended != 0)
                     this.calcChannelExt(this.channels[12]);
@@ -2507,7 +2507,7 @@ public class YmF262 {
                 this.calcChannel(this.channels[16]);
                 this.calcChannel(this.channels[17]);
 
-                // accumulator register set // #1
+                // accumulator register set //#1
                 a = this.chanOut[0] & this.pan[0];
                 b = this.chanOut[0] & this.pan[1];
                 c = this.chanOut[0] & this.pan[2];
@@ -3009,7 +3009,7 @@ public class YmF262 {
 
             private void changeAttackRate(int attackRate, double recipSamp) {
                 if (attackRate != 0) {
-                    final byte[] stepSkipMask = new byte[] {(byte) 0xff, (byte) 0xfe, (byte) 0xee, (byte) 0xba, (byte) 0xaa};
+                    byte[] stepSkipMask = new byte[] {(byte) 0xff, (byte) 0xfe, (byte) 0xee, (byte) 0xba, (byte) 0xaa};
                     int stepSkip;
                     int steps;
                     int stepNum;
@@ -3257,7 +3257,7 @@ public class YmF262 {
             for (int i = 0; i < TREMTAB_SIZE; i++) {
                 // 0.0 .. -26/26*4.8/6 == [0.0 .. -0.8], 4/53 steps == [1 .. 0.57]
                 double trem_val1 = ((double) tremTableInt[i]) * 4.8 / 26.0 / 6.0; // 4.8db
-                double trem_val2 = ((double) (tremTableInt[i] / 4) * 1.2) / 6.0 / 6.0; // 1.2db (larger stepping)
+                double trem_val2 = ((double) (tremTableInt[i] / 4d) * 1.2) / 6.0 / 6.0; // 1.2db (larger stepping)
 
                 tremTable[i] = (int) (Math.pow(FL2, trem_val1) * FIXEDPT);
                 tremTable[TREMTAB_SIZE + i] = (int) (Math.pow(FL2, trem_val2) * FIXEDPT);
@@ -3681,7 +3681,7 @@ public class YmF262 {
             int[] vibVal1, vibVal2, vibVal3, vibVal4;
             int[] tremVal1, tremVal2, tremVal3, tremVal4;
 
-            int ccPtr = 0;
+            int ccPtr;
 
             if ((this.adlibReg[0x105] & 1) == 0) maxChannel = NUM_CHANNELS / 2;
 

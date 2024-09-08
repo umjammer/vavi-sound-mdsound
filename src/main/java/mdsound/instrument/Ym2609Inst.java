@@ -8,8 +8,9 @@ import mdsound.fmvgen.OPNA2;
 
 
 public class Ym2609Inst extends Instrument.BaseInstrument {
-    private OPNA2[] chip = new OPNA2[2];
+
     private static final int DefaultYM2609ClockValue = 8000000;
+    private OPNA2[] chip = new OPNA2[2];
 
     @Override
     public String getName() {
@@ -21,11 +22,8 @@ public class Ym2609Inst extends Instrument.BaseInstrument {
         return "OPNA2";
     }
 
+    // TODO
     boolean visVol;
-
-    public boolean getVisVol() {
-        return visVol;
-    }
 
     public Ym2609Inst() {
         visVolume = new int[][][] {
@@ -36,12 +34,12 @@ public class Ym2609Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void reset(byte chipId) {
+    public void reset(int chipId) {
         chip[chipId].reset();
     }
 
     @Override
-    public int start(byte chipId, int clock) {
+    public int start(int chipId, int clock) {
         chip[chipId] = new OPNA2(clock);
         chip[chipId].init(DefaultYM2609ClockValue, clock);
 
@@ -49,7 +47,7 @@ public class Ym2609Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(byte chipId, int clock, int clockValue, Object... option) {
+    public int start(int chipId, int clock, int clockValue, Object... option) {
         chip[chipId] = new OPNA2(clock);
 
         if (option != null && option.length > 0 && option[0] instanceof Function) { //<String, Stream>
@@ -65,12 +63,12 @@ public class Ym2609Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void stop(byte chipId) {
+    public void stop(int chipId) {
         chip[chipId] = null;
     }
 
     @Override
-    public void update(byte chipId, int[][] outputs, int samples) {
+    public void update(int chipId, int[][] outputs, int samples) {
         int[] updateBuffer = chip[chipId].update();
         //for (int i = 0; i < 1; i++) {
         //    outputs[0][i] = updateBuffer[i * 2 + 0];
@@ -95,44 +93,62 @@ public class Ym2609Inst extends Instrument.BaseInstrument {
         visVolume[chipId][4][1] = chip[chipId].visAPCMVolume[1];
     }
 
-    public int YM2609_Write(byte chipId, int adr, byte data) {
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
         if (chip[chipId] == null) return 0;
 
         chip[chipId].setReg(adr, data);
         return 0;
     }
 
-    public void SetFMVolume(byte chipId, int db) {
+    private void setFMVolume(int chipId, int db) {
         if (chip[chipId] == null) return;
-
         chip[chipId].setVolumeFM(db);
     }
 
-    public void SetPSGVolume(byte chipId, int db) {
+    private void setPSGVolume(int chipId, int db) {
         if (chip[chipId] == null) return;
-
         chip[chipId].setVolumePSG(db);
     }
 
-    public void SetRhythmVolume(byte chipId, int db) {
+    private void setRhythmVolume(int chipId, int db) {
         if (chip[chipId] == null) return;
-
         chip[chipId].setVolumeRhythmTotal(db);
     }
 
-    public void SetAdpcmVolume(byte chipId, int db) {
+    private void setAdpcmVolume(int chipId, int db) {
         if (chip[chipId] == null) return;
-
         chip[chipId].setVolumeADPCM(db);
     }
 
-    public void SetAdpcmA(byte chipId, byte[] _adpcma, int _adpcma_size) {
+    public void setAdpcmA(int chipId, byte[] _adpcma, int _adpcma_size) {
         if (chip[chipId] == null) return;
         chip[chipId].setAdpcmA(_adpcma, _adpcma_size);
     }
 
-    @Override
-    public int write(byte chipId, int port, int adr, int data) {
-        return YM2609_Write(chipId, adr, (byte) data);
+    //----
+
+    // TODO automatic wired, use annotation?
+    public void setFMVolume(int vol, double ignored) {
+        setFMVolume((byte) 0, vol);
+        setFMVolume((byte) 1, vol);
+    }
+
+    // TODO automatic wired, use annotation?
+    public void setPSGVolume(int vol, double ignored) {
+        setPSGVolume((byte) 0, vol);
+        setPSGVolume((byte) 1, vol);
+    }
+
+    // TODO automatic wired, use annotation?
+    public void setRhythmVolume(int vol, double ignored) {
+        setRhythmVolume((byte) 0, vol);
+        setRhythmVolume((byte) 1, vol);
+    }
+
+    // TODO automatic wired, use annotation?
+    public void setAdpcmVolume(int vol, double ignored) {
+        setAdpcmVolume((byte) 0, vol);
+        setAdpcmVolume((byte) 1, vol);
     }
 }

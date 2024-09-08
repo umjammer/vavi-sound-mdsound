@@ -61,23 +61,24 @@ public class PSG {
      */
     static {
         // 0 lo  1 up 2 down 3 hi
-        final byte[] table1 = new byte[] {
+        int[] table1 = new int[] {
                 2, 0, 2, 0, 2, 0, 2, 0, 1, 0, 1, 0, 1, 0, 1, 0,
                 2, 2, 2, 0, 2, 1, 2, 3, 1, 1, 1, 3, 1, 2, 1, 0
         };
-        byte[] table2 = new byte[] {0, 0, 31, 31};
-        byte[] table3 = new byte[] {0, 1, (byte) 255, 0};
+        int[] table2 = new int[] {0, 0, 31, 31};
+        int[] table3 = new int[] {0, 1, 255, 0};
 
         //(int)* ptr = enveloptable[0];
         int ptr = 0;
 
         for (int i = 0; i < 16 * 2; i++) {
-            byte v = table2[table1[i]];
+            int v = table2[table1[i]];
 
             for (int j = 0; j < 32; j++) {
                 envelopTable[ptr / 64][ptr % 64] = emitTable[v];
                 ptr++;
                 v += table3[table1[i]];
+                v &= 0xff;
             }
         }
     }
@@ -94,9 +95,9 @@ public class PSG {
     public void reset() {
         for (int i = 0; i < 14; i++)
             setReg(i, (byte) 0);
-        setReg(7, (byte) 0xff);
-        setReg(14, (byte) 0xff);
-        setReg(15, (byte) 0xff);
+        setReg(7, 0xff);
+        setReg(14, 0xff);
+        setReg(15, 0xff);
     }
 
     /**
@@ -113,15 +114,15 @@ public class PSG {
 
         // 各データの更新
         int tmp;
-        tmp = ((reg[0] + reg[1] * 256) & 0xfff);
+        tmp = ((reg[0] & 0xff) + (reg[1] & 0xff) * 256) & 0xfff;
         speriod[0] = tmp != 0 ? tPeriodBase / tmp : tPeriodBase;
-        tmp = ((reg[2] + reg[3] * 256) & 0xfff);
+        tmp = ((reg[2] & 0xff) + (reg[3] & 0xff) * 256) & 0xfff;
         speriod[1] = tmp != 0 ? tPeriodBase / tmp : tPeriodBase;
-        tmp = ((reg[4] + reg[5] * 256) & 0xfff);
+        tmp = ((reg[4] & 0xff) + (reg[5] & 0xff) * 256) & 0xfff;
         speriod[2] = tmp != 0 ? tPeriodBase / tmp : tPeriodBase;
         tmp = reg[6] & 0x1f;
         nPeriod = tmp != 0 ? nPeriodBase / tmp / 2 : nPeriodBase / 2;
-        tmp = ((reg[11] + reg[12] * 256) & 0xffff);
+        tmp = ((reg[11] & 0xff) + (reg[12] & 0xff) * 256) & 0xffff;
         eperiod = tmp != 0 ? eperiodbase / tmp : eperiodbase * 2;
     }
 
@@ -134,7 +135,7 @@ public class PSG {
     public void setVolume(int volume) {
         double base = 0x4000 / 3.0 * Math.pow(10.0, volume / 40.0);
         for (int i = 31; i >= 2; i--) {
-            emitTable[i] = (int) (base);
+            emitTable[i] = (int) base;
             base /= 1.189207115;
         }
         emitTable[1] = 0;
@@ -155,26 +156,26 @@ public class PSG {
      * @param regnum レジスタの番号 (0 - 15)
      * @param data   セットする値
      */
-    public void setReg(int regnum, byte data) {
+    public void setReg(int regnum, int data) {
         if (regnum < 0x10) {
-            reg[regnum] = data;
+            reg[regnum] = (byte) data;
             int tmp;
             switch (regnum) {
             case 0: // ChA Fine Tune
             case 1: // ChA Coarse Tune
-                tmp = ((reg[0] + reg[1] * 256) & 0xfff);
+                tmp = ((reg[0] & 0xff) + (reg[1] & 0xff) * 256) & 0xfff;
                 speriod[0] = tmp != 0 ? tPeriodBase / tmp : tPeriodBase;
                 break;
 
             case 2: // ChB Fine Tune
             case 3: // ChB Coarse Tune
-                tmp = ((reg[2] + reg[3] * 256) & 0xfff);
+                tmp = ((reg[2] & 0xff) + (reg[3] & 0xff) * 256) & 0xfff;
                 speriod[1] = tmp != 0 ? tPeriodBase / tmp : tPeriodBase;
                 break;
 
             case 4: // ChC Fine Tune
             case 5: // ChC Coarse Tune
-                tmp = ((reg[4] + reg[5] * 256) & 0xfff);
+                tmp = ((reg[4] & 0xff) + (reg[5] & 0xff) * 256) & 0xfff;
                 speriod[2] = tmp != 0 ? tPeriodBase / tmp : tPeriodBase;
                 break;
 
@@ -197,7 +198,7 @@ public class PSG {
 
             case 11: // Envelop period
             case 12:
-                tmp = ((reg[11] + reg[12] * 256) & 0xffff);
+                tmp = ((reg[11] & 0xff) + (reg[12] & 0xff) * 256) & 0xffff;
                 eperiod = tmp != 0 ? eperiodbase / tmp : eperiodbase * 2;
                 break;
 
@@ -217,17 +218,17 @@ public class PSG {
      * @param nsamples 展開する PCM のサンプル数
      */
     public void mix(int[] dest, int nsamples) {
-        byte[] chEnable = new byte[3];
-        byte[] nEnable = new byte[3];
-        byte r7 = (byte) ~reg[7];
+        int[] chEnable = new int[3];
+        int[] nEnable = new int[3];
+        int r7 = ~reg[7];
 
         if (((r7 & 0x3f) | ((reg[8] | reg[9] | reg[10]) & 0x1f)) != 0) {
-            chEnable[0] = (byte) ((((r7 & 0x01) != 0) && (speriod[0] <= (1 << toneShift))) ? 1 : 0);
-            chEnable[1] = (byte) ((((r7 & 0x02) != 0) && (speriod[1] <= (1 << toneShift))) ? 1 : 0);
-            chEnable[2] = (byte) ((((r7 & 0x04) != 0) && (speriod[2] <= (1 << toneShift))) ? 1 : 0);
-            nEnable[0] = (byte) (((r7 >> 3) & 1) != 0 ? 1 : 0);
-            nEnable[1] = (byte) (((r7 >> 4) & 1) != 0 ? 1 : 0);
-            nEnable[2] = (byte) (((r7 >> 5) & 1) != 0 ? 1 : 0);
+            chEnable[0] = (((r7 & 0x01) != 0) && (speriod[0] <= (1 << toneShift))) ? 1 : 0;
+            chEnable[1] = (((r7 & 0x02) != 0) && (speriod[1] <= (1 << toneShift))) ? 1 : 0;
+            chEnable[2] = (((r7 & 0x04) != 0) && (speriod[2] <= (1 << toneShift))) ? 1 : 0;
+            nEnable[0] = ((r7 >> 3) & 1) != 0 ? 1 : 0;
+            nEnable[1] = ((r7 >> 4) & 1) != 0 ? 1 : 0;
+            nEnable[2] = ((r7 >> 5) & 1) != 0 ? 1 : 0;
 
             boolean p1 = ((mask & 1) != 0 && (reg[8] & 0x10) != 0);
             boolean p2 = ((mask & 2) != 0 && (reg[9] & 0x10) != 0);
@@ -344,6 +345,6 @@ public class PSG {
      * レジスタ reg の内容を読み出す
      */
     public int getReg(int regnum) {
-        return reg[regnum & 0x0f];
+        return reg[regnum & 0x0f] & 0xff;
     }
 }

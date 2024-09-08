@@ -515,7 +515,7 @@ public class CtrQsound {
 
     // Updates a PCM Voice. There are 16 voices, each are updated every sample
     // with full rate and volume control.
-    private short updatePcm(int voiceNo, int echoOut) {
+    private short updatePcm(int voiceNo, int[] echoOut) {
         //if (voiceNo != 2) return 0;
 
         //qsound_voice v = this.Voice[voiceNo];
@@ -537,7 +537,7 @@ public class CtrQsound {
         //}
 
         //echoOut += (output * v.echo) << 2;
-        echoOut += (output * registerMap[voiceNo + 0xba]) << 2;
+        echoOut[0] += (output * registerMap[voiceNo + 0xba]) << 2;
 
         // Add delta to the phase and loop back if required
         //new_phase = v.rate + ((v.addr << 12) | (v.phase >> 4));
@@ -580,9 +580,9 @@ public class CtrQsound {
         Adpcm v = this.adpcm[voice_no];
 
         int delta;
-        byte step;
+        int step;
 
-        if (this.muteMask != 0 & (1 << (16 + voice_no)) != 0) {
+        if (this.muteMask != 0 && (1 << (16 + voice_no)) != 0) {
             this.voiceOutput[16 + voice_no] = 0;
             return;
         }
@@ -633,7 +633,7 @@ public class CtrQsound {
 
     // Process a sample update
     private void state_normal_update() {
-        int echoInput = 0;
+        int[] echoInput = new int[1];
 
         this.readyFlag = (byte) 0x80;
 
@@ -654,7 +654,7 @@ public class CtrQsound {
         // update ADPCM voices (one every third sample)
         updateAdpcm(this.stateCounter % 3, this.stateCounter / 3);
 
-        short echoOutput = this.echo.echo(echoInput);
+        short echoOutput = this.echo.echo(echoInput[0]);
 
         // now, we do the magic stuff
         for (int ch = 0; ch < 2; ch++) {
@@ -662,7 +662,7 @@ public class CtrQsound {
             // the filtered component of the right channel.
             int wet = (ch == 1) ? echoOutput << 14 : 0;
             int dry = (ch == 0) ? echoOutput << 14 : 0;
-            int output = 0;
+            int output;
 
             for (int v = 0; v < 19; v++) {
                 //int pan_index = (int)(this.voice_pan[v] - 0x110);
@@ -754,7 +754,7 @@ public class CtrQsound {
         this.stateCounter = 0;
     }
 
-    public void write(int offset, byte data) {
+    public void write(int offset, int data) {
         switch (offset) {
         case 0:
             this.dataLatch = (this.dataLatch & 0x00ff) | (data << 8);
@@ -774,7 +774,7 @@ public class CtrQsound {
         return this.readyFlag;
     }
 
-    public void writeData(byte address, int data) {
+    public void writeData(int address, int data) {
         int[] destination = registerMap;
         if (destination != null) destination[address] = data;
         this.readyFlag = 0;
@@ -836,7 +836,7 @@ public class CtrQsound {
         return start(clock);
     }
 
-    public void write2(int offset, byte data) {
+    public void write2(int offset, int data) {
         if (key_on_hack != 0) {
             int ch;
             switch (offset) {
@@ -863,11 +863,11 @@ public class CtrQsound {
                 case 2: // Pitch write
                     // (old HLE assumed writing a non-zero value after a zero value was Key On)
                     if (pitch_cache[ch] == 0 && _data_latch != 0)
-                        writeData((byte) ((ch << 3) + 1), start_addr_cache[ch]);
+                        writeData((ch << 3) + 1, start_addr_cache[ch]);
                     pitch_cache[ch] = _data_latch;
                     break;
                 case 3: // Phase (old HLE also assumed this was Key On)
-                    writeData((byte) ((ch << 3) + 1), start_addr_cache[ch]);
+                    writeData((ch << 3) + 1, start_addr_cache[ch]);
                     break;
                 default:
                     break;

@@ -13,13 +13,13 @@ import mdsound.chips.Ay8910;
 
 public class MameAy8910Inst extends Instrument.BaseInstrument {
 
-    private Ay8910[] chip = new Ay8910[] {new Ay8910(), new Ay8910()};
+    private final Ay8910[] chip = new Ay8910[2];
     private static final int DefaultAY8910ClockValue = 1789750;
     private int sampleRate = 44100;
     private int masterClock = DefaultAY8910ClockValue;
     private double sampleCounter = 0;
-    private int[][] frm = new int[][] {new int[1], new int[1]};
-    private int[][] before = new int[][] {new int[1], new int[1]};
+    private final int[][] frm = new int[][] {new int[1], new int[1]};
+    private final int[][] before = new int[][] {new int[1], new int[1]};
 
     @Override
     public String getName() {
@@ -32,17 +32,17 @@ public class MameAy8910Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void reset(byte chipId) {
+    public void reset(int chipId) {
         chip[chipId].reset();
     }
 
     @Override
-    public int start(byte chipId, int clock) {
+    public int start(int chipId, int clock) {
         return start(chipId, clock, DefaultAY8910ClockValue);
     }
 
     @Override
-    public int start(byte chipId, int clock, int clockValue, Object... option) {
+    public int start(int chipId, int clock, int clockValue, Object... option) {
         Ay8910 ch = new Ay8910();
         sampleRate = clock;
         masterClock = clockValue / 4;
@@ -62,12 +62,12 @@ public class MameAy8910Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void stop(byte chipId) {
+    public void stop(int chipId) {
         chip[chipId].stop();
     }
 
     @Override
-    public void update(byte chipId, int[][] outputs, int samples) {
+    public void update(int chipId, int[][] outputs, int samples) {
         for (int i = 0; i < samples; i++) {
             outputs[0][i] = 0;
             outputs[1][i] = 0;
@@ -102,12 +102,12 @@ public class MameAy8910Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int write(byte chipId, int port, int adr, int data) {
-        chip[chipId].writeReg((byte) adr, (byte) data);
+    public int write(int chipId, int port, int adr, int data) {
+        chip[chipId].writeReg(adr, data);
         return 0;
     }
 
-    public void setMute(byte chipId, int mask) {
-        chip[chipId].setMuteMask((byte) mask);
+    public void setMute(int chipId, int mask) {
+        chip[chipId].setMuteMask(mask);
     }
 }

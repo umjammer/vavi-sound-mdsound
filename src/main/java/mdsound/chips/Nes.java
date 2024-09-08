@@ -1,8 +1,8 @@
 package mdsound.chips;
 
 import java.util.Arrays;
+import java.util.function.Consumer;
 
-import mdsound.MDSound;
 import mdsound.np.NpNesApu;
 import mdsound.np.NpNesDmc;
 import mdsound.np.NpNesFds;
@@ -14,6 +14,7 @@ import mdsound.np.NpNesFds;
  * Note: FDS core from NSFPlay is always used
  */
 public class Nes {
+
     // 音量設定
     public void setVolumeAPU(int db) {
         db = Math.min(db, 20);
@@ -70,8 +71,7 @@ public class Nes {
             outputs[1][curSmpl] = (short) ((limit(bufferA[1], 0x7fff, -0x8000) * apuVolume) >> 14);
             outputs[0][curSmpl] += (short) ((limit(bufferD[0], 0x7fff, -0x8000) * dmcVolume) >> 14);
             outputs[1][curSmpl] += (short) ((limit(bufferD[1], 0x7fff, -0x8000) * dmcVolume) >> 14);
-            MDSound.np_nes_apu_volume = Math.abs(bufferA[0]);
-            MDSound.np_nes_dmc_volume = Math.abs(bufferD[0]);
+            if (listener != null) listener.accept(new int[] {Math.abs(bufferA[0]), Math.abs(bufferD[0]), -1, -1, -1, -1, -1, -1});
         }
 //                    break;
 //            }
@@ -81,7 +81,7 @@ public class Nes {
                 this.chipFds.render(bufferF);
                 outputs[0][curSmpl] += (short) ((limit(bufferF[0], 0x7fff, -0x8000) * fdsVolume) >> 14);
                 outputs[1][curSmpl] += (short) ((limit(bufferF[1], 0x7fff, -0x8000) * fdsVolume) >> 14);
-                MDSound.np_nes_fds_volume = Math.abs(bufferF[0]);
+                if (listener != null) listener.accept(new int[] {-1, -1, Math.abs(bufferF[0]), -1, -1, -1, -1, -1});
             }
         }
     }
@@ -255,5 +255,11 @@ public class Nes {
             this.chipDmc.setMask((muteMask & 0x1C) >> 2);
         if (this.chipFds != null)
             this.chipFds.setMask((muteMask & 0x20) >> 5);
+    }
+
+    private Consumer<int[]> listener;
+
+    public void setListener(Consumer<int[]> listener) {
+        this.listener = listener;
     }
 }

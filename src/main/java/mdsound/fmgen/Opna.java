@@ -11,7 +11,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.function.Function;
-import java.util.logging.Level;
 
 import dotnet4j.io.FileAccess;
 import dotnet4j.io.FileMode;
@@ -131,8 +130,8 @@ public class Opna {
         }    // obsolete
 
         protected void setParameter(Fmgen.Channel4 ch, int addr, int data) {
-            final int[] slotTable = new int[] {0, 2, 1, 3};
-            final byte[] slTable = new byte[] {
+            int[] slotTable = new int[] {0, 2, 1, 3};
+            byte[] slTable = new byte[] {
                     0, 4, 8, 12, 16, 20, 24, 28,
                     32, 36, 40, 44, 48, 52, 56, 124
             };
@@ -178,8 +177,8 @@ public class Opna {
         }
 
         protected void setPreScaler(int p) {
-            final byte[][] table = new byte[][] {new byte[] {6, 4}, new byte[] {3, 2}, new byte[] {2, 1}};
-            final byte[] table2 = new byte[] {108, 77, 71, 67, 62, 44, 8, 5};
+            byte[][] table = new byte[][] {new byte[] {6, 4}, new byte[] {3, 2}, new byte[] {2, 1}};
+            byte[] table2 = new byte[] {108, 77, 71, 67, 62, 44, 8, 5};
             // 512
             if (preScale != p) {
                 preScale = (byte) p;
@@ -1004,12 +1003,12 @@ stop:
         }
 
         protected int decodeADPCMBSample(int data) {
-            final int[] table1 = new int[] {
+            int[] table1 = new int[] {
                     1, 3, 5, 7, 9, 11, 13, 15,
                     -1, -3, -5, -7, -9, -11, -13, -15,
             };
 
-            final int[] table2 = new int[] {
+            int[] table2 = new int[] {
                     57, 57, 57, 57, 77, 102, 128, 153,
                     57, 57, 57, 57, 77, 102, 128, 153,
             };
@@ -1340,7 +1339,7 @@ stop:
         /**
          * 構築
          */
-        public OPNA(byte chipId) {
+        public OPNA(int chipId) {
             for (int i = 0; i < 6; i++) {
                 rhythm[i].sample = null;
                 rhythm[i].pos = 0;
@@ -1352,13 +1351,6 @@ stop:
             adpcmNotice = 4;
             csmCh = ch[2];
             this.chipId = chipId;
-        }
-
-        protected void finalize() {
-            adpcmBuf = null;
-            for (int i = 0; i < 6; i++) {
-                rhythm[i].sample = null;
-            }
         }
 
         public boolean init(int c, int r) {
@@ -1403,6 +1395,7 @@ stop:
 
         private FileStream createRhythmFileStream(String dir, String fname) {
             Path path = dir == null || dir.isEmpty() ? Paths.get(fname) : Paths.get(dir, fname);
+Debug.println(path);
             return Files.exists(path) ? new FileStream(path.toString(), FileMode.Open, FileAccess.Read) : null;
         }
 
@@ -1414,7 +1407,7 @@ stop:
          * リズム音を読みこむ
          */
         public boolean loadRhythmSample(Function<String, Stream> appendFileReaderCallback) {
-            final String[] rhythmNames = new String[] {
+            String[] rhythmNames = new String[] {
                     "bd", "sd", "top", "hh", "tom", "rim",
             };
 
@@ -1722,7 +1715,7 @@ e.printStackTrace();
         private int rhythmTVol;
         // リズムのキー
         private byte rhythmKey;
-        private byte chipId;
+        private int chipId;
     }
 
     /** YM2610/B(OPNB) */
@@ -1853,7 +1846,7 @@ e.printStackTrace();
                         if ((data & (1 << c)) != 0) {
                             resetStatus(0x100 << c);
                             adpcmA[c].pos = adpcmA[c].start;
-                            //     adpcma[c].step = 0x10000 - adpcma[c].step;
+                            //adpcma[c].step = 0x10000 - adpcma[c].step;
                             adpcmA[c].step = 0;
                             adpcmA[c].adpcmX = 0;
                             adpcmA[c].adpcmD = 0;
@@ -1943,7 +1936,7 @@ e.printStackTrace();
             case 0x15: // Stop Address H
                 adpcmReg[addr - 0x14 + 2] = (byte) data;
                 stopAddr = (adpcmReg[3] * 256 + adpcmReg[2] + 1) << 9;
-                //Debug.printf("  stopaddr %.6x", stopaddr);
+//                Debug.printf("  stopaddr %.6x", stopaddr);
                 break;
 
             case 0x19: // delta-N L
@@ -1969,7 +1962,7 @@ e.printStackTrace();
                 super.setReg(addr, data);
                 break;
             }
-            // Debug.printf("\n");
+//            Debug.println();
         }
 
         /**
@@ -2007,7 +2000,7 @@ e.printStackTrace();
                 adpcmVol = 0;
         }
 
-        //  void SetChannelMask(int mask);
+//        void SetChannelMask(int mask);
 
         public static class ADPCMA {
             // ぱん
@@ -2131,7 +2124,7 @@ e.printStackTrace();
         // AdpcmA ROM
         public byte[] adpcmaBuf;
         public int adpcmASize;
-        public ADPCMA[] adpcmA = new ADPCMA[] {
+        public ADPCMA[] adpcmA = {
                 new ADPCMA(), new ADPCMA(), new ADPCMA(), new ADPCMA(), new ADPCMA(), new ADPCMA()
         };
         // AdpcmA 全体の音量
@@ -2196,7 +2189,7 @@ e.printStackTrace();
         private byte[] fnum2 = new byte[6];
 
         // 線形補間用ワーク
-        //private int mixc, mixc1;
+//        private int mixc, mixc1;
 
         private Fmgen.Channel4[] ch = new Fmgen.Channel4[3];
     }

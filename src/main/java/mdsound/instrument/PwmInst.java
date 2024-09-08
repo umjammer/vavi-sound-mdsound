@@ -46,15 +46,15 @@ public class PwmInst extends Instrument.BaseInstrument {
     }
 
     public PwmInst() {
+        // 0..Main
         visVolume = new int[][][] {
                 new int[][] {new int[] {0, 0}},
                 new int[][] {new int[] {0, 0}}
         };
-        //0..Main
     }
 
     @Override
-    public void update(byte chipId, int[][] outputs, int samples) {
+    public void update(int chipId, int[][] outputs, int samples) {
         PwmChip chip = chips[chipId];
 
         chip.update(outputs, samples);
@@ -64,12 +64,12 @@ public class PwmInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(byte chipId, int samplingRate, int clockValue, Object... option) {
+    public int start(int chipId, int samplingRate, int clockValue, Object... option) {
         return start(chipId, clockValue);
     }
 
     @Override
-    public int start(byte chipId, int clock) {
+    public int start(int chipId, int clock) {
         if (chipId >= MAX_CHIPS)
             return 0;
 
@@ -84,19 +84,19 @@ public class PwmInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void stop(byte chipId) {
+    public void stop(int chipId) {
     }
 
     @Override
-    public void reset(byte chipId) {
+    public void reset(int chipId) {
         PwmChip chip = chips[chipId];
         chip.init();
     }
 
     @Override
-    public int write(byte chipId, int port, int adr, int data) {
+    public int write(int chipId, int port, int adr, int data) {
         PwmChip chip = chips[chipId];
-        chip.writeChannel((byte) adr, data);
+        chip.writeChannel(adr, data);
         return 0;
     }
 
@@ -104,13 +104,16 @@ public class PwmInst extends Instrument.BaseInstrument {
 
     @Override
     public Tuple<Integer, Double> getRegulationVolume() {
-        return new Tuple<>(0xE0/*0xCD*/, 1d);
+        return new Tuple<>(0xE0 /* 0xCD */, 1d);
     }
 
     @Override
-    public Map<String, Integer> getVisVolume() {
-        Map<String, Integer> result = new HashMap<>();
-        result.put("pwm", getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+    public Map<String, Object> getView(String key, Map<String, Object> args) {
+        Map<String, Object> result = new HashMap<>();
+        switch (key) {
+            case "volume" ->
+                    result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+        }
         return result;
     }
 }

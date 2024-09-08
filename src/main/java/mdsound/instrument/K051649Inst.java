@@ -11,7 +11,7 @@ import mdsound.chips.K051649;
 public class K051649Inst extends Instrument.BaseInstrument {
 
     @Override
-    public void reset(byte chipId) {
+    public void reset(int chipId) {
         device_reset_k051649(chipId);
         visVolume = new int[][][] {
                 new int[][] {new int[] {0, 0}},
@@ -20,12 +20,12 @@ public class K051649Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(byte chipId, int clock) {
+    public int start(int chipId, int clock) {
         return device_start_k051649(chipId, clock);
     }
 
     @Override
-    public int start(byte chipId, int SamplingRate, int clockValue, Object... Option) {
+    public int start(int chipId, int SamplingRate, int clockValue, Object... Option) {
         if (scc1Data[chipId] == null) {
             scc1Data[chipId] = new K051649();
         }
@@ -39,12 +39,12 @@ public class K051649Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void stop(byte chipId) {
+    public void stop(int chipId) {
         device_stop_k051649(chipId);
     }
 
     @Override
-    public void update(byte chipId, int[][] outputs, int samples) {
+    public void update(int chipId, int[][] outputs, int samples) {
         k051649_update(chipId, outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
@@ -56,7 +56,7 @@ public class K051649Inst extends Instrument.BaseInstrument {
 
     @Override
     public String getName() {
-        return "K051649Inst";
+        return "K051649";
     }
 
     @Override
@@ -65,12 +65,12 @@ public class K051649Inst extends Instrument.BaseInstrument {
     }
 
     /* generate Sound to the mix buffer */
-    private void k051649_update(byte chipId, int[][] outputs, int samples) {
+    private void k051649_update(int chipId, int[][] outputs, int samples) {
         K051649 info = scc1Data[chipId];
         info.update(outputs, samples);
     }
 
-    private int device_start_k051649(byte chipId, int clock) {
+    private int device_start_k051649(int chipId, int clock) {
         if (chipId >= MAX_CHIPS)
             return 0;
 
@@ -78,80 +78,80 @@ public class K051649Inst extends Instrument.BaseInstrument {
         return info.start(clock);
     }
 
-    private void device_stop_k051649(byte chipId) {
+    private void device_stop_k051649(int chipId) {
         K051649 info = scc1Data[chipId];
     }
 
-    private void device_reset_k051649(byte chipId) {
+    private void device_reset_k051649(int chipId) {
         K051649 info = scc1Data[chipId];
         info.reset();
     }
 
     //
-    private void k051649_waveform_w(byte chipId, int offset, byte data) {
+    private void k051649_waveform_w(int chipId, int offset, int data) {
         K051649 info = scc1Data[chipId];
         info.writeWaveForm(offset, data);
     }
 
-    private byte k051649_waveform_r(byte chipId, int offset) {
+    private int k051649_waveform_r(int chipId, int offset) {
         K051649 info = scc1Data[chipId];
         return info.readWaveForm(offset);
     }
 
     /* SY 20001114: Channel 5 doesn't share the waveform with channel 4 on this chips */
-    private void k052539_waveform_w(byte chipId, int offset, byte data) {
+    private void k052539_waveform_w(int chipId, int offset, byte data) {
         K051649 info = scc1Data[chipId];
         info.writeWaveFormK05239(offset, data);
     }
 
-    private byte k052539_waveform_r(byte chipId, int offset) {
+    private int k052539_waveform_r(int chipId, int offset) {
         K051649 info = scc1Data[chipId];
         return info.readWaveFormK05239(offset);
     }
 
-    private void k051649_volume_w(byte chipId, int offset, byte data) {
+    private void k051649_volume_w(int chipId, int offset, byte data) {
         K051649 info = scc1Data[chipId];
         info.writeVolume(offset, data);
     }
 
-    private void k051649_frequency_w(byte chipId, int offset, byte data) {
+    private void k051649_frequency_w(int chipId, int offset, byte data) {
         K051649 info = scc1Data[chipId];
         info.writeFrequency(offset, data);
     }
 
-    private void k051649_keyonoff_w(byte chipId, int offset, byte data) {
+    private void k051649_keyonoff_w(int chipId, int offset, byte data) {
         K051649 info = scc1Data[chipId];
-        info.wtiteKeyOnOff(offset, data);
+        info.writeKeyOnOff(offset, data);
     }
 
-    private void k051649_test_w(byte chipId, int offset, byte data) {
+    private void k051649_test_w(int chipId, int offset, byte data) {
         K051649 info = scc1Data[chipId];
         info.writeTest(offset, data);
     }
 
-    private byte k051649_test_r(byte chipId, int offset) {
+    private byte k051649_test_r(int chipId, int offset) {
         // reading the test register sets it to $ff!
         k051649_test_w(chipId, offset, (byte) 0xff);
         return (byte) 0xff;
     }
 
-    private void k051649_w(byte chipId, int offset, byte data) {
+    private void k051649_w(int chipId, int offset, byte data) {
         K051649 info = scc1Data[chipId];
         info.write(offset, data);
     }
 
-    private void k051649_set_mute_mask(byte chipId, int muteMask) {
+    private void k051649_set_mute_mask(int chipId, int muteMask) {
         K051649 info = scc1Data[chipId];
         info.setMuteMask(muteMask);
     }
 
     @Override
-    public int write(byte chipId, int port, int adr, int data) {
+    public int write(int chipId, int port, int adr, int data) {
         k051649_w(chipId, adr, (byte) data);
         return 0;
     }
 
-    public K051649 GetK051649_State(byte chipId) {
+    public K051649 GetK051649_State(int chipId) {
         return scc1Data[chipId];
     }
 
@@ -174,9 +174,12 @@ public class K051649Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public Map<String, Integer> getVisVolume() {
-        Map<String, Integer> result = new HashMap<>();
-        result.put("k051649", getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+    public Map<String, Object> getView(String key, Map<String, Object> args) {
+        Map<String, Object> result = new HashMap<>();
+        switch (key) {
+            case "volume" ->
+                    result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+        }
         return result;
     }
 }

@@ -35,41 +35,41 @@ public class OkiM6258 {
     private static final int QUEUE_SIZE = (1 << 1);
     private static final int QUEUE_MASK = (QUEUE_SIZE - 1);
 
-    private byte status;
+    private int status;
 
     /** master clock frequency */
     private int masterClock;
     /** master clock divider */
     private int divider;
     /** 3/4 bit ADPCM select */
-    private byte adpcmType;
+    private int adpcmType;
     /** ADPCM data-in register */
-    private byte dataIn;
+    private int dataIn;
     /** nibble select */
-    private byte nibbleShift;
+    private int nibbleShift;
 
-    private byte outputBits;
+    private int outputBits;
     private int outputMask;
 
     // Valley Bell: Added a small queue to prevent race conditions.
     private byte[] dataBuf = new byte[8];
-    private byte dataInLast;
-    private byte dataBufPos;
-    // Data Empty Values:
+    private int dataInLast;
+    private int dataBufPos;
+    // data Empty Values:
     // 00 - data written, but not read yet
     // 01 - read data, waiting for next write
     // 02 - tried to read, but had no data
-    private byte dataEmpty;
+    private int dataEmpty;
     // Valley Bell: Added pan
-    private byte pan;
+    private int pan;
     private int lastSmpl;
 
     private int signal;
     private int step;
 
-    private byte[] clockBuffer = new byte[0x04];
+    private int[] clockBuffer = new int[0x04];
     private int initialClock;
-    private byte initialDiv;
+    private int initialDiv;
 
     private SampleRateCallback smpRateFunc;
     private MDSound.Chip smpRateData;
@@ -85,20 +85,20 @@ public class OkiM6258 {
         return clkRnd / this.divider;
     }
 
-    private short clockAdpcm(byte nibble) {
+    private int clockAdpcm(int nibble) {
         int max = this.outputMask - 1;
-        int min = -(int) this.outputMask;
+        int min = -this.outputMask;
 
         int sample = diffLookup[this.step * 16 + (nibble & 15)];
         this.signal = ((sample << 8) + (this.signal * 245)) >> 8;
 
-        /* clamp to the maximum */
+        // clamp to the maximum
         if (this.signal > max)
             this.signal = max;
         else if (this.signal < min)
             this.signal = min;
 
-        /* adjust the step size and clamp */
+        // adjust the step size and clamp
         this.step += indexShift[nibble & 7];
         if (this.step > 48)
             this.step = 48;
@@ -106,7 +106,7 @@ public class OkiM6258 {
             this.step = 0;
 
         /* return the signal scaled up to 32767 */
-        return (short) (this.signal << 4);
+        return this.signal << 4;
     }
 
     public interface SampleRateCallback extends BiConsumer<MDSound.Chip, Integer> {
@@ -116,35 +116,35 @@ public class OkiM6258 {
     private static final int[] indexShift = new int[] {-1, -1, -1, -1, 2, 4, 6, 8};
 
     /* lookup table for the precomputed difference */
-    private static int[] diffLookup = new int[49 * 16];
+    private static final int[] diffLookup = new int[49 * 16];
 
-    private static byte internal10Bit = 0x00;
+    private static int internal10Bit = 0x00;
 
     /*
      * compute the difference tables
      */
     static {
-        /* nibble to bit map */
-        final int[][] nbl2bit = new int[][] {
+        // nibble to bit map
+        int[][] nbl2bit = new int[][] {
                 new int[] {1, 0, 0, 0}, new int[] {1, 0, 0, 1}, new int[] {1, 0, 1, 0}, new int[] {1, 0, 1, 1},
                 new int[] {1, 1, 0, 0}, new int[] {1, 1, 0, 1}, new int[] {1, 1, 1, 0}, new int[] {1, 1, 1, 1},
                 new int[] {-1, 0, 0, 0}, new int[] {-1, 0, 0, 1}, new int[] {-1, 0, 1, 0}, new int[] {-1, 0, 1, 1},
                 new int[] {-1, 1, 0, 0}, new int[] {-1, 1, 0, 1}, new int[] {-1, 1, 1, 0}, new int[] {-1, 1, 1, 1}
         };
 
-        /* loop over all possible steps */
+        // loop over all possible steps
         for (int step = 0; step <= 48; step++) {
-            /* compute the step value */
+            // compute the step value
             int stepVal = (int) Math.floor(16.0 * Math.pow(11.0 / 10.0, step));
 
-            /* loop over all nibbles and compute the difference */
+            // loop over all nibbles and compute the difference
             for (int nib = 0; nib < 16; nib++) {
                 diffLookup[step * 16 + nib] = nbl2bit[nib][0] *
                         (stepVal * nbl2bit[nib][1] +
                                 stepVal / 2 * nbl2bit[nib][2] +
                                 stepVal / 4 * nbl2bit[nib][3] +
                                 stepVal / 8);
-//                Debug.printf("diff_lookup[%d]=%d ", step * 16 + nib, diff_lookup[step * 16 + nib]);
+//Debug.printf("diff_lookup[%d]=%d ", step * 16 + nib, diff_lookup[step * 16 + nib]);
             }
         }
     }
@@ -167,13 +167,13 @@ public class OkiM6258 {
                 // Compute the new amplitude and update the current step
                 //int nibble = (this.data_in >> nibbleShift) & 0xf;
                 int nibble;
-                short sample;
+                int sample;
 
                 //Debug.printf("this.data_empty=%d ", this.data_empty);
                 if (nibbleShift == 0) {
                     // 1st nibble - get data
                     if (this.dataEmpty == 0) {
-                        this.dataIn = this.dataBuf[this.dataBufPos >> 4];
+                        this.dataIn = this.dataBuf[this.dataBufPos >> 4] & 0xff;
                         this.dataBufPos += 0x10;
                         this.dataBufPos &= 0x7f;
                         if ((this.dataBufPos >> 4) == (this.dataBufPos & 0x0F))
@@ -188,7 +188,7 @@ public class OkiM6258 {
                 // Output to the buffer
                 //INT16 sample = clock_adpcm(chips, nibble);
                 if (this.dataEmpty < 0x02) {
-                    sample = this.clockAdpcm((byte) nibble);
+                    sample = this.clockAdpcm(nibble);
                     this.lastSmpl = sample;
                 } else {
                     // Valley Bell: data_empty behaviour (loosely) ported from XM6
@@ -201,7 +201,7 @@ public class OkiM6258 {
                         this.signal = this.signal * 15 / 16;
                         this.lastSmpl = this.signal << 4;
                     }
-                    sample = (short) this.lastSmpl;
+                    sample = this.lastSmpl;
                 }
 
                 nibbleShift ^= 4;
@@ -215,7 +215,7 @@ public class OkiM6258 {
             }
 
             // Update the parameters
-            this.nibbleShift = (byte) nibbleShift;
+            this.nibbleShift = nibbleShift;
         } else {
             // Fill with 0
             while ((samples--) != 0) {
@@ -232,20 +232,20 @@ public class OkiM6258 {
      */
     public int start(int clock, int divider, int adpcmType, int output12Bits) {
         this.initialClock = clock;
-        this.initialDiv = (byte) divider;
+        this.initialDiv = divider;
         this.masterClock = clock;
-        this.adpcmType = (byte) adpcmType;
-        this.clockBuffer[0x00] = (byte) ((clock & 0x000000FF) >> 0);
-        this.clockBuffer[0x01] = (byte) ((clock & 0x0000FF00) >> 8);
-        this.clockBuffer[0x02] = (byte) ((clock & 0x00FF0000) >> 16);
-        this.clockBuffer[0x03] = (byte) ((clock & 0xFF000000) >>> 24);
+        this.adpcmType = adpcmType;
+        this.clockBuffer[0x00] = (clock & 0x0000_00ff) >> 0;
+        this.clockBuffer[0x01] = (clock & 0x0000_ff00) >> 8;
+        this.clockBuffer[0x02] = (clock & 0x00ff_0000) >> 16;
+        this.clockBuffer[0x03] = (clock & 0xff00_0000) >>> 24;
 
         // D/A precision is 10-bits but 12-bit data can be output serially to an external DAC
-        this.outputBits = (byte) ((output12Bits != 0) ? 12 : 10);
+        this.outputBits = (output12Bits != 0) ? 12 : 10;
         if (internal10Bit != 0)
             this.outputMask = 1 << (this.outputBits - 1);
         else
-            this.outputMask = (1 << (12 - 1));
+            this.outputMask = 1 << (12 - 1);
         this.divider = dividers[divider];
 
         this.signal = -2;
@@ -256,10 +256,10 @@ public class OkiM6258 {
 
     public void reset() {
         this.masterClock = this.initialClock;
-        this.clockBuffer[0x00] = (byte) ((this.initialClock & 0x000000FF) >> 0);
-        this.clockBuffer[0x01] = (byte) ((this.initialClock & 0x0000FF00) >> 8);
-        this.clockBuffer[0x02] = (byte) ((this.initialClock & 0x00FF0000) >> 16);
-        this.clockBuffer[0x03] = (byte) ((this.initialClock & 0xFF000000) >>> 24);
+        this.clockBuffer[0x00] = (this.initialClock & 0x0000_00ff) >> 0;
+        this.clockBuffer[0x01] = (this.initialClock & 0x0000_ff00) >> 8;
+        this.clockBuffer[0x02] = (this.initialClock & 0x00ff_0000) >> 16;
+        this.clockBuffer[0x03] = (this.initialClock & 0xff00_0000) >>> 24;
         this.divider = dividers[this.initialDiv];
         if (this.smpRateFunc != null) {
             this.smpRateFunc.accept(this.smpRateData, this.getVclk());
@@ -270,11 +270,11 @@ public class OkiM6258 {
         this.step = 0;
         this.status = 0;
 
-        // Valley Bell: Added reset of the Data In register.
+        // Valley Bell: Added reset of the data In register.
         this.dataIn = 0x00;
         this.dataBuf[0] = this.dataBuf[1] = 0x00;
         this.dataBufPos = 0x00;
-        this.dataEmpty = (byte) 0xFF;
+        this.dataEmpty = 0xff;
         this.pan = 0x00;
     }
 
@@ -306,17 +306,17 @@ public class OkiM6258 {
     /**
      * write to the control port of an OKIM6258-compatible chips
      */
-    public void data_write(/*offs_t offset, */byte data) {
+    public void data_write(/* offs_t offset, */ int data) {
         if (this.dataEmpty >= 0x02) {
             this.dataBufPos = 0x00;
         }
         this.dataInLast = data;
-        this.dataBuf[this.dataBufPos & 0x0F] = data;
+        this.dataBuf[this.dataBufPos & 0x0F] = (byte) data;
         this.dataBufPos += 0x01;
         this.dataBufPos &= 0xf7;
-        if ((this.dataBufPos >> 4) == (this.dataBufPos & 0x0F)) {
+        if ((this.dataBufPos >> 4) == (this.dataBufPos & 0x0f)) {
             //Debug.printf("Warning: FIFO full!\n");
-            this.dataBufPos = (byte) ((this.dataBufPos & 0xF0) | ((this.dataBufPos - 1) & 0x07));
+            this.dataBufPos = (this.dataBufPos & 0xf0) | ((this.dataBufPos - 1) & 0X07);
         }
         this.dataEmpty = 0x00;
     }
@@ -324,10 +324,10 @@ public class OkiM6258 {
     /**
      * write to the control port of an OKIM6258-compatible chips
      */
-    public void writeControl(/*offs_t offset, */byte data) {
+    public void writeControl(/* offs_t offset, */ int data) {
         if ((data & COMMAND_STOP) != 0) {
             //Debug.printf("COMMAND:STOP");
-            this.status &= (byte) (0x2 + 0x4);
+            this.status &= 0x2 + 0x4;
             return;
         }
 
@@ -341,7 +341,7 @@ public class OkiM6258 {
                 this.step = 0;
                 this.nibbleShift = 0;
 
-                this.dataBuf[0x00] = data;
+                this.dataBuf[0x00] = (byte) data;
                 this.dataBufPos = 0x01; // write pos 01, read pos 00
                 this.dataEmpty = 0x00;
             }
@@ -359,22 +359,22 @@ public class OkiM6258 {
         }
     }
 
-    private void setClockByte(byte port, byte val) {
+    private void setClockByte(int port, int val) {
         this.clockBuffer[port] = val;
     }
 
-    public void writePan(byte data) {
+    public void writePan(int data) {
         this.pan = data;
     }
 
-    public void write(byte port, byte data) {
+    public void write(int port, int data) {
         //Debug.printf("port=%2x data=%2x \n", port, data);
         switch (port) {
         case 0x00:
-            writeControl(/*0x00, */data);
+            writeControl(/* 0x00, */ data);
             break;
         case 0x01:
-            write((byte) 0x00, data);
+            write(0x00, data);
             break;
         case 0x02:
             writePan(data);
@@ -382,10 +382,10 @@ public class OkiM6258 {
         case 0x08:
         case 0x09:
         case 0x0A:
-            setClockByte((byte) (port & 0x03), data);
+            setClockByte(port & 0x03, data);
             break;
         case 0x0B:
-            setClockByte((byte) (port & 0x03), data);
+            setClockByte(port & 0x03, data);
             setClock(0);
             break;
         case 0x0C:
@@ -401,7 +401,7 @@ public class OkiM6258 {
     }
 
     public static void setOptions(int options) {
-        internal10Bit = (byte) ((options >> 0) & 0x01);
+        internal10Bit = (options >> 0) & 0x01;
     }
 
     public int getPan() {

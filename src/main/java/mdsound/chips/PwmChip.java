@@ -93,7 +93,7 @@ public class PwmChip {
 
     private void setCycle(int cycle) {
         cycle--;
-        this.cycle = (cycle & 0xFFF);
+        this.cycle = (cycle & 0xffF);
         this.cycleCnt = this.cycles;
 
 //#if CHILLY_WILLY_SCALE
@@ -114,116 +114,115 @@ public class PwmChip {
         this.cycleCnt = 0;
     }
 
-    /*
-     * Shift PWM data.
-     *
-     * @param src Channel (L or R) with the source data.
-     * @param dest Channel (L or R) for the destination.
-     */
-    //void PWM_SHIFT(src, dest) {
-    // /* Make sure the source FIFO isn't empty.
-    // if (PWM_RP_##src != PWM_WP_##src)        \
-    // {            \
-    //  /* Get destination channel output from the source channel FIFO. */   \
-    //  PWM_Out_##dest = PWM_FIFO_##src[PWM_RP_##src];      \
-    //             \
-    //  /* Increment the source channel read pointer, resetting to 0 if it overflows. */ \
-    //  PWM_RP_##src = (PWM_RP_##src + 1) & (PWM_BUF_SIZE - 1);     \
-    // }            \
-    //}
+//    /**
+//     * Shift PWM data.
+//     *
+//     * @param src Channel (L or R) with the source data.
+//     * @param dest Channel (L or R) for the destination.
+//     */
+//    void PWM_SHIFT(src, dest) {
+//        // Make sure the source FIFO isn't empty.
+//        if (PWM_RP_##src != PWM_WP_##src) {
+//            // Get destination channel output from the source channel FIFO.
+//            PWM_Out_##dest = PWM_FIFO_##src[PWM_RP_##src];
+//
+//            // Increment the source channel read pointer, resetting to 0 if it overflows.
+//            PWM_RP_##src = (PWM_RP_##src + 1) & (PWM_BUF_SIZE - 1);
+//        }
+//    }
 
-    /*static void PWM_Shift_Data(void) {
-        switch (PWM_Mode & 0x0F) {
-            case 0x01:
-            case 0x0D:
-                // Rx_LL: Right . Ignore, Left . Left
-                PWM_SHIFT(L, L);
-                break;
-
-            case 0x02:
-            case 0x0E:
-                // Rx_LR: Right . Ignore, Left . Right
-                PWM_SHIFT(L, R);
-                break;
-
-            case 0x04:
-            case 0x07:
-                // RL_Lx: Right . Left, Left . Ignore
-                PWM_SHIFT(R, L);
-                break;
-
-            case 0x05:
-            case 0x09:
-                // RR_LL: Right . Right, Left . Left
-                PWM_SHIFT(L, L);
-                PWM_SHIFT(R, R);
-                break;
-
-            case 0x06:
-            case 0x0A:
-                // RL_LR: Right . Left, Left . Right
-                PWM_SHIFT(L, R);
-                PWM_SHIFT(R, L);
-                break;
-
-            case 0x08:
-            case 0x0B:
-                // RR_Lx: Right . Right, Left . Ignore
-                PWM_SHIFT(R, R);
-                break;
-
-            case 0x00:
-            case 0x03:
-            case 0x0C:
-            case 0x0F:
-            default:
-                // Rx_Lx: Right . Ignore, Left . Ignore
-                break;
-        }
-    }
-
-    void PWM_Update_Timer(unsigned int cycle) {
-        // Don't do anything if PWM is disabled in the Sound menu.
-
-        // Don't do anything if PWM isn't active.
-        if ((PWM_Mode & 0x0F) == 0x00)
-            return;
-
-        if (PWM_Cycle == 0x00 || (PWM_Cycle_Cnt > cycle))
-            return;
-
-        PWM_Shift_Data();
-
-        PWM_Cycle_Cnt += PWM_Cycle;
-
-        PWM_Int_Cnt--;
-        if (PWM_Int_Cnt == 0) {
-            PWM_Int_Cnt = PWM_Int;
-
-            if (PWM_Mode & 0x0080) {
-                // RPT => generate DREQ1 as well as INT
-                SH2_DMA1_Request(&M_SH2, 1);
-                SH2_DMA1_Request(&S_SH2, 1);
-            }
-
-            if (_32X_MINT & 1)
-                SH2_Interrupt(&M_SH2, 6);
-            if (_32X_SINT & 1)
-                SH2_Interrupt(&S_SH2, 6);
-        }
-    }*/
+//    static void PWM_Shift_Data(void) {
+//        switch (PWM_Mode & 0x0F) {
+//            case 0x01:
+//            case 0x0D:
+//                // Rx_LL: Right . Ignore, Left . Left
+//                PWM_SHIFT(L, L);
+//                break;
+//
+//            case 0x02:
+//            case 0x0E:
+//                // Rx_LR: Right . Ignore, Left . Right
+//                PWM_SHIFT(L, R);
+//                break;
+//
+//            case 0x04:
+//            case 0x07:
+//                // RL_Lx: Right . Left, Left . Ignore
+//                PWM_SHIFT(R, L);
+//                break;
+//
+//            case 0x05:
+//            case 0x09:
+//                // RR_LL: Right . Right, Left . Left
+//                PWM_SHIFT(L, L);
+//                PWM_SHIFT(R, R);
+//                break;
+//
+//            case 0x06:
+//            case 0x0A:
+//                // RL_LR: Right . Left, Left . Right
+//                PWM_SHIFT(L, R);
+//                PWM_SHIFT(R, L);
+//                break;
+//
+//            case 0x08:
+//            case 0x0B:
+//                // RR_Lx: Right . Right, Left . Ignore
+//                PWM_SHIFT(R, R);
+//                break;
+//
+//            case 0x00:
+//            case 0x03:
+//            case 0x0C:
+//            case 0x0F:
+//            default:
+//                // Rx_Lx: Right . Ignore, Left . Ignore
+//                break;
+//        }
+//    }
+//
+//    void PWM_Update_Timer(unsigned int cycle) {
+//        // Don't do anything if PWM is disabled in the Sound menu.
+//
+//        // Don't do anything if PWM isn't active.
+//        if ((PWM_Mode & 0x0F) == 0x00)
+//            return;
+//
+//        if (PWM_Cycle == 0x00 || (PWM_Cycle_Cnt > cycle))
+//            return;
+//
+//        PWM_Shift_Data();
+//
+//        PWM_Cycle_Cnt += PWM_Cycle;
+//
+//        PWM_Int_Cnt--;
+//        if (PWM_Int_Cnt == 0) {
+//            PWM_Int_Cnt = PWM_Int;
+//
+//            if (PWM_Mode & 0x0080) {
+//                // RPT => generate DREQ1 as well as INT
+//                SH2_DMA1_Request(&M_SH2, 1);
+//                SH2_DMA1_Request(&S_SH2, 1);
+//            }
+//
+//            if (_32X_MINT & 1)
+//                SH2_Interrupt(&M_SH2, 6);
+//            if (_32X_SINT & 1)
+//                SH2_Interrupt(&S_SH2, 6);
+//        }
+//    }
 
     private int updateScale(int in) {
         if (in == 0)
             return 0;
 
         // TODO: Chilly Willy's new scaling algorithm breaks drx's Sonic 1 32X (with PWM drums).
-//# ifdef CHILLY_WILLY_SCALE
+//#ifdef CHILLY_WILLY_SCALE
         // Knuckles' Chaotix: Tachy Touch uses the values 0xF?? for negative values
         // This small modification fixes the terrible pops.
-        in &= 0xFFF;
+        in &= 0xffF;
         if ((in & 0x800) != 0)
-            in |= ~0xFFF;
+            in |= ~0xffF;
         return ((in - this.offset) * this.scale) >> (8 - PWM_Loudness);
 //#else
     }
@@ -255,7 +254,7 @@ public class PwmChip {
         //chips.stream = stream_create(device, 0, 2, device.clock / 384, chips, rf5c68_update);
     }
 
-    public void writeChannel(byte channel, int data) {
+    public void writeChannel(int channel, int data) {
         if (this.clock == 1) { // old-style commands
             switch (channel) {
             case 0x00:

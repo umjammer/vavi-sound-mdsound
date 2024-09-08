@@ -33,33 +33,33 @@ public class HuC6280Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(byte chipId, int clock) {
+    public int start(int chipId, int clock) {
         start(chipId, clock, DefaultHuC6280ClockValue);
 
         return clock;
     }
 
     @Override
-    public int start(byte chipId, int samplingRate, int clockValue, Object... option) {
+    public int start(int chipId, int samplingRate, int clockValue, Object... option) {
         chips[chipId] = new OotakeHuC6280(clockValue, samplingRate);
 
         return samplingRate;
     }
 
     @Override
-    public void stop(byte chipId) {
+    public void stop(int chipId) {
         if (chips[chipId] == null) return;
         chips[chipId] = null;
     }
 
     @Override
-    public void reset(byte chipId) {
+    public void reset(int chipId) {
         if (chips[chipId] == null) return;
         chips[chipId].reset();
     }
 
     @Override
-    public void update(byte chipId, int[][] outputs, int samples) {
+    public void update(int chipId, int[][] outputs, int samples) {
         if (chips[chipId] == null) return;
         chips[chipId].mix(outputs, samples);
 
@@ -67,35 +67,35 @@ public class HuC6280Inst extends Instrument.BaseInstrument {
         visVolume[chipId][0][1] = outputs[1][0];
     }
 
-    private int HuC6280_Write(byte chipId, byte adr, byte data) {
+    private int HuC6280_Write(int chipId, int adr, int data) {
         if (chips[chipId] == null) return 0;
         chips[chipId].writeReg(adr, data);
         return 0;
     }
 
-    public byte read(byte chipId, byte adr) {
+    public int read(int chipId, int adr) {
         if (chips[chipId] == null) return 0;
         return chips[chipId].read(adr);
     }
 
-    public void setMute(byte chipId, int val) {
+    public void setMute(int chipId, int val) {
         if (chips[chipId] == null) return;
 
         chips[chipId].setMuteMask(val);
     }
 
-    public void SetVolume(byte chipId, int db) {
+    public void SetVolume(int chipId, int db) {
         if (chips[chipId] == null) {
         }
     }
 
-    public OotakeHuC6280 GetState(byte chipId) {
+    public OotakeHuC6280 GetState(int chipId) {
         return chips[chipId];
     }
 
     @Override
-    public int write(byte chipId, int port, int adr, int data) {
-        return HuC6280_Write(chipId, (byte) adr, (byte) data);
+    public int write(int chipId, int port, int adr, int data) {
+        return HuC6280_Write(chipId, adr, data);
     }
 
     //----
@@ -106,9 +106,12 @@ public class HuC6280Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public Map<String, Integer> getVisVolume() {
-        Map<String, Integer> result = new HashMap<>();
-        result.put("huc6280", getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+    public Map<String, Object> getView(String key, Map<String, Object> args) {
+        Map<String, Object> result = new HashMap<>();
+        switch (key) {
+            case "volume" ->
+                    result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+        }
         return result;
     }
 }

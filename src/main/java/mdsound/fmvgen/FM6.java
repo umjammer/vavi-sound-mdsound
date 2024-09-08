@@ -235,7 +235,7 @@ public class FM6 {
 
     protected void setParameter(Fmvgen.Channel4 ch, int addr, int data) {
         int[] slotTable = new int[] {0, 2, 1, 3};
-        final byte[] slTable = new byte[] {
+        byte[] slTable = new byte[] {
                 0, 4, 8, 12, 16, 20, 24, 28,
                 32, 36, 40, 44, 48, 52, 56, 124
         };

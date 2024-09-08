@@ -22,12 +22,12 @@ public class X68SoundYm2151Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(byte chipId, int clock) {
+    public int start(int chipId, int clock) {
         return start(chipId, clock, DefaultYM2151ClockValue, (Object[]) null);
     }
 
     @Override
-    public int start(byte chipId, int sampleRate, int clockValue, Object... option) {
+    public int start(int chipId, int sampleRate, int clockValue, Object... option) {
         if (chipId > 1)
             return 0;
 
@@ -50,7 +50,7 @@ public class X68SoundYm2151Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void stop(byte chipId) {
+    public void stop(int chipId) {
         if (x68sound[chipId] == null)
             return;
 
@@ -61,7 +61,7 @@ public class X68SoundYm2151Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void reset(byte chipId) {
+    public void reset(int chipId) {
         if (x68sound[chipId] == null)
             return;
 
@@ -69,7 +69,7 @@ public class X68SoundYm2151Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void update(byte chipId, int[][] outputs, int samples) {
+    public void update(int chipId, int[][] outputs, int samples) {
         if (x68sound[chipId] == null)
             return;
 
@@ -80,7 +80,7 @@ public class X68SoundYm2151Inst extends Instrument.BaseInstrument {
         }
     }
 
-    private void update(byte chipId, int[][] outputs, int samples, BiConsumer<Runnable, Boolean> oneFrameProc) {
+    private void update(int chipId, int[][] outputs, int samples, BiConsumer<Runnable, Boolean> oneFrameProc) {
         if (x68sound[chipId] == null)
             return;
 
@@ -92,7 +92,7 @@ public class X68SoundYm2151Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int write(byte chipId, int port, int adr, int data) {
+    public int write(int chipId, int port, int adr, int data) {
         if (x68sound[chipId] == null)
             return 0;
         sound_Iocs[chipId].opmSet(adr, data);

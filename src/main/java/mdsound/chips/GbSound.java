@@ -5,6 +5,9 @@
 package mdsound.chips;
 
 
+import vavi.util.win32.WAVE.data;
+
+
 /**
  * Game Boy Sound emulation (c) Anthony Kruize (trandor@labyrinth.net.au)
  * <p>
@@ -65,7 +68,7 @@ public class GbSound {
         private int value;
 
         private void setRatio(int mul, int div) {
-            this.inc = (int) ((((long) mul << RC_SHIFT) + div / 2) / div);
+            this.inc = ((mul << RC_SHIFT) + div / 2) / div;
         }
 
         private int update() {
@@ -136,46 +139,46 @@ public class GbSound {
         private static final int[] divisor = new int[] {8, 16, 32, 48, 64, 80, 96, 112};
 
         // Common
-        public byte[] registers = new byte[5];
+        public int[] registers = new int[5];
         private boolean on;
-        private byte channel;
-        public byte length;
-        private byte lengthMask;
+        private int channel;
+        public int length;
+        private int lengthMask;
         private boolean lengthCounting;
         public boolean lengthEnabled;
         // Mode 1, 2, 3
         private int cyclesLeft;
-        public byte duty;
+        public int duty;
         // Mode 1, 2, 4
         private boolean envelopeEnabled;
-        public byte envelopeValue;
-        public byte envelopeDirection;
-        public byte envelopeTime;
-        private byte envelopeCount;
-        private byte signal;
+        public int envelopeValue;
+        public int envelopeDirection;
+        public int envelopeTime;
+        private int envelopeCount;
+        private int signal;
         // Mode 1
         public int frequency;
         private int frequencyCounter;
         private boolean sweepEnabled;
         private boolean sweepNegModeUsed;
-        public byte sweepShift;
+        public int sweepShift;
         public int sweepDirection;
-        public byte sweepTime;
-        private byte sweepCount;
+        public int sweepTime;
+        private int sweepCount;
         // Mode 3
-        public byte level;
-        private byte offset;
+        public int level;
+        private int offset;
         private int dutyCount;
-        private byte currentSample;
+        private int currentSample;
         private boolean sampleReading;
         // Mode 4
         private boolean noiseShort;
         private int noiseLfsr;
-        private byte muted;
+        private int muted;
 
         private void tickLength() {
             if (this.lengthEnabled) {
-                this.length = (byte) ((this.length + 1) & this.lengthMask);
+                this.length = (this.length + 1) & this.lengthMask;
                 if (this.length == 0) {
                     this.on = false;
                     this.lengthCounting = false;
@@ -200,12 +203,12 @@ public class GbSound {
 
             if (this.on && this.sweepShift > 0) {
                 this.frequency = newFrequency;
-                this.registers[3] = (byte) (this.frequency & 0xFF);
+                this.registers[3] = this.frequency & 0xff;
             }
         }
 
         private void tickSweep() {
-            this.sweepCount = (byte) ((this.sweepCount - 1) & 0x07);
+            this.sweepCount = (this.sweepCount - 1) & 0x07;
             if (this.sweepCount == 0) {
                 this.sweepCount = this.sweepTime;
 
@@ -220,13 +223,13 @@ public class GbSound {
 
         private void tickEnvelope() {
             if (this.envelopeEnabled) {
-                this.envelopeCount = (byte) ((this.envelopeCount - 1) & 0x07);
+                this.envelopeCount = (this.envelopeCount - 1) & 0x07;
 
                 if (this.envelopeCount == 0) {
                     this.envelopeCount = this.envelopeTime;
 
                     if (this.envelopeCount != 0) {
-                        byte newEnvelopeValue = (byte) (this.envelopeValue + this.envelopeDirection);
+                        int newEnvelopeValue = this.envelopeValue + this.envelopeDirection;
 
                         if (newEnvelopeValue >= 0 && newEnvelopeValue <= 15) {
                             this.envelopeValue = newEnvelopeValue;
@@ -239,7 +242,7 @@ public class GbSound {
         }
 
         private boolean dacEnabled() {
-            return ((this.channel != 3) ? (this.registers[2] & 0xF8) : (this.registers[0] & 0x80)) != 0;
+            return ((this.channel != 3) ? (this.registers[2] & 0xf8) : (this.registers[0] & 0x80)) != 0;
         }
 
         private void updateSquareChannel(int cycles) {
@@ -260,7 +263,7 @@ public class GbSound {
                         this.frequencyCounter = (this.frequencyCounter + 1) & 0x7FF;
                         if (this.frequencyCounter == 0) {
                             this.dutyCount = (this.dutyCount + 1) & 0x07;
-                            this.signal = (byte) (waveDutyTable[this.duty][this.dutyCount]);
+                            this.signal = waveDutyTable[this.duty][this.dutyCount];
 
                             // Reload frequency counter
                             this.frequencyCounter = this.frequency;
@@ -270,7 +273,7 @@ public class GbSound {
             }
         }
 
-        private void updateWaveChannel(int cycles, byte mode, byte boostWaveCh, byte[] registers) {
+        private void updateWaveChannel(int cycles, int mode, int boostWaveCh, int[] registers) {
             if (on) {
                 // compensate for leftover cycles
                 if (cyclesLeft > 0) {
@@ -289,25 +292,25 @@ public class GbSound {
                         cycles -= 2;
 
                         // Calculate next state
-                        frequencyCounter = (frequencyCounter + 1) & 0x7FF;
+                        frequencyCounter = (frequencyCounter + 1) & 0x7ff;
                         sampleReading = false;
                         if (mode == MODE_DMG && frequencyCounter == 0x7ff)
-                            offset = (byte) ((offset + 1) & 0x1F);
+                            offset = (offset + 1) & 0x1f;
                         if (frequencyCounter == 0) {
                             // Read next sample
                             sampleReading = true;
                             if (mode == MODE_CGB04)
-                                offset = (byte) ((offset + 1) & 0x1F);
+                                offset = (offset + 1) & 0x1f;
                             currentSample = registers[AUD3W0 + (offset / 2)];
                             if ((offset & 0x01) == 0) {
                                 currentSample >>= 4;
                             }
-                            currentSample = (byte) ((currentSample & 0x0F) - 8);
+                            currentSample = (currentSample & 0x0f) - 8;
                             if (boostWaveCh != 0)
 
                                 currentSample <<= 1;
 
-                            signal = (byte) (level != 0 ? currentSample / (1 << (level - 1)) : 0);
+                            signal = level != 0 ? currentSample / (1 << (level - 1)) : 0;
 
                             // Reload frequency counter
                             frequencyCounter = frequency;
@@ -342,7 +345,7 @@ public class GbSound {
                     if (noiseShort) {
                         noiseLfsr = (noiseLfsr & ~(1 << 6)) | (feedback << 6);
                     }
-                    signal = (byte) ((noiseLfsr & 1) != 0 ? -1 : 1);
+                    signal = (noiseLfsr & 1) != 0 ? -1 : 1;
                 }
             }
         }
@@ -351,17 +354,17 @@ public class GbSound {
             return divisor[this.registers[3] & 7] << (this.registers[3] >> 4);
         }
 
-        private void sweep(byte data, byte oldData) {
+        private void sweep(int data, int oldData) {
             this.registers[0] = data;
-            this.sweepShift = (byte) (data & 0x7);
+            this.sweepShift = data & 0x7;
             this.sweepDirection = (data & 0x8) != 0 ? -1 : 1;
-            this.sweepTime = (byte) ((data & 0x70) >> 4);
+            this.sweepTime = (data & 0x70) >> 4;
             if ((oldData & 0x08) != 0 && (data & 0x08) == 0 && this.sweepNegModeUsed) {
                 this.on = false;
             }
         }
 
-        private void initializeHiFrequency(byte data, int cycles) {
+        private void initializeHiFrequency(int data, int cycles) {
             this.registers[4] = data;
 
             boolean lengthWasEnabled = this.lengthEnabled;
@@ -378,12 +381,12 @@ public class GbSound {
             if ((data & 0x80) != 0) {
                 this.on = true;
                 this.envelopeEnabled = true;
-                this.envelopeValue = (byte) (this.registers[2] >> 4);
+                this.envelopeValue = this.registers[2] >> 4;
                 this.envelopeCount = this.envelopeTime;
                 this.sweepCount = this.sweepTime;
                 this.sweepNegModeUsed = false;
                 this.signal = 0;
-                this.length = (byte) (this.registers[1] & 0x3f); // VGM log fix -Valley Bell
+                this.length = this.registers[1] & 0x3f; // VGM log fix -Valley Bell
                 this.lengthCounting = true;
                 this.frequency = ((this.registers[4] & 0x7) << 8) | this.registers[3];
                 this.frequencyCounter = this.frequency;
@@ -408,7 +411,7 @@ public class GbSound {
             }
         }
 
-        private void initializeHiFrequency2(byte data, int cycles) {
+        private void initializeHiFrequency2(int data, int cycles) {
             this.registers[4] = data;
 
             boolean lengthWasEnabled = this.lengthEnabled;
@@ -424,14 +427,14 @@ public class GbSound {
             if ((data & 0x80) != 0) {
                 this.on = true;
                 this.envelopeEnabled = true;
-                this.envelopeValue = (byte) (this.registers[2] >> 4);
+                this.envelopeValue = this.registers[2] >> 4;
                 this.envelopeCount = this.envelopeTime;
                 this.frequency = ((this.registers[4] & 0x7) << 8) | this.registers[3];
                 this.frequencyCounter = this.frequency;
                 this.cyclesLeft = 0;
                 this.dutyCount = 0;
                 this.signal = 0;
-                this.length = (byte) (this.registers[1] & 0x3f); // VGM log fix -Valley Bell
+                this.length = this.registers[1] & 0x3f; // VGM log fix -Valley Bell
                 this.lengthCounting = true;
 
                 if (!this.dacEnabled()) {
@@ -446,7 +449,7 @@ public class GbSound {
             }
         }
 
-        private void initializeHiFrequency3(byte data, int cycles, byte mode) {
+        private void initializeHiFrequency3(int data, int cycles, int mode) {
             this.registers[4] = data;
 
             boolean lengthWasEnabled = this.lengthEnabled;
@@ -491,7 +494,7 @@ public class GbSound {
             }
         }
 
-        private void corruptWaveRam(byte mode) {
+        private void corruptWaveRam(int mode) {
             if (mode != MODE_DMG)
                 return;
 
@@ -505,7 +508,7 @@ public class GbSound {
             }
         }
 
-        private void initializeHiFrequency4(byte data, int cycles) {
+        private void initializeHiFrequency4(int data, int cycles) {
             this.registers[4] = data;
 
             boolean length_was_enabled = this.lengthEnabled;
@@ -521,13 +524,13 @@ public class GbSound {
             if ((data & 0x80) != 0) {
                 this.on = true;
                 this.envelopeEnabled = true;
-                this.envelopeValue = (byte) (this.registers[2] >> 4);
+                this.envelopeValue = this.registers[2] >> 4;
                 this.envelopeCount = this.envelopeTime;
                 this.frequencyCounter = 0;
                 this.cyclesLeft = this.noisePeriodCycles();
                 this.signal = -1;
                 this.noiseLfsr = 0x7fff;
-                this.length = (byte) (this.registers[1] & 0x3f); // VGM log fix -Valley Bell
+                this.length = this.registers[1] & 0x3f; // VGM log fix -Valley Bell
                 this.lengthCounting = true;
 
                 if (!this.dacEnabled()) {
@@ -540,11 +543,11 @@ public class GbSound {
             }
         }
 
-        private void envelope(byte data) {
+        private void envelope(int data) {
             this.registers[2] = data;
-            this.envelopeValue = (byte) (data >> 4);
-            this.envelopeDirection = (byte) ((data & 0x8) != 0 ? 1 : -1);
-            this.envelopeTime = (byte) (data & 0x07);
+            this.envelopeValue = data >> 4;
+            this.envelopeDirection = (data & 0x8) != 0 ? 1 : -1;
+            this.envelopeTime = data & 0x07;
             if (!this.dacEnabled()) {
                 this.on = false;
             }
@@ -552,34 +555,34 @@ public class GbSound {
     }
 
     public static class Controller {
-        private byte on;
-        private byte volumeLeft;
-        private byte volumeRight;
-        public byte mode1Left;
-        public byte mode1Right;
-        public byte mode2Left;
-        public byte mode2Right;
-        public byte mode3Left;
-        public byte mode3Right;
-        public byte mode4Left;
-        public byte mode4Right;
+        private int on;
+        private int volumeLeft;
+        private int volumeRight;
+        public int mode1Left;
+        public int mode1Right;
+        public int mode2Left;
+        public int mode2Right;
+        public int mode3Left;
+        public int mode3Right;
+        public int mode4Left;
+        public int mode4Right;
         private int cycles;
         private boolean waveRamLocked;
 
-        private void setData(byte data) {
-            this.mode1Right = (byte) (data & 0x1);
-            this.mode1Left = (byte) ((data & 0x10) >> 4);
-            this.mode2Right = (byte) ((data & 0x2) >> 1);
-            this.mode2Left = (byte) ((data & 0x20) >> 5);
-            this.mode3Right = (byte) ((data & 0x4) >> 2);
-            this.mode3Left = (byte) ((data & 0x40) >> 6);
-            this.mode4Right = (byte) ((data & 0x8) >> 3);
-            this.mode4Left = (byte) ((data & 0x80) >> 7);
+        private void setData(int data) {
+            this.mode1Right = data & 0x1;
+            this.mode1Left = (data & 0x10) >> 4;
+            this.mode2Right = (data & 0x2) >> 1;
+            this.mode2Left = (data & 0x20) >> 5;
+            this.mode3Right = (data & 0x4) >> 2;
+            this.mode3Left = (data & 0x40) >> 6;
+            this.mode4Right = (data & 0x8) >> 3;
+            this.mode4Left = (data & 0x80) >> 7;
         }
 
-        private void setVolume(byte data) {
-            this.volumeLeft = (byte) (data & 0x7);
-            this.volumeRight = (byte) ((data & 0x70) >> 4);
+        private void setVolume(int data) {
+            this.volumeLeft = data & 0x7;
+            this.volumeRight = (data & 0x70) >> 4;
         }
     }
 
@@ -594,19 +597,19 @@ public class GbSound {
     public Sound sound4;
     public Controller controller;
 
-    public byte[] registers = new byte[0x30];
+    public int[] registers = new int[0x30];
 
     private Ratio cycleCounter;
 
-    private byte mode;
+    private int mode;
 
-    private byte boostWaveCh = 0x00;
+    private int boostWaveCh = 0x00;
 
     // IMPLEMENTATION
 
-    private void write(byte offset, byte data) {
+    private void write(int offset, int data) {
         // Store the value
-        byte oldData = this.registers[offset];
+        int oldData = this.registers[offset];
 
         if (this.controller.on != 0) {
             this.registers[offset] = data;
@@ -620,9 +623,9 @@ public class GbSound {
         case NR11: // Sound length/Wave pattern duty (R/W)
             this.sound1.registers[1] = data;
             if (this.controller.on != 0) {
-                this.sound1.duty = (byte) ((data & 0xc0) >> 6);
+                this.sound1.duty = (data & 0xc0) >> 6;
             }
-            this.sound1.length = (byte) (data & 0x3f);
+            this.sound1.length = data & 0x3f;
             this.sound1.lengthCounting = true;
             break;
         case NR12: // Envelope (R/W)
@@ -630,7 +633,7 @@ public class GbSound {
             break;
         case NR13: // Frequency lo (R/W)
             this.sound1.registers[3] = data;
-            // Only enabling the frequency line breaks blarggs's Sound test // #5
+            // Only enabling the frequency line breaks blarggs's Sound test //#5
             // This condition may not be correct
             if (!this.sound1.sweepEnabled) {
                 this.sound1.frequency = ((this.sound1.registers[4] & 0x7) << 8) | this.sound1.registers[3];
@@ -644,16 +647,16 @@ public class GbSound {
         case NR21: // Sound length/Wave pattern duty (R/W)
             this.sound2.registers[1] = data;
             if (this.controller.on != 0) {
-                this.sound2.duty = (byte) ((data & 0xc0) >> 6);
+                this.sound2.duty = (data & 0xc0) >> 6;
             }
-            this.sound2.length = (byte) (data & 0x3f);
+            this.sound2.length = data & 0x3f;
             this.sound2.lengthCounting = true;
             break;
         case NR22: // Envelope (R/W)
             this.sound2.registers[2] = data;
-            this.sound2.envelopeValue = (byte) (data >> 4);
-            this.sound2.envelopeDirection = (byte) ((data & 0x8) != 0 ? 1 : -1);
-            this.sound2.envelopeTime = (byte) (data & 0x07);
+            this.sound2.envelopeValue = data >> 4;
+            this.sound2.envelopeDirection = (data & 0x8) != 0 ? 1 : -1;
+            this.sound2.envelopeTime = data & 0x07;
             if (!this.sound2.dacEnabled()) {
                 this.sound2.on = false;
             }
@@ -680,7 +683,7 @@ public class GbSound {
             break;
         case NR32: // Select Output Level
             this.sound3.registers[2] = data;
-            this.sound3.level = (byte) ((data & 0x60) >> 5);
+            this.sound3.level = (data & 0x60) >> 5;
             break;
         case NR33: // Frequency lo (W)
             this.sound3.registers[3] = data;
@@ -693,14 +696,14 @@ public class GbSound {
         // MODE 4
         case NR41: // Sound Length (R/W)
             this.sound4.registers[1] = data;
-            this.sound4.length = (byte) (data & 0x3f);
+            this.sound4.length = data & 0x3f;
             this.sound4.lengthCounting = true;
             break;
         case NR42: // Envelope (R/W)
             this.sound4.registers[2] = data;
-            this.sound4.envelopeValue = (byte) (data >> 4);
-            this.sound4.envelopeDirection = (byte) ((data & 0x8) != 0 ? 1 : -1);
-            this.sound4.envelopeTime = (byte) (data & 0x07);
+            this.sound4.envelopeValue = data >> 4;
+            this.sound4.envelopeDirection = (data & 0x8) != 0 ? 1 : -1;
+            this.sound4.envelopeTime = data & 0x07;
             if (!this.sound4.dacEnabled()) {
                 this.sound4.on = false;
             }
@@ -732,8 +735,8 @@ public class GbSound {
                     this.controller.cycles |= 7 * FRAME_CYCLES;
                 }
             }
-            this.controller.on = (byte) ((data & 0x80) != 0 ? 1 : 0); // true : false;
-            this.registers[NR52] = (byte) (data & 0x80);
+            this.controller.on = (data & 0x80) != 0 ? 1 : 0; // true : false;
+            this.registers[NR52] = data & 0x80;
             break;
         }
     }
@@ -741,63 +744,63 @@ public class GbSound {
     private void apuPowerOff() {
         switch (this.mode) {
         case MODE_DMG:
-            write((byte) NR10, (byte) 0x00);
+            write(NR10, 0x00);
             this.sound1.duty = 0;
             this.registers[NR11] = 0;
-            write((byte) NR12, (byte) 0x00);
-            write((byte) NR13, (byte) 0x00);
-            write((byte) NR14, (byte) 0x00);
+            write(NR12, 0x00);
+            write(NR13, 0x00);
+            write(NR14, 0x00);
             this.sound1.lengthCounting = false;
             this.sound1.sweepNegModeUsed = false;
 
             this.registers[NR21] = 0;
-            write((byte) NR22, (byte) 0x00);
-            write((byte) NR23, (byte) 0x00);
-            write((byte) NR24, (byte) 0x00);
+            write(NR22, 0x00);
+            write(NR23, 0x00);
+            write(NR24, 0x00);
             this.sound2.lengthCounting = false;
 
-            write((byte) NR30, (byte) 0x00);
-            write((byte) NR32, (byte) 0x00);
-            write((byte) NR33, (byte) 0x00);
-            write((byte) NR34, (byte) 0x00);
+            write(NR30, 0x00);
+            write(NR32, 0x00);
+            write(NR33, 0x00);
+            write(NR34, 0x00);
             this.sound3.lengthCounting = false;
             this.sound3.currentSample = 0;
 
             this.registers[NR41] = 0;
-            write((byte) NR42, (byte) 0x00);
-            write((byte) NR43, (byte) 0x00);
-            write((byte) NR44, (byte) 0x00);
+            write(NR42, 0x00);
+            write(NR43, 0x00);
+            write(NR44, 0x00);
             this.sound4.lengthCounting = false;
             this.sound4.cyclesLeft = this.sound4.noisePeriodCycles();
             break;
         case MODE_CGB04:
-            write((byte) NR10, (byte) 0x00);
+            write(NR10, 0x00);
             this.sound1.duty = 0;
-            write((byte) NR11, (byte) 0x00);
-            write((byte) NR12, (byte) 0x00);
-            write((byte) NR13, (byte) 0x00);
-            write((byte) NR14, (byte) 0x00);
+            write(NR11, 0x00);
+            write(NR12, 0x00);
+            write(NR13, 0x00);
+            write(NR14, 0x00);
             this.sound1.lengthCounting = false;
             this.sound1.sweepNegModeUsed = false;
 
-            write((byte) NR21, (byte) 0x00);
-            write((byte) NR22, (byte) 0x00);
-            write((byte) NR23, (byte) 0x00);
-            write((byte) NR24, (byte) 0x00);
+            write(NR21, 0x00);
+            write(NR22, 0x00);
+            write(NR23, 0x00);
+            write(NR24, 0x00);
             this.sound2.lengthCounting = false;
 
-            write((byte) NR30, (byte) 0x00);
-            write((byte) NR31, (byte) 0x00);
-            write((byte) NR32, (byte) 0x00);
-            write((byte) NR33, (byte) 0x00);
-            write((byte) NR34, (byte) 0x00);
+            write(NR30, 0x00);
+            write(NR31, 0x00);
+            write(NR32, 0x00);
+            write(NR33, 0x00);
+            write(NR34, 0x00);
             this.sound3.lengthCounting = false;
             this.sound3.currentSample = 0;
 
-            write((byte) NR41, (byte) 0x00);
-            write((byte) NR42, (byte) 0x00);
-            write((byte) NR43, (byte) 0x00);
-            write((byte) NR44, (byte) 0x00);
+            write(NR41, 0x00);
+            write(NR42, 0x00);
+            write(NR43, 0x00);
+            write(NR44, 0x00);
             this.sound4.lengthCounting = false;
             this.sound4.cyclesLeft = this.sound4.noisePeriodCycles();
             break;
@@ -811,7 +814,7 @@ public class GbSound {
         this.controller.waveRamLocked = false;
 
         for (int i = NR44 + 1; i < NR52; i++) {
-            write((byte) i, (byte) 0x00);
+            write(i, 0x00);
         }
     }
 
@@ -878,14 +881,14 @@ public class GbSound {
         this.sound4.updateNoiseChannel(cycles);
     }
 
-    public void setOptions(byte flags) {
-        boostWaveCh = (byte) ((flags & 0x01) >> 0);
+    public void setOptions(int flags) {
+        boostWaveCh = (flags & 0x01) >> 0;
     }
 
-    public byte readWave(int offset) {
+    public int readWave(int offset) {
         if (this.sound3.on) {
             if (this.mode == MODE_DMG)
-                return (byte) (this.sound3.sampleReading ? this.registers[AUD3W0 + (this.sound3.offset / 2)] : 0xFF);
+                return this.sound3.sampleReading ? this.registers[AUD3W0 + (this.sound3.offset / 2)] : 0xff;
             else if (this.mode == MODE_CGB04)
                 return this.registers[AUD3W0 + (this.sound3.offset / 2)];
         }
@@ -893,7 +896,7 @@ public class GbSound {
         return this.registers[AUD3W0 + offset];
     }
 
-    public void writeWave(int offset, byte data) {
+    public void writeWave(int offset, int data) {
         if (this.sound3.on) {
             if (this.mode == MODE_DMG) {
                 if (this.sound3.sampleReading) {
@@ -907,36 +910,35 @@ public class GbSound {
         }
     }
 
-    private static final byte[] readMask = new byte[] {
-            (byte) 0x80, 0x3F, 0x00, (byte) 0xFF, (byte) 0xBF, (byte) 0xFF, 0x3F, 0x00, (byte) 0xFF, (byte) 0xBF, 0x7F, (byte) 0xFF, (byte) 0x9F, (byte) 0xFF, (byte) 0xBF, (byte) 0xFF,
-            (byte) 0xFF, 0x00, 0x00, (byte) 0xBF, 0x00, 0x00, 0x70, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF, (byte) 0xFF,
+    private static final int[] readMask = new int[] {
+            0x80, 0x3F, 0x00, 0xff, 0xBF, 0xff, 0x3F, 0x00, 0xff, 0xBF, 0x7F, 0xff, 0x9F, 0xff, 0xBF, 0xff,
+            0xff, 0x00, 0x00, 0xBF, 0x00, 0x00, 0x70, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     };
 
-    public byte readSound(int offset) {
+    public int readSound(int offset) {
         if (offset < AUD3W0) {
             if (this.controller.on != 0) {
                 if (offset == NR52) {
-                    return (byte) (
-                            (this.registers[NR52] & 0xf0)
+                    return (this.registers[NR52] & 0xf0)
                                     | (this.sound1.on ? 1 : 0)
                                     | (this.sound2.on ? 2 : 0)
                                     | (this.sound3.on ? 4 : 0)
                                     | (this.sound4.on ? 8 : 0)
-                                    | 0x70);
+                                    | 0x70;
                 }
-                return (byte) (this.registers[offset] | readMask[offset & 0x3F]);
+                return this.registers[offset] | readMask[offset & 0x3f];
             } else {
-                return readMask[offset & 0x3F];
+                return readMask[offset & 0x3f];
             }
         } else if (offset <= AUD3WF) {
             return readWave(offset - AUD3W0);
         }
-        return (byte) 0xFF;
+        return 0xff;
     }
 
-    public void writeSound(int offset, byte data) {
+    public void writeSound(int offset, int data) {
         if (offset < AUD3W0) {
             if (this.mode == MODE_DMG) {
                 // Only register NR52 is accessible if the Sound controller is disabled
@@ -948,7 +950,7 @@ public class GbSound {
                     return;
             }
 
-            this.write((byte) offset, data);
+            this.write(offset, data);
         } else if (offset <= AUD3WF) {
             writeWave(offset - AUD3W0, data);
         }
@@ -1010,11 +1012,11 @@ public class GbSound {
             outputs[1][i] = right;
         }
 
-        this.registers[NR52] = (byte) ((this.registers[NR52] & 0xf0)
+        this.registers[NR52] = (this.registers[NR52] & 0xf0)
                 | (this.sound1.on ? 1 : 0)
                 | ((this.sound2.on ? 1 : 0) << 1)
                 | ((this.sound3.on ? 1 : 0) << 2)
-                | ((this.sound4.on ? 1 : 0) << 3));
+                | ((this.sound4.on ? 1 : 0) << 3);
     }
 
     public void start(int clock, int rate) {
@@ -1027,8 +1029,8 @@ public class GbSound {
 
         this.rate = rate;
 
-        this.mode = (byte) ((clock & 0x80000000) != 0 ? MODE_CGB04 : MODE_DMG);
-        this.cycleCounter.setRatio(clock & 0x7FFFFFFF, this.rate);
+        this.mode = (clock & 0x8000_0000) != 0 ? MODE_CGB04 : MODE_DMG;
+        this.cycleCounter.setRatio(clock & 0x7fff_ffff, this.rate);
 
         setMuteMask(0x00);
     }
@@ -1046,60 +1048,60 @@ public class GbSound {
         setMuteMask(muteMask);
 
         this.sound1.channel = 1;
-        this.sound1.lengthMask = 0x3F;
+        this.sound1.lengthMask = 0x3f;
         this.sound2.channel = 2;
-        this.sound2.lengthMask = 0x3F;
+        this.sound2.lengthMask = 0x3f;
         this.sound3.channel = 3;
-        this.sound3.lengthMask = (byte) 0xFF;
+        this.sound3.lengthMask = 0xff;
         this.sound4.channel = 4;
-        this.sound4.lengthMask = 0x3F;
+        this.sound4.lengthMask = 0x3f;
 
-        this.write((byte) NR52, (byte) 0x00);
+        this.write(NR52, 0x00);
         switch (this.mode) {
         case MODE_DMG:
-            this.registers[AUD3W0] = (byte) 0xac;
-            this.registers[AUD3W1] = (byte) 0xdd;
-            this.registers[AUD3W2] = (byte) 0xda;
+            this.registers[AUD3W0] = 0xac;
+            this.registers[AUD3W1] = 0xdd;
+            this.registers[AUD3W2] = 0xda;
             this.registers[AUD3W3] = 0x48;
             this.registers[AUD3W4] = 0x36;
             this.registers[AUD3W5] = 0x02;
-            this.registers[AUD3W6] = (byte) 0xcf;
+            this.registers[AUD3W6] = 0xcf;
             this.registers[AUD3W7] = 0x16;
             this.registers[AUD3W8] = 0x2c;
             this.registers[AUD3W9] = 0x04;
-            this.registers[AUD3WA] = (byte) 0xe5;
+            this.registers[AUD3WA] = 0xe5;
             this.registers[AUD3WB] = 0x2c;
-            this.registers[AUD3WC] = (byte) 0xac;
-            this.registers[AUD3WD] = (byte) 0xdd;
-            this.registers[AUD3WE] = (byte) 0xda;
+            this.registers[AUD3WC] = 0xac;
+            this.registers[AUD3WD] = 0xdd;
+            this.registers[AUD3WE] = 0xda;
             this.registers[AUD3WF] = 0x48;
             break;
         case MODE_CGB04:
             this.registers[AUD3W0] = 0x00;
-            this.registers[AUD3W1] = (byte) 0xFF;
+            this.registers[AUD3W1] = 0xff;
             this.registers[AUD3W2] = 0x00;
-            this.registers[AUD3W3] = (byte) 0xFF;
+            this.registers[AUD3W3] = 0xff;
             this.registers[AUD3W4] = 0x00;
-            this.registers[AUD3W5] = (byte) 0xFF;
+            this.registers[AUD3W5] = 0xff;
             this.registers[AUD3W6] = 0x00;
-            this.registers[AUD3W7] = (byte) 0xFF;
+            this.registers[AUD3W7] = 0xff;
             this.registers[AUD3W8] = 0x00;
-            this.registers[AUD3W9] = (byte) 0xFF;
+            this.registers[AUD3W9] = 0xff;
             this.registers[AUD3WA] = 0x00;
-            this.registers[AUD3WB] = (byte) 0xFF;
+            this.registers[AUD3WB] = 0xff;
             this.registers[AUD3WC] = 0x00;
-            this.registers[AUD3WD] = (byte) 0xFF;
+            this.registers[AUD3WD] = 0xff;
             this.registers[AUD3WE] = 0x00;
-            this.registers[AUD3WF] = (byte) 0xFF;
+            this.registers[AUD3WF] = 0xff;
             break;
         }
     }
 
     public void setMuteMask(int muteMask) {
-        if (this.sound1 != null) this.sound1.muted = (byte) ((muteMask >> 0) & 0x01);
-        if (this.sound2 != null) this.sound2.muted = (byte) ((muteMask >> 1) & 0x01);
-        if (this.sound3 != null) this.sound3.muted = (byte) ((muteMask >> 2) & 0x01);
-        if (this.sound4 != null) this.sound4.muted = (byte) ((muteMask >> 3) & 0x01);
+        if (this.sound1 != null) this.sound1.muted = (muteMask >> 0) & 0x01;
+        if (this.sound2 != null) this.sound2.muted = (muteMask >> 1) & 0x01;
+        if (this.sound3 != null) this.sound3.muted = (muteMask >> 2) & 0x01;
+        if (this.sound4 != null) this.sound4.muted = (muteMask >> 3) & 0x01;
     }
 
     public int getMuteMask() {

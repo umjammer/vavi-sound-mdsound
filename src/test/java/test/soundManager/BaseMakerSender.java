@@ -1,11 +1,13 @@
 
-package test.SoundManager;
+package test.soundManager;
 
 import java.util.concurrent.CompletableFuture;
 
 import dotnet4j.threading.CancellationToken;
 import dotnet4j.threading.CancellationTokenSource;
 import dotnet4j.threading.ThreadingTools;
+import vavi.util.Debug;
+
 
 public abstract class BaseMakerSender {
     public static final int DATA_SEQUENCE_FREQUENCE = 44100;
@@ -45,11 +47,11 @@ public abstract class BaseMakerSender {
         return true;
     }
 
-    public boolean enq(long counter, int dev, int typ, int adr, int val, Object[] ex) {
+    public boolean enq(int counter, int dev, int typ, int adr, int val, Object[] ex) {
         return ringBuffer.enq(counter, dev, typ, adr, val, ex);
     }
 
-    public boolean deq(long counter, int dev, int typ, int adr, int val, Object[] ex) {
+    public boolean deq(/* ref */ int[] counter, /* ref */ int[] dev, /* ref */ int[] typ, /* ref */ int[] adr, /* ref */ int[] val, /* ref */ Object[][] ex) {
         return ringBuffer.deq(counter, dev, typ, adr, val, ex);
     }
 
@@ -73,6 +75,7 @@ public abstract class BaseMakerSender {
 
     public boolean isRunning() {
         synchronized (lockObj) {
+//Debug.println(getClass().getName() + ": " + isRunning);
             return isRunning;
         }
     }

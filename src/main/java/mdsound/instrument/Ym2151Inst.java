@@ -32,13 +32,13 @@ public class Ym2151Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void reset(byte chipId) {
+    public void reset(int chipId) {
         if (chip[chipId] == null) return;
         chip[chipId].reset();
     }
 
     @Override
-    public int start(byte chipId, int clock) {
+    public int start(int chipId, int clock) {
         chip[chipId] = new OPM();
         chip[chipId].init(DefaultYM2151ClockValue, clock, false);
 
@@ -46,7 +46,7 @@ public class Ym2151Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(byte chipId, int clock, int clockValue, Object... option) {
+    public int start(int chipId, int clock, int clockValue, Object... option) {
         chip[chipId] = new OPM();
         chip[chipId].init(clockValue, clock, false);
 
@@ -54,12 +54,12 @@ public class Ym2151Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void stop(byte chipId) {
+    public void stop(int chipId) {
         chip[chipId] = null;
     }
 
     @Override
-    public void update(byte chipId, int[][] outputs, int samples) {
+    public void update(int chipId, int[][] outputs, int samples) {
         if (chip[chipId] == null) return;
 
         int[] buffer = new int[2];
@@ -77,10 +77,10 @@ public class Ym2151Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int write(byte chipId, int port, int adr, int data) {
+    public int write(int chipId, int port, int adr, int data) {
         if (chip[chipId] == null) return 0;
 
-        chip[chipId].setReg((byte) adr, (byte) data);
+        chip[chipId].setReg(adr, data);
         return 0;
     }
 
@@ -92,9 +92,12 @@ public class Ym2151Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public Map<String, Integer> getVisVolume() {
-        Map<String, Integer> result = new HashMap<>();
-        result.put("ym2151", getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+    public Map<String, Object> getView(String key, Map<String, Object> args) {
+        Map<String, Object> result = new HashMap<>();
+        switch (key) {
+            case "volume" ->
+                    result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+        }
         return result;
     }
 }

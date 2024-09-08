@@ -21,62 +21,63 @@ public class PpsDrvInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void reset(byte chipId) {
+    public void reset(int chipId) {
         PPS chip = chips[chipId];
         chip.reset();
     }
 
     @Override
-    public int start(byte chipId, int clock) {
+    public int start(int chipId, int clock) {
         return start(chipId, clock, 0);
     }
 
+    /** @param option BiConsumer&lt;Integer, Integer&gt; */
     @Override
-    public int start(byte chipId, int clock, int clockValue, Object... option) {
+    public int start(int chipId, int clock, int clockValue, Object... option) {
         PPS chip = chips[chipId];
         return chip.start(clock, (option != null && option.length > 0) ? (BiConsumer<Integer, Integer>) option[0] : null);
     }
 
     @Override
-    public void stop(byte chipId) {
+    public void stop(int chipId) {
         PPS chip = chips[chipId];
         chip.stop();
     }
 
     @Override
-    public int write(byte chipId, int port, int adr, int data) {
+    public int write(int chipId, int port, int adr, int data) {
         PPS chip = chips[chipId];
         return chip.write(port, adr, data);
     }
 
     // 音量設定
-    private void setVolume(byte chipId, int vol) {
+    private void setVolume(int chipId, int vol) {
         PPS chip = chips[chipId];
         chip.setVolume(vol);
     }
 
-    private void play(byte chipId, byte al, byte bh, byte bl) {
+    private void play(int chipId, int al, int bh, int bl) {
         PPS chip = chips[chipId];
         chip.play(al, bh, bl);
     }
 
-    private void stop_(byte chipId) {
+    private void stop_(int chipId) {
         PPS chip = chips[chipId];
         chip.stop();
     }
 
-    private boolean setParam(byte chipId, byte paramno, byte data) {
+    private boolean setParam(int chipId, int paramno, int data) {
         PPS chip = chips[chipId];
         return chip.setParam(paramno, data);
     }
 
     @Override
-    public void update(byte chipId, int[][] outputs, int samples) {
+    public void update(int chipId, int[][] outputs, int samples) {
         PPS chip = chips[chipId];
         chip.update(outputs, samples);
     }
 
-    public int load(byte chipId, byte[] pcmData) {
+    public int load(int chipId, byte[] pcmData) {
         PPS chip = chips[chipId];
         return chip.load(pcmData);
     }

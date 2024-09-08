@@ -195,7 +195,7 @@ public class NpNesApu {
     // 生成される波形の振幅は0-8191
     public int render(int[] b) {
         this.tickCount.iup();
-        tick((this.tickCount.value() - this.tickLast) & 0xFF);
+        tick((this.tickCount.value() - this.tickLast) & 0xff);
         this.tickLast = this.tickCount.value();
 
         this.out[0] = (this.mask & 1) != 0 ? 0 : this.out[0];
@@ -387,7 +387,7 @@ public class NpNesApu {
 
             case 0x3:
             case 0x7:
-                this.freq[ch] = (this.freq[ch] & 0xFF) | ((val & 0x7) << 8);
+                this.freq[ch] = (this.freq[ch] & 0xff) | ((val & 0x7) << 8);
 
                 if (this.option[OPT.PHASE_REFRESH.ordinal()] != 0)
                     this.sPhase[ch] = 0;

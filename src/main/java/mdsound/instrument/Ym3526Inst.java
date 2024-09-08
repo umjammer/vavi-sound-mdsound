@@ -21,7 +21,7 @@ public class Ym3526Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void reset(byte chipId) {
+    public void reset(int chipId) {
         visVolume = new int[][][] {
                 new int[][] {new int[] {0, 0}},
                 new int[][] {new int[] {0, 0}}
@@ -33,22 +33,22 @@ public class Ym3526Inst extends Instrument.BaseInstrument {
     private static final int DefaultYM3526ClockValue = 3579545;
 
     @Override
-    public int start(byte chipId, int clock) {
+    public int start(int chipId, int clock) {
         return device_start_ym3526(chipId, DefaultYM3526ClockValue);
     }
 
     @Override
-    public int start(byte chipId, int clock, int clockValue, Object... option) {
+    public int start(int chipId, int clock, int clockValue, Object... option) {
         return device_start_ym3526(chipId, clockValue);
     }
 
     @Override
-    public void stop(byte chipId) {
+    public void stop(int chipId) {
         device_stop_ym3526(chipId);
     }
 
     @Override
-    public void update(byte chipId, int[][] outputs, int samples) {
+    public void update(int chipId, int[][] outputs, int samples) {
         ym3526_stream_update(chipId, outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
@@ -56,16 +56,16 @@ public class Ym3526Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int write(byte chipId, int port, int adr, int data) {
-        ym3526_w(chipId, 0x00, (byte) adr);
-        ym3526_w(chipId, 0x01, (byte) data);
+    public int write(int chipId, int port, int adr, int data) {
+        ym3526_w(chipId, 0x00, adr);
+        ym3526_w(chipId, 0x01, data);
         return 0;
     }
 
     private static final int MAX_CHIPS = 0x02;
     static Ym3526[] chips = new Ym3526[2];
 
-    public void ym3526_stream_update(byte chipId, int[][] outputs, int samples) {
+    public void ym3526_stream_update(int chipId, int[][] outputs, int samples) {
         Ym3526 info = chips[chipId];
         info.updateOne(outputs, samples);
     }
@@ -86,13 +86,13 @@ public class Ym3526Inst extends Instrument.BaseInstrument {
         } else { // Start FM Timer
         }
     }
-    public int device_start_ym3526(byte chipId, int clock) {
+    public int device_start_ym3526(int chipId, int clock) {
         Ym3526 info;
 
         if (chipId >= MAX_CHIPS)
             return 0;
 
-        int rate = (clock & 0x7FFFFFFF) / 72;
+        int rate = (clock & 0x7fff_ffff) / 72;
         if ((CHIP_SAMPLING_MODE == 0x01 && rate < CHIP_SAMPLE_RATE) ||
                 CHIP_SAMPLING_MODE == 0x02)
             rate = CHIP_SAMPLE_RATE;
@@ -108,45 +108,45 @@ public class Ym3526Inst extends Instrument.BaseInstrument {
         return rate;
     }
 
-    public void device_stop_ym3526(byte chipId) {
+    public void device_stop_ym3526(int chipId) {
         Ym3526 info = chips[chipId];
         info.shutdown();
     }
 
-    public void device_reset_ym3526(byte chipId) {
+    public void device_reset_ym3526(int chipId) {
         Ym3526 info = chips[chipId];
         info.reset();
     }
 
-    public byte ym3526_r(byte chipId, int offset) {
+    public byte ym3526_r(int chipId, int offset) {
         Ym3526 info = chips[chipId];
         return info.read(offset & 1);
     }
 
-    public void ym3526_w(byte chipId, int offset, byte data) {
+    public void ym3526_w(int chipId, int offset, int data) {
         Ym3526 info = chips[chipId];
         if (info == null || info.chip == null) return;
 
         info.write(offset & 1, data);
     }
 
-    public byte ym3526_status_port_r(byte chipId, int offset) {
+    public byte ym3526_status_port_r(int chipId, int offset) {
         return ym3526_r(chipId, 0);
     }
 
-    public byte ym3526_read_port_r(byte chipId, int offset) {
+    public byte ym3526_read_port_r(int chipId, int offset) {
         return ym3526_r(chipId, 1);
     }
 
-    public void ym3526_control_port_w(byte chipId, int offset, byte data) {
+    public void ym3526_control_port_w(int chipId, int offset, byte data) {
         ym3526_w(chipId, 0, data);
     }
 
-    public void ym3526_write_port_w(byte chipId, int offset, byte data) {
+    public void ym3526_write_port_w(int chipId, int offset, byte data) {
         ym3526_w(chipId, 1, data);
     }
 
-    public void ym3526_set_mute_mask(byte chipId, int muteMask) {
+    public void ym3526_set_mute_mask(int chipId, int muteMask) {
         Ym3526 info = chips[chipId];
         info.setMuteMask(muteMask);
     }
@@ -159,9 +159,12 @@ public class Ym3526Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public Map<String, Integer> getVisVolume() {
-        Map<String, Integer> result = new HashMap<>();
-        result.put("ym3526", getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+    public Map<String, Object> getView(String key, Map<String, Object> args) {
+        Map<String, Object> result = new HashMap<>();
+        switch (key) {
+            case "volume" ->
+                    result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+        }
         return result;
     }
 }

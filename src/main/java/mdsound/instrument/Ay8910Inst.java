@@ -9,6 +9,7 @@ import mdsound.fmgen.PSG;
 
 
 public class Ay8910Inst extends Instrument.BaseInstrument {
+
     private PSG[] chip = new PSG[2];
     private static final int DefaultClockValue = 1789750;
 
@@ -31,13 +32,13 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void reset(byte chipId) {
+    public void reset(int chipId) {
         if (chip[chipId] == null) return;
         chip[chipId].reset();
     }
 
     @Override
-    public int start(byte chipId, int clock) {
+    public int start(int chipId, int clock) {
         chip[chipId] = new PSG();
         chip[chipId].setClock(DefaultClockValue, clock);
 
@@ -45,7 +46,7 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(byte chipId, int clock, int clockValue, Object... option) {
+    public int start(int chipId, int clock, int clockValue, Object... option) {
         chip[chipId] = new PSG();
         chip[chipId].setClock(clockValue, clock);
 
@@ -53,12 +54,12 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void stop(byte chipId) {
+    public void stop(int chipId) {
         chip[chipId] = null;
     }
 
     @Override
-    public void update(byte chipId, int[][] outputs, int samples) {
+    public void update(int chipId, int[][] outputs, int samples) {
         if (chip[chipId] == null) return;
         int[] buffer = new int[2];
         buffer[0] = 0;
@@ -74,13 +75,13 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
         visVolume[chipId][0][1] = outputs[1][0];
     }
 
-    private int write(byte chipId, byte adr, byte data) {
+    private int write(int chipId, byte adr, byte data) {
         if (chip[chipId] == null) return 0;
         chip[chipId].setReg(adr, data);
         return 0;
     }
 
-    public void setMute(byte chipId, int val) {
+    public void setMute(int chipId, int val) {
         PSG psg = chip[chipId];
         if (psg == null) return;
 
@@ -88,16 +89,16 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
         psg.setChannelMask(val);
     }
 
-    public void setVolume(byte chipId, int db) {
+    public void setVolume(int chipId, int db) {
         if (chip[chipId] == null) return;
 
         chip[chipId].setVolume(db);
     }
 
     @Override
-    public int write(byte chipId, int port, int adr, int data) {
+    public int write(int chipId, int port, int adr, int data) {
         if (chip[chipId] == null) return 0;
-        chip[chipId].setReg(adr, (byte) data);
+        chip[chipId].setReg(adr, data);
         return 0;
     }
 
@@ -109,9 +110,12 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public Map<String, Integer> getVisVolume() {
-        Map<String, Integer> result = new HashMap<>();
-        result.put("ay8910", getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+    public Map<String, Object> getView(String key, Map<String, Object> args) {
+        Map<String, Object> result = new HashMap<>();
+        switch (key) {
+            case "volume" ->
+                    result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+        }
         return result;
     }
 }

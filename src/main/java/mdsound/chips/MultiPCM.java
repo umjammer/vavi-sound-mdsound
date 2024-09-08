@@ -70,7 +70,7 @@ public class MultiPCM {
         private Eg.State state;
         private int step = 0;
         //step vals
-        // Attack
+        /** Attack */
         private int ar;
         // Decay1
         private int d1r;
@@ -267,32 +267,32 @@ public class MultiPCM {
             public int start;
             public int loop;
             public int end;
-            public byte ar;
-            public byte dr1;
-            public byte dr2;
-            public byte dl;
-            public byte rr;
-            public byte krs;
-            public byte lfoVib;
-            public byte am;
+            public int ar;
+            public int dr1;
+            public int dr2;
+            public int dl;
+            public int rr;
+            public int krs;
+            public int lfoVib;
+            public int am;
 
             private void writeRom(byte[] rom, int ptSample) {
                 this.start = (rom[ptSample + 0] << 16) | (rom[ptSample + 1] << 8) | (rom[ptSample + 2] << 0);
                 this.loop = (rom[ptSample + 3] << 8) | (rom[ptSample + 4] << 0);
                 this.end = 0xffff - ((rom[ptSample + 5] << 8) | (rom[ptSample + 6] << 0));
                 this.lfoVib = rom[ptSample + 7];
-                this.dr1 = (byte) (rom[ptSample + 8] & 0xf);
-                this.ar = (byte) ((rom[ptSample + 8] >> 4) & 0xf);
-                this.dr2 = (byte) (rom[ptSample + 9] & 0xf);
-                this.dl = (byte) ((rom[ptSample + 9] >> 4) & 0xf);
-                this.rr = (byte) (rom[ptSample + 10] & 0xf);
-                this.krs = (byte) ((rom[ptSample + 10] >> 4) & 0xf);
+                this.dr1 = rom[ptSample + 8] & 0xf;
+                this.ar = (rom[ptSample + 8] >> 4) & 0xf;
+                this.dr2 = rom[ptSample + 9] & 0xf;
+                this.dl = (rom[ptSample + 9] >> 4) & 0xf;
+                this.rr = rom[ptSample + 10] & 0xf;
+                this.krs = (rom[ptSample + 10] >> 4) & 0xf;
                 this.am = rom[ptSample + 11];
             }
         }
 
         // TL Interpolation steps
-        private static int[] tlSteps = new int[2];
+        private static final int[] tlSteps = new int[2];
 
         static {
             // lower
@@ -301,8 +301,8 @@ public class MultiPCM {
             tlSteps[1] = (int) ((float) (0x80 << SHIFT) / (78.2 * 2 * 44100.0 / 1000.0));
         }
 
-        private byte num;
-        public byte[] regs = new byte[8];
+        private int num;
+        public int[] regs = new int[8];
         private int playing;
         public Slot.Sample sample;
         private int base;
@@ -313,13 +313,13 @@ public class MultiPCM {
         private int dstTL;
         private int tlStep;
         private int prev;
-        private Eg eg;
+        private final Eg eg;
         // Phase Lfo
-        private Lfo pLfo;
+        private final Lfo pLfo;
         // AM Lfo
-        private Lfo aLfo;
+        private final Lfo aLfo;
 
-        private byte muted;
+        private int muted;
 
         Slot() {
             this.eg = new Eg();
@@ -362,11 +362,11 @@ public class MultiPCM {
             this.eg.state = Eg.State.ATTACK;
             this.eg.volume = 0;
 
-            if (this.base >= 0x100000) {
+            if (this.base >= 0x10_0000) {
                 if ((this.pan & 8) != 0)
-                    this.base = (this.base & 0xfffff) | bankL;
+                    this.base = (this.base & 0xf_ffff) | bankL;
                 else
-                    this.base = (this.base & 0xfffff) | bankR;
+                    this.base = (this.base & 0xf_ffff) | bankR;
             }
         }
 
@@ -390,7 +390,7 @@ public class MultiPCM {
                 this.tl = this.dstTL << SHIFT;
         }
 
-        private void lfo(byte data, float rate) {
+        private void lfo(int data, float rate) {
             if (data != 0) {
                 this.pLfo.computeStep((this.regs[6] >> 3) & 7, this.regs[6] & 7, 0, rate);
                 this.aLfo.computeStep((this.regs[6] >> 3) & 7, this.regs[7] & 7, 1, rate);
@@ -430,8 +430,8 @@ public class MultiPCM {
     }
 
     // Max 512 samples
-    private Slot.Sample[] samples = new Slot.Sample[0x200];
-    private Slot[] slots = new Slot[28];
+    private final Slot.Sample[] samples = new Slot.Sample[0x200];
+    private final Slot[] slots = new Slot[28];
     private int curSlot;
     private int address;
     private int bankR, bankL;
@@ -440,9 +440,10 @@ public class MultiPCM {
     private int romSize;
     private byte[] rom;
     // Frequency step table
-    private int[] fnsTable = new int[0x400];
+    private final int[] fnsTable = new int[0x400];
 
-    private static int[] LPANTABLE = new int[0x800], RPANTABLE = new int[0x800];
+    private static final int[] LPANTABLE = new int[0x800];
+    private static final int[] RPANTABLE = new int[0x800];
 
     private static int fix(float v) {
         return (int) ((float) (1 << SHIFT) * v);
@@ -452,8 +453,8 @@ public class MultiPCM {
         // Volume+pan table
         for (int i = 0; i < 0x800; i++) {
 
-            byte iTL = (byte) (i & 0x7f);
-            byte iPAN = (byte) ((i >> 7) & 0xf);
+            int iTL = i & 0x7f;
+            int iPAN = (i >> 7) & 0xf;
 
             float segaDB = (float) (iTL * (-24.0) / (float) 0x40);
 
@@ -561,9 +562,9 @@ public class MultiPCM {
         }
     }
 
-    public void write(int offset, byte data) {
+    public void write(int offset, int data) {
         switch (offset) {
-        case 0: // Data write
+        case 0: // data write
             writeSlot(this.slots[this.curSlot], this.address, data);
             break;
         case 1:
@@ -571,7 +572,7 @@ public class MultiPCM {
             //Debug.printf("curSlot%s", this.curSlot);
             break;
         case 2:
-            this.address = (int) ((data > 7) ? 7 : data);
+            this.address = Math.min(data, 7);
             break;
         }
         /*this.curSlot = val2chan[(offset >> 3) & 0x1F];
@@ -584,7 +585,7 @@ public class MultiPCM {
         this.bankR = rightOffset;
     }
 
-    public void writeBank(byte offset, int data) {
+    public void writeBank(int offset, int data) {
         if ((offset & 0x01) != 0)
             this.bankL = data << 16;
         if ((offset & 0x02) != 0)
@@ -651,7 +652,7 @@ public class MultiPCM {
             this.slots[curChn].muted = (byte) ((muteMask >> curChn) & 0x01);
     }
 
-    private void writeSlot(Slot slot, int reg, byte data) {
+    private void writeSlot(Slot slot, int reg, int data) {
         slot.regs[reg] = data;
 
         switch (reg) {

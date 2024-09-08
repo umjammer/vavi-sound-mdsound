@@ -170,7 +170,7 @@ public class C352 {
                 break;
             case 2:
                 this.freq = val;
-                //Debug.printf("this.v[ch%d].freq = %d", ch, val);
+//                Debug.printf("this.v[ch%d].freq = %d", ch, val);
                 break;
             case 3:
                 this.flags = val;
@@ -252,7 +252,7 @@ public class C352 {
     private static byte muteAllRear = 0x00;
 
     private void fetchSample(Voice v) {
-        //Debug.printf("v.sample = %d  v.pos = %d  this.wave_mask = %d  v.flags =%d ", v.sample, v.pos, this.wave_mask, v.flags);
+//        Debug.printf("v.sample = %d  v.pos = %d  this.wave_mask = %d  v.flags =%d ", v.sample, v.pos, this.wave_mask, v.flags);
 
         v.lastSample = v.sample;
 
@@ -267,7 +267,7 @@ public class C352 {
     }
 
     public void update(int[][] outputs, int samples) {
-        //short[] out = new short[4];
+//        short[] out = new short[4];
 
         for (int i = 0; i < samples; i++) {
             outputs[0][i] = 0;
@@ -283,14 +283,14 @@ public class C352 {
                 short s = 0;
                 flags[j] = v.flags;
 
-                //Debug.printf(" v.flags=%d", v.flags);
+//                Debug.printf(" v.flags=%d", v.flags);
                 if ((v.flags & 0x8000) != 0) {
                     int nextCounter = v.counter + v.freq;
 
                     if ((nextCounter & 0x10000) != 0) {
                         fetchSample(v);
-                        //Debug.printf("fetch");
-                        //Debug.printf(" ch=%d 0=%d  1=%d  2=%d  3=%d",j, _out[0], _out[1], _out[2], _out[3]);
+//                        Debug.printf("fetch");
+//                        Debug.printf(" ch=%d 0=%d  1=%d  2=%d  3=%d",j, _out[0], _out[1], _out[2], _out[3]);
                     }
 
                     if (((nextCounter ^ v.counter) & 0x18000) != 0) {

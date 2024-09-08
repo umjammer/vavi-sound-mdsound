@@ -1,20 +1,20 @@
 
-package test.SoundManager;
-
+package test.soundManager;
 
 import dotnet4j.util.compat.HexaConsumer;
 import dotnet4j.util.compat.HexaFunction;
+import vavi.util.Debug;
 
 
 public class SoundManager {
 
-    public interface Enq extends HexaFunction<Long, Integer, Integer, Integer, Integer, Object[], Boolean> {
+    public interface Enq extends HexaFunction<Integer, Integer, Integer, Integer, Integer, Object[], Boolean> {
     }
 
-    public interface Deq extends HexaFunction<Long, Integer, Integer, Integer, Integer, Object[], Boolean> {
+    public interface Deq extends HexaFunction<int[], int[], int[], int[], int[], Object[][], Boolean> {
     }
 
-    public interface Snd extends HexaConsumer<Long, Integer, Integer, Integer, Integer, Object[]> {
+    public interface Snd extends HexaConsumer<Integer, Integer, Integer, Integer, Integer, Object[]> {
     }
 
     public static final int DATA_SEQUENCE_FREQUENCE = 44100;
@@ -22,8 +22,8 @@ public class SoundManager {
     /**
      * ミュージックデータ解析
      * 処理周期 : 無し
-     * データ受取時 : DataSenderへ即送信
-     * DataSenderが受け取ることができない状態の場合は、待ち合わせする
+     * データ受取時 : dataSenderへ即送信
+     * dataSenderが受け取ることができない状態の場合は、待ち合わせする
      */
     private DataMaker dataMaker;
 
@@ -63,8 +63,8 @@ public class SoundManager {
      * セットアップ
      * @param driverAction ミュージックドライバーの1フレームあたりの処理を指定してください
      * @param realChipAction 実チップ向けデータ送信処理を指定してください
-     * @param startData DataSenderが初期化を行うときに出力するデータを指定してください
-     * @param stopData DataSenderが演奏停止を行うときに出力するデータを指定してください
+     * @param startData dataSenderが初期化を行うときに出力するデータを指定してください
+     * @param stopData dataSenderが演奏停止を行うときに出力するデータを指定してください
      */
     public void setup(DriverAction driverAction, Snd realChipAction, Pack[] startData, Pack[] stopData) {
         dataMaker = new DataMaker(driverAction);
@@ -139,8 +139,8 @@ public class SoundManager {
         return realChipSender.isRunning();
     }
 
-    public long getDriverSeqCounterDelay() {
-        return (long) (DATA_SEQUENCE_FREQUENCE * 0.1);
+    public int getDriverSeqCounterDelay() {
+        return (int) (DATA_SEQUENCE_FREQUENCE * 0.1);
     }
 
     public boolean isRunningAtEmuChipSender() {
@@ -173,6 +173,9 @@ public class SoundManager {
     }
 
     public boolean isRunningAsync() {
+if (true) return false;
+        else
+try {
         if (dataMaker.isRunning())
             return true;
         if (dataSender.isRunning())
@@ -183,6 +186,9 @@ public class SoundManager {
             return true;
 
         return false;
+} finally {
+ Debug.printf("dm: %s, ds: %s, ecs: %s, rcs: %s", dataMaker.isRunning(), dataSender.isRunning(), emuChipSender.isRunning(), realChipSender.isRunning());
+}
     }
 
     public void setInterrupt() {
@@ -204,7 +210,7 @@ public class SoundManager {
         }
     }
 
-    public long getSeqCounter() {
+    public int getSeqCounter() {
         return dataSender.getSeqCounter();
     }
 

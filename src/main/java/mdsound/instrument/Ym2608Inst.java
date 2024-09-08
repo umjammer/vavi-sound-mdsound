@@ -35,12 +35,12 @@ public class Ym2608Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void reset(byte chipId) {
+    public void reset(int chipId) {
         chip[chipId].reset();
     }
 
     @Override
-    public int start(byte chipId, int clock) {
+    public int start(int chipId, int clock) {
         chip[chipId] = new Opna.OPNA(chipId);
         chip[chipId].init(DefaultYM2608ClockValue, clock);
 
@@ -55,7 +55,7 @@ public class Ym2608Inst extends Instrument.BaseInstrument {
      * @return
      */
     @Override
-    public int start(byte chipId, int clock, int clockValue, Object... option) {
+    public int start(int chipId, int clock, int clockValue, Object... option) {
         chip[chipId] = new Opna.OPNA(chipId);
         //chips[chipId] = new Fmgen.OPNA2();
         if (option != null && option.length > 0 && option[0] instanceof Function) { // <string, Stream>
@@ -71,21 +71,21 @@ public class Ym2608Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void stop(byte chipId) {
+    public void stop(int chipId) {
         chip[chipId] = null;
     }
 
     int[] buffer = new int[2];
 
     @Override
-    public void update(byte chipId, int[][] outputs, int samples) {
+    public void update(int chipId, int[][] outputs, int samples) {
         buffer[0] = 0;
         buffer[1] = 0;
         chip[chipId].mix(buffer, 1);
         for (int i = 0; i < 1; i++) {
             outputs[0][i] = buffer[i * 2 + 0];
             outputs[1][i] = buffer[i * 2 + 1];
-            //Debug.printf("[%8d] : [%8d] [%d]\r\n", outputs[0][i], outputs[1][i],i);
+//            Debug.printf("[%8d] : [%8d] [%d]\r\n", outputs[0][i], outputs[1][i],i);
         }
 
         visVolume[chipId][0][0] = outputs[0][0];
@@ -100,47 +100,38 @@ public class Ym2608Inst extends Instrument.BaseInstrument {
         visVolume[chipId][4][1] = chip[chipId].visAPCMVolume[1];
     }
 
-    private int YM2608_Write(byte chipId, int adr, byte data) {
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
         if (chip[chipId] == null) return 0;
-
         chip[chipId].setReg(adr, data);
         return 0;
     }
 
-    public void SetFMVolume(byte chipId, int db) {
+    private void setFMVolume(int chipId, int db) {
         if (chip[chipId] == null) return;
-
         chip[chipId].setVolumeFM(db);
     }
 
-    public void SetPSGVolume(byte chipId, int db) {
+    private void setPSGVolume(int chipId, int db) {
         if (chip[chipId] == null) return;
-
         chip[chipId].setVolumePSG(db);
     }
 
-    public void SetRhythmVolume(byte chipId, int db) {
+    private void setRhythmVolume(int chipId, int db) {
         if (chip[chipId] == null) return;
-
         chip[chipId].setVolumeRhythmTotal(db);
     }
 
-    public void SetAdpcmVolume(byte chipId, int db) {
+    private void setAdpcmVolume(int chipId, int db) {
         if (chip[chipId] == null) return;
-
         chip[chipId].setVolumeADPCM(db);
     }
 
-    @Override
-    public int write(byte chipId, int port, int adr, int data) {
-        return YM2608_Write(chipId, adr, (byte) data);
-    }
-
-    public byte[] GetADPCMBuffer(byte chipId) {
+    public byte[] getADPCMBuffer(int chipId) {
         return chip[chipId].getADPCMBuffer();
     }
 
-    public int ReadStatusEx(byte chipId) {
+    public int readStatusEx(int chipId) {
         return chip[chipId].readStatusEx();
     }
 
@@ -152,13 +143,41 @@ public class Ym2608Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public Map<String, Integer> getVisVolume() {
-        Map<String, Integer> result = new HashMap<>();
-        result.put("ym2608", getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
-        result.put("ym2608FM", getMonoVolume(visVolume[0][1][0], visVolume[0][1][1], visVolume[1][1][0], visVolume[1][1][1]));
-        result.put("ym2608SSG", getMonoVolume(visVolume[0][2][0], visVolume[0][2][1], visVolume[1][2][0], visVolume[1][2][1]));
-        result.put("ym2608Rtm", getMonoVolume(visVolume[0][3][0], visVolume[0][3][1], visVolume[1][3][0], visVolume[1][3][1]));
-        result.put("ym2608APCM", getMonoVolume(visVolume[0][4][0], visVolume[0][4][1], visVolume[1][4][0], visVolume[1][4][1]));
+    public Map<String, Object> getView(String key, Map<String, Object> args) {
+        Map<String, Object> result = new HashMap<>();
+        switch (key) {
+            case "volume" -> {
+                result.put("ym2608", getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+                result.put("ym2608FM", getMonoVolume(visVolume[0][1][0], visVolume[0][1][1], visVolume[1][1][0], visVolume[1][1][1]));
+                result.put("ym2608SSG", getMonoVolume(visVolume[0][2][0], visVolume[0][2][1], visVolume[1][2][0], visVolume[1][2][1]));
+                result.put("ym2608Rtm", getMonoVolume(visVolume[0][3][0], visVolume[0][3][1], visVolume[1][3][0], visVolume[1][3][1]));
+                result.put("ym2608APCM", getMonoVolume(visVolume[0][4][0], visVolume[0][4][1], visVolume[1][4][0], visVolume[1][4][1]));
+            }
+        }
         return result;
+    }
+
+    // TODO automatic wired, use annotation?
+    public void setFMVolume(int vol, double ignored) {
+        setFMVolume((byte) 0, vol);
+        setFMVolume((byte) 1, vol);
+    }
+
+    // TODO automatic wired, use annotation?
+    public void setPSGVolume(int vol, double ignored) {
+        setPSGVolume((byte) 0, vol);
+        setPSGVolume((byte) 1, vol);
+    }
+
+    // TODO automatic wired, use annotation?
+    public void setRhythmVolume(int vol, double ignored) {
+        setRhythmVolume((byte) 0, vol);
+        setRhythmVolume((byte) 1, vol);
+    }
+
+    // TODO automatic wired, use annotation?
+    public void setAdpcmVolume(int vol, double ignored) {
+        setAdpcmVolume((byte) 0, vol);
+        setAdpcmVolume((byte) 1, vol);
     }
 }

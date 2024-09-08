@@ -19,10 +19,10 @@ public class Opm {
     private static final int PCMBUFSIZE = 65536;
     //#define DELAY (1000/5)
 
-// #if C86CTL
+//#if C86CTL
     // c86ctl 用定義
 //        typedef HRESULT(WINAPI C86CtlCreateInstance)(REFIID, LPVOID);
-// #endif
+//#endif
 
     public String author = null;
 
@@ -342,17 +342,17 @@ public class Opm {
 
         global.memRead = Global::memReadDefault;
 
-// #if C86CTL
+//#if C86CTL
 //        if (pChipOPM)
 //            pChipOPM.reset();
-// #endif
+//#endif
 
-// #if ROMEO
+//#if ROMEO
 //        if (UseOpmFlag == 2) {
 //            juliet_YM2151Reset();
 //            juliet_YM2151Mute(0);
 //        }
-// #endif
+//#endif
 
         // UseOpmFlag = 0;
         // UseAdpcmFlag = 0;
@@ -446,7 +446,7 @@ public class Opm {
         dousaMode = 0;
         opmChMask = 0;
 
-        @SuppressWarnings("RedundantTypeArguments (explicit type arguments speedup compilation and analysis time)") final List<BiConsumer<Byte, Byte>> a = Arrays.<BiConsumer<Byte, Byte>>asList(
+        @SuppressWarnings("RedundantTypeArguments (explicit type arguments speedup compilation and analysis time)") List<BiConsumer<Byte, Byte>> a = Arrays.<BiConsumer<Byte, Byte>>asList(
                 this::dmy, this::ExeCmd_LfoReset, this::dmy, this::dmy              // 00-03
                 , this::dmy, this::dmy, this::dmy, this::dmy              // 04-07
                 , this::ExeCmd_KON, this::dmy, this::dmy, this::dmy              // 08-0B
@@ -515,7 +515,7 @@ public class Opm {
         cmdTbl = a.toArray(BiConsumer[]::new);
         //new BiConsumer<Byte, Byte>[]
 
-// #if C86CTL
+//#if C86CTL
         // C86CTL のロード
 // pChipBase = null;
 // pChipOPM = null;
@@ -544,7 +544,7 @@ public class Opm {
 //   }
 //  }
 // }
-// #endif
+//#endif
     }
 
     private void makeTable() {
@@ -617,11 +617,11 @@ public class Opm {
     public void opmPoke(byte data) {
         if (useOpmFlag < 2) {
 
-// #if C86CTL
+//#if C86CTL
 //        if (pChipOPM)
 //            pChipOPM.out(OpmRegNo, data);
 // else
-// #endif
+//#endif
             synchronized (numCmndLockObj) {
                 if (numCmnd < CMNDBUFSIZE) {
                     cmndBuf[cmndWriteIdx][0] = opmRegNo;
@@ -687,7 +687,7 @@ public class Opm {
             //while (_InterlockedCompareExchange(&TimerSemapho, 1, 0) == 1) ;
 
             timerReg = data & 0x8F;
-            statReg &= 0xFF - ((data >> 4) & 3);
+            statReg &= 0xff - ((data >> 4) & 3);
 
             global.timerSemaphore = 0;
 
@@ -1043,19 +1043,19 @@ public class Opm {
         //    case 0xFC:
         //    case 0xFD:
         //    case 0xFE:
-        //    case 0xFF:
+        //    case 0xff:
         //        // D1L/RR
         //        CmdExe_D1lRr(regno, data);
         //        break;
 
         //}
 
-// #if ROMEO
+//#if ROMEO
 //    if (UseOpmFlag == 2)
 //    {
 //        juliet_YM2151W((Byte)regno, (Byte)data);
 //    }
-// #endif
+//#endif
 
     }
 
@@ -1094,7 +1094,7 @@ public class Opm {
 
     private void ExeCmd_PmsAms(byte regno, byte data) {
         int ch = regno - 0x38;
-        lfo.setPMSAMS(ch, data & 0xFF);
+        lfo.setPMSAMS(ch, data & 0xff);
     }
 
     private void ExeCmd_Kf(byte regno, byte data) {
@@ -1124,19 +1124,19 @@ public class Opm {
     }
 
     private void ExeCmd_WaveForm(byte regno, byte data) {
-        lfo.setWaveForm(data);// & 0xFF);
+        lfo.setWaveForm(data);// & 0xff);
     }
 
     private void ExeCmd_PmdAmd(byte regno, byte data) {
-        lfo.setPMDAMD(data);// & 0xFF);
+        lfo.setPMDAMD(data);// & 0xff);
     }
 
     private void ExeCmd_Lfrq(byte regno, byte data) {
-        lfo.setLFRQ(data);// & 0xFF);
+        lfo.setLFRQ(data);// & 0xff);
     }
 
     private void ExeCmd_NeNfrq(byte regno, byte data) {
-        op[7][3].setNFRQ(data);// & 0xFF);
+        op[7][3].setNFRQ(data);// & 0xff);
     }
 
     private void ExeCmd_KON(byte regno, byte data) {
@@ -1729,14 +1729,14 @@ public class Opm {
         }
         Global.waveOutSamp = samprate;
 
-// #if ROMEO
+//#if ROMEO
 //    if (UseOpmFlag == 2)
 //    {
 //        juliet_load();
 //        juliet_prepare();
 //        juliet_YM2151Mute(0);
 //    }
-// #endif
+//#endif
 
         makeTable();
         reset();
@@ -1773,7 +1773,7 @@ public class Opm {
         makeTable();
         reset();
 
-        pcmBufSize = 0xFFFFFFFF;
+        pcmBufSize = 0xffff_ffff;
 
         return waveAndTimerStart();
     }
@@ -1967,7 +1967,7 @@ public class Opm {
             if ((data & 0x01) != 0) {
                 ppiReg |= (byte) (1 << ((data >> 1) & 7));
             } else {
-                ppiReg &= (byte) (0xFF ^ (1 << ((data >> 1) & 7)));
+                ppiReg &= (byte) (0xff ^ (1 << ((data >> 1) & 7)));
             }
             setAdpcmRate();
         }

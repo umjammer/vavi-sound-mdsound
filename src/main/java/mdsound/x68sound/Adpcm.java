@@ -1,18 +1,14 @@
 package mdsound.x68sound;
 
-import java.util.logging.Level;
-
-import vavi.util.Debug;
-
 
 public class Adpcm {
     private Global global = null;
 
     //
     private int scale;
-    // 16bit PCM Data
+    // 16bit PCM data
     private int pcm;
-    // HPF用 16bit PCM Data
+    // HPF用 16bit PCM data
     private int inpPcm, inpPcmPrev, outPcm;
     // HPF用
     private int outInpPcm, outInpPcmPrev;
@@ -49,37 +45,37 @@ public class Adpcm {
 
     private static final byte[] DmaRegInit = new byte[] {
         /*+00*/ 0x00, 0x00, // CSR/CER
-        /*+02*/ (byte) 0xFF, (byte) 0xFF,
+        /*+02*/ (byte) 0xff, (byte) 0xff,
         /*+04*/ (byte) 0x80, 0x32, // DCR/OCR
         /*+06*/ 0x04, 0x08, // SCR/CCR
-        /*+08*/ (byte) 0xFF, (byte) 0xFF,
+        /*+08*/ (byte) 0xff, (byte) 0xff,
         /*+0A*/ 0x00, 0x00, // MTC
         /*+0C*/ 0x00, 0x00, // MAR
         /*+0E*/ 0x00, 0x00, // MAR
-        /*+10*/ (byte) 0xFF, (byte) 0xFF,
-        /*+12*/ (byte) 0xFF, (byte) 0xFF,
+        /*+10*/ (byte) 0xff, (byte) 0xff,
+        /*+12*/ (byte) 0xff, (byte) 0xff,
         /*+14*/ 0x00, (byte) 0xE9, // DAR
         /*+16*/ 0x20, 0x03, // DAR
-        /*+18*/ (byte) 0xFF, (byte) 0xFF,
+        /*+18*/ (byte) 0xff, (byte) 0xff,
         /*+1A*/ 0x00, 0x00, // BTC
         /*+1C*/ 0x00, 0x00, // BAR
         /*+1E*/ 0x00, 0x00, // BAR
-        /*+20*/ (byte) 0xFF, (byte) 0xFF,
-        /*+22*/ (byte) 0xFF, (byte) 0xFF,
-        /*+24*/ (byte) 0xFF, 0x6A, // NIV
-        /*+26*/ (byte) 0xFF, 0x6B, // EIV
-        /*+28*/ (byte) 0xFF, 0x05, // MFC
-        /*+2A*/ (byte) 0xFF, (byte) 0xFF,
-        /*+2C*/ (byte) 0xFF, 0x01, // CPR
-        /*+2E*/ (byte) 0xFF, (byte) 0xFF,
-        /*+30*/ (byte) 0xFF, 0x05, // DFC
-        /*+32*/ (byte) 0xFF, (byte) 0xFF,
-        /*+34*/ (byte) 0xFF, (byte) 0xFF,
-        /*+36*/ (byte) 0xFF, (byte) 0xFF,
-        /*+38*/ (byte) 0xFF, 0x05, // BFC
-        /*+3A*/ (byte) 0xFF, (byte) 0xFF,
-        /*+3C*/ (byte) 0xFF, (byte) 0xFF,
-        /*+3E*/ (byte) 0xFF, 0x00, // GCR
+        /*+20*/ (byte) 0xff, (byte) 0xff,
+        /*+22*/ (byte) 0xff, (byte) 0xff,
+        /*+24*/ (byte) 0xff, 0x6A, // NIV
+        /*+26*/ (byte) 0xff, 0x6B, // EIV
+        /*+28*/ (byte) 0xff, 0x05, // MFC
+        /*+2A*/ (byte) 0xff, (byte) 0xff,
+        /*+2C*/ (byte) 0xff, 0x01, // CPR
+        /*+2E*/ (byte) 0xff, (byte) 0xff,
+        /*+30*/ (byte) 0xff, 0x05, // DFC
+        /*+32*/ (byte) 0xff, (byte) 0xff,
+        /*+34*/ (byte) 0xff, (byte) 0xff,
+        /*+36*/ (byte) 0xff, (byte) 0xff,
+        /*+38*/ (byte) 0xff, 0x05, // BFC
+        /*+3A*/ (byte) 0xff, (byte) 0xff,
+        /*+3C*/ (byte) 0xff, (byte) 0xff,
+        /*+3E*/ (byte) 0xff, 0x00, // GCR
     };
 
     public void init() {
@@ -133,7 +129,7 @@ public class Adpcm {
     }
 
     public int dmaContinueSetNextMtcMar() {
-        dmaReg[0x07] &= (0xFF - 0x40); // CNT=0
+        dmaReg[0x07] &= (0xff - 0x40); // CNT=0
 
         dmaReg[0x0A] = dmaReg[0x1A]; // BTC . MTC
         dmaReg[0x0B] = dmaReg[0x1B];

@@ -1,14 +1,17 @@
 
-package test.SoundManager;
+package test.soundManager;
 
-import test.SoundManager.SoundManager.Snd;
+import test.soundManager.SoundManager.Snd;
+import vavi.util.Debug;
 
-public class ChipSender extends BaseSender {
+
+public abstract class ChipSender extends BaseSender {
     protected final Snd actionOfChip;
     protected boolean busy = false;
 
-    public ChipSender(Snd actionOfChip, int bufferSize/* DATA_SEQUENCE_FREQUENCE */) {
+    public ChipSender(Snd actionOfChip, int bufferSize /* DATA_SEQUENCE_FREQUENCE */) {
         action = this::main;
+Debug.println("action: " + action);
         ringBuffer = new RingBuffer(bufferSize) {
             {
                 autoExtend = false;
@@ -24,6 +27,5 @@ public class ChipSender extends BaseSender {
         }
     }
 
-    protected void main() {
-    }
+    protected abstract void main();
 }

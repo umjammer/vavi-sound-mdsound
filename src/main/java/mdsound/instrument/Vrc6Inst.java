@@ -20,17 +20,17 @@ public class Vrc6Inst extends Instrument.BaseInstrument {
     private double apu_clock_rest = 0;
 
     @Override
-    public void reset(byte chipId) {
+    public void reset(int chipId) {
         vrc6[chipId].reset();
     }
 
     @Override
-    public int start(byte chipId, int clock) {
+    public int start(int chipId, int clock) {
         return start(chipId, clock, 100);
     }
 
     @Override
-    public int start(byte chipId, int sampleRate, int clockValue, Object... option) {
+    public int start(int chipId, int sampleRate, int clockValue, Object... option) {
         vrc6[chipId].setClock(clockValue);
         vrc6[chipId].setRate(sampleRate);
 
@@ -48,12 +48,12 @@ public class Vrc6Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void stop(byte chipId) {
+    public void stop(int chipId) {
         vrc6[chipId].reset();
     }
 
     @Override
-    public void update(byte chipId, int[][] outputs, int samples) {
+    public void update(int chipId, int[][] outputs, int samples) {
         b[0] = 0;
         b[1] = 0;
 
@@ -71,7 +71,7 @@ public class Vrc6Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int write(byte chipId, int port, int adr, int data) {
+    public int write(int chipId, int port, int adr, int data) {
         vrc6[chipId].write(adr, data);
         return 0;
     }

@@ -21,45 +21,45 @@ public class X1_010Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void reset(byte chipId) {
+    public void reset(int chipId) {
         device_reset_x1_010(chipId);
     }
 
     @Override
-    public int start(byte chipId, int clock) {
+    public int start(int chipId, int clock) {
         return device_start_x1_010(chipId, 16000000);
     }
 
     @Override
-    public int start(byte chipId, int clock, int clockValue, Object... option) {
+    public int start(int chipId, int clock, int clockValue, Object... option) {
         return device_start_x1_010(chipId, clockValue);
     }
 
     @Override
-    public void stop(byte chipId) {
+    public void stop(int chipId) {
         device_stop_x1_010(chipId);
     }
 
     @Override
-    public void update(byte chipId, int[][] outputs, int samples) {
+    public void update(int chipId, int[][] outputs, int samples) {
         seta_update(chipId, outputs, samples);
     }
 
     @Override
-    public int write(byte chipId, int port, int adr, int data) {
-        seta_sound_w(chipId, (port << 8) | adr, (byte) data);
+    public int write(int chipId, int port, int adr, int data) {
+        seta_sound_w(chipId, (port << 8) | adr, data);
         return 0;
     }
 
     private static final int MAX_CHIPS = 0x02;
     private X1_010[] x1010Data = new X1_010[] {new X1_010(), new X1_010()};
 
-    private void seta_update(byte chipId, int[][] outputs, int samples) {
+    private void seta_update(int chipId, int[][] outputs, int samples) {
         X1_010 info = x1010Data[chipId];
         info.update(outputs, samples);
     }
 
-    private int device_start_x1_010(byte chipId, int clock) {
+    private int device_start_x1_010(int chipId, int clock) {
         if (chipId >= MAX_CHIPS)
             return 0;
 
@@ -73,45 +73,44 @@ public class X1_010Inst extends Instrument.BaseInstrument {
         return rate;
     }
 
-    private void device_stop_x1_010(byte chipId) {
+    private void device_stop_x1_010(int chipId) {
         X1_010 info = x1010Data[chipId];
         info.stop();
     }
 
-    private void device_reset_x1_010(byte chipId) {
+    private void device_reset_x1_010(int chipId) {
         X1_010 info = x1010Data[chipId];
         info.reset();
     }
 
-    private byte seta_sound_r(byte chipId, int offset) {
+    private int seta_sound_r(int chipId, int offset) {
         X1_010 info = x1010Data[chipId];
         return info.read(offset);
     }
 
-    private void seta_sound_w(byte chipId, int offset, byte data) {
+    private void seta_sound_w(int chipId, int offset, int data) {
         X1_010 info = x1010Data[chipId];
         info.write(offset, data);
     }
 
-    public void x1_010_write_rom(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData, int romDataStartAddress/* = 0*/) {
+    public void x1_010_write_rom(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int romDataStartAddress/* = 0*/) {
         X1_010 info = x1010Data[chipId];
         info.writeRom(romSize, dataStart, dataLength, romData, romDataStartAddress);
     }
 
-    public void x1_010_set_mute_mask(byte chipId, int muteMask) {
+    public void x1_010_set_mute_mask(int chipId, int muteMask) {
         X1_010 info = x1010Data[chipId];
         info.setMuteMask(muteMask);
     }
 
-    /**
-     * Generic get_info
-     */
-  /*DEVICE_GET_INFO( X1_010Inst ) {
-    case DEVINFO_STR_NAME:       strcpy(info.s, "X1-010");      break;
-    case DEVINFO_STR_FAMILY:     strcpy(info.s, "Seta custom");     break;
-    case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;
-    case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
-  */
+//    /**
+//     * Generic get_info
+//     */
+//  DEVICE_GET_INFO( X1_010Inst ) {
+//    case DEVINFO_STR_NAME:       strcpy(info.s, "X1-010");      break;
+//    case DEVINFO_STR_FAMILY:     strcpy(info.s, "Seta custom");     break;
+//    case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;
+//    case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
 
     //----
 

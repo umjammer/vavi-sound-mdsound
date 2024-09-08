@@ -1,14 +1,15 @@
-package test.SoundManager;
+package test.soundManager;
 
-import test.SoundManager.SoundManager.Enq;
+import test.soundManager.SoundManager.Enq;
+import vavi.util.Debug;
 
 
 public class DataSender extends BaseSender {
     private static long sw = System.currentTimeMillis();
     private static final double swFreq = DATA_SEQUENCE_FREQUENCE;
     private final int frq;
-    private static final long Def_SeqCounter = -500;
-    private long seqCounter;
+    private static final int Def_SeqCounter = -500;
+    private int seqCounter;
     private final Enq emuEnq;
     private final Enq realEnq;
     private final Pack[] startData;
@@ -50,7 +51,7 @@ public class DataSender extends BaseSender {
         }
     }
 
-    public long getSeqCounter() {
+    public int getSeqCounter() {
         synchronized (lockObj) {
             return seqCounter;
         }
@@ -65,10 +66,10 @@ public class DataSender extends BaseSender {
             for (Pack dat : startData) {
                 // 振り分けてEnqueue
                 if (dat.dev >= 0)
-                    while (!emuEnq.apply(0l, dat.dev, dat.typ, dat.adr, dat.val, null))
+                    while (!emuEnq.apply(0, dat.dev, dat.typ, dat.adr, dat.val, null))
                         Thread.yield();
                 else
-                    while (!realEnq.apply(0l, dat.dev, dat.typ, dat.adr, dat.val, null))
+                    while (!realEnq.apply(0, dat.dev, dat.typ, dat.adr, dat.val, null))
                         Thread.yield();
             }
         }
@@ -134,7 +135,19 @@ public class DataSender extends BaseSender {
 
                     // dataが貯まってます！
                     while (seqCounter >= ringBuffer.lookUpCounter()) {
-                        if (!ringBuffer.deq(counter, dev, typ, adr, val, ex)) {
+                        int[] counter_ = new int[1];
+                        int[] dev_ = new int[1];
+                        int[] typ_ = new int[1];
+                        int[] adr_ = new int[1];
+                        int[] val_ = new int[1];
+                        Object[][] ex_ = new Object[1][];
+                        if (!ringBuffer.deq(counter_, dev_, typ_, adr_, val_, ex_)) {
+                            counter = counter_[0];
+                            dev = dev_[0];
+                            typ = typ_[0];
+                            adr = adr_[0];
+                            val = val_[0];
+                            ex = ex_[0];
                             break;
                         }
 
@@ -170,6 +183,7 @@ public class DataSender extends BaseSender {
                 parent.requestStopAtRealChipSender();
             }
         } catch (Exception e) {
+Debug.println(e);
             synchronized (lockObj) {
                 isRunning = false;
                 start = false;

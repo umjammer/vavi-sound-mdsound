@@ -10,8 +10,8 @@ import mdsound.fmgen.Opna;
 
 public class Ym2203Inst extends Instrument.BaseInstrument {
 
-    private Opna.OPN[] chips = new Opna.OPN[2];
     private static final int DefaultYM2203ClockValue = 3000000;
+    private Opna.OPN[] chips = new Opna.OPN[2];
 
     @Override
     public String getName() {
@@ -32,13 +32,13 @@ public class Ym2203Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void reset(byte chipId) {
+    public void reset(int chipId) {
         if (chips[chipId] == null) return;
         chips[chipId].reset();
     }
 
     @Override
-    public int start(byte chipId, int clock) {
+    public int start(int chipId, int clock) {
         chips[chipId] = new Opna.OPN();
         chips[chipId].init(DefaultYM2203ClockValue, clock);
 
@@ -46,7 +46,7 @@ public class Ym2203Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(byte chipId, int clock, int clockValue, Object... option) {
+    public int start(int chipId, int clock, int clockValue, Object... option) {
         chips[chipId] = new Opna.OPN();
         chips[chipId].init(clockValue, clock);
 
@@ -54,12 +54,12 @@ public class Ym2203Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void stop(byte chipId) {
+    public void stop(int chipId) {
         chips[chipId] = null;
     }
 
     @Override
-    public void update(byte chipId, int[][] outputs, int samples) {
+    public void update(int chipId, int[][] outputs, int samples) {
         if (chips[chipId] == null) return;
         int[] buffer = new int[2];
         buffer[0] = 0;
@@ -78,13 +78,14 @@ public class Ym2203Inst extends Instrument.BaseInstrument {
         visVolume[chipId][2][1] = chips[chipId].psg.visVolume;
     }
 
-    private int YM2203_Write(byte chipId, byte adr, byte data) {
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
         if (chips[chipId] == null) return 0;
         chips[chipId].setReg(adr, data);
         return 0;
     }
 
-    public void setMute(byte chipId, int val) {
+    public void setMute(int chipId, int val) {
         Opna.OPN chip = chips[chipId];
         if (chip == null) return;
 
@@ -92,21 +93,14 @@ public class Ym2203Inst extends Instrument.BaseInstrument {
         chip.setChannelMask(val);
     }
 
-    public void SetFMVolume(byte chipId, int db) {
+    private void setFMVolume(int chipId, int db) {
         if (chips[chipId] == null) return;
-
         chips[chipId].setVolumeFM(db);
     }
 
-    public void SetPSGVolume(byte chipId, int db) {
+    private void setPSGVolume(int chipId, int db) {
         if (chips[chipId] == null) return;
-
         chips[chipId].setVolumePSG(db);
-    }
-
-    @Override
-    public int write(byte chipId, int port, int adr, int data) {
-        return YM2203_Write(chipId, (byte) adr, (byte) data);
     }
 
     //----
@@ -118,11 +112,27 @@ public class Ym2203Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public Map<String, Integer> getVisVolume() {
-        Map<String, Integer> result = new HashMap<>();
-        result.put("ym2203", getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
-        result.put("ym2203FM", getMonoVolume(visVolume[0][1][0], visVolume[0][1][1], visVolume[1][1][0], visVolume[1][1][1]));
-        result.put("ym2203SSG", getMonoVolume(visVolume[0][2][0], visVolume[0][2][1], visVolume[1][2][0], visVolume[1][2][1]));
+    public Map<String, Object> getView(String key, Map<String, Object> args) {
+        Map<String, Object> result = new HashMap<>();
+        switch (key) {
+            case "volume" -> {
+                result.put("ym2203", getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+                result.put("ym2203FM", getMonoVolume(visVolume[0][1][0], visVolume[0][1][1], visVolume[1][1][0], visVolume[1][1][1]));
+                result.put("ym2203SSG", getMonoVolume(visVolume[0][2][0], visVolume[0][2][1], visVolume[1][2][0], visVolume[1][2][1]));
+            }
+        }
         return result;
+    }
+
+    // TODO automatic wired, use annotation?
+    public void setFMVolume(int vol, double ignored) {
+        setFMVolume(0, vol);
+        setFMVolume(1, vol);
+    }
+
+    // TODO automatic wired, use annotation?
+    public void setPSGVolume(int vol, double ignored) {
+        setPSGVolume(0, vol);
+        setPSGVolume(1, vol);
     }
 }

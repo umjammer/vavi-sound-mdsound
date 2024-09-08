@@ -530,9 +530,10 @@ public class YmDeltaT {
     public void saveState() {
     }
 
-    private void limit(int val, int max, int min) {
-        if (val > max) val = max;
-        else if (val < min) val = min;
+    private static int limit(int val, int max, int min) {
+        if (val > max) return max;
+        else if (val < min) return min;
+        return val;
     }
 
     private void synthesisFromExternalMemory() {
@@ -591,11 +592,11 @@ public class YmDeltaT {
 
                 /* Forecast to next Forecast */
                 this.acc += (decodeTableB1[data] * this.adpCmd / 8);
-                limit(this.acc, DECODE_MAX, DECODE_MIN);
+                this.acc = limit(this.acc, DECODE_MAX, DECODE_MIN);
 
                 /* delta to next delta */
                 this.adpCmd = (this.adpCmd * decodeTableB2[data]) / 64;
-                limit(this.adpCmd, DELTA_MAX, DELTA_MIN);
+                this.adpCmd = limit(this.adpCmd, DELTA_MAX, DELTA_MIN);
 
                 /* ElSemi: Fix interpolator. */
                 /*this.prev_acc = prev_acc + ((this.acc - prev_acc) / 2 );*/
@@ -641,15 +642,13 @@ public class YmDeltaT {
 
                 /* Forecast to next Forecast */
                 this.acc += (decodeTableB1[data] * this.adpCmd / 8);
-                limit(this.acc, DECODE_MAX, DECODE_MIN);
+                this.acc = limit(this.acc, DECODE_MAX, DECODE_MIN);
 
                 /* delta to next delta */
                 this.adpCmd = (this.adpCmd * decodeTableB2[data]) / 64;
-                limit(this.adpCmd, DELTA_MAX, DELTA_MIN);
-
+                this.adpCmd = limit(this.adpCmd, DELTA_MAX, DELTA_MIN);
 
             } while ((--step) != 0);
-
         }
 
         /* ElSemi: Fix interpolator. */

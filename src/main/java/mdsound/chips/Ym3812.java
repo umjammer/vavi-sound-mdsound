@@ -44,9 +44,9 @@ class Ym3812 {
         return opl.write(a, v);
     }
 
-    public byte read(int a) {
+    public int read(int a) {
         // ym3812 always returns bit2 and bit1 in HIGH state
-        return (byte) (opl.read(a) | 0x06);
+        return opl.read(a) | 0x06;
     }
 
     public int timerOver(int c) {

@@ -104,8 +104,8 @@ public class SoundIocs {
             if (adpcmCotLen > 0) {
                 int dmalen;
                 dmalen = adpcmCotLen;
-                if (dmalen > 0xFF00) { // 1度に転送できるバイト数は0xFF00
-                    dmalen = 0xFF00;
+                if (dmalen > 0xff00) { // 1度に転送できるバイト数は0xff00
+                    dmalen = 0xff00;
                 }
                 x68Sound.dmaPokeL((byte) 0x1C, adpcmCotAdrs); // BARに次のDMA転送アドレスをセット
                 x68Sound.dmaPokeW((byte) 0x1A, dmalen); // BTCに次のDMA転送バイト数をセット
@@ -122,7 +122,7 @@ public class SoundIocs {
             x68Sound.adpcmPoke((byte) 0x01); // ADPCM 再生動作停止
         }
         adpcmStat = 0;
-        x68Sound.dmaPoke((byte) 0x00, (byte) 0xFF); // DMA CSR の全ビットをクリア
+        x68Sound.dmaPoke((byte) 0x00, (byte) 0xff); // DMA CSR の全ビットをクリア
     }
 
     /**
@@ -136,7 +136,7 @@ public class SoundIocs {
         x68Sound.adpcmPoke((byte) 0x01); // ADPCM再生動作停止
 
         adpcmStat = 0;
-        x68Sound.dmaPoke((byte) 0x00, (byte) 0xFF); // DMA CSR の全ビットをクリア
+        x68Sound.dmaPoke((byte) 0x00, (byte) 0xff); // DMA CSR の全ビットをクリア
     }
 
     private static final byte[] PANTBL = new byte[] {3, 1, 2, 0};
@@ -178,7 +178,7 @@ public class SoundIocs {
         adpcmStat = (byte) (stat + 2);
         x68Sound.dmaPoke((byte) 0x05, (byte) 0x32); // DMA OCR をチェイン動作なしに設定
 
-        x68Sound.dmaPoke((byte) 0x00, (byte) 0xFF); // DMA CSR の全ビットをクリア
+        x68Sound.dmaPoke((byte) 0x00, (byte) 0xff); // DMA CSR の全ビットをクリア
         x68Sound.dmaPokeL((byte) 0x0C, adrs); // DMA MAR にDMA転送アドレスをセット
         x68Sound.dmaPokeW((byte) 0x0A, len); // DMA MTC にDMA転送バイト数をセット
         setAdpcmMode(mode, (byte) 0x88); // サンプリング周波数とPANを設定してDMA転送開始
@@ -197,8 +197,8 @@ public class SoundIocs {
         int dmaLen;
         int dmaAdrsPtr = addr;
         while (adpcmStat != 0) ; // DMA転送終了待ち
-        while (len > 0x0000FF00) { // ADPCMデータが0xFF00バイト以上の場合は
-            dmaLen = 0x0000FF00; // 0xFF00バイトずつ複数回に分けてDMA転送を行う
+        while (len > 0x0000_FF00) { // ADPCMデータが0xff00バイト以上の場合は
+            dmaLen = 0x0000_FF00; // 0xff00バイトずつ複数回に分けてDMA転送を行う
             adpcmOutMain((byte) 0x80, mode, dmaLen, dmaAdrsPtr);
             dmaAdrsPtr += dmaLen;
             len -= dmaLen;
@@ -219,7 +219,7 @@ public class SoundIocs {
         adpcmStat = 0x12;
         x68Sound.dmaPoke((byte) 0x05, (byte) 0x3A); // DMA OCR をアレイチェイン動作に設定
 
-        x68Sound.dmaPoke((byte) 0x00, (byte) 0xFF); // DMA CSR の全ビットをクリア
+        x68Sound.dmaPoke((byte) 0x00, (byte) 0xff); // DMA CSR の全ビットをクリア
         x68Sound.dmaPokeL((byte) 0x1C, tblPtr); // DMA BAR にアレイチェインテーブルアドレスをセット
         x68Sound.dmaPokeW((byte) 0x1A, cnt); // DMA BTC にアレイチェインテーブルの個数をセット
         setAdpcmMode(mode, (byte) 0x88); // サンプリング周波数とPANを設定してDMA転送開始
@@ -239,7 +239,7 @@ public class SoundIocs {
         adpcmStat = 0x22;
         x68Sound.dmaPoke((byte) 0x05, (byte) 0x3E); // DMA OCR をリンクアレイチェイン動作に設定
 
-        x68Sound.dmaPoke((byte) 0x00, (byte) 0xFF); // DMA CSR の全ビットをクリア
+        x68Sound.dmaPoke((byte) 0x00, (byte) 0xff); // DMA CSR の全ビットをクリア
         x68Sound.dmaPokeL((byte) 0x1C, tblPtr); // DMA BAR にリンクアレイチェインテーブルアドレスをセット
         setAdpcmMode(mode, (byte) 0x88); // サンプリング周波数とPANを設定してDMA転送開始
 
@@ -248,7 +248,7 @@ public class SoundIocs {
 
     /**
      * コンティニューモードを利用して ADPCM 出力を行うサンプル
-     * IOCS _ADPCMOUT と同じ処理を行うが、データバイト数が 0xFF00 バイト以上でも
+     * IOCS _ADPCMOUT と同じ処理を行うが、データバイト数が 0xff00 バイト以上でも
      * すぐにリターンする。
      *
      * @param addr ADPCMデータアドレス
@@ -265,21 +265,21 @@ public class SoundIocs {
         x68Sound.dmaPoke((byte) 0x05, (byte) 0x32); // DMA OCR をチェイン動作なしに設定
 
         dmaLen = adpcmCotLen;
-        if (dmaLen > 0xFF00) { // ADPCMデータが0xFF00バイト以上の場合は
-            dmaLen = 0xFF00; // 0xFF00バイトずつ複数回に分けてDMA転送を行う
+        if (dmaLen > 0xff00) { // ADPCMデータが0xff00バイト以上の場合は
+            dmaLen = 0xff00; // 0xff00バイトずつ複数回に分けてDMA転送を行う
         }
 
-        x68Sound.dmaPoke((byte) 0x00, (byte) 0xFF); // DMA CSR の全ビットをクリア
+        x68Sound.dmaPoke((byte) 0x00, (byte) 0xff); // DMA CSR の全ビットをクリア
         x68Sound.dmaPokeL((byte) 0x0C, adpcmCotAdrs); // DMA MAR にDMA転送アドレスをセット
         x68Sound.dmaPokeW((byte) 0x0A, dmaLen); // DMA MTC にDMA転送バイト数をセット
         adpcmCotAdrs += dmaLen;
         adpcmCotLen -= dmaLen;
         if (adpcmCotLen <= 0) {
-            setAdpcmMode(mode, (byte) 0x88); // データバイト数が0xFF00以下の場合は通常転送
+            setAdpcmMode(mode, (byte) 0x88); // データバイト数が0xff00以下の場合は通常転送
         } else {
             dmaLen = adpcmCotLen;
-            if (dmaLen > 0xFF00) {
-                dmaLen = 0xFF00;
+            if (dmaLen > 0xff00) {
+                dmaLen = 0xff00;
             }
             x68Sound.dmaPokeL((byte) 0x1C, adpcmCotAdrs); // BARに次のDMA転送アドレスをセット
             x68Sound.dmaPokeW((byte) 0x1A, dmaLen); // BTCに次のDMA転送バイト数をセット

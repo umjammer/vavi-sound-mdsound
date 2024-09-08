@@ -1,17 +1,13 @@
 package mdsound.x68sound;
 
-import java.util.logging.Level;
-
-import vavi.util.Debug;
-
 
 public class Pcm8 {
     private Global global;
 
     private int scale; //
-    private int pcm; // 16bit PCM Data
+    private int pcm; // 16bit PCM data
     private int pcm16Prev; // 16bit,8bitPCMの1つ前のデータ
-    private int inpPcm, inpPcmPrev, outPcm; // HPF用 16bit PCM Data
+    private int inpPcm, inpPcmPrev, outPcm; // HPF用 16bit PCM data
     private int outInpPcm, outInpPcmPrev; // HPF用
     private int adpcmRate; // 187500(15625*12), 125000(10416.66*12), 93750(7812.5*12), 62500(5208.33*12), 46875(3906.25*12), ...
     private int rateCounter;
@@ -408,27 +404,27 @@ public class Pcm8 {
 
     public int setMode(int mode) {
         int m;
-        m = (mode >> 16) & 0xFF;
-        if (m != 0xFF) {
+        m = (mode >> 16) & 0xff;
+        if (m != 0xff) {
             m &= 15;
             volume = Global.PCM8VOLTBL[m];
-            this.mode = (this.mode & 0xFF00FFFF) | (m << 16);
+            this.mode = (this.mode & 0xff00FFFF) | (m << 16);
         }
-        m = (mode >> 8) & 0xFF;
-        if (m != 0xFF) {
+        m = (mode >> 8) & 0xff;
+        if (m != 0xff) {
             m &= 7;
             adpcmRate = Global.ADPCMRATEADDTBL[m];
             pcmKind = m;
-            this.mode = (this.mode & 0xFFFF00FF) | (m << 8);
+            this.mode = (this.mode & 0xffFF00FF) | (m << 8);
         }
-        m = (mode) & 0xFF;
-        if (m != 0xFF) {
+        m = (mode) & 0xff;
+        if (m != 0xff) {
             m &= 3;
             if (m == 0) {
                 adpcmReg = (byte) 0xC7; // ADPCM 停止
                 dmaMtc = 0;
             } else {
-                this.mode = (this.mode & 0xFFFFFF00) | m;
+                this.mode = (this.mode & 0xffFFFF00) | m;
             }
         }
         return 0;

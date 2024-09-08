@@ -9,8 +9,9 @@ import mdsound.fmgen.Opna.OPNB;
 
 
 public class Ym2610Inst extends Instrument.BaseInstrument {
-    private OPNB[] chip = new OPNB[2];
+
     private static final int DefaultYM2610ClockValue = 8000000;
+    private OPNB[] chip = new OPNB[2];
 
     @Override
     public String getName() {
@@ -23,21 +24,21 @@ public class Ym2610Inst extends Instrument.BaseInstrument {
     }
 
     public Ym2610Inst() {
+        //0..Main 1..FM 2..SSG 3..PCMa 4..PCMb
         visVolume = new int[][][] {
                 new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}},
                 new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}}
         };
-        //0..Main 1..FM 2..SSG 3..PCMa 4..PCMb
     }
 
     @Override
-    public void reset(byte chipId) {
+    public void reset(int chipId) {
         if (chip[chipId] == null) return;
         chip[chipId].reset();
     }
 
     @Override
-    public int start(byte chipId, int clock) {
+    public int start(int chipId, int clock) {
         chip[chipId] = new OPNB();
         chip[chipId].init(DefaultYM2610ClockValue, clock);
 
@@ -45,20 +46,20 @@ public class Ym2610Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(byte chipId, int clock, int clockValue, Object... option) {
+    public int start(int chipId, int clock, int clockValue, Object... option) {
         chip[chipId] = new OPNB();
-        chip[chipId].init(clockValue, clock, false, new byte[0x20ffff], 0x20ffff, new byte[0x20ffff], 0x20ffff);
+        chip[chipId].init(clockValue, clock, false, new byte[0x20_ffff], 0x20_ffff, new byte[0x20_ffff], 0x20_ffff);
 
         return clock;
     }
 
     @Override
-    public void stop(byte chipId) {
+    public void stop(int chipId) {
         chip[chipId] = null;
     }
 
     @Override
-    public void update(byte chipId, int[][] outputs, int samples) {
+    public void update(int chipId, int[][] outputs, int samples) {
         if (chip[chipId] == null) return;
         int[] buffer = new int[2];
         buffer[0] = 0;
@@ -82,52 +83,44 @@ public class Ym2610Inst extends Instrument.BaseInstrument {
         visVolume[chipId][4][1] = chip[chipId].visAPCMVolume[1];
     }
 
-    private int YM2610_Write(byte chipId, int adr, byte data) {
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
         if (chip[chipId] == null) return 0;
         chip[chipId].setReg(adr, data);
         return 0;
     }
 
-    public void setAdpcmA(byte chipId, byte[] _adpcma, int _adpcma_size) {
+    public void setAdpcmA(int chipId, byte[] _adpcma, int _adpcma_size) {
         if (chip[chipId] == null) return;
         chip[chipId].setAdpcmA(_adpcma, _adpcma_size);
     }
 
-    public void setAdpcmB(byte chipId, byte[] _adpcmb, int _adpcmb_size) {
+    public void setAdpcmB(int chipId, byte[] _adpcmb, int _adpcmb_size) {
         if (chip[chipId] == null) return;
         chip[chipId].setAdpcmB(_adpcmb, _adpcmb_size);
     }
 
-    public void SetFMVolume(byte chipId, int db) {
+    private void setFMVolume(int chipId, int db) {
         if (chip[chipId] == null) return;
-
         chip[chipId].setVolumeFM(db);
     }
 
-    public void SetPSGVolume(byte chipId, int db) {
+    private void setPSGVolume(int chipId, int db) {
         if (chip[chipId] == null) return;
-
         chip[chipId].setVolumePSG(db);
     }
 
-    public void SetAdpcmAVolume(byte chipId, int db) {
+    private void setAdpcmAVolume(int chipId, int db) {
         if (chip[chipId] == null) return;
-
         chip[chipId].setVolumeADPCMATotal(db);
     }
 
-    public void SetAdpcmBVolume(byte chipId, int db) {
+    private void setAdpcmBVolume(int chipId, int db) {
         if (chip[chipId] == null) return;
-
         chip[chipId].setVolumeADPCMB(db);
     }
 
-    @Override
-    public int write(byte chipId, int port, int adr, int data) {
-        return YM2610_Write(chipId, adr, (byte) data);
-    }
-
-    //----
+    // ----
 
     @Override
     public Tuple<Integer, Double> getRegulationVolume() {
@@ -135,14 +128,43 @@ public class Ym2610Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public Map<String, Integer> getVisVolume() {
-        Map<String, Integer> result = new HashMap<>();
-        result.put("ym2610", getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
-        result.put("ym2610FM", getMonoVolume(visVolume[0][1][0], visVolume[0][1][1], visVolume[1][1][0], visVolume[1][1][1]));
-        result.put("ym2610SSG", getMonoVolume(visVolume[0][2][0], visVolume[0][2][1], visVolume[1][2][0], visVolume[1][2][1]));
-        result.put("ym2610APCMA", getMonoVolume(visVolume[0][3][0], visVolume[0][3][1], visVolume[1][3][0], visVolume[1][3][1]));
-        result.put("ym2610APCMB", getMonoVolume(visVolume[0][4][0], visVolume[0][4][1], visVolume[1][4][0], visVolume[1][4][1]));
+    public Map<String, Object> getView(String key, Map<String, Object> args) {
+        // TODO tag commonize
+        Map<String, Object> result = new HashMap<>();
+        switch (key) {
+            case "volume" -> {
+                result.put("ym2610", getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+                result.put("ym2610FM", getMonoVolume(visVolume[0][1][0], visVolume[0][1][1], visVolume[1][1][0], visVolume[1][1][1]));
+                result.put("ym2610SSG", getMonoVolume(visVolume[0][2][0], visVolume[0][2][1], visVolume[1][2][0], visVolume[1][2][1]));
+                result.put("ym2610APCMA", getMonoVolume(visVolume[0][3][0], visVolume[0][3][1], visVolume[1][3][0], visVolume[1][3][1]));
+                result.put("ym2610APCMB", getMonoVolume(visVolume[0][4][0], visVolume[0][4][1], visVolume[1][4][0], visVolume[1][4][1]));
+            }
+        }
         return result;
+    }
+
+    // TODO automatic wired, use annotation?
+    public void setFMVolume(int vol, double ignored) {
+        setFMVolume(0, vol);
+        setFMVolume(1, vol);
+    }
+
+    // TODO automatic wired, use annotation?
+    public void setPSGVolume(int vol, double ignored) {
+        setPSGVolume(0, vol);
+        setPSGVolume(1, vol);
+    }
+
+    // TODO automatic wired, use annotation?
+    public void setAdpcmAVolume(int vol, double ignored) {
+        setAdpcmAVolume(0, vol);
+        setAdpcmAVolume(1, vol);
+    }
+
+    // TODO automatic wired, use annotation?
+    public void setAdpcmBVolume(int vol, double ignored) {
+        setAdpcmBVolume(0, vol);
+        setAdpcmBVolume(1, vol);
     }
 }
 

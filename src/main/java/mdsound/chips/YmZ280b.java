@@ -73,20 +73,20 @@ public class YmZ280b {
         private static final int[] indexScale = new int[] {0x0e6, 0x0e6, 0x0e6, 0x0e6, 0x133, 0x199, 0x200, 0x266};
 
         /*+ 1 if we are actively playing */
-        private byte playing;
+        private int playing;
 
         /** 1 if the key is on */
-        private byte keyon;
+        private int keyon;
         /** 1 if looping is enabled */
-        private byte looping;
+        private int looping;
         /** current playback mode */
-        private byte mode;
+        private int mode;
         /** frequency */
         private int fnum;
         /** output level */
-        private byte level;
+        private int level;
         /** panning */
-        private byte pan;
+        private int pan;
 
         /** start address, in nibbles */
         private int start;
@@ -120,13 +120,13 @@ public class YmZ280b {
         /** current fractional position */
         private int outputPos;
         /** last sample output */
-        private short lastSample;
+        private int lastSample;
         /** current sample target */
-        private short currSample;
+        private int currSample;
         /** 1 if the IRQ state is updated by timer */
-        private byte irqSchedule;
+        private int irqSchedule;
         /** used for muting */
-        private byte muted;
+        private int muted;
 
         private void updateVolumes() {
             if (this.pan == 8) {
@@ -292,7 +292,7 @@ public class YmZ280b {
         /**
          * general 16-bit PCM decoding routine
          */
-        private int generatePcm16(byte[] _base, int size, short[] buffer, int samples) {
+        private int generatePcm16(byte[] base, int size, short[] buffer, int samples) {
             int val;
             int ptrBuffer = 0;
 
@@ -305,7 +305,7 @@ public class YmZ280b {
                 while (samples != 0) {
                     /* fetch the current value */
                     //val = (short)((base[position / 2 + 1] << 8) + base[position / 2 + 0]);
-                    val = (short) ((readMemory(_base, size, position / 2 + 0) << 8) + readMemory(_base, size, position / 2 + 1));
+                    val = ((readMemory(base, size, position / 2 + 0) & 0xff) << 8) + (readMemory(base, size, position / 2 + 1) & 0xff);
                     // Note: Last MAME updates say it's: ((position / 2 + 1) << 8) + (position / 2 + 0);
 
                     /* output to the buffer, scaling by the volume */
@@ -325,8 +325,8 @@ public class YmZ280b {
                 // loop while we still have samples to generate
                 while (samples != 0) {
                     // fetch the current value */
-                    val = (short) ((readMemory(_base, size, position / 2 + 0) << 8)
-                            + readMemory(_base, size, position / 2 + 1));
+                    val = ((readMemory(base, size, position / 2 + 0) & 0xff) << 8)
+                            + (readMemory(base, size, position / 2 + 1) & 0xff);
 
                     // output to the buffer, scaling by the volume
                     buffer[ptrBuffer++] = (short) val;
@@ -358,10 +358,10 @@ public class YmZ280b {
         }
     }
 
-    private static byte readMemory(byte[] _base, int size, int offset) {
-        offset &= 0xffffff;
+    private static int readMemory(byte[] base, int size, int offset) {
+        offset &= 0xff_ffff;
         if (offset < size)
-            return _base[offset];
+            return base[offset] & 0xff;
         else
             return 0;
     }
@@ -370,21 +370,21 @@ public class YmZ280b {
     private byte[] regionBase;
     private int regionSize;
     /** currently accessible register */
-    private byte currentRegister;
+    private int currentRegister;
     /** current status register */
-    private byte statusRegister;
+    private int statusRegister;
     /** current IRQ state */
-    private byte irqState;
+    private int irqState;
     /** current IRQ mask */
-    private byte irqMask;
+    private int irqMask;
     /** current IRQ enable */
-    private byte irqEnable;
+    private int irqEnable;
     /** key on enable */
-    private byte keyonEnable;
+    private int keyonEnable;
     /** external memory enable */
-    private byte extMemEnable;
+    private int extMemEnable;
     /** external memory prefetched data */
-    private byte extReadLatch;
+    private int extReadLatch;
     private int extMemAddressHi;
     private int extMemAddressMid;
     /** where the CPU can read the ROM */
@@ -395,7 +395,7 @@ public class YmZ280b {
     /** IRQ Callback */
     private Callback irqCallback;
     /** the 8 voices */
-    private Voice[] voices = new Voice[] {
+    private final Voice[] voices = new Voice[] {
             new Voice(), new Voice(), new Voice(), new Voice(),
             new Voice(), new Voice(), new Voice(), new Voice()
     };
@@ -427,9 +427,9 @@ public class YmZ280b {
         double frequency;
         // compute the frequency
         if (voice.mode == 1)
-            frequency = this.masterClock * (double) ((voice.fnum & 0x0ff) + 1) * (1.0 / 256.0);
+            frequency = this.masterClock * ((voice.fnum & 0x0ff) + 1) * (1.0 / 256.0);
         else
-            frequency = this.masterClock * (double) ((voice.fnum & 0x1ff) + 1) * (1.0 / 256.0);
+            frequency = this.masterClock * ((voice.fnum & 0x1ff) + 1) * (1.0 / 256.0);
         voice.outputStep = (int) (frequency * (double) FRAC_ONE / this.rate);
     }
 
@@ -451,9 +451,9 @@ public class YmZ280b {
 
             case 0x01: // pitch upper 1 bit, loop, key on, mode
                 voice.fnum = (voice.fnum & 0xff) | ((data & 0x01) << 8);
-                voice.looping = (byte) ((data & 0x10) >> 4);
+                voice.looping = (data & 0x10) >> 4;
                 if ((data & 0x60) == 0) data &= 0x7f; // ignore mode setting and set to same state as KON=0
-                else voice.mode = (byte) ((data & 0x60) >> 5);
+                else voice.mode = (data & 0x60) >> 5;
 
                 if (voice.keyon == 0 && (data & 0x80) != 0 && this.keyonEnable != 0) {
                     voice.playing = 1;
@@ -472,25 +472,25 @@ public class YmZ280b {
                     // if update_irq_state_timer is set, cancel it.
                     voice.irqSchedule = 0;
                 }
-                voice.keyon = (byte) ((data & 0x80) >> 7);
+                voice.keyon = (data & 0x80) >> 7;
 
                 this.update_step(voice);
                 break;
 
             case 0x02: // total level
-                voice.level = (byte) data;
+                voice.level = data;
 
                 voice.updateVolumes();
                 break;
 
             case 0x03: // pan
-                voice.pan = (byte) (data & 0x0f);
+                voice.pan = data & 0x0f;
 
                 voice.updateVolumes();
                 break;
 
             case 0x20: // start address high
-                voice.start = (voice.start & (0x00ffff << 1)) | (data << 17);
+                voice.start = (voice.start & (0x00_ffff << 1)) | (data << 17);
                 break;
 
             case 0x21: // loop start address high
@@ -570,19 +570,19 @@ public class YmZ280b {
 //                        this.ext_ram_write(this.ext_mem_address, data);
 //                    else
 //                        Debug.printf("YMZ280B attempted RAM write to %X\n", this.ext_mem_address);
-                    this.extMemAddress = (this.extMemAddress + 1) & 0xffffff;
+                    this.extMemAddress = (this.extMemAddress + 1) & 0xff_ffff;
                 }
                 break;
 
             case 0xfe: // IRQ mask
-                this.irqMask = (byte) data;
+                this.irqMask = data;
 
                 this.updateIrqState();
                 break;
 
             case 0xff: // IRQ enable, test, etc
-                this.extMemEnable = (byte) ((data & 0x40) >> 6);
-                this.irqEnable = (byte) ((data & 0x10) >> 4);
+                this.extMemEnable = (data & 0x40) >> 6;
+                this.irqEnable = (data & 0x10) >> 4;
 
                 this.updateIrqState();
 
@@ -599,7 +599,7 @@ public class YmZ280b {
                             this.voices[i].playing = 1;
                     }
                 }
-                this.keyonEnable = (byte) ((data & 0x80) >> 7);
+                this.keyonEnable = (data & 0x80) >> 7;
                 break;
 
             default:
@@ -613,7 +613,7 @@ public class YmZ280b {
      * determine the status bits
      */
     private int computeStatus() {
-        byte result;
+        int result;
 
         result = this.statusRegister;
 
@@ -630,7 +630,7 @@ public class YmZ280b {
         if (voice.irqSchedule == 0) return;
 
         voice.playing = 0;
-        this.statusRegister |= (byte) (1 << voiceNum);
+        this.statusRegister |= 1 << voiceNum;
 
         this.updateIrqState();
         voice.irqSchedule = 0;
@@ -653,8 +653,8 @@ public class YmZ280b {
         for (int v = 0; v < 8; v++) {
 
             Voice voice = this.voices[v];
-            short prev = voice.lastSample;
-            short curr = voice.currSample;
+            int prev = voice.lastSample;
+            int curr = voice.currSample;
             short[] currData = this.scratch;
             int currDataP = 0;
             int[] lDest = lAcc;
@@ -682,7 +682,7 @@ public class YmZ280b {
 
             // interpolate */
             while (remaining > 0 && voice.outputPos < FRAC_ONE) {
-                int interpSample = (((int) prev * (FRAC_ONE - voice.outputPos)) + ((int) curr * voice.outputPos)) >> FRAC_BITS;
+                int interpSample = ((prev * (FRAC_ONE - voice.outputPos)) + (curr * voice.outputPos)) >> FRAC_BITS;
 
                 lDest[destP] += interpSample * lVol;
                 rDest[destP] += interpSample * rVol;
@@ -723,7 +723,7 @@ public class YmZ280b {
 
                 samplesLeft &= 0xffff;
                 base = newSamples - samplesLeft;
-                t = (base == 0) ? curr : this.scratch[base - 1];
+                t = (base == 0) ? curr : this.scratch[base - 1] & 0xffff;
 
                 for (i = 0; i < samplesLeft; i++) {
                     if (t < 0) t = -((-t * 15) >> 4);
@@ -743,13 +743,13 @@ public class YmZ280b {
 
             // advance forward one sample
             prev = curr;
-            curr = currData[currDataP++];
+            curr = currData[currDataP++] & 0xffff;
 
             // then sample-rate convert with linear interpolation
             while (remaining > 0) {
                 // interpolate
                 while (remaining > 0 && voice.outputPos < FRAC_ONE) {
-                    int interp_sample = (((int) prev * (FRAC_ONE - voice.outputPos)) + ((int) curr * voice.outputPos)) >> FRAC_BITS;
+                    int interp_sample = ((prev * (FRAC_ONE - voice.outputPos)) + (curr * voice.outputPos)) >> FRAC_BITS;
 
                     lDest[destP] += interp_sample * lVol;
                     rDest[destP] += interp_sample * rVol;
@@ -762,7 +762,7 @@ public class YmZ280b {
                 if (voice.outputPos >= FRAC_ONE) {
                     voice.outputPos -= FRAC_ONE;
                     prev = curr;
-                    curr = currData[currDataP++];
+                    curr = currData[currDataP++] & 0xffff;
                 }
             }
 
@@ -785,7 +785,7 @@ public class YmZ280b {
      */
     public int start(int clock) {
         // initialize the rest of the structure
-        this.masterClock = (double) clock / 384.0;
+        this.masterClock = clock / 384.0;
 
         this.rate = this.masterClock * 2.0;
 
@@ -810,9 +810,9 @@ public class YmZ280b {
 
         // initial clear registers
         for (int i = 0xff; i >= 0; i--) {
-            if (i == 0x83 || (i >= 88 && i <= 0xfd))
+            if (i == 0x83 || (i >= 0x88 && i <= 0xfd))
                 continue; // avoid too many debug messages
-            this.currentRegister = (byte) i;
+            this.currentRegister = i;
             this.writeToRegister(0);
         }
 
@@ -825,23 +825,23 @@ public class YmZ280b {
         }
     }
 
-    public byte read(int offset) {
+    public int read(int offset) {
         if ((offset & 1) == 0) {
 
             if (this.extMemEnable == 0)
-                return (byte) 0xff;
+                return 0xff;
 
             // read from external memory
-            byte ret = this.extReadLatch;
+            int ret;
             ret = readMemory(this.regionBase, this.regionSize, this.extMemAddress);
-            this.extMemAddress = (this.extMemAddress + 1) & 0xffffff;
+            this.extMemAddress = (this.extMemAddress + 1) & 0xff_ffff;
             return ret;
         } else {
-            return (byte) this.computeStatus();
+            return this.computeStatus();
         }
     }
 
-    public void write(int offset, byte data) {
+    public void write(int offset, int data) {
         if ((offset & 1) == 0)
             this.currentRegister = data;
         else {
@@ -879,6 +879,6 @@ public class YmZ280b {
 
     public void setMuteMask(int muteMask) {
         for (int c = 0; c < 8; c++)
-            this.voices[c].muted = (byte) ((muteMask >> c) & 0x01);
+            this.voices[c].muted = (muteMask >> c) & 0x01;
     }
 }

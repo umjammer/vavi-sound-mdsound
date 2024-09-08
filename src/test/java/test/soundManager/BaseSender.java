@@ -1,8 +1,8 @@
 
-package test.SoundManager;
+package test.soundManager;
 
-public class BaseSender extends BaseMakerSender {
-    protected long counter = 0;
+public abstract class BaseSender extends BaseMakerSender {
+    protected int counter = 0;
     protected int dev = 0;
     protected int typ = 0;
     protected int adr = 0;

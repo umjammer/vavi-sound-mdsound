@@ -80,7 +80,7 @@ public class Fmgen {
      * テーブル作成
      */
     static {
-        final double[][] pms = new double[][] {
+        double[][] pms = new double[][] {
                 new double[] {0, 1 / 360.0, 2 / 360.0, 3 / 360.0, 4 / 360.0, 6 / 360.0, 12 / 360.0, 24 / 360.0,}, // OPNA
                 //  { 0, 1/240., 2/240., 4/240., 10/240., 20/240., 80/240., 140/240., }, // OPM
                 new double[] {0, 1 / 480.0, 2 / 480.0, 4 / 480.0, 10 / 480.0, 20 / 480.0, 80 / 480.0, 140 / 480.0,}    // OPM
@@ -90,9 +90,9 @@ public class Fmgen {
         // 1.000963
         // lfofref[level * max * wave];
         // pre = lfofref[level][pms * wave >> 8];
-        final byte[][] amt = new byte[][] {
-                new byte[] {31, 6, 4, 3}, // OPNA
-                new byte[] {31, 2, 1, 0} // OPM
+        int[][] amt = new int[][] {
+                new int[] {31, 6, 4, 3}, // OPNA
+                new int[] {31, 2, 1, 0} // OPM
         };
 
         for (int type = 0; type < 2; type++) {
@@ -123,7 +123,7 @@ public class Fmgen {
 
         // Operator
         static class Operator {
-            public static final byte[] noteTable = new byte[] {
+            public static final int[] noteTable = new int[] {
                     0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 3, 3, 3,
                     4, 4, 4, 4, 4, 4, 4, 5, 6, 7, 7, 7, 7, 7, 7, 7,
                     8, 8, 8, 8, 8, 8, 8, 9, 10, 11, 11, 11, 11, 11, 11, 11,
@@ -134,7 +134,7 @@ public class Fmgen {
                     28, 28, 28, 28, 28, 28, 28, 29, 30, 31, 31, 31, 31, 31, 31, 31,
             };
 
-            public static final byte[] dtTable = new byte[] {
+            public static final int[] dtTable = new int[] {
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 4, 4, 4, 4,
@@ -153,78 +153,78 @@ public class Fmgen {
                     -16, -16, -18, -20, -22, -24, -26, -28, -32, -34, -38, -40, -44, -44, -44, -44,
             };
 
-            public static final byte[][] decayTable1 = new byte[][] {
-                    new byte[] {0, 0, 0, 0, 0, 0, 0, 0}, new byte[] {0, 0, 0, 0, 0, 0, 0, 0},
-                    new byte[] {1, 1, 1, 1, 1, 1, 1, 1}, new byte[] {1, 1, 1, 1, 1, 1, 1, 1},
-                    new byte[] {1, 1, 1, 1, 1, 1, 1, 1}, new byte[] {1, 1, 1, 1, 1, 1, 1, 1},
-                    new byte[] {1, 1, 1, 0, 1, 1, 1, 0}, new byte[] {1, 1, 1, 0, 1, 1, 1, 0},
-                    new byte[] {1, 0, 1, 0, 1, 0, 1, 0}, new byte[] {1, 1, 1, 0, 1, 0, 1, 0},
-                    new byte[] {1, 1, 1, 0, 1, 1, 1, 0}, new byte[] {1, 1, 1, 1, 1, 1, 1, 0},
-                    new byte[] {1, 0, 1, 0, 1, 0, 1, 0}, new byte[] {1, 1, 1, 0, 1, 0, 1, 0},
-                    new byte[] {1, 1, 1, 0, 1, 1, 1, 0}, new byte[] {1, 1, 1, 1, 1, 1, 1, 0},
-                    new byte[] {1, 0, 1, 0, 1, 0, 1, 0}, new byte[] {1, 1, 1, 0, 1, 0, 1, 0},
-                    new byte[] {1, 1, 1, 0, 1, 1, 1, 0}, new byte[] {1, 1, 1, 1, 1, 1, 1, 0},
-                    new byte[] {1, 0, 1, 0, 1, 0, 1, 0}, new byte[] {1, 1, 1, 0, 1, 0, 1, 0},
-                    new byte[] {1, 1, 1, 0, 1, 1, 1, 0}, new byte[] {1, 1, 1, 1, 1, 1, 1, 0},
-                    new byte[] {1, 0, 1, 0, 1, 0, 1, 0}, new byte[] {1, 1, 1, 0, 1, 0, 1, 0},
-                    new byte[] {1, 1, 1, 0, 1, 1, 1, 0}, new byte[] {1, 1, 1, 1, 1, 1, 1, 0},
-                    new byte[] {1, 0, 1, 0, 1, 0, 1, 0}, new byte[] {1, 1, 1, 0, 1, 0, 1, 0},
-                    new byte[] {1, 1, 1, 0, 1, 1, 1, 0}, new byte[] {1, 1, 1, 1, 1, 1, 1, 0},
-                    new byte[] {1, 0, 1, 0, 1, 0, 1, 0}, new byte[] {1, 1, 1, 0, 1, 0, 1, 0},
-                    new byte[] {1, 1, 1, 0, 1, 1, 1, 0}, new byte[] {1, 1, 1, 1, 1, 1, 1, 0},
-                    new byte[] {1, 0, 1, 0, 1, 0, 1, 0}, new byte[] {1, 1, 1, 0, 1, 0, 1, 0},
-                    new byte[] {1, 1, 1, 0, 1, 1, 1, 0}, new byte[] {1, 1, 1, 1, 1, 1, 1, 0},
-                    new byte[] {1, 0, 1, 0, 1, 0, 1, 0}, new byte[] {1, 1, 1, 0, 1, 0, 1, 0},
-                    new byte[] {1, 1, 1, 0, 1, 1, 1, 0}, new byte[] {1, 1, 1, 1, 1, 1, 1, 0},
-                    new byte[] {1, 0, 1, 0, 1, 0, 1, 0}, new byte[] {1, 1, 1, 0, 1, 0, 1, 0},
-                    new byte[] {1, 1, 1, 0, 1, 1, 1, 0}, new byte[] {1, 1, 1, 1, 1, 1, 1, 0},
-                    new byte[] {1, 1, 1, 1, 1, 1, 1, 1}, new byte[] {2, 1, 1, 1, 2, 1, 1, 1},
-                    new byte[] {2, 1, 2, 1, 2, 1, 2, 1}, new byte[] {2, 2, 2, 1, 2, 2, 2, 1},
-                    new byte[] {2, 2, 2, 2, 2, 2, 2, 2}, new byte[] {4, 2, 2, 2, 4, 2, 2, 2},
-                    new byte[] {4, 2, 4, 2, 4, 2, 4, 2}, new byte[] {4, 4, 4, 2, 4, 4, 4, 2},
-                    new byte[] {4, 4, 4, 4, 4, 4, 4, 4}, new byte[] {8, 4, 4, 4, 8, 4, 4, 4},
-                    new byte[] {8, 4, 8, 4, 8, 4, 8, 4}, new byte[] {8, 8, 8, 4, 8, 8, 8, 4},
-                    new byte[] {16, 16, 16, 16, 16, 16, 16, 16}, new byte[] {16, 16, 16, 16, 16, 16, 16, 16},
-                    new byte[] {16, 16, 16, 16, 16, 16, 16, 16}, new byte[] {16, 16, 16, 16, 16, 16, 16, 16}
+            public static final int[][] decayTable1 = new int[][] {
+                    new int[] {0, 0, 0, 0, 0, 0, 0, 0}, new int[] {0, 0, 0, 0, 0, 0, 0, 0},
+                    new int[] {1, 1, 1, 1, 1, 1, 1, 1}, new int[] {1, 1, 1, 1, 1, 1, 1, 1},
+                    new int[] {1, 1, 1, 1, 1, 1, 1, 1}, new int[] {1, 1, 1, 1, 1, 1, 1, 1},
+                    new int[] {1, 1, 1, 0, 1, 1, 1, 0}, new int[] {1, 1, 1, 0, 1, 1, 1, 0},
+                    new int[] {1, 0, 1, 0, 1, 0, 1, 0}, new int[] {1, 1, 1, 0, 1, 0, 1, 0},
+                    new int[] {1, 1, 1, 0, 1, 1, 1, 0}, new int[] {1, 1, 1, 1, 1, 1, 1, 0},
+                    new int[] {1, 0, 1, 0, 1, 0, 1, 0}, new int[] {1, 1, 1, 0, 1, 0, 1, 0},
+                    new int[] {1, 1, 1, 0, 1, 1, 1, 0}, new int[] {1, 1, 1, 1, 1, 1, 1, 0},
+                    new int[] {1, 0, 1, 0, 1, 0, 1, 0}, new int[] {1, 1, 1, 0, 1, 0, 1, 0},
+                    new int[] {1, 1, 1, 0, 1, 1, 1, 0}, new int[] {1, 1, 1, 1, 1, 1, 1, 0},
+                    new int[] {1, 0, 1, 0, 1, 0, 1, 0}, new int[] {1, 1, 1, 0, 1, 0, 1, 0},
+                    new int[] {1, 1, 1, 0, 1, 1, 1, 0}, new int[] {1, 1, 1, 1, 1, 1, 1, 0},
+                    new int[] {1, 0, 1, 0, 1, 0, 1, 0}, new int[] {1, 1, 1, 0, 1, 0, 1, 0},
+                    new int[] {1, 1, 1, 0, 1, 1, 1, 0}, new int[] {1, 1, 1, 1, 1, 1, 1, 0},
+                    new int[] {1, 0, 1, 0, 1, 0, 1, 0}, new int[] {1, 1, 1, 0, 1, 0, 1, 0},
+                    new int[] {1, 1, 1, 0, 1, 1, 1, 0}, new int[] {1, 1, 1, 1, 1, 1, 1, 0},
+                    new int[] {1, 0, 1, 0, 1, 0, 1, 0}, new int[] {1, 1, 1, 0, 1, 0, 1, 0},
+                    new int[] {1, 1, 1, 0, 1, 1, 1, 0}, new int[] {1, 1, 1, 1, 1, 1, 1, 0},
+                    new int[] {1, 0, 1, 0, 1, 0, 1, 0}, new int[] {1, 1, 1, 0, 1, 0, 1, 0},
+                    new int[] {1, 1, 1, 0, 1, 1, 1, 0}, new int[] {1, 1, 1, 1, 1, 1, 1, 0},
+                    new int[] {1, 0, 1, 0, 1, 0, 1, 0}, new int[] {1, 1, 1, 0, 1, 0, 1, 0},
+                    new int[] {1, 1, 1, 0, 1, 1, 1, 0}, new int[] {1, 1, 1, 1, 1, 1, 1, 0},
+                    new int[] {1, 0, 1, 0, 1, 0, 1, 0}, new int[] {1, 1, 1, 0, 1, 0, 1, 0},
+                    new int[] {1, 1, 1, 0, 1, 1, 1, 0}, new int[] {1, 1, 1, 1, 1, 1, 1, 0},
+                    new int[] {1, 1, 1, 1, 1, 1, 1, 1}, new int[] {2, 1, 1, 1, 2, 1, 1, 1},
+                    new int[] {2, 1, 2, 1, 2, 1, 2, 1}, new int[] {2, 2, 2, 1, 2, 2, 2, 1},
+                    new int[] {2, 2, 2, 2, 2, 2, 2, 2}, new int[] {4, 2, 2, 2, 4, 2, 2, 2},
+                    new int[] {4, 2, 4, 2, 4, 2, 4, 2}, new int[] {4, 4, 4, 2, 4, 4, 4, 2},
+                    new int[] {4, 4, 4, 4, 4, 4, 4, 4}, new int[] {8, 4, 4, 4, 8, 4, 4, 4},
+                    new int[] {8, 4, 8, 4, 8, 4, 8, 4}, new int[] {8, 8, 8, 4, 8, 8, 8, 4},
+                    new int[] {16, 16, 16, 16, 16, 16, 16, 16}, new int[] {16, 16, 16, 16, 16, 16, 16, 16},
+                    new int[] {16, 16, 16, 16, 16, 16, 16, 16}, new int[] {16, 16, 16, 16, 16, 16, 16, 16}
             };
 
             public static final int[] decayTable2 = new int[] {
                     1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2047, 2047, 2047, 2047, 2047
             };
 
-            public static final byte[][] attackTable = new byte[][] {
-                    new byte[] {-1, -1, -1, -1, -1, -1, -1, -1}, new byte[] {-1, -1, -1, -1, -1, -1, -1, -1},
-                    new byte[] {4, 4, 4, 4, 4, 4, 4, 4}, new byte[] {4, 4, 4, 4, 4, 4, 4, 4},
-                    new byte[] {4, 4, 4, 4, 4, 4, 4, 4}, new byte[] {4, 4, 4, 4, 4, 4, 4, 4},
-                    new byte[] {4, 4, 4, -1, 4, 4, 4, -1}, new byte[] {4, 4, 4, -1, 4, 4, 4, -1},
-                    new byte[] {4, -1, 4, -1, 4, -1, 4, -1}, new byte[] {4, 4, 4, -1, 4, -1, 4, -1},
-                    new byte[] {4, 4, 4, -1, 4, 4, 4, -1}, new byte[] {4, 4, 4, 4, 4, 4, 4, -1},
-                    new byte[] {4, -1, 4, -1, 4, -1, 4, -1}, new byte[] {4, 4, 4, -1, 4, -1, 4, -1},
-                    new byte[] {4, 4, 4, -1, 4, 4, 4, -1}, new byte[] {4, 4, 4, 4, 4, 4, 4, -1},
-                    new byte[] {4, -1, 4, -1, 4, -1, 4, -1}, new byte[] {4, 4, 4, -1, 4, -1, 4, -1},
-                    new byte[] {4, 4, 4, -1, 4, 4, 4, -1}, new byte[] {4, 4, 4, 4, 4, 4, 4, -1},
-                    new byte[] {4, -1, 4, -1, 4, -1, 4, -1}, new byte[] {4, 4, 4, -1, 4, -1, 4, -1},
-                    new byte[] {4, 4, 4, -1, 4, 4, 4, -1}, new byte[] {4, 4, 4, 4, 4, 4, 4, -1},
-                    new byte[] {4, -1, 4, -1, 4, -1, 4, -1}, new byte[] {4, 4, 4, -1, 4, -1, 4, -1},
-                    new byte[] {4, 4, 4, -1, 4, 4, 4, -1}, new byte[] {4, 4, 4, 4, 4, 4, 4, -1},
-                    new byte[] {4, -1, 4, -1, 4, -1, 4, -1}, new byte[] {4, 4, 4, -1, 4, -1, 4, -1},
-                    new byte[] {4, 4, 4, -1, 4, 4, 4, -1}, new byte[] {4, 4, 4, 4, 4, 4, 4, -1},
-                    new byte[] {4, -1, 4, -1, 4, -1, 4, -1}, new byte[] {4, 4, 4, -1, 4, -1, 4, -1},
-                    new byte[] {4, 4, 4, -1, 4, 4, 4, -1}, new byte[] {4, 4, 4, 4, 4, 4, 4, -1},
-                    new byte[] {4, -1, 4, -1, 4, -1, 4, -1}, new byte[] {4, 4, 4, -1, 4, -1, 4, -1},
-                    new byte[] {4, 4, 4, -1, 4, 4, 4, -1}, new byte[] {4, 4, 4, 4, 4, 4, 4, -1},
-                    new byte[] {4, -1, 4, -1, 4, -1, 4, -1}, new byte[] {4, 4, 4, -1, 4, -1, 4, -1},
-                    new byte[] {4, 4, 4, -1, 4, 4, 4, -1}, new byte[] {4, 4, 4, 4, 4, 4, 4, -1},
-                    new byte[] {4, -1, 4, -1, 4, -1, 4, -1}, new byte[] {4, 4, 4, -1, 4, -1, 4, -1},
-                    new byte[] {4, 4, 4, -1, 4, 4, 4, -1}, new byte[] {4, 4, 4, 4, 4, 4, 4, -1},
-                    new byte[] {4, 4, 4, 4, 4, 4, 4, 4}, new byte[] {3, 4, 4, 4, 3, 4, 4, 4},
-                    new byte[] {3, 4, 3, 4, 3, 4, 3, 4}, new byte[] {3, 3, 3, 4, 3, 3, 3, 4},
-                    new byte[] {3, 3, 3, 3, 3, 3, 3, 3}, new byte[] {2, 3, 3, 3, 2, 3, 3, 3},
-                    new byte[] {2, 3, 2, 3, 2, 3, 2, 3}, new byte[] {2, 2, 2, 3, 2, 2, 2, 3},
-                    new byte[] {2, 2, 2, 2, 2, 2, 2, 2}, new byte[] {1, 2, 2, 2, 1, 2, 2, 2},
-                    new byte[] {1, 2, 1, 2, 1, 2, 1, 2}, new byte[] {1, 1, 1, 2, 1, 1, 1, 2},
-                    new byte[] {0, 0, 0, 0, 0, 0, 0, 0}, new byte[] {0, 0, 0, 0, 0, 0, 0, 0},
-                    new byte[] {0, 0, 0, 0, 0, 0, 0, 0}, new byte[] {0, 0, 0, 0, 0, 0, 0, 0}
+            public static final int[][] attackTable = new int[][] {
+                    new int[] {-1, -1, -1, -1, -1, -1, -1, -1}, new int[] {-1, -1, -1, -1, -1, -1, -1, -1},
+                    new int[] {4, 4, 4, 4, 4, 4, 4, 4}, new int[] {4, 4, 4, 4, 4, 4, 4, 4},
+                    new int[] {4, 4, 4, 4, 4, 4, 4, 4}, new int[] {4, 4, 4, 4, 4, 4, 4, 4},
+                    new int[] {4, 4, 4, -1, 4, 4, 4, -1}, new int[] {4, 4, 4, -1, 4, 4, 4, -1},
+                    new int[] {4, -1, 4, -1, 4, -1, 4, -1}, new int[] {4, 4, 4, -1, 4, -1, 4, -1},
+                    new int[] {4, 4, 4, -1, 4, 4, 4, -1}, new int[] {4, 4, 4, 4, 4, 4, 4, -1},
+                    new int[] {4, -1, 4, -1, 4, -1, 4, -1}, new int[] {4, 4, 4, -1, 4, -1, 4, -1},
+                    new int[] {4, 4, 4, -1, 4, 4, 4, -1}, new int[] {4, 4, 4, 4, 4, 4, 4, -1},
+                    new int[] {4, -1, 4, -1, 4, -1, 4, -1}, new int[] {4, 4, 4, -1, 4, -1, 4, -1},
+                    new int[] {4, 4, 4, -1, 4, 4, 4, -1}, new int[] {4, 4, 4, 4, 4, 4, 4, -1},
+                    new int[] {4, -1, 4, -1, 4, -1, 4, -1}, new int[] {4, 4, 4, -1, 4, -1, 4, -1},
+                    new int[] {4, 4, 4, -1, 4, 4, 4, -1}, new int[] {4, 4, 4, 4, 4, 4, 4, -1},
+                    new int[] {4, -1, 4, -1, 4, -1, 4, -1}, new int[] {4, 4, 4, -1, 4, -1, 4, -1},
+                    new int[] {4, 4, 4, -1, 4, 4, 4, -1}, new int[] {4, 4, 4, 4, 4, 4, 4, -1},
+                    new int[] {4, -1, 4, -1, 4, -1, 4, -1}, new int[] {4, 4, 4, -1, 4, -1, 4, -1},
+                    new int[] {4, 4, 4, -1, 4, 4, 4, -1}, new int[] {4, 4, 4, 4, 4, 4, 4, -1},
+                    new int[] {4, -1, 4, -1, 4, -1, 4, -1}, new int[] {4, 4, 4, -1, 4, -1, 4, -1},
+                    new int[] {4, 4, 4, -1, 4, 4, 4, -1}, new int[] {4, 4, 4, 4, 4, 4, 4, -1},
+                    new int[] {4, -1, 4, -1, 4, -1, 4, -1}, new int[] {4, 4, 4, -1, 4, -1, 4, -1},
+                    new int[] {4, 4, 4, -1, 4, 4, 4, -1}, new int[] {4, 4, 4, 4, 4, 4, 4, -1},
+                    new int[] {4, -1, 4, -1, 4, -1, 4, -1}, new int[] {4, 4, 4, -1, 4, -1, 4, -1},
+                    new int[] {4, 4, 4, -1, 4, 4, 4, -1}, new int[] {4, 4, 4, 4, 4, 4, 4, -1},
+                    new int[] {4, -1, 4, -1, 4, -1, 4, -1}, new int[] {4, 4, 4, -1, 4, -1, 4, -1},
+                    new int[] {4, 4, 4, -1, 4, 4, 4, -1}, new int[] {4, 4, 4, 4, 4, 4, 4, -1},
+                    new int[] {4, 4, 4, 4, 4, 4, 4, 4}, new int[] {3, 4, 4, 4, 3, 4, 4, 4},
+                    new int[] {3, 4, 3, 4, 3, 4, 3, 4}, new int[] {3, 3, 3, 4, 3, 3, 3, 4},
+                    new int[] {3, 3, 3, 3, 3, 3, 3, 3}, new int[] {2, 3, 3, 3, 2, 3, 3, 3},
+                    new int[] {2, 3, 2, 3, 2, 3, 2, 3}, new int[] {2, 2, 2, 3, 2, 2, 2, 3},
+                    new int[] {2, 2, 2, 2, 2, 2, 2, 2}, new int[] {1, 2, 2, 2, 1, 2, 2, 2},
+                    new int[] {1, 2, 1, 2, 1, 2, 1, 2}, new int[] {1, 1, 1, 2, 1, 1, 1, 2},
+                    new int[] {0, 0, 0, 0, 0, 0, 0, 0}, new int[] {0, 0, 0, 0, 0, 0, 0, 0},
+                    new int[] {0, 0, 0, 0, 0, 0, 0, 0}, new int[] {0, 0, 0, 0, 0, 0, 0, 0}
             };
 
             public static final int[][][][] ssgEnvTable = new int[][][][] {
@@ -622,7 +622,7 @@ public class Fmgen {
 
             // EG 計算
             public void egCalc() {
-                egCount = (2047 * 3) << FM_RATIOBITS; // ##この手抜きは再現性を低下させる
+                egCount = (2047 * 3) << FM_RATIOBITS; //##この手抜きは再現性を低下させる
 
                 if (egPhase == EGPhase.Attack) {
                     int c = attackTable[egRate][egCurveCount & 7];
@@ -992,7 +992,7 @@ public class Fmgen {
 
             private void makeTable() {
                 // PG Part
-                final float[] dt2lv = new float[] {1.0f, 1.414f, 1.581f, 1.732f};
+                float[] dt2lv = new float[] {1.0f, 1.414f, 1.581f, 1.732f};
                 for (int h = 0; h < 4; h++) {
                     //assert(2 + FM_RATIOBITS - FM_PGBITS >= 0);
                     double rr = dt2lv[h] * (double) (ratio) / (1 << (2 + FM_RATIOBITS - FM_PGBITS));
@@ -1007,7 +1007,7 @@ public class Fmgen {
         /**
          * 4-Op Channel
          */
-        private static final byte[] fbTable = new byte[] {31, 7, 6, 5, 4, 3, 2, 1};
+        private static final int[] fbTable = new int[] {31, 7, 6, 5, 4, 3, 2, 1};
 
         private static int[] kfTable = new int[64];
 
@@ -1053,8 +1053,8 @@ public class Fmgen {
             op[3].prepare();
 
             pms = pmTable[op[0].type.ordinal()][op[0].ms & 7];
-            int key = (op[0].isOn() | op[1].isOn() | op[2].isOn() | op[3].isOn()) ? 1 : 0;
-            int lfo = (op[0].ms & ((op[0].amOn | op[1].amOn | op[2].amOn | op[3].amOn) ? 0x37 : 7)) != 0 ? 2 : 0;
+            int key = (op[0].isOn() || op[1].isOn() || op[2].isOn() || op[3].isOn()) ? 1 : 0;
+            int lfo = (op[0].ms & ((op[0].amOn || op[1].amOn || op[2].amOn || op[3].amOn) ? 0x37 : 7)) != 0 ? 2 : 0;
             return key | lfo;
         }
 
@@ -1066,7 +1066,7 @@ public class Fmgen {
 
         // KC/KF を設定
         public void setKCKF(int kc, int kf) {
-            final int[] kcTable = new int[] {
+            int[] kcTable = new int[] {
                     5197, 5506, 5833, 6180, 6180, 6547, 6937, 7349,
                     7349, 7786, 8249, 8740, 8740, 9259, 9810, 10394,
             };
@@ -1104,15 +1104,15 @@ public class Fmgen {
 
         // アルゴリズムを設定
         public void setAlgorithm(int algo) {
-            final byte[][] table1 = new byte[][] {
-                    new byte[] {0, 1, 1, 2, 2, 3},
-                    new byte[] {1, 0, 0, 1, 1, 2},
-                    new byte[] {1, 1, 1, 0, 0, 2},
-                    new byte[] {0, 1, 2, 1, 1, 2},
-                    new byte[] {0, 1, 2, 2, 2, 1},
-                    new byte[] {0, 1, 0, 1, 0, 1},
-                    new byte[] {0, 1, 2, 1, 2, 1},
-                    new byte[] {1, 0, 1, 0, 1, 0}
+            int[][] table1 = new int[][] {
+                    new int[] {0, 1, 1, 2, 2, 3},
+                    new int[] {1, 0, 0, 1, 1, 2},
+                    new int[] {1, 1, 1, 0, 0, 2},
+                    new int[] {0, 1, 2, 1, 1, 2},
+                    new int[] {0, 1, 2, 2, 2, 1},
+                    new int[] {0, 1, 0, 1, 0, 1},
+                    new int[] {0, 1, 2, 1, 2, 1},
+                    new int[] {1, 0, 1, 0, 1, 0}
             };
 
             in[0] = table1[algo][0];

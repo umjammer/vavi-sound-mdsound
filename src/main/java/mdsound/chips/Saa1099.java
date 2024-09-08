@@ -87,7 +87,7 @@ public class Saa1099 {
         private double counter;
         private double freq;
         private int level;
-        private byte muted;
+        private int muted;
 
         private void reset() {
             this.frequency = 0;
@@ -127,58 +127,58 @@ public class Saa1099 {
             12 * 32767 / 16, 13 * 32767 / 16, 14 * 32767 / 16, 15 * 32767 / 16
     };
 
-    private static final byte[][] envelope = new byte[][] {
+    private static final int[][] envelope = new int[][] {
             // zero amplitude
-            new byte[] {
+            new int[] {
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
             },
             // maximum amplitude
-            new byte[] {
+            new int[] {
                     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
                     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
                     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
                     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
             },
             /* single decay */
-            new byte[] {
+            new int[] {
                     15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
             },
             /* repetitive decay */
-            new byte[] {
+            new int[] {
                     15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0,
                     15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0,
                     15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0,
                     15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0
             },
             // single triangular
-            new byte[] {
+            new int[] {
                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
                     15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
             },
             // repetitive triangular
-            new byte[] {
+            new int[] {
                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
                     15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0,
                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
                     15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0
             },
             // single attack
-            new byte[] {
+            new int[] {
                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
             },
             // repetitive attack
-            new byte[] {
+            new int[] {
                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
@@ -308,7 +308,7 @@ public class Saa1099 {
                 if (this.channels[ch].muted != 0)
                     continue; // placed here to ensure that envelopes are updated
 
-// #if false
+//#if false
 //                    // if the noise is enabled
 //                    if (this.channels[ch].noiseEnable != 0) {
 //                        // if the noise level is high (noise 0: chan 0-2, noise 1: chan 3-5)
@@ -327,7 +327,7 @@ public class Saa1099 {
 //                            output_r += this.channels[ch].amplitude[RIGHT] * this.channels[ch].envelope[RIGHT] / 16;
 //                        }
 //                    }
-// #else
+//#else
                 // Now with bipolar output. -Valley Bell
                 if (this.channels[ch].noiseEnable != 0) {
                     if ((this.noise[ch / 3].level & 1) != 0) {
@@ -348,7 +348,7 @@ public class Saa1099 {
                         output_r -= this.channels[ch].amplitude[RIGHT] * this.channels[ch].envelope[RIGHT] / 32;
                     }
                 }
-// #endif
+//#endif
             }
 
             for (int ch = 0; ch < 2; ch++) {
@@ -380,7 +380,7 @@ public class Saa1099 {
     }
 
     public void reset() {
-        for (byte curChn = 0; curChn < 6; curChn++) {
+        for (int curChn = 0; curChn < 6; curChn++) {
             Channel sachn = this.channels[curChn];
             sachn.reset();
         }
@@ -400,7 +400,7 @@ public class Saa1099 {
         this.syncState = 0x00;
     }
 
-    public void writeControl(int offset, byte data) {
+    public void writeControl(int offset, int data) {
         if ((data & 0xff) > 0x1c) {
             // Error!
             //throw new Exception("SAA1099: Unknown register selected\n");
@@ -416,7 +416,7 @@ public class Saa1099 {
         }
     }
 
-    public void write(int offset, byte data) {
+    public void write(int offset, int data) {
         int reg = this.selectedReg;
         int ch;
 
@@ -507,7 +507,7 @@ public class Saa1099 {
     }
 
     public void setMuteMask(int muteMask) {
-        for (byte curChn = 0; curChn < 6; curChn++)
+        for (int curChn = 0; curChn < 6; curChn++)
             this.channels[curChn].muted = (byte) ((muteMask >> curChn) & 0x01);
     }
 }

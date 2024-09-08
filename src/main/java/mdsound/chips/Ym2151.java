@@ -89,41 +89,43 @@ public class Ym2151 {
         private byte eg_sh_ar;
         /** (attack state) */
         private byte eg_sel_ar;
-        private int tl;
         /** Total attenuation Level */
-        private int volume;
+        private int tl;
         /** current envelope attenuation level */
+        private int volume;
+        /** (decay state) */
         private byte eg_sh_d1r;
         /** (decay state) */
         private byte eg_sel_d1r;
-        /** (decay state) */
-        private int d1l;
         /** envelope switches to sustain state after reaching this level */
+        private int d1l;
+        /** (sustain state) */
         private byte eg_sh_d2r;
         /** (sustain state) */
         private byte eg_sel_d2r;
-        /** (sustain state) */
+        /** (release state) */
         private byte eg_sh_rr;
         /** (release state) */
         private byte eg_sel_rr;
-        /** (release state) */
 
-        private int key;
         /** 0=last key was KEY OFF, 1=last key was KEY ON */
+        private int key;
 
-        private int ks;
         /** key scale */
-        private int ar;
+        private int ks;
         /** attack rate */
-        private int d1r;
+        private int ar;
         /** decay rate */
-        private int d2r;
+        private int d1r;
         /** sustain rate */
-        private int rr;
+        private int d2r;
         /** release rate */
+        private int rr;
 
-        private int reserved0; //*/
-        private int reserved1; //*/
+        /** */
+        private int reserved0;
+        /** */
+        private int reserved1;
 
         private void KEY_ON(int key_set, int eg_cnt) {
             if (this.key == 0) {
@@ -145,7 +147,7 @@ public class Ym2151 {
                 this.key &= key_clr;
                 if (this.key == 0) {
                     if (this.state > EG_REL)
-                        this.state = EG_REL; /* KEY OFF = release */
+                        this.state = EG_REL; // KEY OFF = release
                 }
             }
         }
@@ -162,11 +164,11 @@ public class Ym2151 {
         private int op_calc1(int env, int pm) {
             int i = (this.phase & ~FREQ_MASK) + pm;
 
-            /*Debug.printf("i=%08x (i>>16)&511=%8i phase=%i [pm=%08x] ",i, (i>>16)&511, this.phase>>FREQ_SH, pm);*/
+            //Debug.printf("i=%08x (i>>16)&511=%8i phase=%i [pm=%08x] ",i, (i>>16)&511, this.phase>>FREQ_SH, pm);
 
             int p = (env << 3) + sin_tab[(i >> FREQ_SH) & SIN_MASK];
 
-            /*Debug.printf("(p&255=%i p>>8=%i) out= %i\n", p&255,p>>8, tl_tab[p&255]>>(p>>8) );*/
+            //Debug.printf("(p&255=%i p>>8=%i) out= %i\n", p&255,p>>8, tl_tab[p&255]>>(p>>8) );
 
             if (p >= TL_TAB_LEN)
                 return 0;
@@ -584,8 +586,8 @@ public class Ym2151 {
             some 0x80 could be 0x81 as well as some 0x00 could be 0x01.
     */
     private static final byte[] lfo_noise_waveform = new byte[] {
-            (byte) 0xFF, (byte) 0xEE, (byte) 0xD3, (byte) 0x80, 0x58, (byte) 0xDA, 0x7F, (byte) 0x94, (byte) 0x9E, (byte) 0xE3, (byte) 0xFA, 0x00, 0x4D, (byte) 0xFA, (byte) 0xFF, 0x6A,
-            0x7A, (byte) 0xDE, 0x49, (byte) 0xF6, 0x00, 0x33, (byte) 0xBB, 0x63, (byte) 0x91, 0x60, 0x51, (byte) 0xFF, 0x00, (byte) 0xD8, 0x7F, (byte) 0xDE,
+            (byte) 0xff, (byte) 0xEE, (byte) 0xD3, (byte) 0x80, 0x58, (byte) 0xDA, 0x7F, (byte) 0x94, (byte) 0x9E, (byte) 0xE3, (byte) 0xFA, 0x00, 0x4D, (byte) 0xFA, (byte) 0xff, 0x6A,
+            0x7A, (byte) 0xDE, 0x49, (byte) 0xF6, 0x00, 0x33, (byte) 0xBB, 0x63, (byte) 0x91, 0x60, 0x51, (byte) 0xff, 0x00, (byte) 0xD8, 0x7F, (byte) 0xDE,
             (byte) 0xDC, 0x73, 0x21, (byte) 0x85, (byte) 0xB2, (byte) 0x9C, 0x5D, 0x24, (byte) 0xCD, (byte) 0x91, (byte) 0x9E, 0x76, 0x7F, 0x20, (byte) 0xFB, (byte) 0xF3,
             0x00, (byte) 0xA6, 0x3E, 0x42, 0x27, 0x69, (byte) 0xAE, 0x33, 0x45, 0x44, 0x11, 0x41, 0x72, 0x73, (byte) 0xDF, (byte) 0xA2,
 
@@ -594,7 +596,7 @@ public class Ym2151 {
             0x33, (byte) 0xB6, 0x1E, 0x57, 0x5C, (byte) 0xAC, 0x25, (byte) 0x89, 0x4D, (byte) 0xC5, (byte) 0x9C, (byte) 0x99, 0x15, 0x07, (byte) 0xCF, (byte) 0xBA,
             (byte) 0xC5, (byte) 0x9B, 0x15, 0x4D, (byte) 0x8D, 0x2A, 0x1E, 0x1F, (byte) 0xEA, 0x2B, 0x2F, 0x64, (byte) 0xA9, 0x50, 0x3D, (byte) 0xAB,
 
-            0x50, 0x77, (byte) 0xE9, (byte) 0xC0, (byte) 0xAC, 0x6D, 0x3F, (byte) 0xCA, (byte) 0xCF, 0x71, 0x7D, (byte) 0x80, (byte) 0xA6, (byte) 0xFD, (byte) 0xFF, (byte) 0xB5,
+            0x50, 0x77, (byte) 0xE9, (byte) 0xC0, (byte) 0xAC, 0x6D, 0x3F, (byte) 0xCA, (byte) 0xCF, 0x71, 0x7D, (byte) 0x80, (byte) 0xA6, (byte) 0xFD, (byte) 0xff, (byte) 0xB5,
             (byte) 0xBD, 0x6F, 0x24, 0x7B, 0x00, (byte) 0x99, 0x5D, (byte) 0xB1, 0x48, (byte) 0xB0, 0x28, 0x7F, (byte) 0x80, (byte) 0xEC, (byte) 0xBF, 0x6F,
             0x6E, 0x39, (byte) 0x90, 0x42, (byte) 0xD9, 0x4E, 0x2E, 0x12, 0x66, (byte) 0xC8, (byte) 0xCF, 0x3B, 0x3F, 0x10, 0x7D, 0x79,
             0x00, (byte) 0xD3, 0x1F, 0x21, (byte) 0x93, 0x34, (byte) 0xD7, 0x19, 0x22, (byte) 0xA2, 0x08, 0x20, (byte) 0xB9, (byte) 0xB9, (byte) 0xEF, 0x51,
@@ -706,10 +708,10 @@ public class Ym2151 {
             phaseinc *= scaler; // adjust
 
             // octave 2 - reference octave
-            this.freq[768 + 2 * 768 + i] = ((int) (phaseinc * mult)) & 0xffffffc0; // adjust to X.10 fixed point
+            this.freq[768 + 2 * 768 + i] = ((int) (phaseinc * mult)) & 0xffff_ffc0; // adjust to X.10 fixed point
             // octave 0 and octave 1
             for (j = 0; j < 2; j++) {
-                this.freq[768 + j * 768 + i] = (this.freq[768 + 2 * 768 + i] >> (2 - j)) & 0xffffffc0; /* adjust to X.10 fixed point */
+                this.freq[768 + j * 768 + i] = (this.freq[768 + 2 * 768 + i] >> (2 - j)) & 0xffff_ffc0; /* adjust to X.10 fixed point */
             }
             // octave 3 to 7
             for (j = 3; j < 8; j++) {
@@ -757,12 +759,14 @@ public class Ym2151 {
         for (i = 0; i < 1024; i++) {
             // ASG 980324: changed to compute both tim_A_tab and timer_A_time
             pom = ((double) 64 * (1024 - i) / this.clock);
-            this.tim_A_tab[i] = (int) (pom * (double) this.sampfreq * mult); // number of samples that timer period takes (fixed point) */
+            // number of samples that timer period takes (fixed point)
+            this.tim_A_tab[i] = (int) (pom * (double) this.sampfreq * mult);
         }
         for (i = 0; i < 256; i++) {
-            /* ASG 980324: changed to compute both tim_B_tab and timer_B_time */
+            // ASG 980324: changed to compute both tim_B_tab and timer_B_time
             pom = ((double) 1024 * (256 - i) / this.clock);
-            this.tim_B_tab[i] = (int) (pom * (double) this.sampfreq * mult); // number of samples that timer period takes (fixed point) */
+            // number of samples that timer period takes (fixed point)
+            this.tim_B_tab[i] = (int) (pom * (double) this.sampfreq * mult);
         }
 
         // calculate noise periods table
@@ -975,8 +979,8 @@ public class Ym2151 {
     public void ym2151_write_reg(int r, int v) {
         int i = (r & 0x07) * 4 + ((r & 0x18) >> 3);
         Operator op = this.oper[i];
-        Operator[] opBuf = this.oper;
-        int opPtr = i;
+        Operator[] opBuf;
+        int opPtr;
 
         // adjust bus to 8 bits
         r &= 0xff;
@@ -1064,7 +1068,7 @@ public class Ym2151 {
                 break;
 
             default:
-                //Debug.printf("YM2151 Write %02x to undocumented register // #%02x\n",v,r);
+                //Debug.printf("YM2151 Write %02x to undocumented register //#%02x\n",v,r);
                 break;
             }
             break;
@@ -1531,7 +1535,7 @@ public class Ym2151 {
         even if there're started with some delay.
 
         Note that, in the diagram below, the decay phase in channel 0 starts at
-        sample // #2, while in channel 1 it starts at sample // #6. Anyway, both channels
+        sample //#2, while in channel 1 it starts at sample //#6. Anyway, both channels
         will always change their levels at exactly the same (following) samples.
 
         (S - start point of this channel, A-attack phase, D-decay phase):

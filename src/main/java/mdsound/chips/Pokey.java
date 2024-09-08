@@ -39,8 +39,8 @@ import mdsound.instrument.PokeyInst;
  *   required for the Tempest Pokey protection will be found.
  *   Tempest expects the upper 4 bits of the RNG to appear in the
  *   lower 4 bits after four cycles, so there has to be a shift
- *   of 1 per cycle (which was not the case before). Bits // #6-#13 of the
- *   new RNG give this expected result now, bits // #0-7 of the 9 bit poly.
+ *   of 1 per cycle (which was not the case before). Bits //#6-#13 of the
+ *   new RNG give this expected result now, bits //#0-7 of the 9 bit poly.
  * - reading the RNG returns the shift register contents ^ 0xff.
  *   That way resetting the Pokey with SKCTL (which resets the
  *   polynome shifters to 0) returns the expected 0xff value.
@@ -67,7 +67,7 @@ import mdsound.instrument.PokeyInst;
  * - reworked pot anaSystem.err.printf/digital conversion timing.
  * - optional non-indexing Pokey update functions.
  */
-public class PokeyState {
+public class Pokey {
 
     // POKEY WRITE System.err.printfICALS
     private static final int AUDF1_C = 0x00;
@@ -244,10 +244,10 @@ public class PokeyState {
     /** channel volume - derived */
     private int[] volume = new int[4];
     /** channel output signal (1 active, 0 inactive) */
-    private byte[] output = new byte[4];
+    private int[] output = new int[4];
     /** channel plays an audible tone/effect */
-    private byte[] audible = new byte[4];
-    private byte[] muted = new byte[4];
+    private int[] audible = new int[4];
+    private int[] muted = new int[4];
     /** sample rate in 24.8 format */
     private int samplerate24_8;
     /** sample position fractional part */
@@ -272,31 +272,31 @@ public class PokeyState {
     private int clockMult;
 
     /** AUDFx (D200, D202, D204, D206) */
-    private byte[] audioF = new byte[4];
+    private int[] audioF = new int[4];
     /** AUDCx (D201, D203, D205, D207) */
-    private byte[] audioC = new byte[4];
+    private int[] audioC = new int[4];
     /** POTx   (R/D200-D207) */
-    private byte[] POTx = new byte[8];
+    private int[] POTx = new int[8];
     /** AUDCTL (W/D208) */
-    private byte audioControl;
+    private int audioControl;
     /** ALLPOT (R/D208) */
-    private byte allPot;
+    private int allPot;
     /** KBCODE (R/D209) */
-    private byte kbCode;
+    private int kbCode;
     /** RANDOM (R/D20A) */
-    private byte random;
+    private int random;
     /** SERIN  (R/D20D) */
-    private byte serIn;
+    private int serIn;
     /** SEROUT (W/D20D) */
-    private byte serOut;
+    private int serOut;
     /** IRQST  (R/D20E) */
-    private byte irqSt;
+    private int irqSt;
     /** IRQEN  (W/D20E) */
-    private byte irqEn;
+    private int irqEn;
     /** SKSTAT (R/D20F) */
-    private byte skStat;
+    private int skStat;
     /** SKCTL  (W/D20F) */
-    private byte skCtl;
+    private int skCtl;
     private double clockPeriod;
 
     private byte[] poly4 = new byte[0x0f];
@@ -341,7 +341,7 @@ public class PokeyState {
         if (this.audible[ch] != 0)
             this.counter[ch] = this.divisor[ch];
         else
-            this.counter[ch] = 0x7fffffff;
+            this.counter[ch] = 0x7fff_ffff;
         this.p4 = (this.p4 + this.polyAdjust) % 0x0000f;
         this.p5 = (this.p5 + this.polyAdjust) % 0x0001f;
         this.p9 = (this.p9 + this.polyAdjust) % 0x001ff;
@@ -480,7 +480,7 @@ public class PokeyState {
         for (int i = 0; i < mask; i++) {
             poly[i] = (byte) (x & 1);
             LOG_POLY.fine(String.format("%05x: %d\n", x, x & 1));
-            /* calculate next bit */
+            // calculate next bit
             x = ((x << left) + (x >> right) + add) & mask;
         }
     }
@@ -555,9 +555,9 @@ public class PokeyState {
         this.clockMult = DIV_64;
     }
 
-    public byte read(int offset) {
+    public int read(int offset) {
         int data = 0, pot;
-        int adjust = 0;
+        int adjust;
 
         switch (offset & 15) {
         case POT0_C:
@@ -569,35 +569,35 @@ public class PokeyState {
         case POT6_C:
         case POT7_C:
             pot = offset & 7;
-                /*if( !this.pot_r[pot].isnull() ) {
-                    // If the conversion is not yet finished (ptimer running),
-                    // get the current value by the linear interpolation of
-                    // the final value using the elapsed time.
-                    if( this.ALLPOT & (1 << pot) ) {
-                        //data = this.ptimer[pot].elapsed().attoseconds / AD_TIME.attoseconds;
-                        data = this.POTx[pot];
-                        Debug.printf("POKEY '%s' read POT%d (interpolated) $%02x\n", this.device.tag(), pot, data);
-                    } else {
-                        data = this.POTx[pot];
-                        Debug.printf("POKEY '%s' read POT%d (final value)  $%02x\n", this.device.tag(), pot, data);
-                    }
-                } else
-                    Debug.printf("%s: warning - read '%s' POT%d\n", this.device.machine().describe_context(), this.device.tag(), pot);*/
+//            if (!this.pot_r[pot].isnull()) {
+//                // If the conversion is not yet finished (ptimer running),
+//                // get the current value by the linear interpolation of
+//                // the final value using the elapsed time.
+//                if (this.ALLPOT & (1 << pot)) {
+//                    //data = this.ptimer[pot].elapsed().attoseconds / AD_TIME.attoseconds;
+//                    data = this.POTx[pot];
+//                    Debug.printf("POKEY '%s' read POT%d (interpolated) $%02x\n", this.device.tag(), pot, data);
+//                } else {
+//                    data = this.POTx[pot];
+//                    Debug.printf("POKEY '%s' read POT%d (final value)  $%02x\n", this.device.tag(), pot, data);
+//                }
+//            } else
+//                Debug.printf("%s: warning - read '%s' POT%d\n", this.device.machine().describe_context(), this.device.tag(), pot);
             break;
 
         case ALLPOT_C:
             // If the 2 least significant bits of SKCTL are 0, the ALLPOTs
             // are disabled (SKRESET). Thanks to MikeJ for pointing this out.
-                /*if( (this.SKCTL & SK_RESET) == 0) {
-                    data = 0;
-                    Debug.printf("POKEY '%s' ALLPOT internal $%02x (reset)\n", this.device.tag(), data);
-                } else if( !this.allpot_r.isnull() ) {
-                    data = this.allpot_r(offset);
-                    Debug.printf("POKEY '%s' ALLPOT Callback $%02x\n", this.device.tag(), data);
-                } else {
-                    data = this.ALLPOT;
-                    Debug.printf("POKEY '%s' ALLPOT internal $%02x\n", this.device.tag(), data);
-                }*/
+//            if ((this.SKCTL & SK_RESET) == 0) {
+//                data = 0;
+//                Debug.printf("POKEY '%s' ALLPOT internal $%02x (reset)\n", this.device.tag(), data);
+//            } else if (!this.allpot_r.isnull()) {
+//                data = this.allpot_r(offset);
+//                Debug.printf("POKEY '%s' ALLPOT Callback $%02x\n", this.device.tag(), data);
+//            } else {
+//                data = this.ALLPOT;
+//                Debug.printf("POKEY '%s' ALLPOT internal $%02x\n", this.device.tag(), data);
+//            }
             break;
 
         case KBCODE_C:
@@ -622,10 +622,10 @@ public class PokeyState {
                 //LOG_RAND(("POKEY '%s' rand17 frozen (SKCTL): $%02x\n", this.device.tag(), this.RANDOM));
             }
             if ((this.audioControl & POLY9) != 0) {
-                this.random = this.rand9[this.r9];
+                this.random = this.rand9[this.r9] & 0xff;
                 //LOG_RAND(("POKEY '%s' adjust %u rand9[$%05x]: $%02x\n", this.device.tag(), adjust, this.r9, this.RANDOM));
             } else {
-                this.random = this.rand17[this.r17];
+                this.random = this.rand17[this.r17] & 0xff;
                 //LOG_RAND(("POKEY '%s' adjust %u rand17[$%05x]: $%02x\n", this.device.tag(), adjust, this.r17, this.RANDOM));
             }
             //if (adjust > 0)
@@ -658,10 +658,10 @@ public class PokeyState {
             break;
         }
 
-        return (byte) data;
+        return data;
     }
 
-    public void write(int offset, byte data) {
+    public void write(int offset, int data) {
         int chMask = 0, newVal;
 
         //this.channel.update();
@@ -748,79 +748,79 @@ public class PokeyState {
             break;
 
         case STIMER_C:
-                /*// first remove any existing timers
-                LOG_TIMER(("POKEY '%s' STIMER $%02x\n", this.device.tag(), data));
-
-                this.timer[TIMER1].adjust(attotime::never, this.timer_param[TIMER1]);
-                this.timer[TIMER2].adjust(attotime::never, this.timer_param[TIMER2]);
-                this.timer[TIMER4].adjust(attotime::never, this.timer_param[TIMER4]);
-
-                // reset all counters to zero (side effect)
-                this.polyadjust = 0;
-                this.counter[CHAN1] = 0;
-                this.counter[CHAN2] = 0;
-                this.counter[CHAN3] = 0;
-                this.counter[CHAN4] = 0;
-
-                // joined chan#1 and chan#2 ?
-                if( this.AUDCTL & CH12_JOINED ) {
-                    if( this.divisor[CHAN2] > 4 ) {
-                        LOG_TIMER(("POKEY '%s' timer1+2 after %d clocks\n", this.device.tag(), this.divisor[CHAN2]));
-                        // set timer #1 _and_ // #2 event after timer_div clocks of joined CHAN1+CHAN2
-                        this.timer_period[TIMER2] = this.clock_period * this.divisor[CHAN2];
-                        this.timer_param[TIMER2] = IRQ_TIMR2|IRQ_TIMR1;
-                        this.timer[TIMER2].adjust(this.timer_period[TIMER2], this.timer_param[TIMER2], this.timer_period[TIMER2]);
-                    }
-                } else {
-                    if( this.divisor[CHAN1] > 4 ) {
-                        LOG_TIMER(("POKEY '%s' timer1 after %d clocks\n", this.device.tag(), this.divisor[CHAN1]));
-                        // set timer #1 event after timer_div clocks of CHAN1
-                        this.timer_period[TIMER1] = this.clock_period * this.divisor[CHAN1];
-                        this.timer_param[TIMER1] = IRQ_TIMR1;
-                        this.timer[TIMER1].adjust(this.timer_period[TIMER1], this.timer_param[TIMER1], this.timer_period[TIMER1]);
-                    }
-
-                    if( this.divisor[CHAN2] > 4 ) {
-                        LOG_TIMER(("POKEY '%s' timer2 after %d clocks\n", this.device.tag(), this.divisor[CHAN2]));
-                        // set timer #2 event after timer_div clocks of CHAN2
-                        this.timer_period[TIMER2] = this.clock_period * this.divisor[CHAN2];
-                        this.timer_param[TIMER2] = IRQ_TIMR2;
-                        this.timer[TIMER2].adjust(this.timer_period[TIMER2], this.timer_param[TIMER2], this.timer_period[TIMER2]);
-                    }
-                }
-
-                // Note: p[chips] does not have a timer #3
-
-                if( this.AUDCTL & CH34_JOINED ) {
-                    // not sure about this: if audc4 == 0000xxxx don't start timer 4 ?
-                    if( this.AUDC[CHAN4] & 0xf0 ) {
-                        if( this.divisor[CHAN4] > 4 ) {
-                            LOG_TIMER(("POKEY '%s' timer4 after %d clocks\n", this.device.tag(), this.divisor[CHAN4]));
-                            // set timer #4 event after timer_div clocks of CHAN4
-                            this.timer_period[TIMER4] = this.clock_period * this.divisor[CHAN4];
-                            this.timer_param[TIMER4] = IRQ_TIMR4;
-                            this.timer[TIMER4].adjust(this.timer_period[TIMER4], this.timer_param[TIMER4], this.timer_period[TIMER4]);
-                        }
-                    }
-                } else {
-                    if( this.divisor[CHAN4] > 4 ) {
-                        LOG_TIMER(("POKEY '%s' timer4 after %d clocks\n", this.device.tag(), this.divisor[CHAN4]));
-                        // set timer #4 event after timer_div clocks of CHAN4
-                        this.timer_period[TIMER4] = this.clock_period * this.divisor[CHAN4];
-                        this.timer_param[TIMER4] = IRQ_TIMR4;
-                        this.timer[TIMER4].adjust(this.timer_period[TIMER4], this.timer_param[TIMER4], this.timer_period[TIMER4]);
-                    }
-                }
-
-                this.timer[TIMER1].enable(this.IRQEN & IRQ_TIMR1);
-                this.timer[TIMER2].enable(this.IRQEN & IRQ_TIMR2);
-                this.timer[TIMER4].enable(this.IRQEN & IRQ_TIMR4);*/
+//            // first remove any existing timers
+//            LOG_TIMER(("POKEY '%s' STIMER $%02x\n", this.device.tag(), data));
+//
+//            this.timer[TIMER1].adjust(attotime::never, this.timer_param[TIMER1]);
+//            this.timer[TIMER2].adjust(attotime::never, this.timer_param[TIMER2]);
+//            this.timer[TIMER4].adjust(attotime::never, this.timer_param[TIMER4]);
+//
+//            // reset all counters to zero (side effect)
+//            this.polyadjust = 0;
+//            this.counter[CHAN1] = 0;
+//            this.counter[CHAN2] = 0;
+//            this.counter[CHAN3] = 0;
+//            this.counter[CHAN4] = 0;
+//
+//            // joined chan#1 and chan#2 ?
+//            if (this.AUDCTL & CH12_JOINED) {
+//                if (this.divisor[CHAN2] > 4) {
+//                    LOG_TIMER(("POKEY '%s' timer1+2 after %d clocks\n", this.device.tag(), this.divisor[CHAN2]));
+//                    // set timer #1 _and_ //#2 event after timer_div clocks of joined CHAN1+CHAN2
+//                    this.timer_period[TIMER2] = this.clock_period * this.divisor[CHAN2];
+//                    this.timer_param[TIMER2] = IRQ_TIMR2 | IRQ_TIMR1;
+//                    this.timer[TIMER2].adjust(this.timer_period[TIMER2], this.timer_param[TIMER2], this.timer_period[TIMER2]);
+//                }
+//            } else {
+//                if (this.divisor[CHAN1] > 4) {
+//                    LOG_TIMER(("POKEY '%s' timer1 after %d clocks\n", this.device.tag(), this.divisor[CHAN1]));
+//                    // set timer #1 event after timer_div clocks of CHAN1
+//                    this.timer_period[TIMER1] = this.clock_period * this.divisor[CHAN1];
+//                    this.timer_param[TIMER1] = IRQ_TIMR1;
+//                    this.timer[TIMER1].adjust(this.timer_period[TIMER1], this.timer_param[TIMER1], this.timer_period[TIMER1]);
+//                }
+//
+//                if (this.divisor[CHAN2] > 4) {
+//                    LOG_TIMER(("POKEY '%s' timer2 after %d clocks\n", this.device.tag(), this.divisor[CHAN2]));
+//                    // set timer #2 event after timer_div clocks of CHAN2
+//                    this.timer_period[TIMER2] = this.clock_period * this.divisor[CHAN2];
+//                    this.timer_param[TIMER2] = IRQ_TIMR2;
+//                    this.timer[TIMER2].adjust(this.timer_period[TIMER2], this.timer_param[TIMER2], this.timer_period[TIMER2]);
+//                }
+//            }
+//
+//            // Note: p[chips] does not have a timer #3
+//
+//            if (this.AUDCTL & CH34_JOINED) {
+//                // not sure about this: if audc4 == 0000xxxx don't start timer 4 ?
+//                if (this.AUDC[CHAN4] & 0xf0) {
+//                    if (this.divisor[CHAN4] > 4) {
+//                        LOG_TIMER(("POKEY '%s' timer4 after %d clocks\n", this.device.tag(), this.divisor[CHAN4]));
+//                        // set timer #4 event after timer_div clocks of CHAN4
+//                        this.timer_period[TIMER4] = this.clock_period * this.divisor[CHAN4];
+//                        this.timer_param[TIMER4] = IRQ_TIMR4;
+//                        this.timer[TIMER4].adjust(this.timer_period[TIMER4], this.timer_param[TIMER4], this.timer_period[TIMER4]);
+//                    }
+//                }
+//            } else {
+//                if (this.divisor[CHAN4] > 4) {
+//                    LOG_TIMER(("POKEY '%s' timer4 after %d clocks\n", this.device.tag(), this.divisor[CHAN4]));
+//                    // set timer #4 event after timer_div clocks of CHAN4
+//                    this.timer_period[TIMER4] = this.clock_period * this.divisor[CHAN4];
+//                    this.timer_param[TIMER4] = IRQ_TIMR4;
+//                    this.timer[TIMER4].adjust(this.timer_period[TIMER4], this.timer_param[TIMER4], this.timer_period[TIMER4]);
+//                }
+//            }
+//
+//            this.timer[TIMER1].enable(this.IRQEN & IRQ_TIMR1);
+//            this.timer[TIMER2].enable(this.IRQEN & IRQ_TIMR2);
+//            this.timer[TIMER4].enable(this.IRQEN & IRQ_TIMR4);
             break;
 
         case SKREST_C:
             // reset SKSTAT
             //Debug.printf(("POKEY '%s' SKREST $%02x\n", this.device.tag(), data));
-            this.skStat &= (byte) ~(SK_FRAME | SK_OVERRUN | SK_KBERR);
+            this.skStat &= ~(SK_FRAME | SK_OVERRUN | SK_KBERR);
             break;
 
         case POTGO_C:
@@ -867,8 +867,8 @@ public class PokeyState {
             //Debug.printf(("POKEY '%s' SKCTL  $%02x\n", this.device.tag(), data));
             this.skCtl = data;
             if ((data & SK_RESET) == 0) {
-                write(IRQEN_C, (byte) 0);
-                write(SKREST_C, (byte) 0);
+                write(IRQEN_C, 0);
+                write(SKREST_C, 0);
             }
             break;
         }
@@ -896,22 +896,20 @@ public class PokeyState {
                 this.counter[CHAN1] = newVal;
             //if( this.interrupt_cb && this.timer[TIMER1] )
             // this.timer[TIMER1].adjust(this.clock_period * newVal, this.timer_param[TIMER1], this.timer_period[TIMER1]);
-            this.audible[CHAN1] = (byte) (
-                    (this.audioC[CHAN1] & VOLUME_ONLY) != 0 ||
+            this.audible[CHAN1] = (this.audioC[CHAN1] & VOLUME_ONLY) != 0 ||
                             (this.audioC[CHAN1] & VOLUME_MASK) == 0 ||
                             ((this.audioC[CHAN1] & PURE) != 0 && newVal < (this.samplerate24_8 >> 8))
-                            ? 0 : 1
-            );
+                            ? 0 : 1;
             if (this.audible[CHAN1] == 0) {
                 this.output[CHAN1] = 1;
-                this.counter[CHAN1] = 0x7fffffff;
+                this.counter[CHAN1] = 0x7fff_ffff;
                 // 50% duty cycle should result in half volume
                 this.volume[CHAN1] >>= 1;
             }
         }
 
         if ((chMask & (1 << CHAN2)) != 0) {
-            /* process channel 2 frequency */
+            // process channel 2 frequency
             if ((this.audioControl & CH12_JOINED) != 0) {
                 if ((this.audioControl & CH1_HICLK) != 0)
                     newVal = this.audioF[CHAN2] * 256 + this.audioF[CHAN1] + DIVADD_HICLK_JOINED;
@@ -937,7 +935,7 @@ public class PokeyState {
             );
             if (this.audible[CHAN2] == 0) {
                 this.output[CHAN2] = 1;
-                this.counter[CHAN2] = 0x7fffffff;
+                this.counter[CHAN2] = 0x7fff_ffff;
                 /* 50% duty cycle should result in half volume */
                 this.volume[CHAN2] >>= 1;
             }
@@ -956,25 +954,23 @@ public class PokeyState {
             this.divisor[CHAN3] = newVal;
             if (newVal < this.counter[CHAN3])
                 this.counter[CHAN3] = newVal;
-            /* channel 3 does not have a timer associated */
-            this.audible[CHAN3] = (byte) (
-                    !((this.audioC[CHAN3] & VOLUME_ONLY) != 0 ||
+            // channel 3 does not have a timer associated
+            this.audible[CHAN3] = !((this.audioC[CHAN3] & VOLUME_ONLY) != 0 ||
                             (this.audioC[CHAN3] & VOLUME_MASK) == 0 ||
                             ((this.audioC[CHAN3] & PURE) != 0 && newVal < (this.samplerate24_8 >> 8))
                     ) ||
                             (this.audioControl & CH1_FILTER) != 0
-                            ? 1 : 0
-            );
+                            ? 1 : 0;
             if (this.audible[CHAN3] == 0) {
                 this.output[CHAN3] = 1;
-                this.counter[CHAN3] = 0x7fffffff;
-                /* 50% duty cycle should result in half volume */
+                this.counter[CHAN3] = 0x7fff_ffff;
+                // 50% duty cycle should result in half volume
                 this.volume[CHAN3] >>= 1;
             }
         }
 
         if ((chMask & (1 << CHAN4)) != 0) {
-            /* process channel 4 frequency */
+            // process channel 4 frequency
             if ((this.audioControl & CH34_JOINED) != 0) {
                 if ((this.audioControl & CH3_HICLK) != 0)
                     newVal = this.audioF[CHAN4] * 256 + this.audioF[CHAN3] + DIVADD_HICLK_JOINED;
@@ -992,18 +988,16 @@ public class PokeyState {
                 this.counter[CHAN4] = newVal;
             //if( this.interrupt_cb && this.timer[TIMER4] )
             // this.timer[TIMER4].adjust(this.clock_period * newVal, this.timer_param[TIMER4], this.timer_period[TIMER4]);
-            this.audible[CHAN4] = (byte) (
-                    !((this.audioC[CHAN4] & VOLUME_ONLY) != 0 ||
+            this.audible[CHAN4] = !((this.audioC[CHAN4] & VOLUME_ONLY) != 0 ||
                             (this.audioC[CHAN4] & VOLUME_MASK) == 0 ||
                             (this.audioC[CHAN4] & PURE) != 0 && newVal < (this.samplerate24_8 >> 8)
                     ) ||
                             (this.audioControl & CH2_FILTER) != 0
-                            ? 1 : 0
-            );
+                            ? 1 : 0;
 
             if (this.audible[CHAN4] == 0) {
                 this.output[CHAN4] = 1;
-                this.counter[CHAN4] = 0x7fffffff;
+                this.counter[CHAN4] = 0x7fff_ffff;
                 // 50% duty cycle should result in half volume
                 this.volume[CHAN4] >>= 1;
             }
@@ -1012,6 +1006,6 @@ public class PokeyState {
 
     public void setMuteMask(int muteMask) {
         for (int c = 0; c < 4; c++)
-            this.muted[c] = (byte) ((muteMask >> c) & 0x01);
+            this.muted[c] = (muteMask >> c) & 0x01;
     }
 }

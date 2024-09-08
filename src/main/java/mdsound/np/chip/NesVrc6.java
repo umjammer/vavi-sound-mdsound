@@ -1,12 +1,10 @@
 package mdsound.np.chip;
 
-import java.util.logging.Level;
+import java.util.function.Consumer;
 
-import mdsound.MDSound;
 import mdsound.np.Device.SoundChip;
 import mdsound.np.chip.DeviceInfo.TrackInfo;
 import mdsound.np.chip.DeviceInfo.BasicTrackInfo;
-import vavi.util.Debug;
 
 
 public class NesVrc6 implements SoundChip {
@@ -171,7 +169,7 @@ e.printStackTrace();
                     count14 = 0;
                     phase[2] = 0;
                 } else if (0 == (count14 & 1)) { // only accumulate on even ticks
-                    phase[2] = (phase[2] + volume[2]) & 0xFF; // note 8-bit wrapping behaviour
+                    phase[2] = (phase[2] + volume[2]) & 0xff; // note 8-bit wrapping behaviour
                 }
             }
         }
@@ -216,7 +214,7 @@ e.printStackTrace();
         b[0] = (b[0] * MASTER) >> 8;
         b[1] = (b[1] * MASTER) >> 8;
 
-        MDSound.np_nes_vrc6_volume = Math.abs(b[0]);
+        if (listener != null) listener.accept(new int[] {-1, -1, -1, -1, -1, -1, Math.abs(b[0]), -1});
 
         return 2;
     }
@@ -298,6 +296,12 @@ e.printStackTrace();
     @Override
     public void setOption(int id, int val) {
         throw new UnsupportedOperationException();
+    }
+
+    private Consumer<int[]> listener;
+
+    public void setListener(Consumer<int[]> listener) {
+        this.listener = listener;
     }
 }
 

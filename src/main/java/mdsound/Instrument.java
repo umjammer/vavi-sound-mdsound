@@ -10,37 +10,37 @@ import dotnet4j.util.compat.Tuple;
 
 public interface Instrument {
 
-    Map<String, Integer> getVisVolume();
+    Map<String, Object> getView(String key, Map<String, Object> args);
 
     String getName();
 
     String getShortName();
 
-    int start(byte chipId, int clock);
+    int start(int chipId, int clock);
 
-    int start(byte chipId, int clock, int clockValue, Object... option);
+    int start(int chipId, int clock, int clockValue, Object... option);
 
-    void stop(byte chipId);
+    void stop(int chipId);
 
-    void reset(byte chipId);
+    void reset(int chipId);
 
-    void update(byte chipId, int[][] outputs, int samples);
+    void update(int chipId, int[][] outputs, int samples);
 
-    int write(byte chipId, int port, int adr, int data);
+    int write(int chipId, int port, int adr, int data);
 
     //
 
     Tuple<Integer, Double> getRegulationVolume();
 
     abstract class BaseInstrument implements Instrument {
-        protected static byte CHIP_SAMPLING_MODE = 2;
+        protected static int CHIP_SAMPLING_MODE = 2;
         public static int CHIP_SAMPLE_RATE = 44100;
 
         // chipId , type , LR
         protected int[][][] visVolume;
 
         @Override
-        public Map<String, Integer> getVisVolume() {
+        public Map<String, Object> getView(String key, Map<String, Object> args) {
             return Collections.emptyMap();
         }
 

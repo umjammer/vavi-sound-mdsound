@@ -150,7 +150,7 @@ public class NpNesFds {
             this.envSpeed[i] = 0;
             this.envOut[i] = 0;
         }
-        this.masterEnvSpeed = 0xFF;
+        this.masterEnvSpeed = 0xff;
 
         // NOTE: the FDS BIOS reset only does the following related to audio:
         //   $4023 = $00
@@ -160,7 +160,7 @@ public class NpNesFds {
         write(0x4023, 0x00);
         write(0x4023, 0x83);
         write(0x4080, 0x80);
-        write(0x408A, 0xFF);
+        write(0x408A, 0xff);
 
         // reset other stuff
         write(0x4082, 0x00); // wav freq 0
@@ -214,7 +214,7 @@ public class NpNesFds {
                 if (wv == 4) // 4 resets mod position
                     this.modPos = 0;
                 else {
-                    final int[] bias = new int[] {0, 1, 2, 4, 0, -4, -2, -1};
+                    int[] bias = new int[] {0, 1, 2, 4, 0, -4, -2, -1};
                     this.modPos += bias[wv];
                     this.modPos &= 0x7F; // 7-bit clamp
                 }
@@ -286,7 +286,7 @@ public class NpNesFds {
         int v, rc_out, m;
 
         this.tickCount.iup();
-        clocks = (this.tickCount.value() - this.tickLast) & 0xFF;
+        clocks = (this.tickCount.value() - this.tickLast) & 0xff;
         tick(clocks);
         this.tickLast = this.tickCount.value();
 

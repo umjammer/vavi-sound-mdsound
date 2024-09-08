@@ -8,14 +8,15 @@ import mdsound.chips.PPZ8Status;
 
 
 public class Ppz8Inst extends Instrument.BaseInstrument {
+
     @Override
     public String getName() {
-        return "Ppz8Inst";
+        return "Ppz8";
     }
 
     @Override
     public String getShortName() {
-        return "Ppz8Inst";
+        return "Ppz8";
     }
 
     public Ppz8Inst() {
@@ -26,18 +27,18 @@ public class Ppz8Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void reset(byte chipId) {
+    public void reset(int chipId) {
         PPZ8Status chip = chips[chipId];
         chip.reset();
     }
 
     @Override
-    public int start(byte chipId, int clock) {
+    public int start(int chipId, int clock) {
         return start(chipId, clock, 0);
     }
 
     @Override
-    public int start(byte chipId, int clock, int clockValue, Object... option) {
+    public int start(int chipId, int clock, int clockValue, Object... option) {
         PPZ8Status chip = chips[chipId];
         chip.setSamplingRate(clock);
         reset(chipId);
@@ -45,12 +46,12 @@ public class Ppz8Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void stop(byte chipId) {
+    public void stop(int chipId) {
         //none
     }
 
     @Override
-    public int write(byte chipId, int port, int adr, int data) {
+    public int write(int chipId, int port, int adr, int data) {
         PPZ8Status chip = chips[chipId];
         return chip.write(port, adr, data);
     }
@@ -67,37 +68,37 @@ public class Ppz8Inst extends Instrument.BaseInstrument {
         chip.makeVolumeTable(vol);
     }
 
-    private void playPCM(int chipId, byte al, int dx) {
+    private void playPCM(int chipId, int al, int dx) {
         PPZ8Status chip = chips[chipId];
         chip.playPCM(al, dx);
     }
 
-    private void stopPCM(int chipId, byte al) {
+    private void stopPCM(int chipId, int al) {
         PPZ8Status chip = chips[chipId];
         chip.stopPCM(al);
     }
 
-    public int loadPcm(int chipId, byte bank, byte mode, byte[][] pcmData) {
+    public int loadPcm(int chipId, int bank, int mode, byte[][] pcmData) {
         PPZ8Status chip = chips[chipId];
         return chip.loadPcm(bank, mode, pcmData);
     }
 
-    private void readStatus(int chipId, byte al) {
+    private void readStatus(int chipId, int al) {
         PPZ8Status chip = chips[chipId];
         chip.readStatus(al);
     }
 
-    private void setVolume(int chipId, byte al, int dx) {
+    private void setVolume(int chipId, int al, int dx) {
         PPZ8Status chip = chips[chipId];
         chip.setVolume(al, dx);
     }
 
-    private void setFrequency(int chipId, byte al, int dx, int cx) {
+    private void setFrequency(int chipId, int al, int dx, int cx) {
         PPZ8Status chip = chips[chipId];
         chip.setFrequency(al, dx, cx);
     }
 
-    private void setLoopPoint(int chipId, byte al, int lpStOfsDX, int lpStOfsCX, int lpEdOfsDI, int lpEdOfsSI) {
+    private void setLoopPoint(int chipId, int al, int lpStOfsDX, int lpStOfsCX, int lpEdOfsDI, int lpEdOfsSI) {
         PPZ8Status chip = chips[chipId];
         chip.setLoopPoint(al, lpStOfsDX, lpStOfsCX, lpEdOfsDI, lpEdOfsSI);
     }
@@ -107,12 +108,12 @@ public class Ppz8Inst extends Instrument.BaseInstrument {
         chip.stopInterrupt();
     }
 
-    private void setPan(int chipId, byte al, int dx) {
+    private void setPan(int chipId, int al, int dx) {
         PPZ8Status chip = chips[chipId];
         chip.setPan(al, dx);
     }
 
-    private void setSrcFrequency(int chipId, byte al, int dx) {
+    private void setSrcFrequency(int chipId, int al, int dx) {
         PPZ8Status chip = chips[chipId];
         chip.setSrcFrequency(al, dx);
     }
@@ -127,7 +128,7 @@ public class Ppz8Inst extends Instrument.BaseInstrument {
         chip.setVolume(vol);
     }
 
-    private void setAdpcmEmu(int chipId, byte al) {
+    private void setAdpcmEmu(int chipId, int al) {
         PPZ8Status chip = chips[chipId];
         chip.setAdpcmEmu(al);
     }
@@ -138,7 +139,7 @@ public class Ppz8Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void update(byte chipId, int[][] outputs, int samples) {
+    public void update(int chipId, int[][] outputs, int samples) {
         PPZ8Status chip = chips[chipId];
         chip.update(outputs, samples);
 
@@ -151,15 +152,18 @@ public class Ppz8Inst extends Instrument.BaseInstrument {
         return chip.convertPviAdpcmToPziPcm(bank);
     }
 
-    public PPZ8Status.Channel[] getPPZ8State(byte chipId) {
+    public PPZ8Status.Channel[] getPPZ8State(int chipId) {
         PPZ8Status chip = chips[chipId];
         return chip.getChannels();
     }
 
     @Override
-    public Map<String, Integer> getVisVolume() {
-        Map<String, Integer> result = new HashMap<>();
-        result.put("ppz8", getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+    public Map<String, Object> getView(String key, Map<String, Object> args) {
+        Map<String, Object> result = new HashMap<>();
+        switch (key) {
+            case "volume" ->
+                    result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+        }
         return result;
     }
 }

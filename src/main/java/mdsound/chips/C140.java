@@ -2,6 +2,8 @@ package mdsound.chips;
 
 import java.util.Arrays;
 
+import vavi.util.Debug;
+
 
 /**
  * C140
@@ -50,24 +52,24 @@ public class C140 {
     private static final int MAX_VOICE = 24;
 
     private static class Voice {
-        private long ptoffset;
-        private long pos;
-        private long key;
+        private int ptoffset;
+        private int pos;
+        private int key;
         //--work
-        private long lastdt;
-        private long prevdt;
-        private long dltdt;
+        private int lastdt;
+        private int prevdt;
+        private int dltdt;
         //--reg
-        private long rvol;
-        private long lvol;
-        private long frequency;
-        private long bank;
-        private long mode;
+        private int rvol;
+        private int lvol;
+        private int frequency;
+        private int bank;
+        private int mode;
 
-        private long sample_start;
-        private long sample_end;
-        private long sample_loop;
-        private byte muted;
+        private int sample_start;
+        private int sample_end;
+        private int sample_loop;
+        private int muted;
 
         private void init_voice() {
             this.key = 0;
@@ -123,28 +125,28 @@ public class C140 {
      * is done by a small PAL or GAL external to the Sound chips, which can be switched
      * per-game or at least per-PCB revision as addressing range needs grow.
      */
-    private long findSample(long adrs, long bank, int voice) {
+    private int findSample(int adrs, int bank, int voice) {
         adrs = (bank << 16) + adrs;
 
         switch (bankingType) {
         case SYSTEM2:
             // System 2 banking
-            return ((adrs & 0x200000) >> 2) | (adrs & 0x7ffff);
+            return ((adrs & 0x20_0000) >> 2) | (adrs & 0x7_ffff);
 
         case SYSTEM21:
             // System 21 banking.
             // similar to System 2's.
-            return ((adrs & 0x300000) >> 1) | (adrs & 0x7ffff);
+            return ((adrs & 0x30_0000) >> 1) | (adrs & 0x7_ffff);
 
         case ASIC219:
             // ASIC219's banking is fairly simple
-            return (long) ((this.reg[asic219banks[voice / 4]] & 0x3) * 0x20000) | adrs;
+            return ((this.reg[asic219banks[voice / 4]] & 0x3) * 0x2_0000) | adrs;
         }
 
         return 0;
     }
 
-    public void write(int offset, byte data) {
+    public void write(int offset, int data) {
         offset &= 0x1ff;
 
         // mirror the bank registers on the 219, fixes bkrtmaq (and probably xday2 based on notes in the HLE)
@@ -152,7 +154,7 @@ public class C140 {
             offset -= 8;
         }
 
-        this.reg[offset] = data;
+        this.reg[offset] = (byte) data;
         if (offset < 0x180) {
             Voice v = this.voi[offset >> 4];
 
@@ -171,21 +173,19 @@ public class C140 {
 
                     // on the 219 asic, addresses are in words
                     if (this.bankingType == Type.ASIC219) {
-                        v.sample_loop = ((this.reg[vreg + 10] * 256) | this.reg[vreg + 11]) * 2;
-                        v.sample_start = ((this.reg[vreg + 6] * 256) | this.reg[vreg + 7]) * 2;
-                        v.sample_end = ((this.reg[vreg + 8] * 256) | this.reg[vreg + 9]) * 2;
+                        v.sample_loop = (((this.reg[vreg + 10] & 0xff) * 256) | (this.reg[vreg + 11] & 0xff)) * 2;
+                        v.sample_start = (((this.reg[vreg + 6] & 0xff) * 256) | (this.reg[vreg + 7] & 0xff)) * 2;
+                        v.sample_end = (((this.reg[vreg + 8] & 0xff) * 256) | (this.reg[vreg + 9] & 0xff)) * 2;
 
-                        //#if 0
-                        //Debug.printf("219: play v %d mode %02x start %x loop %x end %x\n",
-                        // offset>>4, v.mode,
-                        // find_sample(info, v.sample_start, v.bank, offset>>4),
-                        // find_sample(info, v.sample_loop, v.bank, offset>>4),
-                        // find_sample(info, v.sample_end, v.bank, offset>>4));
-                        //#endif
+//                        Debug.printf("219: play v %d mode %02x start %x loop %x end %x\n",
+//                                offset >> 4, v.mode,
+//                                find_sample(info, v.sample_start, v.bank, offset >> 4),
+//                                find_sample(info, v.sample_loop, v.bank, offset >> 4),
+//                                find_sample(info, v.sample_end, v.bank, offset >> 4));
                     } else {
-                        v.sample_loop = (this.reg[vreg + 10] << 8) | this.reg[vreg + 11];
-                        v.sample_start = (this.reg[vreg + 6] << 8) | this.reg[vreg + 7];
-                        v.sample_end = (this.reg[vreg + 8] << 8) | this.reg[vreg + 9];
+                        v.sample_loop = ((this.reg[vreg + 10] & 0xff) << 8) | (this.reg[vreg + 11] & 0xff);
+                        v.sample_start = ((this.reg[vreg + 6] & 0xff) << 8) | (this.reg[vreg + 7] & 0xff);
+                        v.sample_end = ((this.reg[vreg + 8] & 0xff) << 8) | (this.reg[vreg + 9] & 0xff);
                     }
                 } else {
                     v.key = 0;
@@ -209,7 +209,7 @@ public class C140 {
             this.pRom = new byte[romSize];
             this.pRomSize = romSize;
             for (int i = 0; i < romSize; i++) this.pRom[i] = (byte) 0xff;
-            //memset(this.pRom, 0xFF, romSize);
+            //memset(this.pRom, 0xff, romSize);
         }
         if (dataStart > romSize)
             return;
@@ -224,7 +224,7 @@ public class C140 {
             this.pRom = new byte[romSize];
             this.pRomSize = romSize;
             for (int i = 0; i < romSize; i++) this.pRom[i] = (byte) 0xff;
-            //memset(this.pRom, 0xFF, romSize);
+            //memset(this.pRom, 0xff, romSize);
         }
         if (dataStart > romSize)
             return;
@@ -247,7 +247,7 @@ public class C140 {
         int sdt;
         int st, ed, sz;
 
-        long pSampleData;
+        int pSampleData;
         int frequency, delta, offset, pos;
         int cnt, voiceCnt;
         int lastdt, prevdt, dltdt;
@@ -274,7 +274,7 @@ public class C140 {
             int vreg = i * 16;
 
             if (v.key == 0 || v.muted != 0) continue;
-            frequency = (this.reg[vreg + 2] << 8) | this.reg[vreg + 3];
+            frequency = ((this.reg[vreg + 2] & 0xff) << 8) | (this.reg[vreg + 3] & 0xff);
 
             // Abort Voice if no frequency value set
             if (frequency == 0) continue;
@@ -283,8 +283,8 @@ public class C140 {
             delta = (int) (frequency * pbase);
 
             // Calculate left/right channel volumes
-            lvol = (this.reg[vreg + 1] << 5) / MAX_VOICE; //32ch . 24ch
-            rvol = (this.reg[vreg + 0] << 5) / MAX_VOICE;
+            lvol = ((this.reg[vreg + 1] & 0xff) << 5) / MAX_VOICE; //32ch . 24ch
+            rvol = ((this.reg[vreg + 0] & 0xff) << 5) / MAX_VOICE;
 
             // Set mixer outputs base pointers
             lmix = this.mixerBufferLeft;
@@ -299,11 +299,11 @@ public class C140 {
             pSampleData = findSample(st, v.bank, i);
 
             // Fetch back previous data pointers
-            offset = (int) v.ptoffset;
-            pos = (int) v.pos;
-            lastdt = (int) v.lastdt;
-            prevdt = (int) v.prevdt;
-            dltdt = (int) v.dltdt;
+            offset = v.ptoffset;
+            pos = v.pos;
+            lastdt = v.lastdt;
+            prevdt = v.prevdt;
+            dltdt = v.dltdt;
 
             // Switch on data type - compressed PCM is only for C140
             if ((v.mode & 8) != 0 && (this.bankingType != Type.ASIC219)) {
@@ -320,7 +320,7 @@ public class C140 {
                         //debugCnt = 20;
                         // Check if it's a looping sample, either stop or loop
                         if ((v.mode & 0x10) != 0) {
-                            pos = (int) (v.sample_loop - st);
+                            pos = v.sample_loop - st;
                         } else {
                             v.key = 0;
                             break;
@@ -328,7 +328,7 @@ public class C140 {
                     }
 
                     // Read the chosen sample byte
-                    dt = this.pRom[(int) (pSampleData + pos)];
+                    dt = this.pRom[pSampleData + pos];
 
                     // decompress to 13bit range         //2000.06.26 CAB
                     sdt = dt >> 3; // signed
@@ -359,7 +359,7 @@ public class C140 {
                         //debugCnt = 20;
                         // Check if it's a looping sample, either stop or loop
                         if ((v.mode & 0x10) != 0) {
-                            pos = (int) (v.sample_loop - st);
+                            pos = v.sample_loop - st;
                         } else {
                             v.key = 0;
                             break;
@@ -370,7 +370,7 @@ public class C140 {
                         prevdt = lastdt;
 
                         if (this.bankingType == Type.ASIC219) {
-                            lastdt = this.pRom[(int) (pSampleData + (pos ^ 0x01))];
+                            lastdt = this.pRom[pSampleData + (pos ^ 0x01)];
 
                             // Sign + magnitude format
                             if ((v.mode & 0x01) != 0 && ((lastdt & 0x80) != 0)) {
@@ -381,10 +381,10 @@ public class C140 {
                                 lastdt = -lastdt;
 
                         } else {
-                            lastdt = this.pRom[(int) (pSampleData + pos)];
+                            lastdt = this.pRom[pSampleData + pos];
                         }
 
-                        dltdt = (lastdt - prevdt);
+                        dltdt = lastdt - prevdt;
                     }
 
                     // Caclulate the sample value
@@ -413,10 +413,10 @@ public class C140 {
         for (int i = 0; i < samples; i++) {
             dest1[i] = lmix[i] << 3;
             dest2[i] = rmix[i] << 3;
-            //if (debugCnt > 0) {
-            //    debugCnt--;
-            //    Debug.printf("%x  %d", lmix[i]);
-            //}
+//            if (debugCnt > 0) {
+//                debugCnt--;
+//                Debug.printf("%x  %d", lmix[i]);
+//            }
         }
     }
 

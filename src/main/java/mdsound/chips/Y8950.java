@@ -19,11 +19,11 @@ public class Y8950 {
 
     private Opl opl;
 
-    private void setDeltatStatus(byte changeBits) {
+    private void setDeltatStatus(int changeBits) {
         opl.setStatus(changeBits);
     }
 
-    private void resetDeltatStatus(byte changeBits) {
+    private void resetDeltatStatus(int changeBits) {
         opl.resetStatus(changeBits);
     }
 
@@ -49,7 +49,7 @@ public class Y8950 {
         return opl.write(a, v);
     }
 
-    public byte read(int a) {
+    public int read(int a) {
         return opl.read(a);
     }
 

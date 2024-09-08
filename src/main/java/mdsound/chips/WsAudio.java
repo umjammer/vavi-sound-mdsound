@@ -14,39 +14,39 @@ public class WsAudio {
     /**
      * Initial I/O values
      */
-    private static final byte[] initialIoValue = new byte[] {
+    private static final int[] initialIoValue = new int[] {
             0x00, // 0
             0x00, // 1
-            (byte) 0x9d, // 2
-            (byte) 0xbb, // 3
+            0x9d, // 2
+            0xbb, // 3
             0x00, // 4
             0x00, // 5
             0x00, // 6
             0x26, // 7
-            (byte) 0xfe, // 8
-            (byte) 0xde, // 9
-            (byte) 0xf9, // a
-            (byte) 0xfb, // b
-            (byte) 0xdb, // c
-            (byte) 0xd7, // d
+            0xfe, // 8
+            0xde, // 9
+            0xf9, // a
+            0xfb, // b
+            0xdb, // c
+            0xd7, // d
             0x7f, // e
-            (byte) 0xf5, // f
+            0xf5, // f
             0x00, // 10
             0x00, // 11
             0x00, // 12
             0x00, // 13
             0x01, // 14
             0x00, // 15
-            (byte) 0x9e, // 16
-            (byte) 0x9b, // 17
+            0x9e, // 16
+            0x9b, // 17
             0x00, // 18
             0x00, // 19
             0x00, // 1a
             0x00, // 1b
-            (byte) 0x99, // 1c
-            (byte) 0xfd, // 1d
-            (byte) 0xb7, // 1e
-            (byte) 0xdf, // 1f
+            0x99, // 1c
+            0xfd, // 1d
+            0xb7, // 1e
+            0xdf, // 1f
             0x30, // 20
             0x57, // 21
             0x75, // 22
@@ -143,13 +143,13 @@ public class WsAudio {
             0x00, // 7d
             0x00, // 7e
             0x00, // 7f
-            (byte) 0xFF, // 80
+            0xff, // 80
             0x07, // 81
-            (byte) 0xFF, // 82
+            0xff, // 82
             0x07, // 83
-            (byte) 0xFF, // 84
+            0xff, // 84
             0x07, // 85
-            (byte) 0xFF, // 86
+            0xff, // 86
             0x07, // 87
             0x00, // 88
             0x00, // 89
@@ -175,14 +175,14 @@ public class WsAudio {
             0x00, // 9d
             0x03, // 9e
             0x00, // 9f
-            (byte) 0x87 - 2, // a0
+            0x87 - 2, // a0
             0x00, // a1
             0x00, // a2
             0x00, // a3
             0x0, // a4 2b
             0x0, // a5 7f
             0x4f, // a6
-            (byte) 0xff, // a7 cf ?
+            0xff, // a7 cf ?
             0x00, // a8
             0x00, // a9
             0x00, // aa
@@ -192,7 +192,7 @@ public class WsAudio {
             0x00, // ae
             0x00, // af
             0x00, // b0
-            (byte) 0xdb, // b1
+            0xdb, // b1
             0x00, // b2
             0x00, // b3
             0x00, // b4
@@ -205,73 +205,73 @@ public class WsAudio {
             0x00, // bb
             0x42, // bc
             0x00, // bd
-            (byte) 0x83, // be
+            0x83, // be
             0x00, // bf
             0x2f, // c0
             0x3f, // c1
-            (byte) 0xff, // c2
-            (byte) 0xff, // c3
+            0xff, // c2
+            0xff, // c3
             0x00, // c4
             0x00, // c5
             0x00, // c6
             0x00, // c7
 
-            (byte) 0xd1, // c8?
-            (byte) 0xd1, // c9
-            (byte) 0xd1, // ca
-            (byte) 0xd1, // cb
-            (byte) 0xd1, // cc
-            (byte) 0xd1, // cd
-            (byte) 0xd1, // ce
-            (byte) 0xd1, // cf
-            (byte) 0xd1, // d0
-            (byte) 0xd1, // d1
-            (byte) 0xd1, // d2
-            (byte) 0xd1, // d3
-            (byte) 0xd1, // d4
-            (byte) 0xd1, // d5
-            (byte) 0xd1, // d6
-            (byte) 0xd1, // d7
-            (byte) 0xd1, // d8
-            (byte) 0xd1, // d9
-            (byte) 0xd1, // da
-            (byte) 0xd1, // db
-            (byte) 0xd1, // dc
-            (byte) 0xd1, // dd
-            (byte) 0xd1, // de
-            (byte) 0xd1, // df
-            (byte) 0xd1, // e0
-            (byte) 0xd1, // e1
-            (byte) 0xd1, // e2
-            (byte) 0xd1, // e3
-            (byte) 0xd1, // e4
-            (byte) 0xd1, // e5
-            (byte) 0xd1, // e6
-            (byte) 0xd1, // e7
-            (byte) 0xd1, // e8
-            (byte) 0xd1, // e9
-            (byte) 0xd1, // ea
-            (byte) 0xd1, // eb
-            (byte) 0xd1, // ec
-            (byte) 0xd1, // ed
-            (byte) 0xd1, // ee
-            (byte) 0xd1, // ef
-            (byte) 0xd1, // f0
-            (byte) 0xd1, // f1
-            (byte) 0xd1, // f2
-            (byte) 0xd1, // f3
-            (byte) 0xd1, // f4
-            (byte) 0xd1, // f5
-            (byte) 0xd1, // f6
-            (byte) 0xd1, // f7
-            (byte) 0xd1, // f8
-            (byte) 0xd1, // f9
-            (byte) 0xd1, // fa
-            (byte) 0xd1, // fb
-            (byte) 0xd1, // fc
-            (byte) 0xd1, // fd
-            (byte) 0xd1, // fe
-            (byte) 0xd1 //ff
+            0xd1, // c8?
+            0xd1, // c9
+            0xd1, // ca
+            0xd1, // cb
+            0xd1, // cc
+            0xd1, // cd
+            0xd1, // ce
+            0xd1, // cf
+            0xd1, // d0
+            0xd1, // d1
+            0xd1, // d2
+            0xd1, // d3
+            0xd1, // d4
+            0xd1, // d5
+            0xd1, // d6
+            0xd1, // d7
+            0xd1, // d8
+            0xd1, // d9
+            0xd1, // da
+            0xd1, // db
+            0xd1, // dc
+            0xd1, // dd
+            0xd1, // de
+            0xd1, // df
+            0xd1, // e0
+            0xd1, // e1
+            0xd1, // e2
+            0xd1, // e3
+            0xd1, // e4
+            0xd1, // e5
+            0xd1, // e6
+            0xd1, // e7
+            0xd1, // e8
+            0xd1, // e9
+            0xd1, // ea
+            0xd1, // eb
+            0xd1, // ec
+            0xd1, // ed
+            0xd1, // ee
+            0xd1, // ef
+            0xd1, // f0
+            0xd1, // f1
+            0xd1, // f2
+            0xd1, // f3
+            0xd1, // f4
+            0xd1, // f5
+            0xd1, // f6
+            0xd1, // f7
+            0xd1, // f8
+            0xd1, // f9
+            0xd1, // fa
+            0xd1, // fb
+            0xd1, // fc
+            0xd1, // fd
+            0xd1, // fe
+            0xd1 //ff
     };
 
     private enum IORam {
@@ -322,23 +322,23 @@ public class WsAudio {
 
     private static class Channel {
         private int wave;
-        private byte lVol;
-        private byte rVol;
+        private int lVol;
+        private int rVol;
         private int offset;
         private int delta;
-        private byte pos;
-        private byte muted;
+        private int pos;
+        private int muted;
     }
 
     /** Ratio */
     private static class RatioCounter {
         /** counter increment */
-        private long inc;
+        private int inc;
         /** current value */
-        private long val;
+        private int val;
 
         private void setRatio(int mul, int div) {
-            this.inc = (((long) mul << 20) + div / 2) / div;
+            this.inc = ((mul << 20) + div / 2) / div;
         }
 
         private void step() {
@@ -350,7 +350,7 @@ public class WsAudio {
         }
 
         private void resetPreStep() {
-            this.val = ((long) 1 << 20) - this.inc;
+            this.val = (1 << 20) - this.inc;
         }
 
         private int getVal() {
@@ -358,29 +358,29 @@ public class WsAudio {
         }
 
         private void mask() {
-            this.val &= (((long) 1 << 20) - 1);
+            this.val &= ((1 << 20) - 1);
         }
     }
 
     private Channel[] audios = new Channel[] {
             new Channel(), new Channel(), new Channel(), new Channel()
     };
-    private RatioCounter blankTimer = new RatioCounter();
-    private short sweepTime;
-    private byte sweepStep;
-    private short sweepCount;
+    private final RatioCounter blankTimer = new RatioCounter();
+    private int sweepTime;
+    private int sweepStep;
+    private int sweepCount;
     private int sweepFreq;
-    private byte noiseType;
+    private int noiseType;
     private int noiseRng;
     private int mainVolume;
-    private byte pcmVolumeLeft;
-    private byte pcmVolumeRight;
+    private int pcmVolumeLeft;
+    private int pcmVolumeRight;
 
     private byte[] ioRam = new byte[0x100];
     private byte[] internalRam;
 
-    private int clock = DEFAULT_CLOCK;
-    private int sampleRate = DEFAULT_CLOCK / 128;
+    private int clock;
+    private int sampleRate;
     private float ratEmul;
 
     public WsAudio(int masterClock) {
@@ -395,7 +395,7 @@ public class WsAudio {
         this.sampleRate = clock / 128;
 
         // actual size is 64 KB, but the audio chips can only access 16 KB
-        this.internalRam = new byte[0x4000];// ((int)8*)malloc(0x4000);
+        this.internalRam = new byte[0x4000]; // ((int)8*)malloc(0x4000);
 
         this.ratEmul = (float) this.clock * 65536.0f / (float) this.sampleRate;
         // one step every 256 cycles
@@ -420,7 +420,7 @@ public class WsAudio {
         this.blankTimer.reset();
 
         for (int i = 0x80; i < 0xc9; i++)
-            writeAudioPort((byte) i, initialIoValue[i]);
+            writeAudioPort(i, initialIoValue[i]);
     }
 
     public void stop() {
@@ -468,7 +468,7 @@ public class WsAudio {
 
                 if ((ch == 1) && ((this.ioRam[IORam.SNDMOD.v] & 0x20) != 0)) {
                     // Voice出力
-                    short w = this.ioRam[0x89];
+                    int w = this.ioRam[0x89] & 0xff;
                     w -= 0x80;
                     l += this.pcmVolumeLeft * w;
                     r += this.pcmVolumeRight * w;
@@ -479,7 +479,7 @@ public class WsAudio {
                         int masked, xorReg;
 
                         this.audios[ch].offset += this.audios[ch].delta;
-                        byte cnt = (byte) (this.audios[ch].offset >> 16);
+                        int cnt = this.audios[ch].offset >> 16;
                         this.audios[ch].offset &= 0xffff;
                         while (cnt > 0) {
                             cnt--;
@@ -501,20 +501,20 @@ public class WsAudio {
                         this.ioRam[IORam.PCSRL.v] = (byte) (this.noiseRng & 0xff);
                         this.ioRam[IORam.PCSRH.v] = (byte) ((this.noiseRng >> 8) & 0x7f);
 
-                        short w = (short) ((this.noiseRng & 1) != 0 ? 0x7f : -0x80);
+                        int w = (this.noiseRng & 1) != 0 ? 0x7f : -0x80;
                         l += this.audios[ch].lVol * w;
                         r += this.audios[ch].rVol * w;
                     } else {
                         this.audios[ch].offset += this.audios[ch].delta;
-                        byte cnt = (byte) (this.audios[ch].offset >> 16);
+                        int cnt = this.audios[ch].offset >> 16;
                         this.audios[ch].offset &= 0xffff;
                         this.audios[ch].pos += cnt;
                         this.audios[ch].pos &= 0x1f;
-                        short w = this.internalRam[(this.audios[ch].wave & 0xFFF0) + (this.audios[ch].pos >> 1)];
+                        int w = this.internalRam[(this.audios[ch].wave & 0xfff0) + (this.audios[ch].pos >> 1)] & 0xff;
                         if ((this.audios[ch].pos & 1) == 0)
-                            w = (short) ((w << 4) & 0xf0); // 下位ニブル
+                            w = (w << 4) & 0xf0; // 下位ニブル
                         else
-                            w = (short) (w & 0xf0); // 上位ニブル
+                            w = w & 0xf0; // 上位ニブル
                         w -= 0x80;
                         l += this.audios[ch].lVol * w;
                         r += this.audios[ch].rVol * w;
@@ -527,21 +527,21 @@ public class WsAudio {
         }
     }
 
-    public void writeAudioPort(byte port, byte value) {
+    public void writeAudioPort(int port, int value) {
         int i;
         float freq;
 
-        this.ioRam[port] = value;
+        this.ioRam[port] = (byte) value;
 
         switch (port & 0xff) {
         // 0x80-0x87の周波数レジスタについて
-        // - ロックマン&フォルテの0x0fの曲では、周波数=0xFFFF の音が不要
+        // - ロックマン&フォルテの0x0fの曲では、周波数=0xffFF の音が不要
         // - デジモンディープロジェクトの0x0dの曲のノイズは 周波数=0x07FF で音を出す
-        // →つまり、0xFFFF の時だけ音を出さないってことだろうか。
+        // →つまり、0xffFF の時だけ音を出さないってことだろうか。
         //   でも、0x07FF の時も音を出さないけど、ノイズだけ音を出すのかも。
         case 0x80:
         case 0x81:
-            i = (((int) this.ioRam[0x81]) << 8) + ((int) this.ioRam[0x80]);
+            i = ((this.ioRam[0x81] & 0xff) << 8) + (this.ioRam[0x80] & 0xff);
             if (i == 0xffff)
                 freq = 0;
             else
@@ -550,7 +550,7 @@ public class WsAudio {
             break;
         case 0x82:
         case 0x83:
-            i = (((int) this.ioRam[0x83]) << 8) + ((int) this.ioRam[0x82]);
+            i = ((this.ioRam[0x83] & 0xff) << 8) + (this.ioRam[0x82] & 0xff);
             if (i == 0xffff)
                 freq = 0;
             else
@@ -559,7 +559,7 @@ public class WsAudio {
             break;
         case 0x84:
         case 0x85:
-            i = (((int) this.ioRam[0x85]) << 8) + ((int) this.ioRam[0x84]);
+            i = ((this.ioRam[0x85] & 0xff) << 8) + (this.ioRam[0x84] & 0xff);
             this.sweepFreq = i;
             if (i == 0xffff)
                 freq = 0;
@@ -569,7 +569,7 @@ public class WsAudio {
             break;
         case 0x86:
         case 0x87:
-            i = (((int) this.ioRam[0x87]) << 8) + ((int) this.ioRam[0x86]);
+            i = ((this.ioRam[0x87] & 0xff) << 8) + (this.ioRam[0x86] & 0xff);
             if (i == 0xffff)
                 freq = 0;
             else
@@ -577,20 +577,20 @@ public class WsAudio {
             this.audios[3].delta = (int) (freq * this.ratEmul);
             break;
         case 0x88:
-            this.audios[0].lVol = (byte) ((value >> 4) & 0xf);
-            this.audios[0].rVol = (byte) (value & 0xf);
+            this.audios[0].lVol = (value >> 4) & 0xf;
+            this.audios[0].rVol = value & 0xf;
             break;
         case 0x89:
-            this.audios[1].lVol = (byte) ((value >> 4) & 0xf);
-            this.audios[1].rVol = (byte) (value & 0xf);
+            this.audios[1].lVol = (value >> 4) & 0xf;
+            this.audios[1].rVol = value & 0xf;
             break;
         case 0x8A:
-            this.audios[2].lVol = (byte) ((value >> 4) & 0xf);
-            this.audios[2].rVol = (byte) (value & 0xf);
+            this.audios[2].lVol = (value >> 4) & 0xf;
+            this.audios[2].rVol = value & 0xf;
             break;
         case 0x8B:
-            this.audios[3].lVol = (byte) ((value >> 4) & 0xf);
-            this.audios[3].rVol = (byte) (value & 0xf);
+            this.audios[3].lVol = (value >> 4) & 0xf;
+            this.audios[3].rVol = value & 0xf;
             break;
         case 0x8C:
             this.sweepStep = value;
@@ -603,11 +603,11 @@ public class WsAudio {
             // これを HBlank (256cycles) の間隔で言うと、
             //　8192/256 = 32
             // なので、32[HBlank]*(n+1) 間隔となる
-            this.sweepTime = (short) ((((short) value) + 1) << 5);
+            this.sweepTime = (value + 1) << 5;
             this.sweepCount = this.sweepTime;
             break;
         case 0x8E:
-            this.noiseType = (byte) (value & 7);
+            this.noiseType = value & 7;
             if ((value & 8) != 0) this.noiseRng = 1; // ノイズカウンターリセット
             break;
         case 0x8F:
@@ -627,8 +627,8 @@ public class WsAudio {
         case 0x93:
             break;
         case 0x94:
-            this.pcmVolumeLeft = (byte) ((value & 0xc) * 2);
-            this.pcmVolumeRight = (byte) (((value << 2) & 0xc) * 2);
+            this.pcmVolumeLeft = (value & 0xc) * 2;
+            this.pcmVolumeRight = ((value << 2) & 0xc) * 2;
             break;
         case 0x52:
             //if (value&0x80)
@@ -637,8 +637,8 @@ public class WsAudio {
         }
     }
 
-    private byte readPort(byte port) {
-        return (this.ioRam[port]);
+    private int readPort(int port) {
+        return this.ioRam[port] & 0xff;
     }
 
     // HBlank 間隔で呼ばれる
@@ -648,7 +648,7 @@ public class WsAudio {
             if (this.sweepCount < 0) {
                 this.sweepCount = this.sweepTime;
                 this.sweepFreq += this.sweepStep;
-                this.sweepFreq &= 0x7FF;
+                this.sweepFreq &= 0x7ff;
 
                 float freq = 1.0f / (2048 - this.sweepFreq);
                 this.audios[2].delta = (int) (freq * this.ratEmul);
@@ -659,11 +659,11 @@ public class WsAudio {
 
     private void soundDma() {
         if ((this.ioRam[IORam.SDMACTL.v] & 0x88) == 0x80) {
-            int i = (this.ioRam[IORam.SDMACH.v] << 8) | this.ioRam[IORam.SDMACL.v];
-            int j = (this.ioRam[IORam.SDMASB.v] << 16) | (this.ioRam[IORam.SDMASH.v] << 8) | this.ioRam[IORam.SDMASL.v];
-            byte b = this.internalRam[j & 0x3FFF];
+            int i = ((this.ioRam[IORam.SDMACH.v] & 0xff) << 8) | (this.ioRam[IORam.SDMACL.v] & 0xff);
+            int j = ((this.ioRam[IORam.SDMASB.v] & 0xff) << 16) | ((this.ioRam[IORam.SDMASH.v] & 0xff) << 8) | (this.ioRam[IORam.SDMASL.v] & 0xff);
+            int b = this.internalRam[j & 0x3fff] & 0xff;
 
-            this.ioRam[0x89] = b;
+            this.ioRam[0x89] = (byte) b;
             i--;
             j++;
             if (i < 32) {
@@ -673,26 +673,26 @@ public class WsAudio {
                 // set DMA timer
                 //ws_timer_set(2, DMACycles[SDMACTL&3]);
             }
-            this.ioRam[IORam.SDMASB.v] = (byte) ((j >> 16) & 0xFF);
-            this.ioRam[IORam.SDMASH.v] = (byte) ((j >> 8) & 0xFF);
-            this.ioRam[IORam.SDMASL.v] = (byte) (j & 0xFF);
-            this.ioRam[IORam.SDMACH.v] = (byte) ((i >> 8) & 0xFF);
-            this.ioRam[IORam.SDMACL.v] = (byte) (i & 0xFF);
+            this.ioRam[IORam.SDMASB.v] = (byte) ((j >> 16) & 0xff);
+            this.ioRam[IORam.SDMASH.v] = (byte) ((j >> 8) & 0xff);
+            this.ioRam[IORam.SDMASL.v] = (byte) (j & 0xff);
+            this.ioRam[IORam.SDMACH.v] = (byte) ((i >> 8) & 0xff);
+            this.ioRam[IORam.SDMACL.v] = (byte) (i & 0xff);
         }
     }
 
-    public void writeRamByte(int offset, byte value) {
+    public void writeRamByte(int offset, int value) {
         // RAM - 16 KB (WS) / 64 KB (WSC) internal RAM
-        this.internalRam[offset & 0x3FFF] = value;
+        this.internalRam[offset & 0x3fff] = (byte) value;
     }
 
-    private byte readRamByte(int offset) {
-        return this.internalRam[offset & 0x3FFF];
+    private int readRamByte(int offset) {
+        return this.internalRam[offset & 0x3fff] & 0xff;
     }
 
     private void setMuteMask(int muteMask) {
-        for (byte c = 0; c < 4; c++)
-            this.audios[c].muted = (byte) ((muteMask >> c) & 0x01);
+        for (int c = 0; c < 4; c++)
+            this.audios[c].muted = (muteMask >> c) & 0x01;
     }
 
     private int getMuteMask() {

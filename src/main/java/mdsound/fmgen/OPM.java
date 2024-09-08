@@ -2,6 +2,8 @@ package mdsound.fmgen;
 
 import java.util.Random;
 
+import vavi.util.Debug;
+
 import static mdsound.fmgen.Fmgen.limit;
 
 
@@ -213,7 +215,7 @@ public class OPM extends Timer {
                 lfoCount = 0;
                 lfoCountPrev = ~(int) 0;
             }
-            reg01 = (byte) data;
+            reg01 = (byte) (data & 0xff);
             break;
 
         case 0x08: // KEYON
@@ -242,7 +244,7 @@ public class OPM extends Timer {
             break;
 
         case 0x18: // LFRQ(Lfo freq)
-            lfoFreq = (byte) data;
+            lfoFreq = (byte) (data & 0xff);
 
             //assert(16 - 4 - FM_RATIOBITS >= 0);
             lfoCountDiff = rateRatio
@@ -286,7 +288,7 @@ public class OPM extends Timer {
         case 0x2d:
         case 0x2e:
         case 0x2f:
-            kc[c] = (byte) data;
+            kc[c] = (byte) (data & 0xff);
             ch[c].setKCKF(kc[c], kf[c]);
             break;
 
@@ -299,7 +301,7 @@ public class OPM extends Timer {
         case 0x35:
         case 0x36:
         case 0x37:
-            kf[c] = (byte) (data >> 2);
+            kf[c] = (byte) ((data >> 2) & 0xff);
             ch[c].setKCKF(kc[c], kf[c]);
             break;
 
@@ -312,7 +314,7 @@ public class OPM extends Timer {
         case 0x3d:
         case 0x3e:
         case 0x3f:
-            ch[c].setMS((data << 4) | (data >> 4));
+            ch[c].setMS((((data & 0xff) << 4) | ((data  & 0xff) >> 4)) & 0xff);
             break;
 
         case 0x0f: // NE/NFRQ (noise)
@@ -328,11 +330,11 @@ public class OPM extends Timer {
     }
 
     private void setParameter(int addr, int data) {
-        final byte[] slTable = new byte[] {
+        byte[] slTable = new byte[] {
                 0, 4, 8, 12, 16, 20, 24, 28,
                 32, 36, 40, 44, 48, 52, 56, 124
         };
-        final byte[] slotTable = new byte[] {0, 2, 1, 3};
+        byte[] slotTable = new byte[] {0, 2, 1, 3};
 
         int slot = slotTable[(addr >> 3) & 3];
         Fmgen.Channel4.Operator op = ch[addr & 7].op[slot];
@@ -402,17 +404,17 @@ public class OPM extends Timer {
 
                 amTable[type][c] = a;
                 pmTable[type][c] = -p - 1;
-                // Debug.printf("%d ", p);
+//                Debug.printf("%d ", p);
             }
         }
     }
 
     private void lfo() {
         if (lfoWaveForm != 3) {
-            // if ((lfo_count_ ^ lfo_count_prev_) & ~((1 << 15) - 1))
+//            if ((lfo_count_ ^ lfo_count_prev_) & ~((1 << 15) - 1))
             {
                 int c = (lfoCount >> 15) & 0x1fe;
-                // Debug.printf("%.8x %.2x\n", lfo_count_, c);
+//                Debug.printf("%.8x %.2x\n", lfo_count_, c);
                 chip.setPML(pmTable[lfoWaveForm][c] * pmd / 128 + 0x80);
                 chip.setAML(amTable[lfoWaveForm][c] * amd / 128);
             }

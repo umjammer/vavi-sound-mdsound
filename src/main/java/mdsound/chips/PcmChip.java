@@ -121,13 +121,13 @@ public class PcmChip {
      * Write to a PCM register.
      *
      * @param reg  Register ID.
-     * @param data Data to write.
+     * @param data data to write.
      */
     public void writeReg(int reg, int data) {
         int i;
         Channel chan = this.channels[this.curChan];
 
-        data &= 0xFF;
+        data &= 0xff;
 
         switch (reg) {
         case 0x00: // evelope register
@@ -143,7 +143,7 @@ public class PcmChip {
             break;
 
         case 0x02: // frequency step (LB) registers
-            chan.stepB &= 0xFF00;
+            chan.stepB &= 0xff00;
             chan.stepB += data;
             chan.step = (int) ((float) chan.stepB * this.rate);
 
@@ -159,7 +159,7 @@ public class PcmChip {
             break;
 
         case 0x04:
-            chan.loopAddr &= 0xFF00;
+            chan.loopAddr &= 0xff00;
             chan.loopAddr += data;
 
             //Debug.printf("Loop low = %.2X   Loop = %.8X", data, chan.Loop_Addr);
@@ -192,7 +192,7 @@ public class PcmChip {
 
             // sounding bit
             if ((data & 0x80) > 0)
-                this.enable = 0xFF; // Used as mask
+                this.enable = 0xff; // Used as mask
             else
                 this.enable = 0;
 
@@ -201,7 +201,7 @@ public class PcmChip {
 
         case 0x08:
             // Sound on/off register
-            data ^= 0xFF;
+            data ^= 0xff;
 
             //Debug.printf("Channel Enable = %.2X", data);
 
@@ -249,9 +249,9 @@ public class PcmChip {
 
                 for (int j = 0; j < length; j++) {
                     // test for loop signal
-                    if ((this.ram[addr] & 0xff) == 0xFF) {
+                    if ((this.ram[addr] & 0xff) == 0xff) {
                         ch.addr = (addr = ch.loopAddr) << STEP_SHIFT;
-                        if (this.ram[addr] == 0xFF)
+                        if (this.ram[addr] == 0xff)
                             break;
                         else
                             j--;
@@ -276,7 +276,7 @@ public class PcmChip {
                         addr = ch.addr >> STEP_SHIFT;
 
                         for (; k < addr; k++) {
-                            if ((this.ram[k] & 0xff) == 0xFF) {
+                            if ((this.ram[k] & 0xff) == 0xff) {
                                 ch.addr = (addr = ch.loopAddr) << STEP_SHIFT;
                                 break;
                             }
@@ -284,7 +284,7 @@ public class PcmChip {
                     }
                 }
 
-                if ((this.ram[addr] & 0xff) == 0xFF) {
+                if ((this.ram[addr] & 0xff) == 0xff) {
                     ch.addr = ch.loopAddr << STEP_SHIFT;
                 }
             }
@@ -299,11 +299,11 @@ public class PcmChip {
     }
 
     public void start(int clock) {
-        this.smpl0Patch = (clock & 0x80000000) >>> 31;
+        this.smpl0Patch = (clock & 0x8000_0000) >>> 31;
     }
 
-    public void writeMem(int offset, byte data) {
-        this.ram[this.bank | offset] = data;
+    public void writeMem(int offset, int data) {
+        this.ram[this.bank | offset] = (byte) (data & 0xff);
     }
 
     public void writeRam(int dataStart, int dataLength, byte[] ramData) {

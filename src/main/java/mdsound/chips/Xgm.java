@@ -12,7 +12,7 @@ public class Xgm {
         private int addr = 0;
         private int inst = 0;
         private boolean isPlaying = false;
-        private byte data = 0;
+        private int data = 0;
     }
 
     private static class SampleID {
@@ -33,12 +33,12 @@ public class Xgm {
     private Object[] lockobj = new Object[] {new Object(), new Object()};
     private boolean ox2b = false;
 
-    public void reset(byte chipId, int sampleRate) {
+    public void reset(int chipId, int sampleRate) {
         pcmStep[chipId] = sampleRate / 14000.0;
         stop(chipId);
     }
 
-    public void stop(byte chipId) {
+    public void stop(int chipId) {
         pcmExecDelta[chipId] = 0.0;
         dacEnable[chipId] = 0;
         ox2b = false;
@@ -50,7 +50,7 @@ public class Xgm {
         for (int i = 0; i < 63; i++) sampleID[chipId][i] = new SampleID();
     }
 
-    public void write(byte chipId, int port, int adr, int data) {
+    public void write(int chipId, int port, int adr, int data) {
         //
         // OPN2はアドレスとデータが二回に分けて送信されるタイプ
         // 一回目 アドレス (adr = 0)
@@ -69,7 +69,7 @@ public class Xgm {
         }
     }
 
-    public void update(byte chipId, int samples, QuadFunction<Byte, Integer, Integer, Integer, Integer> Write) {
+    public void update(int chipId, int samples, QuadFunction<Byte, Integer, Integer, Integer, Integer> Write) {
         for (int i = 0; i < samples; i++) {
             while ((int) pcmExecDelta[chipId] <= 0) {
                 write(chipId, 0, 0, 0x2a);
@@ -80,9 +80,9 @@ public class Xgm {
         }
     }
 
-    public void playPCM(byte chipId, byte X, byte id) {
-        byte priority = (byte) (X & 0xc);
-        byte channel = (byte) (X & 0x3);
+    public void playPCM(int chipId, int X, int id) {
+        int priority = X & 0xc;
+        int channel = X & 0x3;
 
         synchronized (lockobj[chipId]) {
             // 優先度が高い場合または消音中の場合のみ発音できる
@@ -105,17 +105,17 @@ public class Xgm {
         }
     }
 
-    private short oneFramePCM(byte chipId) {
+    private short oneFramePCM(int chipId) {
         if (dacEnable[chipId] == 0) return 0x80; //0x80 : 無音状態(...というよりも波形の中心となる場所?)
 
         // 波形合成
-        short o = 0;
+        int o = 0;
         synchronized (lockobj[chipId]) {
             for (int i = 0; i < 4; i++) {
                 if (!xgmPcm[chipId][i].isPlaying) continue;
                 byte d = xgmPcm[chipId][i].addr < pcmBuf[chipId].length ? pcmBuf[chipId][xgmPcm[chipId][i].addr++] : (byte) 0;
                 o += d;
-                xgmPcm[chipId][i].data = (byte) Math.abs(d);
+                xgmPcm[chipId][i].data = Math.abs(d);
                 if (xgmPcm[chipId][i].addr >= xgmPcm[chipId][i].endAddr) {
                     xgmPcm[chipId][i].isPlaying = false;
                     xgmPcm[chipId][i].data = 0;
@@ -123,9 +123,9 @@ public class Xgm {
             }
         }
 
-        o = (short) Math.min(Math.max(o, (Byte.MIN_VALUE & 0xff) + 1), Byte.MAX_VALUE & 0xff); //クリッピング
+        o = (short) Math.min(Math.max(o, Byte.MIN_VALUE + 1), Byte.MAX_VALUE); //クリッピング
         o += 0x80; // OPN2での中心の位置に移動する
 
-        return o;
+        return (short) o;
     }
 }

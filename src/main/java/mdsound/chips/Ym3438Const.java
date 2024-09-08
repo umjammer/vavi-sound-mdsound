@@ -1,6 +1,9 @@
 package mdsound.chips;
 
 
+/**
+ * @see "https://github.com/abbruzze/sega-md/blob/3c8f24d62d6f533b65525b98e74d81530ef5393d/src/ucesoft/smd/audio/Ym3438.java"
+ */
 public abstract class Ym3438Const {
 
     /** logsin table */

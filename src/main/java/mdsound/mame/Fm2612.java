@@ -437,7 +437,7 @@ public class Fm2612 {
                 this.opn.st.timerAOver();
                 // CSM mode key,TL controll
                 if ((this.opn.st.mode & 0xc0) == 0x80) { // CSM mode total level latch and auto key on
-                    this.ch[2].controllKeyCsm(this.opn.sl3.keyCsm == 0);
+                    this.ch[2].controlKeyCsm(this.opn.sl3.keyCsm == 0);
                     this.opn.sl3.keyCsm = 1;
                 }
             }
@@ -535,7 +535,7 @@ public class Fm2612 {
                     /**
                      * key scale rate: 3-KSR
                      */
-                    public byte KSR;
+                    public int KSR;
                     /**
                      * attack rate
                      */
@@ -555,7 +555,7 @@ public class Fm2612 {
                     /**
                      * key scale rate: kcode>>(3-KSR)
                      */
-                    public byte ksr;
+                    public int ksr;
                     /**
                      * multiple: ML_TABLE[ML]
                      */
@@ -577,7 +577,7 @@ public class Fm2612 {
                     /**
                      * phase type
                      */
-                    public byte state;
+                    public int state;
                     /**
                      * total level: TL << 3
                      */
@@ -598,49 +598,49 @@ public class Fm2612 {
                     /**
                      * attack state
                      */
-                    public byte egShAr;
+                    public int egShAr;
                     /**
                      * attack state
                      */
-                    public byte egSelAr;
+                    public int egSelAr;
                     /**
                      * decay state
                      */
-                    public byte egShD1R;
+                    public int egShD1R;
                     /**
                      * decay state
                      */
-                    public byte egSelD1R;
+                    public int egSelD1R;
                     /**
                      * sustain state
                      */
-                    public byte egShD2R;
+                    public int egShD2R;
                     /**
                      * sustain state
                      */
-                    public byte egSelD2R;
+                    public int egSelD2R;
                     /**
                      * release state
                      */
-                    public byte egShRr;
+                    public int egShRr;
                     /**
                      * release state
                      */
-                    public byte egSelRr;
+                    public int egSelRr;
 
                     /**
                      * SSG-EG waveform
                      */
-                    public byte ssg;
+                    public int ssg;
                     /**
                      * SSG-EG negated output
                      */
-                    public byte ssgn;
+                    public int ssgn;
 
                     /**
                      * 0=last key was KEY OFF, 1=KEY ON
                      */
-                    public byte key;
+                    public int key;
 
                     // LFO
 
@@ -677,10 +677,10 @@ public class Fm2612 {
                     /**
                      * set attack rate & key scale
                      */
-                    private void setArKsr(byte type, int v) {
+                    private void setArKsr(int type, int v) {
                         this.ar = (v & 0x1f) != 0 ? (32 + ((v & 0x1f) << 1)) : 0;
 
-                        this.KSR = (byte) (3 - (v >> 6));
+                        this.KSR = 3 - (v >> 6);
 
                         // Even if it seems unnecessary, in some odd case, KSR and KC are both modified
                         // and could result in this.kc remaining unchanged.
@@ -691,34 +691,34 @@ public class Fm2612 {
                             this.egSelAr = Opn.egRateSelect2612[this.ar + this.ksr];
                         } else {
                             this.egShAr = 0;
-                            this.egSelAr = (byte) (18 * RATE_STEPS); // verified by Nemesis on real hardware
+                            this.egSelAr = 18 * RATE_STEPS; // verified by Nemesis on real hardware
                         }
                     }
 
                     /**
                      * set decay rate
                      */
-                    private void setDr(byte type, int v) {
+                    private void setDr(int type, int v) {
                         this.d1r = (v & 0x1f) != 0 ? (32 + ((v & 0x1f) << 1)) : 0;
 
-                        this.egShD1R = Opn.egRateShift[this.d1r + this.ksr];
-                        this.egSelD1R = Opn.egRateSelect2612[this.d1r + this.ksr];
+                        this.egShD1R = Opn.egRateShift[this.d1r + this.ksr] & 0xff;
+                        this.egSelD1R = Opn.egRateSelect2612[this.d1r + this.ksr] & 0xff;
                     }
 
                     /**
                      * set sustain rate
                      */
-                    private void setSr(byte type, int v) {
+                    private void setSr(int type, int v) {
                         this.d2r = (v & 0x1f) != 0 ? (32 + ((v & 0x1f) << 1)) : 0;
 
-                        this.egShD2R = Opn.egRateShift[this.d2r + this.ksr];
-                        this.egSelD2R = Opn.egRateSelect2612[this.d2r + this.ksr];
+                        this.egShD2R = Opn.egRateShift[this.d2r + this.ksr] & 0xff;
+                        this.egSelD2R = Opn.egRateSelect2612[this.d2r + this.ksr] & 0xff;
                     }
 
                     /**
                      * set release rate
                      */
-                    private void setSlRr(byte type, int v) {
+                    private void setSlRr(int type, int v) {
                         this.sl = slTable[v >> 4];
 
                         // check EG state changes
@@ -727,8 +727,8 @@ public class Fm2612 {
 
                         this.rr = 34 + ((v & 0x0f) << 2);
 
-                        this.egShRr = Opn.egRateShift[this.rr + this.ksr];
-                        this.egSelRr = Opn.egRateSelect2612[this.rr + this.ksr];
+                        this.egShRr = Opn.egRateShift[this.rr + this.ksr] & 0xff;
+                        this.egSelRr = Opn.egRateSelect2612[this.rr + this.ksr] & 0xff;
                     }
 
                     // sustain level table (3dB per step)
@@ -788,13 +788,13 @@ public class Fm2612 {
                             this.ssgn = 0;
 
                             if ((this.ar + this.ksr) < 32 + 62) {
-                                this.state = (byte) ((this.volume <= MIN_ATT_INDEX) ? ((this.sl == MIN_ATT_INDEX) ? EG_SUS : EG_DEC) : EG_ATT);
+                                this.state = (this.volume <= MIN_ATT_INDEX) ? ((this.sl == MIN_ATT_INDEX) ? EG_SUS : EG_DEC) : EG_ATT;
                             } else {
                                 // force attenuation level to 0
                                 this.volume = MIN_ATT_INDEX;
 
                                 // directly switch to Decay (or Sustain)
-                                this.state = (this.sl == MIN_ATT_INDEX) ? (byte) EG_SUS : (byte) EG_DEC;
+                                this.state = (this.sl == MIN_ATT_INDEX) ? EG_SUS : EG_DEC;
                             }
 
                             // recalculate EG output
@@ -816,13 +816,13 @@ public class Fm2612 {
                             this.ssgn = 0;
 
                             if ((this.ar + this.ksr) < 32 + 62) {
-                                this.state = (byte) ((this.volume <= MIN_ATT_INDEX) ? ((this.sl == MIN_ATT_INDEX) ? EG_SUS : EG_DEC) : EG_ATT);
+                                this.state = (this.volume <= MIN_ATT_INDEX) ? ((this.sl == MIN_ATT_INDEX) ? EG_SUS : EG_DEC) : EG_ATT;
                             } else {
                                 // force attenuation level to 0
                                 this.volume = MIN_ATT_INDEX;
 
                                 // directly switch to Decay (or Sustain)
-                                this.state = (byte) ((this.sl == MIN_ATT_INDEX) ? EG_SUS : EG_DEC);
+                                this.state = (this.sl == MIN_ATT_INDEX) ? EG_SUS : EG_DEC;
                             }
 
                             // recalculate EG output
@@ -877,12 +877,12 @@ public class Fm2612 {
                     public void attack(int egCnt) {
                         if ((egCnt & ((1 << this.egShAr) - 1)) == 0) {
                             // update attenuation level
-                            this.volume += (~this.volume * (egInc[this.egSelAr + ((egCnt >> this.egShAr) & 7)])) >> 4;
+                            this.volume += (~this.volume * (egInc[this.egSelAr + ((egCnt >> this.egShAr) & 7)] & 0xff)) >> 4;
 
                             // check phase transition
                             if (this.volume <= MIN_ATT_INDEX) {
                                 this.volume = MIN_ATT_INDEX;
-                                this.state = (byte) ((this.sl == MIN_ATT_INDEX) ? EG_SUS : EG_DEC); // special case where SL=0
+                                this.state = (this.sl == MIN_ATT_INDEX) ? EG_SUS : EG_DEC; // special case where SL=0
                             }
 
                             // recalculate EG output
@@ -900,7 +900,7 @@ public class Fm2612 {
                             if ((this.ssg & 0x08) != 0) {
                                 // update attenuation level
                                 if (this.volume < 0x200) {
-                                    this.volume += 4 * egInc[this.egSelD1R + ((egCnt >> this.egShD1R) & 7)];
+                                    this.volume += 4 * egInc[this.egSelD1R + ((egCnt >> this.egShD1R) & 7)] & 0xff;
 
                                     // recalculate EG output
                                     if ((this.ssgn ^ (byte) (this.ssg & 0x04)) != 0) // SSG-EG Output Inversion
@@ -911,7 +911,7 @@ public class Fm2612 {
 
                             } else {
                                 // update attenuation level
-                                this.volume += egInc[this.egSelD1R + ((egCnt >> this.egShD1R) & 7)];
+                                this.volume += egInc[this.egSelD1R + ((egCnt >> this.egShD1R) & 7)] & 0xff;
 
                                 // recalculate EG output
                                 this.volOut = this.volume + this.tl;
@@ -930,7 +930,7 @@ public class Fm2612 {
                             if ((this.ssg & 0x08) != 0) {
                                 // update attenuation level
                                 if (this.volume < 0x200) {
-                                    this.volume += 4 * egInc[this.egSelD2R + ((egCnt >> this.egShD2R) & 7)];
+                                    this.volume += 4 * egInc[this.egSelD2R + ((egCnt >> this.egShD2R) & 7)] & 0xff;
 
                                     // recalculate EG output
                                     if ((this.ssgn ^ (byte) (this.ssg & 0x04)) != 0) // SSG-EG Output Inversion
@@ -940,7 +940,7 @@ public class Fm2612 {
                                 }
                             } else {
                                 // update attenuation level
-                                this.volume += egInc[this.egSelD2R + ((egCnt >> this.egShD2R) & 7)];
+                                this.volume += egInc[this.egSelD2R + ((egCnt >> this.egShD2R) & 7)] & 0xff;
 
                                 // check phase transition*/
                                 if (this.volume >= MAX_ATT_INDEX)
@@ -960,7 +960,7 @@ public class Fm2612 {
                             if ((this.ssg & 0x08) != 0) {
                                 // update attenuation level
                                 if (this.volume < 0x200)
-                                    this.volume += 4 * egInc[this.egSelRr + ((egCnt >> this.egShRr) & 7)];
+                                    this.volume += 4 * egInc[this.egSelRr + ((egCnt >> this.egShRr) & 7)] & 0xff;
                                 // check phase transition
                                 if (this.volume >= 0x200) {
                                     this.volume = MAX_ATT_INDEX;
@@ -968,7 +968,7 @@ public class Fm2612 {
                                 }
                             } else {
                                 // update attenuation level
-                                this.volume += egInc[this.egSelRr + ((egCnt >> this.egShRr) & 7)];
+                                this.volume += egInc[this.egSelRr + ((egCnt >> this.egShRr) & 7)] & 0xff;
 
                                 // check phase transition*/
                                 if (this.volume >= MAX_ATT_INDEX) {
@@ -998,24 +998,24 @@ public class Fm2612 {
                         this.incr = (fc * this.mul) >> 1;
 
                         if (this.ksr != ksr) {
-                            this.ksr = (byte) ksr;
+                            this.ksr = ksr;
 
                             // calculate envelope generator rates
                             if ((this.ar + this.ksr) < 32 + 62) {
-                                this.egShAr = egRateShift[this.ar + this.ksr];
-                                this.egSelAr = egRateSelect2612[this.ar + this.ksr];
+                                this.egShAr = egRateShift[this.ar + this.ksr] & 0xff;
+                                this.egSelAr = egRateSelect2612[this.ar + this.ksr] & 0xff;
                             } else {
                                 this.egShAr = 0;
-                                this.egSelAr = (byte) (18 * RATE_STEPS); // verified by Nemesis on real hardware (Attack phase is blocked)
+                                this.egSelAr = 18 * RATE_STEPS; // verified by Nemesis on real hardware (Attack phase is blocked)
                             }
 
-                            this.egShD1R = egRateShift[this.d1r + this.ksr];
-                            this.egShD2R = egRateShift[this.d2r + this.ksr];
-                            this.egShRr = egRateShift[this.rr + this.ksr];
+                            this.egShD1R = egRateShift[this.d1r + this.ksr] & 0xff;
+                            this.egShD2R = egRateShift[this.d2r + this.ksr] & 0xff;
+                            this.egShRr = egRateShift[this.rr + this.ksr] & 0xff;
 
-                            this.egSelD1R = egRateSelect2612[this.d1r + this.ksr];
-                            this.egSelD2R = egRateSelect2612[this.d2r + this.ksr];
-                            this.egSelRr = egRateSelect2612[this.rr + this.ksr];
+                            this.egSelD1R = egRateSelect2612[this.d1r + this.ksr] & 0xff;
+                            this.egSelD2R = egRateSelect2612[this.d2r + this.ksr] & 0xff;
+                            this.egSelRr = egRateSelect2612[this.rr + this.ksr] & 0xff;
                         }
                     }
 
@@ -1024,7 +1024,7 @@ public class Fm2612 {
                         int lfo_fn_table_index_offset = lfoPmTable[fnum_lfo + pms + lfoPm];
 
                         if (lfo_fn_table_index_offset != 0) { // LFO phase modulation active
-                            byte blk = (byte) ((blockFnum & 0x7000) >> 12);
+                            int blk = (blockFnum & 0x7000) >> 12;
                             int fn = blockFnum & 0xfff;
 
                             // recalculate keyscale code
@@ -1107,7 +1107,7 @@ public class Fm2612 {
                                 // same as Key ON
                                 if (this.state != EG_ATT) {
                                     if ((this.ar + this.ksr) < 32 + 62) {
-                                        this.state = (byte) ((this.volume <= MIN_ATT_INDEX) ? ((this.sl == MIN_ATT_INDEX) ? EG_SUS : EG_DEC) : EG_ATT);
+                                        this.state = (this.volume <= MIN_ATT_INDEX) ? ((this.sl == MIN_ATT_INDEX) ? EG_SUS : EG_DEC) : EG_ATT;
                                     } else {
                                         // Attack Rate is maximal: directly switch to Decay or Substain
                                         this.volume = MIN_ATT_INDEX;
@@ -1135,11 +1135,11 @@ public class Fm2612 {
                 /**
                  * algorithm
                  */
-                public byte algo;
+                public int algo;
                 /**
                  * feedback shift
                  */
-                public byte fb;
+                public int fb;
                 /**
                  * op1 output for feedback
                  */
@@ -1178,7 +1178,7 @@ public class Fm2612 {
                 /**
                  * channel AMS
                  */
-                public byte ams;
+                public int ams;
 
                 /**
                  * fnum,blk:adjusted to sample rate
@@ -1187,12 +1187,12 @@ public class Fm2612 {
                 /**
                  * key code:
                  */
-                public byte kCode;
+                public int kCode;
                 /**
                  * current blk/fnum value for this slot (can be different betweeen slots of one channel in 3slot mode)
                  */
                 public int blockFnum;
-                public byte muted;
+                public int muted;
 
                 private void keyOn(int s, boolean b) {
                     Channel.Slot slot = this.slots[s];
@@ -1256,7 +1256,7 @@ public class Fm2612 {
                     blockFnum = blockFnum * 2 + lfoFnTableIndexOffset;
 
                     if (lfoFnTableIndexOffset != 0) { // LFO phase modulation active
-                        byte blk = (byte) ((blockFnum & 0x7000) >> 12);
+                        int blk = (blockFnum & 0x7000) >> 12;
                         int fn = blockFnum & 0xfff;
 
                         // recalculate keyscale code
@@ -1292,9 +1292,9 @@ public class Fm2612 {
                 }
 
                 /**
-                 * CSM Key Controll
+                 * CSM Key Control
                  */
-                private void controllKeyCsm(boolean b) {
+                private void controlKeyCsm(boolean b) {
                     // all key ON (verified by Nemesis on real hardware)
                     this.keyOnCsm(SLOT1, b);
                     this.keyOnCsm(SLOT2, b);
@@ -1432,11 +1432,11 @@ public class Fm2612 {
                 /**
                  * interrupt level
                  */
-                public byte irq;
+                public int irq;
                 /**
                  * irq mask
                  */
-                public byte irqmask;
+                public int irqmask;
 //#if FM_BUSY_FLAG_SUPPORT
                 // TIME_TYPE busy_expiry_time; // expiry time of the busy status
 //#endif
@@ -1451,11 +1451,11 @@ public class Fm2612 {
                 /**
                  * address register
                  */
-                public byte address;
+                public int address;
                 /**
                  * status flag
                  */
-                public byte status;
+                public int status;
                 /**
                  * mode  CSM / 3SLOT
                  */
@@ -1463,11 +1463,11 @@ public class Fm2612 {
                 /**
                  * freq latch
                  */
-                public byte fn_h;
+                public int fn_h;
                 /**
                  * prescaler selector
                  */
-                public byte prescalerSel;
+                public int prescalerSel;
                 /**
                  * timer a
                  */
@@ -1479,7 +1479,7 @@ public class Fm2612 {
                 /**
                  * timer b
                  */
-                public byte tb;
+                public int tb;
                 /**
                  * timer b counter
                  */
@@ -1514,7 +1514,7 @@ public class Fm2612 {
                  */
                 private void setStatus(int flag) {
                     // set status flag
-                    this.status |= (byte) flag;
+                    this.status |= flag;
                     if (this.irq == 0 && ((this.status & this.irqmask) != 0)) {
                         this.irq = 1;
                         // Callback user interrupt handler (IRQ is OFF to ON)
@@ -1527,7 +1527,7 @@ public class Fm2612 {
                  */
                 private void resetStatus(int flag) {
                     // reset status flag
-                    this.status &= (byte) ~flag;
+                    this.status &= ~flag;
                     if ((this.irq != 0) && ((this.status & this.irqmask) == 0)) {
                         this.irq = 0;
                         // Callback user interrupt handler (IRQ is ON to OFF)
@@ -1539,7 +1539,7 @@ public class Fm2612 {
                  * IRQ mask set
                  */
                 private void setIrqMask(int flag) {
-                    this.irqmask = (byte) flag;
+                    this.irqmask = flag;
                     // IRQ handling check
                     setStatus(0);
                     resetStatus(0);
@@ -1554,7 +1554,7 @@ public class Fm2612 {
                             this.timerAOver();
                             // CSM mode total level latch and auto key on
                             if ((this.mode & 0x80) != 0) {
-                                csmCh.controllKeyCsm(opn.sl3.keyCsm == 0);
+                                csmCh.controlKeyCsm(opn.sl3.keyCsm == 0);
                                 opn.sl3.keyCsm = 1;
                             }
                         }
@@ -1569,8 +1569,8 @@ public class Fm2612 {
                             timerBOver();
                 }
 
-                private byte setStatus() {
-                    return this.status;
+                private int setStatus() {
+                    return this.status & 0xff;
                 }
 
                 private void setBusy(int bClock) {
@@ -1642,7 +1642,7 @@ public class Fm2612 {
                 /**
                  * freq3 latch
                  */
-                public byte fnH;
+                public int fnH;
                 /**
                  * key code
                  */
@@ -1654,25 +1654,25 @@ public class Fm2612 {
                 /**
                  * CSM mode Key-ON flag
                  */
-                public byte keyCsm;
+                public int keyCsm;
             }
 
-            private byte isVGMInit;
+            private int isVGMInit;
 
             // register number to channel number , slot offset
 
-            private byte chan(int n) {
-                return (byte) (n & 3);
+            private int chan(int n) {
+                return n & 3;
             }
 
             private int slot(int s) {
-                return ((s >> 2) & 3);
+                return (s >> 2) & 3;
             }
 
             /**
              * chips type
              */
-            public byte type;
+            public int type;
             /**
              * general state
              */
@@ -1686,7 +1686,7 @@ public class Fm2612 {
              */
             public Channel[] channels;
             /**
-             * Fm channels output masks (0xffffffff = enable)
+             * Fm channels output masks (0xffff_ffff = enable)
              */
             public int[] pan = new int[6 * 2];
 
@@ -1724,7 +1724,7 @@ public class Fm2612 {
             /**
              * current LFO phase (of 128)
              */
-            public byte lfoCnt;
+            public int lfoCnt;
             /**
              * current LFO phase runs at LFO frequency
              */
@@ -2022,7 +2022,7 @@ public class Fm2612 {
              * write a opn mode register 0x20-0x2f
              */
             private void writeMode(int r, int v) {
-                byte c;
+                int c;
                 Channel ch;
 
                 switch (r) {
@@ -2059,14 +2059,14 @@ public class Fm2612 {
                     this.st.ta = (this.st.ta & 0x3fc) | (v & 3);
                     break;
                 case 0x26: // timer B
-                    this.st.tb = (byte) v;
+                    this.st.tb = v;
                     break;
                 case 0x27: // mode, timer control
                     this.setTimers(v);
                     this.st.setTimers(this.st.param, v);
                     break;
                 case 0x28: // key on / off
-                    c = (byte) (v & 0x03);
+                    c = v & 0x03;
                     if (c == 3) break;
                     if ((v & 0x04) != 0 && (this.type & TYPE_6CH) != 0) c += 3;
                     ch = this.channels[c];
@@ -2090,7 +2090,7 @@ public class Fm2612 {
                 Channel ch;
                 Channel.Slot slot;
 
-                byte c = chan(r);
+                int c = chan(r);
 
                 if (c == 3) return; // 0xX3,0xX7,0xXB,0xXF
 
@@ -2111,7 +2111,7 @@ public class Fm2612 {
                     break;
 
                 case 0x50: // KS, AR
-                    byte old_KSR = slot.KSR;
+                    int old_KSR = slot.KSR;
                     slot.setArKsr(this.type, v);
                     if (slot.KSR != old_KSR) {
                         ch.slots[SLOT1].incr = -1;
@@ -2224,12 +2224,12 @@ public class Fm2612 {
                     switch (slot(r)) {
                     case 0: // 0xa0-0xa2 : FNUM1
                         if (isVGMInit != 0)
-                            this.st.fn_h = (byte) (ch.blockFnum >> 8);
+                            this.st.fn_h = ch.blockFnum >> 8;
                     {
                         int fn = (((this.st.fn_h) & 7) << 8) + v;
-                        byte blk = (byte) (this.st.fn_h >> 3);
+                        int blk = this.st.fn_h >> 3;
                         // keyscale code
-                        ch.kCode = (byte) ((blk << 2) | opnFkTable[fn >> 7]);
+                        ch.kCode = (blk << 2) | opnFkTable[fn >> 7];
                         // phase increment counter
                         ch.fc = this.fnTable[fn * 2] >> (7 - blk);
 
@@ -2242,27 +2242,27 @@ public class Fm2612 {
                     case 1: // 0xa4-0xa6 : FNUM2,BLK
                         this.st.fn_h = (byte) (v & 0x3f);
                         if (isVGMInit != 0) // workaround for stupid Kega Fusion init block
-                            ch.blockFnum = (this.st.fn_h << 8) | (ch.blockFnum & 0xFF);
+                            ch.blockFnum = (this.st.fn_h << 8) | (ch.blockFnum & 0xff);
                         break;
                     case 2: // 0xa8-0xaa : 3CH FNUM1
                         if (isVGMInit != 0)
-                            this.sl3.fnH = (byte) (this.sl3.blockFnum[c] >> 8);
+                            this.sl3.fnH = this.sl3.blockFnum[c] >> 8;
                         if (r < 0x100) {
                             int fn = ((this.sl3.fnH & 7) << 8) + v;
-                            byte blk = (byte) (this.sl3.fnH >> 3);
+                            int blk = this.sl3.fnH >> 3;
                             // keyscale code
                             this.sl3.kCode[c] = (byte) ((blk << 2) | opnFkTable[fn >> 7]);
                             // phase increment counter
                             this.sl3.fc[c] = this.fnTable[fn * 2] >> (7 - blk);
                             this.sl3.blockFnum[c] = (blk << 11) | fn;
-                            (this.channels)[2].slots[SLOT1].incr = -1;
+                            this.channels[2].slots[SLOT1].incr = -1;
                         }
                         break;
                     case 3: // 0xac-0xae : 3CH FNUM2,BLK
                         if (r < 0x100) {
-                            this.sl3.fnH = (byte) (v & 0x3f);
+                            this.sl3.fnH = v & 0x3f;
                             if (isVGMInit != 0)
-                                this.sl3.blockFnum[c] = (this.sl3.fnH << 8) | (this.sl3.blockFnum[c] & 0xFF);
+                                this.sl3.blockFnum[c] = (this.sl3.fnH << 8) | (this.sl3.blockFnum[c] & 0xff);
                         }
                         break;
                     }
@@ -2272,8 +2272,8 @@ public class Fm2612 {
                     switch (slot(r)) {
                     case 0: { // 0xb0-0xb2 : FB,ALGO
                         int feedback = (v >> 3) & 7;
-                        ch.algo = (byte) (v & 7);
-                        ch.fb = (byte) (feedback != 0 ? (byte) (feedback + 6) : 0);
+                        ch.algo = v & 7;
+                        ch.fb = feedback != 0 ? feedback + 6 : 0;
                         ch.setOps(this.setupConnection(ch.algo, c));
                     }
                     break;
@@ -2321,11 +2321,11 @@ public class Fm2612 {
                     // where sample clock is  MPcm/144
                     // this means the increment value for one clock sample is FNUM * 2^(B-1) = FNUM * 64 for octave 7
                     // we also need to handle the ratio between the chips frequency and the emulated frequency (can be 1.0)
-                    this.fnTable[i] = (int) ((double) i * 32 * freqBase * (1 << (FREQ_SH - 10))); // -10 because chips works with 10.10 fixed point, while we use 16.16
+                    this.fnTable[i] = (int) (i * 32 * freqBase * (1 << (FREQ_SH - 10))); // -10 because chips works with 10.10 fixed point, while we use 16.16
                 }
 
                 // maximal frequency is required for Phase overflow calculation, register size is 17 bits (Nemesis)
-                this.fnMax = (int) ((double) 0x20000 * freqBase * (1 << (FREQ_SH - 10)));
+                this.fnMax = (int) (0x20000 * freqBase * (1 << (FREQ_SH - 10)));
             }
 
             /**
@@ -2424,10 +2424,10 @@ public class Fm2612 {
 
             // build LFO PM modulation table
             for (short i = 0; i < 8; i++) { // 8 PM depths
-                byte fnum;
+                int fnum;
                 for (fnum = 0; fnum < 128; fnum++) { // 7 bits meaningful of F-NUMBER
-                    byte value;
-                    byte step;
+                    int value;
+                    int step;
                     int offset_depth = i;
                     int offset_fnum_bit;
                     int bit_tmp;
@@ -2437,14 +2437,14 @@ public class Fm2612 {
                         for (bit_tmp = 0; bit_tmp < 7; bit_tmp++) { // 7 bits
                             if ((fnum & (1 << bit_tmp)) != 0) { // only if bit "bit_tmp" is set
                                 offset_fnum_bit = bit_tmp * 8;
-                                value += lfo_pm_output[offset_fnum_bit + offset_depth][step];
+                                value += lfo_pm_output[offset_fnum_bit + offset_depth][step] & 0xff;
                             }
                         }
                         // 32 steps for LFO PM (sinus)
-                        lfoPmTable[(fnum * 32 * 8) + (i * 32) + step + 0] = value;
-                        lfoPmTable[(fnum * 32 * 8) + (i * 32) + (step ^ 7) + 8] = value;
-                        lfoPmTable[(fnum * 32 * 8) + (i * 32) + step + 16] = -value;
-                        lfoPmTable[(fnum * 32 * 8) + (i * 32) + (step ^ 7) + 24] = -value;
+                        lfoPmTable[(fnum * 32 * 8) + (i * 32) + step + 0] = value & 0xff;
+                        lfoPmTable[(fnum * 32 * 8) + (i * 32) + (step ^ 7) + 8] = value & 0xff;
+                        lfoPmTable[(fnum * 32 * 8) + (i * 32) + step + 16] = -value & 0xff;
+                        lfoPmTable[(fnum * 32 * 8) + (i * 32) + (step ^ 7) + 24] = -value & 0xff;
                     }
                 }
             }
@@ -2458,10 +2458,10 @@ public class Fm2612 {
 
         Opn.Channel[] cch = new Opn.Channel[6];
 
-        private byte pseudoSt = 0x00;
+        private int pseudoSt = 0x00;
 
-        private void ym2612_setoptions(byte flags) {
-            pseudoSt = (byte) ((flags >> 2) & 0x01);
+        private void ym2612_setoptions(int flags) {
+            pseudoSt = (flags >> 2) & 0x01;
         }
 
         // registers
@@ -2481,16 +2481,16 @@ public class Fm2612 {
         /**
          * address line A1
          */
-        public byte addr_A1;
+        public int addr_A1;
 
         // dac output (Ym2612Inst)
         //int   dacen;
-        public byte dacen;
-        public byte dac_test;
+        public int dacen;
+        public int dac_test;
         public int dacOut;
-        public byte muteDAC;
+        public int muteDAC;
 
-        public byte waveOutMode;
+        public int waveOutMode;
         public int waveL;
         public int waveR;
 
@@ -2527,7 +2527,7 @@ public class Fm2612 {
             }
         }
 
-        public byte read(int a) {
+        public int read(int a) {
             switch (a & 3) {
             case 0: // status 0
                 return this.opn.st.setStatus();
@@ -2540,7 +2540,7 @@ public class Fm2612 {
             return 0;
         }
 
-        public int write(int a, byte v) {
+        public int write(int a, int v) {
             int addr;
 
             //this.OPN.eg_timer = 0;
@@ -2558,21 +2558,21 @@ public class Fm2612 {
                     break; // verified on real YM2608
 
                 addr = this.opn.st.address;
-                this.regs[addr] = v;
+                this.regs[addr] = (byte) v;
                 switch (addr & 0xf0) {
                 case 0x20: // 0x20-0x2f Mode
                     switch (addr) {
                     case 0x2a: // DAC data (Ym2612Inst)
                         updateReq();
-                        this.dacOut = ((int) v - 0x80) << 6; // level unknown
+                        this.dacOut = (v - 0x80) << 6; // level unknown
                         break;
                     case 0x2b: // DAC Sel  (Ym2612Inst)
                         // b7 = dac enable
-                        this.dacen = (byte) (v & 0x80);
+                        this.dacen = v & 0x80;
                         break;
                     case 0x2C: // undocumented: DAC Test Reg
                         // b5 = volume enable
-                        this.dac_test = (byte) (v & 0x20);
+                        this.dac_test = v & 0x20;
                         break;
                     default: // OPN section
                         updateReq();
@@ -2599,7 +2599,7 @@ public class Fm2612 {
                     break; // verified on real YM2608
 
                 addr = this.opn.st.address;
-                this.regs[addr | 0x100] = v;
+                this.regs[addr | 0x100] = (byte) v;
                 updateReq();
                 this.opn.writeReg(addr | 0x100, v);
                 break;
@@ -2770,7 +2770,7 @@ public class Fm2612 {
                         opn.st.timerAOver();
                         // CSM mode total level latch and auto key on
                         if ((opn.st.mode & 0x80) != 0) {
-                            cch[2].controllKeyCsm(opn.sl3.keyCsm == 0);
+                            cch[2].controlKeyCsm(opn.sl3.keyCsm == 0);
                             opn.sl3.keyCsm = 1;
                         }
                     }
@@ -2792,20 +2792,20 @@ public class Fm2612 {
 
         public void postLoad() {
             // DAC data & port
-            this.dacOut = ((int) this.regs[0x2a] - 0x80) << 6; // level unknown
-            this.dacen = (byte) (this.regs[0x2d] & 0x80);
+            this.dacOut = ((this.regs[0x2a] & 0xff) - 0x80) << 6; // level unknown
+            this.dacen = this.regs[0x2d] & 0x80;
             // OPN registers
             // DT / MULTI , TL , KS / AR , AMON / DR , SR , SL / RR , SSG-EG
             for (int r = 0x30; r < 0x9e; r++)
                 if ((r & 3) != 3) {
-                    this.opn.writeReg(r, this.regs[r]);
-                    this.opn.writeReg(r | 0x100, this.regs[r | 0x100]);
+                    this.opn.writeReg(r, this.regs[r] & 0xff);
+                    this.opn.writeReg(r | 0x100, this.regs[r | 0x100] & 0xff);
                 }
             // FB / CONNECT , L / R / AMS / PMS
             for (int r = 0xb0; r < 0xb6; r++)
                 if ((r & 3) != 3) {
-                    this.opn.writeReg(r, this.regs[r]);
-                    this.opn.writeReg(r | 0x100, this.regs[r | 0x100]);
+                    this.opn.writeReg(r, this.regs[r] & 0xff);
+                    this.opn.writeReg(r | 0x100, this.regs[r | 0x100] & 0xff);
                 }
             // channels
             //FM_channel_postload(this.CH,6);
@@ -2831,9 +2831,10 @@ public class Fm2612 {
         /**
          * limiter
          */
-        private static void limit(int val, int max, int min) {
-            if (val > max) val = max;
-            else if (val < min) val = min;
+        private static int limit(/* ref */ int val, int max, int min) {
+            if (val > max) return max;
+            else if (val < min) return min;
+            return val;
         }
     }
 
@@ -2874,30 +2875,30 @@ public class Fm2612 {
      * @param a    address
      * @param v    value
      */
-    public int ym2612_write(byte chipId, BaseChip chip, int a, byte v) {
+    public int ym2612_write(int chipId, BaseChip chip, int a, int v) {
         //Debug.printf(Level.FINE, "a:%x v:%x",a,v));
 
         Ym2612 f2612 = (Ym2612) chip;
         return f2612.write(a, v);
     }
 
-    private byte ym2612_read(BaseChip chip, int a) {
+    private int ym2612_read(BaseChip chip, int a) {
         Ym2612 f2612 = (Ym2612) chip;
         return f2612.read(a);
     }
 
-    private int ym2612_timer_over(byte chipId, BaseChip chip, int c) {
+    private int ym2612_timer_over(int chipId, BaseChip chip, int c) {
         Ym2612 f2612 = (Ym2612) chip;
         return f2612.timerOver(c);
     }
 
-    public void ym2612_set_mutemask(byte chipId, BaseChip chip, int muteMask) {
+    public void ym2612_set_mutemask(int chipId, BaseChip chip, int muteMask) {
         Ym2612 f2612 = (Ym2612) chip;
         f2612.setMuteMask(muteMask);
     }
 
-    private void ym2612_update_req(byte chipId, Ym2612 chip) {
-        Ym2612 f2612 = (Ym2612) chip;
+    private void ym2612_update_req(int chipId, Ym2612 chip) {
+        Ym2612 f2612 = chip;
         f2612.updateReq();
     }
 
@@ -2959,10 +2960,10 @@ public class Fm2612 {
         }
 
         private void saveState(Ym2612.Opn.State st) {
-// #if FM_BUSY_FLAG_SUPPORT
-// state_save_register_device_item(device, 0, st.busy_expiry_time.seconds );
-// state_save_register_device_item(device, 0, st.busy_expiry_time.attoseconds );
-// #endif
+//#if FM_BUSY_FLAG_SUPPORT
+//            state_save_register_device_item(device, 0, st.busy_expiry_time.seconds );
+//            state_save_register_device_item(device, 0, st.busy_expiry_time.attoseconds );
+//#endif
             this.state_save_register_device_item(0, st.address);
             this.state_save_register_device_item(0, st.irq);
             this.state_save_register_device_item(0, st.irqmask);
@@ -2975,6 +2976,6 @@ public class Fm2612 {
             this.state_save_register_device_item(0, st.tb);
             this.state_save_register_device_item(0, st.tbc);
         }
-        //#endif /* _STATE_H
+//#endif /* _STATE_H
     }
 }

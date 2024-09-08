@@ -699,63 +699,63 @@ public class Ay8910 {
 
     // internal state
     private PsgType type;
-    private byte streams;
-    private byte ioports;
+    private int streams;
+    private int ioports;
     //(int)8 ready;
-    private byte active;
-    private byte register_latch;
+    private int active;
+    private int register_latch;
     private byte[] regs = new byte[16];
-    private byte lastEnable;
+    private int lastEnable;
     private int[] count = new int[NUM_CHANNELS];
     private byte[] output = new byte[NUM_CHANNELS];
-    private byte preScaleNoise;
+    private int preScaleNoise;
     private int countNoise;
     private int countEnv;
-    private byte envStep;
+    private int envStep;
     private int envVolume;
-    private byte hold, alternate, attack, holding;
+    private int hold, alternate, attack, holding;
     private int rng;
-    private byte envStepMask;
+    private int envStepMask;
 
     // init parameters ...
 
     private int step;
-    private byte zeroIsOff;
-    private byte[] volEnabled = new byte[NUM_CHANNELS];
+    private int zeroIsOff;
+    private final int[] volEnabled = new int[NUM_CHANNELS];
     private YmParam param;
     private YmParam paramEnv;
-    private int[][] volTable = new int[][] {
+    private final int[][] volTable = new int[][] {
             new int[16], new int[16], new int[16]
     };
-    private int[][] envTable = new int[][] {
+    private final int[][] envTable = new int[][] {
             new int[32], new int[32], new int[32]
     };
 //#if ENABLE_CUSTOM_OUTPUTS
 //    int[] vol3DTable = new int[8 * 32 * 32 * 32];
 //#endif
     private int flags; /** Flags */
-    private int[] resLoad = new int[3]; /** Load on channel in ohms */
+    private final int[] resLoad = new int[3]; /** Load on channel in ohms */
 
-    private byte[] stereoMask = new byte[NUM_CHANNELS];
-    private int[] muteMask = new int[NUM_CHANNELS];
+    private final int[] stereoMask = new int[NUM_CHANNELS];
+    private final int[] muteMask = new int[NUM_CHANNELS];
 
     private int clock;
-    private byte chipType;
-    private byte chipFlags;
+    private int chipType;
+    private int chipFlags;
 
     private ChangeStateCallback smpRateFunc;
     private Object smpRateData;
 
-    private int getNoiseEnabled(int _chan) {
-        return (this.regs[AY_ENABLE] >> (3 + _chan)) & 1;
+    private int getNoiseEnabled(int chan) {
+        return (this.regs[AY_ENABLE] >> (3 + chan)) & 1;
     }
 
-    private int getToneEnabled(int _chan) {
-        return (this.regs[AY_ENABLE] >> _chan) & 1;
+    private int getToneEnabled(int chan) {
+        return (this.regs[AY_ENABLE] >> chan) & 1;
     }
 
-    private int getTonePeriod(int _chan) {
-        return this.regs[_chan << 1] | ((this.regs[(_chan << 1) | 1] & 0x0f) << 8);
+    private int getTonePeriod(int chan) {
+        return (this.regs[chan << 1] & 0xff) | ((this.regs[(chan << 1) | 1] & 0x0f) << 8);
     }
 
     private int getNoisePeriod() {
@@ -767,20 +767,20 @@ public class Ay8910 {
     }
 
     private int getToneEnvelope(int _chan) {
-        return (this.regs[AY_AVOL + _chan] >> 4) & ((this.chipType == (byte) Type.AY8914.v) ? 3 : 1);
+        return ((this.regs[AY_AVOL + _chan] & 0xff) >> 4) & ((this.chipType == Type.AY8914.v) ? 3 : 1);
     }
 
     private int getEnvelopePeriod() {
-        return this.regs[AY_EFINE] | (this.regs[AY_ECOARSE] << 8);
+        return (this.regs[AY_EFINE] & 0xff) | ((this.regs[AY_ECOARSE]& 0xff) << 8);
     }
 
     private int getNoiseOutput() {
         return this.rng & 1;
     }
 
-    public void writeReg(byte r, byte v) {
+    public void writeReg(int r, int v) {
         //if (r >= 11 && r <= 13 ) printf("%d %x %02x\n", this.index, r, v);
-        this.regs[r] = v;
+        this.regs[r] = (byte) v;
 
         switch (r) {
         case AY_AFINE:
@@ -798,8 +798,8 @@ public class Ay8910 {
             // No action required
             break;
         case AY_ENABLE:
-            if (this.lastEnable == 0xFF)
-                this.lastEnable = (byte) ~this.regs[AY_ENABLE];
+            if (this.lastEnable == 0xff)
+                this.lastEnable = ~(this.regs[AY_ENABLE] & 0xff);
 
             if ((this.lastEnable & 0x40) != (this.regs[AY_ENABLE] & 0x40)) {
                 // write out 0xff if port set to input
@@ -813,17 +813,17 @@ public class Ay8910 {
                 //    this.port_b_write_cb(psg, 0, (this.regs[AY_ENABLE] & 0x80) ? this.regs[AY_PORTB] : 0xff);
             }
 
-            this.lastEnable = (byte) (this.regs[AY_ENABLE] & 0xC0);
+            this.lastEnable = (byte) (this.regs[AY_ENABLE] & 0xc0);
             break;
         case AY_ESHAPE:
-            this.attack = (this.regs[AY_ESHAPE] & 0x04) != 0 ? this.envStepMask : (byte) 0x00;
+            this.attack = (this.regs[AY_ESHAPE] & 0x04) != 0 ? this.envStepMask : 0x00;
             if ((this.regs[AY_ESHAPE] & 0x08) == 0) {
-                // if Continue = 0, map the shape to the equivalent one which has Continue = 1
+                // if "Continue = 0", map the shape to the equivalent one which has "Continue = 1"
                 this.hold = 1;
                 this.alternate = this.attack;
             } else {
-                this.hold = (byte) (this.regs[AY_ESHAPE] & 0x01);
-                this.alternate = (byte) (this.regs[AY_ESHAPE] & 0x02);
+                this.hold = this.regs[AY_ESHAPE] & 0x01;
+                this.alternate = this.regs[AY_ESHAPE] & 0x02;
             }
             this.envStep = this.envStepMask;
             this.holding = 0;
@@ -896,9 +896,8 @@ public class Ay8910 {
             }
 
             for (int chan = 0; chan < NUM_CHANNELS; chan++) {
-                this.volEnabled[chan] = (byte) (
-                        (this.output[chan] | getToneEnabled(chan))
-                                & (getNoiseOutput() | getNoiseEnabled(chan))
+                this.volEnabled[chan] = (this.output[chan] | getToneEnabled(chan))
+                                & (getNoiseOutput() | getNoiseEnabled(chan)
                 );
             }
 
@@ -925,7 +924,6 @@ public class Ay8910 {
                             this.envStep &= this.envStepMask;
                         }
                     }
-
                 }
             }
             this.envVolume = this.envStep ^ this.attack;
@@ -938,7 +936,7 @@ public class Ay8910 {
                     if (this.muteMask[chan] == 0)
                         continue;
                     if (getToneEnvelope(chan) != 0) {
-                        if (this.chipType == (byte) Type.AY8914.v) { // AY8914 Has a two bit tone_envelope field
+                        if (this.chipType == Type.AY8914.v) { // AY8914 Has a two bit tone_envelope field
                             chnOut = this.envTable[chan][this.volEnabled[chan] != 0 ? this.envVolume >> (3 - getToneEnvelope(chan)) : 0];
                         } else {
                             chnOut = this.envTable[chan][this.volEnabled[chan] != 0 ? this.envVolume : 0];
@@ -1010,10 +1008,10 @@ public class Ay8910 {
      *   used by e.g. YM2203, YM2210 ...
      */
 
-    private void setType(byte chipType) {
+    private void setType(int chipType) {
         this.chipType = chipType;
         if ((chipType & 0xF0) == 0x20)
-            chipType = (byte) Type.YM2149.v;
+            chipType = Type.YM2149.v;
 
         switch (Type.valueOf(chipType)) {
         case AY8910:
@@ -1067,22 +1065,22 @@ public class Ay8910 {
         }
     }
 
-    //private byte device_start_ay8910_mame(DEV_INFO retDevInf) {
-    //    Ay8910 chips;
-    //    DEV_DATA devData;
-    //    int rate;
+//    private byte device_start_ay8910_mame(DEV_INFO retDevInf) {
+//        Ay8910 chips;
+//        DEV_DATA devData;
+//        int rate;
+//
+//        rate = ay8910_start(chips, cfg._genCfg.clock, cfg.chipType, cfg.chipFlags);
+//        if (chips == null)
+//            return 0xff;
+//
+//        devData = (DEV_DATA) chips;
+//        devData.chipInf = chips;
+//        INIT_DEVINF(retDevInf, devData, rate, devDef_AY8910_MAME);
+//        return 0x00;
+//    }
 
-    //    rate = ay8910_start(chips, cfg._genCfg.clock, cfg.chipType, cfg.chipFlags);
-    //    if (chips == null)
-    //        return 0xFF;
-
-    //    devData = (DEV_DATA)chips;
-    //    devData.chipInf = chips;
-    //    INIT_DEVINF(retDevInf, devData, rate, devDef_AY8910_MAME);
-    //    return 0x00;
-    //}
-
-    public int init(int clock, byte ay_type, byte ay_flags) {
+    public int init(int clock, int ay_type, int ay_flags) {
 
         this.smpRateFunc = null;
 
@@ -1126,9 +1124,9 @@ public class Ay8910 {
         this.countNoise = 0;
         this.countEnv = 0;
         this.preScaleNoise = 0;
-        this.lastEnable = (byte) 0xFF; // force to write
+        this.lastEnable = 0xff; // force to write
         for (int i = 0; i < AY_PORTA; i++)
-            writeReg((byte) (i & 0xff), (byte) 0);
+            writeReg(i & 0xff, 0);
         //this.ready = 1;
 //#if ENABLE_REGISTER_TEST
 //        writeReg((byte) AY_AFINE, (byte) 0);
@@ -1162,68 +1160,68 @@ public class Ay8910 {
             if ((this.chipFlags & YM2149_PIN26_LOW) != 0)
                 masterClock /= 2;
         }
-        /* The envelope is pacing twice as fast for the YM2149 as for the AY-3-8910,    */
-        /* This handled by the step parameter. Consequently, we use a divider of 8 here. */
+        // The envelope is pacing twice as fast for the YM2149 as for the AY-3-8910,
+        // This handled by the step parameter. Consequently, we use a divider of 8 here.
         return masterClock / 8;
     }
 
-    private void write(byte addr, byte data) {
+    private void write(int addr, int data) {
         if ((addr & 1) != 0) {
             if (this.active != 0) {
-                /* Data port */
+                // data port
                 writeReg(this.register_latch, data);
             }
         } else {
-            this.active = (byte) ((data >> 4) == 0 ? 1 : 0); // mask programmed 4-bit code
+            this.active = (data >> 4) == 0 ? 1 : 0; // mask programmed 4-bit code
             if (this.active != 0) {
-                /* Register port */
-                this.register_latch = (byte) (data & 0x0f);
+                // Register port
+                this.register_latch = data & 0x0f;
             } else {
                 Debug.printf(Level.WARNING, "%s upper address mismatch\n", "AY8910");
             }
         }
     }
 
-    private static final byte[][] ayMask = new byte[][] {
-            new byte[] {
-                    (byte) 0xff, 0x0f, (byte) 0xff, 0x0f, (byte) 0xff, 0x0f, 0x1f, (byte) 0xff, 0x3f, 0x3f, 0x3f, (byte) 0xff, (byte) 0xff, 0x0f, (byte) 0xff, (byte) 0xff
+    private static final int[][] ayMask = new int[][] {
+            new int[] {
+                    0xff, 0x0f, 0xff, 0x0f, 0xff, 0x0f, 0x1f, 0xff, 0x3f, 0x3f, 0x3f, 0xff, 0xff, 0x0f, 0xff, 0xff
             },
-            new byte[] {
-                    (byte) 0xff, 0x0f, (byte) 0xff, 0x0f, (byte) 0xff, 0x0f, 0x1f, (byte) 0xff, 0x1f, 0x1f, 0x1f, (byte) 0xff, (byte) 0xff, 0x0f, (byte) 0xff, (byte) 0xff
+            new int[] {
+                    0xff, 0x0f, 0xff, 0x0f, 0xff, 0x0f, 0x1f, 0xff, 0x1f, 0x1f, 0x1f, 0xff, 0xff, 0x0f, 0xff, 0xff
             }
     };
 
-    public byte read(byte addr) {
-        byte r = this.register_latch;
+    public int read(byte addr) {
+        int r = this.register_latch;
 
-        if (this.active == 0) return (byte) 0xff; // high impedance
+        if (this.active == 0) return 0xff; // high impedance
 
         switch (r) {
         case AY_PORTA:
             if ((this.regs[AY_ENABLE] & 0x40) != 0)
                 Debug.printf("warning: read from %s Port A set as output\n", "AY8910");
-                /*
-                   even if the port is set as output, we still need to return the external
-                   data. Some games, like kidniki, need this to work.
 
-                   FIXME: The io ports are designed as open collector outputs. Bits 7 and 8 of AY_ENABLE
-                   only enable (low) or disable (high) the pull up resistors. The YM2149 datasheet
-                   specifies those pull up resistors as 60k to 600k (min / max).
-                   We do need a Callback for those two flags. Kid Niki (Irem m62) is one such
-                   case were it makes a difference in comparison to a standard TTL output.
-                 */
-            //if (this.port_a_read_cb != NULL)
-            //    this.regs[AY_PORTA] = this.port_a_read_cb(psg, 0);
-            //else
-            //    Debug.printf("Warning - read 8910 Port A\n");
+                // even if the port is set as output, we still need to return the external
+                // data. Some games, like kidniki, need this to work.
+                //
+                //FIXME: The io ports are designed as open collector outputs. Bits 7 and 8 of AY_ENABLE
+                // only enable (low) or disable (high) the pull up resistors. The YM2149 datasheet
+                // specifies those pull up resistors as 60k to 600k (min / max).
+                // We do need a Callback for those two flags. Kid Niki (Irem m62) is one such
+                // case were it makes a difference in comparison to a standard TTL output.
+
+//            if (this.port_a_read_cb != NULL)
+//                this.regs[AY_PORTA] = this.port_a_read_cb(psg, 0);
+//            else
+//                Debug.printf("Warning - read 8910 Port A\n");
             break;
         case AY_PORTB:
             if ((this.regs[AY_ENABLE] & 0x80) != 0)
                 Debug.printf("warning: read from %s Port B set as output\n", "AY8910");
-            //if (this.port_b_read_cb != NULL)
-            //    this.regs[AY_PORTB] = this.port_b_read_cb(psg, 0);
-            //else
-            //    Debug.printf("Warning - read 8910 Port B\n");
+//            if (this.port_b_read_cb != NULL)
+//                this.regs[AY_PORTB] = this.port_b_read_cb(psg, 0);
+//            else
+//                Debug.printf("Warning - read 8910 Port B\n");
             break;
         }
 
@@ -1234,23 +1232,23 @@ public class Ay8910 {
         // - AY-3-8914: same as 8910 except regs B,C,D (8,9,A below due to 8910.8914 remapping) are 0x3f
         // - AY-3-8916/8917 (used on ECS INTV expansion): inaccessible bits mirror one of the i/o ports, needs further testing
         // - YM2149: no anomaly
-        if (this.chipType == (byte) Type.AY8914.v) {
-            return (byte) (this.regs[r] & ayMask[0][r]);
+        if (this.chipType == Type.AY8914.v) {
+            return this.regs[r] & ayMask[0][r];
         }
         //else if (this.chip_type == AYTYPE_AY8910) {
         else if (this.type == PsgType.AY) {
-            return (byte) (this.regs[r] & ayMask[1][r]);
+            return this.regs[r] & ayMask[1][r];
         } else return this.regs[r];
     }
 
     public void setMuteMask(int muteMask) {
-        for (byte curChn = 0; curChn < NUM_CHANNELS; curChn++)
+        for (int curChn = 0; curChn < NUM_CHANNELS; curChn++)
             this.muteMask[curChn] = (muteMask & (1 << curChn)) != 0 ? 0 : ~0;
     }
 
     public void setStereoMask(int stereoMask) {
-        for (byte curChn = 0; curChn < NUM_CHANNELS; curChn++) {
-            this.stereoMask[curChn] = (byte) (stereoMask & 0x03);
+        for (int curChn = 0; curChn < NUM_CHANNELS; curChn++) {
+            this.stereoMask[curChn] = stereoMask & 0x03;
             stereoMask >>= 2;
         }
     }
@@ -1284,10 +1282,9 @@ public class Ay8910 {
         }
         if (normalize != 0) {
             for (int j = 0; j < par.resCount; j++)
-                /* The following line generates values that cause clicks when starting/pausing/stopping
-                    because there're off (the center is at zero, not the base).
-                    That's quite bad for a player.
-                */
+                // The following line generates values that cause clicks when starting/pausing/stopping
+                // because there're off (the center is at zero, not the base).
+                // That's quite bad for a player.
                 tab[j] = (int) (MAX_OUTPUT * ((temp[j] - min) / (max - min)) / NUM_CHANNELS);
         } else {
             for (int j = 0; j < par.resCount; j++)
@@ -1323,7 +1320,7 @@ public class Ay8910 {
     }};
 
 //#if false
-    /* RL = 1000, Hacker Kay normalized, 2.1V to 3.2V */
+//    /** RL = 1000, Hacker Kay normalized, 2.1V to 3.2V */
 //    static final YmParam ay8910_param = new YmParam() {{
 //        r_up = 664;
 //        r_down = 913;
@@ -1332,11 +1329,11 @@ public class Ay8910 {
 //           4120,  2512,  1737,  1335,  1005,   747,   586,    451 };
 //    }};
 
-    /*
-     * RL = 3000, Hacker Kay normalized pattern, 1.5V to 2.8V
-     * These values correspond with guesses based on Gyruss schematics
-     * They work well with scramble as well.
-     */
+//    /**
+//     * RL = 3000, Hacker Kay normalized pattern, 1.5V to 2.8V
+//     * These values correspond with guesses based on Gyruss schematics
+//     * They work well with scramble as well.
+//     */
 //    static final YmParam ay8910_param = {
 //        930, 454,
 //        16,
@@ -1344,11 +1341,11 @@ public class Ay8910 {
 //           4189,  2557,  1772,  1363,  1028,  766,   602,  464 },
 //    };
 
-    /*
-     * RL = 1000, Hacker Kay normalized pattern, 0.75V to 2.05V
-     * These values correspond with guesses based on Gyruss schematics
-     * They work well with scramble as well.
-     */
+//    /**
+//     * RL = 1000, Hacker Kay normalized pattern, 0.75V to 2.05V
+//     * These values correspond with guesses based on Gyruss schematics
+//     * They work well with scramble as well.
+//     */
 //    static final YmParam ay8910_param = {
 //        1371, 313,
 //        16,
@@ -1356,9 +1353,9 @@ public class Ay8910 {
 //           3814,  2337,  1629,  1263,   962,  727,   580,   458 },
 //    };
 
-    /*
-     * RL = 1000, Hacker Kay normalized pattern, 0.2V to 1.5V
-     */
+//    /**
+//     * RL = 1000, Hacker Kay normalized pattern, 0.2V to 1.5V
+//     */
 //    static final YmParam ay8910_param = {
 //        5806, 300,
 //        16,

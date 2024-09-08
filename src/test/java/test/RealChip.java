@@ -215,7 +215,7 @@ public class RealChip {
 
     }
 
-    public class RSoundChip {
+    public static class RSoundChip {
         protected int SoundLocation;
 
         protected int BusID;
@@ -250,10 +250,9 @@ public class RealChip {
             throw new UnsupportedOperationException();
         }
 
-        public void setSSGVolume(byte vol) {
+        public void setSSGVolume(int vol) {
             throw new UnsupportedOperationException();
         }
-
     }
 
     public class RScciSoundChip extends RSoundChip {
@@ -310,10 +309,9 @@ public class RealChip {
         }
 
         @Override
-        public void setSSGVolume(byte vol) {
+        public void setSSGVolume(int vol) {
             // SCCIはSSG音量の変更不可
         }
-
     }
 
     public class RC86ctlSoundChip extends RSoundChip {
@@ -374,7 +372,7 @@ public class RealChip {
         }
 
         @Override
-        public void setSSGVolume(byte vol) {
+        public void setSSGVolume(int vol) {
             NIGimic2 gm = realChip.QueryInterface();
             gm.setSSGVolume(vol);
         }

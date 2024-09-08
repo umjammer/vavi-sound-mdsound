@@ -1,6 +1,7 @@
 package mdsound.np.chip;
 
-import mdsound.MDSound;
+import java.util.function.Consumer;
+
 import mdsound.Common;
 import mdsound.np.Device.SoundChip;
 import mdsound.np.chip.DeviceInfo.BasicTrackInfo;
@@ -165,11 +166,10 @@ public class NesVrc7 implements SoundChip {
         b[0] = (b[0] * MASTER) >> 8;
         b[1] = (b[1] * MASTER) >> 8;
 
-        MDSound.np_nes_vrc7_volume = Math.abs(b[0]);
+        if (listener != null) listener.accept(new int[] {-1, -1, -1, -1, -1, -1, -1, Math.abs(b[0])});
 
         return 2;
     }
-
 
     @Override
     public void setMask(int m) {
@@ -180,6 +180,12 @@ public class NesVrc7 implements SoundChip {
     @Override
     public void setOption(int id, int val) {
         throw new UnsupportedOperationException();
+    }
+
+    private Consumer<int[]> listener;
+
+    public void setListener(Consumer<int[]> listener) {
+        this.listener = listener;
     }
 }
 

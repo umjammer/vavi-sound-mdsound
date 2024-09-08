@@ -1,8 +1,7 @@
 
-package test.SoundManager;
+package test.soundManager;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 
@@ -29,7 +28,7 @@ public class RingBuffer {
     }
 
     public void init(int size) {
-        buf = new ArrayList<>(Arrays.asList(new Pack.PPack()));
+        buf = new ArrayList<>(List.of(new Pack.PPack()));
         for (int i = 1; i < size + 1; i++) {
             buf.add(new Pack.PPack());
             buf.get(i).prev = buf.get(i - 1);
@@ -43,7 +42,7 @@ public class RingBuffer {
         bLength = 0;
     }
 
-    public boolean enq(long counter, int dev, int typ, int adr, int val, Object[] ex) {
+    public boolean enq(int counter, int dev, int typ, int adr, int val, Object[] ex) {
         synchronized (lockObj) {
             if (enqPos.next == deqPos) {
                 if (!autoExtend) {
@@ -71,7 +70,7 @@ public class RingBuffer {
             if (counter >= enqPos.prev.counter) {
                 enqPos = enqPos.next;
 
-                // debugDispBuffer();
+//                debugDispBuffer();
 
                 return true;
             }
@@ -102,21 +101,21 @@ public class RingBuffer {
 
             enqPos = lastPos.next;
 
-            // debugDispBuffer();
+//            debugDispBuffer();
 
             return true;
         }
     }
 
-    public boolean deq(Long counter, int dev, int typ, int adr, int val, Object[] ex) {
+    public boolean deq(/* ref */ int[] counter, /* ref */ int[] dev, /* ref */ int[] typ, /* ref */ int[] adr, /* ref */ int[] val, /* ref */ Object[][] ex) {
         synchronized (lockObj) {
-            counter = deqPos.counter;
+            counter[0] = deqPos.counter;
 
-            dev = deqPos.pack.dev;
-            typ = deqPos.pack.typ;
-            adr = deqPos.pack.adr;
-            val = deqPos.pack.val;
-            ex = deqPos.pack.ex;
+            dev[0] = deqPos.pack.dev;
+            typ[0] = deqPos.pack.typ;
+            adr[0] = deqPos.pack.adr;
+            val[0] = deqPos.pack.val;
+            ex[0] = deqPos.pack.ex;
 
             if (enqPos == deqPos)
                 return false;
@@ -125,7 +124,7 @@ public class RingBuffer {
             deqPos.counter = 0;
             deqPos = deqPos.next;
 
-            // debugDispBuffer();
+//            debugDispBuffer();
 
             return true;
         }

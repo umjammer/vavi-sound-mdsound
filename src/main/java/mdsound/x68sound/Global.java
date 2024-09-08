@@ -38,7 +38,7 @@ public class Global {
     public int opmRate = 62500; // 入力クロック÷64
 
     public int[] STEPTBL = new int[11 * 12 * 64];
-    public final int ALPHAZERO = (SIZEALPHATBL * 3);
+    public static final int ALPHAZERO = (SIZEALPHATBL * 3);
     public int[] ALPHATBL = new int[ALPHAZERO + SIZEALPHATBL + 1];
     public short[] SINTBL = new short[SIZESINTBL];
     public static final int[] STEPTBL_O2 = new int[] {
@@ -275,12 +275,12 @@ public class Global {
     //public int Semaphore = 0;
     public int timerSemaphore = 0;
 
-    public final int OPMLPF_COL = 64;
-    public final int OPMLPF_ROW_44 = 441;
+    public static final int OPMLPF_COL = 64;
+    public static final int OPMLPF_ROW_44 = 441;
 
     public static final short[][] OPMLOWPASS_44;
 
-    public final int OPMLPF_ROW_48 = 96;
+    public static final int OPMLPF_ROW_48 = 96;
     public static final short[][] OPMLOWPASS_48;
 
     static {
@@ -317,7 +317,7 @@ public class Global {
     public int thread_flag = 0;
     public int timer_start_flag = 0;
     //final int N_waveblk=8;
-    public final int N_waveblk = 4;
+    public static final int N_waveblk = 4;
     public int waveblk = 0;
     public int playingblk = 0, playingblk_next = 1;
     public int setPcmBufPtr = -1;

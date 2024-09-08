@@ -79,7 +79,7 @@ public class AdpcmA {
 
     private Fmvgen.Effects effects;
     private int revStartCh;
-    private int num = 0;
+    private int num;
 
     private static final byte[] table2 = new byte[] {
             1, 3, 5, 7, 9, 11, 13, 15,

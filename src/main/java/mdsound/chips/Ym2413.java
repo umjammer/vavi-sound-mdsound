@@ -441,14 +441,14 @@ public class Ym2413 {
     /** Noise Generator */
     private int noiseSeed;
 
-    // Channel Data
+    // Channel data
     private int[] patchNumber = new int[9];
     private int[] keyStatus = new int[9];
 
     /** Slot */
     private Slot[] slot = new Slot[18];
 
-    /** Voice Data */
+    /** Voice data */
     private Slot.Patch[][] patch = new Slot.Patch[][] {
             new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2]
             , new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2]
@@ -626,12 +626,12 @@ public class Ym2413 {
     /** Empty Voice data */
     private static final Slot.Patch nullPatch = new Slot.Patch();
 
-    /** Basic Voice Data */
+    /** Basic Voice data */
     private Slot.Patch[][] defaultPatch;
 
     /** Definition of envelope mode */
     private enum EgState {
-        READY, ATTACK, DECAY, SUSHOLD, SUSTAIN, RELEASE, SETTLE, FINISH;
+        READY, ATTACK, DECAY, SUSHOLD, SUSTAIN, RELEASE, SETTLE, FINISH
     }
 
     /** Phase incr table for Attack */
@@ -726,7 +726,7 @@ public class Ym2413 {
 
     /** Phase increment counter table */
     private void makeDPhaseTable() {
-        final int[] mlTable = new int[] {
+        int[] mlTable = new int[] {
                 1, 1 * 2, 2 * 2, 3 * 2, 4 * 2, 5 * 2, 6 * 2, 7 * 2, 8 * 2,
                 9 * 2, 10 * 2, 10 * 2, 12 * 2, 12 * 2, 15 * 2, 15 * 2
         };
@@ -748,7 +748,7 @@ public class Ym2413 {
 
     static {
 
-        final double[] klTable = new double[] {
+        double[] klTable = new double[] {
                 2 * 0.000, 2 * 9.000, 2 * 12.000, 2 * 13.875
                 , 2 * 15.000, 2 * 16.125, 2 * 16.875, 2 * 17.625
                 , 2 * 18.000, 2 * 18.750, 2 * 19.125, 2 * 19.500
@@ -822,7 +822,7 @@ public class Ym2413 {
     private void makeDPhaseArTable() {
 
 //# ifdef USE_SPEC_ENV_SPEED
-        final int[][] attackTable = new int[][] {
+        int[][] attackTable = new int[][] {
                 new int[4], new int[4], new int[4], new int[4],
                 new int[4], new int[4], new int[4], new int[4],
                 new int[4], new int[4], new int[4], new int[4],
@@ -1140,7 +1140,7 @@ public class Ym2413 {
         }
 
         if ((this.patchNumber[7] & 0x10) != 0) {
-            if (!((this.slotOnFlag[Slot.HH] != 0 && this.slotOnFlag[Slot.SD] != 0) | (this.reg[0x0e] & 0x20) != 0)) {
+            if (!((this.slotOnFlag[Slot.HH] != 0 && this.slotOnFlag[Slot.SD] != 0) || (this.reg[0x0e] & 0x20) != 0)) {
                 this.slot[Slot.HH].type = 0;
                 this.slot[Slot.HH].egMode = EgState.FINISH;
                 this.slot[Slot.SD].egMode = EgState.FINISH;
@@ -1156,7 +1156,7 @@ public class Ym2413 {
         }
 
         if ((this.patchNumber[8] & 0x10) != 0) {
-            if (!((this.slotOnFlag[Slot.CYM] != 0 && this.slotOnFlag[Slot.TOM] != 0) | (this.reg[0x0e] & 0x20) != 0)) {
+            if (!((this.slotOnFlag[Slot.CYM] != 0 && this.slotOnFlag[Slot.TOM] != 0) || (this.reg[0x0e] & 0x20) != 0)) {
                 this.slot[Slot.TOM].type = 0;
                 this.slot[Slot.TOM].egMode = EgState.FINISH;
                 this.slot[Slot.CYM].egMode = EgState.FINISH;
@@ -1195,8 +1195,8 @@ public class Ym2413 {
         makeDPhaseTable();
         makeDPhaseArTable();
         makeDPhaseDrTable();
-        pmDPhase = adjustRate((int) (PM_SPEED * PM_DP_WIDTH / (clock / 72)));
-        amDPhase = adjustRate((int) (AM_SPEED * AM_DP_WIDTH / (clock / 72)));
+        pmDPhase = adjustRate((int) (PM_SPEED * PM_DP_WIDTH / (clock / 72.)));
+        amDPhase = adjustRate((int) (AM_SPEED * AM_DP_WIDTH / (clock / 72.)));
     }
 
     private void makeTables(int c, int r) {

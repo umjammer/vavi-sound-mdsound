@@ -2,24 +2,21 @@
 
 package mdsound.fmgen;
 
-import java.util.logging.Level;
-
 import dotnet4j.io.FileAccess;
 import dotnet4j.io.FileMode;
 import dotnet4j.io.FileNotFoundException;
 import dotnet4j.io.FileShare;
 import dotnet4j.io.FileStream;
 import dotnet4j.io.SeekOrigin;
-import vavi.util.Debug;
 
 
 public class FileIO {
     private Exception lastException = null;
 
     public enum Flags {
-        Open(0x000001),
-        Readonly(0x000002),
-        Create(0x000004);
+        Open(0x00_0001),
+        Readonly(0x00_0002),
+        Create(0x00_0004);
         final int v;
 
         Flags(int v) {
@@ -61,12 +58,12 @@ public class FileIO {
     /**
      * ファイルを開く
      */
-    public boolean open(String filename, int flg/* = 0*/) {
+    public boolean open(String filename, int flg /* = 0 */) {
         close();
 
         path = filename;
 
-        FileAccess access = ((flg & Flags.Readonly.v) > 0) ? FileAccess.ReadWrite : FileAccess.ReadWrite;
+        FileAccess access = ((flg & Flags.Readonly.v) > 0) ? FileAccess.Read : FileAccess.ReadWrite;
         FileShare share = ((flg & Flags.Readonly.v) > 0) ? FileShare.Read : FileShare.None;
         FileMode creation = ((flg & Flags.Create.v) > 0) ? FileMode.Create : FileMode.Open;
 
@@ -83,15 +80,13 @@ public class FileIO {
         }
 
         flags = (flg & Flags.Readonly.v) | ((hFile == null) ? 0 : Flags.Open.v);
-        //if ((flags & (int)Flags.Open)==0)
-        //{
-        //    switch (GetLastError())
-        //    {
-        //        case ERROR_FILE_NOT_FOUND: error = file_not_found; break;
-        //        case ERROR_SHARING_VIOLATION: error = sharing_violation; break;
-        //        default: error = unknown; break;
-        //    }
-        //}
+//        if ((flags & (int)Flags.Open)==0) {
+//            switch (GetLastError()) {
+//                case ERROR_FILE_NOT_FOUND: error = file_not_found; break;
+//                case ERROR_SHARING_VIOLATION: error = sharing_violation; break;
+//                default: error = unknown; break;
+//            }
+//        }
         setLogicalOrigin(0);
 
         return (flags & Flags.Open.v) > 0;
@@ -234,7 +229,7 @@ e.printStackTrace();
         if ((getFlags() & Flags.Open.v) == 0)
             return 0;
 
-        return hFile.getPosition();
+        return hFile.position();
     }
 
     /**

@@ -19,22 +19,22 @@ public class K054539Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void reset(byte chipId) {
+    public void reset(int chipId) {
         device_reset_k054539(chipId);
     }
 
     @Override
-    public int start(byte chipId, int clock) {
+    public int start(int chipId, int clock) {
         return device_start_k054539(chipId, clock);
     }
 
     @Override
-    public void stop(byte chipId) {
+    public void stop(int chipId) {
         device_stop_k054539(chipId);
     }
 
     @Override
-    public void update(byte chipId, int[][] outputs, int samples) {
+    public void update(int chipId, int[][] outputs, int samples) {
         k054539_update(chipId, outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
@@ -42,7 +42,7 @@ public class K054539Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(byte chipId, int SamplingRate, int clockValue, Object... Option) {
+    public int start(int chipId, int SamplingRate, int clockValue, Object... Option) {
         int sampRate = device_start_k054539(chipId, clockValue);
         int flags = 1;
         if (Option != null && Option.length > 0) flags = (int) (byte) Option[0];
@@ -56,7 +56,7 @@ public class K054539Inst extends Instrument.BaseInstrument {
 
     @Override
     public String getName() {
-        return "K054539Inst";
+        return "K054539";
     }
 
     @Override
@@ -64,32 +64,32 @@ public class K054539Inst extends Instrument.BaseInstrument {
         return "K054";
     }
 
-    public void k054539_init_flags(byte chipId, int flags) {
+    public void k054539_init_flags(int chipId, int flags) {
         K054539 info = chips[chipId];
         info.intFlags(flags);
     }
 
-    public void k054539_set_gain(byte chipId, int channel, double gain) {
+    public void k054539_set_gain(int chipId, int channel, double gain) {
         K054539 info = chips[chipId];
         if (gain >= 0) info.setGain(channel, gain);
     }
 
-    private void k054539_update(byte chipId, int[][] outputs, int samples) {
+    private void k054539_update(int chipId, int[][] outputs, int samples) {
         K054539 info = chips[chipId];
         info.update(outputs, samples);
     }
 
-    private void k054539_w(byte chipId, int offset, byte data) {
+    private void k054539_w(int chipId, int offset, int data) {
         K054539 info = chips[chipId];
         info.write(offset, data);
     }
 
-    public byte k054539_r(byte chipId, int offset) {
+    public byte k054539_r(int chipId, int offset) {
         K054539 info = chips[chipId];
         return info.write(offset);
     }
 
-    private int device_start_k054539(byte chipId, int clock) {
+    private int device_start_k054539(int chipId, int clock) {
         if (chipId >= MAX_CHIPS)
             return 0;
 
@@ -97,49 +97,47 @@ public class K054539Inst extends Instrument.BaseInstrument {
         return info.start(clock);
     }
 
-    private void device_stop_k054539(byte chipId) {
+    private void device_stop_k054539(int chipId) {
         K054539 info = chips[chipId];
         info.stop();
     }
 
-    private void device_reset_k054539(byte chipId) {
+    private void device_reset_k054539(int chipId) {
         K054539 chip = chips[chipId];
         chip.reset();
     }
 
-    private void k054539_write_rom(byte chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
+    private void k054539_write_rom(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
         K054539 chip = chips[chipId];
         chip.writeRom(romSize, dataStart, dataLength, romData);
     }
 
-    public void k054539_write_rom2(byte chipId, int romSize, int dataStart, int dataLength,
+    public void k054539_write_rom2(int chipId, int romSize, int dataStart, int dataLength,
                                    byte[] romData, int startAdr) {
         K054539 chip = chips[chipId];
         chip.writeRom2(romSize, dataStart, dataLength, romData, startAdr);
     }
 
-    public void k054539_set_mute_mask(byte chipId, int muteMask) {
+    public void k054539_set_mute_mask(int chipId, int muteMask) {
         K054539 chip = chips[chipId];
         chip.setMuteMask(muteMask);
     }
 
     @Override
-    public int write(byte chipId, int port, int adr, int data) {
-        k054539_w(chipId, adr, (byte) data);
+    public int write(int chipId, int port, int adr, int data) {
+        k054539_w(chipId, adr, data);
         return 0;
     }
 
-    /**
-     * Generic get_info
-     */
-    /*DEVICE_GET_INFO( k054539 ) {
-        switch (K054539) {
-            case DEVINFO_STR_NAME:       strcpy(info.s, "K054539Inst");      break;
-            case DEVINFO_STR_FAMILY:     strcpy(info.s, "Konami custom");    break;
-            case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;
-            case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
-        }
-    }*/
+//    /**
+//     * Generic get_info
+//     */
+//            case DEVINFO_STR_NAME:       strcpy(info.s, "K054539Inst");      break;
+//            case DEVINFO_STR_FAMILY:     strcpy(info.s, "Konami custom");    break;
+//            case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;
+//            case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
+//        }
+//    }
 
     //----
 
@@ -149,9 +147,12 @@ public class K054539Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public Map<String, Integer> getVisVolume() {
-        Map<String, Integer> result = new HashMap<>();
-        result.put("k054539", getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+    public Map<String, Object> getView(String key, Map<String, Object> args) {
+        Map<String, Object> result = new HashMap<>();
+        switch (key) {
+            case "volume" ->
+                    result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+        }
         return result;
     }
 }

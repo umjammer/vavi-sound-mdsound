@@ -272,8 +272,8 @@ public class OPNA2 extends Opna.OPNABase {
     public void setPreScaler(int p) {
         super.setPreScaler(p);
 
-        final byte[][] table = new byte[][] {new byte[] {6, 4}, new byte[] {3, 2}, new byte[] {2, 1}};
-        final byte[] table2 = new byte[] {108, 77, 71, 67, 62, 44, 8, 5};
+        byte[][] table = new byte[][] {new byte[] {6, 4}, new byte[] {3, 2}, new byte[] {2, 1}};
+        byte[] table2 = new byte[] {108, 77, 71, 67, 62, 44, 8, 5};
         // 512
         if (prescale != p) {
             prescale = (byte) p;
@@ -544,7 +544,7 @@ public class OPNA2 extends Opna.OPNABase {
      * リズム音を読みこむ
      */
     public boolean loadRhythmSample(Function<String, Stream> appendFileReaderCallback) throws IOException {
-        final String[] rhythmName = {
+        String[] rhythmName = {
                 "bd", "sd", "top", "hh", "tom", "rim",
         };
 

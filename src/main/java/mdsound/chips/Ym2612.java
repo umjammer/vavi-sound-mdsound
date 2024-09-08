@@ -1,13 +1,18 @@
 package mdsound.chips;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
+
 import dotnet4j.util.compat.TriConsumer;
-import mdsound.instrument.Ym2612Inst;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+
+import static java.lang.System.getLogger;
 
 
 /**
  * Ym2612.C : Ym2612 emulator
  * <p>
- * Almost constantes are taken from the MAME core
+ * Almost constants are taken from the MAME core
  * <p>
  * This source is a part of Gens project
  * Written by Stéphane Dallongeville (gens@consolemul.com)
@@ -22,26 +27,28 @@ import mdsound.instrument.Ym2612Inst;
  */
 public class Ym2612 {
 
+    private static final Logger logger = getLogger(Ym2612.class.getName());
+
     //Just for tests stuff...
     //
-    //#define COEF_MOD       0.5
-    //#define MAX_OUT        ((int) (((1 << MAX_OUT_BITS) - 1) * COEF_MOD))
+//    private static final double COEF_MOD = 0.5;
+//    private static final int MAX_OUT = ((int) (((1 << MAX_OUT_BITS) - 1) * COEF_MOD));
     private static final int OUTPUT_BITS = 15;
 
     /** Change it if you need to do long update */
     private static final int MAX_UPDATE_LENGTH = 0x100; // for in_vgm
 
-    // Gens always uses 16 bits Sound (in 32 bits buffer) and do the convertion later if needed.
+    // Gens always uses 16 bits Sound (in 32 bits buffer) and do the conversion later if needed.
 
-    /* OUTPUT_BITS 15 is MAME's volume level */
-//        private static final int OUTPUT_BITS = 15;
+//    /** OUTPUT_BITS 15 is MAME's volume level */
+//    private static final int OUTPUT_BITS = 15;
 
     /** DAC_SHIFT makes sure that FM and DAC volume has the same volume */
     private static final int DAC_SHIFT = OUTPUT_BITS - 9;
 
     private static final int ATTACK = 0;
     private static final int DECAY = 1;
-    private static final int SUBSTAIN = 2;
+    private static final int SUSTAIN = 2;
     private static final int RELEASE = 3;
 
     /** Sinus phase counter int part */
@@ -59,23 +66,23 @@ public class Ym2612 {
     /** LFO phase counter float part (best setting) */
     private static final int LFO_LBITS = 28 - LFO_HBITS;
 
-    private static final int SIN_LENGHT = 1 << SIN_HBITS;
-    private static final int ENV_LENGHT = 1 << ENV_HBITS;
-    private static final int LFO_LENGHT = 1 << LFO_HBITS;
+    private static final int SIN_LENGTH = 1 << SIN_HBITS;
+    private static final int ENV_LENGTH = 1 << ENV_HBITS;
+    private static final int LFO_LENGTH = 1 << LFO_HBITS;
 
     /** Env + TL scaling + LFO */
-    private static final int TL_LENGHT = ENV_LENGHT * 3;
+    private static final int TL_LENGTH = ENV_LENGTH * 3;
 
-    private static final int SIN_MASK = SIN_LENGHT - 1;
-    private static final int ENV_MASK = ENV_LENGHT - 1;
-    private static final int LFO_MASK = LFO_LENGHT - 1;
+    private static final int SIN_MASK = SIN_LENGTH - 1;
+    private static final int ENV_MASK = ENV_LENGTH - 1;
+    private static final int LFO_MASK = LFO_LENGTH - 1;
 
     /** ENV_MAX = 96 dB */
-    private static final double ENV_STEP = 96.0 / ENV_LENGHT;
+    private static final double ENV_STEP = 96.0 / ENV_LENGTH;
 
-    private static final int ENV_ATTACK = (ENV_LENGHT * 0) << ENV_LBITS;
-    private static final int ENV_DECAY = (ENV_LENGHT * 1) << ENV_LBITS;
-    private static final int ENV_END = (ENV_LENGHT * 2) << ENV_LBITS;
+    private static final int ENV_ATTACK = (ENV_LENGTH * 0) << ENV_LBITS;
+    private static final int ENV_DECAY = (ENV_LENGTH * 1) << ENV_LBITS;
+    private static final int ENV_END = (ENV_LENGTH * 2) << ENV_LBITS;
 
     private static final int MAX_OUT_BITS = SIN_HBITS + SIN_LBITS + 2; // Modulation = -4 <-. +4
     private static final int MAX_OUT = (1 << MAX_OUT_BITS) - 1;
@@ -90,7 +97,7 @@ public class Ym2612 {
     private static final int AR_RATE = 399128;
     private static final int DR_RATE = 5514396;
 
-    /** FIXED (LFO_FMS_BASE gives somethink as 1) */
+    /** FIXED (LFO_FMS_BASE gives something as 1) */
     private static final int LFO_FMS_LBITS = 9;
     private static final int LFO_FMS_BASE = (int) (0.05946309436 * 0.0338 * (double) (1 << LFO_FMS_LBITS));
 
@@ -99,45 +106,45 @@ public class Ym2612 {
     private static final int S2 = 1;
     private static final int S3 = 3;
 
-    // Partie variables
+    // Variable part
 
     /** SINUS TABLE (pointer on TL TABLE) */
-    private static int[] SIN_TAB = new int[SIN_LENGHT];
-    /** TOTAL LEVEL TABLE (positif and minus) */
-    private static int[] TL_TAB = new int[TL_LENGHT * 2];
+    private static final int[] SIN_TAB = new int[SIN_LENGTH];
+    /** TOTAL LEVEL TABLE (positive and minus) */
+    private static final int[] TL_TAB = new int[TL_LENGTH * 2];
     /** ENV CURVE TABLE (attack & decay) */
-    private static int[] ENV_TAB = new int[2 * ENV_LENGHT + 8];
+    private static final int[] ENV_TAB = new int[2 * ENV_LENGTH + 8];
 
     /** Conversion from decay to attack phase */
-    private static int[] DECAY_TO_ATTACK = new int[ENV_LENGHT];
+    private static final int[] DECAY_TO_ATTACK = new int[ENV_LENGTH];
 
     /** Frequency step table */
-    private int[] fincTab = new int[2048];
+    private final int[] fIncTab = new int[2048];
 
     /** Attack rate table */
-    private int[] arTab = new int[128];
+    private final int[] arTab = new int[128];
     /** Decay rate table */
-    private int[] drTab = new int[96];
+    private final int[] drTab = new int[96];
     /** Detune table */
     private int[][] dtTab = new int[][] {
             new int[32], new int[32], new int[32], new int[32],
             new int[32], new int[32], new int[32], new int[32]
     };
-    /** Substain level table */
-    private static int[] SL_TAB = new int[16];
+    /** Sustain level table */
+    private static final int[] SL_TAB = new int[16];
     /** Table for NULL rate */
-    private int[] nullRate = new int[32];
+    private final int[] nullRate = new int[32];
 
     /** LFO AMS TABLE (adjusted for 11.8 dB) */
-    private static int[] LFO_ENV_TAB = new int[LFO_LENGHT];
+    private static final int[] LFO_ENV_TAB = new int[LFO_LENGTH];
     /** LFO FMS TABLE */
-    private static int[] LFO_FREQ_TAB = new int[LFO_LENGHT];
+    private static final int[] LFO_FREQ_TAB = new int[LFO_LENGTH];
 
-    /** Interpolation table */
-    //private int INTER_TAB[MAX_UPDATE_LENGTH];
+//    /** Interpolation table */
+//    private int INTER_TAB[MAX_UPDATE_LENGTH];
 
     /** LFO step table */
-    private int[] lfoIncTab = new int[8];
+    private final int[] lfoIncTab = new int[8];
 
     public interface UpdateChan extends TriConsumer<Channel, int[][], Integer> {
     }
@@ -224,21 +231,21 @@ public class Ym2612 {
     };
 
     /** Interpolation calculation */
-    private static int intCnt;
+    private long intCnt;
 
     private int YM2612_Enable;
     private int YM2612_Improv;
 
-    //int DAC_Enable = 1;
+//    int DAC_Enable = 1;
 
     private int[][] YM_Buf = new int[2][];
 
-    /** enable SSG-EG envelope (causes inacurate Sound sometimes - rodrigo) */
-    private static int enableSsgEg = 1;
+    /** enable SSG-EG envelope (causes inaccurate Sound sometimes - rodrigo) */
+    private static int enableSsgEg = 1; // TODO
     /** sometimes it creates a terrible noise */
     private int dacHighpassEnable = 1;
 
-    private  static int[] vol = new int[2];
+    private static final int[] vol = new int[2];
 
     private static class Channel {
 
@@ -254,15 +261,15 @@ public class Ym2612 {
 
             for (int j = 0; j < 4; j++) {
                 this.s0Out[j] = 0;
-                this.fnum[j] = 0;
-                this.foct[j] = 0;
+                this.fNum[j] = 0;
+                this.fOct[j] = 0;
                 this.kc[j] = 0;
 
                 this.slots[j].reset();
             }
         }
 
-        private void do0xB4(byte data) {
+        private void do0xB4(int data) {
             if ((data & 0x80) != 0) this.left = -1;
             else this.left = 0;
 
@@ -272,99 +279,99 @@ public class Ym2612 {
             this.ams = LFO_AMS_TAB[(data >> 4) & 3];
             this.fms = LFO_FMS_TAB[data & 7];
 
-            if (this.slots[0].amSOn != 0) this.slots[0].ams = this.ams;
+            if (this.slots[0].amsOn != 0) this.slots[0].ams = this.ams;
             else this.slots[0].ams = 31;
-            if (this.slots[1].amSOn != 0) this.slots[1].ams = this.ams;
+            if (this.slots[1].amsOn != 0) this.slots[1].ams = this.ams;
             else this.slots[1].ams = 31;
-            if (this.slots[2].amSOn != 0) this.slots[2].ams = this.ams;
+            if (this.slots[2].amsOn != 0) this.slots[2].ams = this.ams;
             else this.slots[2].ams = 31;
-            if (this.slots[3].amSOn != 0) this.slots[3].ams = this.ams;
+            if (this.slots[3].amsOn != 0) this.slots[3].ams = this.ams;
             else this.slots[3].ams = 31;
         }
 
         private static class Slot {
-            /** paramètre detune */
+            /** detune parameter */
             private int[] dt;
-            /** paramètre "multiple de fréquence" */
+            /** "frequency multiple" parameter */
             private int mul;
-            /** Total Level = volume lorsque l'enveloppe est au plus haut */
+            /** Total Level = volume when the envelope is at its highest */
             private int tl;
-            /** Total Level ajusted */
+            /** Total Level adjusted */
             private int tll;
-            /** Sustin Level (ajusted) = volume où l'enveloppe termine sa première phase de régression */
+            /** Sustain Level (adjusted) = volume where the envelope ends its first phase of regression */
             private int sll;
-            /** Key Scale Rate Shift = facteur de prise en compte du KSL dans la variations de l'enveloppe */
+            /** Key Scale Rate Shift = factor for taking into account KSL in envelope variations */
             private int ksrS;
             /**
-             * Key Scale Rate = cette valeur est calculée param rapport à la fréquence actuelle, elle va influer
-             * sur les différents paramètres de l'enveloppe comme l'attaque, le decay ...  comme dans la réalité !
+             * Key Scale Rate = This value is calculated in relation to the current frequency, it will influence
+             * the different parameters of the envelope such as attack, decay... as in reality!
              */
             private int ksr;
-            /** Type enveloppe SSG */
-            private int SEG;
-            /** Attack Rate (table pointeur) = Taux d'attaque (AR[KSR]) */
+            /** SSG envelope type */
+            private int seg;
+            /** Attack Rate (pointer table) = Attack Rate (ar[ksr]) */
             private int[] ar;
             private int arIndex;
-            /** Decay Rate (table pointeur) = Taux pour la régression (DR[KSR]) */
+            /** Decay Rate (pointer table) = Rate for regression (dr[ksr]) */
             private int[] dr;
             private int drIndex;
-            /** Sustin Rate (table pointeur) = Taux pour le maintien (SR[KSR]) */
+            /** Austin Rate (pointer table) = Rate for maintenance (sur[ksr]) */
             private int[] sr;
             private int srIndex;
-            /** Release Rate (table pointeur) = Taux pour le relâchement (RR[KSR]) */
+            /** Release Rate (pointer table) = Rate for release (rr[ksr]) */
             private int[] rr;
             private int rrIndex;
-            /** Frequency Count = compteur-fréquence pour déterminer l'amplitude actuelle (SIN[Finc >> 16]) */
+            /** Frequency Count = frequency counter to determine current amplitude (SIN[fInc >> 16]) */
             private int fCnt;
-            /** frequency step = pas d'incrémentation du compteur-fréquence */
+            /** frequency step = no incrementation of the frequency counter */
             private int fInc;
             /**
-             * plus le pas est grand, plus la fréquence est aïgu (ou haute)
-             * /** Envelope current phase = cette variable permet de savoir dans quelle phase
+             * the larger the step, the higher the frequency
+             * Envelope current phase = this variable allows you to know in which phase
              */
             private int eCurp;
-            // de l'enveloppe on se trouve, param exemple phase d'attaque ou phase de maintenue ...
-            // en fonction de la valeur de cette variable, on va appeler une fonction permettant
-            // de mettre à jour l'enveloppe courante.
-            /** Envelope counter = le compteur-enveloppe permet de savoir où l'on se trouve dans l'enveloppe */
+            // of the envelope we find ourselves, for example attack phase or sustain phase...
+            // depending on the value of this variable, we will call a function to update
+            // the current envelope
+            /** Envelope counter = the envelope counter lets you know where you are in the envelope */
             private int eCnt;
-            /** Envelope step courant */
+            /** Envelope step current */
             private int eInc;
-            /** Envelope counter limite pour la prochaine phase */
+            /** Envelope counter limit for next phase */
             private int eCmp;
             /**
-             * Envelope step for Attack = pas d'incrémentation du compteur durant la phase d'attaque
-             * cette valeur est égal à AR[KSR]
+             * Envelope step for Attack = no increment of the counter during the
+             * attack phase this value is equal to {@code ar[ksr]}
              */
             private int eIncA;
             /**
-             * Envelope step for Decay = pas d'incrémentation du compteur durant la phase de regression
-             * cette valeur est égal à DR[KSR]
+             * Envelope step for Decay = no increment of the counter during the
+             * regression phase this value is equal to {@code dr[ksr]}
              */
             private int eIncD;
             /**
-             * Envelope step for Sustain = pas d'incrémentation du compteur durant la phase de maintenue
-             * cette valeur est égal à SR[KSR]
+             * Envelope step for Sustain = no increment of the counter during the
+             * sustain phase this value is equal to {@code sr[ksr]}
              */
             private int eIncS;
             /**
-             * Envelope step for Release = pas d'incrémentation du compteur durant la phase de relâchement
-             * cette valeur est égal à RR[KSR]
+             * Envelope step for Release = no increment of the counter during the
+             * release phase this value is equal to {@code rr[ksr]}
              */
             private int eIncR;
             /**
-             * pointeur of SLOT output = pointeur permettant de connecter la sortie de ce slot à l'entrée
-             * d'un autre ou carrement à la sortie de la voie
+             * pointer of SLOT output = pointer allowing to connect the output of this
+             * slot to the input of another or directly to the output of the track
              */
-            private int[] OUTp;
-            /** input data of the slot = données en entrée du slot */
-            private int INd;
+            private int[] outP;
+            /** input data of the slot = input data of the slot */
+            private int inD;
             /** Change envelop mask. */
             private int chgEnM;
-            /** AMS depth level of this SLOT = degré de modulation de l'amplitude param le LFO */
+            /** AMS depth level of this SLOT = degree of modulation of the amplitude param the LFO */
             private int ams;
-            /** AMS enable flag = drapeau d'activation de l'AMS */
-            private int amSOn;
+            /** AMS enable flag = AMS activation flag */
+            private int amsOn;
 
             private void reset() {
                 this.fCnt = 0;
@@ -378,7 +385,7 @@ public class Ym2612 {
             }
 
             private void keyOn() {
-                if (this.eCurp == RELEASE) { // la touche est-elle relâchée ?
+                if (this.eCurp == RELEASE) { // is the key released?
                     this.fCnt = 0;
 
                     // Fix Ecco 2 splash Sound
@@ -393,7 +400,7 @@ public class Ym2612 {
             }
 
             private void keyOff() {
-                if (this.eCurp != RELEASE) { // la touche est-elle appuyée ?
+                if (this.eCurp != RELEASE) { // is the key pressed?
                     if (this.eCnt < ENV_DECAY) { // attack phase ?
                         this.eCnt = (ENV_TAB[this.eCnt >> ENV_LBITS] << ENV_LBITS) + ENV_DECAY;
                     }
@@ -404,11 +411,11 @@ public class Ym2612 {
                 }
             }
 
-            private void do0x60(byte data, int ams, int[] drTab, int[] nullRate) {
-                if ((this.amSOn = (data & 0x80)) != 0) this.ams = ams;
+            private void do0x60(int data, int ams, int[] drTab, int[] nullRate) {
+                if ((this.amsOn = (data & 0x80)) != 0) this.ams = ams;
                 else this.ams = 31;
 
-                if ((data &= 0x1F) > 0) {
+                if ((data &= 0x1f) > 0) {
                     this.dr = drTab;
                     this.drIndex = data << 1;
                 } else {
@@ -423,11 +430,11 @@ public class Ym2612 {
             private interface EnvNextEvent extends Runnable {
             }
 
-            /** Next Enveloppe phase functions pointer table */
+            /** Next Envelope phase functions pointer table */
             private final Channel.Slot.EnvNextEvent[] envNextEvents = new Channel.Slot.EnvNextEvent[] {
                     this::attack,
                     this::decay,
-                    this::substain,
+                    this::sustain,
                     this::release,
                     this::null_,
                     this::null_,
@@ -440,12 +447,12 @@ public class Ym2612 {
 
                 this.fInc = (fInc + this.dt[kc]) * this.mul;
 
-                ksr = kc >> this.ksrS; // keycode atténuation
+                ksr = kc >> this.ksrS; // keycode attenuation
 
-                //Debug.printf(debug_file, "FINC = %d  this.Finc = %d\n", fInc, this.Finc);
+//logger.log(Level.DEBUG, String.format("fInc = %d  this.fInc = %d", fInc, this.fInc));
 
-                if (this.ksr != ksr) { // si le KSR a changé alors
-                    // les différents taux pour l'enveloppe sont mis à jour
+                if (this.ksr != ksr) { // if the KSR has changed then
+                    // the different rates for the envelope are updated
                     this.ksr = ksr;
 
                     this.eIncA = this.ar[this.arIndex + ksr];
@@ -456,17 +463,19 @@ public class Ym2612 {
                     if (this.eCurp == ATTACK) this.eInc = this.eIncA;
                     else if (this.eCurp == DECAY) this.eInc = this.eIncD;
                     else if (this.eCnt < ENV_END) {
-                        if (this.eCurp == SUBSTAIN) this.eInc = this.eIncS;
+                        if (this.eCurp == SUSTAIN) this.eInc = this.eIncS;
                         else if (this.eCurp == RELEASE) this.eInc = this.eIncR;
                     }
 
-                    //  Debug.printf(debug_file, "KSR = %.4X  EincA = %.8X EincD = %.8X EincS = %.8X EincR = %.8X\n", ksr, this.EincA, this.EincD, this.EincS, this.EincR);
+//logger.log(Level.DEBUG, "ksr = %.4X  eIncA = %.8X eIncD = %.8X eIncS = %.8X eIncR = %.8X", ksr, this.eIncA, this.eIncD, this.eIncS, this.eIncR);
                 }
             }
 
+            /** @see EnvNextEvent */
             private void null_() {
             }
 
+            /** @see EnvNextEvent */
             private void attack() {
                 // Verified with Gynoug even in HQ (explode SFX)
                 this.eCnt = ENV_DECAY;
@@ -476,27 +485,29 @@ public class Ym2612 {
                 this.eCurp = DECAY;
             }
 
+            /** @see EnvNextEvent */
             private void decay() {
                 // Verified with Gynoug even in HQ (explode SFX)
                 this.eCnt = this.sll;
 
                 this.eInc = this.eIncS;
                 this.eCmp = ENV_END;
-                this.eCurp = SUBSTAIN;
+                this.eCurp = SUSTAIN;
             }
 
-            private void substain() {
+            /** @see EnvNextEvent */
+            private void sustain() {
                 if (enableSsgEg != 0) {
-                    if ((this.SEG & 8) != 0) { // SSG envelope type
-                        if ((this.SEG & 1) != 0) {
+                    if ((this.seg & 8) != 0) { // SSG envelope type
+                        if ((this.seg & 1) != 0) {
                             this.eCnt = ENV_END;
                             this.eInc = 0;
                             this.eCmp = ENV_END + 1;
                         } else {
                             // re KEY ON
 
-                            // this.Fcnt = 0;
-                            // this.ChgEnM = 0xFFFFFFFF;
+                            // this.fCnt = 0;
+                            // this.chgEnM = 0xffff_ffff;
 
                             this.eCnt = 0;
                             this.eInc = this.eIncA;
@@ -504,7 +515,7 @@ public class Ym2612 {
                             this.eCurp = ATTACK;
                         }
 
-                        this.SEG ^= (this.SEG & 2) << 1;
+                        this.seg ^= (this.seg & 2) << 1;
                     } else {
                         this.eCnt = ENV_END;
                         this.eInc = 0;
@@ -517,6 +528,7 @@ public class Ym2612 {
                 }
             }
 
+            /** @see EnvNextEvent */
             private void release() {
                 this.eCnt = ENV_END;
                 this.eInc = 0;
@@ -524,43 +536,43 @@ public class Ym2612 {
             }
         }
 
-        /** anciennes sorties slot 0 (pour le feed back) */
-        private int[] s0Out = new int[4];
-        /** ancienne sortie de la voie (son brut) */
+        /** old slot 0 outputs (for feedback) */
+        private final int[] s0Out = new int[4];
+        /** old track output (raw sound) */
         private int oldOutD;
-        /** sortie de la voie (son brut) */
+        /** track output (raw sound) */
         private int outD;
         /** LEFT enable flag */
         private int left;
         /** RIGHT enable flag */
         private int right;
-        /** Algorythm = détermine les connections entre les opérateurs */
+        /** Algorithm = determines the connections between operators */
         private int algo;
-        /** shift count of self feed back = degré de "Feed-Back" du SLOT 1 (il est son unique entrée) */
+        /** shift count of self feed back = degree of "Feed-Back" of SLOT 1 (it is its only input) */
         private int fb;
-        /** Fréquency Modulation Sensitivity of channel = degré de modulation de la fréquence sur la voie param le LFO */
+        /** Frequency Modulation Sensitivity of channel = degree of frequency modulation on the channel param the LFO */
         private int fms;
-        /** Amplitude Modulation Sensitivity of channel = degré de modulation de l'amplitude sur la voie param le LFO */
+        /** Amplitude Modulation Sensitivity of channel = degree of amplitude modulation on the channel param the LFO */
         private int ams;
-        /** hauteur fréquence de la voie (+ 3 pour le mode spécial) */
-        private int[] fnum = new int[4];
-        /** octave de la voie (+ 3 pour le mode spécial) */
-        private int[] foct = new int[4];
-        /** Key Code = valeur fonction de la fréquence (voir KSR pour les slots, KSR = KC >> KSR_S) */
-        private int[] kc = new int[4];
-        /** four slot.operators = les 4 slots de la voie */
-        private Channel.Slot[] slots = new Channel.Slot[] {new Channel.Slot(), new Channel.Slot(), new Channel.Slot(), new Channel.Slot()};
+        /** height frequency of the track (+ 3 for special mode) */
+        private final int[] fNum = new int[4];
+        /** octave of the track (+ 3 for special mode) */
+        private final int[] fOct = new int[4];
+        /** Key Code = value depending on frequency (see KSR for slots, KSR = KC >> KSR_S) */
+        private final int[] kc = new int[4];
+        /** four slot operators = the 4 slots of the track */
+        private final Slot[] slots = new Slot[] {new Slot(), new Slot(), new Slot(), new Slot()};
         /** Frequency step recalculation flag */
-        private int ffLag;
+        private int fFlag;
         /** Maxim: channel mute flag */
         private int mute;
 
         private int keyOn;
-        private int[] fmVol = new int[2];
-        private int[] fmSlotVol = new int[4];
+        private final int[] fmVol = new int[2];
+        private final int[] fmSlotVol = new int[4];
 
-        private void calcFInc(int[] fincTab) {
-            int fInc = fincTab[this.fnum[0]] >> (7 - this.foct[0]);
+        private void calcFInc(int[] fIncTab) {
+            int fInc = fIncTab[this.fNum[0]] >> (7 - this.fOct[0]);
             int kc = this.kc[0];
 
             this.slots[0].calcFInc(fInc, kc);
@@ -570,12 +582,12 @@ public class Ym2612 {
         }
 
         private void keyOn(int nsl) {
-            Channel.Slot sl = this.slots[nsl]; // on recupère le bon pointeur de slot
+            Slot sl = this.slots[nsl]; // we get the right slot pointer
             sl.keyOn();
         }
 
         private void keyOff(int nsl) {
-            Channel.Slot sl = this.slots[nsl]; // on recupère le bon pointeur de slot
+            Slot sl = this.slots[nsl]; // we get the right slot pointer
             sl.keyOff();
         }
 
@@ -606,61 +618,61 @@ public class Ym2612 {
         }
     }
 
-    /** Horloge Ym2612 */
+    /** Ym2612 clock */
     private int clock;
     /** Sample Rate (11025/22050/44100) */
     private int rate;
     /** TimerBase calculation */
-    private int timerBase;
+    private final int timerBase;
     /** Ym2612 Status (timer overflow) */
     private int status;
-    /** addresse pour l'écriture dans l'OPN A (propre à l'émulateur) */
+    /** address for writing to OPN A (emulator specific) */
     private int opnAAdr;
-    /** addresse pour l'écriture dans l'OPN B (propre à l'émulateur) */
+    /** address for writing to OPN B (emulator specific) */
     private int opnBAdr;
-    /** LFO counter = compteur-fréquence pour le LFO */
+    /** LFO counter = frequency counter for the LFO */
     private int lfoCnt;
-    /** LFO step counter = pas d'incrémentation du compteur-fréquence du LFO */
+    /** LFO step counter = no increment of LFO frequency counter */
     private int lfoInc;
-    // plus le pas est grand, plus la fréquence est grande
-    /** timerA limit = valeur jusqu'à laquelle le timer A doit compter */
+    // the larger the step, the higher the frequency
+    /** timerA limit = value up to which timer A should count */
     private int timerA;
     private int timerAL;
-    /** timerA counter = valeur courante du Timer A */
+    /** timerA counter = current value of Timer A */
     private int timerACnt;
-    /** timerB limit = valeur jusqu'à laquelle le timer B doit compter */
+    /** timerB limit = value up to which timer B should count */
     private int timerB;
     private int timerBL;
-    /** timerB counter = valeur courante du Timer B */
+    /** timerB counter = current value of Timer B */
     private int timerBCnt;
-    /** Mode actuel des voie 3 et 6 (normal / spécial) */
+    /** Current mode of tracks 3 and 6 (normal / special) */
     private int mode;
     /** DAC enabled flag */
     private int dac;
     /** DAC data */
     private int dacData;
     private int dacHighpass;
-    /** Fréquence de base, se calcul param rapport à l'horlage et au sample rate */
-    private double frequence;
+    /** Base frequency, calculated relative to the clock and sample rate */
+    private double frequency;
     /** Interpolation Counter */
-    private int interCnt;
+    private long interCnt;
     /** Interpolation Step */
-    private int interStep;
-    /** Les 6 voies du Ym2612 */
-    private Channel[] channels = new Channel[] {new Channel(), new Channel(), new Channel(), new Channel(), new Channel(), new Channel()};
-    /** Sauvegardes des valeurs de tout les registres, c'est facultatif */
-    private int[][] regs = new int[][] {new int[0x100], new int[0x100]};
-    /** cela nous rend le débuggage plus facile */
-//        private static final int MAX_UPDATE_LENGTH = 0x100;
+    private final long interStep;
+    /** The 6 channels of the Ym2612 */
+    private final Channel[] channels = new Channel[] {new Channel(), new Channel(), new Channel(), new Channel(), new Channel(), new Channel()};
+    /** Saving the values of all registers is optional */
+    private final int[][] regs = new int[][] {new int[0x100], new int[0x100]};
+//    /** This makes debugging easier for us */
+//    private static final int MAX_UPDATE_LENGTH = 0x100;
 
     /** Temporary calculated LFO AMS (adjusted for 11.8 dB) * */
-    private int[] lfoEnvUp = new int[MAX_UPDATE_LENGTH];
+    private final int[] lfoEnvUp = new int[MAX_UPDATE_LENGTH];
     /** Temporary calculated LFO FMS * */
-    private int[] lfoFreqUp = new int[MAX_UPDATE_LENGTH];
+    private final int[] lfoFreqUp = new int[MAX_UPDATE_LENGTH];
 
     /** current phase calculation * */
     private int in0, in1, in2, in3;
-    /** current enveloppe calculation * */
+    /** current envelope calculation* */
     private int en0, en1, en2, en3;
 
     private int dacMute;
@@ -672,40 +684,39 @@ public class Ym2612 {
         this.channels[2].keyOn(3);
     }
 
-    private int setSlot(int adr, byte data) {
-        Channel ch;
-        Channel.Slot slot;
-        int nch, nsl;
+    @SuppressFBWarnings("SF_SWITCH_NO_DEFAULT")
+    private int setSlot(int adr, int data) {
+        int nch;
 
         if ((nch = adr & 3) == 3) return 1;
-        nsl = (adr >> 2) & 3;
+        int nsl = (adr >> 2) & 3;
 
         if ((adr & 0x100) != 0) nch += 3;
 
-        ch = this.channels[nch];
-        slot = ch.slots[nsl];
+        Channel ch = this.channels[nch];
+        Channel.Slot slot = ch.slots[nsl];
 
-        switch (adr & 0xF0) {
+        switch (adr & 0xf0) {
         case 0x30:
-            if ((slot.mul = (data & 0x0F)) != 0) slot.mul <<= 1;
+            if ((slot.mul = (data & 0x0f)) != 0) slot.mul <<= 1;
             else slot.mul = 1;
 
             slot.dt = dtTab[(data >> 4) & 7];
 
             ch.slots[0].fInc = -1;
 
-            //Debug.printf(debug_file, "CHANNEL[%d], SLOT[%d] DTMUL = %.2X\n", nch, nsl, data & 0x7F);
+//logger.log(Level.DEBUG, String.format("CHANNEL[%d], SLOT[%d] DTMUL = %.2X", nch, nsl, data & 0x7F));
             break;
 
         case 0x40:
-            slot.tl = data & 0x7F;
+            slot.tl = data & 0x7f;
 
-            // SOR2 do a lot of TL adjustement and this fix R.Shinobi jump Sound...
+            // SOR2 do a lot of TL adjustment and this fix R.Shinobi jump Sound...
             updateSpecial();
 
             slot.tll = slot.tl << (ENV_HBITS - 7);
 
-            //Debug.printf(debug_file, "CHANNEL[%d], SLOT[%d] TL = %.2X\n", nch, nsl, slot.TL);
+//logger.log(Level.DEBUG, String.format("CHANNEL[%d], SLOT[%d] TL = %.2X", nch, nsl, slot.TL));
             break;
 
         case 0x50:
@@ -713,7 +724,7 @@ public class Ym2612 {
 
             ch.slots[0].fInc = -1;
 
-            if ((data &= 0x1F) != 0) {
+            if ((data &= 0x1f) != 0) {
                 slot.ar = arTab;
                 slot.arIndex = data << 1;
             } else {
@@ -724,13 +735,13 @@ public class Ym2612 {
             slot.eIncA = slot.ar[slot.arIndex + slot.ksr];
             if (slot.eCurp == ATTACK) slot.eInc = slot.eIncA;
 
-            //Debug.printf(debug_file, "CHANNEL[%d], SLOT[%d] AR = %.2X  EincA = %.6X\n", nch, nsl, data, slot.EincA);
+//logger.log(Level.DEBUG, String.format("CHANNEL[%d], SLOT[%d] AR = %.2X  EincA = %.6X", nch, nsl, data, slot.EincA));
             break;
 
         case 0x60:
             slot.do0x60(data, ch.ams, drTab, nullRate);
 
-            //Debug.printf(debug_file, "CHANNEL[%d], SLOT[%d] AMS = %d  DR = %.2X  EincD = %.6X\n", nch, nsl, slot.AMSon, data, slot.EincD);
+//logger.log(Level.DEBUG, String.format("CHANNEL[%d], SLOT[%d] AMS = %d  DR = %.2X  EincD = %.6X", nch, nsl, slot.AMSon, data, slot.EincD));
             break;
 
         case 0x70:
@@ -743,22 +754,22 @@ public class Ym2612 {
             }
 
             slot.eIncS = slot.sr[slot.srIndex + slot.ksr];
-            if ((slot.eCurp == SUBSTAIN) && (slot.eCnt < ENV_END)) slot.eInc = slot.eIncS;
+            if ((slot.eCurp == SUSTAIN) && (slot.eCnt < ENV_END)) slot.eInc = slot.eIncS;
 
-            //Debug.printf(debug_file, "CHANNEL[%d], SLOT[%d] SR = %.2X  EincS = %.6X\n", nch, nsl, data, slot.EincS);
+//logger.log(Level.DEBUG, String.format("CHANNEL[%d], SLOT[%d] SR = %.2X  EincS = %.6X", nch, nsl, data, slot.EincS));
             break;
 
         case 0x80:
             slot.sll = SL_TAB[data >> 4];
 
             slot.rr = drTab;
-            slot.rrIndex = ((data & 0xF) << 2) + 2;
+            slot.rrIndex = ((data & 0xf) << 2) + 2;
 
             slot.eIncR = slot.rr[slot.rrIndex + slot.ksr];
             if ((slot.eCurp == RELEASE) && (slot.eCnt < ENV_END)) slot.eInc = slot.eIncR;
 
-            //Debug.printf(debug_file, "CHANNEL[%d], SLOT[%d] slot = %.8X\n", nch, nsl, slot.SLL);
-            //Debug.printf(debug_file, "CHANNEL[%d], SLOT[%d] RR = %.2X  EincR = %.2X\n", nch, nsl, ((data & 0xF) << 1) | 2, slot.EincR);
+//logger.log(Level.DEBUG, String.format("CHANNEL[%d], SLOT[%d] slot = %.8X", nch, nsl, slot.SLL));
+//logger.log(Level.DEBUG, String.format("CHANNEL[%d], SLOT[%d] RR = %.2X  EincR = %.2X", nch, nsl, ((data & 0xF) << 1) | 2, slot.EincR));
             break;
 
         case 0x90:
@@ -787,10 +798,10 @@ public class Ym2612 {
             // Al = Altern
             // H  = Hold
             if (enableSsgEg != 0) {
-                if ((data & 0x08) != 0) slot.SEG = data & 0x0F;
-                else slot.SEG = 0;
+                if ((data & 0x08) != 0) slot.seg = data & 0x0f;
+                else slot.seg = 0;
 
-                //Debug.printf(debug_file, "CHANNEL[%d], SLOT[%d] SSG-EG = %.2X\n", nch, nsl, data);
+//logger.log(Level.DEBUG, String.format("CHANNEL[%d], SLOT[%d] SSG-EG = %.2X", nch, nsl, data));
             }
             break;
         }
@@ -798,74 +809,75 @@ public class Ym2612 {
         return 0;
     }
 
-    private int setChannel(int adr, byte data) {
+    @SuppressFBWarnings("SF_SWITCH_NO_DEFAULT")
+    private int setChannel(int adr, int data) {
         Channel ch;
         int num;
 
         if ((num = adr & 3) == 3) return 1;
 
-        switch (adr & 0xFC) {
-        case 0xA0:
+        switch (adr & 0xfc) {
+        case 0xa0:
             if ((adr & 0x100) != 0) num += 3;
             ch = this.channels[num];
 
             updateSpecial();
 
-            ch.fnum[0] = (ch.fnum[0] & 0x700) + data;
-            ch.kc[0] = (ch.foct[0] << 2) | FKEY_TAB[ch.fnum[0] >> 7];
+            ch.fNum[0] = (ch.fNum[0] & 0x700) + data;
+            ch.kc[0] = (ch.fOct[0] << 2) | FKEY_TAB[ch.fNum[0] >> 7];
 
             ch.slots[0].fInc = -1;
 
-            //Debug.printf(debug_file, "CHANNEL[%d] part1 FNUM = %d  KC = %d\n", num, ch.FNUM[0], ch.KC[0]);
+//logger.log(Level.DEBUG, String.format("CHANNEL[%d] part1 FNUM = %d  KC = %d", num, ch.FNUM[0], ch.KC[0]));
             break;
 
-        case 0xA4:
+        case 0xa4:
             if ((adr & 0x100) != 0) num += 3;
             ch = this.channels[num];
 
             updateSpecial();
 
-            ch.fnum[0] = (ch.fnum[0] & 0x0FF) + ((data & 0x07) << 8);
-            ch.foct[0] = (data & 0x38) >> 3;
-            ch.kc[0] = (ch.foct[0] << 2) | FKEY_TAB[ch.fnum[0] >> 7];
+            ch.fNum[0] = (ch.fNum[0] & 0x0ff) + ((data & 0x07) << 8);
+            ch.fOct[0] = (data & 0x38) >> 3;
+            ch.kc[0] = (ch.fOct[0] << 2) | FKEY_TAB[ch.fNum[0] >> 7];
 
             ch.slots[0].fInc = -1;
 
-            //Debug.printf(debug_file, "CHANNEL[%d] part2 FNUM = %d  FOCT = %d  KC = %d\n", num, ch.FNUM[0], ch.FOCT[0], ch.KC[0]);
+//logger.log(Level.DEBUG, String.format("CHANNEL[%d] part2 FNUM = %d  FOCT = %d  KC = %d", num, ch.FNUM[0], ch.FOCT[0], ch.KC[0]));
             break;
 
-        case 0xA8:
+        case 0xa8:
             if (adr < 0x100) {
                 num++;
 
                 updateSpecial();
 
-                this.channels[2].fnum[num] = (this.channels[2].fnum[num] & 0x700) + data;
-                this.channels[2].kc[num] = (this.channels[2].foct[num] << 2) | FKEY_TAB[this.channels[2].fnum[num] >> 7];
+                this.channels[2].fNum[num] = (this.channels[2].fNum[num] & 0x700) + data;
+                this.channels[2].kc[num] = (this.channels[2].fOct[num] << 2) | FKEY_TAB[this.channels[2].fNum[num] >> 7];
 
                 this.channels[2].slots[0].fInc = -1;
 
-                //Debug.printf(debug_file, "CHANNEL[2] part1 FNUM[%d] = %d  KC[%d] = %d\n", num, this.CHANNEL[2].FNUM[num], num, this.CHANNEL[2].KC[num]);
+//logger.log(Level.DEBUG, String.format("CHANNEL[2] part1 FNUM[%d] = %d  KC[%d] = %d", num, this.CHANNEL[2].FNUM[num], num, this.CHANNEL[2].KC[num]));
             }
             break;
 
-        case 0xAC:
+        case 0xac:
             if (adr < 0x100) {
                 num++;
 
                 updateSpecial();
 
-                this.channels[2].fnum[num] = (this.channels[2].fnum[num] & 0x0FF) + ((data & 0x07) << 8);
-                this.channels[2].foct[num] = (data & 0x38) >> 3;
-                this.channels[2].kc[num] = (this.channels[2].foct[num] << 2) | FKEY_TAB[this.channels[2].fnum[num] >> 7];
+                this.channels[2].fNum[num] = (this.channels[2].fNum[num] & 0x0ff) + ((data & 0x07) << 8);
+                this.channels[2].fOct[num] = (data & 0x38) >> 3;
+                this.channels[2].kc[num] = (this.channels[2].fOct[num] << 2) | FKEY_TAB[this.channels[2].fNum[num] >> 7];
 
                 this.channels[2].slots[0].fInc = -1;
 
-                //Debug.printf(debug_file, "CHANNEL[2] part2 FNUM[%d] = %d  FOCT[%d] = %d  KC[%d] = %d\n", num, this.CHANNEL[2].FNUM[num], num, this.CHANNEL[2].FOCT[num], num, this.CHANNEL[2].KC[num]);
+//logger.log(Level.DEBUG, String.format("CHANNEL[2] part2 FNUM[%d] = %d  FOCT[%d] = %d  KC[%d] = %d", num, this.CHANNEL[2].FNUM[num], num, this.CHANNEL[2].FOCT[num], num, this.CHANNEL[2].KC[num]));
             }
             break;
 
-        case 0xB0:
+        case 0xb0:
             if ((adr & 0x100) != 0) num += 3;
             ch = this.channels[num];
 
@@ -886,10 +898,10 @@ public class Ym2612 {
             //if(ch.FB = ((data >> 3) & 7)) ch.FB = 9 - ch.FB; // Thunder force 4 (music stage 8), Gynoug, Aladdin bug Sound...
             //else ch.FB = 31;
 
-            //Debug.printf(debug_file, "CHANNEL[%d] ALGO = %d  FB = %d\n", num, ch.ALGO, ch.FB);
+//logger.log(Level.DEBUG, String.format("CHANNEL[%d] ALGO = %d  FB = %d", num, ch.ALGO, ch.FB));
             break;
 
-        case 0xB4:
+        case 0xb4:
             if ((adr & 0x100) != 0) num += 3;
             ch = this.channels[num];
 
@@ -897,40 +909,41 @@ public class Ym2612 {
 
             ch.do0xB4(data);
 
-            //Debug.printf(debug_file, "CHANNEL[%d] AMS = %d  FMS = %d\n", num, ch.AMS, ch.FMS);
+//logger.log(Level.DEBUG, String.format("CHANNEL[%d] AMS = %d  FMS = %d", num, ch.AMS, ch.FMS));
             break;
         }
 
         return 0;
     }
 
-    private int setData(int adr, byte data) {
+    @SuppressFBWarnings("SF_SWITCH_NO_DEFAULT")
+    private int setData(int adr, int data) {
         Channel ch;
         int nch;
 
         switch (adr) {
         case 0x22:
             if ((data & 8) != 0) {
-                // Cool Spot music 1, LFO modified severals time which
-                // distord the Sound, have to check that on a real genesis...
+                // Cool Spot music 1, LFO modified several time which
+                // distort the Sound, have to check that on a real genesis...
 
                 this.lfoInc = lfoIncTab[data & 7];
 
-                //Debug.printf(debug_file, "\nLFO Enable, LFOinc = %.8X   %d\n", this.LFOinc, data & 7);
+//logger.log(Level.DEBUG, String.format("\nLFO Enable, LFOinc = %.8X   %d", this.LFOinc, data & 7));
             } else {
                 this.lfoInc = this.lfoCnt = 0;
 
-                //Debug.printf(debug_file, "\nLFO Disable\n");
+//logger.log(Level.DEBUG, String.format("\nLFO Disable"));
             }
             break;
 
         case 0x24:
-            this.timerA = (this.timerA & 0x003) | (((int) data) << 2);
+            this.timerA = (this.timerA & 0x003) | (data << 2);
 
             if (this.timerAL != (1024 - this.timerA) << 12) {
                 this.timerACnt = this.timerAL = (1024 - this.timerA) << 12;
 
-                //Debug.printf(debug_file, "Timer A Set = %.8X\n", this.TimerAcnt);
+//logger.log(Level.DEBUG, String.format("Timer A Set = %.8X", this.TimerAcnt));
             }
             break;
 
@@ -940,7 +953,7 @@ public class Ym2612 {
             if (this.timerAL != (1024 - this.timerA) << 12) {
                 this.timerACnt = this.timerAL = (1024 - this.timerA) << 12;
 
-                //Debug.printf(debug_file, "Timer A Set = %.8X\n", this.TimerAcnt);
+//logger.log(Level.DEBUG, String.format("Timer A Set = %.8X", this.TimerAcnt));
             }
             break;
 
@@ -950,12 +963,12 @@ public class Ym2612 {
             if (this.timerBL != (256 - this.timerB) << (4 + 12)) {
                 this.timerBCnt = this.timerBL = (256 - this.timerB) << (4 + 12);
 
-                //Debug.printf(debug_file, "Timer B Set = %.8X\n", this.TimerBcnt);
+//logger.log(Level.DEBUG, String.format("Timer B Set = %.8X", this.TimerBcnt));
             }
             break;
 
         case 0x27:
-            // Paramètre divers
+            // Miscellaneous settings
             // b7 = CSM MODE
             // b6 = 3 slot mode
             // b5 = reset b
@@ -981,7 +994,7 @@ public class Ym2612 {
 
             this.mode = data;
 
-            //Debug.printf(debug_file, "Mode reg = %.2X\n", data);
+//logger.log(Level.DEBUG, String.format("Mode reg = %.2X", data));
             break;
 
         case 0x28:
@@ -992,26 +1005,26 @@ public class Ym2612 {
 
             updateSpecial();
 
-            if ((data & 0x10) != 0) ch.keyOn(S0); // On appuie sur la touche pour le slot 1
-            else ch.keyOff(S0); // On relâche la touche pour le slot 1
-            if ((data & 0x20) != 0) ch.keyOn(S1); // On appuie sur la touche pour le slot 3
-            else ch.keyOff(S1); // On relâche la touche pour le slot 3
-            if ((data & 0x40) != 0) ch.keyOn(S2); // On appuie sur la touche pour le slot 2
-            else ch.keyOff(S2); // On relâche la touche pour le slot 2
-            if ((data & 0x80) != 0) ch.keyOn(S3); // On appuie sur la touche pour le slot 4
-            else ch.keyOff(S3); // On relâche la touche pour le slot 4
+            if ((data & 0x10) != 0) ch.keyOn(S0); // Press the key for slot 1
+            else ch.keyOff(S0); // Release the key for slot 1
+            if ((data & 0x20) != 0) ch.keyOn(S1); // Press the key for slot 3
+            else ch.keyOff(S1); // Release the key for slot 3
+            if ((data & 0x40) != 0) ch.keyOn(S2); // Press the key for slot 2
+            else ch.keyOff(S2); // Release the key for slot 2
+            if ((data & 0x80) != 0) ch.keyOn(S3); // Press the key for slot 4
+            else ch.keyOff(S3); // Release the key for slot 4
 
-            //Debug.printf(debug_file, "CHANNEL[%d]  KEY %.1X\n", nch, ((data & 0xf0) >> 4));
+    //logger.log(Level.DEBUG, String.format("CHANNEL[%d]  KEY %.1X", nch, ((data & 0xf0) >> 4));
             break;
 
         case 0x2A:
-            this.dacData = (int) data - 0x80 << DAC_SHIFT; // donnée du DAC
+            this.dacData = (data - 0x80) << DAC_SHIFT; // DAC data
             break;
 
         case 0x2B:
             if ((this.dac ^ (data & 0x80)) != 0) updateSpecial();
 
-            this.dac = data & 0x80; // activation/désactivation du DAC
+            this.dac = data & 0x80; // DAC activation/deactivation
             break;
         }
 
@@ -1021,13 +1034,13 @@ public class Ym2612 {
     // Gens
 
     private void updateSpecial() {
-//            if (YM_Len && YM2612_Enable) {
-//                YM2612_Update(YM_Buf, YM_Len);
+//        if (YM_Len && YM2612_Enable) {
+//            YM2612_Update(YM_Buf, YM_Len);
 //
-//                YM_Buf[0] = Seg_L + Sound_Extrapol[VDP_Current_Line + 1][0];
-//                YM_Buf[1] = Seg_R + Sound_Extrapol[VDP_Current_Line + 1][0];
-//                YM_Len = 0;
-//            }
+//            YM_Buf[0] = Seg_L + Sound_Extrapol[VDP_Current_Line + 1][0];
+//            YM_Buf[1] = Seg_R + Sound_Extrapol[VDP_Current_Line + 1][0];
+//            YM_Len = 0;
+//        }
     }
 
     private void getCurrentPhase(Channel ch) {
@@ -1037,12 +1050,12 @@ public class Ym2612 {
         this.in3 = ch.slots[S3].fCnt;
     }
 
-    private void updatePhaseLfo(Channel ch, int i, int lfoFreq) {
-        if ((lfoFreq = (ch.fms * this.lfoFreqUp[i]) >> (LFO_HBITS - 1)) > 0) {
-            ch.slots[S0].fCnt += ch.slots[S0].fInc + ((ch.slots[S0].fInc * lfoFreq) >> LFO_FMS_LBITS);
-            ch.slots[S1].fCnt += ch.slots[S1].fInc + ((ch.slots[S1].fInc * lfoFreq) >> LFO_FMS_LBITS);
-            ch.slots[S2].fCnt += ch.slots[S2].fInc + ((ch.slots[S2].fInc * lfoFreq) >> LFO_FMS_LBITS);
-            ch.slots[S3].fCnt += ch.slots[S3].fInc + ((ch.slots[S3].fInc * lfoFreq) >> LFO_FMS_LBITS);
+    private void updatePhaseLfo(Channel ch, int i, /* ref */ int[] lfoFreq) {
+        if ((lfoFreq[0] = (ch.fms * this.lfoFreqUp[i]) >> (LFO_HBITS - 1)) != 0) {
+            ch.slots[S0].fCnt += ch.slots[S0].fInc + ((ch.slots[S0].fInc * lfoFreq[0]) >> LFO_FMS_LBITS);
+            ch.slots[S1].fCnt += ch.slots[S1].fInc + ((ch.slots[S1].fInc * lfoFreq[0]) >> LFO_FMS_LBITS);
+            ch.slots[S2].fCnt += ch.slots[S2].fInc + ((ch.slots[S2].fInc * lfoFreq[0]) >> LFO_FMS_LBITS);
+            ch.slots[S3].fCnt += ch.slots[S3].fInc + ((ch.slots[S3].fInc * lfoFreq[0]) >> LFO_FMS_LBITS);
         } else {
             ch.slots[S0].fCnt += ch.slots[S0].fInc;
             ch.slots[S1].fCnt += ch.slots[S1].fInc;
@@ -1052,55 +1065,55 @@ public class Ym2612 {
     }
 
     private void getCurrentEnv(Channel ch) {
-        if ((ch.slots[S0].SEG & 4) != 0) {
+        if ((ch.slots[S0].seg & 4) != 0) {
             if ((this.en0 = ENV_TAB[(ch.slots[S0].eCnt >> ENV_LBITS)] + ch.slots[S0].tll) > ENV_MASK)
                 this.en0 = 0;
             else this.en0 ^= ENV_MASK;
         } else this.en0 = ENV_TAB[(ch.slots[S0].eCnt >> ENV_LBITS)] + ch.slots[S0].tll;
-        if ((ch.slots[S1].SEG & 4) != 0) {
+        if ((ch.slots[S1].seg & 4) != 0) {
             if ((this.en1 = ENV_TAB[(ch.slots[S1].eCnt >> ENV_LBITS)] + ch.slots[S1].tll) > ENV_MASK)
                 this.en1 = 0;
             else this.en1 ^= ENV_MASK;
         } else this.en1 = ENV_TAB[(ch.slots[S1].eCnt >> ENV_LBITS)] + ch.slots[S1].tll;
-        if ((ch.slots[S2].SEG & 4) != 0) {
+        if ((ch.slots[S2].seg & 4) != 0) {
             if ((this.en2 = ENV_TAB[(ch.slots[S2].eCnt >> ENV_LBITS)] + ch.slots[S2].tll) > ENV_MASK)
                 this.en2 = 0;
             else this.en2 ^= ENV_MASK;
         } else this.en2 = ENV_TAB[(ch.slots[S2].eCnt >> ENV_LBITS)] + ch.slots[S2].tll;
-        if ((ch.slots[S3].SEG & 4) != 0) {
+        if ((ch.slots[S3].seg & 4) != 0) {
             if ((this.en3 = ENV_TAB[(ch.slots[S3].eCnt >> ENV_LBITS)] + ch.slots[S3].tll) > ENV_MASK)
                 this.en3 = 0;
             else this.en3 ^= ENV_MASK;
         } else this.en3 = ENV_TAB[(ch.slots[S3].eCnt >> ENV_LBITS)] + ch.slots[S3].tll;
     }
 
-    private void getCurrentEnvLfo(Channel ch, int i, int lfoEnv) {
-        lfoEnv = this.lfoEnvUp[i];
+    private void getCurrentEnvLfo(Channel ch, int i, /* ref */ int[] lfoEnv) {
+        lfoEnv[0] = this.lfoEnvUp[i];
 
-        if ((ch.slots[S0].SEG & 4) != 0) {
+        if ((ch.slots[S0].seg & 4) != 0) {
             if ((this.en0 = ENV_TAB[(ch.slots[S0].eCnt >> ENV_LBITS)] + ch.slots[S0].tll) > ENV_MASK)
                 this.en0 = 0;
-            else this.en0 = (this.en0 ^ ENV_MASK) + (lfoEnv >> ch.slots[S0].ams);
+            else this.en0 = (this.en0 ^ ENV_MASK) + (lfoEnv[0] >> ch.slots[S0].ams);
         } else
-            this.en0 = ENV_TAB[(ch.slots[S0].eCnt >> ENV_LBITS)] + ch.slots[S0].tll + (lfoEnv >> ch.slots[S0].ams);
-        if ((ch.slots[S1].SEG & 4) != 0) {
+            this.en0 = ENV_TAB[(ch.slots[S0].eCnt >> ENV_LBITS)] + ch.slots[S0].tll + (lfoEnv[0] >> ch.slots[S0].ams);
+        if ((ch.slots[S1].seg & 4) != 0) {
             if ((this.en1 = ENV_TAB[(ch.slots[S1].eCnt >> ENV_LBITS)] + ch.slots[S1].tll) > ENV_MASK)
                 this.en1 = 0;
-            else this.en1 = (this.en1 ^ ENV_MASK) + (lfoEnv >> ch.slots[S1].ams);
+            else this.en1 = (this.en1 ^ ENV_MASK) + (lfoEnv[0] >> ch.slots[S1].ams);
         } else
-            this.en1 = ENV_TAB[(ch.slots[S1].eCnt >> ENV_LBITS)] + ch.slots[S1].tll + (lfoEnv >> ch.slots[S1].ams);
-        if ((ch.slots[S2].SEG & 4) != 0) {
+            this.en1 = ENV_TAB[(ch.slots[S1].eCnt >> ENV_LBITS)] + ch.slots[S1].tll + (lfoEnv[0] >> ch.slots[S1].ams);
+        if ((ch.slots[S2].seg & 4) != 0) {
             if ((this.en2 = ENV_TAB[(ch.slots[S2].eCnt >> ENV_LBITS)] + ch.slots[S2].tll) > ENV_MASK)
                 this.en2 = 0;
-            else this.en2 = (this.en2 ^ ENV_MASK) + (lfoEnv >> ch.slots[S2].ams);
+            else this.en2 = (this.en2 ^ ENV_MASK) + (lfoEnv[0] >> ch.slots[S2].ams);
         } else
-            this.en2 = ENV_TAB[(ch.slots[S2].eCnt >> ENV_LBITS)] + ch.slots[S2].tll + (lfoEnv >> ch.slots[S2].ams);
-        if ((ch.slots[S3].SEG & 4) != 0) {
+            this.en2 = ENV_TAB[(ch.slots[S2].eCnt >> ENV_LBITS)] + ch.slots[S2].tll + (lfoEnv[0] >> ch.slots[S2].ams);
+        if ((ch.slots[S3].seg & 4) != 0) {
             if ((this.en3 = ENV_TAB[(ch.slots[S3].eCnt >> ENV_LBITS)] + ch.slots[S3].tll) > ENV_MASK)
                 this.en3 = 0;
-            else this.en3 = (this.en3 ^ ENV_MASK) + (lfoEnv >> ch.slots[S3].ams);
+            else this.en3 = (this.en3 ^ ENV_MASK) + (lfoEnv[0] >> ch.slots[S3].ams);
         } else
-            this.en3 = ENV_TAB[(ch.slots[S3].eCnt >> ENV_LBITS)] + ch.slots[S3].tll + (lfoEnv >> ch.slots[S3].ams);
+            this.en3 = ENV_TAB[(ch.slots[S3].eCnt >> ENV_LBITS)] + ch.slots[S3].tll + (lfoEnv[0] >> ch.slots[S3].ams);
     }
 
     private void doFeedback0(Channel ch) {
@@ -1178,13 +1191,13 @@ public class Ym2612 {
         ch.doLimit();
     }
 
-    private void doAlgo6(Channel CH) {
-        doFeedback(CH);
-        this.in1 += CH.s0Out[1];
-        CH.outD = (TL_TAB[SIN_TAB[(this.in3 >> SIN_LBITS) & SIN_MASK] + this.en3] +
+    private void doAlgo6(Channel ch) {
+        doFeedback(ch);
+        this.in1 += ch.s0Out[1];
+        ch.outD = (TL_TAB[SIN_TAB[(this.in3 >> SIN_LBITS) & SIN_MASK] + this.en3] +
                 TL_TAB[SIN_TAB[(this.in1 >> SIN_LBITS) & SIN_MASK] + this.en1] +
                 TL_TAB[SIN_TAB[(this.in2 >> SIN_LBITS) & SIN_MASK] + this.en2]) >> OUT_SHIFT;
-        CH.doLimit();
+        ch.doLimit();
     }
 
     private void doAlgo7(Channel ch) {
@@ -1195,37 +1208,40 @@ public class Ym2612 {
         ch.doLimit();
     }
 
-    private void doOutput(Channel ch, int[][] buf, int i) {
+    private static void doOutput(Channel ch, int[][] buf, int i) {
         buf[0][i] += ch.outD & ch.left;
         buf[1][i] += ch.outD & ch.right;
+logger.log(Level.DEBUG, String.format("fm: %04x, %04x", buf[0][i], buf[1][i]));
         vol[0] = Math.max(vol[0], Math.abs(ch.outD & ch.left));
         vol[1] = Math.max(vol[1], Math.abs(ch.outD & ch.right));
     }
 
-    private void doOutputInt0(Channel ch, int[][] buf, int i) {
+    private int doOutputInt0(Channel ch, int[][] buf, /* ref */ int i) {
         if (((intCnt += this.interStep) & 0x04000) != 0) {
-            intCnt &= 0x3FFF;
+            intCnt &= 0x3fff;
             buf[0][i] += ch.oldOutD & ch.left;
             buf[1][i] += ch.oldOutD & ch.right;
             vol[0] = Math.max(vol[0], Math.abs(ch.oldOutD & ch.left));
             vol[1] = Math.max(vol[1], Math.abs(ch.oldOutD & ch.right));
         } else i--;
+        return i;
     }
 
-    private void doOutputInt1(Channel ch, int[][] buf, int i) {
+    private int doOutputInt1(Channel ch, int[][] buf, /* ref */ int i) {
         ch.oldOutD = (ch.outD + ch.oldOutD) >> 1;
         if (((intCnt += this.interStep) & 0x04000) != 0) {
-            intCnt &= 0x3FFF;
+            intCnt &= 0x3fff;
             buf[0][i] += ch.oldOutD & ch.left;
             buf[1][i] += ch.oldOutD & ch.right;
             vol[0] = Math.max(vol[0], Math.abs(ch.oldOutD & ch.left));
             vol[1] = Math.max(vol[1], Math.abs(ch.oldOutD & ch.right));
         } else i--;
+        return i;
     }
 
-    private void doOutputInt2(Channel ch, int[][] buf, int i) {
+    private int doOutputInt2(Channel ch, int[][] buf, /* ref */ int i) {
         if (((intCnt += this.interStep) & 0x04000) != 0) {
-            intCnt &= 0x3FFF;
+            intCnt &= 0x3fff;
             ch.oldOutD = (ch.outD + ch.oldOutD) >> 1;
             buf[0][i] += ch.oldOutD & ch.left;
             buf[1][i] += ch.oldOutD & ch.right;
@@ -1233,24 +1249,26 @@ public class Ym2612 {
             vol[1] = Math.max(vol[1], Math.abs(ch.oldOutD & ch.right));
         } else i--;
         ch.oldOutD = ch.outD;
+        return i;
     }
 
-    private void doOutputInt(Channel ch, int[][] buf, int i) {
+    private int doOutputInt(Channel ch, int[][] buf, /* ref */ int i) {
         if (((intCnt += this.interStep) & 0x04000) != 0) {
-            intCnt &= 0x3FFF;
-            ch.oldOutD = (((intCnt ^ 0x3FFF) * ch.outD) + (intCnt * ch.oldOutD)) >> 14;
+            intCnt &= 0x3fff;
+            ch.oldOutD = (int) ((((intCnt ^ 0x3fff) * ch.outD) + (intCnt * ch.oldOutD)) >> 14);
             buf[0][i] += ch.oldOutD & ch.left;
             buf[1][i] += ch.oldOutD & ch.right;
             vol[0] = Math.max(vol[0], Math.abs(ch.oldOutD & ch.left));
             vol[1] = Math.max(vol[1], Math.abs(ch.oldOutD & ch.right));
         } else i--;
         ch.oldOutD = ch.outD;
+        return i;
     }
 
     private void updateChanAlgo0(Channel ch, int[][] buf, int length) {
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-        //Debug.printf(debug_file, "\n\nAlgo 0 len = %d\n\n", length);
+logger.log(Level.TRACE, String.format("Algo 0 len = %d", length));
 
         for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
@@ -1265,7 +1283,7 @@ public class Ym2612 {
     private void updateChanAlgo1(Channel ch, int[][] buf, int length) {
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-        //Debug.printf(debug_file, "\n\nAlgo 1 len = %d\n\n", length);
+logger.log(Level.TRACE, String.format("Algo 1 len = %d", length));
 
         for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
@@ -1280,7 +1298,7 @@ public class Ym2612 {
     private void updateChanAlgo2(Channel ch, int[][] buf, int length) {
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-        //Debug.printf(debug_file, "\n\nAlgo 2 len = %d\n\n", length);
+logger.log(Level.TRACE, String.format("Algo 2 len = %d", length));
 
         for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
@@ -1295,7 +1313,7 @@ public class Ym2612 {
     private void updateChanAlgo3(Channel ch, int[][] buf, int length) {
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-        //Debug.printf(debug_file, "\n\nAlgo 3 len = %d\n\n", length);
+logger.log(Level.TRACE, String.format("Algo 3 len = %d", length));
 
         for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
@@ -1310,7 +1328,7 @@ public class Ym2612 {
     private void updateChanAlgo4(Channel ch, int[][] buf, int length) {
         if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END)) return;
 
-        //Debug.printf(debug_file, "\n\nAlgo 4 len = %d\n\n", length);
+logger.log(Level.TRACE, String.format("Algo 4 len = %d", length));
 
         for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
@@ -1327,7 +1345,7 @@ public class Ym2612 {
         if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S2].eCnt == ENV_END) &&
                 (ch.slots[S3].eCnt == ENV_END)) return;
 
-        //Debug.printf(debug_file, "\n\nAlgo 5 len = %d\n\n", length);
+logger.log(Level.TRACE, String.format("Algo 5 len = %d", length));
 
         for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
@@ -1344,7 +1362,7 @@ public class Ym2612 {
         if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S2].eCnt == ENV_END) &&
                 (ch.slots[S3].eCnt == ENV_END)) return;
 
-        //Debug.printf(debug_file, "\n\nAlgo 6 len = %d\n\n", length);
+logger.log(Level.TRACE, String.format("Algo 6 len = %d", length));
 
         for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
@@ -1362,7 +1380,7 @@ public class Ym2612 {
                 (ch.slots[S2].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END))
             return;
 
-        //Debug.printf(debug_file, "\n\nAlgo 7 len = %d\n\n", length);
+logger.log(Level.TRACE, String.format("Algo 7 len = %d", length));
 
         for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
@@ -1375,11 +1393,11 @@ public class Ym2612 {
     }
 
     private void updateChanAlgo0LFO(Channel ch, int[][] buf, int length) {
-        int envLfo = 0, freqLfo = 0;
+        int[] envLfo = new int[1], freqLfo = new int[1];
 
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-        //Debug.printf(debug_file, "\n\nAlgo 0 LFO len = %d\n\n", length);
+logger.log(Level.TRACE, String.format("Algo 0 LFO len = %d", length));
 
         for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
@@ -1392,11 +1410,11 @@ public class Ym2612 {
     }
 
     private void updateChanAlgo1LFO(Channel ch, int[][] buf, int length) {
-        int envLfo = 0, freqLfo = 0;
+        int[] envLfo = new int[1], freqLfo = new int[1];
 
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-        //Debug.printf(debug_file, "\n\nAlgo 1 LFO len = %d\n\n", length);
+logger.log(Level.TRACE, String.format("Algo 1 LFO len = %d", length));
 
         for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
@@ -1409,13 +1427,13 @@ public class Ym2612 {
     }
 
     private void updateChanAlgo2LFO(Channel ch, int[][] buf, int length) {
-        int i, envLfo = 0, freqLfo = 0;
+        int[] envLfo = new int[1], freqLfo = new int[1];
 
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-        //Debug.printf(debug_file, "\n\nAlgo 2 LFO len = %d\n\n", length);
+logger.log(Level.TRACE, String.format("Algo 2 LFO len = %d", length));
 
-        for (i = 0; i < length; i++) {
+        for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
             updatePhaseLfo(ch, i, freqLfo);
             getCurrentEnvLfo(ch, i, envLfo);
@@ -1426,16 +1444,16 @@ public class Ym2612 {
     }
 
     private void updateChanAlgo3LFO(Channel ch, int[][] buf, int length) {
-        int envLFO = 0, freqLfo = 0;
+        int[] envLfo = new int[1], freqLfo = new int[1];
 
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-        //Debug.printf(debug_file, "\n\nAlgo 3 LFO len = %d\n\n", length);
+logger.log(Level.TRACE, String.format("Algo 3 LFO len = %d", length));
 
         for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
             updatePhaseLfo(ch, i, freqLfo);
-            getCurrentEnvLfo(ch, i, envLFO);
+            getCurrentEnvLfo(ch, i, envLfo);
             ch.updateEnv();
             doAlgo3(ch);
             doOutput(ch, buf, i);
@@ -1443,11 +1461,11 @@ public class Ym2612 {
     }
 
     private void updateChanAlgo4LFO(Channel ch, int[][] buf, int length) {
-        int envLfo = 0, freqLfo = 0;
+        int[] envLfo = new int[1], freqLfo = new int[1];
 
         if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END)) return;
 
-        //Debug.printf(debug_file, "\n\nAlgo 4 LFO len = %d\n\n", length);
+logger.log(Level.TRACE, String.format("Algo 4 LFO len = %d", length));
 
         for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
@@ -1460,12 +1478,12 @@ public class Ym2612 {
     }
 
     private void updateChanAlgo5LFO(Channel ch, int[][] buf, int length) {
-        int envLfo = 0, freqLfo = 0;
+        int[] envLfo = new int[1], freqLfo = new int[1];
 
         if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S2].eCnt == ENV_END) &&
                 (ch.slots[S3].eCnt == ENV_END)) return;
 
-        //Debug.printf(debug_file, "\n\nAlgo 5 LFO len = %d\n\n", length);
+logger.log(Level.TRACE, String.format("Algo 5 LFO len = %d", length));
 
         for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
@@ -1478,13 +1496,13 @@ public class Ym2612 {
     }
 
     private void updateChanAlgo6LFO(Channel ch, int[][] buf, int length) {
-        int i, envLfo = 0, freqLfo = 0;
+        int[] envLfo = new int[1], freqLfo = new int[1];
 
         if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S2].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END)) return;
 
-        // Debug.printf(debug_file, "\n\nAlgo 6 LFO len = %d\n\n", length);
+logger.log(Level.TRACE, "Algo 6 LFO len = %d", length);
 
-        for (i = 0; i < length; i++) {
+        for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
             updatePhaseLfo(ch, i, freqLfo);
             getCurrentEnvLfo(ch, i, envLfo);
@@ -1495,13 +1513,13 @@ public class Ym2612 {
     }
 
     private void updateChanAlgo7LFO(Channel ch, int[][] buf, int length) {
-        int envLfo = 0, freqLfo = 0;
+        int[] envLfo = new int[1], freqLfo = new int[1];
 
         if ((ch.slots[S0].eCnt == ENV_END) && (ch.slots[S1].eCnt == ENV_END) &&
                 (ch.slots[S2].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END))
             return;
 
-        //Debug.printf(debug_file, "\n\nAlgo 7 LFO len = %d\n\n", length);
+logger.log(Level.TRACE, String.format("Algo 7 LFO len = %d", length));
 
         for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
@@ -1517,7 +1535,7 @@ public class Ym2612 {
 
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-        //Debug.printf(debug_file, "\n\nAlgo 0 len = %d\n\n", length);
+logger.log(Level.TRACE, String.format("Algo 0 len = %d", length));
 
         intCnt = this.interCnt;
 
@@ -1527,7 +1545,7 @@ public class Ym2612 {
             getCurrentEnv(ch);
             ch.updateEnv();
             doAlgo0(ch);
-            doOutputInt(ch, buf, i);
+            i = doOutputInt(ch, buf, i);
         }
     }
 
@@ -1535,7 +1553,7 @@ public class Ym2612 {
 
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-        //Debug.printf(debug_file, "\n\nAlgo 1 len = %d\n\n", length);
+logger.log(Level.TRACE, String.format("Algo 1 len = %d", length));
 
         intCnt = this.interCnt;
 
@@ -1545,7 +1563,7 @@ public class Ym2612 {
             getCurrentEnv(ch);
             ch.updateEnv();
             doAlgo1(ch);
-            doOutputInt(ch, buf, i);
+            i = doOutputInt(ch, buf, i);
         }
     }
 
@@ -1553,7 +1571,7 @@ public class Ym2612 {
 
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-        // Debug.printf(debug_file, "\n\nAlgo 2 len = %d\n\n", length);
+logger.log(Level.TRACE, "Algo 2 len = %d", length);
 
         intCnt = this.interCnt;
 
@@ -1563,7 +1581,7 @@ public class Ym2612 {
             getCurrentEnv(ch);
             ch.updateEnv();
             doAlgo2(ch);
-            doOutputInt(ch, buf, i);
+            i = doOutputInt(ch, buf, i);
         }
     }
 
@@ -1571,7 +1589,7 @@ public class Ym2612 {
 
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-        //Debug.printf(debug_file, "\n\nAlgo 3 len = %d\n\n", length);
+logger.log(Level.TRACE, String.format("Algo 3 len = %d", length));
 
         intCnt = this.interCnt;
 
@@ -1581,7 +1599,7 @@ public class Ym2612 {
             getCurrentEnv(ch);
             ch.updateEnv();
             doAlgo3(ch);
-            doOutputInt(ch, buf, i);
+            i = doOutputInt(ch, buf, i);
         }
     }
 
@@ -1589,7 +1607,7 @@ public class Ym2612 {
 
         if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END)) return;
 
-        //Debug.printf(debug_file, "\n\nAlgo 4 len = %d\n\n", length);
+logger.log(Level.TRACE, String.format("Algo 4 len = %d", length));
 
         intCnt = this.interCnt;
 
@@ -1599,7 +1617,7 @@ public class Ym2612 {
             getCurrentEnv(ch);
             ch.updateEnv();
             doAlgo4(ch);
-            doOutputInt(ch, buf, i);
+            i = doOutputInt(ch, buf, i);
         }
     }
 
@@ -1608,7 +1626,7 @@ public class Ym2612 {
         if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S2].eCnt == ENV_END) &&
                 (ch.slots[S3].eCnt == ENV_END)) return;
 
-        //Debug.printf(debug_file, "\n\nAlgo 5 len = %d\n\n", length);
+logger.log(Level.TRACE, String.format("Algo 5 len = %d", length));
 
         intCnt = this.interCnt;
 
@@ -1618,7 +1636,7 @@ public class Ym2612 {
             getCurrentEnv(ch);
             ch.updateEnv();
             doAlgo5(ch);
-            doOutputInt(ch, buf, i);
+            i = doOutputInt(ch, buf, i);
         }
     }
 
@@ -1627,7 +1645,7 @@ public class Ym2612 {
         if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S2].eCnt == ENV_END) &&
                 (ch.slots[S3].eCnt == ENV_END)) return;
 
-        //Debug.printf(debug_file, "\n\nAlgo 6 len = %d\n\n", length);
+logger.log(Level.TRACE, String.format("Algo 6 len = %d", length));
 
         intCnt = this.interCnt;
 
@@ -1637,7 +1655,7 @@ public class Ym2612 {
             getCurrentEnv(ch);
             ch.updateEnv();
             doAlgo6(ch);
-            doOutputInt(ch, buf, i);
+            i = doOutputInt(ch, buf, i);
         }
     }
 
@@ -1647,7 +1665,7 @@ public class Ym2612 {
                 (ch.slots[S2].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END))
             return;
 
-        //Debug.printf(debug_file, "\n\nAlgo 7 len = %d\n\n", length);
+logger.log(Level.TRACE, String.format("Algo 7 len = %d", length));
 
         intCnt = this.interCnt;
 
@@ -1657,16 +1675,16 @@ public class Ym2612 {
             getCurrentEnv(ch);
             ch.updateEnv();
             doAlgo7(ch);
-            doOutputInt(ch, buf, i);
+            i = doOutputInt(ch, buf, i);
         }
     }
 
     private void updateChanAlgo0LFOInt(Channel ch, int[][] buf, int length) {
-        int envLfo = 0, freqLfo = 0;
+        int[] envLfo = new int[1], freqLfo = new int[1];
 
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-        //Debug.printf(debug_file, "\n\nAlgo 0 LFO len = %d\n\n", length);
+logger.log(Level.TRACE, String.format("Algo 0 LFO len = %d", length));
 
         intCnt = this.interCnt;
 
@@ -1676,16 +1694,16 @@ public class Ym2612 {
             getCurrentEnvLfo(ch, i, envLfo);
             ch.updateEnv();
             doAlgo0(ch);
-            doOutputInt(ch, buf, i);
+            i = doOutputInt(ch, buf, i);
         }
     }
 
     private void updateChanAlgo1LFOInt(Channel ch, int[][] buf, int length) {
-        int envLfo = 0, freqLfo = 0;
+        int[] envLfo = new int[1], freqLfo = new int[1];
 
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-        //Debug.printf(debug_file, "\n\nAlgo 1 LFO len = %d\n\n", length);
+logger.log(Level.TRACE, String.format("Algo 1 LFO len = %d", length));
 
         intCnt = this.interCnt;
 
@@ -1695,16 +1713,16 @@ public class Ym2612 {
             getCurrentEnvLfo(ch, i, envLfo);
             ch.updateEnv();
             doAlgo1(ch);
-            doOutputInt(ch, buf, i);
+            i = doOutputInt(ch, buf, i);
         }
     }
 
     private void updateChanAlgo2LFOInt(Channel ch, int[][] buf, int length) {
-        int envLfo = 0, freqLfo = 0;
+        int[] envLfo = new int[1], freqLfo = new int[1];
 
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-        //Debug.printf(debug_file, "\n\nAlgo 2 LFO len = %d\n\n", length);
+logger.log(Level.TRACE, String.format("Algo 2 LFO len = %d", length));
 
         intCnt = this.interCnt;
 
@@ -1714,16 +1732,16 @@ public class Ym2612 {
             getCurrentEnvLfo(ch, i, envLfo);
             ch.updateEnv();
             doAlgo2(ch);
-            doOutputInt(ch, buf, i);
+            i = doOutputInt(ch, buf, i);
         }
     }
 
     private void updateChanAlgo3LFOInt(Channel ch, int[][] buf, int length) {
-        int envLfo = 0, freqLfo = 0;
+        int[] envLfo = new int[1], freqLfo = new int[1];
 
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-        //Debug.printf(debug_file, "\n\nAlgo 3 LFO len = %d\n\n", length);
+logger.log(Level.TRACE, String.format("Algo 3 LFO len = %d", length));
 
         intCnt = this.interCnt;
 
@@ -1733,16 +1751,16 @@ public class Ym2612 {
             getCurrentEnvLfo(ch, i, envLfo);
             ch.updateEnv();
             doAlgo3(ch);
-            doOutputInt(ch, buf, i);
+            i = doOutputInt(ch, buf, i);
         }
     }
 
     private void updateChanAlgo4LFOInt(Channel ch, int[][] buf, int length) {
-        int envLfo = 0, freqLfo = 0;
+        int[] envLfo = new int[1], freqLfo = new int[1];
 
         if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END)) return;
 
-        //Debug.printf(debug_file, "\n\nAlgo 4 LFO len = %d\n\n", length);
+logger.log(Level.TRACE, String.format("Algo 4 LFO len = %d", length));
 
         intCnt = this.interCnt;
 
@@ -1752,16 +1770,16 @@ public class Ym2612 {
             getCurrentEnvLfo(ch, i, envLfo);
             ch.updateEnv();
             doAlgo4(ch);
-            doOutputInt(ch, buf, i);
+            i = doOutputInt(ch, buf, i);
         }
     }
 
     private void updateChanAlgo5LFOInt(Channel ch, int[][] buf, int length) {
-        int envLfo = 0, freqLfo = 0;
+        int[] envLfo = new int[1], freqLfo = new int[1];
 
         if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S2].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END)) return;
 
-        //Debug.printf(debug_file, "\n\nAlgo 5 LFO len = %d\n\n", length);
+logger.log(Level.TRACE, String.format("Algo 5 LFO len = %d", length));
 
         intCnt = this.interCnt;
 
@@ -1771,16 +1789,16 @@ public class Ym2612 {
             getCurrentEnvLfo(ch, i, envLfo);
             ch.updateEnv();
             doAlgo5(ch);
-            doOutputInt(ch, buf, i);
+            i = doOutputInt(ch, buf, i);
         }
     }
 
     private void updateChanAlgo6LFOInt(Channel ch, int[][] buf, int length) {
-        int envLfo = 0, freqLfo = 0;
+        int[] envLfo = new int[1], freqLfo = new int[1];
 
         if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S2].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END)) return;
 
-        //Debug.printf(debug_file, "\n\nAlgo 6 LFO len = %d\n\n", length);
+logger.log(Level.TRACE, String.format("Algo 6 LFO len = %d", length));
 
         intCnt = this.interCnt;
 
@@ -1790,17 +1808,17 @@ public class Ym2612 {
             getCurrentEnvLfo(ch, i, envLfo);
             ch.updateEnv();
             doAlgo6(ch);
-            doOutputInt(ch, buf, i);
+            i = doOutputInt(ch, buf, i);
         }
     }
 
     private void updateChanAlgo7LFOInt(Channel ch, int[][] buf, int length) {
-        int envLfo = 0, freqLfo = 0;
+        int[] envLfo = new int[1], freqLfo = new int[1];
 
         if ((ch.slots[S0].eCnt == ENV_END) && (ch.slots[S1].eCnt == ENV_END) && (ch.slots[S2].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END))
             return;
 
-        //Debug.printf(debug_file, "\n\nAlgo 7 LFO len = %d\n\n", length);
+logger.log(Level.TRACE, String.format("Algo 7 LFO len = %d", length));
 
         intCnt = this.interCnt;
 
@@ -1810,14 +1828,14 @@ public class Ym2612 {
             getCurrentEnvLfo(ch, i, envLfo);
             ch.updateEnv();
             doAlgo7(ch);
-            doOutputInt(ch, buf, i);
+            i = doOutputInt(ch, buf, i);
         }
     }
 
-    // Initialisation de l'émulateur Ym2612
+    // Initializing the Ym2612 emulator
     public Ym2612(int clock, int rate, int interpolation) {
 
-        //Debug.printf(debug_file, "Ym2612 logging :\n\n");
+//logger.log(Level.TRACE, "Ym2612 logging");
 
         this.clock = clock;
         this.rate = rate;
@@ -1825,146 +1843,37 @@ public class Ym2612 {
         // 144 = 12 * (prescale * 2) = 12 * 6 * 2
         // prescale set to 6 by default
 
-        this.frequence = ((double) this.clock / (double) this.rate) / 144.0;
-        this.timerBase = (int) (this.frequence * 4096.0);
+        this.frequency = ((double) this.clock / (double) this.rate) / 144.0;
+        this.timerBase = (int) (this.frequency * 4096.0);
 
-        if ((interpolation != 0) && (this.frequence > 1.0)) {
-            this.interStep = (int) ((1.0 / this.frequence) * (double) (0x4000));
+        if ((interpolation != 0) && (this.frequency > 1.0)) {
+            this.interStep = (int) ((1.0 / this.frequency) * (double) (0x4000));
             this.interCnt = 0;
 
-            // We recalculate rate and frequence after interpolation
+            // We recalculate rate and frequency after interpolation
 
             this.rate = this.clock / 144;
-            this.frequence = 1.0;
+            this.frequency = 1.0;
         } else {
             this.interStep = 0x4000;
             this.interCnt = 0;
         }
 
-        //Debug.printf(debug_file, "Ym2612 frequence = %g rate = %d  interp step = %.8X\n\n", this.Frequence, this.rate, this.Inter_Step);
+        // ----
 
-        // Tableau TL :
-        // [0     -  4095] = +output  [4095  - ...] = +output overflow (fill with 0)
-        // [12288 - 16383] = -output  [16384 - ...] = -output overflow (fill with 0)
-
-        for (int i = 0; i < TL_LENGHT; i++) {
-            if (i >= PG_CUT_OFF) // Ym2612 cut off Sound after 78 dB (14 bits output ?)
-            {
-                TL_TAB[TL_LENGHT + i] = TL_TAB[i] = 0;
-            } else {
-                double x = MAX_OUT; // Max output
-                x /= Math.pow(10, (ENV_STEP * i) / 20); // Decibel . Voltage
-
-                TL_TAB[i] = (int) x;
-                TL_TAB[TL_LENGHT + i] = -TL_TAB[i];
-            }
-
-            //Debug.printf(debug_file, "TL_TAB[%d] = %.8X    TL_TAB[%d] = %.8X\n", i, TL_TAB[i], TL_LENGHT + i, TL_TAB[TL_LENGHT + i]);
-        }
-
-        //Debug.printf(debug_file, "\n\n\n\n");
-
-        // Tableau SIN :
-        // SIN_TAB[x][y] = sin(x) * y;
-        // x = phase and y = volume
-
-        SIN_TAB[0] = SIN_TAB[SIN_LENGHT / 2] = PG_CUT_OFF;
-
-        for (int i = 1; i <= SIN_LENGHT / 4; i++) {
-            double x = Math.sin(2.0 * Math.PI * (double) (i) / (double) (SIN_LENGHT)); // Sinus
-            x = 20 * Math.log10(1 / x); // convert to dB
-
-            int j = (int) (x / ENV_STEP); // Get TL range
-
-            if (j > PG_CUT_OFF) j = PG_CUT_OFF;
-
-            SIN_TAB[i] = SIN_TAB[(SIN_LENGHT / 2) - i] = j;
-            SIN_TAB[(SIN_LENGHT / 2) + i] = SIN_TAB[SIN_LENGHT - i] = TL_LENGHT + j;
-
-            //Debug.printf(debug_file, "SIN[%d][0] = %.8X    SIN[%d][0] = %.8X    SIN[%d][0] = %.8X    SIN[%d][0] = %.8X\n", i, SIN_TAB[i][0], (SIN_LENGHT / 2) - i, SIN_TAB[(SIN_LENGHT / 2) - i][0], (SIN_LENGHT / 2) + i, SIN_TAB[(SIN_LENGHT / 2) + i][0], SIN_LENGHT - i, SIN_TAB[SIN_LENGHT - i][0]);
-        }
-
-        //Debug.printf(debug_file, "\n\n\n\n");
-
-        // Tableau LFO (LFO wav) :
-
-        for (int i = 0; i < LFO_LENGHT; i++) {
-            double x = Math.sin(2.0 * Math.PI * (double) i / (double) (LFO_LENGHT)); // Sinus
-            x += 1.0;
-            x /= 2.0; // positive only
-            x *= 11.8 / ENV_STEP; // ajusted to MAX enveloppe modulation
-
-            LFO_ENV_TAB[i] = (int) x;
-
-            x = Math.sin(2.0 * Math.PI * (double) i / (double) LFO_LENGHT); // Sinus
-            x *= (1 << (LFO_HBITS - 1)) - 1;
-
-            LFO_FREQ_TAB[i] = (int) x;
-
-            //Debug.printf(debug_file, "LFO[%d] = %.8X\n", i, LFO_ENV_TAB[i]);
-        }
-
-        //Debug.printf(debug_file, "\n\n\n\n");
-
-        // Tableau Enveloppe :
-        // ENV_TAB[0] . ENV_TAB[ENV_LENGHT - 1] = attack curve
-        // ENV_TAB[ENV_LENGHT] . ENV_TAB[2 * ENV_LENGHT - 1] = decay curve
-
-        for (int i = 0; i < ENV_LENGHT; i++) {
-            // Attack curve (x^8 - music level 2 Vectorman 2)
-            double x = Math.pow(((double) ((ENV_LENGHT - 1) - i) / (double) (ENV_LENGHT)), 8);
-            x *= ENV_LENGHT;
-
-            ENV_TAB[i] = (int) x;
-
-            // Decay curve (just linear)
-            x = Math.pow(((double) i / (double) ENV_LENGHT), 1);
-            x *= ENV_LENGHT;
-
-            ENV_TAB[ENV_LENGHT + i] = (int) x;
-
-            //Debug.printf(debug_file, "ATTACK[%d] = %d   DECAY[%d] = %d\n", i, ENV_TAB[i], i, ENV_TAB[ENV_LENGHT + i]);
-        }
-
-        ENV_TAB[ENV_END >> ENV_LBITS] = ENV_LENGHT - 1; // for the stopped state
-
-        // Tableau pour la conversion Attack . Decay and Decay . Attack
-
-        for (int i = 0, j = ENV_LENGHT - 1; i < ENV_LENGHT; i++) {
-            while (j > 0 && (ENV_TAB[j] < i)) j--;
-
-            DECAY_TO_ATTACK[i] = j << ENV_LBITS;
-        }
-
-        // Tableau pour le Substain Level
-
-        for (int i = 0; i < 15; i++) {
-            double x = i * 3; // 3 and not 6 (Mickey Mania first music for test)
-            x /= ENV_STEP;
-
-            int j = (int) x;
-            j <<= ENV_LBITS;
-
-            SL_TAB[i] = j + ENV_DECAY;
-        }
-
-        int j = ENV_LENGHT - 1; // special case : volume off
-        j <<= ENV_LBITS;
-        SL_TAB[15] = j + ENV_DECAY;
-
-        // Tableau Frequency Step
+        // Frequency Step Table
 
         for (int i = 0; i < 2048; i++) {
-            double x = (double) (i) * this.frequence;
+            double x = (double) (i) * this.frequency;
 
             x *= 1 << (SIN_LBITS + SIN_HBITS - (21 - 7));
 
             x /= 2.0; // because MUL = value * 2
 
-            fincTab[i] = (int) x;
+            fIncTab[i] = (int) x;
         }
 
-        // Tableaux Attack & Decay rate
+        // Attack and Decay rate tables
 
         for (int i = 0; i < 4; i++) {
             arTab[i] = 0;
@@ -1972,11 +1881,11 @@ public class Ym2612 {
         }
 
         for (int i = 0; i < 60; i++) {
-            double x = this.frequence;
+            double x = this.frequency;
 
-            x *= 1.0 + ((i & 3) * 0.25); // bits 0-1 : x1.00, x1.25, x1.50, x1.75
-            x *= 1 << ((i >> 2)); // bits 2-5 : shift bits (x2^0 - x2^15)
-            x *= ENV_LENGHT << ENV_LBITS; // on ajuste pour le tableau ENV_TAB
+            x *= 1.0 + ((i & 3) * 0.25);  // bits 0-1 : x1.00, x1.25, x1.50, x1.75
+            x *= 1 << ((i >> 2));         // bits 2-5 : shift bits (x2^0 - x2^15)
+            x *= ENV_LENGTH << ENV_LBITS; // we adjust for the ENV_TAB table
 
             arTab[i + 4] = (int) (x / AR_RATE);
             drTab[i + 4] = (int) (x / DR_RATE);
@@ -1989,20 +1898,21 @@ public class Ym2612 {
             nullRate[i - 64] = 0;
         }
 
-        // Tableau Detune
+        // Detune Table
 
+        int j;
         for (int i = 0; i < 4; i++) {
             for (j = 0; j < 32; j++) {
-                double x = (double) DT_DEF_TAB[(i << 5) + j] * this.frequence * (double) (1 << (SIN_LBITS + SIN_HBITS - 21));
+                double x = (double) DT_DEF_TAB[(i << 5) + j] * this.frequency * (double) (1 << (SIN_LBITS + SIN_HBITS - 21));
 
                 dtTab[i + 0][j] = (int) x;
                 dtTab[i + 4][j] = (int) -x;
             }
         }
 
-        // Tableau LFO
+        // LFO Table
 
-        j = (this.rate * this.interStep) / 0x4000;
+        j = (int) ((this.rate * this.interStep) / 0x4000);
 
         lfoIncTab[0] = (int) (3.98 * (double) (1 << (LFO_HBITS + LFO_LBITS)) / j);
         lfoIncTab[1] = (int) (5.56 * (double) (1 << (LFO_HBITS + LFO_LBITS)) / j);
@@ -2015,13 +1925,120 @@ public class Ym2612 {
 
         reset();
     }
+//logger.log(Level.TRACE, String.format("Ym2612 frequency = %g rate = %d  interp step = %.8X", this.frequency, this.rate, this.interStep));
 
-    private int end() {
+    static {
+        // TL Table:
+        // [0     -  4095] = +output  [4095  - ...] = +output overflow (fill with 0)
+        // [12288 - 16383] = -output  [16384 - ...] = -output overflow (fill with 0)
+
+        for (int i = 0; i < TL_LENGTH; i++) {
+            if (i >= PG_CUT_OFF) { // Ym2612 cut off Sound after 78 dB (14 bits output ?)
+                TL_TAB[TL_LENGTH + i] = TL_TAB[i] = 0;
+            } else {
+                double x = MAX_OUT; // Max output
+                x /= Math.pow(10, (ENV_STEP * i) / 20); // Decibel -> Voltage
+
+                TL_TAB[i] = (int) x;
+                TL_TAB[TL_LENGTH + i] = -TL_TAB[i];
+            }
+
+//logger.log(Level.DEBUG, String.format("TL_TAB[%d] = %.8X    TL_TAB[%d] = %.8X", i, TL_TAB[i], TL_LENGTH + i, TL_TAB[TL_LENGTH + i]));
+        }
+
+        // SIN table:
+        // SIN_TAB[x][y] = sin(x) * y;
+        // x = phase and y = volume
+
+        SIN_TAB[0] = SIN_TAB[SIN_LENGTH / 2] = PG_CUT_OFF;
+
+        for (int i = 1; i <= SIN_LENGTH / 4; i++) {
+            double x = Math.sin(2.0 * Math.PI * (double) (i) / (double) (SIN_LENGTH)); // Sinus
+            x = 20 * Math.log10(1 / x); // convert to dB
+
+            int j = (int) (x / ENV_STEP); // Get TL range
+
+            if (j > PG_CUT_OFF) j = PG_CUT_OFF;
+
+            SIN_TAB[i] = SIN_TAB[(SIN_LENGTH / 2) - i] = j;
+            SIN_TAB[(SIN_LENGTH / 2) + i] = SIN_TAB[SIN_LENGTH - i] = TL_LENGTH + j;
+
+//logger.log(Level.DEBUG, String.format("SIN[%d][0] = %.8X    SIN[%d][0] = %.8X    SIN[%d][0] = %.8X    SIN[%d][0] = %.8X", i, SIN_TAB[i][0], (SIN_LENGTH / 2) - i, SIN_TAB[(SIN_LENGTH / 2) - i][0], (SIN_LENGTH / 2) + i, SIN_TAB[(SIN_LENGTH / 2) + i][0], SIN_LENGTH - i, SIN_TAB[SIN_LENGTH - i][0]));
+        }
+
+        // LFO table (LFO wav):
+
+        for (int i = 0; i < LFO_LENGTH; i++) {
+            double x = Math.sin(2.0 * Math.PI * (double) i / (double) (LFO_LENGTH)); // Sinus
+            x += 1.0;
+            x /= 2.0; // positive only
+            x *= 11.8 / ENV_STEP; // adjusted to MAX envelope modulation
+
+            LFO_ENV_TAB[i] = (int) x;
+
+            x = Math.sin(2.0 * Math.PI * (double) i / (double) LFO_LENGTH); // Sinus
+            x *= (1 << (LFO_HBITS - 1)) - 1;
+
+            LFO_FREQ_TAB[i] = (int) x;
+
+//logger.log(Level.DEBUG, String.format("LFO[%d] = %.8X", i, LFO_ENV_TAB[i]));
+        }
+
+//logger.log(Level.DEBUG, "n");
+
+        // Envelope Table:
+        // ENV_TAB[0] . ENV_TAB[ENV_LENGTH - 1] = attack curve
+        // ENV_TAB[ENV_LENGTH] . ENV_TAB[2 * ENV_LENGTH - 1] = decay curve
+
+        for (int i = 0; i < ENV_LENGTH; i++) {
+            // Attack curve (x^8 - music level 2 Vectorman 2)
+            double x = Math.pow(((double) ((ENV_LENGTH - 1) - i) / (double) (ENV_LENGTH)), 8);
+            x *= ENV_LENGTH;
+
+            ENV_TAB[i] = (int) x;
+
+            // Decay curve (just linear)
+            x = Math.pow(((double) i / (double) ENV_LENGTH), 1);
+            x *= ENV_LENGTH;
+
+            ENV_TAB[ENV_LENGTH + i] = (int) x;
+
+//logger.log(Level.DEBUG, String.format("ATTACK[%d] = %d   DECAY[%d] = %d", i, ENV_TAB[i], i, ENV_TAB[ENV_LENGTH + i]));
+        }
+
+        ENV_TAB[ENV_END >> ENV_LBITS] = ENV_LENGTH - 1; // for the stopped state
+
+        // Table for Attack -> Decay and Decay -> Attack conversion
+
+        for (int i = 0, j = ENV_LENGTH - 1; i < ENV_LENGTH; i++) {
+            while (j > 0 && (ENV_TAB[j] < i)) j--;
+
+            DECAY_TO_ATTACK[i] = j << ENV_LBITS;
+        }
+
+        // Table for Sustain Level
+
+        for (int i = 0; i < 15; i++) {
+            double x = i * 3; // 3 and not 6 (Mickey Mania first music for test)
+            x /= ENV_STEP;
+
+            int j = (int) x;
+            j <<= ENV_LBITS;
+
+            SL_TAB[i] = j + ENV_DECAY;
+        }
+
+        int j = ENV_LENGTH - 1; // special case : volume off
+        j <<= ENV_LBITS;
+        SL_TAB[15] = j + ENV_DECAY;
+    }
+
+    public int end() {
         return 0;
     }
 
     public int reset() {
-        //  Debug.printf(debug_file, "\n\nStarting reseting Ym2612 ...\n\n");
+//logger.log(Level.DEBUG, "Starting resetting Ym2612 ...");
 
         this.lfoCnt = 0;
         this.timerA = 0;
@@ -2049,66 +2066,64 @@ public class Ym2612 {
             this.regs[1][i] = -1;
         }
 
-        for (int i = 0xB6; i >= 0xB4; i--) {
-            write((byte) 0, (byte) i);
-            write((byte) 2, (byte) i);
-            write((byte) 1, (byte) 0xC0);
-            write((byte) 3, (byte) 0xC0);
+        for (int i = 0xb6; i >= 0xb4; i--) {
+            write(0, i);
+            write(1, 0xc0);
+            write(2, i);
+            write(3, 0xc0);
         }
 
-        for (int i = 0xB2; i >= 0x22; i--) {
-            write((byte) 0, (byte) i);
-            write((byte) 2, (byte) i);
-            write((byte) 1, (byte) 0);
-            write((byte) 3, (byte) 0);
+        for (int i = 0xb2; i >= 0x22; i--) {
+            write(0, i);
+            write(1, 0);
+            write(2, i);
+            write(3, 0);
         }
 
-        write((byte) 0, (byte) 0x2A);
-        write((byte) 1, (byte) 0x80);
+        write(0, 0x2a);
+        write(1, 0x80);
 
-        //  Debug.printf(debug_file, "\n\nFinishing reseting Ym2612 ...\n\n");
+//logger.log(Level.DEBUG, "Finishing resetting Ym2612 ...");
 
         return 0;
     }
 
-    private int read() {
-        /*  static int cnt = 0;
-
-          if(cnt++ == 50) {
-            cnt = 0;
-            return this.Status;
-          }
-          else return this.Status | 0x80;
-        */
+    public int read() {
+//        static int cnt = 0;
+//
+//        if (cnt++ == 50) {
+//            cnt = 0;
+//            return this.Status;
+//        } else return this.Status | 0x80;
         return this.status;
     }
 
-    public int write(byte adr, byte data) {
-
-        data &= 0xFF;
+    public int write(int adr, int data) {
+        data &= 0xff;
         adr &= 0x03;
+logger.log(Level.TRACE, String.format("fm%d: a: %02x, d: %02x", adr / 2, adr, data));
 
         switch (adr) {
         case 0:
-            this.opnAAdr = data & 0xff;
+            this.opnAAdr = data;
             break;
 
         case 1:
             // Trivial optimisation
-            if (this.opnAAdr == 0x2A) {
-                this.dacData = ((int) data - 0x80) << DAC_SHIFT;
+            if (this.opnAAdr == 0x2a) {
+                this.dacData = (data - 0x80) << DAC_SHIFT;
                 return 0;
             }
 
-            int d = this.opnAAdr & 0xF0;
+            int d = this.opnAAdr & 0xf0;
 
             if (d >= 0x30) {
                 if (this.regs[0][this.opnAAdr] == data) return 2;
                 this.regs[0][this.opnAAdr] = data;
 
-                //if (GYM_Dumping) Update_GYM_Dump(1, this.OPNAadr, data);
+//if (GYM_Dumping) Update_GYM_Dump(1, this.OPNAadr, data);
 
-                if (d < 0xA0) { // SLOT
+                if (d < 0xa0) { // SLOT
                     setSlot(this.opnAAdr, data);
                 } else { // CHANNEL
                     setChannel(this.opnAAdr, data);
@@ -2116,8 +2131,8 @@ public class Ym2612 {
             } else { // Ym2612
                 this.regs[0][this.opnAAdr] = data;
 
-                //if ((GYM_Dumping) && ((this.OPNAadr == 0x22) || (this.OPNAadr == 0x27) || (this.OPNAadr == 0x28)))
-                // Update_GYM_Dump(1, this.OPNAadr, data);
+//if ((GYM_Dumping) && ((this.OPNAadr == 0x22) || (this.OPNAadr == 0x27) || (this.OPNAadr == 0x28)))
+// Update_GYM_Dump(1, this.OPNAadr, data);
 
                 setData(this.opnAAdr, data);
             }
@@ -2128,15 +2143,15 @@ public class Ym2612 {
             break;
 
         case 3:
-            d = this.opnBAdr & 0xF0;
+            d = this.opnBAdr & 0xf0;
 
             if (d >= 0x30) {
                 if (this.regs[1][this.opnBAdr] == data) return 2;
                 this.regs[1][this.opnBAdr] = data;
 
-                // if (GYM_Dumping) Update_GYM_Dump(2, this.OPNBadr, data);
+// if (GYM_Dumping) Update_GYM_Dump(2, this.OPNBadr, data);
 
-                if (d < 0xA0) { // SLOT
+                if (d < 0xa0) { // SLOT
                     setSlot(this.opnBAdr + 0x100, data);
                 } else { // CHANNEL
                     setChannel(this.opnBAdr + 0x100, data);
@@ -2148,7 +2163,8 @@ public class Ym2612 {
         return 0;
     }
 
-    private int getMute() {
+    // mds
+    public int getMute() {
         int result = 0;
         for (int i = 0; i < 6; ++i) {
             result |= this.channels[i].mute << i;
@@ -2158,6 +2174,7 @@ public class Ym2612 {
         return result;
     }
 
+    // mds
     public void setMute(int val) {
         for (int i = 0; i < 6; ++i) {
             this.channels[i].mute = (val >> i) & 1;
@@ -2173,7 +2190,7 @@ public class Ym2612 {
         enableSsgEg = (flags >> 1) & 0x01;
     }
 
-    private void clearBuffer(int[][] buffer, int length) {
+    public static void clearBuffer(int[][] buffer, int length) {
         // the MAME core does this before updating,
         // but the Gens core does this before mixing
         int[] bufL = buffer[0];
@@ -2186,48 +2203,46 @@ public class Ym2612 {
     }
 
     public void update(int[][] buf, int length) {
-        int i, j, algoType;
+        int algoType;
 
-// #if DEBUG
-        //Debug.printf(debug_file, "\n\nStarting generating Sound...\n\n");
-// #endif
+//logger.log(Level.TRACE, "Starting generating Sound...");
 
-        // Mise ?jour des pas des compteurs-fréquences s'ils ont 騁?modifi駸
+        // update frequency counter steps if they have been modified
 
-        if (this.channels[0].slots[0].fInc == -1) this.channels[0].calcFInc(this.fincTab);
-        if (this.channels[1].slots[0].fInc == -1) this.channels[1].calcFInc(this.fincTab);
+        if (this.channels[0].slots[0].fInc == -1) this.channels[0].calcFInc(this.fIncTab);
+        if (this.channels[1].slots[0].fInc == -1) this.channels[1].calcFInc(this.fIncTab);
         if (this.channels[2].slots[0].fInc == -1) {
-            if ((this.mode & 0x40) > 0) {
-                this.channels[2].slots[S0].calcFInc(fincTab[this.channels[2].fnum[2]] >> (7 - this.channels[2].foct[2]), this.channels[2].kc[2]);
-                this.channels[2].slots[S1].calcFInc(fincTab[this.channels[2].fnum[3]] >> (7 - this.channels[2].foct[3]), this.channels[2].kc[3]);
-                this.channels[2].slots[S2].calcFInc(fincTab[this.channels[2].fnum[1]] >> (7 - this.channels[2].foct[1]), this.channels[2].kc[1]);
-                this.channels[2].slots[S3].calcFInc(fincTab[this.channels[2].fnum[0]] >> (7 - this.channels[2].foct[0]), this.channels[2].kc[0]);
+            if ((this.mode & 0x40) != 0) {
+                this.channels[2].slots[S0].calcFInc(fIncTab[this.channels[2].fNum[2]] >> (7 - this.channels[2].fOct[2]), this.channels[2].kc[2]);
+                this.channels[2].slots[S1].calcFInc(fIncTab[this.channels[2].fNum[3]] >> (7 - this.channels[2].fOct[3]), this.channels[2].kc[3]);
+                this.channels[2].slots[S2].calcFInc(fIncTab[this.channels[2].fNum[1]] >> (7 - this.channels[2].fOct[1]), this.channels[2].kc[1]);
+                this.channels[2].slots[S3].calcFInc(fIncTab[this.channels[2].fNum[0]] >> (7 - this.channels[2].fOct[0]), this.channels[2].kc[0]);
             } else {
-                this.channels[2].calcFInc(this.fincTab);
+                this.channels[2].calcFInc(this.fIncTab);
             }
         }
-        if (this.channels[3].slots[0].fInc == -1) this.channels[3].calcFInc(this.fincTab);
-        if (this.channels[4].slots[0].fInc == -1) this.channels[4].calcFInc(this.fincTab);
-        if (this.channels[5].slots[0].fInc == -1) this.channels[5].calcFInc(this.fincTab);
+        if (this.channels[3].slots[0].fInc == -1) this.channels[3].calcFInc(this.fIncTab);
+        if (this.channels[4].slots[0].fInc == -1) this.channels[4].calcFInc(this.fIncTab);
+        if (this.channels[5].slots[0].fInc == -1) this.channels[5].calcFInc(this.fIncTab);
 
-        if ((this.interStep & 0x04000) > 0) algoType = 0;
+        // TODO vavi algoType is always 0
+        if ((this.interStep & 0x04000) != 0) algoType = 0;
         else algoType = 16;
 
-        if ((this.lfoInc) != 0) {
-            // Precalcul LFO wav
+        if (this.lfoInc != 0) {
+            // Precalculate LFO wav
 
-            for (i = 0; i < length; i++) {
-                j = ((this.lfoCnt += this.lfoInc) >> LFO_LBITS) & LFO_MASK;
+            for (int i = 0; i < length; i++) {
+                int j = ((this.lfoCnt += this.lfoInc) >> LFO_LBITS) & LFO_MASK;
 
                 this.lfoEnvUp[i] = LFO_ENV_TAB[j];
                 this.lfoFreqUp[i] = LFO_FREQ_TAB[j];
 
-                //Debug.printf(debug_file, "LFO_ENV_UP[%d] = %d   LFO_FREQ_UP[%d] = %d\n", i, this.LFO_ENV_UP[i], i, this.LFO_FREQ_UP[i]);
+logger.log(Level.TRACE, String.format("LFO_ENV_UP[%d] = %d   LFO_FREQ_UP[%d] = %d", i, this.lfoEnvUp[i], i, this.lfoFreqUp[i]));
             }
 
             algoType |= 8;
         }
-
 
         if (this.channels[0].mute == 0) {
             vol[0] = 0;
@@ -2269,8 +2284,7 @@ public class Ym2612 {
             this.channels[4].fmVol[0] = vol[0];
             this.channels[4].fmVol[1] = vol[1];
         }
-        if (this.channels[5].mute == 0
-                && (this.dac == 0)) {
+        if (this.channels[5].mute == 0 && (this.dac == 0)) {
             vol[0] = 0;
             vol[1] = 0;
             updateChan[this.channels[5].algo + algoType].accept(this.channels[5], buf, length);
@@ -2280,14 +2294,14 @@ public class Ym2612 {
 
         this.interCnt = intCnt;
 
-        //Debug.printf(debug_file, "\n\nFinishing generating Sound...\n\n");
+//logger.log(Level.TRACE, "Finishing generating Sound...");
     }
 
-    // higher values reduce highpass on DAC
-    //enum highpass {
-    //  fract = 15,
-    //  highpass_shift = 9
-    //};
+//    /** higher values reduce highpass on DAC */
+//    enum highpass {
+//        fract =15,
+//        highpass_shift =9
+//    }
 
     public void updateDacAndTimers(int[][] buffer, int length) {
 
@@ -2315,7 +2329,7 @@ public class Ym2612 {
                 this.status |= (this.mode & 0x04) >> 2;
                 this.timerACnt += this.timerAL;
 
-                //Debug.printf(debug_file, "Counter A overflow\n");
+//logger.log(Level.DEBUG, "Counter A overflow");
 
                 if ((this.mode & 0x80) != 0) controlCsmKey();
             }
@@ -2326,15 +2340,17 @@ public class Ym2612 {
                 this.status |= (this.mode & 0x08) >> 2;
                 this.timerBCnt += this.timerBL;
 
-                //Debug.printf(debug_file, "Counter B overflow\n");
+//logger.log(Level.DEBUG, "Counter B overflow");
             }
         }
     }
 
+    // for mds
     public int[][] getRegisters() {
         return regs;
     }
 
+    // for mds
     public int[] keyStatuses() {
         int[] keys = new int[channels.length];
         for (int i = 0; i < keys.length; i++)

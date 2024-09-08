@@ -21,7 +21,7 @@ package mdsound.chips;
 
 /**
  * Ootake (PC Engine emulator) PSG
- *
+ * <pre>
 ・キューの参照処理をシンプルにした。テンポの安定性および音質の向上。
 ・オーバーサンプリングしないようにした。（筆者の主観もあるが、PSGの場合、響きの
   美しさが損なわれてしまうケースが多いため。速度的にもアップ）
@@ -173,6 +173,7 @@ Copyright(C)2006-2012 Kitao Nakamura.
         2. キューのアクセス部分を排他処理にする
 
     の２とおりが考えられる。とりあえず２の方法をとることにする。
+ </pre>
 */
 public class OotakeHuC6280 {
 
@@ -299,7 +300,7 @@ public class OotakeHuC6280 {
             }
         }
 
-        private void noise(byte data) {
+        private void noise(int data) {
             this.bNoiseOn = ((data & 0x80) != 0);
             this.noiseFrq = 0x1F - (data & 0x1F);
             if (this.noiseFrq == 0)
@@ -309,7 +310,7 @@ public class OotakeHuC6280 {
         }
 
         // Kitao 更新。DDAモードのときもWaveデータを更新するようにした。v0.63。ファイヤープロレスリング
-        private void porcessWave(byte data) {
+        private void porcessWave(int data) {
             data &= 0x1F;
             waveCrash = false; // Kitao追加
             if (!this.on) { // Kitao追加。音を鳴らしていないときだけWaveデータを更新する。v0.65。F1トリプルバトルのエンジン音。
@@ -327,10 +328,10 @@ public class OotakeHuC6280 {
             }
         }
 
-        private void setOnDdaAl(byte data) {
-            if (honeyInTheSky) { //はにいいんざすかいのポーズ時に、微妙なボリューム調整タイミングの問題でプチノイズが載ってしまうので、現状はパッチ処理で対応。v2.60更新
-                if ((this.on) && (data == 0)) { //発声中にdataが0の場合、LRボリュームも0にリセット。はにいいんざすかいのポーズ時のノイズが解消。(data & 0x1F)だけが0のときにリセットすると、サイレントデバッガーズ等でNG。発声してない時にリセットするとアトミックロボでNG。ｖ2.55
-                    //Debug.printf("test %X %X %X %X",this.Channel,this.bOn,this.MainVolumeL,this.MainVolumeR);
+        private void setOnDdaAl(int data) {
+            if (honeyInTheSky) { // はにいいんざすかいのポーズ時に、微妙なボリューム調整タイミングの問題でプチノイズが載ってしまうので、現状はパッチ処理で対応。v2.60更新
+                if ((this.on) && (data == 0)) { // 発声中にdataが0の場合、LRボリュームも0にリセット。はにいいんざすかいのポーズ時のノイズが解消。(data & 0x1F)だけが0のときにリセットすると、サイレントデバッガーズ等でNG。発声してない時にリセットするとアトミックロボでNG。ｖ2.55
+//Debug.printf("test %X %X %X %X",this.Channel,this.bOn,this.MainVolumeL,this.MainVolumeR);
                     if ((mainVolumeL & 1) == 0) // メインボリュームのbit0が0のときだけ処理(はにいいんざすかいでイレギュラーな0xE。他のゲームは0xF。※ヘビーユニットも0xEだった)。これがないとミズバク大冒険で音が出ない。実機の仕組みと同じかどうかは未確認。v2.53追加
                         this.volumeL = 0;
                     if ((mainVolumeR & 1) == 0) // 右チャンネルも同様とする
@@ -488,10 +489,10 @@ public class OotakeHuC6280 {
     /**
      * Psg ポートの書き込みに対する動作を記述します。
      */
-    public void writeReg(byte reg, byte data) {
+    public void writeReg(int reg, int data) {
         Psg psg;
 
-        this.port[reg & 15] = data;
+        this.port[reg & 15] = (byte) data;
 
         switch (reg & 15) {
         case 0: // register select
@@ -511,10 +512,10 @@ public class OotakeHuC6280 {
 
         case 2: // frequency low
             psg = this.psgs[this.channel];
-            psg.frq &= ~(int) 0xFF;
+            psg.frq &= ~(int) 0xff;
             psg.frq |= data;
             // Kitao更新。update_frequencyは、速度アップのためサブルーチンにせず直接実行するようにした。
-            int frq = (psg.frq - 1) & 0xFFF;
+            int frq = (psg.frq - 1) & 0xffF;
             if (frq != 0)
                 // Kitao更新。速度アップのためfrq以外は定数計算にした。
                 // 精度向上のため、先に値の小さいOVERSAMPLE_RATEのほうで割るようにした。
@@ -529,7 +530,7 @@ public class OotakeHuC6280 {
             psg.frq &= ~(int) 0xF00;
             psg.frq |= (data & 0x0F) << 8;
             // Kitao更新。update_frequencyは、速度アップのためサブルーチンにせず直接実行するようにした。
-            frq = (psg.frq - 1) & 0xFFF;
+            frq = (psg.frq - 1) & 0xffF;
             if (frq != 0)
                 // Kitao更新。速度アップのためfrq以外は定数計算にした。
                 // 精度向上のため、先に値の小さいOVERSAMPLE_RATEのほうで割るようにした。
@@ -669,27 +670,30 @@ public class OotakeHuC6280 {
     /**
      * Psg ポートの読み出しに対する動作を記述します。
      */
-    public byte read(int regNum) {
+    public int read(int regNum) {
         if (regNum == 0)
-            return (byte) this.channel;
+            return this.channel;
 
-        return this.port[regNum & 15];
+        return this.port[regNum & 15] & 0xff;
     }
 
     /**
      * Psg ポートの書き込みに対する動作を記述します。
      */
-    private void write(int regNum, byte data) {
-        writeReg((byte) regNum, data);
+    private void write(int regNum, int data) {
+        writeReg(regNum, data);
     }
 
-    // Kitao追加。PSGのボリュームも個別に設定可能にした。
+    /**
+     * @author Kitao
+     * Kitao追加。PSGのボリュームも個別に設定可能にした。
+     */
     private void setVolume() {
         this.volume = 1.0 / PSG_DECLINE;
         setVOL();
     }
 
-    // Kitao 追加
+    /** @author Kitao */
     private void resetVolumeReg() {
         this.mainVolumeL = 0;
         this.mainVolumeR = 0;
@@ -703,12 +707,15 @@ public class OotakeHuC6280 {
             this.psgs[c].setMute(((muteMask >> c) & 0x01) != 0);
     }
 
-    // Kitao 追加
+    /** @author Kitao */
     private boolean getMutePsgChannel(int c) {
         return this.psgs[c].mute;
     }
 
-    // Kitao 追加。v2.60
+    /**
+     * @author Kitao
+     * @since v2.60
+     */
     private void setHoneyInTheSky(boolean bHoneyInTheSky) {
         this.honeyInTheSky = bHoneyInTheSky;
     }

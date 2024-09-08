@@ -6,6 +6,8 @@ import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -22,10 +24,14 @@ import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.filechooser.FileFilter;
 
+import static java.lang.System.getLogger;
+
 // import test.RealChip.RSoundChip;
 
 
 public class FrmMain extends JFrame {
+
+    private static final Logger logger = getLogger(FrmMain.class.getName());
 
     private void initializeComponent() {
         this.label1 = new JLabel();
@@ -120,7 +126,7 @@ public class FrmMain extends JFrame {
         // 
         // timer1
         // 
-        this.timer1.scheduleAtFixedRate(this::timer1Tick, 0l, 10l, TimeUnit.SECONDS);
+        this.timer1.scheduleAtFixedRate(this::timer1Tick, 0L, 10L, TimeUnit.SECONDS);
         // 
         // label3
         // 
@@ -500,7 +506,7 @@ public class FrmMain extends JFrame {
         try {
             app.prePlay(tbFile.getText());
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(Level.ERROR, e.getMessage(), e);
             JOptionPane.showMessageDialog(null, "ファイルの読み込みに失敗しました。");
         }
 

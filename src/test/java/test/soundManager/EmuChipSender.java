@@ -1,5 +1,8 @@
 
-package test.SoundManager;
+package test.soundManager;
+
+import vavi.util.Debug;
+
 
 public class EmuChipSender extends ChipSender {
 
@@ -15,6 +18,7 @@ public class EmuChipSender extends ChipSender {
     protected void main() {
         try {
             while (true) {
+Debug.println("wait");
                 while (!getStart()) {
                     Thread.sleep(100);
                 }
@@ -22,6 +26,7 @@ public class EmuChipSender extends ChipSender {
                 synchronized (lockObj) {
                     isRunning = true;
                 }
+Debug.println("start");
 
                 while (true) {
                     Thread.yield();
@@ -42,7 +47,19 @@ public class EmuChipSender extends ChipSender {
                     }
 
                     try {
-                        while (ringBuffer.deq(counter, dev, typ, adr, val, ex)) {
+                        int[] counter_ = new int[1];
+                        int[] dev_ = new int[1];
+                        int[] typ_ = new int[1];
+                        int[] adr_ = new int[1];
+                        int[] val_ = new int[1];
+                        Object[][] ex_ = new Object[1][];
+                        while (ringBuffer.deq(counter_, dev_, typ_, adr_, val_, ex_)) {
+                            counter = counter_[0];
+                            dev = dev_[0];
+                            typ = typ_[0];
+                            adr = adr_[0];
+                            val = val_[0];
+                            ex = ex_[0];
                             //actionOfChip.run(counter, dev, typ, adr, val, ex);
                             if (!receiveBuffer.enq(counter, dev, typ, adr, val, ex)) {
                                 parent.setInterrupt();
@@ -61,13 +78,14 @@ public class EmuChipSender extends ChipSender {
                 }
 
                 synchronized (lockObj) {
+Debug.println("stop");
                     isRunning = false;
                     ringBuffer.init(ringBufferSize);
                     receiveBuffer.init(DATA_SEQUENCE_FREQUENCE);
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+Debug.println(e);
             synchronized (lockObj) {
                 isRunning = false;
                 start = false;

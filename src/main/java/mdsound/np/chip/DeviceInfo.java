@@ -85,12 +85,6 @@ public class DeviceInfo {
             }
         }
 
-        protected void finalize() {
-            for (int i = 0; i < bufmax; i++)
-                buffer[i].second = null;
-            buffer = null;
-        }
-
         public void Clear() {
             for (int i = 0; i < bufmax; i++) {
                 buffer[i].first = 0;

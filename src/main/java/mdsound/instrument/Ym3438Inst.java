@@ -7,7 +7,7 @@ import mdsound.chips.Ym3438;
 
 public class Ym3438Inst extends Instrument.BaseInstrument {
 
-    private Ym3438[] chips = new Ym3438[] {new Ym3438(), new Ym3438()};
+    private final Ym3438[] chips = new Ym3438[] {new Ym3438(), new Ym3438()};
 
     private Ym3438Const.Type type;
 
@@ -25,19 +25,19 @@ public class Ym3438Inst extends Instrument.BaseInstrument {
         return "OPN2cmos";
     }
 
-    private void writeBuffered(byte chipId, int port, byte data) {
+    private void writeBuffered(int chipId, int port, int data) {
         Ym3438 chip = chips[chipId];
         chip.write(port, data);
     }
 
-    private void generateResampled(byte chipId, int[] buf) {
+    private void generateResampled(int chipId, int[] buf) {
         Ym3438 chip = chips[chipId];
         chip.update(buf);
     }
 
     private int[] gsBuffer = new int[2];
 
-    private void generateStream(byte chipId, int[][] sndPtr, int numSamples) {
+    private void generateStream(int chipId, int[][] sndPtr, int numSamples) {
 
         for (int i = 0; i < numSamples; i++) {
             generateResampled(chipId, gsBuffer);
@@ -48,11 +48,11 @@ public class Ym3438Inst extends Instrument.BaseInstrument {
         }
     }
 
-    public void setMute(byte chipId, int mute) {
+    public void setMute(int chipId, int mute) {
         chips[chipId].setMuteMask(mute);
     }
 
-    public void setMute(byte chipId, int ch, boolean mute) {
+    public void setMute(int chipId, int ch, boolean mute) {
         chips[chipId].setMute(ch, mute);
     }
 
@@ -64,29 +64,29 @@ public class Ym3438Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(byte chipId, int clock) {
+    public int start(int chipId, int clock) {
         return start(chipId, clock, 0);
     }
 
     @Override
-    public int start(byte chipId, int clock, int clockValue, Object... option) {
+    public int start(int chipId, int clock, int clockValue, Object... option) {
         chips[chipId].setChipType(type);
         chips[chipId].reset(clock, clockValue);
         return clock;
     }
 
     @Override
-    public void stop(byte chipId) {
+    public void stop(int chipId) {
         chips[chipId].reset(0, 0);
     }
 
     @Override
-    public void reset(byte chipId) {
+    public void reset(int chipId) {
         chips[chipId].reset(0, 0);
     }
 
     @Override
-    public void update(byte chipId, int[][] outputs, int samples) {
+    public void update(int chipId, int[][] outputs, int samples) {
         generateStream(chipId, outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
@@ -94,8 +94,8 @@ public class Ym3438Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int write(byte chipId, int port, int adr, int data) {
-        writeBuffered(chipId, adr, (byte) data);
+    public int write(int chipId, int port, int adr, int data) {
+        writeBuffered(chipId, adr, data);
         return 0;
     }
 }

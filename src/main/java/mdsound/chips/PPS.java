@@ -14,11 +14,12 @@ import static dotnet4j.util.compat.CollectionUtilities.toByteArray;
  * @version 0.00 2022-07-08 nsano initial version <br>
  */
 public class PPS {
+
     private static class Header {
         private int address;
         private int length;
-        private byte toneOfs;
-        private byte volumeOfs;
+        private int toneOfs;
+        private int volumeOfs;
     }
 
     private double samplingRate = 44100.0;
@@ -83,7 +84,7 @@ public class PPS {
         emitTable[0] = 0;
     }
 
-    public void play(byte al, byte bh, byte bl) {
+    public void play(int al, int bh, int bl) {
         int num = al;
         int shift = bh;
         //Debug.printf(bh);
@@ -96,7 +97,7 @@ public class PPS {
         a += shift;
         a = Math.min(Math.max(a, 1), 255);
 
-        if ((byte) (ppsHd[num].volumeOfs + volshift) >= 15) return;
+        if (ppsHd[num].volumeOfs + volshift >= 15) return;
         // 音量が 0 以下の時は再生しない
 
         if (!singleFlag && keyonFlag) {
@@ -117,11 +118,11 @@ public class PPS {
         dataSize1 = ppsHd[num].length; // 1 音目を消して再生
         dataXor1 = 0;
         if (lowCpuCheckFlag) {
-            tick1 = (int) (((8000 * a / 225) << 16) / samplingRate);
+            tick1 = (int) (((int) (8000 * a / 225.) << 16) / samplingRate);
             tickXor1 = tick1 & 0xffff;
             tick1 >>= 16;
         } else {
-            tick1 = (int) (((16000 * a / 225) << 16) / samplingRate);
+            tick1 = (int) (((int) (16000 * a / 225.) << 16) / samplingRate);
             tickXor1 = tick1 & 0xffff;
             tick1 >>= 16;
         }
@@ -136,7 +137,7 @@ public class PPS {
         dataSize1 = dataSize2 = -1;
     }
 
-    public boolean setParam(byte paramno, byte data) {
+    public boolean setParam(int paramno, int data) {
         switch (paramno & 1) {
         case 0:
             singleFlag = data != 0;
@@ -186,9 +187,8 @@ public class PPS {
                 psg.accept(0x0a, al1);
             } else {
                 if (interpolation) {
-                    data =
-                            (emitTable[al1] * (0x10000 - dataXor1) + emitTable[al2] * dataXor1 +
-                                    emitTable[ah1] * (0x10000 - dataXor2) + emitTable[ah2] * dataXor2) / 0x10000;
+                    data = (emitTable[al1] * (0x10000 - dataXor1) + emitTable[al2] * dataXor1 +
+                            emitTable[ah1] * (0x10000 - dataXor2) + emitTable[ah2] * dataXor2) / 0x10000;
 
                 } else {
                     data = emitTable[al1] + emitTable[ah1];
@@ -200,8 +200,8 @@ public class PPS {
             if (!real) {
                 if (!keyonFlag) data += keyoffVol;
                 //if(keyoff_vol!=0) Debug.printf("keyoff_vol%d", keyoff_vol);
-                outputs[0][i] = (short) Math.max(Math.min(outputs[0][i] + data, Short.MAX_VALUE), Short.MIN_VALUE);
-                outputs[1][i] = (short) Math.max(Math.min(outputs[1][i] + data, Short.MAX_VALUE), Short.MIN_VALUE);
+                outputs[0][i] = Math.max(Math.min(outputs[0][i] + data, Short.MAX_VALUE), Short.MIN_VALUE);
+                outputs[1][i] = Math.max(Math.min(outputs[1][i] + data, Short.MAX_VALUE), Short.MIN_VALUE);
             }
 
             //  psg.mix(dest, 1);
@@ -209,20 +209,20 @@ public class PPS {
 
             if (dataSize2 > 1) { // ２音合成再生
                 dataXor2 += tickXor2;
-                if (dataXor2 >= 0x10000) {
+                if (dataXor2 >= 0x1_0000) {
                     dataSize2--;
                     dataOffset2++;
-                    dataXor2 -= 0x10000;
+                    dataXor2 -= 0x1_0000;
                 }
                 dataSize2 -= tick2;
                 dataOffset2 += tick2;
 
                 if (lowCpuCheckFlag) {
                     dataXor2 += tickXor2;
-                    if (dataXor2 >= 0x10000) {
+                    if (dataXor2 >= 0x1_0000) {
                         dataSize2--;
                         dataOffset2++;
-                        dataXor2 -= 0x10000;
+                        dataXor2 -= 0x1_0000;
                     }
                     dataSize2 -= tick2;
                     dataOffset2 += tick2;
@@ -230,20 +230,20 @@ public class PPS {
             }
 
             dataXor1 += tickXor1;
-            if (dataXor1 >= 0x10000) {
+            if (dataXor1 >= 0x1_0000) {
                 dataSize1--;
                 dataOffset1++;
-                dataXor1 -= 0x10000;
+                dataXor1 -= 0x1_0000;
             }
             dataSize1 -= tick1;
             dataOffset1 += tick1;
 
             if (lowCpuCheckFlag) {
                 dataXor1 += tickXor1;
-                if (dataXor1 >= 0x10000) {
+                if (dataXor1 >= 0x1_0000) {
                     dataSize1--;
                     dataOffset1++;
-                    dataXor1 -= 0x10000;
+                    dataXor1 -= 0x1_0000;
                 }
                 dataSize1 -= tick1;
                 dataOffset1 += tick1;
@@ -297,8 +297,8 @@ public class PPS {
         // データの作成
         // PPS 補正(プチノイズ対策）/ 160 サンプルで減衰させる
         for (int i = 0; i < MAX_PPS; i++) {
-            int address = pcmData[i * 6 + 0] + pcmData[i * 6 + 1] * 0x100 - MAX_PPS * 6;
-            int leng = pcmData[i * 6 + 2] + pcmData[i * 6 + 3] * 0x100;
+            int address = (pcmData[i * 6 + 0] & 0xff) + (pcmData[i * 6 + 1] & 0xff) * 0x100 - MAX_PPS * 6;
+            int leng = (pcmData[i * 6 + 2] & 0xff) + (pcmData[i * 6 + 3] & 0xff) * 0x100;
 
             // 仮バッファは 2 倍の大きさにしている為。
             address *= 2;
@@ -310,7 +310,7 @@ public class PPS {
 
             for (int j = start_pps; j < end_pps; j++) {
                 //Debug.printf("before%d", o[j]);
-                o.set(j, (byte) (o.get(j) - (j - start_pps) * 16 / (end_pps - start_pps)));
+                o.set(j, (byte) ((o.get(j) & 0xff) - (j - start_pps) * 16 / (end_pps - start_pps)));
                 if (o.get(j) < 0)
                     o.set(j, (byte) 0);
                 //Debug.printf("after%d", o[j]);
@@ -323,10 +323,10 @@ public class PPS {
         List<Header> h = new ArrayList<>();
         for (int i = 0; i < MAX_PPS; i++) {
             Header p = new Header();
-            p.address = (pcmData[i * 6 + 0] + pcmData[i * 6 + 1] * 0x100 - MAX_PPS * 6) * 2;
-            p.length = (pcmData[i * 6 + 2] + pcmData[i * 6 + 3] * 0x100) * 2;
-            p.toneOfs = pcmData[i * 6 + 4];
-            p.volumeOfs = pcmData[i * 6 + 5];
+            p.address = ((pcmData[i * 6 + 0] & 0xff) + (pcmData[i * 6 + 1] & 0xff) * 0x100 - MAX_PPS * 6) * 2;
+            p.length = ((pcmData[i * 6 + 2] & 0xff) + (pcmData[i * 6 + 3] & 0xff) * 0x100) * 2;
+            p.toneOfs = pcmData[i * 6 + 4] & 0xff;
+            p.volumeOfs = pcmData[i * 6 + 5] & 0xff;
 
             h.add(p);
         }
@@ -372,18 +372,18 @@ public class PPS {
     }
 
     public int write(int port, int adr, int data) {
-        switch ((byte) port) {
+        switch (port) {
         case 0x00:
             reset();
             break;
         case 0x01:
-            play((byte) (adr >> 8), (byte) adr, (byte) data);
+            play(adr >> 8, adr, data);
             break;
         case 0x02:
             this.stop();
             break;
         case 0x03:
-            return setParam((byte) adr, (byte) data) ? 1 : 0;
+            return setParam(adr, data) ? 1 : 0;
         case 0x04:
             int04();
             break;

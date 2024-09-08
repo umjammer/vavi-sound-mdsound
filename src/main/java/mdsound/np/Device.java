@@ -2,6 +2,7 @@ package mdsound.np;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 
 public interface Device {
@@ -81,6 +82,8 @@ public interface Device {
          * Track info for keyboard view.
          */
         //TrackInfo getTrackInfo(int trk) { return null; }
+
+        void setListener(Consumer<int[]> listener);
     }
 
     class Bus implements Device {

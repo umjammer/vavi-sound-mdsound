@@ -1,5 +1,7 @@
 package mdsound.instrument;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -7,13 +9,17 @@ import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
 import mdsound.chips.Ym2612;
 
+import static java.lang.System.getLogger;
+
 
 public class Ym2612Inst extends Instrument.BaseInstrument {
+
+    private static final Logger logger = getLogger(Ym2612Inst.class.getName());
 
     private static final int DefaultFMClockValue = 7670454;
 
     private static final int MAX_CHIPS = 2;
-    public Ym2612[] chips = new Ym2612[] {null, null};
+    public Ym2612[] chips = new Ym2612[MAX_CHIPS];
 
     public Ym2612Inst() {
         //0..Main
@@ -25,7 +31,7 @@ public class Ym2612Inst extends Instrument.BaseInstrument {
 
     @Override
     public String getName() {
-        return "Ym2612Inst";
+        return "Ym2612";
     }
 
     @Override
@@ -34,38 +40,40 @@ public class Ym2612Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(byte chipId, int clock) {
-        chips[chipId] = new Ym2612(DefaultFMClockValue, clock, 0);
+    public int start(int chipId, int rate) {
+        if (rate == 0) return 0;
+        chips[chipId] = new Ym2612(DefaultFMClockValue, rate, 0);
         chips[chipId].reset();
 
-        return clock;
+        return rate;
     }
 
     @Override
-    public int start(byte chipId, int clock, int clockValue, Object... option) {
-        if (clockValue == 0) return 0;
+    public int start(int chipId, int rate, int clock, Object... option) {
+        if (rate == 0) return 0;
         if (clock == 0) {
             clock = DefaultFMClockValue;
         }
 
-        chips[chipId] = new Ym2612(clockValue, clock, clockValue);
+        chips[chipId] = new Ym2612(clock, rate, clock);
         chips[chipId].reset();
 
         // 動作オプション設定
         if (option != null && option.length > 0 && option[0] instanceof Integer optFlags) {
+logger.log(Level.DEBUG, "option: " + optFlags);
             chips[chipId].setOptions(optFlags & 0x3);
         }
 
-        return clock;
+        return rate;
     }
 
     @Override
-    public void stop(byte chipId) {
+    public void stop(int chipId) {
         chips[chipId] = null;
     }
 
     @Override
-    public void reset(byte chipId) {
+    public void reset(int chipId) {
         Ym2612 chip = chips[chipId];
         if (chip == null) return;
 
@@ -73,7 +81,7 @@ public class Ym2612Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void update(byte chipId, int[][] outputs, int samples) {
+    public void update(int chipId, int[][] outputs, int samples) {
         Ym2612 chip = chips[chipId];
         if (chip == null) return;
 
@@ -85,16 +93,16 @@ public class Ym2612Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int write(byte chipId, int port, int adr, int data) {
+    public int write(int chipId, int port, int adr, int data) {
         Ym2612 chip = chips[chipId];
         if (chip == null) return 0;
 
-        return chip.write((byte) adr, (byte) data);
+        return chip.write(adr, data);
     }
 
     //----
 
-    public void setMute(byte chipId, int v) {
+    public void setMute(int chipId, int v) {
         Ym2612 chip = chips[chipId];
         if (chip == null) return;
 
@@ -107,9 +115,14 @@ public class Ym2612Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public Map<String, Integer> getVisVolume() {
-        Map<String, Integer> result = new HashMap<>();
-        result.put("ym2612", getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+    public Map<String, Object> getView(String key, Map<String, Object> args) {
+        Map<String, Object> result = new HashMap<>();
+        switch (key) {
+            case "volume" ->
+                    result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+            case "registers" ->
+                    result.put(getName(), new int[][][] {chips[0].getRegisters(), chips[0].getRegisters()});
+        }
         return result;
     }
 }

@@ -9,10 +9,10 @@ import mdsound.fmvgen.effect.ReversePhase;
 
 public class PSG2 extends mdsound.fmgen.PSG {
 
-    protected byte[] panpot = new byte[3];
-    protected byte[] phaseReset = new byte[3];
+    protected int[] panpot = new int[3];
+    protected int[] phaseReset = new int[3];
     protected boolean[] phaseResetBefore = new boolean[3];
-    protected byte[] duty = new byte[3];
+    protected int[] duty = new int[3];
     private Fmvgen.Effects effects;
     private int efcStartCh;
     private byte[][] user = new byte[][] {new byte[64], new byte[64], new byte[64], new byte[64], new byte[64], new byte[64]};
@@ -23,7 +23,7 @@ public class PSG2 extends mdsound.fmgen.PSG {
     private static final double ncountDiv = 32.0;
 
     {
-        final List<BiFunction<Integer, Integer, Integer>> a = Arrays.asList(
+        List<BiFunction<Integer, Integer, Integer>> a = Arrays.asList(
                 this::getSampleFromDuty,
                 this::getSampleFromDuty,
                 this::getSampleFromDuty,
@@ -51,34 +51,34 @@ public class PSG2 extends mdsound.fmgen.PSG {
     }
 
     @Override
-    public void setReg(int regnum, byte data) {
+    public void setReg(int regnum, int data) {
         if (regnum >= 0x10) return;
 
-        reg[regnum] = data;
+        reg[regnum] = (byte) data;
         int tmp;
         switch (regnum) {
         case 0: // ChA Fine Tune
         case 1: // ChA Coarse Tune
-            tmp = ((reg[0] + reg[1] * 256) & 0xfff);
+            tmp = ((reg[0] & 0xff) + (reg[1] & 0xff) * 256) & 0xfff;
             speriod[0] = tmp != 0 ? tPeriodBase / tmp : tPeriodBase;
-            duty[0] = (byte) (reg[1] >> 4);
-            duty[0] = (byte) (duty[0] < 8 ? (7 - duty[0]) : duty[0]);
+            duty[0] = (reg[1] & 0xff) >> 4;
+            duty[0] = duty[0] < 8 ? (7 - duty[0]) : duty[0];
             break;
 
         case 2: // ChB Fine Tune
         case 3: // ChB Coarse Tune
             tmp = ((reg[2] + reg[3] * 256) & 0xfff);
             speriod[1] = tmp != 0 ? tPeriodBase / tmp : tPeriodBase;
-            duty[1] = (byte) (reg[3] >> 4);
-            duty[1] = (byte) (duty[1] < 8 ? (7 - duty[1]) : duty[1]);
+            duty[1] = (reg[3] & 0xff) >> 4;
+            duty[1] = duty[1] < 8 ? (7 - duty[1]) : duty[1];
             break;
 
         case 4: // ChC Fine Tune
         case 5: // ChC Coarse Tune
             tmp = ((reg[4] + reg[5] * 256) & 0xfff);
             speriod[2] = tmp != 0 ? tPeriodBase / tmp : tPeriodBase;
-            duty[2] = (byte) (reg[5] >> 4);
-            duty[2] = (byte) (duty[2] < 8 ? (7 - duty[2]) : duty[2]);
+            duty[2] = (reg[5] & 0xff) >> 4;
+            duty[2] = duty[2] < 8 ? (7 - duty[2]) : duty[2];
             break;
 
         case 6: // Noise generator control
@@ -99,28 +99,28 @@ public class PSG2 extends mdsound.fmgen.PSG {
             break;
         case 8:
             olevel[0] = (mask & 1) != 0 ? emitTable[(data & 15) * 2 + 1] : 0;
-            panpot[0] = (byte) (data >> 6);
-            panpot[0] = (byte) (panpot[0] == 0 ? 3 : panpot[0]);
+            panpot[0] = data >> 6;
+            panpot[0] = panpot[0] == 0 ? 3 : panpot[0];
             phaseReset[0] = (byte) ((data & 0x20) != 0 ? 1 : 0);
             break;
 
         case 9:
             olevel[1] = (mask & 2) != 0 ? emitTable[(data & 15) * 2 + 1] : 0;
-            panpot[1] = (byte) (data >> 6);
-            panpot[1] = (byte) (panpot[1] == 0 ? 3 : panpot[1]);
+            panpot[1] = data >> 6;
+            panpot[1] = panpot[1] == 0 ? 3 : panpot[1];
             phaseReset[1] = (byte) ((data & 0x20) != 0 ? 1 : 0);
             break;
 
         case 10:
             olevel[2] = (mask & 4) != 0 ? emitTable[(data & 15) * 2 + 1] : 0;
-            panpot[2] = (byte) (data >> 6);
-            panpot[2] = (byte) (panpot[2] == 0 ? 3 : panpot[2]);
-            phaseReset[2] = (byte) ((data & 0x20) != 0 ? 1 : 0);
+            panpot[2] = data >> 6;
+            panpot[2] = panpot[2] == 0 ? 3 : panpot[2];
+            phaseReset[2] = (data & 0x20) != 0 ? 1 : 0;
             break;
 
         case 11: // Envelop period
         case 12:
-            tmp = ((reg[11] + reg[12] * 256) & 0xffff);
+            tmp = ((reg[11] & 0xff) + (reg[12] & 0xff) * 256) & 0xffff;
             eperiod = tmp != 0 ? eperiodbase / tmp : eperiodbase * 2;
             break;
 
@@ -129,7 +129,7 @@ public class PSG2 extends mdsound.fmgen.PSG {
             envelop = envelopTable[data & 15];
             break;
 
-        case 14: // Define Wave Data
+        case 14: // Define Wave data
             if ((data & 0x80) != 0) userDefCounter = 0;
             user[((data & 0x70) >> 4) % 6][userDefCounter & 63] = (byte) (data & 0xf);
             //Debug.printf("%d : WF %d %d %d ", ((data & 0x70) >> 4) % 6, userDefCounter & 63, (byte)(data & 0xf), data);
@@ -138,21 +138,21 @@ public class PSG2 extends mdsound.fmgen.PSG {
         }
     }
 
-    private byte[] chEnable = new byte[3];
-    private byte[] nEnable = new byte[3];
+    private int[] chEnable = new int[3];
+    private int[] nEnable = new int[3];
     private Integer[] p = new Integer[3];
 
     @Override
     public void mix(int[] dest, int nsamples) {
-        byte r7 = (byte) ~reg[7];
+        int r7 = ~(reg[7] & 0xff);
 
         if (((r7 & 0x3f) | ((reg[8] | reg[9] | reg[10]) & 0x1f)) != 0) {
-            chEnable[0] = (byte) ((((r7 & 0x01) != 0) && (speriod[0] <= (1 << toneShift))) ? 15 : 0);
-            chEnable[1] = (byte) ((((r7 & 0x02) != 0) && (speriod[1] <= (1 << toneShift))) ? 15 : 0);
-            chEnable[2] = (byte) ((((r7 & 0x04) != 0) && (speriod[2] <= (1 << toneShift))) ? 15 : 0);
-            nEnable[0] = (byte) ((r7 & 0x08) != 0 ? 1 : 0);
-            nEnable[1] = (byte) ((r7 & 0x10) != 0 ? 1 : 0);
-            nEnable[2] = (byte) ((r7 & 0x20) != 0 ? 1 : 0);
+            chEnable[0] = (((r7 & 0x01) != 0) && (speriod[0] <= (1 << toneShift))) ? 15 : 0;
+            chEnable[1] = (((r7 & 0x02) != 0) && (speriod[1] <= (1 << toneShift))) ? 15 : 0;
+            chEnable[2] = (((r7 & 0x04) != 0) && (speriod[2] <= (1 << toneShift))) ? 15 : 0;
+            nEnable[0] = (r7 & 0x08) != 0 ? 1 : 0;
+            nEnable[1] = (r7 & 0x10) != 0 ? 1 : 0;
+            nEnable[2] = (r7 & 0x20) != 0 ? 1 : 0;
             p[0] = ((mask & 1) != 0 && (reg[8] & 0x10) != 0) ? null : 0;
             p[1] = ((mask & 2) != 0 && (reg[9] & 0x10) != 0) ? null : 1;
             p[2] = ((mask & 4) != 0 && (reg[10] & 0x10) != 0) ? null : 2;
@@ -346,7 +346,7 @@ public class PSG2 extends mdsound.fmgen.PSG {
 
         // ユーザー定義
         int pos = (sCount[k] >> (toneShift + overSampling - 3 - 2)) & 63;
-        int n = ((int) user[duty[k] - 10][pos] & chEnable[k]);
+        int n = user[duty[k] - 10][pos] & chEnable[k];
         int x = n - 8;
         return (lv * x) >> 2;
     }

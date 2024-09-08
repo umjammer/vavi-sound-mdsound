@@ -77,12 +77,12 @@ public class Km6502 implements Device {
     public final int R_FLAG = Flags.R.v;
     public final int V_FLAG = Flags.V.v;
     public final int N_FLAG = Flags.N.v;
-    public final int T_FLAG = 0;
+    public static final int T_FLAG = 0;
 
     private static final int BASE_OF_ZERO = 0x0000;
-    private static final int VEC_RESET = 0xFFFC;
-    private static final int VEC_NMI = 0xFFFA;
-    private static final int VEC_INT = 0xFFFE;
+    private static final int VEC_RESET = 0xffFC;
+    private static final int VEC_NMI = 0xffFA;
+    private static final int VEC_INT = 0xffFE;
     private static final int VEC_BRK = VEC_INT;
     private static final int IRQ_INIT = IRQ.INIT.v;
     private static final int IRQ_RESET = IRQ.RESET.v;
@@ -252,24 +252,24 @@ public class Km6502 implements Device {
 
     public int KI_READWORDBUG(int adr) {
         int ret = K_READ(adr);
-        return ret + (K_READ((adr & 0xFF00) + ((adr + 1) & 0xff)) << 8);
+        return ret + (K_READ((adr & 0xff00) + ((adr + 1) & 0xff)) << 8);
     }
 
     public int KA_ABSX_() {
-        if (((this.pc) & 0xff) == 0xFF)
+        if (((this.pc) & 0xff) == 0xff)
             KI_ADDCLOCK(1); // page break
         return KAI_ABSX();
     }
 
     public int KA_ABSY_() {
-        if (((this.pc) & 0xff) == 0xFF)
+        if (((this.pc) & 0xff) == 0xff)
             KI_ADDCLOCK(1); // page break
         return KAI_ABSY();
     }
 
     public int KA_INDY_() {
         int adr = KAI_INDY();
-        if (((adr) & 0xff) == 0xFF)
+        if (((adr) & 0xff) == 0xff)
             KI_ADDCLOCK(1); // page break
         return adr;
     }
@@ -304,27 +304,27 @@ public class Km6502 implements Device {
     }
 
     public void KMI_SBC(int src) {
-        KM_ALUADDER(src ^ 0xFF);
+        KM_ALUADDER(src ^ 0xff);
     }
 
     public void KMI_SBC_D(int src) {
-        KM_ALUADDER_D(((src ^ 0xFF) + (0x100 - 0x66)) & 0xff);
+        KM_ALUADDER_D(((src ^ 0xff) + (0x100 - 0x66)) & 0xff);
     }
 
     public void KM_CMP(int src) {
-        int w = this.a + (src ^ 0xFF) + 1;
+        int w = this.a + (src ^ 0xff) + 1;
         this.p &= ~(int) (N_FLAG | Z_FLAG | C_FLAG);
         this.p += FLAG_NZC(w);
     }
 
     public void KM_CPX(int src) {
-        int w = this.x + (src ^ 0xFF) + 1;
+        int w = this.x + (src ^ 0xff) + 1;
         this.p &= ~(int) (N_FLAG | Z_FLAG | C_FLAG);
         this.p += FLAG_NZC(w);
     }
 
     public void KM_CPY(int src) {
-        int w = this.y + (src ^ 0xFF) + 1;
+        int w = this.y + (src ^ 0xff) + 1;
         this.p &= ~(int) (N_FLAG | Z_FLAG | C_FLAG);
         this.p += FLAG_NZC(w);
     }
@@ -402,9 +402,9 @@ public class Km6502 implements Device {
     }
 
     public void KM_BRA(int rel) {
-        int oldPage = this.pc & 0xFF00;
+        int oldPage = this.pc & 0xff00;
         this.pc = (this.pc + (rel ^ 0x80) - 0x80) & 0xffff;
-        KI_ADDCLOCK(1 + ((oldPage != (this.pc & 0xFF00)) ? 1 : 0));
+        KI_ADDCLOCK(1 + ((oldPage != (this.pc & 0xff00)) ? 1 : 0));
     }
 
     public void KM_PUSH(int src) {
@@ -939,7 +939,7 @@ public class Km6502 implements Device {
         KM_ORA(K_READ(KA_ABSX()));
     }
 
-    /* --- PHr PLr --- */
+    /** PHr PLr */
     public void opCode48() { /* 48 - PHA */
         KM_PUSH(this.a);
     }
@@ -956,8 +956,8 @@ public class Km6502 implements Device {
         this.p = KM_POP() & ~T_FLAG;
     }
 
-    /// * --- RMBi --- */
-    /// * --- SMBi --- */
+    // RMBi
+    // SMBi
 
     /* --- ROL --- */
     public void opCode26() {
@@ -1852,7 +1852,7 @@ public class Km6502 implements Device {
         this.x = (res) & 0xff;
         this.p &= ~(int) (N_FLAG | Z_FLAG | C_FLAG);
         this.p |= FLAG_NZ(this.x);
-        this.p |= (res <= 0xFF) ? C_FLAG : 0;
+        this.p |= (res <= 0xff) ? C_FLAG : 0;
     }
 
     /* --- SBC --- */
@@ -2776,7 +2776,7 @@ public class Km6502 implements Device {
         case 0xFE:
             opCodeFE();
             break;
-        case 0xFF:
+        case 0xff:
             opCodeFF();
             this.illegal = 1;
             break;
@@ -2789,7 +2789,7 @@ public class Km6502 implements Device {
                 this.a = 0;
                 this.x = 0;
                 this.y = 0;
-                this.s = 0xFF;
+                this.s = 0xff;
                 this.p = Z_FLAG | R_FLAG | I_FLAG;
                 this.iRequest = 0;
                 this.iMask = ~(int) 0;
@@ -2799,7 +2799,7 @@ public class Km6502 implements Device {
                 this.a = 0;
                 this.x = 0;
                 this.y = 0;
-                this.s = 0xFF;
+                this.s = 0xff;
                 this.p = Z_FLAG | R_FLAG | I_FLAG;
                 this.pc = KI_READWORD(VEC_RESET);
                 this.iRequest = 0;
@@ -2808,7 +2808,7 @@ public class Km6502 implements Device {
                 KM_PUSH((this.pc >> 8) & 0xff);
                 KM_PUSH((this.pc) & 0xff);
                 KM_PUSH(this.p | R_FLAG | B_FLAG);
-                this.p = (this.p & ~T_FLAG) | I_FLAG; /* 6502 bug */
+                this.p = (this.p & ~T_FLAG) | I_FLAG; // 6502 bug
                 this.iRequest &= ~(int) (IRQ_NMI | IRQ_BRK);
                 this.pc = KI_READWORD(VEC_NMI);
                 KI_ADDCLOCK(7);
@@ -2873,9 +2873,6 @@ public class Km6502 implements Device {
         bus = null;
     }
 
-    protected void finalize() {
-    }
-
     private void writeByte(int adr, int val) {
         write(adr, val, 0);
     }
@@ -2909,9 +2906,9 @@ public class Km6502 implements Device {
 
 //                int tpc = this.pc;
 //                int[][] tb = new int[3][1];
-//                bus.read((tpc + 0) & 0xFFFF, tb[0]);
-//                bus.read((tpc + 1) & 0xFFFF, tb[1]);
-//                bus.read((tpc + 2) & 0xFFFF, tb[2]);
+//                bus.read((tpc + 0) & 0xffFF, tb[0]);
+//                bus.read((tpc + 1) & 0xffFF, tb[1]);
+//                bus.read((tpc + 2) & 0xffFF, tb[2]);
 //                Debug.printf("%04x: A=%02x X=%02x Y=%02x P=%02x S=%02x %s > ",
 //                                  this.pc,
 //                                  this.a,
@@ -2968,7 +2965,7 @@ public class Km6502 implements Device {
 // System.err.pritnf("Write: 0x%04X = 0x%02X\n", adr, val);
 
         // for blargg's CPU tests
-// #if 0
+//#if 0
         // if (adr == 0x6000) {
         //  System.err.pritnf("Blargg result: %02X [");
         // int msg = 0x6004;
@@ -2982,7 +2979,7 @@ public class Km6502 implements Device {
         //  System.err.pritnf("]\n");
         //  return false;
         // }
-// #endif
+//#endif
 
         if (bus != null)
             return bus.write(adr, val, id);
@@ -3041,12 +3038,12 @@ public class Km6502 implements Device {
         startup(startAdr);
 
         for (int i = 0; (i < (NES_BASECYCLES / intFreq)) && !breaked; i++, exec()) {
-// #if TRACE
+//#if TRACE
 //            int tpc = this.pc;
 //            int[][] tb = new int[3][1];
-//            bus.read((tpc + 0) & 0xFFFF, tb[0]);
-//            bus.read((tpc + 1) & 0xFFFF, tb[1]);
-//            bus.read((tpc + 2) & 0xFFFF, tb[2]);
+//            bus.read((tpc + 0) & 0xffFF, tb[0]);
+//            bus.read((tpc + 1) & 0xffFF, tb[1]);
+//            bus.read((tpc + 2) & 0xffFF, tb[2]);
 //            Debug.printf("%04x: A=%02x X=%02x Y=%02x P=%02x S=%02x %s > ",
 //                              this.pc,
 //                              this.a,
@@ -3055,7 +3052,7 @@ public class Km6502 implements Device {
 //                              this.p,
 //                              this.s,
 //                              this.iRequest != 0 ? 'I' : 'i');
-// #endif
+//#endif
             if (this.pc == breakPoint) {
                 breaked = true;
             }

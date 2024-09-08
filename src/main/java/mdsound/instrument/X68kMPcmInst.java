@@ -10,7 +10,7 @@ public class X68kMPcmInst extends Instrument.BaseInstrument {
 
     @Override
     public String getName() {
-        return "X68kMPcmInst";
+        return "X68kMPcm";
     }
 
     @Override
@@ -19,34 +19,34 @@ public class X68kMPcmInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void reset(byte chipId) {
+    public void reset(int chipId) {
         reset_(chipId);
     }
 
     @Override
-    public int start(byte chipId, int clock) {
+    public int start(int chipId, int clock) {
         return start(chipId, 44100, clock);
     }
 
     @Override
-    public int start(byte chipId, int samplingRate, int clockValue, Object... option) {
+    public int start(int chipId, int samplingRate, int clockValue, Object... option) {
         mountMpcmX68K(chipId);
         initialize(chipId, clockValue, samplingRate);
         return samplingRate;
     }
 
     @Override
-    public void stop(byte chipId) {
+    public void stop(int chipId) {
         unmountMpcmX68K(chipId);
     }
 
     @Override
-    public void update(byte chipId, int[][] outputs, int samples) {
+    public void update(int chipId, int[][] outputs, int samples) {
         update_(chipId, outputs, samples);
     }
 
     @Override
-    public int write(byte chipId, int port, int adr, int data) {
+    public int write(int chipId, int port, int adr, int data) {
         return 0;
     }
 
@@ -63,9 +63,9 @@ public class X68kMPcmInst extends Instrument.BaseInstrument {
         chip.unmount();
     }
 
-    public boolean initialize(int chipId, int base_, float samplingRate) {
+    public boolean initialize(int chipId, int base, float samplingRate) {
         MPcm chip = chips[chipId];
-        return chip.init(base_, samplingRate);
+        return chip.init(base, samplingRate);
     }
 
     public void reset_(int chipId) {

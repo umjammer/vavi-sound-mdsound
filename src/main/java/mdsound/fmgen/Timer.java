@@ -55,20 +55,20 @@ public class Timer {
 
     protected void setTimerA(int addr, int data) {
         int tmp;
-        regta[addr & 1] = (byte) (data);
+        regta[addr & 1] = (byte) (data & 0xff);
         tmp = (regta[0] << 2) + (regta[1] & 3);
         timerA = (1024 - tmp) * timerStep;
         // Debug.printf("Timer A = %d   %d us\n", tmp, timera >> 16);
     }
 
     protected void setTimerB(int data) {
-        timerB = (256 - data) * timerStep;
+        timerB = (256 - (data & 0xff)) * timerStep;
         // Debug.printf("Timer B = %d   %d us\n", data, timerb >> 12);
     }
 
     protected void setTimerControl(int data) {
-        int tmp = regTc ^ data;
-        regTc = (byte) data;
+        int tmp = regTc ^ (data & 0xff);
+        regTc = (byte) (data & 0xff);
 
         if ((data & 0x10) != 0)
             resetStatus(1);

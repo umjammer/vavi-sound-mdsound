@@ -122,19 +122,19 @@ public class DosboxYm3812 {
         };
 
         // map a register base to a modulator Operator number or Operator number
-        private static final byte[] regBase2modOp = new byte[] {
+        private static final int[] regBase2modOp = new int[] {
                 0, 1, 2, 0, 1, 2, 0, 0, 3, 4, 5, 3, 4, 5, 0, 0, 6, 7, 8, 6, 7, 8
         };
 
 
         // map a channel number to the register offset of the modulator (=register base)
-        private static final byte[] modulatorbase = new byte[] {
+        private static final int[] modulatorbase = new int[] {
                 0, 1, 2,
                 8, 9, 10,
                 16, 17, 18
         };
 
-        private static final byte[] regbase2op = new byte[] {
+        private static final int[] regbase2op = new int[] {
                 0, 1, 2, 9, 10, 11, 0, 0, 3, 4, 5, 12, 13, 14, 0, 0, 6, 7, 8, 15, 16, 17
         };
 
@@ -188,9 +188,9 @@ public class DosboxYm3812 {
             //static double frqmul[16]; // moved to Opl
 
             // key scale levels
-            private static byte[][] ksLev = new byte[][] {
-                    new byte[16], new byte[16], new byte[16], new byte[16],
-                    new byte[16], new byte[16], new byte[16], new byte[16]
+            private static int[][] ksLev = new int[][] {
+                    new int[16], new int[16], new int[16], new int[16],
+                    new int[16], new int[16], new int[16], new int[16]
             };
 
             // start of the waveform
@@ -266,7 +266,7 @@ public class DosboxYm3812 {
                 for (int i = 0; i < TREMTAB_SIZE; i++) {
                     // 0.0 .. -26/26*4.8/6 == [0.0 .. -0.8], 4/53 steps == [1 .. 0.57]
                     double trem_val1 = ((double) tremTableInt[i]) * 4.8 / 26.0 / 6.0; // 4.8db
-                    double trem_val2 = (double) (tremTableInt[i] / 4) * 1.2 / 6.0 / 6.0; // 1.2db (larger stepping)
+                    double trem_val2 = (double) (tremTableInt[i] / 4d) * 1.2 / 6.0 / 6.0; // 1.2db (larger stepping)
 
                     tremTable[i] = (int) (Math.pow(FL2, trem_val1) * FIXEDPT);
                     tremTable[TREMTAB_SIZE + i] = (int) (Math.pow(FL2, trem_val2) * FIXEDPT);
@@ -304,9 +304,9 @@ public class DosboxYm3812 {
                 for (int i = 9; i < 16; i++) ksLev[7][i] = (byte) (i + 41);
                 for (int j = 6; j >= 0; j--) {
                     for (int i = 0; i < 16; i++) {
-                        int oct = (int) ksLev[j + 1][i] - 8;
+                        int oct = ksLev[j + 1][i] - 8;
                         if (oct < 0) oct = 0;
-                        ksLev[j][i] = (byte) oct;
+                        ksLev[j][i] = oct;
                     }
                 }
             }
@@ -430,9 +430,9 @@ public class DosboxYm3812 {
 
             private void changeFrequency(int chanBase, int regBase, byte[] adlibReg, double[] frqMul, double recipSamp) {
                 // frequency
-                int frn = ((((int) adlibReg[ARC_KON_BNUM + chanBase]) & 3) << 8) + (int) adlibReg[ARC_FREQ_NUM + chanBase];
+                int frn = (((adlibReg[ARC_KON_BNUM + chanBase]) & 3) << 8) + (adlibReg[ARC_FREQ_NUM + chanBase] & 0xff);
                 // block number/octave
-                int oct = ((((int) adlibReg[ARC_KON_BNUM + chanBase]) >> 2) & 7);
+                int oct = (adlibReg[ARC_KON_BNUM + chanBase] >> 2) & 7;
                 freq_high = (frn >> 7) & 7;
 
                 // keysplit
@@ -447,11 +447,11 @@ public class DosboxYm3812 {
                 tinc = (int) ((((double) (frn << oct)) * frqMul[adlibReg[ARC_TVS_KSR_MUL + regBase] & 15]));
                 // 40+a0+b0:
                 double volIn = (double) (adlibReg[ARC_KSL_OUTLEV + regBase] & 63) +
-                        ksLMul[adlibReg[ARC_KSL_OUTLEV + regBase] >> 6] * ksLev[oct][frn >> 6];
+                        ksLMul[(adlibReg[ARC_KSL_OUTLEV + regBase] & 0xff) >> 6] * ksLev[oct][frn >> 6];
                 vol = Math.pow(FL2, volIn * -0.125 - 14);
 
                 // Operator frequency changed, care about features that depend on it
-                changeAttackRate(adlibReg[ARC_ATTR_DECR + regBase] >> 4, recipSamp);
+                changeAttackRate((adlibReg[ARC_ATTR_DECR + regBase] & 0xff) >> 4, recipSamp);
                 changeDecayRate(adlibReg[ARC_ATTR_DECR + regBase] & 15, recipSamp);
                 changeReleaseRate(adlibReg[ARC_SUSL_RELR + regBase] & 15, recipSamp);
             }
@@ -463,7 +463,7 @@ public class DosboxYm3812 {
                     if (wselbase >= ARC_SECONDSET)
                         wselbase -= (ARC_SECONDSET - 22); // second set starts at 22
 
-                    tcount = wavestart[wave_sel[wselbase]] * FIXEDPT;
+                    tcount = wavestart[wave_sel[wselbase] & 0xff] * FIXEDPT;
 
                     // start with attack mode
                     opState = OF_TYPE_ATT;
@@ -505,7 +505,7 @@ public class DosboxYm3812 {
                 this.envStepSkipA = 0;
             }
 
-            private static final byte[] stepSkipMask = new byte[] {(byte) 0xff, (byte) 0xfe, (byte) 0xee, (byte) 0xba, (byte) 0xaa};
+            private static final int[] stepSkipMask = new int[] {0xff, 0xfe, 0xee, 0xba, 0xaa};
 
             /** current output/last output (used for feedback) */
             private int cval, lastcval;
@@ -719,12 +719,12 @@ public class DosboxYm3812 {
 
         // per-chips variables
         private Opl.Op[] ops = new Opl.Op[MAXOPERATORS];
-        private byte[] muteChn = new byte[NUM_CHANNELS + 5];
+        private int[] muteChn = new int[NUM_CHANNELS + 5];
         private int chipClock;
 
         private int intSampleRate;
 
-        private byte status;
+        private int status;
         private int oplIndex;
         private int oplAddr;
         // adlib register set
@@ -797,16 +797,16 @@ public class DosboxYm3812 {
             this.oplAddr = 0;
         }
 
-        private void writeIO(int addr, byte val) {
+        private void writeIO(int addr, int val) {
             if ((addr & 1) != 0)
                 write(this.oplAddr, val);
             else
                 this.oplAddr = val;
         }
 
-        private void write(int idx, byte val) {
+        private void write(int idx, int val) {
             int secondSet = idx & 0x100;
-            this.adlibReg[idx] = val;
+            this.adlibReg[idx] = (byte) val;
 
             switch (idx & 0xf0) {
             case ARC_CONTROL:
@@ -878,7 +878,7 @@ public class DosboxYm3812 {
 
                     // change attack rate and decay rate of this Operator
                     Opl.Op po = this.ops[regbase2op[secondSet != 0 ? (base + 22) : base]];
-                    po.changeAttackRate(this.adlibReg[ARC_ATTR_DECR + regBase] >> 4, this.recipSamp);
+                    po.changeAttackRate((this.adlibReg[ARC_ATTR_DECR + regBase] & 0xff) >> 4, this.recipSamp);
                     po.changeDecayRate(this.adlibReg[ARC_ATTR_DECR + regBase] & 15, this.recipSamp);
                 }
             }
@@ -894,7 +894,7 @@ public class DosboxYm3812 {
                     // change sustain level and release rate of this Operator
                     Opl.Op po = this.ops[regbase2op[secondSet != 0 ? (base + 22) : base]];
                     po.changeReleaseRate(this.adlibReg[ARC_SUSL_RELR + regbase] & 15, this.recipSamp);
-                    po.changeSustainLevel(this.adlibReg[ARC_SUSL_RELR + regbase] >> 4);
+                    po.changeSustainLevel((this.adlibReg[ARC_SUSL_RELR + regbase] & 0xff) >> 4);
                 }
             }
             break;
@@ -1211,13 +1211,13 @@ public class DosboxYm3812 {
                         if ((pos[posP + 0].vibrato) && (pos[posP + 0].opState != OF_TYPE_OFF)) {
                             vibVal1 = vibval_var1;
                             for (int i = 0; i < endSamples; i++)
-                                vibVal1[i] = (int) ((vibLut[i] * pos[posP + 0].freq_high / 8) * FIXEDPT * VIBFAC);
+                                vibVal1[i] = (int) ((vibLut[i] * pos[posP + 0].freq_high / 8.) * FIXEDPT * VIBFAC);
                         } else
                             vibVal1 = Opl.Op.vibValConst;
                         if ((pos[posP + 9].vibrato) && (pos[posP + 9].opState == OF_TYPE_OFF)) {
                             vibVal2 = vibval_var2;
                             for (int i = 0; i < endSamples; i++)
-                                vibVal2[i] = (int) ((vibLut[i] * pos[posP + 9].freq_high / 8) * FIXEDPT * VIBFAC);
+                                vibVal2[i] = (int) ((vibLut[i] * pos[posP + 9].freq_high / 8.) * FIXEDPT * VIBFAC);
                         } else
                             vibVal2 = Opl.Op.vibValConst;
 
@@ -1235,7 +1235,7 @@ public class DosboxYm3812 {
                         if ((pos[posP + 9].vibrato) && (pos[posP + 9].opState == OF_TYPE_OFF)) {
                             vibVal4 = vibval_var2;
                             for (int i = 0; i < endSamples; i++)
-                                vibVal4[i] = (int) ((vibLut[i] * pos[posP + 9].freq_high / 8) * FIXEDPT * VIBFAC);
+                                vibVal4[i] = (int) ((vibLut[i] * pos[posP + 9].freq_high / 8.) * FIXEDPT * VIBFAC);
                         } else
                             vibVal4 = Opl.Op.vibValConst;
 
@@ -1300,13 +1300,13 @@ public class DosboxYm3812 {
                         if ((ops[posP + 0].vibrato) && (ops[posP + 0].opState != OF_TYPE_OFF)) {
                             vibVal1 = vibval_var1;
                             for (int i = 0; i < endSamples; i++)
-                                vibVal1[i] = (int) ((vibLut[i] * ops[posP + 0].freq_high / 8) * FIXEDPT * VIBFAC);
+                                vibVal1[i] = (int) ((vibLut[i] * ops[posP + 0].freq_high / 8.) * FIXEDPT * VIBFAC);
                         } else
                             vibVal1 = Opl.Op.vibValConst;
                         if ((ops[posP + 9].vibrato) && (ops[posP + 9].opState != OF_TYPE_OFF)) {
                             vibVal2 = vibval_var2;
                             for (int i = 0; i < endSamples; i++)
-                                vibVal2[i] = (int) ((vibLut[i] * ops[posP + 9].freq_high / 8) * FIXEDPT * VIBFAC);
+                                vibVal2[i] = (int) ((vibLut[i] * ops[posP + 9].freq_high / 8.) * FIXEDPT * VIBFAC);
                         } else
                             vibVal2 = Opl.Op.vibValConst;
                         if (ops[posP + 0].tremolo)
@@ -1342,13 +1342,13 @@ public class DosboxYm3812 {
                         if ((ops[posP + 0].vibrato) && (ops[posP + 0].opState != OF_TYPE_OFF)) {
                             vibVal1 = vibval_var1;
                             for (int i = 0; i < endSamples; i++)
-                                vibVal1[i] = (int) ((vibLut[i] * ops[posP + 0].freq_high / 8) * FIXEDPT * VIBFAC);
+                                vibVal1[i] = (int) ((vibLut[i] * ops[posP + 0].freq_high / 8.) * FIXEDPT * VIBFAC);
                         } else
                             vibVal1 = Opl.Op.vibValConst;
                         if ((ops[posP + 9].vibrato) && (ops[posP + 9].opState != OF_TYPE_OFF)) {
                             vibVal2 = vibval_var2;
                             for (int i = 0; i < endSamples; i++)
-                                vibVal2[i] = (int) ((vibLut[i] * ops[posP + 9].freq_high / 8) * FIXEDPT * VIBFAC);
+                                vibVal2[i] = (int) ((vibLut[i] * ops[posP + 9].freq_high / 8.) * FIXEDPT * VIBFAC);
                         } else
                             vibVal2 = Opl.Op.vibValConst;
                         if (ops[posP + 0].tremolo)
@@ -1387,8 +1387,8 @@ public class DosboxYm3812 {
         }
 
         private void setMuteMask(int muteMask) {
-            for (byte curChn = 0; curChn < NUM_CHANNELS + 5; curChn++)
-                this.muteChn[curChn] = (byte) ((muteMask >> curChn) & 0x01);
+            for (int curChn = 0; curChn < NUM_CHANNELS + 5; curChn++)
+                this.muteChn[curChn] = (muteMask >> curChn) & 0x01;
         }
     }
 
@@ -1444,7 +1444,7 @@ public class DosboxYm3812 {
         }
     }
 
-    public void write(int offset, byte data) {
+    public void write(int offset, int data) {
         switch (EMU_CORE) {
         case EC_MAME:
             break;

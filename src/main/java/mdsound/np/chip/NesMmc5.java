@@ -1,6 +1,7 @@
 package mdsound.np.chip;
 
-import mdsound.MDSound;
+import java.util.function.Consumer;
+
 import mdsound.np.Device.SoundChip;
 import mdsound.np.chip.DeviceInfo.TrackInfo;
 import mdsound.np.chip.DeviceInfo.BasicTrackInfo;
@@ -8,8 +9,8 @@ import mdsound.np.cpu.Km6502;
 
 
 public class NesMmc5 implements SoundChip {
-    public final double DEFAULT_CLOCK = 1789772.0;
-    public final int DEFAULT_RATE = 44100;
+    public static final double DEFAULT_CLOCK = 1789772.0;
+    public static final int DEFAULT_RATE = 44100;
 
     public enum OPT {
         NONLINEAR_MIXER, PHASE_REFRESH, END
@@ -251,7 +252,7 @@ public class NesMmc5 implements SoundChip {
         b[1] += m[2] * -sm[1][2];
         b[1] >>= 7;
 
-        MDSound.np_nes_mmc5_volume = Math.abs(b[0]);
+        if (listener != null) listener.accept(new int[] {-1, -1, -1, -1, Math.abs(b[0]), -1, -1, -1});
 
         return 2;
     }
@@ -326,7 +327,7 @@ public class NesMmc5 implements SoundChip {
         // PCM channel control
         case 0x5011:
             if (!pcmMode) {
-                val &= 0xFF;
+                val &= 0xff;
                 if (val != 0) pcm = (byte) val;
             }
             break;
@@ -362,7 +363,7 @@ public class NesMmc5 implements SoundChip {
             pcmMode = false; // prevent recursive entry
             int[] pcm_read = new int[] { 0 };
             cpu.read(adr, pcm_read, id);
-            pcm_read[0] &= 0xFF;
+            pcm_read[0] &= 0xff;
             if (pcm_read[0] != 0)
                 pcm = (byte) pcm_read[0];
             pcmMode = true;
@@ -435,5 +436,10 @@ public class NesMmc5 implements SoundChip {
     public void setMask(int mask) {
         this.mask = mask;
     }
-}
 
+    private Consumer<int[]> listener;
+
+    public void setListener(Consumer<int[]> listener) {
+        this.listener = listener;
+    }
+}

@@ -1,12 +1,10 @@
 package mdsound.np.chip;
 
 import java.util.Arrays;
-import java.util.logging.Level;
+import java.util.function.Consumer;
 
-import mdsound.MDSound;
 import mdsound.np.Device.SoundChip;
 import mdsound.np.chip.DeviceInfo.BasicTrackInfo;
-import vavi.util.Debug;
 
 
 public class NesN106 implements SoundChip {
@@ -31,8 +29,8 @@ public class NesN106 implements SoundChip {
         }
     }
 
-    public final double DEFAULT_CLOCK = 1789772.0;
-    public final int DEFAULT_RATE = 44100;
+    public static final double DEFAULT_CLOCK = 1789772.0;
+    public static final int DEFAULT_RATE = 44100;
 
     public enum OPT {
         SERIAL,
@@ -103,7 +101,7 @@ public class NesN106 implements SoundChip {
             t.freq = ((double) (t._freq) * clock) / (double) (15 * 65536 * channels * t.wavelen);
             t.halt = getChannels() > trk;
             for (int i = 0; i < t.wavelen; ++i)
-                t.wave[i] = (short) getSample((i + t.tone) & 0xFF);
+                t.wave[i] = (short) getSample((i + t.tone) & 0xff);
         }
 
         return t;
@@ -202,7 +200,7 @@ e.printStackTrace();
             setPhase(phase, channel);
 
             // fetch sample (note: N163 output is centred at 8, and inverted w.r.t 2A03)
-            int sample = 8 - getSample(((phase >> 16) + off) & 0xFF);
+            int sample = 8 - getSample(((phase >> 16) + off) & 0xff);
             fout[channel] = sample * vol;
 
             // cycle to next channel every 15 clocks
@@ -282,7 +280,7 @@ e.printStackTrace();
         b[0] = (b[0] * GAIN) >> 8;
         b[1] = (b[1] * GAIN) >> 8;
 
-        MDSound.np_nes_n106_volume = Math.abs(b[0]);
+        if (listener != null) listener.accept(new int[] {-1, -1, -1, -1, -1, Math.abs(b[0]), -1, -1});
 
         return 2;
     }
@@ -369,8 +367,14 @@ e.printStackTrace();
     private void setPhase(int phase, int channel) {
         // 24-bit phase stored in channel regs 1/3/5
         channel = channel << 3;
-        reg[0x41 + channel] = phase & 0xFF;
-        reg[0x43 + channel] = (phase >> 8) & 0xFF;
-        reg[0x45 + channel] = (phase >> 16) & 0xFF;
+        reg[0x41 + channel] = phase & 0xff;
+        reg[0x43 + channel] = (phase >> 8) & 0xff;
+        reg[0x45 + channel] = (phase >> 16) & 0xff;
+    }
+
+    private Consumer<int[]> listener;
+
+    public void setListener(Consumer<int[]> listener) {
+        this.listener = listener;
     }
 }

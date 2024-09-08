@@ -1,8 +1,9 @@
 package mdsound.np.chip;
 
+import java.util.function.Consumer;
+
 import mdsound.Common;
 import mdsound.Instrument;
-import mdsound.MDSound;
 import mdsound.np.Device.SoundChip;
 import mdsound.np.NpNesApu;
 
@@ -19,7 +20,7 @@ public class NesApu implements SoundChip {
     @Override
     public int render(int[] b) {
         int ret = apu.renderOrg(b);
-        MDSound.np_nes_apu_volume = Math.abs(b[0]);
+        if (listener != null) listener.accept(new int[] {Math.abs(b[0]), -1, -1, -1, -1, -1, -1, -1});
         return ret;
     }
 
@@ -61,5 +62,11 @@ public class NesApu implements SoundChip {
     @Override
     public boolean write(int adr, int val, int id/* = 0*/) {
         return apu.write(adr, val);
+    }
+
+    private Consumer<int[]> listener;
+
+    public void setListener(Consumer<int[]> listener) {
+        this.listener = listener;
     }
 }

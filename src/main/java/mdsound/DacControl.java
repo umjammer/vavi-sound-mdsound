@@ -3,94 +3,129 @@ package mdsound;
 import java.util.ArrayList;
 import java.util.List;
 
+import mdsound.instrument.Ay8910Inst;
+import mdsound.instrument.DmgInst;
+import mdsound.instrument.HuC6280Inst;
+import mdsound.instrument.IntFNesInst;
+import mdsound.instrument.MameYm2612Inst;
+import mdsound.instrument.OkiM6258Inst;
+import mdsound.instrument.PwmInst;
+import mdsound.instrument.ScdPcmInst;
+import mdsound.instrument.Sn76489Inst;
+import mdsound.instrument.Sn76496Inst;
+import mdsound.instrument.Y8950Inst;
+import mdsound.instrument.Ym2151Inst;
+import mdsound.instrument.Ym2203Inst;
+import mdsound.instrument.Ym2413Inst;
+import mdsound.instrument.Ym2608Inst;
+import mdsound.instrument.Ym2610Inst;
+import mdsound.instrument.Ym2612Inst;
+import mdsound.instrument.Ym3438Inst;
+import mdsound.instrument.Ym3526Inst;
+import mdsound.instrument.Ym3812Inst;
+import mdsound.instrument.YmF262Inst;
+import mdsound.instrument.YmF271Inst;
+import mdsound.instrument.YmF278bInst;
+import mdsound.instrument.YmZ280bInst;
+import vavi.util.ByteUtil;
+
 
 public class DacControl {
 
-    public static class VGM_PCM_DATA {
+    public static class PcmData {
         public int dataSize;
         public byte[] data;
         public int dataStart;
     }
 
-    public static class VGM_PCM_BANK {
+    public static class PcmBank {
         public int bankCount;
-        public List<VGM_PCM_DATA> bank = new ArrayList<>();
+        public List<PcmData> bank = new ArrayList<>();
         public int dataSize;
         public byte[] data;
         public int dataPos;
         public int bnkPos;
     }
 
-    public static class DACCTRL_DATA {
+    public static class ControlData {
         public boolean enable;
-        public byte bank;
+        public int bank;
     }
 
-    public static class PCMBANK_TBL {
-        public byte comprType;
-        public byte cmpSubType;
-        public byte bitDec;
-        public byte bitCmp;
+    public static class PcmBankTable {
+        public int comprType;
+        public int cmpSubType;
+        public int bitDec;
+        public int bitCmp;
         public int entryCount;
         public byte[] entries;
     }
 
-    public static class DacControl_ {
+    public static class Control {
         // Commands sent to dest-chips
-        public byte dstChipType;
-        public byte dstEmuType;
-        public byte dstChipIndex;
-        public byte dstchipId;
+        public int dstChipType;
+        public int dstEmuType;
+        public int dstChipIndex;
+        public int dstchipId;
         public int dstCommand;
-        public byte cmdSize;
+        public int cmdSize;
 
-        public int frequency; // Frequency (Hz) at which the commands are sent */
-        public int dataLen; // to protect from reading beyond End Of Data */
+        /** Frequency (Hz) at which the commands are sent */
+        public int frequency;
+        /** to protect from reading beyond End Of data */
+        public int dataLen;
         public byte[] data;
-        public int dataStart; // Position where to start */
-        public byte stepSize; // usually 1, set to 2 for L/R interleaved data */
-        public byte stepBase; // usually 0, set to 0/1 for L/R interleaved data */
+        /** Position where to start */
+        public int dataStart;
+        /** usually 1, set to 2 for L/R interleaved data */
+        public int stepSize;
+        /** usually 0, set to 0/1 for L/R interleaved data */
+        public int stepBase;
         public int cmdsToSend;
 
         // Running Bits: 0 (01) - is playing
         //     2 (04) - loop sample (simple loop from start to end)
         //     4 (10) - already sent this command
         //     7 (80) - disabled
-        public byte running;
-        public byte reverse;
-        public int step; // Position in Player SampleRate */
-        public int pos; // Position in Data SampleRate */
+        public int running;
+        public int reverse;
+        /** Position in Player SampleRate */
+        public int step;
+        /** Position in data SampleRate */
+        public int pos;
         public int remainCmds;
-        public int realPos; // true Position in Data (== Pos, if Reverse is off) */
-        public byte dataStep; // always StepSize * CmdSize */
+        /** true Position in data (== Pos, if Reverse is off) */
+        public int realPos;
+        /** always StepSize * CmdSize */
+        public int dataStep;
     }
 
-    private static final byte DCTRL_LMODE_IGNORE = 0x00;
-    private static final byte DCTRL_LMODE_CMDS = 0x01;
-    private static final byte DCTRL_LMODE_MSEC = 0x02;
-    private static final byte DCTRL_LMODE_TOEND = 0x03;
-    private static final byte DCTRL_LMODE_BYTES = 0x0F;
-    private static final int MAX_CHIPS = 0xFF;
+    private static final int DCTRL_LMODE_IGNORE = 0x00;
+    private static final int DCTRL_LMODE_CMDS = 0x01;
+    private static final int DCTRL_LMODE_MSEC = 0x02;
+    private static final int DCTRL_LMODE_TOEND = 0x03;
+    private static final int DCTRL_LMODE_BYTES = 0x0F;
+    private static final int MAX_CHIPS = 0xff;
     private static final int DAC_SMPL_RATE = 44100;
     private static final int PCM_BANK_COUNT = 0x40;
 
-    private DacControl_[] dacData = new DacControl_[MAX_CHIPS];
+    private Control[] dacData = new Control[MAX_CHIPS];
     private MDSound mds = null;
     private final Object lock = new Object();
     private int samplingRate;
     private double pcmStep;
     private double pcmExecDelta;
-    private byte dacCtrlUsed;
+    private int dacCtrlUsed;
     private byte[] dacCtrlUsg = new byte[MAX_CHIPS];
-    private DACCTRL_DATA[] dacCtrl = new DACCTRL_DATA[0xFF];
-    public VGM_PCM_BANK[] pcmBank = null;
-    private PCMBANK_TBL pcmTbl = new PCMBANK_TBL();
+    private ControlData[] dacCtrl = new ControlData[0xff];
+    public PcmBank[] pcmBank = null;
+    private PcmBankTable pcmTbl = new PcmBankTable();
 
     public DacControl(int samplingRate, MDSound mds) {
         init(samplingRate, mds, null);
     }
 
-    public void init(int samplingRate, MDSound mds, VGM_PCM_BANK[] pcmBank) {
+    public void init(int samplingRate, MDSound mds, PcmBank[] pcmBank) {
         this.mds = mds;
         this.samplingRate = samplingRate;
         pcmStep = samplingRate / (double) DAC_SMPL_RATE;
@@ -98,8 +133,8 @@ public class DacControl {
         this.pcmBank = pcmBank;
         refresh();
         dacCtrlUsed = 0x00;
-        for (int curChip = 0x00; curChip < 0xFF; curChip++) {
-            dacCtrl[curChip] = new DACCTRL_DATA();
+        for (int curChip = 0x00; curChip < 0xff; curChip++) {
+            dacCtrl[curChip] = new ControlData();
             dacCtrl[curChip].enable = false;
         }
     }
@@ -114,82 +149,82 @@ public class DacControl {
         pcmExecDelta -= 1.0;
     }
 
-    public void setupStreamControl(byte si, byte chipType, byte emuType, byte chipIndex, byte chipId, byte port, byte cmd) {
-        if (si == (byte) 0xFF) return;
+    public void setupStreamControl(int si, int chipType, int emuType, int chipIndex, int chipId, int port, int cmd) {
+        if (si == 0xff) return;
 
         if (!dacCtrl[si].enable) {
             deviceStartDaccontrol(si);
             deviceResetDaccontrol(si);
             dacCtrl[si & 0xff].enable = true;
-            dacCtrlUsg[dacCtrlUsed & 0xff] = si;
+            dacCtrlUsg[dacCtrlUsed] = (byte) si;
             dacCtrlUsed++;
         }
 
-        setupChip(si, chipType, emuType, chipIndex, (byte) (chipId & 0x7F), port * 0x100 + cmd);
+        setupChip(si, chipType, emuType, chipIndex, chipId & 0x7F, port * 0x100 + cmd);
     }
 
-    public void setStreamData(byte si, byte bank, byte stepSize, byte stepBase) {
-        if (si == (byte) 0xFF) return;
+    public void setStreamData(int si, int bank, int stepSize, int stepBase) {
+        if (si == 0xff) return;
 
         dacCtrl[si].bank = bank;
         if (dacCtrl[si & 0xff].bank >= PCM_BANK_COUNT)
             dacCtrl[si & 0xff].bank = 0x00;
 
-        VGM_PCM_BANK tempPCM = pcmBank[dacCtrl[si].bank];
+        PcmBank tempPCM = pcmBank[dacCtrl[si].bank];
         //Last95Max = tempPCM.BankCount;
         setData(si, tempPCM.data, tempPCM.dataSize, stepSize, stepBase);
     }
 
-    public void setStreamFrequency(byte si, int tempLng) {
-        if (si == (byte) 0xFF || !dacCtrl[si & 0xff].enable) return;
+    public void setStreamFrequency(int si, int tempLng) {
+        if (si == 0xff || !dacCtrl[si & 0xff].enable) return;
         set_frequency(si, tempLng);
     }
 
-    public void startStream(byte si, int dataStart, byte tempByt, int dataLen) {
-        if (si == (byte) 0xFF || !dacCtrl[si & 0xff].enable || pcmBank[dacCtrl[si & 0xff].bank].bankCount == 0)
+    public void startStream(int si, int dataStart, int tempByt, int dataLen) {
+        if (si == 0xff || !dacCtrl[si].enable || pcmBank[dacCtrl[si].bank].bankCount == 0)
             return;
 
         start(si, dataStart, tempByt, dataLen);
     }
 
-    public void stopStream(byte si) {
-        if (!dacCtrl[si & 0xff].enable)
+    public void stopStream(int si) {
+        if (!dacCtrl[si].enable)
             return;
 
-        if ((si & 0xff) < 0xFF)
+        if ((si) < 0xff)
             stop(si);
         else
-            for (int i = 0x00; i < 0xFF; i++) stop((byte) i);
+            for (int i = 0x00; i < 0xff; i++) stop(i);
     }
 
-    public void startStreamFastCall(byte curChip, int tempSht, byte mode) {
-        if (curChip == (byte) 0xFF || !dacCtrl[curChip & 0xff].enable ||
+    public void startStreamFastCall(int curChip, int tempSht, int mode) {
+        if (curChip == 0xff || !dacCtrl[curChip].enable ||
                 pcmBank[dacCtrl[curChip].bank].bankCount == 0) {
             return;
         }
 
-        VGM_PCM_BANK tempPCM = pcmBank[dacCtrl[curChip].bank];
+        PcmBank tempPCM = pcmBank[dacCtrl[curChip].bank];
         if (tempSht >= tempPCM.bankCount)
             tempSht = 0x00;
 
-        VGM_PCM_DATA tempBnk = tempPCM.bank.get(tempSht);
+        PcmData tempBnk = tempPCM.bank.get(tempSht);
 
-        byte tempByt = (byte) (DacControl.DCTRL_LMODE_BYTES |
+        int tempByt = DacControl.DCTRL_LMODE_BYTES |
                 (mode & 0x10) |         // Reverse Mode
-                ((mode & 0x01) << 7)); // Looping
+                ((mode & 0x01) << 7); // Looping
         start(curChip, tempBnk.dataStart, tempByt, tempBnk.dataSize);
     }
 
     public void addPCMData(byte type, int dataSize, int adr, byte[] vgmBuf) {
         int curBnk;
-        VGM_PCM_BANK tempPCM;
-        VGM_PCM_DATA tempBnk;
+        PcmBank tempPCM;
+        PcmData tempBnk;
         int bankSize;
         //boolean retVal;
-        byte bnkType;
-        byte curDAC;
+        int bnkType;
+        int curDAC;
 
-        bnkType = (byte) (type & 0x3F);
+        bnkType = type & 0x3F;
         if ((bnkType & 0xff) >= PCM_BANK_COUNT)
             return;
 
@@ -204,12 +239,12 @@ public class DacControl {
             return; // Speed hack for restarting playback (skip already loaded blocks)
         curBnk = tempPCM.bankCount;
         tempPCM.bankCount++;
-        tempPCM.bank.add(new VGM_PCM_DATA());
+        tempPCM.bank.add(new PcmData());
 
         if ((type & 0x40) == 0)
             bankSize = dataSize;
         else
-            bankSize = getLE32(vgmBuf, adr + 1);
+            bankSize = ByteUtil.readLeInt(vgmBuf, adr + 1);
 
         byte[] newData = new byte[tempPCM.dataSize + bankSize];
         if (tempPCM.data != null && tempPCM.data.length > 0)
@@ -235,7 +270,7 @@ public class DacControl {
                 System.arraycopy(tempBnk.data, 0, tempPCM.data, 0 + tempBnk.dataStart, bankSize);
             }
         }
-        //if (bankSize != tempBnk.dataSize) Debug.printf("Error reading Data Block! Data Size conflict!\n");
+        //if (bankSize != tempBnk.dataSize) Debug.printf("Error reading data Block! data Size conflict!\n");
         if (retVal)
             tempPCM.dataSize += bankSize;
 
@@ -256,11 +291,11 @@ public class DacControl {
         return pcmBank[0x00].bank.get(0).data[dataPos];
     }
 
-    public Integer getPCMAddressFromPCMBank(byte Type, int dataPos) {
-        if (Type >= PCM_BANK_COUNT)
+    public Integer getPCMAddressFromPCMBank(int type, int dataPos) {
+        if (type >= PCM_BANK_COUNT)
             return null;
 
-        if (dataPos >= pcmBank[Type].dataSize)
+        if (dataPos >= pcmBank[type].dataSize)
             return null;
 
         return dataPos;
@@ -268,64 +303,50 @@ public class DacControl {
 
     public void refresh() {
         synchronized (lock) {
-            for (int i = 0; i < MAX_CHIPS; i++) dacData[i] = new DacControl_();
+            for (int i = 0; i < MAX_CHIPS; i++) dacData[i] = new Control();
         }
     }
 
-    @Deprecated
-    private int getLE16(byte[] vgmBuf, int adr) {
-        int dat = (int) vgmBuf[adr] + (int) vgmBuf[adr + 1] * 0x100;
-
-        return dat;
-    }
-
-    @Deprecated
-    private int getLE32(byte[] vgmBuf, int adr) {
-        int dat = (int) vgmBuf[adr] + (int) vgmBuf[adr + 1] * 0x100 + (int) vgmBuf[adr + 2] * 0x10000 + (int) vgmBuf[adr + 3] * 0x1000000;
-
-        return dat;
-    }
-
-    private boolean decompressDataBlk(byte[] vgmBuf, VGM_PCM_DATA bank, int dataSize, int adr) {
-        byte comprType;
-        byte bitDec;
-        byte bitCmp;
-        byte cmpSubType;
+    private boolean decompressDataBlk(byte[] vgmBuf, PcmData bank, int dataSize, int adr) {
+        int comprType;
+        int bitDec;
+        int bitCmp;
+        int cmpSubType;
         int addVal;
         int inPos;
         int inDataEnd;
         int outPos;
         int outDataEnd;
         int inVal;
-        int outVal = 0;// Fint outVal;
-        byte valSize;
-        byte inShift;
-        byte outShift;
-        int ent1B = 0;// (int)8* ent1B;
-        int ent2B = 0;// int* ent2B;
-        //#if defined(_DEBUG) && defined(WIN32)
+        int outVal = 0; // Fint outVal;
+        int valSize;
+        int inShift;
+        int outShift;
+        int ent1B = 0; // (int)8* ent1B;
+        int ent2B = 0; // int* ent2B;
+//#if defined(_DEBUG) && defined(WIN32)
         // (int)32 Time;
-        //#endif
+//#endif
 
         // ReadBits Variables
-        byte bitsToRead;
-        byte bitReadVal;
-        byte inValB;
-        byte bitMask;
-        byte outBit;
+        int bitsToRead;
+        int bitReadVal;
+        int inValB;
+        int bitMask;
+        int outBit;
 
         // Variables for DPCM
         int outMask;
 
-        comprType = vgmBuf[adr + 0];
-        bank.dataSize = getLE32(vgmBuf, adr + 1);
+        comprType = vgmBuf[adr + 0] & 0xff;
+        bank.dataSize = ByteUtil.readLeInt(vgmBuf, adr + 1);
 
         switch (comprType) {
         case 0x00: // n-Bit compression
-            bitDec = vgmBuf[adr + 5];
-            bitCmp = vgmBuf[adr + 6];
-            cmpSubType = vgmBuf[adr + 7];
-            addVal = getLE16(vgmBuf, adr + 8);
+            bitDec = vgmBuf[adr + 5] & 0xff;
+            bitCmp = vgmBuf[adr + 6] & 0xff;
+            cmpSubType = vgmBuf[adr + 7] & 0xff;
+            addVal = ByteUtil.readLeShort(vgmBuf, adr + 8) & 0xffff;
 
             if (cmpSubType == 0x02) {
                 //bank.dataSize = 0x00;
@@ -339,16 +360,16 @@ public class DacControl {
                     return false;
                 } else if (bitDec != pcmTbl.bitDec || bitCmp != pcmTbl.bitCmp) {
                     bank.dataSize = 0x00;
-                    //Debug.printf("Warning! Data block and loaded value table incompatible!\n");
+                    //Debug.printf("Warning! data block and loaded value table incompatible!\n");
                     return false;
                 }
             }
 
-            valSize = (byte) ((bitDec + 7) / 8);
+            valSize = (bitDec + 7) / 8;
             inPos = adr + 0x0A;
             inDataEnd = adr + dataSize;
             inShift = 0;
-            outShift = (byte) (bitDec - bitCmp);
+            outShift = bitDec - bitCmp;
             outDataEnd = bank.dataSize;
 
             for (outPos = 0; outPos < outDataEnd && inPos < inDataEnd; outPos += valSize) {
@@ -357,17 +378,17 @@ public class DacControl {
                 inVal = 0x0000;
                 bitsToRead = bitCmp;
                 while (bitsToRead != 0) {
-                    bitReadVal = (byte) ((bitsToRead >= 8) ? 8 : bitsToRead);
+                    bitReadVal = Math.min(bitsToRead, 8);
                     bitsToRead -= bitReadVal;
-                    bitMask = (byte) ((1 << bitReadVal) - 1);
+                    bitMask = (1 << bitReadVal) - 1;
 
                     inShift += bitReadVal;
-                    inValB = (byte) ((vgmBuf[inPos] << inShift >> 8) & bitMask);
+                    inValB = (vgmBuf[inPos] << inShift >> 8) & bitMask;
                     if (inShift >= 8) {
                         inShift -= 8;
                         inPos++;
                         if (inShift != 0)
-                            inValB |= (byte) ((vgmBuf[inPos] << inShift >> 8) & bitMask);
+                            inValB |= (vgmBuf[inPos] << inShift >> 8) & bitMask;
                     }
 
                     inVal |= inValB << outBit;
@@ -384,13 +405,14 @@ public class DacControl {
                 case 0x02: // Table
                     switch (valSize) {
                     case 0x01:
-                        outVal = pcmTbl.entries[ent1B + inVal];
+                        outVal = pcmTbl.entries[ent1B + inVal] & 0xff;
                         break;
                     case 0x02:
 //#ifndef BIG_ENDIAN
-                        //     outVal = ent2B[inVal];
+//                        outVal = ent2B[inVal];
 //#else
-                        outVal = pcmTbl.entries[ent2B + inVal * 2] + pcmTbl.entries[ent2B + inVal * 2 + 1] * 0x100;// ReadLE16(((int)8*)&ent2B[inVal]);
+                        //ReadLE16(((int)8*)&ent2B[inVal]);
+                        outVal = (pcmTbl.entries[ent2B + inVal * 2] & 0xff) + (pcmTbl.entries[ent2B + inVal * 2 + 1] & 0xff) * 0x100;
 //#endif
                         break;
                     }
@@ -398,25 +420,25 @@ public class DacControl {
                 }
 
 //#ifndef BIG_ENDIAN
-                //   //memcpy(outPos, &outVal, valSize);
-                //   if (valSize == 0x01)
-                //               *(((int)8*)outPos) = ((int)8)outVal;
-                //   else //if (valSize == 0x02)
-                //                *((int*)outPos) = (int)outVal;
+//               //memcpy(outPos, &outVal, valSize);
+//               if (valSize == 0x01)
+//                    *(((int)8*)outPos) = ((int)8)outVal;
+//               else //if (valSize == 0x02)
+//                    *((int*)outPos) = (int)outVal;
 //#else
                 if (valSize == 0x01) {
                     bank.data[outPos] = (byte) outVal;
                 } else { //if (valSize == 0x02)
                     bank.data[outPos + 0x00] = (byte) ((outVal & 0x00FF) >> 0);
-                    bank.data[outPos + 0x01] = (byte) ((outVal & 0xFF00) >> 8);
+                    bank.data[outPos + 0x01] = (byte) ((outVal & 0xff00) >> 8);
                 }
 //#endif
             }
             break;
         case 0x01: // Delta-PCM
-            bitDec = vgmBuf[adr + 5];
-            bitCmp = vgmBuf[adr + 6];
-            outVal = getLE16(vgmBuf, adr + 8);
+            bitDec = vgmBuf[adr + 5] & 0xff;
+            bitCmp = vgmBuf[adr + 6] & 0xff;
+            outVal = ByteUtil.readLeShort(vgmBuf, adr + 8) & 0xffff;
 
             ent1B = 0;
             ent2B = 0;
@@ -426,16 +448,16 @@ public class DacControl {
                 return false;
             } else if (bitDec != pcmTbl.bitDec || bitCmp != pcmTbl.bitCmp) {
                 bank.dataSize = 0x00;
-                //Debug.printf("Warning! Data block and loaded value table incompatible!\n");
+                //Debug.printf("Warning! data block and loaded value table incompatible!\n");
                 return false;
             }
 
-            valSize = (byte) ((bitDec + 7) / 8);
+            valSize = (bitDec + 7) / 8;
             outMask = (1 << bitDec) - 1;
             inPos = adr + 0xa;
             inDataEnd = adr + dataSize;
             inShift = 0;
-            outShift = (byte) (bitDec - bitCmp);
+            outShift = bitDec - bitCmp;
             outDataEnd = bank.dataSize;// bank.Data + bank.dataSize;
             addVal = 0x0000;
 
@@ -445,20 +467,20 @@ public class DacControl {
                 inVal = 0x0000;
                 bitsToRead = bitCmp;
                 while (bitsToRead != 0) {
-                    bitReadVal = (byte) ((bitsToRead >= 8) ? 8 : bitsToRead);
+                    bitReadVal = Math.min(bitsToRead, 8);
                     bitsToRead -= bitReadVal;
-                    bitMask = (byte) ((1 << bitReadVal) - 1);
+                    bitMask = (1 << bitReadVal) - 1;
 
                     inShift += bitReadVal;
-                    inValB = (byte) ((vgmBuf[inPos] << inShift >> 8) & bitMask);
+                    inValB = (vgmBuf[inPos] << inShift >> 8) & bitMask;
                     if (inShift >= 8) {
                         inShift -= 8;
                         inPos++;
                         if (inShift != 0)
-                            inValB |= (byte) ((vgmBuf[inPos] << inShift >> 8) & bitMask);
+                            inValB |= (vgmBuf[inPos] << inShift >> 8) & bitMask;
                     }
 
-                    inVal |= (byte) (inValB << outBit);
+                    inVal |= inValB << outBit;
                     outBit += bitReadVal;
                 }
 
@@ -473,7 +495,7 @@ public class DacControl {
 //#ifndef BIG_ENDIAN
                     //    addVal = ent2B[inVal];
 //#else
-                    addVal = pcmTbl.entries[ent2B + inVal] + pcmTbl.entries[ent2B + inVal + 1] * 0x100;
+                    addVal = (pcmTbl.entries[ent2B + inVal] & 0xff) + (pcmTbl.entries[ent2B + inVal + 1] & 0xff) * 0x100;
 //#endif
                     outVal += addVal;
                     outVal &= outMask;
@@ -481,7 +503,7 @@ public class DacControl {
                     //    *((int*)outPos) = (int)outVal;
 //#else
                     bank.data[outPos + 0x00] = (byte) ((outVal & 0x00FF) >> 0);
-                    bank.data[outPos + 0x01] = (byte) ((outVal & 0xFF00) >> 8);
+                    bank.data[outPos + 0x01] = (byte) ((outVal & 0xff00) >> 8);
 //#endif
                     break;
                 }
@@ -496,32 +518,32 @@ public class DacControl {
     }
 
     private void readPCMTable(byte[] vgmBuf, int dataSize, int adr) {
-        byte valSize;
+        int valSize;
         int tblSize;
 
-        pcmTbl.comprType = vgmBuf[adr + 0];
-        pcmTbl.cmpSubType = vgmBuf[adr + 1];
-        pcmTbl.bitDec = vgmBuf[adr + 2];
-        pcmTbl.bitCmp = vgmBuf[adr + 3];
-        pcmTbl.entryCount = getLE16(vgmBuf, adr + 4);
+        pcmTbl.comprType = vgmBuf[adr + 0] & 0xff;
+        pcmTbl.cmpSubType = vgmBuf[adr + 1] & 0xff;
+        pcmTbl.bitDec = vgmBuf[adr + 2] & 0xff;
+        pcmTbl.bitCmp = vgmBuf[adr + 3] & 0xff;
+        pcmTbl.entryCount = ByteUtil.readLeShort(vgmBuf, adr + 4) & 0xffff;
 
-        valSize = (byte) ((pcmTbl.bitDec + 7) / 8);
+        valSize = (pcmTbl.bitDec + 7) / 8;
         tblSize = pcmTbl.entryCount * valSize;
 
         pcmTbl.entries = new byte[tblSize];
         for (int i = 0; i < tblSize; i++) pcmTbl.entries[i] = vgmBuf[adr + 6 + i];
 
-        //if (dataSize < 0x06 + tblSize) {
-        //    //Debug.printf("Warning! Bad PCM Table Length!\n");
-        //}
+//        if (dataSize < 0x06 + tblSize) {
+//            //Debug.printf("Warning! Bad PCM Table Length!\n");
+//        }
     }
 
-    private void sendCommand(DacControl_ chip) {
+    private void sendCommand(Control chip) {
         //注意!! chipはlock中です
 
-        byte port;
-        byte command;
-        byte data;
+        int port;
+        int command;
+        int data;
 
         if ((chip.running & 0x10) != 0) // command already sent
             return;
@@ -536,18 +558,18 @@ public class DacControl {
         switch (chip.dstChipType) {
         // Support for the important chips
         case 0x02: // Ym2612Inst (16-bit Register (actually 9 Bit), 8-bit data)
-            port = (byte) ((chip.dstCommand & 0xFF00) >> 8);
-            command = (byte) ((chip.dstCommand & 0x00FF) >> 0);
-            data = chip.data[(chip.dataStart + chip.realPos)];
+            port = (chip.dstCommand & 0xff00) >> 8;
+            command = chip.dstCommand & 0x00FF;
+            data = chip.data[chip.dataStart + chip.realPos] & 0xff;
 
             chipRegWrite(chip.dstChipType
                     , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
                     , port, command, data);
             break;
         case 0x11: // PWM (4-bit Register, 12-bit data)
-            port = (byte) ((chip.dstCommand & 0x000F) >> 0);
-            command = (byte) (chip.data[chip.dataStart + chip.realPos + 1] & 0x0F);
-            data = chip.data[chip.dataStart + chip.realPos];
+            port = chip.dstCommand & 0x000F;
+            command = chip.data[chip.dataStart + chip.realPos + 1] & 0x0F;
+            data = chip.data[chip.dataStart + chip.realPos] & 0xff;
 
             chipRegWrite(chip.dstChipType
                     , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
@@ -555,28 +577,28 @@ public class DacControl {
             break;
         // Support for other chips (mainly for completeness)
         case 0x00: // Sn76496Inst (4-bit Register, 4-bit/10-bit data)
-            command = (byte) ((chip.dstCommand & 0x00F0) >> 0);
-            data = (byte) (chip.data[chip.dataStart + chip.realPos] & 0x0F);
+            command = chip.dstCommand & 0x00F0;
+            data = chip.data[chip.dataStart + chip.realPos] & 0x0F;
 
             if ((command & 0x10) != 0) {
                 // Volume Change (4-Bit value)
                 chipRegWrite(chip.dstChipType
                         , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
-                        , (byte) 0x00, (byte) 0x00, (byte) (command | data));
+                        , 0x00, 0x00, command | data);
             } else {
                 // Frequency Write (10-Bit value)
-                port = (byte) (((chip.data[chip.dataStart + chip.realPos + 1] & 0x03) << 4) | ((chip.data[chip.dataStart + chip.realPos] & 0xF0) >> 4));
+                port = ((chip.data[chip.dataStart + chip.realPos + 1] & 0x03) << 4) | ((chip.data[chip.dataStart + chip.realPos] & 0xF0) >> 4);
                 chipRegWrite(chip.dstChipType
                         , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
-                        , (byte) 0x00, (byte) 0x00, (byte) (command | data));
+                        , 0x00, 0x00, command | data);
                 chipRegWrite(chip.dstChipType
                         , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
-                        , (byte) 0x00, (byte) 0x00, port);
+                        , 0x00, 0x00, port);
             }
             break;
         case 0x18: // OKIM6295 - TODO: verify
-            command = (byte) ((chip.dstCommand & 0x00FF) >> 0);
-            data = chip.data[chip.dataStart + chip.realPos];
+            command = chip.dstCommand & 0x00FF;
+            data = chip.data[chip.dataStart + chip.realPos] & 0xff;
 
             if (command == 0) {
                 port = (byte) ((chip.dstCommand & 0x0F00) >> 8);
@@ -585,21 +607,21 @@ public class DacControl {
                     // write sample ID
                     chipRegWrite(chip.dstChipType
                             , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
-                            , (byte) 0x00, command, data);
+                            , 0x00, command, data);
                     // write channel(s) that should play the sample
                     chipRegWrite(chip.dstChipType
                             , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
-                            , (byte) 0x00, command, (byte) (port << 4));
+                            , 0x00, command, port << 4);
                 } else {
                     // Sample Stop
                     chipRegWrite(chip.dstChipType
                             , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
-                            , (byte) 0x00, command, (byte) (port << 3));
+                            , 0x00, command, port << 3);
                 }
             } else {
                 chipRegWrite(chip.dstChipType
                         , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
-                        , (byte) 0x00, command, data);
+                        , 0x00, command, data);
             }
             break;
         // Generic support: 8-bit Register, 8-bit data
@@ -618,11 +640,11 @@ public class DacControl {
         case 0x17: // OKIM6258
         case 0x1D: // K053260Inst - TODO: Verify
         case 0x1E: // PokeyInst - TODO: Verify
-            command = (byte) ((chip.dstCommand & 0x00FF) >> 0);
-            data = chip.data[chip.dataStart + chip.realPos];
+            command = chip.dstCommand & 0x00FF;
+            data = chip.data[chip.dataStart + chip.realPos] & 0xff;
             chipRegWrite(chip.dstChipType
                     , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
-                    , (byte) 0x00, command, data);
+                    , 0x00, command, data);
             break;
         // Generic support: 16-bit Register, 8-bit data
         case 0x07: // YM2608
@@ -633,9 +655,9 @@ public class DacControl {
         case 0x19: // K051649Inst - TODO: Verify
         case 0x1A: // K054539Inst - TODO: Verify
         case 0x1C: // C140Inst - TODO: Verify
-            port = (byte) ((chip.dstCommand & 0xFF00) >> 8);
-            command = (byte) ((chip.dstCommand & 0x00FF) >> 0);
-            data = chip.data[chip.dataStart + chip.realPos];
+            port = (chip.dstCommand & 0xff00) >> 8;
+            command = chip.dstCommand & 0x00FF;
+            data = chip.data[chip.dataStart + chip.realPos] & 0xff;
             chipRegWrite(chip.dstChipType
                     , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
                     , port, command, data);
@@ -644,16 +666,16 @@ public class DacControl {
         case 0x05: // RF5C68
         case 0x10: // RF5C164
         case 0x1B: // OotakeHuC6280
-            port = (byte) ((chip.dstCommand & 0xFF00) >> 8);
-            command = (byte) ((chip.dstCommand & 0x00FF) >> 0);
-            data = chip.data[chip.dataStart + chip.realPos];
+            port = (chip.dstCommand & 0xff00) >> 8;
+            command = chip.dstCommand & 0x00FF;
+            data = chip.data[chip.dataStart + chip.realPos] & 0xff;
 
-            if (port == 0xFF) // Send Channel Select
+            if (port == 0xff) // Send Channel Select
                 chipRegWrite(chip.dstChipType
                         , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
-                        , (byte) 0x00, (byte) (command & 0x0f), data);
+                        , 0x00, command & 0x0f, data);
             else {
-                byte prevChn;
+                int prevChn;
 
                 prevChn = port; // by default don't restore channel
                 // get current channel for supported chips
@@ -662,30 +684,30 @@ public class DacControl {
                 else if (chip.dstChipType == 0x05) {
                 }   // TODO
                 else if (chip.dstChipType == 0x1B)
-                    prevChn = mds.ReadOotakePsg(chip.dstChipIndex, chip.dstchipId, (byte) 0x00);
+                    prevChn = mds.readOotakePsg(chip.dstChipIndex, chip.dstchipId, 0x00);
 
                 // Send Channel Select
                 chipRegWrite(chip.dstChipType
                         , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
-                        , (byte) 0x00, (byte) (command >> 4), port);
+                        , 0x00, command >> 4, port);
                 // Send data
                 chipRegWrite(chip.dstChipType
                         , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
-                        , (byte) 0x00, (byte) (command & 0x0F), data);
+                        , 0x00, command & 0x0F, data);
                 // restore old channel
                 if (prevChn != port)
                     chipRegWrite(chip.dstChipType
                             , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
-                            , (byte) 0x00, (byte) (command >> 4), prevChn);
+                            , 0x00, command >> 4, prevChn);
 
             }
             break;
         // Generic support: 8-bit Register, 16-bit data
         case 0x1F: // QSoundInst
-            command = (byte) ((chip.dstCommand & 0x00FF) >> 0);
+            command = chip.dstCommand & 0x00FF;
             chipRegWrite(chip.dstChipType
                     , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
-                    , chip.data[chip.dataStart + chip.realPos], chip.data[chip.dataStart + chip.realPos + 1], command);
+                    , chip.data[chip.dataStart + chip.realPos] & 0xff, chip.data[chip.dataStart + chip.realPos + 1] & 0xff, command);
             break;
         }
         chip.running |= 0x10;
@@ -693,12 +715,12 @@ public class DacControl {
 
     private int muldiv64round(int multiplicand, int multiplier, int divisor) {
         // Yes, I'm correctly rounding the values.
-        return (int) (((long) multiplicand * multiplier + divisor / 2) / divisor);
+        return (multiplicand * multiplier + divisor / 2) / divisor;
     }
 
-    private void update(byte chipId, int samples) {
+    private void update(int chipId, int samples) {
         synchronized (lock) {
-            DacControl_ chip = dacData[chipId];
+            Control chip = dacData[chipId];
             int newPos;
             int realDataStp;
 
@@ -755,8 +777,8 @@ public class DacControl {
         }
     }
 
-    private byte deviceStartDaccontrol(byte chipId) {
-        DacControl_ chip;
+    private byte deviceStartDaccontrol(int chipId) {
+        Control chip;
 
         if (chipId >= MAX_CHIPS)
             return 0;
@@ -764,26 +786,26 @@ public class DacControl {
         synchronized (lock) {
             chip = dacData[chipId];
 
-            chip.dstChipType = (byte) 0xFF;
+            chip.dstChipType = (byte) 0xff;
             chip.dstchipId = 0x00;
             chip.dstCommand = 0x0000;
 
-            chip.running = (byte) 0xFF; // disable all actions (except setup_chip)
+            chip.running = (byte) 0xff; // disable all actions (except setup_chip)
         }
 
         return 1;
     }
 
-    public void deviceStopDaccontrol(byte chipId) {
+    public void deviceStopDaccontrol(int chipId) {
         synchronized (lock) {
-            DacControl_ chip = dacData[chipId];
-            chip.running = (byte) 0xFF;
+            Control chip = dacData[chipId];
+            chip.running = (byte) 0xff;
         }
     }
 
-    private void deviceResetDaccontrol(byte chipId) {
+    private void deviceResetDaccontrol(int chipId) {
         synchronized (lock) {
-            DacControl_ chip = dacData[chipId];
+            Control chip = dacData[chipId];
 
             chip.dstChipType = 0x00;
             chip.dstchipId = 0x00;
@@ -807,9 +829,9 @@ public class DacControl {
         }
     }
 
-    private void setupChip(byte chipId, byte chType, byte emuType, byte chipIndex, byte chNum, int command) {
+    private void setupChip(int chipId, int chType, int emuType, int chipIndex, int chNum, int command) {
         synchronized (lock) {
-            DacControl_ chip = dacData[chipId];
+            Control chip = dacData[chipId];
 
             chip.dstChipType = chType; // TypeID (e.g. 0x02 for Ym2612Inst)
             chip.dstEmuType = emuType;
@@ -835,13 +857,13 @@ public class DacControl {
                 chip.cmdSize = 0x01;
                 break;
             }
-            chip.dataStep = (byte) (chip.cmdSize * chip.stepSize);
+            chip.dataStep = chip.cmdSize * chip.stepSize;
         }
     }
 
-    private void setData(byte chipId, byte[] data, int dataLen, byte stepSize, byte stepBase) {
+    private void setData(int chipId, byte[] data, int dataLen, int stepSize, int stepBase) {
         synchronized (lock) {
-            DacControl_ chip = dacData[chipId];
+            Control chip = dacData[chipId];
 
             if ((chip.running & 0x80) > 0)
                 return;
@@ -853,16 +875,16 @@ public class DacControl {
                 chip.dataLen = 0x00;
                 chip.data = null;
             }
-            chip.stepSize = (byte) (stepSize > 0 ? stepSize : 1);
+            chip.stepSize = stepSize > 0 ? stepSize : 1;
             chip.stepBase = stepBase;
-            chip.dataStep = (byte) (chip.cmdSize * chip.stepSize);
+            chip.dataStep = chip.cmdSize * chip.stepSize;
         }
     }
 
-    private void refresh_data(byte chipId, byte[] data, int dataLen) {
+    private void refresh_data(int chipId, byte[] data, int dataLen) {
         synchronized (lock) {
             // Should be called to fix the data pointer. (e.g. after a realloc)
-            DacControl_ chip = dacData[chipId];
+            Control chip = dacData[chipId];
 
             if ((chip.running & 0x80) != 0)
                 return;
@@ -877,10 +899,10 @@ public class DacControl {
         }
     }
 
-    private void set_frequency(byte chipId, int frequency) {
+    private void set_frequency(int chipId, int frequency) {
         synchronized (lock) {
             //Debug.printf("chipId%d frequency%d", chipId, frequency);
-            DacControl_ chip = dacData[chipId];
+            Control chip = dacData[chipId];
 
             if ((chip.running & 0x80) != 0)
                 return;
@@ -891,9 +913,9 @@ public class DacControl {
         }
     }
 
-    private void start(byte chipId, int dataPos, byte lenMode, int length) {
+    private void start(int chipId, int dataPos, int lenMode, int length) {
         synchronized (lock) {
-            DacControl_ chip = dacData[chipId];
+            Control chip = dacData[chipId];
 
             int cmdStepBase;
 
@@ -901,7 +923,7 @@ public class DacControl {
                 return;
 
             cmdStepBase = chip.cmdSize * chip.stepBase;
-            if (dataPos != 0xFFFFFFFF) { // skip setting dataStart, if Pos == -1
+            if (dataPos != 0xffff_ffff) { // skip setting dataStart, if Pos == -1
                 chip.dataStart = dataPos + cmdStepBase;
                 if (chip.dataStart > chip.dataLen) // catch bad value and force silence
                     chip.dataStart = chip.dataLen;
@@ -926,7 +948,7 @@ public class DacControl {
                 chip.cmdsToSend = 0x00;
                 break;
             }
-            chip.reverse = (byte) ((lenMode & 0x10) >> 4);
+            chip.reverse = (lenMode & 0x10) >> 4;
 
             chip.remainCmds = chip.cmdsToSend;
             chip.step = 0x00;
@@ -937,16 +959,16 @@ public class DacControl {
                 chip.realPos = (chip.cmdsToSend - 0x01) * chip.dataStep;
 
             chip.running &= 0xfb; // ~0x04;
-            chip.running |= (byte) ((lenMode & 0x80) != 0 ? 0x04 : 0x00); // set loop mode
+            chip.running |= (lenMode & 0x80) != 0 ? 0x04 : 0x00; // set loop mode
 
             chip.running |= 0x01; // start
             chip.running &= 0xef; // ~0x10; // command isn't yet sent
         }
     }
 
-    private void stop(byte chipId) {
+    private void stop(int chipId) {
         synchronized (lock) {
-            DacControl_ chip = dacData[chipId];
+            Control chip = dacData[chipId];
 
             if ((chip.running & 0x80) != 0)
                 return;
@@ -955,74 +977,74 @@ public class DacControl {
         }
     }
 
-    private void chipRegWrite(byte chipType, byte emuType, byte chipIndex, byte chipId, byte port, byte offset, byte data) {
+    private void chipRegWrite(int chipType, int emuType, int chipIndex, int chipId, int port, int offset, int data) {
         switch (chipType) {
         case 0x00: // SN76489
-            if (emuType == 0) mds.writeSn76489(chipIndex, chipId, data);
-            else if (emuType == 1) mds.writeSn76496(chipIndex, chipId, data);
+            if (emuType == 0) mds.write(Sn76489Inst.class, chipIndex, 0, chipId, data);
+            else if (emuType == 1) mds.write(Sn76496Inst.class, chipIndex, 0, chipId, data);
             break;
         case 0x01: // YM2413+
-            mds.writeYm2413(chipIndex, chipId, offset, data);
+            mds.write(Ym2413Inst.class, chipIndex, chipId, port, offset, data);
             break;
         case 0x02: // Ym2612Inst
-            if (emuType == 0) mds.writeYm2612(chipIndex, chipId, port, offset, data);
-            else if (emuType == 1) mds.writeYm3438(chipIndex, chipId, port, offset, data);
-            else if (emuType == 2) mds.writeYm2612Mame(chipIndex, chipId, port, offset, data);
+            if (emuType == 0) mds.write(Ym2612Inst.class, chipIndex, chipId, port, offset, data);
+            else if (emuType == 1) mds.write(Ym3438Inst.class, chipIndex, chipId, port, offset, data);
+            else if (emuType == 2) mds.write(MameYm2612Inst.class, chipIndex, chipId, port, offset, data);
             break;
         case 0x03: // YM2151+
-            mds.writeYm2151(chipIndex, chipId, offset, data);
+            mds.write(Ym2151Inst.class, chipIndex, chipId, port, offset, data);
             break;
         case 0x06: // YM2203+
-            mds.writeYm2203(chipIndex, chipId, offset, data);
+            mds.write(Ym2203Inst.class, chipIndex, chipId, port, offset, data);
             break;
         case 0x07: // YM2608+
-            mds.writeYm2608(chipIndex, chipId, port, offset, data);
+            mds.write(Ym2608Inst.class, chipIndex, chipId, port, offset, data);
             break;
         case 0x08: // YM2610+
-            mds.writeYm2610(chipIndex, chipId, port, offset, data);
+            mds.write(Ym2610Inst.class, chipIndex, chipId, port, offset, data);
             break;
         case 0x09: // YM3812+
-            mds.writeYm3812(chipIndex, chipId, offset, data);
+            mds.write(Ym3812Inst.class, chipIndex, chipId, port, offset, data);
             break;
         case 0x0A: // YM3526+
-            mds.writeYm3526(chipIndex, chipId, offset, data);
+            mds.write(Ym3526Inst.class, chipIndex, chipId, port, offset, data);
             break;
         case 0x0B: // Y8950Inst+
-            mds.writeY8950(chipIndex, chipId, offset, data);
+            mds.write(Y8950Inst.class, chipIndex, chipId, port, offset, data);
             break;
         case 0x0C: // YMF262+
-            mds.writeYmF262(chipIndex, chipId, port, offset, data);
+            mds.write(YmF262Inst.class, chipIndex, chipId, port, offset, data);
             break;
         case 0x0D: // YMF278B+
-            mds.writeYmF278b(chipIndex, chipId, port, offset, data);
+            mds.write(YmF278bInst.class, chipIndex, chipId, port, offset, data);
             break;
         case 0x0E: // YMF271+
-            mds.writeYmf271(chipIndex, chipId, port, offset, data);
+            mds.write(YmF271Inst.class, chipIndex, chipId, port, offset, data);
             break;
         case 0x0F: // YMZ280B+
-            mds.writeYmZ280b(chipIndex, chipId, offset, data);
+            mds.write(YmZ280bInst.class, chipIndex, chipId, port, offset, data);
             break;
         case 0x10: // Rf5c164
-            mds.writeScdPcm(chipIndex, chipId, offset, data);
+            mds.write(ScdPcmInst.class, chipIndex, chipId, port, offset, data);
             break;
         case 0x11: // PWM
-            mds.writePwm(chipIndex, chipId, port, (offset << 8) | (data << 0));
+            mds.write(PwmInst.class, chipIndex, chipId, port, (offset << 8) | data);
             break;
         case 0x12: // AY8910+
-            mds.writeAY8910(chipIndex, chipId, offset, data);
+            mds.write(Ay8910Inst.class, chipIndex, chipId, port, offset, data);
             break;
         case 0x13: // DMG+
-            mds.writeGb(chipIndex, chipId, offset, data);
+            mds.write(DmgInst.class, chipIndex, chipId, port, offset, data);
             break;
         case 0x14: // NES+
-            mds.writeNES(chipIndex, chipId, offset, data);
+            mds.write(IntFNesInst.class, chipIndex, chipId, port, offset, data);
             break;
         case 0x17: // OKIM6258
             //Debug.printf("[DAC]");
-            mds.writeOkiM6258(chipIndex, chipId, offset, data);
+            mds.write(OkiM6258Inst.class, chipIndex, chipId, offset, data);
             break;
         case 0x1b: // OotakeHuC6280
-            mds.writeOotakePsg(chipIndex, chipId, offset, data);
+            mds.write(HuC6280Inst.class, chipIndex, chipId, offset, data);
             break;
         }
     }

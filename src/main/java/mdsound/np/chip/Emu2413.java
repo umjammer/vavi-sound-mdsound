@@ -398,14 +398,14 @@ public class Emu2413 {
         /* Noise Generator */
         public int noiseSeed;
 
-        /* Channel Data */
+        /* Channel data */
         public int[] patchNumber = new int[9];
         public int[] keyStatus = new int[9];
 
         /* Slot */
         public Slot[] slot = new Slot[18];
 
-        /* Voice Data */
+        /* Voice data */
         public Slot.Patch[][] patch = new Slot.Patch[][] {
                 new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2]
                 , new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2]
@@ -538,7 +538,7 @@ public class Emu2413 {
             }
 
             if ((this.patchNumber[7] & 0x10) != 0) {
-                if (!((this.slotOnFlag[Slot.SLOT_HH] != 0 && this.slotOnFlag[Slot.SLOT_SD] != 0) | (this.reg[0x0e] & 0x20) != 0)) {
+                if (!((this.slotOnFlag[Slot.SLOT_HH] != 0 && this.slotOnFlag[Slot.SLOT_SD] != 0) || (this.reg[0x0e] & 0x20) != 0)) {
                     this.slot[Slot.SLOT_HH].type = 0;
                     this.slot[Slot.SLOT_HH].egMode = EgState.FINISH.ordinal();
                     this.slot[Slot.SLOT_SD].egMode = EgState.FINISH.ordinal();
@@ -554,7 +554,7 @@ public class Emu2413 {
             }
 
             if ((this.patchNumber[8] & 0x10) != 0) {
-                if (!((this.slotOnFlag[Slot.SLOT_CYM] != 0 && this.slotOnFlag[Slot.SLOT_TOM] != 0) | (this.reg[0x0e] & 0x20) != 0)) {
+                if (!((this.slotOnFlag[Slot.SLOT_CYM] != 0 && this.slotOnFlag[Slot.SLOT_TOM] != 0) || (this.reg[0x0e] & 0x20) != 0)) {
                     this.slot[Slot.SLOT_TOM].type = 0;
                     this.slot[Slot.SLOT_TOM].egMode = EgState.FINISH.ordinal();
                     this.slot[Slot.SLOT_CYM].egMode = EgState.FINISH.ordinal();
@@ -1337,9 +1337,9 @@ public class Emu2413 {
                         0x31, 0x22, (byte) 0xFA, 0x01, (byte) 0xF1, (byte) 0xF1, (byte) 0xF4, (byte) 0xEE, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                         0x21, 0x61, 0x28, 0x06, (byte) 0xF1, (byte) 0xF1, (byte) 0xCE, (byte) 0x9B, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 
-                        0x27, 0x61, 0x60, 0x00, (byte) 0xF0, (byte) 0xF0, (byte) 0xFF, (byte) 0xFD, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x27, 0x61, 0x60, 0x00, (byte) 0xF0, (byte) 0xF0, (byte) 0xff, (byte) 0xFD, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                         0x60, 0x21, 0x2B, 0x06, (byte) 0x85, (byte) 0xF1, 0x79, (byte) 0x9D, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                        0x31, (byte) 0xA1, (byte) 0xFF, 0x0A, 0x53, 0x62, 0x5E, (byte) 0xAF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+                        0x31, (byte) 0xA1, (byte) 0xff, 0x0A, 0x53, 0x62, 0x5E, (byte) 0xAF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                         0x03, (byte) 0xA1, 0x70, 0x0F, (byte) 0xD4, (byte) 0xA3, (byte) 0x94, (byte) 0xBE, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 
                         0x2B, 0x61, (byte) 0xE4, 0x07, (byte) 0xF6, (byte) 0x93, (byte) 0xBD, (byte) 0xAC, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -1551,7 +1551,7 @@ public class Emu2413 {
         /* Empty Voice data */
         private static final Slot.Patch null_patch = new Slot.Patch();
 
-        /* Basic Voice Data */
+        /* Basic Voice data */
         private Slot.Patch[][][] defaultPatch = null;
 
         /* Definition of envelope mode */
@@ -1684,7 +1684,7 @@ public class Emu2413 {
 
         /* Phase increment counter table */
         private void makeDphaseTable() {
-            final int[] mlTable = new int[]
+            int[] mlTable = new int[]
                     {1, 1 * 2, 2 * 2, 3 * 2, 4 * 2, 5 * 2, 6 * 2, 7 * 2, 8 * 2, 9 * 2, 10 * 2, 10 * 2, 12 * 2, 12 * 2, 15 * 2, 15 * 2};
 
             for (int fnum = 0; fnum < 512; fnum++)
@@ -1696,7 +1696,7 @@ public class Emu2413 {
         private void makeTllTable() {
             //#define dB2(x) ((x)*2)
 
-            final double[] klTable = new double[] {
+            double[] klTable = new double[] {
                     0.000 * 2, 9.000 * 2, 12.000 * 2, 13.875 * 2, 15.000 * 2, 16.125 * 2, 16.875 * 2, 17.625 * 2,
                     18.000 * 2, 18.750 * 2, 19.125 * 2, 19.500 * 2, 19.875 * 2, 20.250 * 2, 20.625 * 2, 21.000 * 2
             };
@@ -1881,8 +1881,8 @@ public class Emu2413 {
             makeDphaseTable();
             makeDphaseARTable();
             makeDphaseDRTable();
-            pmDPhase = adjustRate((int) (PM_SPEED * PM_DP_WIDTH / (clk / 72)));
-            amDPhase = adjustRate((int) (AM_SPEED * AM_DP_WIDTH / (clk / 72)));
+            pmDPhase = adjustRate((int) (PM_SPEED * PM_DP_WIDTH / (clk / 72d)));
+            amDPhase = adjustRate((int) (AM_SPEED * AM_DP_WIDTH / (clk / 72d)));
         }
 
         private void makeTables(int c, int r) {
