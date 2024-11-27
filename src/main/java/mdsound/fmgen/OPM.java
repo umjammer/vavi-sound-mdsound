@@ -404,7 +404,7 @@ public class OPM extends Timer {
 
                 amTable[type][c] = a;
                 pmTable[type][c] = -p - 1;
-//                Debug.printf("%d ", p);
+//                logger.log(Level.TRACE, "%d ".formatted(p));
             }
         }
     }
@@ -414,7 +414,7 @@ public class OPM extends Timer {
 //            if ((lfo_count_ ^ lfo_count_prev_) & ~((1 << 15) - 1))
             {
                 int c = (lfoCount >> 15) & 0x1fe;
-//                Debug.printf("%.8x %.2x\n", lfo_count_, c);
+//                logger.log(Level.TRACE, "%.8x %.2x".formatted(lfo_count_, c));
                 chip.setPML(pmTable[lfoWaveForm][c] * pmd / 128 + 0x80);
                 chip.setAML(amTable[lfoWaveForm][c] * amd / 128);
             }

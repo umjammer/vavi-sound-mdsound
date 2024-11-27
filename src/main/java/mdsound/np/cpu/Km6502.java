@@ -1,6 +1,7 @@
 
 package mdsound.np.cpu;
 
+import java.lang.System.Logger.Level;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
@@ -2902,32 +2903,32 @@ public class Km6502 implements Device {
 
         while (this.clock < clock) {
             if (!breaked) {
-// System.err.pritnf("PC: 0x%04X\n", this.PC);
+//logger.log(Level.TRACE, "PC: 0x%04X".formatted(this.PC));
 
 //                int tpc = this.pc;
 //                int[][] tb = new int[3][1];
 //                bus.read((tpc + 0) & 0xffFF, tb[0]);
 //                bus.read((tpc + 1) & 0xffFF, tb[1]);
 //                bus.read((tpc + 2) & 0xffFF, tb[2]);
-//                Debug.printf("%04x: A=%02x X=%02x Y=%02x P=%02x S=%02x %s > ",
+//                logger.log(Level.TRACE, "%04x: A=%02x X=%02x Y=%02x P=%02x S=%02x %s > ".formatted(
 //                                  this.pc,
 //                                  this.a,
 //                                  this.x,
 //                                  this.y,
 //                                  this.p,
 //                                  this.s,
-//                                  this.iRequest != 0 ? 'I' : 'i');
+//                                  this.iRequest != 0 ? 'I' : 'i'));
 
                 exec();
 
-//                Debug.printf("%s", OP_NAME[this.lastcode]);
+//                logger.log(Level.TRACE, "%s".formatted(OP_NAME[this.lastcode]));
 //                int oplen = this.pc - tpc;
 //                for (int i = 0; i < 3; ++i) {
 //                    if (i == 0 || i < oplen) {
-//                        Debug.printf(" %02x", tb[i][0]);
+//                        logger.log(Level.TRACE, " %02x".formatted(tb[i][0]));
 //                    }
 //                }
-//                System.err.println();
+//                logger.log(Level.TRACE, "On");
 
                 if (this.pc == breakPoint)
                     breaked = true;
@@ -2947,7 +2948,7 @@ public class Km6502 implements Device {
                     startup(intAddress);
                 }
                 clockOfFrame += clockPerFrame;
-                // System.err.pritnf("NMI\n");
+                // logger.log(Level.TRACE, "NMI");
             }
         }
 
@@ -2962,23 +2963,23 @@ public class Km6502 implements Device {
 
     @Override
     public boolean write(int adr, int val, int id) {
-// System.err.pritnf("Write: 0x%04X = 0x%02X\n", adr, val);
+// logger.log(Level.TRACE, "Write: 0x%04X = 0x%02X".formatted(adr, val));
 
         // for blargg's CPU tests
 //#if 0
-        // if (adr == 0x6000) {
-        //  System.err.pritnf("Blargg result: %02X [");
-        // int msg = 0x6004;
-        // do {
-        //  int ic;
-        //  read(msg, ic);
-        //  if (ic == 0) break;
-        //  ++msg;
-        // System.err.pritnf("%c", char(ic));
-        // } while (1);
-        //  System.err.pritnf("]\n");
-        //  return false;
-        // }
+//        if (adr == 0x6000) {
+//            logger.log(Level.TRACE, "Blargg result: %02X [".formatted(0));
+//            int msg = 0x6004;
+//            do {
+//                int ic;
+//                read(msg, ic);
+//                if (ic == 0) break;
+//                ++msg;
+//                logger.log(Level.TRACE, "%c".formatted(char(ic));
+//            } while (1);
+//            logger.log(Level.TRACE, "]");
+//            return false;
+//        }
 //#endif
 
         if (bus != null)
@@ -2992,7 +2993,7 @@ public class Km6502 implements Device {
         if (bus != null) {
             boolean result = bus.read(adr, val, id);
 
-// System.err.pritnf(" Read: 0x%04X = 0x%02X\n", adr, val);
+//logger.log(Level.TRACE, " Read: 0x%04X = 0x%02X".formatted(adr, val));
 
             return result;
         } else
@@ -3018,10 +3019,10 @@ public class Km6502 implements Device {
 
     public void start(int startAdr,
                       int intAdr,
-                      double intFreq/* =60.0 */,
-                      int a/* =0 */,
-                      int x/* =0 */,
-                      int y/* =0 */) {
+                      double intFreq /* = 60.0 */,
+                      int a /* = 0 */,
+                      int x /* = 0 */,
+                      int y /* = 0 */) {
         // 割り込みアドレス設定
         intAddress = intAdr;
         clockPerFrame = (int) (((1 << 16) * NES_BASECYCLES) / intFreq);
@@ -3044,14 +3045,14 @@ public class Km6502 implements Device {
 //            bus.read((tpc + 0) & 0xffFF, tb[0]);
 //            bus.read((tpc + 1) & 0xffFF, tb[1]);
 //            bus.read((tpc + 2) & 0xffFF, tb[2]);
-//            Debug.printf("%04x: A=%02x X=%02x Y=%02x P=%02x S=%02x %s > ",
+//            logger.log(Level.TRACE, "%04x: A=%02x X=%02x Y=%02x P=%02x S=%02x %s > ".formatted(
 //                              this.pc,
 //                              this.a,
 //                              this.x,
 //                              this.y,
 //                              this.p,
 //                              this.s,
-//                              this.iRequest != 0 ? 'I' : 'i');
+//                              this.iRequest != 0 ? 'I' : 'i'));
 //#endif
             if (this.pc == breakPoint) {
                 breaked = true;

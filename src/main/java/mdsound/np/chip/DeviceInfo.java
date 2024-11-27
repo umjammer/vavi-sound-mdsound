@@ -11,42 +11,42 @@ public class DeviceInfo {
             return null;
         }
 
-        // 現在の出力値をそのまま返す
+        /** Returns the current output value as is */
         public int getOutput() {
             return 0;
         }
 
-        // 周波数をHzで返す
+        /** Returns the frequency in Hz */
         public double getFreqHz() {
             return 0;
         }
 
-        // 周波数をデバイス依存値で返す．
+        /** Returns the frequency as a device dependent value. */
         public int getFreq() {
             return 0;
         }
 
-        // 音量を返す
+        /** Return the volume */
         public int getVolume() {
             return 0;
         }
 
-        // 音量の最大値を返す
+        /** Returns the maximum volume */
         public int getMaxVolume() {
             return 0;
         }
 
-        // 発音中ならtrue OFFならfalse
+        /** True if sound is being played, false if it is OFF */
         public boolean getKeyStatus() {
             return false;
         }
 
-        // トーン番号
+        /** Tone Number */
         public int getTone() {
             return 0;
         }
 
-        // 周波数をノート番号に変換．0x60がo4c 0は無効
+        /** Converts frequency to note number. 0x60 is o4c, 0 is invalid. */
         public int getNote(double freq) {
             final double LOG2_440 = 8.7813597135246596040696824762152; // ln(440) / ln(2)
             final double LOG_2 = 0.69314718055994530941723212145818; // ln(2)
@@ -59,7 +59,7 @@ public class DeviceInfo {
         }
     }
 
-    /* TrackInfo を バッファリング */
+    /** Buffering TrackInfo */
     public static class InfoBuffer {
         public static class Pair {
             public int first;
@@ -76,7 +76,7 @@ public class DeviceInfo {
 
         public Pair[] buffer;
 
-        public InfoBuffer(int max/* = 60 * 10 */) {
+        public InfoBuffer(int max /* = 60 * 10 */) {
             index = 0;
             bufmax = max;
             buffer = new Pair[bufmax];

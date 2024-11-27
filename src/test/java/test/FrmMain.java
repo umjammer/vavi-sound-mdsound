@@ -489,7 +489,7 @@ public class FrmMain extends JFrame {
             @Override public boolean accept(java.io.File f) { return f.getName().toLowerCase().endsWith(".vgm"); }
             @Override public String getDescription() { return "VGMファイル(*.vgm)"; }
         });
-        ofd.setDialogTitle("ファイルを選択してください");
+        ofd.setDialogTitle("Select a file");
         String dir = prefs.get(KEY_FILECHOOSER_DIRECTORY, null);
         if (dir != null) {
             ofd.setCurrentDirectory(new java.io.File(dir));

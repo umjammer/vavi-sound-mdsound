@@ -1,8 +1,17 @@
 package mdsound.x68sound;
 
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
+
+import static java.lang.System.getLogger;
+
+
 public class Pcm8 {
-    private Global global;
+
+    private static final Logger logger = getLogger(Pcm8.class.getName());
+
+    private final Global global;
 
     private int scale; //
     private int pcm; // 16bit PCM data
@@ -164,7 +173,7 @@ public class Pcm8 {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(Level.ERROR, e.getMessage(), e);
         }
 
         return dmaLastValue;

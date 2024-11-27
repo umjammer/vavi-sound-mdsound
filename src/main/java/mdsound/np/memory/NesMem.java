@@ -15,7 +15,7 @@ public class NesMem implements Device {
     @Override
     public void reset() {
         for (int i = 0; i < 0x800; i++) image[i] = 0;
-        // 分かっててあえて初期化してません。
+        // I know this but I don't initialize it.
     }
 
     public boolean setImage(byte[] data, int offset, int size) {

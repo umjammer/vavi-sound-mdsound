@@ -343,7 +343,7 @@ instruments.forEach((k, v) -> logger.log(Level.DEBUG, k + ": " + Arrays.toString
                 buffer[0][0] = 0;
                 buffer[1][0] = 0;
                 resampleChipStream(chips, buffer, 1);
-//if (buffer[0][0] != 0) Debug.printf("%d", buffer[0][0]);
+//if (buffer[0][0] != 0) logger.log(Level.DEBUG, "%d".formatted(buffer[0][0]));
                 a[0] += buffer[0][0];
                 b[0] += buffer[1][0];
 
@@ -356,7 +356,7 @@ instruments.forEach((k, v) -> logger.log(Level.DEBUG, k + ": " + Arrays.toString
 
                 buf[offset + i + 0] = (short) (a[0] & 0xffff);
                 buf[offset + i + 1] = (short) (b[0] & 0xffff);
-logger.log(Level.DEBUG, String.format("[%d] %04x, %04x", i, buf[offset + i + 0], buf[offset + i + 1]));
+logger.log(Level.DEBUG, "[%d] %04x, %04x".formatted(i, buf[offset + i + 0], buf[offset + i + 1]));
                 visWaveBuffer.enq((short) (a[0] & 0xffff), (short) (b[0] & 0xffff));
             }
 
@@ -433,9 +433,9 @@ logger.log(Level.DEBUG, "no insts");
             inst = chip;
             int mul = inst.tVolume;
 
-            //if (i != 0 && chips[i].LSmpl[0] != 0) Debug.printf("%d %d", chips[i].LSmpl[0], chips[0].LSmpl == chips[i].LSmpl);
-//logger.log(Level.DEBUG, String.format("%s, resample: %d, mul: %d", inst.instrument.getName(), inst.resampler, mul));
-//logger.log(Level.DEBUG, String.format("resampler: %d", inst.resampler));
+            //if (i != 0 && chips[i].LSmpl[0] != 0) logger.log(Level.DEBUG, "%d %d".formatted(chips[i].LSmpl[0], chips[0].LSmpl == chips[i].LSmpl));
+//logger.log(Level.TRACE, "%s, resample: %d, mul: %d".formatted(inst.instrument.getName(), inst.resampler, mul));
+//logger.log(Level.TRACE, "resampler: %d".formatted(inst.resampler));
             switch (inst.resampler) {
             case 0x00: // old, but very fast resampler
                 inst.smpLast = inst.smpNext;
@@ -490,7 +490,7 @@ logger.log(Level.DEBUG, "no insts");
                 inNow = fp2i_ceil(inPosL);
 
 //if (inst.getClass() == Ym2612Inst.class) {
-// logger.log(Level.DEBUG, String.format("inPosL=%d , inPre=%d , inNow=%d , inst.SmpNext=%d", inPosL, inPre, inNow, inst.SmpNext));
+// logger.log(Level.TRACE, "inPosL=%d , inPre=%d , inNow=%d , inst.SmpNext=%d".formatted(inPosL, inPre, inNow, inst.SmpNext));
 //}
 
                 curBufL[0x00] = inst.lsmpl[0];
@@ -546,11 +546,11 @@ logger.log(Level.DEBUG, "no insts");
                     buff[0][0] = 0;
                     buff[1][0] = 0;
                     inst.instrument.update(inst.id, buff, 1);
-//logger.log(Level.DEBUG, String.format("%s[%d] %04x, %04x", inst.instrument.getName(), ind, buff[0][ind], buff[1][ind]));
+//logger.log(Level.TRACE, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(), ind, buff[0][ind], buff[1][ind]));
 
                     streamBufs[0][ind] = limit((buff[0][0] * mul) >> 15, 0x7fff, -0x8000);
                     streamBufs[1][ind] = limit((buff[1][0] * mul) >> 15, 0x7fff, -0x8000);
-logger.log(Level.DEBUG, String.format("%s[%d] %04x, %04x", inst.instrument.getName(), ind, streamBufs[0][ind], streamBufs[1][ind]));
+logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(), ind, streamBufs[0][ind], streamBufs[1][ind]));
                 }
                 for (outPos = 0x00; outPos < length; outPos++) {
                     tempSample[0][outPos] = curBufL[outPos];
@@ -575,7 +575,7 @@ logger.log(Level.DEBUG, String.format("%s[%d] %04x, %04x", inst.instrument.getNa
                     buff[0][0] = 0;
                     buff[1][0] = 0;
                     inst.instrument.update(inst.id, buff, 1);
-                    //Debug.printf("%d : %d", i, buff[0][0]);
+                    //logger.log(Level.TRACE, "%d : %d".formatted(i, buff[0][0]));
 
                     streamPnt[0][ind] = limit((buff[0][0] * mul) >> 15, 0x7fff, -0x8000);
                     streamPnt[1][ind] = limit((buff[1][0] * mul) >> 15, 0x7fff, -0x8000);
@@ -650,8 +650,8 @@ logger.log(Level.DEBUG, String.format("%s[%d] %04x, %04x", inst.instrument.getNa
                     retSample[1][j] += tempSample[1][j];
                 }
 
-            //if (tempSample[0][0] != 0) Debug.printf(Level.FINE, "%d %d %d", i, tempSample[0][0], inst.Resampler);
-//logger.log(Level.DEBUG, String.format("%s: %04x, %04x", inst.instrument.getName(), streamBufs[0][0], streamBufs[1][0]));
+            //if (tempSample[0][0] != 0) logger.log(Level.DEBUG, "%d %d %d".formatted(i, tempSample[0][0], inst.resampler));
+//logger.log(Level.TRACE, "%s: %04x, %04x".formatted(inst.instrument.getName(), streamBufs[0][0], streamBufs[1][0]));
         }
     }
 
@@ -661,11 +661,11 @@ logger.log(Level.DEBUG, String.format("%s[%d] %04x, %04x", inst.instrument.getNa
         // chipNum: chips number (0 - first chips, 1 - second chips)
         // chipCnt: chips volume divider (number of used chips)
         int[] CHIP_VOLS = new int[] { // CHIP_COUNT
-                0x80, 0x200/*0x155*/, 0x100, 0x100, 0x180, 0xB0, 0x100, 0x80, // 00-07
-                0x80, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x98,   // 08-0F
-                0x80, 0xE0/*0xCD*/, 0x100, 0xC0, 0x100, 0x40, 0x11E, 0x1C0,  // 10-17
-                0x100/*110*/, 0xA0, 0x100, 0x100, 0x100, 0xB3, 0x100, 0x100, // 18-1F
-                0x20, 0x100, 0x100, 0x100, 0x40, 0x20, 0x100, 0x40,   // 20-27
+                0x80, 0x200 /* 0x155 */, 0x100, 0x100, 0x180, 0xB0, 0x100, 0x80, // 00-07
+                0x80, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x98,            // 08-0F
+                0x80, 0xE0 /* 0xCD */, 0x100, 0xC0, 0x100, 0x40, 0x11E, 0x1C0,   // 10-17
+                0x100 /* 110 */, 0xA0, 0x100, 0x100, 0x100, 0xB3, 0x100, 0x100,  // 18-1F
+                0x20, 0x100, 0x100, 0x100, 0x40, 0x20, 0x100, 0x40,              // 20-27
                 0x280
         };
         int volume;
@@ -740,11 +740,11 @@ logger.log(Level.DEBUG, String.format("%s[%d] %04x, %04x", inst.instrument.getNa
     public void write(Class<? extends Instrument> i, int chipIndex, int chipId, int port, int adr, int data) {
         synchronized (lockobj) {
             if (!instruments.containsKey(i)) {
-//logger.log(Level.DEBUG, "not contains: " + i);
+//logger.log(Level.TRACE, "not contains: " + i);
                 return;
             }
 
-//Debug.printf("mds: %02x", data); // ok
+//logger.log(Level.TRACE, "mds: %02x".formatted(data)); // ok
             instruments.get(i)[chipIndex].write(chipId, port, adr, data);
         }
     }

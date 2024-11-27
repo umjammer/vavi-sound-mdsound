@@ -1,5 +1,8 @@
 package mdsound.fmvgen;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
+
 import mdsound.fmgen.Fmgen;
 import mdsound.fmvgen.effect.Chorus;
 import mdsound.fmvgen.effect.Compressor;
@@ -8,10 +11,13 @@ import mdsound.fmvgen.effect.Eq3band;
 import mdsound.fmvgen.effect.HPFLPF;
 import mdsound.fmvgen.effect.Reverb;
 import mdsound.fmvgen.effect.ReversePhase;
-import vavi.util.Debug;
+
+import static java.lang.System.getLogger;
 
 
 public class Fmvgen extends Fmgen {
+
+    private static final Logger logger = getLogger(Fmvgen.class.getName());
 
     public static class Effects {
         private static final int MaxCh = 39;
@@ -360,12 +366,12 @@ public class Fmvgen extends Fmgen {
             }
             while (p < FM_CLENTS) {
                 clTable[p] = clTable[p - 512] / 2;
-                //System.err.Debug.printf("%d:", cltable[p]);
+//logger.log(Level.TRACE, "%d:".formatted(cltable[p]));
                 p++;
             }
 
-            // for (i = 0; i < 13 * 256; i++)
-            //  Debug.printf("%4d, %d, %d\n", i, cltable[i*2], cltable[i*2+1]);
+//for (i = 0; i < 13 * 256; i++)
+// logger.log(Level.TRACE, "%4d, %d, %d".formatted(i, cltable[i*2], cltable[i*2+1]));
 
             // サインテーブルの作成
             //double log2 = Math.log(2.0);
@@ -373,14 +379,14 @@ public class Fmvgen extends Fmgen {
             //double r = (i * 2 + 1) * FM_PI / FM_OPSINENTS;
             //double q = -256 * Math.log(Math.sin(r)) / log2;
             //int s = (int)((int)(Math.floor(q + 0.5)) + 1);
-            //System.err.Debug.printf("%d, %d", s, cltable[s * 2] / 8);
-            //System.err.Debug.printf("%6d , %6d , %6d , %4X , %4X"
-            //    , s
-            //    , cltable[s * 2]
-            //    , ((s * 2) % 2 == 0 ? 1 : -1) * (4095 - Math.abs((s * 2) / 2))
-            //    , ((s * 2) % 2 == 0 ? 1 : -1) * (4095 - Math.abs((s * 2) / 2))
-            //    , ((s * 2 + 1 ) % 2 == 0 ? 1 : -1) * (4095 - Math.abs((s * 2+1) / 2))
-            //    );
+//logger.log(Level.TRACE, "%d, %d".formatted(s, cltable[s * 2] / 8));
+//logger.log(Level.TRACE, "%6d , %6d , %6d , %4X , %4X".formatted(
+// s
+// , cltable[s * 2]
+// , ((s * 2) % 2 == 0 ? 1 : -1) * (4095 - Math.abs((s * 2) / 2))
+// , ((s * 2) % 2 == 0 ? 1 : -1) * (4095 - Math.abs((s * 2) / 2))
+// , ((s * 2 + 1 ) % 2 == 0 ? 1 : -1) * (4095 - Math.abs((s * 2+1) / 2))
+// ));
             for (int j = 0; j < 12; j++) {
                 Fmvgen.waveReset(j, 0);
                 Fmvgen.waveReset(j, 1);
@@ -642,7 +648,7 @@ public class Fmvgen extends Fmgen {
             int pgin = pgCalc() >> (20 + FM_PGBITS - FM_OPSINBITS);
             if (fb < 31) {
                 pgin += ((In2 << (1 + IS2EC_SHIFT)) >> fb) >> (20 + FM_PGBITS - FM_OPSINBITS);
-                //System.err.Debug.printf("Calc:%d", pgin);
+                //System.err.logger.log(Level.DEBUG, "Calc:%d".formatted(pgin));
             } else {
                 pgin += In >> (20 + FM_PGBITS - FM_OPSINBITS - (2 + IS2EC_SHIFT));
             }
@@ -695,7 +701,7 @@ public class Fmvgen extends Fmgen {
             int pgin = pgCalc() >> (20 + FM_PGBITS - FM_OPSINBITS);
             if (fb < 31) {
                 pgin += ((In << (1 + IS2EC_SHIFT)) >> fb) >> (20 + FM_PGBITS - FM_OPSINBITS);
-                //System.err.Debug.printf("CalcFB:%d", pgin);
+                //System.err.logger.log(Level.DEBUG, "CalcFB:%d".formatted(pgin));
             }
             out = logToLin(egOut + SINE(ch, pgin));
             dbgOpOut = out2;
@@ -1012,12 +1018,12 @@ public class Fmvgen extends Fmgen {
         public void setKCKF(int kc, int kf) {
             int oct = 19 - ((kc >> 4) & 7);
 
-            //Debug.printf("%p", this);
+            //logger.log(Level.TRACE, "%p".formatted(this));
             int kcv = kcTable[kc & 0x0f];
             kcv = (kcv + 2) / 4 * 4;
-            //Debug.printf(" %.4x", kcv);
+            //logger.log(Level.TRACE, " %.4x".formatted(kcv));
             int dp = kcv * kftable[kf & 0x3f];
-            //Debug.printf(" %.4x %.4x %.8x", kcv, kftable[kf & 0x3f], dp >> oct);
+            //logger.log(Level.TRACE, " %.4x %.4x %.8x".formatted(kcv, kftable[kf & 0x3f], dp >> oct));
             dp >>= 16 + 3;
             dp <<= 16 + 3;
             dp >>= oct;
@@ -1026,7 +1032,7 @@ public class Fmvgen extends Fmgen {
             op[1].setDPBN(dp, bn);
             op[2].setDPBN(dp, bn);
             op[3].setDPBN(dp, bn);
-            //Debug.printf(" %.8x\n", dp);
+            //logger.log(Level.TRACE, " %.8x".formatted(dp));
         }
 
         // キー制御
@@ -1315,8 +1321,8 @@ public class Fmvgen extends Fmgen {
 
             if (carrier != 0xf) {
                 for (int i = 0; i < 4; i++)
-                    Debug.printf("algLink:%d:%d", i, op[i].algLink);
-                Debug.printf("carrier:%d", carrier);
+                    logger.log(Level.DEBUG, "algLink:%d:%d".formatted(i, op[i].algLink));
+                logger.log(Level.DEBUG, "carrier:%d".formatted(carrier));
             }
         }
     }

@@ -292,7 +292,7 @@ public class YmF271 {
             }
 
             //if (this.waveform != 7) {
-            // Debug.printf("Waveform %d in update_pcm !!!\n", this.waveform);
+            // logger.log(Level.TRACE, "Waveform %d in update_pcm !!!".formatted(this.waveform));
             //}
 
             for (int i = 0; i < length; i++) {
@@ -624,8 +624,8 @@ public class YmF271 {
                 continue;
 
 //if (slotGroup.pfm && slotGroup.sync != 3) {
-// Debug.printf("YmF271 Group %d: PFM, Sync = %d, Waveform Slot1 = %d, Slot2 = %d, Slot3 = %d, Slot4 = %d\n",
-//  j, slotGroup.sync, this.slots[j + 0].waveform, this.slots[j + 12].waveform, this.slots[j + 24].waveform, this.slots[j + 36].waveform);
+// logger.log(Level.TRACE, "YmF271 Group %d: PFM, Sync = %d, Waveform Slot1 = %d, Slot2 = %d, Slot3 = %d, Slot4 = %d".formatted(
+//  j, slotGroup.sync, this.slots[j + 0].waveform, this.slots[j + 12].waveform, this.slots[j + 24].waveform, this.slots[j + 36].waveform));
 //}
 
             switch (slotGroup.sync) {
@@ -1135,7 +1135,7 @@ public class YmF271 {
         int syncMode;
 
         if (groupNum == -1) {
-            //Debug.printf("ymf271_write_fm invalid group %02X %02X", address, data);
+            //logger.log(Level.TRACE, "ymf271_write_fm invalid group %02X %02X".formatted(address, data));
             return;
         }
 
@@ -1221,7 +1221,7 @@ public class YmF271 {
         int slotnum = pcmTab[address & 0xf];
         Slot slot;
         if (slotnum == -1) {
-            //Debug.printf("ymf271_write_pcm invalid slot %02X %02X", address, data);
+            //logger.log(Level.TRACE, "ymf271_write_pcm invalid slot %02X %02X".formatted(address, data));
             return;
         }
         slot = this.slots[slotnum];
@@ -1242,7 +1242,7 @@ public class YmF271 {
             slot.startAddr |= (data & 0x7f) << 16;
             slot.altLoop = (data & 0x80) != 0 ? 1 : 0;
             //if (slot.altloop)
-            // System.err.println("YmF271 A/L, contact MAMEdev");
+            // logger.log(Level.TRACE, "YmF271 A/L, contact MAMEdev");
             break;
 
         case 0x3:
@@ -1300,7 +1300,7 @@ public class YmF271 {
         if ((address & 0xf0) == 0) {
             int groupNum = fmTab[address & 0xf];
             if (groupNum == -1) {
-                //Debug.printf("ymf271_write_timer invalid group %2x %2x", address, data);
+                //logger.log(Level.TRACE, "ymf271_write_timer invalid group %2x %2x".formatted(address, data));
                 return;
             }
             Group group = this.groups[groupNum];

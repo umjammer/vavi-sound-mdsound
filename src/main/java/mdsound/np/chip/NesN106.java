@@ -1,13 +1,19 @@
 package mdsound.np.chip;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.Arrays;
 import java.util.function.Consumer;
 
 import mdsound.np.Device.SoundChip;
 import mdsound.np.chip.DeviceInfo.BasicTrackInfo;
 
+import static java.lang.System.getLogger;
+
 
 public class NesN106 implements SoundChip {
+
+    private static final Logger logger = getLogger(NesN106.class.getName());
 
     public static class TrackInfo extends BasicTrackInfo {
         public int wavelen;
@@ -115,7 +121,7 @@ public class NesN106 implements SoundChip {
 
             return trkInfo;
         } catch (Exception e) {
-e.printStackTrace();
+logger.log(Level.ERROR, e.getMessage(), e);
             return null;
         }
     }

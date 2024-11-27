@@ -174,7 +174,7 @@ public class K054539 {
 
         byte[] regBase = this.regs;
         boolean latch = (this.flags & K054539.UPDATE_AT_KEYON) != 0 && (regBase[0x22f] & 1) != 0;
-        //Debug.printf("latch = %d \n", latch);
+        //logger.log(Level.TRACE, "latch = %d ".formatted(latch));
 
         if (latch && offset < 0x100) {
             int offs = (offset & 0x1f) - 0xc;
@@ -183,7 +183,7 @@ public class K054539 {
             if (offs >= 0 && offs <= 2) {
                 // latch writes to the position index registers
                 this.posRegLatch[ch][offs] = (byte) data;
-                //Debug.printf("this.k054539_posreg_latch[%d][%d] = %d \n", ch, offs, data);
+                //logger.log(Level.TRACE, "this.k054539_posreg_latch[%d][%d] = %d ".formatted(ch, offs, data));
                 return;
             }
         } else
@@ -274,7 +274,7 @@ public class K054539 {
         case 0x22c:
             break;
         default:
-            //Debug.printf("K054539 read %03x\n", offset);
+            //logger.log(Level.TRACE, "K054539 read %03x".formatted(offset));
             break;
         }
         return this.regs[offset];
@@ -382,7 +382,7 @@ public class K054539 {
                 lVal = rVal = val;
             } else
                 lVal = rVal = 0;
-            //Debug.printf("rbase[this.reverb_pos(%d)] = %d \n", this.reverb_pos, lVal);
+//logger.log(Level.TRACE, "rbase[this.reverb_pos(%d)] = %d".formatted(this.reverb_pos, lVal));
             this.ram[this.reverbPos * 2] = 0;
             this.ram[this.reverbPos * 2 + 1] = 0;
 
@@ -424,7 +424,7 @@ public class K054539 {
                     if (rbVol > VOL_CAP)
                         rbVol = VOL_CAP;
 
-                    //Debug.printf("ch=%d lVol=%d rVol=%d\n", ch, lVol, rVol);
+//logger.log(Level.TRACE, "ch=%d lVol=%d rVol=%d".formatted(ch, lVol, rVol));
 
                     int rDelta = (this.regs[regP1 + 6] | (this.regs[regP1 + 7] << 8)) >> 3;
                     rDelta = (rDelta + this.reverbPos) & 0x3fff;
@@ -472,7 +472,7 @@ public class K054539 {
                                 break;
                             }
                         }
-                        //Debug.printf("ch=%d curPos=%d curVal=%d\n", ch, curPos, curVal);
+//logger.log(Level.TRACE, "ch=%d curPos=%d curVal=%d".formatted(ch, curPos, curVal));
                         //if(ch!=6) curVal = 0;
                         break;
                     }
@@ -544,14 +544,14 @@ public class K054539 {
                         break;
                     }
                     default:
-                        //System.err.prtinf(("Unknown sample type %x for channel %d\n", base2[0] & 0xc, ch));
+//logger.log(Level.TRACE, "Unknown sample type %x for channel %d".formatted(base2[0] & 0xc, ch));
                         break;
                     }
                     lVal += curVal * lVol;
                     rVal += curVal * rVol;
-                    //if (ch == 6) {
-                    //    Debug.printf("ch=%d lVal=%d\n", ch, lVal);
-                    //}
+//if (ch == 6) {
+// logger.log(Level.TRACE, "ch=%d lVal=%d".formatted(ch, lVal));
+//}
                     int ptr = (rDelta + this.reverbPos) & 0x1fff;
                     short valu = (short) (this.ram[ptr * 2] + this.ram[ptr * 2 + 1] * 0x100);
                     valu += (short) (curVal * rbVol);
@@ -574,7 +574,7 @@ public class K054539 {
             outputs[1][i] = (int) rVal;
             outputs[0][i] <<= 1;
             outputs[1][i] <<= 1;
-            //Debug.printf( "outputs[0][i] = %d\n", outputs[0][i]);
+//logger.log(Level.TRACE, "outputs[0][i] = %d".formatted(outputs[0][i]));
         }
     }
 

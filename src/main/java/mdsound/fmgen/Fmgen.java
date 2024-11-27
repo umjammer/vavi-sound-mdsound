@@ -107,7 +107,7 @@ public class Fmgen {
                     //else
                     //     pmtable[type][i][j] = int(0x10000 * (v - 1));
 
-                    //Debug.printf("pmtable[%d][%d][%.2x] = %5d  %7.5f %7.5f\n", type, i, j, pmtable[type][i][j], v, w);
+                    //logger.log(Level.TRACE, "pmtable[%d][%d][%.2x] = %5d  %7.5f %7.5f".formatted(type, i, j, pmtable[type][i][j], v, w));
                 }
             }
             for (int i = 0; i < 4; i++) {
@@ -421,7 +421,7 @@ public class Fmgen {
                 }
 
                 // for (i=0; i<13*256; i++)
-                //  Debug.printf("%4d, %d, %d\n", i, cltable[i*2], cltable[i*2+1]);
+                //  logger.log(Level.TRACE, "%4d, %d, %d".formatted(i, cltable[i*2], cltable[i*2+1]));
 
                 // サインテーブルの作成
                 double log2 = Math.log(2.0);
@@ -429,7 +429,7 @@ public class Fmgen {
                     double r = (i * 2 + 1) * Math.PI / FM_OPSINENTS;
                     double q = -256 * Math.log(Math.sin(r)) / log2;
                     int s = (int) (Math.floor(q + 0.5)) + 1;
-                    //  Debug.printf("%d, %d\n", s, cltable[s * 2] / 8);
+                    //  logger.log(Level.TRACE, "%d, %d".formatted(s, cltable[s * 2] / 8));
                     sineTable[i] = s * 2;
                     sineTable[FM_OPSINENTS / 2 + i] = s * 2 + 1;
                 }
@@ -1073,12 +1073,12 @@ public class Fmgen {
 
             int oct = 19 - ((kc >> 4) & 7);
 
-            //Debug.printf("%p", this);
+            //logger.log(Level.TRACE, "%p".formatted(this));
             int kcv = kcTable[kc & 0x0f];
             kcv = (kcv + 2) / 4 * 4;
-            //Debug.printf(" %.4x", kcv);
+            //logger.log(Level.TRACE, " %.4x".formatted(kcv));
             int dp = kcv * kfTable[kf & 0x3f];
-            //Debug.printf(" %.4x %.4x %.8x", kcv, kftable[kf & 0x3f], dp >> oct);
+            //logger.log(Level.TRACE, " %.4x %.4x %.8x".formatted(kcv, kftable[kf & 0x3f], dp >> oct));
             dp >>= 16 + 3;
             dp <<= 16 + 3;
             dp >>= oct;
@@ -1087,7 +1087,7 @@ public class Fmgen {
             op[1].setDPBN(dp, bn);
             op[2].setDPBN(dp, bn);
             op[3].setDPBN(dp, bn);
-            //Debug.printf(" %.8x\n", dp);
+            //logger.log(Level.TRACE, " %.8x".formatted(dp));
         }
 
         // キー制御

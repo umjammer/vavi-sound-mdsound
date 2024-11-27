@@ -132,7 +132,7 @@ public class PSG2 extends mdsound.fmgen.PSG {
         case 14: // Define Wave data
             if ((data & 0x80) != 0) userDefCounter = 0;
             user[((data & 0x70) >> 4) % 6][userDefCounter & 63] = (byte) (data & 0xf);
-            //Debug.printf("%d : WF %d %d %d ", ((data & 0x70) >> 4) % 6, userDefCounter & 63, (byte)(data & 0xf), data);
+            //logger.log(Level.TRACE, "%d : WF %d %d %d ", ((data & 0x70) >> 4) % 6, userDefCounter & 63, (byte)(data & 0xf), data);
             userDefCounter++;
             break;
         }

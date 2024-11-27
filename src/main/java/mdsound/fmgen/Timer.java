@@ -58,12 +58,12 @@ public class Timer {
         regta[addr & 1] = (byte) (data & 0xff);
         tmp = (regta[0] << 2) + (regta[1] & 3);
         timerA = (1024 - tmp) * timerStep;
-        // Debug.printf("Timer A = %d   %d us\n", tmp, timera >> 16);
+        // logger.log(Level.TRACE, "Timer A = %d   %d us".formatted(tmp, timera >> 16));
     }
 
     protected void setTimerB(int data) {
         timerB = (256 - (data & 0xff)) * timerStep;
-        // Debug.printf("Timer B = %d   %d us\n", data, timerb >> 12);
+        // logger.log(Level.TRACE, "Timer B = %d   %d us".formatted(data, timerb >> 12));
     }
 
     protected void setTimerControl(int data) {

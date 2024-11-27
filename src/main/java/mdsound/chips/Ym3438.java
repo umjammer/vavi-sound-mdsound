@@ -199,7 +199,7 @@ public class Ym3438 {
     private void doIO() {
         this.writeAEn = (this.writeA & 0x03) == 0x01 ? 1 : 0;
         this.writeDEn = (this.writeD & 0x03) == 0x01 ? 1 : 0;
-        //Debug.printf("aen:%d den:%d\n", this.write_a_en, this.write_d_en);
+        //logger.log(Level.TRACE, "aen:%d den:%d".formatted(this.write_a_en, this.write_d_en));
         this.writeA <<= 1;
         this.writeD <<= 1;
         // BUSY Counter
@@ -306,7 +306,7 @@ public class Ym3438 {
                     this.writeFmAddress = 0;
                 }
             }
-            //Debug.printf("d_en:%d wdata:%d adr:%d\n", this.write_d_en, this.write_data, this.address);
+            //logger.log(Level.TRACE, "d_en:%d wdata:%d adr:%d".formatted(this.write_d_en, this.write_data, this.address));
             if (this.writeDEn != 0 && (this.writeData & 0x100) == 0) {
                 switch (this.address) {
                 case 0x21: // LSI test 1
@@ -353,7 +353,7 @@ public class Ym3438 {
                     } else {
                         this.modeKonChannel = (this.writeData & 0x03) + ((this.writeData >> 2) & 1) * 3;
                     }
-//Debug.printf("kon_ope:%d:%d:%d:%d kon_ch:%d\n", this.modeKonChannel[0], this.modeKonChannel[1]
+//logger.log(Level.TRACE, "kon_ope:%d:%d:%d:%d kon_ch:%d".formatted(this.modeKonChannel[0], this.modeKonChannel[1]
 //, this.modeKonChannel[2], this.modeKonChannel[3], this.modeKonChannel);
                     break;
                 case 0x2a: // DAC data
@@ -417,7 +417,7 @@ public class Ym3438 {
         fnum &= 0xfff;
 
         basefreq = (fnum << this.pgBlock) >> 2;
-        //Debug.printf("040   basefreq:%d fnum:%d this.pg_block:%d\n", basefreq, fnum, this.pg_block);
+        //logger.log(Level.TRACE, "040   basefreq:%d fnum:%d this.pg_block:%d".formatted(basefreq, fnum, this.pg_block));
 
         // Apply detune
         if (dt_l != 0) {
@@ -499,7 +499,7 @@ public class Ym3438 {
         int slot = (this.slot + 22) % 24;
 
         int nkon = this.egKonLatch[slot] & 0xff;
-        //Debug.printf("nkon:%d\n", nkon);
+        //logger.log(Level.TRACE, "nkon:%d".formatted(nkon));
         int okon = this.egKon[slot] & 0xff;
         int kon_event;
         int koff_event;
@@ -535,7 +535,7 @@ public class Ym3438 {
             eg_off = (level & 0x3f0) == 0x3f0 ? 1 : 0;
         }
         nextlevel = level;
-        //Debug.printf("nextlevel:%d this.eg_state[slot]:%d slot:%d\n", nextlevel, this.eg_state[slot],slot);
+        //logger.log(Level.TRACE, "nextlevel:%d this.eg_state[slot]:%d slot:%d".formatted(nextlevel, this.eg_state[slot],slot));
         if (kon_event != 0) {
             nextstate = Eg.Attack.ordinal();
             // Instant attack
@@ -544,7 +544,7 @@ public class Ym3438 {
             } else if ((this.egState[slot] & 0xff) == Eg.Attack.ordinal() && level != 0 && this.egInc != 0 && nkon != 0) {
                 inc = (~level << this.egInc) >> 5;
             }
-            //Debug.printf("inc:%d\n", inc);
+            //logger.log(Level.TRACE, "inc:%d".formatted(inc));
         } else {
             switch (Eg.valueOf(this.egState[slot])) {
             case Attack:
@@ -553,7 +553,7 @@ public class Ym3438 {
                 } else if (this.egInc != 0 && this.egRateMax == 0 && nkon != 0) {
                     inc = (~level << this.egInc) >> 5;
                 }
-                //Debug.printf("ainc:%d\n", inc);
+                //logger.log(Level.TRACE, "ainc:%d".formatted(inc));
                 break;
             case Decay:
                 if ((level >> 5) == this.egSl[1]) {
@@ -564,7 +564,7 @@ public class Ym3438 {
                         inc <<= 2;
                     }
                 }
-                //Debug.printf("dinc:%d\n", inc);
+                //logger.log(Level.TRACE, "dinc:%d".formatted(inc));
                 break;
             case Sustain:
             case Release:
@@ -574,14 +574,14 @@ public class Ym3438 {
                         inc <<= 2;
                     }
                 }
-                //Debug.printf("srinc:%d\n", inc);
+                //logger.log(Level.TRACE, "srinc:%d".formatted(inc));
                 break;
             default:
                 break;
             }
             if (nkon == 0) {
                 nextstate = Eg.Release.ordinal();
-                //Debug.printf("1rel\n", inc);
+                //logger.log(Level.TRACE, "1rel".formatted(inc));
             }
         }
         if (this.egKonCsm[slot] != 0) {
@@ -592,16 +592,16 @@ public class Ym3438 {
         if (kon_event == 0 && this.egSsgHoldUpLatch[slot] == 0 && (this.egState[slot] & 0xff) != Eg.Attack.ordinal() && eg_off != 0) {
             nextstate = Eg.Release.ordinal();
             nextlevel = 0x3ff;
-            //Debug.printf("2rel\n", inc);
+            //logger.log(Level.TRACE, "2rel".formatted(inc));
         }
 
         nextlevel += inc;
-        //Debug.printf("nextlevel:%d\n", nextlevel);
+        //logger.log(Level.TRACE, "nextlevel:%d".formatted(nextlevel));
 
         this.egKon[slot] = this.egKonLatch[slot];
         this.egLevel[slot] = (short) (nextlevel & 0x3ff);
         this.egState[slot] = (byte) nextstate;
-        //Debug.printf("this.eg_level[slot]:%d slot:%d\n", this.eg_level[slot], slot);
+        //logger.log(Level.TRACE, "this.eg_level[slot]:%d slot:%d".formatted(this.eg_level[slot], slot));
     }
 
     private void envelopePrepare() {
@@ -684,7 +684,7 @@ public class Ym3438 {
         int level;
 
         level = this.egLevel[slot] & 0xffff;
-        //Debug.printf("level:%d\n", level);
+        //logger.log(Level.TRACE, "level:%d".formatted(level));
 
         if (this.egSsgInv[slot] != 0) {
             // Inverse
@@ -706,7 +706,7 @@ public class Ym3438 {
             level = 0x3ff;
         }
         this.egOut[slot] = (short) level;
-        //Debug.printf("this.eg_out[slot]:%d slot:%d\n", this.eg_out[slot], slot);
+        //logger.log(Level.TRACE, "this.eg_out[slot]:%d slot:%d".formatted(this.eg_out[slot], slot));
     }
 
     private void updateLFO() {
@@ -782,10 +782,10 @@ public class Ym3438 {
         }
         if (Ym3438Const.fmAlgorithm[op][5][this.connect[channel]] != 0 && test_dac == 0) {
             add += (short) (this.fmOut[slot] >> 5);
-            //Debug.printf("040   this.fm_out[slot]:%d slot:%d\n", this.fm_out[slot], slot);
+            //logger.log(Level.TRACE, "040   this.fm_out[slot]:%d slot:%d".formatted(this.fm_out[slot], slot));
         }
         sum = acc + add;
-        //Debug.printf("040   acc:%d add:%d\n", acc, add);
+        //logger.log(Level.TRACE, "040   acc:%d add:%d".formatted(acc, add));
         // Clamp
         if (sum > 255) {
             sum = 255;
@@ -849,7 +849,7 @@ public class Ym3438 {
             //else {
             //    this.mol = sign;
             //}
-            //Debug.printf("040   out:%d sign:%d\n", out_, sign);
+            //logger.log(Level.TRACE, "040   out:%d sign:%d".formatted(out_, sign));
             if (this.chLockR != 0 && out_en != 0) {
                 this.mor = out_;
             }
@@ -881,7 +881,7 @@ public class Ym3438 {
         int slot = (this.slot + 19) % 24;
         // Calculate phase
         int phase = (this.fmMod[slot] + (this.pgPhase[slot] >> 10)) & 0x3ff;
-        //Debug.printf("040   this.fm_mod[slot]:%d this.pg_phase[slot]:%d\n", this.fm_mod[slot], this.pg_phase[slot]);
+        //logger.log(Level.TRACE, "040   this.fm_mod[slot]:%d this.pg_phase[slot]:%d".formatted(this.fm_mod[slot], this.pg_phase[slot]));
         int quarter;
         int level;
         int output;
@@ -893,13 +893,13 @@ public class Ym3438 {
         level = Ym3438Const.logSinRom[quarter];
         // Apply envelope
         level += (this.egOut[slot] & 0xffff) << 2;
-        //Debug.printf("040   quarter:%d this.eg_out[slot]:%d slot:%d\n", quarter, this.eg_out[slot], slot);
+        //logger.log(Level.TRACE, "040   quarter:%d this.eg_out[slot]:%d slot:%d".formatted(quarter, this.eg_out[slot], slot));
         // Transform
         if (level > 0x1fff) {
             level = 0x1fff;
         }
         output = ((Ym3438Const.expRom[(level & 0xff) ^ 0xff] | 0x400) << 2) >> (level >> 8);
-        //Debug.printf("040   output:%d level:%d\n", output, level);
+        //logger.log(Level.TRACE, "040   output:%d level:%d".formatted(output, level));
         if ((phase & 0x200) != 0) {
             output = ((~output) ^ (this.modeTest21[4] << 13)) + 1;
         } else {
@@ -986,7 +986,7 @@ public class Ym3438 {
         // Key On
         this.egKonLatch[this.slot] = this.modeKon[this.slot];
         this.egKonCsm[this.slot] = 0;
-        //Debug.printf("this.eg_kon_latch[this.slot]:%d slot:%d\n", this.eg_kon_latch[this.slot], this.slot);
+        //logger.log(Level.TRACE, "this.eg_kon_latch[this.slot]:%d slot:%d".formatted(this.eg_kon_latch[this.slot], this.slot));
         if (this.channel == 2 && this.modeKonCsm != 0) {
             // CSM Key On
             this.egKonLatch[this.slot] = 1;
@@ -1031,12 +1031,12 @@ public class Ym3438 {
             this.rateRatio = rateratio;
         }
         //System.err.printfsw = true;
-        //Debug.printf("rateratio%d rate%d clock%d\n", this.rateratio,rate,clock);
+        //logger.log(Level.TRACE, "rateratio%d rate%d clock%d".formatted(this.rateratio,rate,clock));
         //System.err.printfsw = false;
     }
 
     private void clock(int[] buffer) {
-        //Debug.printf("010 mol:%d mor:%d\n", this.mol, this.mor);
+        //logger.log(Level.TRACE, "010 mol:%d mor:%d".formatted(this.mol, this.mor));
 
         this.lfoInc = this.modeTest21[1];
         this.pgRead >>= 1;
@@ -1097,40 +1097,40 @@ public class Ym3438 {
             this.egCycleStop = 0;
         }
 
-        //Debug.printf("020 mol:%d mor:%d\n", this.mol, this.mor);
+        //logger.log(Level.TRACE, "020 mol:%d mor:%d".formatted(this.mol, this.mor));
 
         doIO();
 
-        //Debug.printf("030 mol:%d mor:%d\n", this.mol, this.mor);
+        //logger.log(Level.TRACE, "030 mol:%d mor:%d".formatted(this.mol, this.mor));
 
         doTimerA();
         doTimerB();
         keyOn();
 
-        //Debug.printf("040 mol:%d mor:%d\n", this.mol, this.mor);
+        //logger.log(Level.TRACE, "040 mol:%d mor:%d".formatted(this.mol, this.mor));
 
         chOutput();
-        //Debug.printf("045 mol:%d mor:%d\n", this.mol, this.mor);
+        //logger.log(Level.TRACE, "045 mol:%d mor:%d".formatted(this.mol, this.mor));
         chGenerate();
 
-        //Debug.printf("050 mol:%d mor:%d\n", this.mol, this.mor);
+        //logger.log(Level.TRACE, "050 mol:%d mor:%d".formatted(this.mol, this.mor));
 
         fmPrepare();
         fmGenerate();
 
-        //Debug.printf("060 mol:%d mor:%d\n", this.mol, this.mor);
+        //logger.log(Level.TRACE, "060 mol:%d mor:%d".formatted(this.mol, this.mor));
 
         phaseGenerate();
         phaseCalcIncrement();
 
-        //Debug.printf("070 mol:%d mor:%d\n", this.mol, this.mor);
+        //logger.log(Level.TRACE, "070 mol:%d mor:%d".formatted(this.mol, this.mor));
 
         envelopeADSR();
         envelopeGenerate();
         envelopeSSGEG();
         envelopePrepare();
 
-        //Debug.printf("080 mol:%d mor:%d\n", this.mol, this.mor);
+        //logger.log(Level.TRACE, "080 mol:%d mor:%d".formatted(this.mol, this.mor));
 
         // Prepare fnum & block
         if (this.modeCh3 != 0) {
@@ -1164,7 +1164,7 @@ public class Ym3438 {
             this.pgKcode = this.kcode[(this.channel + 1) % 6];
         }
 
-        //Debug.printf("090 mol:%d mor:%d\n", this.mol, this.mor);
+        //logger.log(Level.TRACE, "090 mol:%d mor:%d".formatted(this.mol, this.mor));
 
         updateLFO();
         doRegWrite();
@@ -1172,19 +1172,19 @@ public class Ym3438 {
         this.slot = this.cycles;
         this.channel = this.cycles % 6;
 
-        //Debug.printf("100 mol:%d mor:%d\n", this.mol, this.mor);
+        //logger.log(Level.TRACE, "100 mol:%d mor:%d".formatted(this.mol, this.mor));
 
         buffer[0] = this.mol;
         buffer[1] = this.mor;
 
-        //Debug.printf("110 mol:%d mor:%d\n", this.mol, this.mor);
+        //logger.log(Level.TRACE, "110 mol:%d mor:%d".formatted(this.mol, this.mor));
     }
 
     private void writeInternal(int port, int data) {
         //if (port == 1 && data == 0xf1) {
-        //    System.err.printfOn();
+        //    logger.log(Level.TRACE, "");
         //}
-        //Debug.printf("port:%x data:%x\n", port, data);
+        //logger.log(Level.TRACE, "port:%x data:%x".formatted(port, data));
 
         port &= 3;
         this.writeData = ((port << 7) & 0x100) | data;
@@ -1314,7 +1314,7 @@ public class Ym3438 {
                     default -> 0;
                 };
                 this.clock(grBuffer);
-                //Debug.printf("l%d r%d\n", buffer[0], buffer[1]);
+                //logger.log(Level.TRACE, "l%d r%d".formatted(buffer[0], buffer[1]));
                 if (mute == 0) {
                     this.samples[0] += grBuffer[0];
                     this.samples[1] += grBuffer[1];
@@ -1341,13 +1341,13 @@ public class Ym3438 {
                 this.samples[1] = (int) (this.oldSamples[1] + (1 - 0.512331301282628) * (this.samples[1] * 12 - this.oldSamples[1]));
             }
             this.sampleCnt -= this.rateRatio;
-            //Debug.printf("samplecnt%d\n", this.samplecnt);
+            //logger.log(Level.TRACE, "samplecnt%d".formatted(this.samplecnt));
         }
         buf[0] = (this.oldSamples[0] * (this.rateRatio - this.sampleCnt)
                 + this.samples[0] * this.sampleCnt) / this.rateRatio;
         buf[1] = (this.oldSamples[1] * (this.rateRatio - this.sampleCnt)
                 + this.samples[1] * this.sampleCnt) / this.rateRatio;
-        //Debug.printf("bl%d br%d this.oldsamples[0]%d this.samples[0]%d\n", buf[0], buf[1], this.oldsamples[0], this.samples[0]);
+        //logger.log(Level.TRACE, "bl%d br%d this.oldsamples[0]%d this.samples[0]%d".formatted(buf[0], buf[1], this.oldsamples[0], this.samples[0]));
         this.sampleCnt += 1 << 10;// RSM_FRAC;
     }
 

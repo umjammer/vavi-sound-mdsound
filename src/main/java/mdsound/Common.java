@@ -36,7 +36,7 @@ public class Common {
 
     @Deprecated
     public static void write(String fmt, Object... arg) {
-        String msg = String.format(fmt, arg);
+        String msg = fmt.formatted(arg);
         try (StreamWriter writer = new StreamWriter(new FileStream("log.txt", FileMode.Append))) {
             writer.writeLine(msg);
         } catch (IOException e) {

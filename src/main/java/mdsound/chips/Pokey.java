@@ -14,7 +14,8 @@
 
 package mdsound.chips;
 
-import java.util.logging.Logger;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 
 import mdsound.instrument.PokeyInst;
 
@@ -130,11 +131,11 @@ public class Pokey {
      */
     private static final int POKEY_DEFAULT_GAIN = (32767 / 11 / 4);
 
-    private Logger logger = Logger.getLogger(PokeyInst.class.getName());
-    private Logger LOG_SOUND = Logger.getLogger(PokeyInst.class.getName() + ".SOUND");
-    private Logger LOG_TIMER = Logger.getLogger(PokeyInst.class.getName() + ".TIMER");
-    private Logger LOG_POLY = Logger.getLogger(PokeyInst.class.getName() + ".POLY");
-    private Logger LOG_RAND = Logger.getLogger(PokeyInst.class.getName() + ".RAND");
+    private Logger logger = System.getLogger(PokeyInst.class.getName());
+    private Logger LOG_SOUND = System.getLogger(PokeyInst.class.getName() + ".SOUND");
+    private Logger LOG_TIMER = System.getLogger(PokeyInst.class.getName() + ".TIMER");
+    private Logger LOG_POLY = System.getLogger(PokeyInst.class.getName() + ".POLY");
+    private Logger LOG_RAND = System.getLogger(PokeyInst.class.getName() + ".RAND");
 
     private static final int CHAN1 = 0;
     private static final int CHAN2 = 1;
@@ -469,17 +470,17 @@ public class Pokey {
                 samples--;
             }
         }
-//            this.rtimer.adjust(attotime::never);
+//        this.rtimer.adjust(attotime::never);
     }
 
     private void init(byte[] poly, int size, int left, int right, int add) {
         int mask = (1 << size) - 1;
         int x = 0;
 
-        LOG_POLY.fine(String.format("poly %d\n", size));
+LOG_POLY.log(Level.DEBUG, "poly %d".formatted(size));
         for (int i = 0; i < mask; i++) {
             poly[i] = (byte) (x & 1);
-            LOG_POLY.fine(String.format("%05x: %d\n", x, x & 1));
+LOG_POLY.log(Level.DEBUG, "%05x: %d".formatted(x, x & 1));
             // calculate next bit
             x = ((x << left) + (x >> right) + add) & mask;
         }
@@ -489,13 +490,13 @@ public class Pokey {
         int mask = (1 << size) - 1;
         int x = 0;
 
-        LOG_RAND.fine(String.format("rand %d\n", size));
+LOG_RAND.log(Level.DEBUG, "rand %d".formatted(size));
         for (int i = 0; i < mask; i++) {
             if (size == 17)
                 rng[i] = (byte) (x >> 6); // use bits 6..13
             else
                 rng[i] = (byte) x; // use bits 0..7
-            LOG_RAND.fine(String.format("%05x: %02x\n", x, rng[i]));
+LOG_RAND.log(Level.DEBUG, "%05x: %02x".formatted(x, rng[i]));
             // calculate next bit
             x = ((x << left) + (x >> right) + add) & mask;
         }
@@ -574,15 +575,15 @@ public class Pokey {
 //                // get the current value by the linear interpolation of
 //                // the final value using the elapsed time.
 //                if (this.ALLPOT & (1 << pot)) {
-//                    //data = this.ptimer[pot].elapsed().attoseconds / AD_TIME.attoseconds;
+////                    data = this.ptimer[pot].elapsed().attoseconds / AD_TIME.attoseconds;
 //                    data = this.POTx[pot];
-//                    Debug.printf("POKEY '%s' read POT%d (interpolated) $%02x\n", this.device.tag(), pot, data);
+//logger.log(Level.TRACE, "POKEY '%s' read POT%d (interpolated) $%02x".formatted(this.device.tag(), pot, data));
 //                } else {
 //                    data = this.POTx[pot];
-//                    Debug.printf("POKEY '%s' read POT%d (final value)  $%02x\n", this.device.tag(), pot, data);
+//logger.log(Level.TRACE, "POKEY '%s' read POT%d (final value)  $%02x".formatted(this.device.tag(), pot, data));
 //                }
 //            } else
-//                Debug.printf("%s: warning - read '%s' POT%d\n", this.device.machine().describe_context(), this.device.tag(), pot);
+//logger.log(Level.TRACE, "%s: warning - read '%s' POT%d".formatted(this.device.machine().describe_context(), this.device.tag(), pot));
             break;
 
         case ALLPOT_C:
@@ -590,13 +591,13 @@ public class Pokey {
             // are disabled (SKRESET). Thanks to MikeJ for pointing this out.
 //            if ((this.SKCTL & SK_RESET) == 0) {
 //                data = 0;
-//                Debug.printf("POKEY '%s' ALLPOT internal $%02x (reset)\n", this.device.tag(), data);
+//logger.log(Level.TRACE, "POKEY '%s' ALLPOT internal $%02x (reset)".formatted(this.device.tag(), data));
 //            } else if (!this.allpot_r.isnull()) {
 //                data = this.allpot_r(offset);
-//                Debug.printf("POKEY '%s' ALLPOT Callback $%02x\n", this.device.tag(), data);
+//logger.log(Level.TRACE, "POKEY '%s' ALLPOT Callback $%02x".formatted(this.device.tag(), data));
 //            } else {
 //                data = this.ALLPOT;
-//                Debug.printf("POKEY '%s' ALLPOT internal $%02x\n", this.device.tag(), data);
+//logger.log(Level.TRACE, "POKEY '%s' ALLPOT internal $%02x".formatted(this.device.tag(), data));
 //            }
             break;
 
@@ -619,42 +620,42 @@ public class Pokey {
                 adjust = 1;
                 this.r9 = 0;
                 this.r17 = 0;
-                //LOG_RAND(("POKEY '%s' rand17 frozen (SKCTL): $%02x\n", this.device.tag(), this.RANDOM));
+//LOG_RAND.log(Level.TRACE, "POKEY '%s' rand17 frozen (SKCTL): $%02x".formatted(this.device.tag(), this.RANDOM));
             }
             if ((this.audioControl & POLY9) != 0) {
                 this.random = this.rand9[this.r9] & 0xff;
-                //LOG_RAND(("POKEY '%s' adjust %u rand9[$%05x]: $%02x\n", this.device.tag(), adjust, this.r9, this.RANDOM));
+//LOG_RAND.log(Level.TRACE, "POKEY '%s' adjust %u rand9[$%05x]: $%02x".formatted(this.device.tag(), adjust, this.r9, this.RANDOM));
             } else {
                 this.random = this.rand17[this.r17] & 0xff;
-                //LOG_RAND(("POKEY '%s' adjust %u rand17[$%05x]: $%02x\n", this.device.tag(), adjust, this.r17, this.RANDOM));
+//LOG_RAND.log(Level.TRACE, "POKEY '%s' adjust %u rand17[$%05x]: $%02x".formatted(this.device.tag(), adjust, this.r17, this.RANDOM));
             }
-            //if (adjust > 0)
-            // this.rtimer.adjust(attotime::never);
+//            if (adjust > 0)
+//                this.rtimer.adjust(attotime::never);
             data = this.random ^ 0xff;
             break;
 
         case SERIN_C:
-            //if( !this.serin_r.isnull() )
-            // this.SERIN = this.serin_r(offset);
+//            if (!this.serin_r.isnull())
+//                this.SERIN = this.serin_r(offset);
             data = this.serIn;
-            //Debug.printf(("POKEY '%s' SERIN  $%02x\n", this.device.tag(), data));
+//logger.log(Level.TRACE, "POKEY '%s' SERIN  $%02x".formatted(this.device.tag(), data));
             break;
 
         case IRQST_C:
             // IRQST is an active low input port; we keep it active high
             // internally to ease the (un-)masking of bits
             data = this.irqSt ^ 0xff;
-            //Debug.printf(("POKEY '%s' IRQST  $%02x\n", this.device.tag(), data));
+//logger.log(Level.TRACE, "POKEY '%s' IRQST  $%02x".formatted(this.device.tag(), data));
             break;
 
         case SKSTAT_C:
             // SKSTAT is also an active low input port
             data = this.skStat ^ 0xff;
-            //Debug.printf(("POKEY '%s' SKSTAT $%02x\n", this.device.tag(), data));
+//logger.log(Level.TRACE, "POKEY '%s' SKSTAT $%02x".formatted(this.device.tag(), data));
             break;
 
         default:
-            //Debug.printf(("POKEY '%s' register $%02x\n", this.device.tag(), offset));
+//logger.log(Level.TRACE, "POKEY '%s' register $%02x".formatted(this.device.tag(), offset));
             break;
         }
 
@@ -671,7 +672,7 @@ public class Pokey {
         case AUDF1_C:
             if (data == this.audioF[CHAN1])
                 return;
-            //LOG_SOUND(("POKEY '%s' AUDF1  $%02x\n", this.device.tag(), data));
+//LOG_SOUND.log(Level.TRACE, "POKEY '%s' AUDF1  $%02x".formatted(this.device.tag(), data));
             this.audioF[CHAN1] = data;
             chMask = 1 << CHAN1;
             if ((this.audioControl & CH12_JOINED) != 0) // if ch 1&2 tied together
@@ -681,7 +682,7 @@ public class Pokey {
         case AUDC1_C:
             if (data == this.audioC[CHAN1])
                 return;
-            //LOG_SOUND(("POKEY '%s' AUDC1  $%02x (%s)\n", this.device.tag(), data, audc2str(data)));
+//LOG_SOUND.log(Level.TRACE, "POKEY '%s' AUDC1  $%02x (%s)".formatted(this.device.tag(), data, audc2str(data)));
             this.audioC[CHAN1] = data;
             chMask = 1 << CHAN1;
             break;
@@ -689,7 +690,7 @@ public class Pokey {
         case AUDF2_C:
             if (data == this.audioF[CHAN2])
                 return;
-            //LOG_SOUND(("POKEY '%s' AUDF2  $%02x\n", this.device.tag(), data));
+//LOG_SOUND.log(Level.TRACE, "POKEY '%s' AUDF2  $%02x".formatted(this.device.tag(), data));
             this.audioF[CHAN2] = data;
             chMask = 1 << CHAN2;
             break;
@@ -697,7 +698,7 @@ public class Pokey {
         case AUDC2_C:
             if (data == this.audioC[CHAN2])
                 return;
-            //LOG_SOUND(("POKEY '%s' AUDC2  $%02x (%s)\n", this.device.tag(), data, audc2str(data)));
+//LOG_SOUND.log(Level.TRACE, "POKEY '%s' AUDC2  $%02x (%s)".formatted(this.device.tag(), data, audc2str(data)));
             this.audioC[CHAN2] = data;
             chMask = 1 << CHAN2;
             break;
@@ -705,7 +706,7 @@ public class Pokey {
         case AUDF3_C:
             if (data == this.audioF[CHAN3])
                 return;
-            //LOG_SOUND(("POKEY '%s' AUDF3  $%02x\n", this.device.tag(), data));
+//LOG_SOUND.log(Level.TRACE, "POKEY '%s' AUDF3  $%02x".formatted(this.device.tag(), data));
             this.audioF[CHAN3] = data;
             chMask = 1 << CHAN3;
 
@@ -716,7 +717,7 @@ public class Pokey {
         case AUDC3_C:
             if (data == this.audioC[CHAN3])
                 return;
-            //LOG_SOUND(("POKEY '%s' AUDC3  $%02x (%s)\n", this.device.tag(), data, audc2str(data)));
+//LOG_SOUND.log(Level.TRACE, "POKEY '%s' AUDC3  $%02x (%s)".formatted(this.device.tag(), data, audc2str(data)));
             this.audioC[CHAN3] = data;
             chMask = 1 << CHAN3;
             break;
@@ -724,7 +725,7 @@ public class Pokey {
         case AUDF4_C:
             if (data == this.audioF[CHAN4])
                 return;
-            //LOG_SOUND(("POKEY '%s' AUDF4  $%02x\n", this.device.tag(), data));
+//LOG_SOUND.log(Level.TRACE, "POKEY '%s' AUDF4  $%02x".formatted(this.device.tag(), data));
             this.audioF[CHAN4] = data;
             chMask = 1 << CHAN4;
             break;
@@ -732,7 +733,7 @@ public class Pokey {
         case AUDC4_C:
             if (data == this.audioC[CHAN4])
                 return;
-            //LOG_SOUND(("POKEY '%s' AUDC4  $%02x (%s)\n", this.device.tag(), data, audc2str(data)));
+//LOG_SOUND.log(Level.TRACE, "POKEY '%s' AUDC4  $%02x (%s)".formatted(this.device.tag(), data, audc2str(data)));
             this.audioC[CHAN4] = data;
             chMask = 1 << CHAN4;
             break;
@@ -740,7 +741,7 @@ public class Pokey {
         case AUDCTL_C:
             if (data == this.audioControl)
                 return;
-            //LOG_SOUND(("POKEY '%s' AUDCTL $%02x (%s)\n", this.device.tag(), data, audctl2str(data)));
+//LOG_SOUND.log(Level.TRACE, "POKEY '%s' AUDCTL $%02x (%s)".formatted(this.device.tag(), data, audctl2str(data)));
             this.audioControl = data;
             chMask = 15; // all channels
             // determine the base multiplier for the 'div by n' calculations
@@ -749,7 +750,7 @@ public class Pokey {
 
         case STIMER_C:
 //            // first remove any existing timers
-//            LOG_TIMER(("POKEY '%s' STIMER $%02x\n", this.device.tag(), data));
+//LOG_TIMER.log(Level.TRACE, "POKEY '%s' STIMER $%02x".formatted(this.device.tag(), data));
 //
 //            this.timer[TIMER1].adjust(attotime::never, this.timer_param[TIMER1]);
 //            this.timer[TIMER2].adjust(attotime::never, this.timer_param[TIMER2]);
@@ -765,7 +766,7 @@ public class Pokey {
 //            // joined chan#1 and chan#2 ?
 //            if (this.AUDCTL & CH12_JOINED) {
 //                if (this.divisor[CHAN2] > 4) {
-//                    LOG_TIMER(("POKEY '%s' timer1+2 after %d clocks\n", this.device.tag(), this.divisor[CHAN2]));
+//LOG_TIMER.log(Level.TRACE, "POKEY '%s' timer1+2 after %d clocks".formatted(this.device.tag(), this.divisor[CHAN2]));
 //                    // set timer #1 _and_ //#2 event after timer_div clocks of joined CHAN1+CHAN2
 //                    this.timer_period[TIMER2] = this.clock_period * this.divisor[CHAN2];
 //                    this.timer_param[TIMER2] = IRQ_TIMR2 | IRQ_TIMR1;
@@ -773,7 +774,7 @@ public class Pokey {
 //                }
 //            } else {
 //                if (this.divisor[CHAN1] > 4) {
-//                    LOG_TIMER(("POKEY '%s' timer1 after %d clocks\n", this.device.tag(), this.divisor[CHAN1]));
+//LOG_TIMER.log(Level.TRACE, "POKEY '%s' timer1 after %d clocks".formatted(this.device.tag(), this.divisor[CHAN1]));
 //                    // set timer #1 event after timer_div clocks of CHAN1
 //                    this.timer_period[TIMER1] = this.clock_period * this.divisor[CHAN1];
 //                    this.timer_param[TIMER1] = IRQ_TIMR1;
@@ -781,7 +782,7 @@ public class Pokey {
 //                }
 //
 //                if (this.divisor[CHAN2] > 4) {
-//                    LOG_TIMER(("POKEY '%s' timer2 after %d clocks\n", this.device.tag(), this.divisor[CHAN2]));
+//LOG_TIMER.log(Level.TRACE, "POKEY '%s' timer2 after %d clocks".formatted(this.device.tag(), this.divisor[CHAN2]));
 //                    // set timer #2 event after timer_div clocks of CHAN2
 //                    this.timer_period[TIMER2] = this.clock_period * this.divisor[CHAN2];
 //                    this.timer_param[TIMER2] = IRQ_TIMR2;
@@ -795,7 +796,7 @@ public class Pokey {
 //                // not sure about this: if audc4 == 0000xxxx don't start timer 4 ?
 //                if (this.AUDC[CHAN4] & 0xf0) {
 //                    if (this.divisor[CHAN4] > 4) {
-//                        LOG_TIMER(("POKEY '%s' timer4 after %d clocks\n", this.device.tag(), this.divisor[CHAN4]));
+//LOG_TIMER.log(Level.TRACE, "POKEY '%s' timer4 after %d clocks".formatted(this.device.tag(), this.divisor[CHAN4]));
 //                        // set timer #4 event after timer_div clocks of CHAN4
 //                        this.timer_period[TIMER4] = this.clock_period * this.divisor[CHAN4];
 //                        this.timer_param[TIMER4] = IRQ_TIMR4;
@@ -804,7 +805,7 @@ public class Pokey {
 //                }
 //            } else {
 //                if (this.divisor[CHAN4] > 4) {
-//                    LOG_TIMER(("POKEY '%s' timer4 after %d clocks\n", this.device.tag(), this.divisor[CHAN4]));
+//LOG_TIMER.log(Level.TRACE, "POKEY '%s' timer4 after %d clocks".formatted(this.device.tag(), this.divisor[CHAN4]));
 //                    // set timer #4 event after timer_div clocks of CHAN4
 //                    this.timer_period[TIMER4] = this.clock_period * this.divisor[CHAN4];
 //                    this.timer_param[TIMER4] = IRQ_TIMR4;
@@ -819,17 +820,17 @@ public class Pokey {
 
         case SKREST_C:
             // reset SKSTAT
-            //Debug.printf(("POKEY '%s' SKREST $%02x\n", this.device.tag(), data));
+//logger.log(Level.TRACE, "POKEY '%s' SKREST $%02x".formatted(this.device.tag(), data));
             this.skStat &= ~(SK_FRAME | SK_OVERRUN | SK_KBERR);
             break;
 
         case POTGO_C:
-            //Debug.printf(("POKEY '%s' POTGO  $%02x\n", this.device.tag(), data));
+//logger.log(Level.TRACE, "POKEY '%s' POTGO  $%02x".formatted(this.device.tag(), data));
             //pokey_potgo(p);
             break;
 
         case SEROUT_C:
-            //Debug.printf(("POKEY '%s' SEROUT $%02x\n", this.device.tag(), data));
+//logger.log(Level.TRACE, "POKEY '%s' SEROUT $%02x".formatted(this.device.tag(), data));
             //this.serout_w(offset, data);
             //this.SKSTAT |= SK_SEROUT;
             // These are arbitrary values, tested with some custom boot
@@ -841,7 +842,7 @@ public class Pokey {
             break;
 
         case IRQEN_C:
-            //Debug.printf(("POKEY '%s' IRQEN  $%02x\n", this.device.tag(), data));
+//logger.log(Level.TRACE, "POKEY '%s' IRQEN  $%02x".formatted(this.device.tag(), data));
 
             // acknowledge one or more IRQST bits ?
             if ((this.irqSt & ~data) != 0) {
@@ -864,7 +865,7 @@ public class Pokey {
         case SKCTL_C:
             if (data == this.skCtl)
                 return;
-            //Debug.printf(("POKEY '%s' SKCTL  $%02x\n", this.device.tag(), data));
+//logger.log(Level.TRACE, "POKEY '%s' SKCTL  $%02x".formatted(this.device.tag(), data));
             this.skCtl = data;
             if ((data & SK_RESET) == 0) {
                 write(IRQEN_C, 0);
@@ -888,14 +889,14 @@ public class Pokey {
             else
                 newVal = (this.audioF[CHAN1] + DIVADD_LOCLK) * this.clockMult;
 
-            //LOG_SOUND(("POKEY '%s' chan1 %d\n", this.device.tag(), newVal));
+//LOG_SOUND.log(Level.TRACE, "POKEY '%s' chan1 %d".formatted(this.device.tag(), newVal));
 
             this.volume[CHAN1] = (this.audioC[CHAN1] & VOLUME_MASK) * POKEY_DEFAULT_GAIN;
             this.divisor[CHAN1] = newVal;
             if (newVal < this.counter[CHAN1])
                 this.counter[CHAN1] = newVal;
-            //if( this.interrupt_cb && this.timer[TIMER1] )
-            // this.timer[TIMER1].adjust(this.clock_period * newVal, this.timer_param[TIMER1], this.timer_period[TIMER1]);
+//            if (this.interrupt_cb && this.timer[TIMER1])
+//                this.timer[TIMER1].adjust(this.clock_period * newVal, this.timer_param[TIMER1], this.timer_period[TIMER1]);
             this.audible[CHAN1] = (this.audioC[CHAN1] & VOLUME_ONLY) != 0 ||
                             (this.audioC[CHAN1] & VOLUME_MASK) == 0 ||
                             ((this.audioC[CHAN1] & PURE) != 0 && newVal < (this.samplerate24_8 >> 8))
@@ -915,18 +916,18 @@ public class Pokey {
                     newVal = this.audioF[CHAN2] * 256 + this.audioF[CHAN1] + DIVADD_HICLK_JOINED;
                 else
                     newVal = (this.audioF[CHAN2] * 256 + this.audioF[CHAN1] + DIVADD_LOCLK) * this.clockMult;
-                //LOG_SOUND(("POKEY '%s' chan1+2 %d\n", this.device.tag(), newVal));
+//LOG_SOUND.log(Level.TRACE, "POKEY '%s' chan1+2 %d".formatted(this.device.tag(), newVal));
             } else {
                 newVal = (this.audioF[CHAN2] + DIVADD_LOCLK) * this.clockMult;
-                //LOG_SOUND(("POKEY '%s' chan2 %d\n", this.device.tag(), newVal));
+//LOG_SOUND.log(Level.TRACE, "POKEY '%s' chan2 %d".formatted(this.device.tag(), newVal));
             }
 
             this.volume[CHAN2] = (this.audioC[CHAN2] & VOLUME_MASK) * POKEY_DEFAULT_GAIN;
             this.divisor[CHAN2] = newVal;
             if (newVal < this.counter[CHAN2])
                 this.counter[CHAN2] = newVal;
-            //if( this.interrupt_cb && this.timer[TIMER2] )
-            // this.timer[TIMER2].adjust(this.clock_period * newVal, this.timer_param[TIMER2], this.timer_period[TIMER2]);
+//            if (this.interrupt_cb && this.timer[TIMER2])
+//                this.timer[TIMER2].adjust(this.clock_period * newVal, this.timer_param[TIMER2], this.timer_period[TIMER2]);
             this.audible[CHAN2] = (byte) (
                     (this.audioC[CHAN2] & VOLUME_ONLY) != 0 ||
                             (this.audioC[CHAN2] & VOLUME_MASK) == 0 ||
@@ -936,19 +937,19 @@ public class Pokey {
             if (this.audible[CHAN2] == 0) {
                 this.output[CHAN2] = 1;
                 this.counter[CHAN2] = 0x7fff_ffff;
-                /* 50% duty cycle should result in half volume */
+                // 50% duty cycle should result in half volume
                 this.volume[CHAN2] >>= 1;
             }
         }
 
         if ((chMask & (1 << CHAN3)) != 0) {
-            /* process channel 3 frequency */
+            // process channel 3 frequency
             if ((this.audioControl & CH3_HICLK) != 0)
                 newVal = this.audioF[CHAN3] + DIVADD_HICLK;
             else
                 newVal = (this.audioF[CHAN3] + DIVADD_LOCLK) * this.clockMult;
 
-            //LOG_SOUND(("POKEY '%s' chan3 %d\n", this.device.tag(), newVal));
+//LOG_SOUND.log(Level.TRACE, "POKEY '%s' chan3 %d".formatted(this.device.tag(), newVal));
 
             this.volume[CHAN3] = (this.audioC[CHAN3] & VOLUME_MASK) * POKEY_DEFAULT_GAIN;
             this.divisor[CHAN3] = newVal;
@@ -976,18 +977,18 @@ public class Pokey {
                     newVal = this.audioF[CHAN4] * 256 + this.audioF[CHAN3] + DIVADD_HICLK_JOINED;
                 else
                     newVal = (this.audioF[CHAN4] * 256 + this.audioF[CHAN3] + DIVADD_LOCLK) * this.clockMult;
-                //LOG_SOUND(("POKEY '%s' chan3+4 %d\n", this.device.tag(), newVal));
+//LOG_SOUND.log(Level.TRACE, "POKEY '%s' chan3+4 %d".formatted(this.device.tag(), newVal));
             } else {
                 newVal = (this.audioF[CHAN4] + DIVADD_LOCLK) * this.clockMult;
-                //LOG_SOUND(("POKEY '%s' chan4 %d\n", this.device.tag(), newVal));
+//LOG_SOUND.log(Level.TRACE, "POKEY '%s' chan4 %d".formatted(this.device.tag(), newVal));
             }
 
             this.volume[CHAN4] = (this.audioC[CHAN4] & VOLUME_MASK) * POKEY_DEFAULT_GAIN;
             this.divisor[CHAN4] = newVal;
             if (newVal < this.counter[CHAN4])
                 this.counter[CHAN4] = newVal;
-            //if( this.interrupt_cb && this.timer[TIMER4] )
-            // this.timer[TIMER4].adjust(this.clock_period * newVal, this.timer_param[TIMER4], this.timer_period[TIMER4]);
+//            if (this.interrupt_cb && this.timer[TIMER4])
+//                this.timer[TIMER4].adjust(this.clock_period * newVal, this.timer_param[TIMER4], this.timer_period[TIMER4]);
             this.audible[CHAN4] = !((this.audioC[CHAN4] & VOLUME_ONLY) != 0 ||
                             (this.audioC[CHAN4] & VOLUME_MASK) == 0 ||
                             (this.audioC[CHAN4] & PURE) != 0 && newVal < (this.samplerate24_8 >> 8)

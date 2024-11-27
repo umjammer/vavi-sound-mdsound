@@ -171,7 +171,7 @@ public class Rf5c68 {
                         }
                     }
 
-                    //Debug.printf("Ch:%d L:%d R:%d", i, outputs[0][j], outputs[1][j]);
+                    //logger.log(Level.TRACE, "Ch:%d L:%d R:%d".formatted(i, outputs[0][j], outputs[1][j]));
                 }
             }
         }

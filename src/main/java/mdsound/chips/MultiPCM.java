@@ -569,7 +569,7 @@ public class MultiPCM {
             break;
         case 1:
             this.curSlot = val2chan[data & 0x1f];
-            //Debug.printf("curSlot%s", this.curSlot);
+            //logger.log(Level.TRACE, "curSlot%s".formatted(this.curSlot));
             break;
         case 2:
             this.address = Math.min(data, 7);
@@ -642,7 +642,7 @@ public class MultiPCM {
                 Slot.Sample tempSmpl = this.samples[curSmpl];
                 int ptSample = curSmpl * 12;
                 tempSmpl.writeRom(this.rom, ptSample);
-                //Debug.printf("LFOVIB%d  AM%d", this.ROM[ptSample + 7], this.ROM[ptSample + 11]);
+                //logger.log(Level.TRACE, "LFOVIB%d  AM%d".formatted(this.ROM[ptSample + 7], this.ROM[ptSample + 11]));
             }
         }
     }

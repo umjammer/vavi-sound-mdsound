@@ -68,9 +68,9 @@ public class SegaPcm {
             // only process active channels
             if ((this.ram[ptrRegs + 0x86] & 1) == 0 && this.muted[ch] == 0) {
                 int ptrRom = this.ptrRom + ((this.ram[ptrRegs + 0x86] & this.bankMask) << this.bankShift);
-                //Debug.printf("this.ram[ptrRegs + 0x86]:%x", this.ram[ptrRegs + 0x86]);
-                //Debug.printf("this.bankmask:%x", this.bankmask);
-                //Debug.printf("this.bankshift:%x", this.bankshift);
+                //logger.log(Level.TRACE, "this.ram[ptrRegs + 0x86]:%x".formatted(this.ram[ptrRegs + 0x86]));
+                //logger.log(Level.TRACE, "this.bankmask:%x".formatted(this.bankmask));
+                //logger.log(Level.TRACE, "this.bankshift:%x".formatted(this.bankshift));
                 int addr = ((this.ram[ptrRegs + 0x85] & 0xff) << 16) | ((this.ram[ptrRegs + 0x84] & 0xff) << 8) | (this.low[ch] & 0xff);
                 int loop = ((this.ram[ptrRegs + 0x05] & 0xff) << 16) | ((this.ram[ptrRegs + 0x04] & 0xff) << 8);
                 int end = (this.ram[ptrRegs + 6] & 0xff) + 1;

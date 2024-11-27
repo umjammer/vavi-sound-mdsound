@@ -40,9 +40,9 @@ public class NesMmc5 implements SoundChip {
     protected int[] out = new int[3];
     protected boolean[] enable = new boolean[2];
 
-    // エンベロープ有効フラグ
+    // Envelope Enabled Flag
     protected boolean[] envelopeDisable = new boolean[2];
-    // エンベロープループ
+    // Envelope Loop
     protected boolean[] envelopeLoop = new boolean[2];
     protected boolean[] envelopeWrite = new boolean[2];
     protected int[] envelopeDivPeriod = new int[2];

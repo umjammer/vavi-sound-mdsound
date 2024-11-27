@@ -159,7 +159,7 @@ public class QSound {
             this.channel[ch].bank = (data & 0x7f) << 16; // Note: The most recent MAME doesn't do "& 0x7F"
 //#ifdef _DEBUG
 //if (data && !(data & 0x8000))
-// Debug.printf("QSound Ch %u: Bank = %04x\n", ch, data);
+// logger.log(Level.TRACE, "QSound Ch %u: Bank = %04x".formatted(ch, data));
 //#endif
             break;
         case 1: // start/cur address
@@ -176,7 +176,7 @@ public class QSound {
             break;
         case 3:
 //if (this.channel[ch].enabled && data != 0x8000)
-// Debug.printf("QSound Ch %u: KeyOn = %04x\n", ch, data);
+// logger.log(Level.TRACE, "QSound Ch %u: KeyOn = %04x".formatted(ch, data));
             // key on (does the value matter? it always writes 0x8000)
             //this.channel[ch].enabled = 1;
             this.channel[ch].enabled = (byte) ((data & 0x8000) >> 15);
@@ -190,11 +190,11 @@ public class QSound {
             break;
         case 6: // master volume
 //if (!this.channel[ch].enabled && data)
-// Debug.printf("QSound update warning - please report!\n");
+// logger.log(Level.TRACE, "QSound update warning - please report!\n");
             this.channel[ch].vol = data;
             break;
         case 7: // unused?
-//Debug.printf("UNUSED QSOUND REG 7=%04x", data);
+//logger.log(Level.TRACE, "UNUSED QSOUND REG 7=%04x".formatted(data));
             break;
         case 8: {
             // panning (left=0x0110, centre=0x0120, right=0x0130)
@@ -210,13 +210,13 @@ public class QSound {
         }
         break;
         case 9: // unknown
-//Debug.printf("QSOUND REG 9=%04x",data);
+//logger.log(Level.TRACE, "QSOUND REG 9=%04x".formatted(data));
             break;
         default:
-//Debug.printf("%s: write_data %02x = %04x\n", machine().describe_context(), address, data);
+//logger.log(Level.TRACE, "%s: write_data %02x = %04x".formatted(machine().describe_context(), address, data));
             break;
         }
-//Debug.printf("QSOUND WRITE %02x CH%02d-R%02d =%04x\n", address, ch, reg, data);
+//logger.log(Level.TRACE, "QSOUND WRITE %02x CH%02d-R%02d =%04x".formatted(address, ch, reg, data));
     }
 
     public int start(int clock) {
@@ -258,8 +258,8 @@ public class QSound {
             break;
 
         default:
-            //Debug.printf("%s: unexpected QSound write to offset %d == %02X\n", device.machine().describe_context(), offset, data);
-            //Debug.printf("QSound: unexpected QSound write to offset %d == %02X\n", offset, data);
+            //logger.log(Level.TRACE, "%s: unexpected QSound write to offset %d == %02X".formatted(device.machine().describe_context(), offset, data));
+            //logger.log(Level.TRACE, "QSound: unexpected QSound write to offset %d == %02X".formatted(offset, data));
             break;
         }
     }

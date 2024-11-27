@@ -164,16 +164,16 @@ public class Ym2151 {
         private int op_calc1(int env, int pm) {
             int i = (this.phase & ~FREQ_MASK) + pm;
 
-            //Debug.printf("i=%08x (i>>16)&511=%8i phase=%i [pm=%08x] ",i, (i>>16)&511, this.phase>>FREQ_SH, pm);
+//logger.log(Level.TRACE, "i=%08x (i>>16)&511=%8i phase=%i [pm=%08x] ".formatted(i, i >> 16) & 511, this.phase >> FREQ_SH, pm));
 
             int p = (env << 3) + sin_tab[(i >> FREQ_SH) & SIN_MASK];
 
-            //Debug.printf("(p&255=%i p>>8=%i) out= %i\n", p&255,p>>8, tl_tab[p&255]>>(p>>8) );
+//logger.log(Level.TRACE, "(p&255=%i p>>8=%i) out= %i".formatted(p & 255, p >> 8, tl_tab[p & 255] >> (p >> 8)));
 
             if (p >= TL_TAB_LEN)
                 return 0;
 
-            //Debug.printf("p:%d tl_tab[p]:%d", p, tl_tab[p]);
+//logger.log(Level.TRACE, "p:%d tl_tab[p]:%d".formatted(p, tl_tab[p]));
             return tl_tab[p];
         }
 
@@ -186,14 +186,14 @@ public class Ym2151 {
     /** the 32 operators */
     private Operator[] oper = new Operator[32];
 
-    /** channels output masks (0xffffffff = enable) */
+    /** channels output masks (0xffff_ffff = enable) */
     private int[] pan = new int[16];
     /** used for muting */
     private byte[] muted = new byte[8];
 
     /** Global envelope generator counter */
     private int eg_cnt;
-    /** Global envelope generator counter works at frequency = chipclock/64/3 */
+    /** Global envelope generator counter works at frequency = chipclock / 64 / 3 */
     private int eg_timer;
     /** step of eg_timer */
     private int eg_timer_add;
@@ -645,13 +645,13 @@ public class Ym2151 {
                 tl_tab[x * 2 + 0 + i * 2 * TL_RES_LEN] = tl_tab[x * 2 + 0] >> i;
                 tl_tab[x * 2 + 1 + i * 2 * TL_RES_LEN] = -tl_tab[x * 2 + 0 + i * 2 * TL_RES_LEN];
             }
-//Debug.printf("tl %04i", x*2);
+//logger.log(Level.TRACE, "tl %04d".formatted(x * 2));
 //for (i=0; i<13; i++)
-// Debug.printf(", [%02i] %4i", i*2, tl_tab[ x*2 /*+1*/ + i*2*TL_RES_LEN ]);
-//Debug.printf("\n");
+// logger.log(Level.TRACE, ", [%02i] %4d".formatted(i * 2, tl_tab[x * 2 /* +1 */ + i * 2 * TL_RES_LEN]));
+//logger.log(Level.TRACE, "\n");
         }
-        //Debug.printf("TL_TAB_LEN = %i (%i bytes)\n",TL_TAB_LEN, (int)sizeof(tl_tab));
-        //Debug.printf("ENV_QUIET= %i\n",ENV_QUIET );
+//logger.log(Level.TRACE, "TL_TAB_LEN = %d (%d bytes)".formatted(TL_TAB_LEN, (int) sizeof(tl_tab)));
+//logger.log(Level.TRACE, "ENV_QUIET= %d".formatted(ENV_QUIET));
 
         for (i = 0; i < SIN_LEN; i++) {
             // non-standard sinus
@@ -673,14 +673,14 @@ public class Ym2151 {
                 n = n >> 1;
 
             sin_tab[i] = n * 2 + (m >= 0.0 ? 0 : 1);
-            //Debug.printf("sin [0x%4x]= %4i (tl_tab value=%8x)\n", i, sin_tab[i],tl_tab[sin_tab[i]]);
+//logger.log(Level.TRACE, "sin [0x%4x]= %4i (tl_tab value=%8x)".formatted(i, sin_tab[i], tl_tab[sin_tab[i]]));
         }
 
         // calculate d1l_tab table
         for (i = 0; i < 16; i++) {
             m = (i != 15 ? i : i + 16) * (4.0 / ENV_STEP); // every 3 'dB' except for all bits = 1 = 45+48 'dB'
             d1l_tab[i] = (int) m;
-            //Debug.printf("d1l_tab[%02x]=%08x\n",i,d1l_tab[i] );
+//logger.log(Level.TRACE, "d1l_tab[%02x]=%08x".formatted(i, d1l_tab[i]));
         }
     }
 
@@ -691,7 +691,7 @@ public class Ym2151 {
         double pom;
 
         scaler = ((double) this.clock / 64.0) / ((double) this.sampfreq);
-        //Debug.printf("scaler    = %20.15f\n", scaler);
+//logger.log(Level.TRACE, "scaler    = %20.15f".formatted(scaler));
 
         // this loop calculates Hertz values for notes from c-0 to b-7
         // including 64 'cents' (100/64 that is 1.5625 of real cent) per note
@@ -747,8 +747,8 @@ public class Ym2151 {
 // int x = j*32 + i;
 // pom = (double)this.dt1_freq[x] / mult;
 // pom = pom * (double)this.sampfreq / (double)SIN_LEN;
-// Debug.printf("DT1(%03i)[%02i %02i][%08x]= real %19.15f Hz  emul %19.15f Hz\n",
-//  x, j, i, this.dt1_freq[x], Hz, pom);
+// logger.log(Level.TRACE, "DT1(%03i)[%02i %02i][%08x]= real %19.15f Hz  emul %19.15f Hz".formatted(
+//  x, j, i, this.dt1_freq[x], Hz, pom));
 //}
             }
         }
@@ -776,7 +776,7 @@ public class Ym2151 {
             j = 32 - j;
             j = (int) (65536.0 / (j * 32.0)); // number of samples per one shift of the shift register
             this.noise_tab[i] = (int) (j * 64 * scaler);
-            //Debug.printf("noise_tab[%02x]=%08x\n", i, this.noise_tab[i]);
+            //logger.log(Level.TRACE, "noise_tab[%02x]=%08x".formatted(i, this.noise_tab[i]));
         }
     }
 
@@ -789,7 +789,7 @@ public class Ym2151 {
 
         // MEM is simply one sample delay
 
-        //Debug.printf("v:%d c1:%d mem:%d c2:%d m2:%d chanout[cha]:%d", v, c1.v, mem.v, c2.v, m2.v, chanout[cha]);
+        //logger.log(Level.TRACE, "v:%d c1:%d mem:%d c2:%d m2:%d chanout[cha]:%d".formatted(v, c1.v, mem.v, c2.v, m2.v, chanout[cha]));
 
         switch (v & 7) {
         case 0:
@@ -1068,7 +1068,7 @@ public class Ym2151 {
                 break;
 
             default:
-                //Debug.printf("YM2151 Write %02x to undocumented register //#%02x\n",v,r);
+//logger.log(Level.TRACE, "YM2151 Write %02x to undocumented register //#%02x".formatted(v, r));
                 break;
             }
             break;
@@ -1244,13 +1244,13 @@ public class Ym2151 {
 
         this.eg_timer_add = (int) ((1 << EG_SH) * (clock / 64.0) / this.sampfreq);
         this.eg_timer_overflow = (3) * (1 << EG_SH);
-        //Debug.printf("YM2151[init] eg_timer_add=%8x eg_timer_overflow=%8x\n", this.eg_timer_add, this.eg_timer_overflow);
+        //logger.log(Level.TRACE, "YM2151[init] eg_timer_add=%8x eg_timer_overflow=%8x".formatted(this.eg_timer_add, this.eg_timer_overflow));
 
         this.tim_A = 0;
         this.tim_B = 0;
         for (chn = 0; chn < 8; chn++)
             this.muted[chn] = 0x00;
-        //Debug.printf("YM2151[init] clock=%i sampfreq=%i\n", this.clock, this.sampfreq);
+        //logger.log(Level.TRACE, "YM2151[init] clock=%i sampfreq=%i".formatted(this.clock, this.sampfreq));
     }
 
     public void stop() {
@@ -1327,8 +1327,8 @@ public class Ym2151 {
         if (op.ams != 0)
             am = this.lfa << (op.ams - 1);
 //if (chan == 0) {
-//Debug.printf("Ch:%d ENV_QUIET:%d Op.tl:%d Op.volume:%d Op.state:%d Psg.eg_cnt:%d Psg.eg_timer_add:%d Psg.eg_timer_overflow:%d \n"
-//, chan, ENV_QUIET, Op.tl, Op.volume, Op.state, Psg.eg_cnt, Psg.eg_timer_add, Psg.eg_timer_overflow);
+//logger.log(Level.TRACE, "Ch:%d ENV_QUIET:%d Op.tl:%d Op.volume:%d Op.state:%d Psg.eg_cnt:%d Psg.eg_timer_add:%d Psg.eg_timer_overflow:%d".formatted(
+// chan, ENV_QUIET, Op.tl, Op.volume, Op.state, Psg.eg_cnt, Psg.eg_timer_add, Psg.eg_timer_overflow));
 //}
         env = op.volumeCalc(am);
 
@@ -1361,7 +1361,7 @@ public class Ym2151 {
         env = opBuf[opPtr + 3].volumeCalc(am); // C2
         if (env < ENV_QUIET) {
             chanout[chan].v += opBuf[opPtr + 3].opCalc(env, c2.v);
-            //Debug.printf("chanout[chan]:%d env:%d c2:%d", chanout[chan].v, env, c2.v);
+//logger.log(Level.TRACE, "chanout[chan]:%d env:%d c2:%d".formatted(chanout[chan].v, env, c2.v));
         }
         if (chanout[chan].v > 16384) chanout[chan].v = 16384;
         else if (chanout[chan].v < -16384) chanout[chan].v = -16384;
@@ -1388,8 +1388,8 @@ public class Ym2151 {
         if (op.ams != 0)
             am = this.lfa << (op.ams - 1);
         env = op.volumeCalc(am);
-//Debug.printf("1:env:%d ENV_QUIET:%d Op.tl:%d Op.volume:%d Op.state:%d Psg.eg_cnt:%d Psg.eg_timer_add:%d Psg.eg_timer_overflow:%d \n"
-//, env, ENV_QUIET, Op.tl, Op.volume, Op.state, Psg.eg_cnt, Psg.eg_timer_add, Psg.eg_timer_overflow);
+//logger.log(Level.TRACE, "1:env:%d ENV_QUIET:%d Op.tl:%d Op.volume:%d Op.state:%d Psg.eg_cnt:%d Psg.eg_timer_add:%d Psg.eg_timer_overflow:%d".formatted(
+// env, ENV_QUIET, Op.tl, Op.volume, Op.state, Psg.eg_cnt, Psg.eg_timer_add, Psg.eg_timer_overflow));
         int out = op.fbOutPrev + op.fbOutCurr;
         op.fbOutPrev = op.fbOutCurr;
 
@@ -1405,21 +1405,21 @@ public class Ym2151 {
             if (op.fb_shift == 0)
                 out = 0;
             op.fbOutCurr = op.op_calc1(env, (out << op.fb_shift));
-//Debug.printf("2:env:%d ENV_QUIET:%d \n", env, ENV_QUIET);
+//logger.log(Level.TRACE, "2:env:%d ENV_QUIET:%d".formatted(env, ENV_QUIET));
         }
 
         env = opBuf[opPtr + 1].volumeCalc(am); // M2 */
-//Debug.printf("3:env:%d ENV_QUIET:%d \n", env, ENV_QUIET);
+//logger.log(Level.TRACE, "3:env:%d ENV_QUIET:%d".formatted(env, ENV_QUIET));
         if (env < ENV_QUIET)
             opBuf[opPtr + 1].connect.v += opBuf[opPtr + 1].opCalc(env, m2.v);
 
         env = opBuf[opPtr + 2].volumeCalc(am); // C1 */
-//Debug.printf("4:env:%d ENV_QUIET:%d \n", env, ENV_QUIET);
+//logger.log(Level.TRACE, "4:env:%d ENV_QUIET:%d".formatted(env, ENV_QUIET));
         if (env < ENV_QUIET)
             opBuf[opPtr + 2].connect.v += opBuf[opPtr + 2].opCalc(env, c1.v);
 
         env = opBuf[opPtr + 3].volumeCalc(am); // C2 */
-        //Debug.printf("5:env:%d ENV_QUIET:%d \n", env, ENV_QUIET);
+//logger.log(Level.TRACE, "5:env:%d ENV_QUIET:%d".formatted(env, ENV_QUIET));
         if ((this.noise & 0x80) != 0) {
             int noiseout;
 
@@ -1944,7 +1944,7 @@ public class Ym2151 {
 
             outl >>= FINAL_SH;
             outr >>= FINAL_SH;
-            //Debug.printf("%d %d", outl, outr);
+            //logger.log(Level.TRACE, "%d %d".formatted(outl, outr));
             bufL[i] = (short) outl;
             bufR[i] = (short) outr;
 

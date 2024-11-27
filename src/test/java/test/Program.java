@@ -264,8 +264,8 @@ public class Program {
         for (int i = 0x00; i < 0x05 + 1; i++) {
             data.add(new Pack(dev, 0, i, 0x00));
         }
-        data.add(new Pack(dev, 0, 0x06, 0x00)); // SSG ノイズ周波数
-        data.add(new Pack(dev, 0, 0x07, 0x38)); // SSG ミキサ
+        data.add(new Pack(dev, 0, 0x06, 0x00)); // SSG Noise Frequency
+        data.add(new Pack(dev, 0, 0x07, 0x38)); // SSG Mixer
         // SSG ボリューム(3ch)
         for (int i = 0x08; i < 0x0A + 1; i++) {
             data.add(new Pack(dev, 0, i, 0x00));

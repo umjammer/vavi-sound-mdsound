@@ -542,7 +542,7 @@ public class FM6 {
     }
 
     protected void lfo() {
-        // Debug.printf("%4d - %8d, %8d\n", c, lfocount, lfodcount);
+        // logger.log(Level.TRACE, "%4d - %8d, %8d".formatted(c, lfocount, lfodcount));
 
         chip.setPML(OPNA2.pmTable[(lfoCount >> (Fmvgen.FM_LFOCBITS + 1)) & 0xff]);
         chip.setAML(OPNA2.amTable[(lfoCount >> (Fmvgen.FM_LFOCBITS + 1)) & 0xff]);

@@ -1,13 +1,13 @@
 package mdsound.np;
 
 //
-// filter.h から抜粋
+// Excerpt from filter.h
 //
 //
 
 
-//  dcf.SetParam(270,(*config)["HPF"]); //DCFilter
-//  lpf.SetParam(4700.0,(*config)["LPF"]); //Filter
+//  dcf.SetParam(270,(*config)["HPF"]); // DCFilter
+//  lpf.SetParam(4700.0,(*config)["LPF"]); // Filter
 
 
 public class DCFilter {
@@ -38,7 +38,7 @@ public class DCFilter {
     }
 
     public void setRate(double r) {
-        // カットオフ周波数 : 2pi*R*C
+        // Cutoff Frequency: 2pi*R*C
         rate = r;
         updateFactor();
     }
@@ -63,7 +63,7 @@ public class DCFilter {
         updateFactor();
     }
 
-    // 非virtualなRender
+    // Non-virtual Render
     public int fastRender(int[] b) {
         if (a < 1.0) {
             out[0] = a * (out[0] + b[0] - in[0]);

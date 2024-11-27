@@ -2,6 +2,9 @@
 
 package mdsound.fmgen;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
+
 import dotnet4j.io.FileAccess;
 import dotnet4j.io.FileMode;
 import dotnet4j.io.FileNotFoundException;
@@ -9,8 +12,13 @@ import dotnet4j.io.FileShare;
 import dotnet4j.io.FileStream;
 import dotnet4j.io.SeekOrigin;
 
+import static java.lang.System.getLogger;
+
 
 public class FileIO {
+
+    private static final Logger logger = getLogger(FileIO.class.getName());
+
     private Exception lastException = null;
 
     public enum Flags {
@@ -49,10 +57,6 @@ public class FileIO {
     public FileIO(String filename, int flg/* = 0*/) {
         flags = 0;
         open(filename, flg);
-    }
-
-    protected void finalize() {
-        close();
     }
 
     /**
@@ -107,7 +111,7 @@ public class FileIO {
         try {
             hFile = new FileStream(filename, creation, access, share);
         } catch (Exception e) {
-e.printStackTrace();
+logger.log(Level.ERROR, e.getMessage(), e);
             hFile = null;
         }
 
@@ -135,7 +139,7 @@ e.printStackTrace();
         try {
             hFile = new FileStream(path, creation, access, share);
         } catch (Exception e) {
-e.printStackTrace();
+logger.log(Level.ERROR, e.getMessage(), e);
             hFile = null;
         }
 
@@ -182,7 +186,7 @@ e.printStackTrace();
         try {
             hFile.write(src, 0, len);
         } catch (Exception e) {
-e.printStackTrace();
+logger.log(Level.ERROR, e.getMessage(), e);
             return -1;
         }
 
@@ -215,7 +219,7 @@ e.printStackTrace();
         try {
             hFile.seek(fpos, wmethod);
         } catch (Exception e) {
-e.printStackTrace();
+logger.log(Level.ERROR, e.getMessage(), e);
             return false;
         }
 

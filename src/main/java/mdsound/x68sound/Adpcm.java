@@ -1,8 +1,17 @@
 package mdsound.x68sound;
 
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
+
+import static java.lang.System.getLogger;
+
+
 public class Adpcm {
-    private Global global = null;
+
+    private static final Logger logger = getLogger(Adpcm.class.getName());
+
+    private Global global;
 
     //
     private int scale;
@@ -314,7 +323,7 @@ public class Adpcm {
                 }
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.log(Level.ERROR, e.getMessage(), e);
         }
 
         return dmaLastValue;

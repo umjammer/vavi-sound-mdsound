@@ -100,8 +100,8 @@ public class OkiM6295 {
          * clock the next ADPCM byte
          */
         private short clock(int nibble) {
-//logger.log(Level.DEBUG, String.format("nibble=%d diff_lookup[%d]=%d\n", nibble, this.step * 16 + (nibble & 15), diff_lookup[this.step * 16 + (nibble & 15)]));
-//logger.log(Level.DEBUG, String.format("1this.signal=%d\n", this.signal));
+//logger.log(Level.TRACE, "nibble=%d diff_lookup[%d]=%d".formatted(nibble, this.step * 16 + (nibble & 15), diff_lookup[this.step * 16 + (nibble & 15)]));
+//logger.log(Level.TRACE, "1this.signal=%d".formatted(this.signal));
             this.signal += diffLookup[this.step * 16 + (nibble & 15)];
 
             // clamp to the maximum
@@ -110,16 +110,16 @@ public class OkiM6295 {
             else if (this.signal < -2048)
                 this.signal = -2048;
 
-//logger.log(Level.DEBUG, String.format("2this.signal=%d\n", this.signal));
+//logger.log(Level.TRACE, "2this.signal=%d".formatted(this.signal));
             // adjust the step size and clamp
             this.step += indexShift[nibble & 7];
-//logger.log(Level.DEBUG, String.format("3this.signal=%d\n", this.signal));
+//logger.log(Level.TRACE, "3this.signal=%d".formatted(this.signal));
             if (this.step > 48)
                 this.step = 48;
             else if (this.step < 0)
                 this.step = 0;
 
-//logger.log(Level.DEBUG, String.format("4this.signal=%d\n", this.signal));
+//logger.log(Level.TRACE, "4this.signal=%d".formatted(this.signal));
             // return the signal
             return (short) this.signal;
         }
@@ -175,7 +175,7 @@ public class OkiM6295 {
 
             // if this Voice is active
             if (playing != 0) {
-                //logger.log(Level.DEBUG, String.format("base_offset[%x] sample[%x] count[%x]\n", Voice.base_offset, Voice.sample, Voice.count);
+                //logger.log(Level.TRACE, "base_offset[%x] sample[%x] count[%x]".formatted(Voice.base_offset, Voice.sample, Voice.count));
                 int iBase = baseOffset;
                 int sample = this.sample;
                 int count = this.count;
@@ -184,14 +184,14 @@ public class OkiM6295 {
                 while (samples != 0) {
                     // compute the new amplitude and update the current step
                     //int nibble = memory_raw_read_byte(this.device.space(), base + sample / 2) >> (((sample & 1) << 2) ^ 4);
-                    //logger.log(Level.DEBUG, String.format("nibblecal1[%d]2[%d]\n", iBase + sample / 2, (((sample & 1) << 2) ^ 4));
+                    //logger.log(Level.TRACE, "nibblecal1[%d]2[%d]".formatted(iBase + sample / 2, (((sample & 1) << 2) ^ 4));
                     int nibble = read.apply((iBase + sample / 2) >> (((sample & 1) << 2) ^ 4));
-                    //logger.log(Level.DEBUG, String.format( "nibble[%x]\n", nibble);
+                    //logger.log(Level.TRACE, "nibble[%x]".formatted(nibble));
 
                     // output to the buffer, scaling by the volume
                     // signal in range -2048..2047, volume in range 2..32 => signal * volume / 2 in range -32768..32767
                     buffer[ptrBuffer++] = (short) (adpcm.clock(nibble) * volume / 2);
-                    //logger.log(Level.DEBUG, String.format("*buffer[%d]\n", buffer[ptrBuffer-1]);
+                    //logger.log(Level.TRACE, "*buffer[%d]".formatted(buffer[ptrBuffer - 1]);
                     samples--;
 
                     // next!
@@ -271,7 +271,7 @@ public class OkiM6295 {
     }
 
     public void update(int[][] outputs, int samples) {
-        //logger.log(Level.DEBUG, String.format("samples:%d\n"        , samples));
+        //logger.log(Level.TRACE, "samples:%d".formatted(samples));
         for (int i = 0; i < samples; i++) {
             outputs[0][i] = 0;
         }
@@ -291,11 +291,10 @@ public class OkiM6295 {
                     voice.generateAdpcm(sampleData, _samples, this::readRawMemoryByte);
                     for (int samp = 0; samp < _samples; samp++) {
                         outputs[0][ptrBuffer++] += sampleData[samp];
-                        //if (sampleData[samp] != 0) {
-                        //    logger.log(Level.DEBUG, String.format("ch:%d sampledata[%d]=%d count:%d sample:%d"
-                        //    , i, samp, sampleData[samp]
-                        //    , Voice.count, Voice.sample));
-                        //}
+//                        if (sampleData[samp] != 0) {
+//                            logger.log(Level.TRACE, "ch:%d sampledata[%d]=%d count:%d sample:%d".formatted(
+//                                    i, samp, sampleData[samp], Voice.count, Voice.sample));
+//                        }
                     }
 
                     remaining -= samples;
@@ -413,7 +412,7 @@ public class OkiM6295 {
 
             // the manual explicitly says that it's not possible to start multiple voices at the same time
 //if (temp != 0 && temp != 1 && temp != 2 && temp != 4 && temp != 8)
-// logger.log(Level.DEBUG, String.format("OKI6295 start %x contact MAMEDEV\n", temp);
+// logger.log(Level.TRACE, "OKI6295 start %x contact MAMEDEV".formatted(temp);
 
             // determine which Voice(s) (Voice is set by a 1 bit in the upper 4 bits of the second byte)
             for (i = 0; i < VOICES; i++, temp >>= 1) {
@@ -448,13 +447,13 @@ public class OkiM6295 {
                             voice.volume = volumeTable[data & 0x0f];
                             chInfo.keyon[i] = true;
                         } else {
-//logger.log(Level.DEBUG, String.format("OKIM6295:'%s' requested to play sample %02x on non-stopped Voice\n",device.tag(),this.command));
+//logger.log(Level.TRACE, "OKIM6295:'%s' requested to play sample %02x on non-stopped Voice".formatted(device.tag(), this.command));
                             // just displays warnings when seeking
-//logger.log(Level.DEBUG, String.format("OKIM6295: Voice %u requested to play sample %02x on non-stopped Voice\n",i,this.command));
+//logger.log(Level.TRACE, "OKIM6295: Voice %u requested to play sample %02x on non-stopped Voice".formatted(i, this.command));
                         }
                     } else { // invalid samples go here
-//logger.log(Level.DEBUG, String.format("OKIM6295:'%s' requested to play invalid sample %02x\n",device.tag(),this.command));
-//logger.log(Level.DEBUG, String.format("OKIM6295: Voice %d  requested to play invalid sample %2X StartAddr %X StopAdr %X \n", i, this.command, start, stop));
+//logger.log(Level.TRACE, "OKIM6295:'%s' requested to play invalid sample %02x".formatted(device.tag(), this.command));
+//logger.log(Level.TRACE, "OKIM6295: Voice %d  requested to play invalid sample %2X StartAddr %X StopAdr %X".formatted(i, this.command, start, stop));
                         voice.playing = 0;
                     }
                 }
@@ -530,7 +529,7 @@ public class OkiM6295 {
         if (this.romSize != romSize) {
             this.rom = new byte[romSize];
             this.romSize = romSize;
-//logger.log(Level.DEBUG, String.format("OKIM6295: New ROM Size: 0x%05X\n", romSize));
+//logger.log(Level.TRACE, "OKIM6295: New ROM Size: 0x%05X".formatted(romSize));
             Arrays.fill(this.rom, 0, romSize, (byte) 0xff);
         }
         if (dataStart > romSize)
@@ -542,11 +541,11 @@ public class OkiM6295 {
     }
 
     public void writeRom2(int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddr) {
-//logger.log(Level.DEBUG, String.format("OKIM6295::writeRom2: chipId:%d romSize:%x dataStart:%x dataLength:%x srcStartAddr:%x\n", chipId, romSize, dataStart), dataLength, srcStartAddr));
+//logger.log(Level.TRACE, "OKIM6295::writeRom2: chipId:%d romSize:%x dataStart:%x dataLength:%x srcStartAddr:%x".formatted(chipId, romSize, dataStart), dataLength, srcStartAddr));
         if (this.romSize != romSize) {
             this.rom = new byte[romSize];
             this.romSize = romSize;
-//logger.log(Level.DEBUG, String.format("OKIM6295: New ROM Size: 0x%05X\n", romSize);
+//logger.log(Level.TRACE, "OKIM6295: New ROM Size: 0x%05X".formatted(romSize);
             Arrays.fill(this.rom, 0, romSize, (byte) 0xff);
         }
         if (dataStart > romSize)
@@ -554,7 +553,7 @@ public class OkiM6295 {
         if (dataStart + dataLength > romSize)
             dataLength = romSize - dataStart;
 
-//logger.log(Level.DEBUG, String.format("%02x ", this.ROM[i + dataStart]);
+//logger.log(Level.TRACE, "%02x ".formatted(this.ROM[i + dataStart]);
         if (dataLength >= 0) System.arraycopy(romData, srcStartAddr, this.rom, dataStart, dataLength);
     }
 

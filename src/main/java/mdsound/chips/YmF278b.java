@@ -2,18 +2,20 @@ package mdsound.chips;
 
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.logging.Level;
 
 import dotnet4j.io.Stream;
 import dotnet4j.util.compat.Tuple;
 import mdsound.Common;
-import vavi.util.Debug;
+
+import static java.lang.System.getLogger;
 
 
 /**
@@ -75,6 +77,8 @@ import vavi.util.Debug;
    August 15, 2010 - Backport to MAME-style C from OpenMSX
 */
 public class YmF278b {
+
+    private static final Logger logger = getLogger(YmF278b.class.getName());
 
     /** standard clock for OPL4 */
     public static final int YMF278B_STD_CLOCK = 33868800;
@@ -547,9 +551,7 @@ public class YmF278b {
                 break;
 
             default:
-                //# ifdef _DEBUG
-                //Debug.printf(...);
-                //#endif
+                //logger.log(Level.TRACE, ...);
                 break;
             }
         }
@@ -577,7 +579,7 @@ public class YmF278b {
         if (address < this.romSize) {
         } // can't write to ROM
         else if (address < this.romSize + this.ramSize) {
-            //Debug.printf("adr:%06x dat:%02x", address, value);
+            //logger.log(Level.TRACE, "adr:%06x dat:%02x".formatted(address, value));
             this.ram[address - this.romSize] = (byte) value;
         } else {
         } // can't write to unmapped memory
@@ -675,7 +677,7 @@ public class YmF278b {
 //            ymf278b_irq_check(chips);
             break;
         default:
-//Debug.printf("YMF278B:  Port A write %02x, %02x\n", reg, data);
+//logger.log(Level.TRACE, "YMF278B:  Port A write %02x, %02x".formatted(reg, data));
             this.ymf262.write(1, data);
             //this.YmF262.Write(0, 0, reg, data);
             if ((reg & 0xF0) == 0xB0 && (data & 0x20) != 0) // Key On set
@@ -700,12 +702,12 @@ public class YmF278b {
             break;
         }
 //#ifdef _DEBUG
-// Debug.printf("YMF278B:  Port B write %02x, %02x\n", reg, data);
+// logger.log(Level.TRACE, "YMF278B:  Port B write %02x, %02x".formatted(reg, data));
 //#endif
     }
 
     private void writeC(int reg, int data) {
-        //Debug.printf("ymf278b_C_w reg:%02x dat:%02x", reg, data);
+        //logger.log(Level.TRACE, "ymf278b_C_w reg:%02x dat:%02x".formatted(reg, data));
 
         // Handle slot registers specifically
         if (reg >= 0x08 && reg <= 0xF7) {
@@ -1052,7 +1054,7 @@ public class YmF278b {
             break;
 
         default:
-            Debug.printf(Level.WARNING, "YMF278B: unexpected write at offset %X to YmF278b = %02X\n", offset, data);
+            logger.log(Level.WARNING, "YMF278B: unexpected write at offset %X to YmF278b = %02X".formatted(offset, data));
             break;
         }
     }

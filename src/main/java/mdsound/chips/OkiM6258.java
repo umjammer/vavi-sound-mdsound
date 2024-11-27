@@ -144,7 +144,7 @@ public class OkiM6258 {
                                 stepVal / 2 * nbl2bit[nib][2] +
                                 stepVal / 4 * nbl2bit[nib][3] +
                                 stepVal / 8);
-//Debug.printf("diff_lookup[%d]=%d ", step * 16 + nib, diff_lookup[step * 16 + nib]);
+//logger.log(Level.TRACE, "diff_lookup[%d]=%d ".formatted(step * 16 + nib, diff_lookup[step * 16 + nib]));
             }
         }
     }
@@ -163,13 +163,13 @@ public class OkiM6258 {
             int nibbleShift = this.nibbleShift;
 
             while (samples != 0) {
-                //Debug.printf("status=%d this.nibbleShift=%d ", this.status, this.nibbleShift);
+                //logger.log(Level.TRACE, "status=%d this.nibbleShift=%d ".formatted(this.status, this.nibbleShift));
                 // Compute the new amplitude and update the current step
                 //int nibble = (this.data_in >> nibbleShift) & 0xf;
                 int nibble;
                 int sample;
 
-                //Debug.printf("this.data_empty=%d ", this.data_empty);
+                //logger.log(Level.TRACE, "this.data_empty=%d ".formatted(this.data_empty));
                 if (nibbleShift == 0) {
                     // 1st nibble - get data
                     if (this.dataEmpty == 0) {
@@ -206,10 +206,10 @@ public class OkiM6258 {
 
                 nibbleShift ^= 4;
 
-                //Debug.printf("this.pan=%d sample=%d ", this.pan, sample);
+                //logger.log(Level.TRACE, "this.pan=%d sample=%d ".formatted(this.pan, sample));
                 bufL[ind] = ((this.pan & 0x02) != 0) ? 0x00 : sample;
                 bufR[ind] = ((this.pan & 0x01) != 0) ? 0x00 : sample;
-                //Debug.printf("001  bufL[%d]=%d  bufR[%d]=%d", ind, bufL[ind], ind, bufR[ind]);
+                //logger.log(Level.TRACE, "001  bufL[%d]=%d  bufR[%d]=%d".formatted(ind, bufL[ind], ind, bufR[ind]));
                 samples--;
                 ind++;
             }
@@ -219,7 +219,7 @@ public class OkiM6258 {
         } else {
             // Fill with 0
             while ((samples--) != 0) {
-//                    Debug.printf("passed ");
+//                    logger.log(Level.TRACE, "passed ");
                 bufL[ind] = 0;
                 bufR[ind] = 0;
                 ind++;
@@ -263,7 +263,7 @@ public class OkiM6258 {
         this.divider = dividers[this.initialDiv];
         if (this.smpRateFunc != null) {
             this.smpRateFunc.accept(this.smpRateData, this.getVclk());
-            //Debug.printf("passed");
+            //;
         }
 
         this.signal = -2;
@@ -315,7 +315,7 @@ public class OkiM6258 {
         this.dataBufPos += 0x01;
         this.dataBufPos &= 0xf7;
         if ((this.dataBufPos >> 4) == (this.dataBufPos & 0x0f)) {
-            //Debug.printf("Warning: FIFO full!\n");
+            //logger.log(Level.TRACE, "Warning: FIFO full!\n");
             this.dataBufPos = (this.dataBufPos & 0xf0) | ((this.dataBufPos - 1) & 0X07);
         }
         this.dataEmpty = 0x00;
@@ -326,13 +326,13 @@ public class OkiM6258 {
      */
     public void writeControl(/* offs_t offset, */ int data) {
         if ((data & COMMAND_STOP) != 0) {
-            //Debug.printf("COMMAND:STOP");
+            //logger.log(Level.TRACE, "COMMAND:STOP");
             this.status &= 0x2 + 0x4;
             return;
         }
 
         if ((data & COMMAND_PLAY) != 0) {
-            //Debug.printf("COMMAND:PLAY");
+            //logger.log(Level.TRACE, "COMMAND:PLAY");
             if ((this.status & STATUS_PLAYING) == 0) {
                 this.status |= STATUS_PLAYING;
 
@@ -352,7 +352,7 @@ public class OkiM6258 {
         }
 
         if ((data & COMMAND_RECORD) != 0) {
-            //Debug.printf("M6258: Record enabled\n");
+            //logger.log(Level.TRACE, "M6258: Record enabled\n");
             this.status |= STATUS_RECORDING;
         } else {
             this.status &= 0xb;
@@ -368,7 +368,7 @@ public class OkiM6258 {
     }
 
     public void write(int port, int data) {
-        //Debug.printf("port=%2x data=%2x \n", port, data);
+        //logger.log(Level.TRACE, "port=%2x data=%2x ".formatted(port, data));
         switch (port) {
         case 0x00:
             writeControl(/* 0x00, */ data);

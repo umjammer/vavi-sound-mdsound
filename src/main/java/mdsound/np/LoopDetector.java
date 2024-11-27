@@ -43,7 +43,7 @@ public class LoopDetector implements Device {
         protected int[] streamBuf;
         protected int[] timeBuf;
         protected int bIdx;
-        // 前回チェック時の bIdx;
+        // bIdx last time checked
         protected int bLast;
         protected int wspeed;
         protected int currentTime;
@@ -102,7 +102,7 @@ public class LoopDetector implements Device {
             if (wspeed != 0)
                 wspeed = (wspeed + bIdx - bLast) / 2;
             else
-                wspeed = bIdx - bLast; // 初回
+                wspeed = bIdx - bLast; // first time
             bLast = bIdx;
 
             match_size = wspeed * match_second / match_interval;
@@ -111,13 +111,13 @@ public class LoopDetector implements Device {
             if (match_length < 0)
                 return false;
 
-            //Debug.printf("match_length:%d", match_length);
-            //Debug.printf("match_size  :%d", match_size);
+            //logger.log(Level.TRACE, "match_length:%d".formatted(match_length));
+            //logger.log(Level.TRACE, "match_size  :%d".formatted(match_size));
             for (i = 0; i < match_length; i++) {
                 for (j = 0; j < match_size; j++) {
                     if (streamBuf[(bIdx + j + match_length) & bufMask] !=
                             streamBuf[(bIdx + i + j) & bufMask]) {
-                        //Debug.printf("j  :%d", j);
+                        //logger.log(Level.TRACE, "j  :%d".formatted(j));
                         break;
                     }
                 }

@@ -1,10 +1,10 @@
 package mdsound.mame;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.function.Consumer;
-import java.util.logging.Level;
 
-import vavi.util.Debug;
-
+import static java.lang.System.getLogger;
 import static mdsound.mame.Fm.OUTD_CENTER;
 
 
@@ -68,6 +68,8 @@ import static mdsound.mame.Fm.OUTD_CENTER;
  * Y8950Inst    MSX AUDIO
  */
 public class YmDeltaT {
+
+    private static final Logger logger = getLogger(YmDeltaT.class.getName());
 
     private static final int SHIFT = 16;
 
@@ -305,7 +307,7 @@ public class YmDeltaT {
                 this.adpCmd = DELTA_DEF;
                 this.nowData = 0;
                 if (this.start > this.end)
-                    Debug.printf(Level.WARNING, "DeltaT: Start: %06X, End: %06X\n", this.start, this.end);
+                    logger.log(Level.WARNING, "DeltaT: Start: %06X, End: %06X".formatted(this.start, this.end));
             }
 
 
@@ -315,16 +317,16 @@ public class YmDeltaT {
 
                 /* if yes, then let's check if ADPCM memory is mapped and big enough */
                 if (this.memory == null) {
-                    Debug.print(Level.FINE, "YM Delta-T ADPCM rom not mapped\n");
+                    logger.log(Level.DEBUG, "YM Delta-T ADPCM rom not mapped\n");
                     this.portState = 0x00;
                     this.pcmBsy = 0;
                 } else {
                     if (this.end >= this.memorySize) { // Check End in Range
-                        Debug.printf(Level.FINE, "YM Delta-T ADPCM end out of range: $%08x\n", this.end);
+                        logger.log(Level.DEBUG, "YM Delta-T ADPCM end out of range: $%08x".formatted(this.end));
                         this.end = this.memorySize - 1;
                     }
                     if (this.start >= this.memorySize) { // Check Start in Range */
-                        Debug.printf(Level.FINE, "YM Delta-T ADPCM start out of range: $%08x\n", this.start);
+                        logger.log(Level.DEBUG, "YM Delta-T ADPCM start out of range: $%08x".formatted(this.start));
                         this.portState = 0x00;
                         this.pcmBsy = 0;
                     }

@@ -132,7 +132,7 @@ public class PPZ8Status {
      * @param dx PCMの音色番号
      */
     public void playPCM(int al, int dx) {
-        logger.log(Level.TRACE, String.format("ppz8em: PlayPCM: ch:%d @:%d", al, dx));
+        logger.log(Level.TRACE, "ppz8em: PlayPCM: ch:%d @:%d".formatted(al, dx));
 
         int bank = (dx & 0x8000) != 0 ? 1 : 0;
         int num = dx & 0x7fff;
@@ -194,7 +194,7 @@ public class PPZ8Status {
      * @param al PCMチャンネル(0-7)
      */
     public void stopPCM(int al) {
-        logger.log(Level.TRACE, String.format("ppz8em: StopPCM: ch:%d", al));
+        logger.log(Level.TRACE, "ppz8em: StopPCM: ch:%d".formatted(al));
         chWk[al].playing = false;
     }
 
@@ -206,7 +206,7 @@ public class PPZ8Status {
      * @param pcmData ファイル内容
      */
     public int loadPcm(int bank, int mode, byte[][] pcmData) {
-        logger.log(Level.TRACE, String.format("ppz8em: LoadPCM: bank:%d mode:%d", bank, mode));
+        logger.log(Level.TRACE, "ppz8em: LoadPCM: bank:%d mode:%d".formatted(bank, mode));
 
         bank &= 1;
         mode &= 1;
@@ -257,7 +257,7 @@ public class PPZ8Status {
      * @param dx ボリューム(0-15 / 0-255)
      */
     public void setVolume(int al, int dx) {
-        logger.log(Level.TRACE, String.format("ppz8em: SetVolume: Ch:%d vol:%d", al, dx));
+        logger.log(Level.TRACE, "ppz8em: SetVolume: Ch:%d vol:%d".formatted(al, dx));
         chWk[al].volume = dx;
     }
 
@@ -269,7 +269,7 @@ public class PPZ8Status {
      * @param cx PCMの音程周波数CX
      */
     public void setFrequency(int al, int dx, int cx) {
-        logger.log(Level.TRACE, String.format("ppz8em: SetFrequency: 0x%8x", dx * 0x10000 + cx));
+        logger.log(Level.TRACE, "ppz8em: SetFrequency: 0x%8x".formatted(dx * 0x10000 + cx));
         chWk[al].frequency = dx * 0x10000 + cx;
     }
 
@@ -283,8 +283,8 @@ public class PPZ8Status {
      * @param lpEdOfsSI ループ終了オフセットSI
      */
     public void setLoopPoint(int al, int lpStOfsDX, int lpStOfsCX, int lpEdOfsDI, int lpEdOfsSI) {
-        logger.log(Level.TRACE, String.format("ppz8em: SetLoopPoint: St:0x%8x Ed:0x%8x"
-                , lpStOfsDX * 0x10000 + lpStOfsCX, lpEdOfsDI * 0x10000 + lpEdOfsSI));
+        logger.log(Level.TRACE, "ppz8em: SetLoopPoint: St:0x%8x Ed:0x%8x".formatted(
+                lpStOfsDX * 0x10000 + lpStOfsCX, lpEdOfsDI * 0x10000 + lpEdOfsSI));
         al &= 7;
         chWk[al]._loopStartOffset = lpStOfsDX * 0x10000 + lpStOfsCX;
         chWk[al]._loopEndOffset = lpEdOfsDI * 0x10000 + lpEdOfsSI;
@@ -310,7 +310,7 @@ public class PPZ8Status {
      * @param dx PAN(0~9)
      */
     public void setPan(int al, int dx) {
-        logger.log(Level.TRACE, String.format("ppz8em:sSetPan: %d", dx));
+        logger.log(Level.TRACE, "ppz8em:sSetPan: %d".formatted(dx));
         chWk[al].pan = dx;
         chWk[al].panL = (chWk[al].pan < 6 ? 1.0 : (0.25 * (9 - chWk[al].pan)));
         chWk[al].panR = (chWk[al].pan > 4 ? 1.0 : (0.25 * chWk[al].pan));
@@ -323,7 +323,7 @@ public class PPZ8Status {
      * @param dx 元周波数
      */
     public void setSrcFrequency(int al, int dx) {
-        logger.log(Level.TRACE, String.format("ppz8em: setSrcFrequency: %d", dx));
+        logger.log(Level.TRACE, "ppz8em: setSrcFrequency: %d".formatted(dx));
         chWk[al]._srcFrequency = dx;
     }
 
@@ -331,7 +331,7 @@ public class PPZ8Status {
      * 0x16 全体ボリューム
      */
     public void setAllVolume(int vol) {
-        logger.log(Level.TRACE, String.format("ppz8em: SetAllVolume: %d", vol));
+        logger.log(Level.TRACE, "ppz8em: SetAllVolume: %d".formatted(vol));
         if (vol < 16 && vol != PCM_VOLUME) {
             PCM_VOLUME = vol;
             makeVolumeTable(volume);
@@ -353,7 +353,7 @@ public class PPZ8Status {
      * @param al 0:ﾁｬﾈﾙ7でADPCMのエミュレートしない  1:する
      */
     public void setAdpcmEmu(int al) {
-        logger.log(Level.TRACE, String.format("ppz8em: setAdpcmEmu: %d", al));
+        logger.log(Level.TRACE, "ppz8em: setAdpcmEmu: %d".formatted(al));
         adpcmEmu = al;
     }
 
@@ -377,7 +377,7 @@ public class PPZ8Status {
                 if (chWk[i].pan == 0) continue;
 
                 if (i == 6) {
-                    //Debug.printf(VolumeTable[chWk[i].volume][pcmData[chWk[i].bank][chWk[i].ptr]] * chWk[i].panL);
+                    //logger.log(Level.TRACE, VolumeTable[chWk[i].volume][pcmData[chWk[i].bank][chWk[i].ptr]] * chWk[i].panL);
                 }
 
                 int n = chWk[i].ptr >= pcmData[chWk[i].bank].length ? 0x80 : pcmData[chWk[i].bank][chWk[i].ptr];
@@ -491,22 +491,22 @@ public class PPZ8Status {
                 int psrc = pcmData[bank][psrcPtr++] & 0xff;
 
                 int n = xN + table1[(psrc >> 4) & 0x0f] * deltaN / 8;
-                //Debug.printf(n);
+                //logger.log(Level.TRACE, n);
                 xN = Math.max(Math.min(n, 32767), -32768);
 
                 n = deltaN * table2[(psrc >> 4) & 0x0f] / 64;
-                //Debug.printf(n);
+                //logger.log(Level.TRACE, n);
                 deltaN = Math.max(Math.min(n, 24576), 127);
 
                 o.add((byte) (xN / (32768 / 128) + 128));
 
 
                 n = xN + table1[psrc & 0x0f] * deltaN / 8;
-                //Debug.printf(n);
+                //logger.log(Level.TRACE, n);
                 xN = Math.max(Math.min(n, 32767), -32768);
 
                 n = deltaN * table2[psrc & 0x0f] / 64;
-                //Debug.printf(n);
+                //logger.log(Level.TRACE, n);
                 deltaN = Math.max(Math.min(n, 24576), 127);
 
                 o.add((byte) (xN / (32768 / 128) + 128));

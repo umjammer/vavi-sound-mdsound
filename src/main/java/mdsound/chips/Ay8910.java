@@ -4,11 +4,12 @@
 
 package mdsound.chips;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.Arrays;
 import java.util.function.BiConsumer;
-import java.util.logging.Level;
 
-import vavi.util.Debug;
+import static java.lang.System.getLogger;
 
 
 /**
@@ -539,6 +540,8 @@ Links:
 */
 public class Ay8910 {
 
+    private static final Logger logger = getLogger(Ay8910.class.getName());
+
     // cfg.chipType: chips type
 
     /** AY8910 variants */
@@ -831,22 +834,22 @@ public class Ay8910 {
             break;
         case AY_PORTA:
             if ((this.regs[AY_ENABLE] & 0x40) != 0) {
-                //if (this.port_a_write_cb != NULL)
-                //    this.port_a_write_cb(psg, 0, this.regs[AY_PORTA]);
-                //else
-                //    Debug.printf("warning: unmapped write %02x to %s Port A\n", v, "AY8910");
+//                if (this.port_a_write_cb != null)
+//                    this.port_a_write_cb(psg, 0, this.regs[AY_PORTA]);
+//                else
+//                    logger.log(Level.TRACE, "warning: unmapped write %02x to %s Port A".formatted(v, "AY8910"));
             } else {
-                Debug.printf(Level.WARNING, "write %02x to %s Port A set as input - ignored\n", v, "AY8910");
+                logger.log(Level.WARNING, "write %02x to %s Port A set as input - ignored".formatted(v, "AY8910"));
             }
             break;
         case AY_PORTB:
             if ((this.regs[AY_ENABLE] & 0x80) != 0) {
-                //if (this.port_b_write_cb != NULL)
-                //    this.port_b_write_cb(psg, 0, this.regs[AY_PORTB]);
-                //else
-                //    Debug.printf("warning: unmapped write %02x to %s Port B\n", v, "AY8910");
+//                if (this.port_b_write_cb != null)
+//                    this.port_b_write_cb(psg, 0, this.regs[AY_PORTB]);
+//                else
+//                    logger.log(Level.TRACE, "warning: unmapped write %02x to %s Port B".formatted(v, "AY8910"));
             } else {
-                Debug.printf(Level.WARNING, "write %02x to %s Port B set as input - ignored\n", v, "AY8910");
+                logger.log(Level.WARNING, "write %02x to %s Port B set as input - ignored".formatted(v, "AY8910"));
             }
             break;
         }
@@ -965,7 +968,7 @@ public class Ay8910 {
 //    int chan;
 //
 //    if ((this.flags & AY8910_LEGACY_OUTPUT) != 0 || this.flags == 0) {
-//        //Debug.printf("AY-3-8910/YM2149 using legacy output levels!\n");
+//        //logger.log(Level.TRACE, "AY-3-8910/YM2149 using legacy output levels!\n");
 //        normalize = 1;
 //    }
 //
@@ -1127,7 +1130,7 @@ public class Ay8910 {
         this.lastEnable = 0xff; // force to write
         for (int i = 0; i < AY_PORTA; i++)
             writeReg(i & 0xff, 0);
-        //this.ready = 1;
+//        this.ready = 1;
 //#if ENABLE_REGISTER_TEST
 //        writeReg((byte) AY_AFINE, (byte) 0);
 //        writeReg((byte) AY_ACOARSE, (byte) 1);
@@ -1177,7 +1180,7 @@ public class Ay8910 {
                 // Register port
                 this.register_latch = data & 0x0f;
             } else {
-                Debug.printf(Level.WARNING, "%s upper address mismatch\n", "AY8910");
+                logger.log(Level.WARNING, "%s upper address mismatch".formatted("AY8910"));
             }
         }
     }
@@ -1199,7 +1202,7 @@ public class Ay8910 {
         switch (r) {
         case AY_PORTA:
             if ((this.regs[AY_ENABLE] & 0x40) != 0)
-                Debug.printf("warning: read from %s Port A set as output\n", "AY8910");
+                logger.log(Level.DEBUG, "warning: read from %s Port A set as output".formatted("AY8910"));
 
                 // even if the port is set as output, we still need to return the external
                 // data. Some games, like kidniki, need this to work.
@@ -1213,15 +1216,15 @@ public class Ay8910 {
 //            if (this.port_a_read_cb != NULL)
 //                this.regs[AY_PORTA] = this.port_a_read_cb(psg, 0);
 //            else
-//                Debug.printf("Warning - read 8910 Port A\n");
+//                logger.log(Level.TRACE, "Warning - read 8910 Port A\n");
             break;
         case AY_PORTB:
             if ((this.regs[AY_ENABLE] & 0x80) != 0)
-                Debug.printf("warning: read from %s Port B set as output\n", "AY8910");
+                logger.log(Level.DEBUG, "warning: read from %s Port B set as output".formatted("AY8910"));
 //            if (this.port_b_read_cb != NULL)
 //                this.regs[AY_PORTB] = this.port_b_read_cb(psg, 0);
 //            else
-//                Debug.printf("Warning - read 8910 Port B\n");
+//                logger.log(Level.TRACE, "Warning - read 8910 Port B\n");
             break;
         }
 

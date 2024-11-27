@@ -161,8 +161,8 @@ public class Sn76489 {
 
     public void writeGGStereo(int data) {
         this.psgStereo = data;
-        //logger.log(Level.DEBUG, String.format("WrPSGStereo:0:%d", SN76489Chip[0].psgStereo));
-        //logger.log(Level.DEBUG, String.format("WrPSGStereo:1:%d", SN76489Chip[1].psgStereo));
+        //logger.log(Level.TRACE, "WrPSGStereo:0:%d".formatted(SN76489Chip[0].psgStereo));
+        //logger.log(Level.TRACE, "WrPSGStereo:1:%d".formatted(SN76489Chip[1].psgStereo));
     }
 
     public int start(int samplingRate, int clockValue) {
@@ -223,7 +223,7 @@ public class Sn76489 {
     }
 
     public int[][] update(int[][] buffer, int length) {
-//logger.log(Level.DEBUG, String.format("PSGStereo:1: %d", this.psgStereo));
+//logger.log(Level.TRACE, "PSGStereo:1: %d".formatted(this.psgStereo));
 
         Sn76489 chip2;
         Sn76489 chipT;
@@ -257,7 +257,7 @@ public class Sn76489 {
                         this.channels[i] = PSGVolumeValues[this.registers[2 * i + 1]] * chipT.toneFreqPos[i];
                 } else {
                     // Muted channel
-logger.log(Level.DEBUG, String.format("T:ch[%d]: muted", i));
+logger.log(Level.DEBUG, "T:ch[%d]: muted".formatted(i));
                     this.channels[i] = 0;
                 }
 
@@ -270,7 +270,7 @@ logger.log(Level.DEBUG, String.format("T:ch[%d]: muted", i));
                 if ((this.registers[6] & 0x4) != 0)
                     this.channels[3] >>= 1;
             } else {
-logger.log(Level.DEBUG, String.format("N:ch[%d]: muted", i));
+logger.log(Level.DEBUG, "N:ch[%d]: muted".formatted(i));
                 this.channels[i] = 0;
             }
 
@@ -283,7 +283,7 @@ logger.log(Level.DEBUG, String.format("N:ch[%d]: muted", i));
                 // For all 4 channels
                 for (i = 0; i <= 3; ++i) {
                     if (((this.psgStereo >> i) & 0x11) == 0x11) {
-                        //logger.log(Level.DEBUG, String.format("ggpan1");
+                        //logger.log(Level.TRACE, "ggpan1");
                         // no GG stereo for this channel
                         if (this.panning[i][0] == 1.0f) {
                             bl = this.channels[i]; // left
@@ -295,11 +295,11 @@ logger.log(Level.DEBUG, String.format("N:ch[%d]: muted", i));
 
                         }
                     } else {
-                        //logger.log(Level.DEBUG, String.format("ggpan2");
+                        //logger.log(Level.TRACE, "ggpan2");
                         // GG stereo overrides panning
                         bl = ((this.psgStereo >> (i + 4)) & 0x1) * this.channels[i]; // left
                         br = ((this.psgStereo >> i) & 0x1) * this.channels[i]; // right
-                        //logger.log(Level.DEBUG, String.format("Ch:bl:br:%d:%d:%d:%d",i,bl,br, this.Channels[i]);
+                        //logger.log(Level.TRACE, "Ch:bl:br:%d:%d:%d:%d".formatted(i, bl, br, this.Channels[i]);
                     }
 
                     buffer[0][j] += bl;
@@ -307,7 +307,7 @@ logger.log(Level.DEBUG, String.format("N:ch[%d]: muted", i));
                     this.volume[i][0] = Math.abs(bl);
                     this.volume[i][1] = Math.abs(br);
                 }
-//logger.log(Level.TRACE, String.format("%d", this.channels[3]));
+//logger.log(Level.TRACE, "%d".formatted(this.channels[3]));
             } else {
                 if ((this.ngpFlags & 0x01) == 0) {
                     // For all 3 tone channels
@@ -408,12 +408,12 @@ logger.log(Level.DEBUG, String.format("N:ch[%d]: muted", i));
             }
         }
 
-//logger.log(Level.DEBUG, "psg: " + Arrays.toString(buffer[0]) + ", " + Arrays.toString(buffer[1]) + ", " + chipT.mute + ", " + chipN.mute); // mute ok, TODO data always 0
+//logger.log(Level.TRACE, "psg: " + Arrays.toString(buffer[0]) + ", " + Arrays.toString(buffer[1]) + ", " + chipT.mute + ", " + chipN.mute); // mute ok, TODO data always 0
         return this.volume;
     }
 
     public void write(int data) {
-logger.log(Level.TRACE, String.format("psg: %02x, mute: %02x", data & 0xff, mute)); // it seems ok
+logger.log(Level.TRACE, "psg: %02x, mute: %02x".formatted(data & 0xff, mute)); // it seems ok
         if ((data & 0x80) != 0) {
             // Latch/data byte  %1 cc t dddd
             this.latchedRegister = (data >> 4) & 0x07;

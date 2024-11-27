@@ -161,7 +161,7 @@ public class IremGa20 {
     }
 
     public void write(int offset, byte data) {
-//        Debug.printf("GA20:  Offset %02x, data %04x\n",offset,data);
+//logger.log(Level.TRACE, "GA20:  Offset %02x, data %04x".formatted(offset, data));
 
         int channel = offset >> 3;
 
@@ -178,7 +178,7 @@ public class IremGa20 {
             return (byte) (this.channel[channel].play != 0 ? 1 : 0);
 
         default:
-            //Debug.printf("GA20: read unk. register %d, channel %d\n", offset & 0xf, channel);
+//logger.log(Level.TRACE, "GA20: read unk. register %d, channel %d".formatted(offset & 0xf, channel));
             break;
         }
 

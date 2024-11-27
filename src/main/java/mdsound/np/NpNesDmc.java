@@ -8,7 +8,7 @@ import java.util.Random;
 // Updated to NSFPlay 2.3 on 26 September 2013
 // (Note: Encoding is UTF-8)
 //
-// NSFPlay tag2.4のソースを移植 2021/08/14
+// Ported the source code of NSFPlay tag2.4 2021/08/14
 //
 // https://github.com/bbbradsmith/nsfplay/releases/tag/2.4
 //
@@ -172,47 +172,47 @@ public class NpNesDmc {
         this.sm[1][trk] = mixr;
     }
 
-    //TrackInfo getTrackInfo(int trk) {
-    //    switch (trk) {
-    //        case 0:
-    //            trkinfo[trk].max_volume = 255;
-    //            trkinfo[0].key = (linear_counter > 0 && length_counter[0] > 0 && enable[0]);
-    //            trkinfo[0].volume = 0;
-    //            trkinfo[0]._freq = tri_freq;
-    //            if (trkinfo[0]._freq)
-    //                trkinfo[0].freq = clock / 32 / (trkinfo[0]._freq + 1);
-    //            else
-    //                trkinfo[0].freq = 0;
-    //            trkinfo[0].tone = -1;
-    //            trkinfo[0].output = out[0];
-    //            break;
-    //        case 1:
-    //            trkinfo[1].max_volume = 15;
-    //            trkinfo[1].volume = noise_volume + (envelope_disable ? 0 : 0x10) + (envelope_loop ? 0x20 : 0);
-    //            trkinfo[1].key = length_counter[1] > 0 && enable[1] &&
-    //                             (envelope_disable ? (noise_volume > 0) : (envelope_counter > 0));
-    //            trkinfo[1]._freq = reg[0x400e - 0x4008] & 0xF;
-    //            trkinfo[1].freq = clock / double(wavlen_table[pal][trkinfo[1]._freq] * ((noise_tap & (1 << 6)) ? 93 : 1));
-    //            trkinfo[1].tone = noise_tap & (1 << 6);
-    //            trkinfo[1].output = out[1];
-    //            break;
-    //        case 2:
-    //            trkinfo[2].max_volume = 127;
-    //            trkinfo[2].volume = reg[0x4011 - 0x4008] & 0x7F;
-    //            trkinfo[2].key = dlength > 0;
-    //            trkinfo[2]._freq = reg[0x4010 - 0x4008] & 0xF;
-    //            trkinfo[2].freq = clock / double(freq_table[pal][trkinfo[2]._freq]);
-    //            trkinfo[2].tone = (0xc000 | (adr_reg << 6));
-    //            trkinfo[2].output = (damp << 1) | dac_lsb;
-    //            break;
-    //        default:
-    //            return NULL;
-    //    }
-    //    return trkinfo[trk];
-    //}
+//    TrackInfo getTrackInfo(int trk) {
+//        switch (trk) {
+//            case 0:
+//                trkinfo[trk].max_volume = 255;
+//                trkinfo[0].key = (linear_counter > 0 && length_counter[0] > 0 && enable[0]);
+//                trkinfo[0].volume = 0;
+//                trkinfo[0]._freq = tri_freq;
+//                if (trkinfo[0]._freq)
+//                    trkinfo[0].freq = clock / 32 / (trkinfo[0]._freq + 1);
+//                else
+//                    trkinfo[0].freq = 0;
+//                trkinfo[0].tone = -1;
+//                trkinfo[0].output = out[0];
+//                break;
+//            case 1:
+//                trkinfo[1].max_volume = 15;
+//                trkinfo[1].volume = noise_volume + (envelope_disable ? 0 : 0x10) + (envelope_loop ? 0x20 : 0);
+//                trkinfo[1].key = length_counter[1] > 0 && enable[1] &&
+//                        (envelope_disable ? (noise_volume > 0) : (envelope_counter > 0));
+//                trkinfo[1]._freq = reg[0x400e - 0x4008] & 0xF;
+//                trkinfo[1].freq = clock / double(wavlen_table[pal][trkinfo[1]._freq] * ((noise_tap & (1 << 6)) ? 93 : 1));
+//                trkinfo[1].tone = noise_tap & (1 << 6);
+//                trkinfo[1].output = out[1];
+//                break;
+//            case 2:
+//                trkinfo[2].max_volume = 127;
+//                trkinfo[2].volume = reg[0x4011 - 0x4008] & 0x7F;
+//                trkinfo[2].key = dlength > 0;
+//                trkinfo[2]._freq = reg[0x4010 - 0x4008] & 0xF;
+//                trkinfo[2].freq = clock / double(freq_table[pal][trkinfo[2]._freq]);
+//                trkinfo[2].tone = (0xc000 | (adr_reg << 6));
+//                trkinfo[2].output = (damp << 1) | dac_lsb;
+//                break;
+//            default:
+//                return NULL;
+//        }
+//        return trkinfo[trk];
+//    }
 
     private void sequenceFrame(int s) {
-        //Debug.printf("FrameSequence: %d\n",s);
+//logger.log(Level.TRACE, "FrameSequence: %d".formatted(s));
 
         if (s > 3) return; // no operation in step 4
 
@@ -282,7 +282,7 @@ public class NpNesDmc {
             8, 9, 10, 11, 12, 13, 14, 15
     };
 
-    /** 三角波チャンネルの計算 戻り値は0-15 */
+    /** Calculates triangle wave channel. Returns 0-15. */
     private int calcTri(int clocks) {
         byte tri = 0;
         if (this.linearCounter > 0 && this.lengthCounter[0] > 0
@@ -295,26 +295,26 @@ public class NpNesDmc {
             }
         }
         // Note: else-block added by VB
-        //else if (this.option[(int)OPT.OPT_TRI_NULL] != 0) {
-        //    if (this.tphase != 0 && this.tphase < 31) {
-        //        // Finish the Triangle wave to prevent clicks.
-        //        this.counter[0] += clocks;
-        //        while (this.counter[0] > this.tri_freq && this.tphase != 0)
-        //        {
-        //            this.tphase = (this.tphase + 1) & 31;
-        //            this.counter[0] -= (this.tri_freq + 1);
-        //        }
-        //    }
-        //}
+//        else if (this.option[(int) OPT.OPT_TRI_NULL] != 0) {
+//            if (this.tphase != 0 && this.tphase < 31) {
+//                // Finish the Triangle wave to prevent clicks.
+//                this.counter[0] += clocks;
+//                while (this.counter[0] > this.tri_freq && this.tphase != 0) {
+//                    this.tphase = (this.tphase + 1) & 31;
+//                    this.counter[0] -= (this.tri_freq + 1);
+//                }
+//            }
+//        }
 
         this.reg[0x10] = tri;
         return triTbl[this.tPhase];
     }
 
-    /** ノイズチャンネルの計算 戻り値は0-127
-    // 低サンプリングレートで合成するとエイリアスノイズが激しいので
-    // ノイズだけはこの関数内で高クロック合成し、簡易なサンプリングレート
-    // 変換を行っている。
+    /**
+     * Calculates the noise channel. Returns 0-127.
+     * When synthesized at a low sampling rate, alias noise is severe,
+     * so only the noise is synthesized at a high clock rate within this function,
+     * and simple sampling rate conversion is performed.
      */
     private int calcNoise(int clocks) {
         byte noi = 1;
@@ -337,9 +337,9 @@ public class NpNesDmc {
         count = 0;
         accum = this.counter[1] * last;
         int accumClocks = this.counter[1];
-        //# ifdef _DEBUG
-        //            int start_clocks = counter[1];
-        //#endif
+//#ifdef _DEBUG
+// int start_clocks = counter[1];
+//#endif
         if (this.counter[1] < 0) { // only happens on startup when using the randomize noise option
             accum = 0;
             accumClocks = 0;
@@ -365,9 +365,9 @@ public class NpNesDmc {
 
         accum -= last * this.counter[1]; // remove these samples which belong in the next calc
         accumClocks -= this.counter[1];
-        //# ifdef _DEBUG
-        //if (start_clocks >= 0) assert(accumClocks == clocks); // these should be equal
-        //#endif
+//#ifdef _DEBUG
+// if (start_clocks >= 0) assert(accumClocks == clocks); // these should be equal
+//#endif
 
         int average = accum / accumClocks;
         //assert(average <= 15); // above this would indicate overflow
@@ -788,7 +788,7 @@ public class NpNesDmc {
 
             if (!this.enable[0]) {
                 this.lengthCounter[0] = 0;
-                //this.tphase = 0; // KUMA:止めたら出力も0にしたい
+                //this.tphase = 0; // TODO KUMA When it stops, I want the output to be 0
             }
             if (!this.enable[1]) {
                 this.lengthCounter[1] = 0;
@@ -812,7 +812,7 @@ public class NpNesDmc {
         }
 
         if (adr == 0x4017) {
-            //Debug.printf("4017 = %02X\n", val);
+            //logger.log(Level.TRACE, "4017 = %02X".formatted(val));
             this.frameIrqEnable = ((val & 0x40) != 0x40);
             if (this.frameIrqEnable) this.frameIrq = false;
             //cpu.updateIRQ(NES_CPU::IRQD_FRAME, false);
@@ -834,7 +834,7 @@ public class NpNesDmc {
 
         this.reg[adr - 0x4008] = (byte) (val & 0xff);
 
-        //Debug.printf("$%04X %02X\n", adr, val);
+        //logger.log(Level.TRACE, "$%04X %02X".formatted(adr, val));
 
         switch (adr) {
 
@@ -908,12 +908,12 @@ public class NpNesDmc {
 
         case 0x4012:
             this.adrReg = val & 0xff;
-            // ここで dadAress は更新されない
+            // dadAress is not updated here
             break;
 
         case 0x4013:
             this.lenReg = val & 0xff;
-            // ここで length は更新されない
+            // length is not updated here
             break;
 
         default:

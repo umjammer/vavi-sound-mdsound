@@ -173,7 +173,7 @@ public class Sn76496 {
 
     public void writeStereo(int offset, int data) {
         if (this.stereo != 0) this.stereoMask = data;
-        //else Debug.printf("Call to stereo write with mono chips!\n");
+        //else logger.log(Level.DEBUG, "Call to stereo write with mono chips!\n");
     }
 
     public void writeReg(int offset, int data) {
@@ -224,7 +224,7 @@ public class Sn76496 {
             break;
         case 6: { // noise  : frequency, mode
 //#if DEBUG
-// if ((data & 0x80) == 0) Debug.printf("Sn76489: write to reg 6 with bit 7 clear; data was %03x, new write is %02x! report this to LN!\n", this.Register[6], data);
+// if ((data & 0x80) == 0) logger.log(Level.DEBUG, "Sn76489: write to reg 6 with bit 7 clear; data was %03x, new write is %02x! report this to LN!".formatted(this.Register[6], data));
 //#endif
             if ((data & 0x80) == 0) this.register[r] = (this.register[r] & 0x3f0) | (data & 0x0f);
             n = this.register[6];

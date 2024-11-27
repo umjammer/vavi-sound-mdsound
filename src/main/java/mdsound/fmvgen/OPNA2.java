@@ -557,7 +557,7 @@ public class OPNA2 extends Opna.OPNABase {
             int filePtr;
 
             int fSize;
-            String fileName = String.format("2608_%s.wav", rhythmName[i]);
+            String fileName = "2608_%s.wav".formatted(rhythmName[i]);
 
             try (Stream st = appendFileReaderCallback.apply(fileName)) {
                 buf = Common.readAllBytes(st);

@@ -7,6 +7,8 @@
 
 package mdsound.fmgen;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -17,8 +19,8 @@ import dotnet4j.io.FileMode;
 import dotnet4j.io.FileStream;
 import dotnet4j.io.Stream;
 import mdsound.Common;
-import vavi.util.Debug;
 
+import static java.lang.System.getLogger;
 import static mdsound.fmgen.Fmgen.limit;
 
 
@@ -90,6 +92,9 @@ import static mdsound.fmgen.Fmgen.limit;
  * 単位は約 1/2 dB，有効範囲の上限は 20 (10dB)
  */
 public class Opna {
+
+    private static final Logger logger = getLogger(Opna.class.getName());
+
     // OPN Base
     static class OPNBase extends Timer {
         public OPNBase() {
@@ -554,19 +559,19 @@ public class Opna {
                 if ((control1 & 0x40) != 0) {
                     memAddr = startAddr;
                 }
-                //Debug.printf("  startaddr %.6x", startaddr);
+                //logger.log(Level.TRACE, "  startaddr %.6x".formatted(startaddr));
                 break;
 
             case 0x04: // Stop Address L
             case 0x05: // Stop Address H
                 adpcmReg[addr - 0x04 + 2] = (byte) data;
                 stopAddr = (adpcmReg[3] * 256 + adpcmReg[2] + 1) << 6;
-                //Debug.printf("  stopaddr %.6x", stopaddr);
+                //logger.log(Level.TRACE, "  stopaddr %.6x".formatted(stopaddr));
                 break;
 
             case 0x08: // ADPCM data
                 if ((control1 & 0x60) == 0x60) {
-                    //Debug.printf("  Wr [0x%.5x] = %.2x", memaddr, data);
+                    //logger.log(Level.TRACE, "  Wr [0x%.5x] = %.2x".formatted(memaddr, data));
                     writeRAM(data);
                 }
                 break;
@@ -588,7 +593,7 @@ public class Opna {
             case 0x0d: // Limit Address H
                 adpcmReg[addr - 0x0c + 6] = (byte) data;
                 limitAddr = (adpcmReg[7] * 256 + adpcmReg[6] + 1) << 6;
-                //Debug.printf("  limitaddr %.6x", limitaddr);
+                //logger.log(Level.TRACE, "  limitaddr %.6x".formatted(limitaddr));
                 break;
 
             case 0x10: // Flag Controller
@@ -611,15 +616,15 @@ public class Opna {
                 return psg.getReg(addr);
 
             if (addr == 0x108) {
-                //Debug.printf("%d:reg[108] .   ", Diag::GetCPUTick());
+//logger.log(Level.TRACE, "%d:reg[108] .   ".formatted(Diag.GetCPUTick()));
 
                 int data = adpcmReadBuf & 0xff;
                 adpcmReadBuf >>= 8;
                 if ((control1 & 0x60) == 0x20) {
                     adpcmReadBuf |= readRAM() << 8;
-                    //Debug.printf("Rd [0x%.6x:%.2x] ", memaddr, adpcmreadbuf >> 8);
+//logger.log(Level.TRACE, "Rd [0x%.6x:%.2x] ".formatted(memaddr, adpcmreadbuf >> 8));
                 }
-                //Debug.printf("%.2x\n");
+//logger.log(Level.TRACE, "%.2x".formatted(0));
                 return data;
             }
 
@@ -714,27 +719,27 @@ public class Opna {
          */
         protected void setStatus(int bits) {
             if ((status & bits) == 0) {
-                //  Debug.printf("SetStatus(%.2x %.2x)\n", bits, stmask);
+//logger.log(Level.TRACE, "SetStatus(%.2x %.2x)".formatted(bits, stmask));
                 status |= bits & stMask;
                 updateStatus();
             }
             // else
-            //Debug.printf("SetStatus(%.2x) - ignored\n", bits);
+//logger.log(Level.TRACE, "SetStatus(%.2x) - ignored".formatted(bits));
         }
 
         protected void resetStatus(int bits) {
             status &= ~bits;
-            // Debug.printf("ResetStatus(%.2x)\n", bits);
+//logger.log(Level.TRACE, "ResetStatus(%.2x)".formatted(bits));
             updateStatus();
         }
 
         protected void updateStatus() {
-            // Debug.printf("%d:INT = %d\n", Diag::GetCPUTick(), (status & stmask & reg29) != 0);
+//logger.log(Level.TRACE, "%d:INT = %d".formatted(Diag.GetCPUTick(), (status & stmask & reg29) != 0));
             intr((status & stMask & reg29) != 0);
         }
 
         protected void lfo() {
-            // Debug.printf("%4d - %8d, %8d\n", c, lfocount, lfodcount);
+//logger.log(Level.TRACE, "%4d - %8d, %8d".formatted(c, lfocount, lfodcount));
 
             chip.setPML(pmTable[(lfoCount >> (Fmgen.FM_LFOCBITS + 1)) & 0xff]);
             chip.setAML(amTable[(lfoCount >> (Fmgen.FM_LFOCBITS + 1)) & 0xff]);
@@ -779,7 +784,7 @@ public class Opna {
 
             if (adpcmPlay) {
                 int ptrDest = 0;
-                //  Debug.printf("ADPCM Play: %d   DeltaN: %d\n", adpld, deltan);
+//logger.log(Level.TRACE, "ADPCM Play: %d   DeltaN: %d".formatted(adpld, deltan));
                 if (adplD <= 8192) { // fplay < fsamp
                     for (; count > 0; count--) {
                         if (adplC < 0) {
@@ -883,7 +888,7 @@ stop:
                 memAddr &= 0x3fffff;
             }
             if (memAddr == limitAddr) {
-                //Debug.printf("Limit ! (%.8x)\n", limitaddr);
+//logger.log(Level.TRACE, "Limit ! (%.8x)".formatted(limitaddr));
                 memAddr = 0;
             }
             setStatus(8);
@@ -928,7 +933,7 @@ stop:
                 memAddr &= 0x3fffff;
             }
             if (memAddr == limitAddr) {
-                //Debug.printf("Limit ! (%.8x)\n", limitaddr);
+//logger.log(Level.TRACE, "Limit ! (%.8x)".formatted(limitaddr));
                 memAddr = 0;
             }
             if (memAddr < stopAddr)
@@ -990,7 +995,7 @@ stop:
                     adpcmD = 127;
                     return data;
                 } else {
-                    memAddr &= adpcmMask; // 0x3fffff;
+                    memAddr &= adpcmMask; // 0x3f_ffff;
                     setStatus(adpcmNotice);
                     adpcmPlay = false;
                 }
@@ -1116,7 +1121,7 @@ stop:
         }
 
         // 初期化
-        public boolean init(int c, int r, boolean ip /*= false*/, String s/* = ""*/) {
+        public boolean init(int c, int r, boolean ip /* = false */, String s /* = "" */) {
             if (!setRate(c, r, ip))
                 return false;
 
@@ -1129,7 +1134,7 @@ stop:
         }
 
         // サンプリングレート変更
-        public boolean setRate(int c, int r, boolean f/* = false*/) {
+        public boolean setRate(int c, int r, boolean f /* = false */) {
             super.init(c, r);
             rebuildTimeTable();
             return true;
@@ -1182,7 +1187,7 @@ stop:
 
         // レジスタアレイにデータを設定
         public void setReg(int addr, int data) {
-            // Debug.printf("reg[%.2x] <- %.2x\n", addr, data);
+// logger.log(Level.TRACE, "reg[%.2x] <- %.2x".formatted(addr, data));
             if (addr >= 0x100)
                 return;
 
@@ -1395,7 +1400,7 @@ stop:
 
         private FileStream createRhythmFileStream(String dir, String fname) {
             Path path = dir == null || dir.isEmpty() ? Paths.get(fname) : Paths.get(dir, fname);
-Debug.println(path);
+logger.log(Level.DEBUG, path);
             return Files.exists(path) ? new FileStream(path.toString(), FileMode.Open, FileAccess.Read) : null;
         }
 
@@ -1419,9 +1424,9 @@ Debug.println(path);
                 try {
                     int fsize;
                     boolean f = true;
-                    String buf1 = String.format("2608_%s_%d.wav", rhythmNames[i], chipId);
-                    String buf2 = String.format("2608_%s.wav", rhythmNames[i]);
-                    String rymBuf1 = String.format("2608_rym_%d.wav", chipId);
+                    String buf1 = "2608_%s_%d.wav".formatted(rhythmNames[i], chipId);
+                    String buf2 = "2608_%s.wav".formatted(rhythmNames[i]);
+                    String rymBuf1 = "2608_rym_%d.wav".formatted(chipId);
                     String rymBuf2 = "2608_rym.wav";
                     byte[] file;
 
@@ -1500,7 +1505,7 @@ Debug.println(path);
                     rhythm[i].step = rhythm[i].rate * 1024 / rate;
                     rhythm[i].pos = rhythm[i].size = fsize * 1024;
                 } catch (Exception e) {
-e.printStackTrace();
+logger.log(Level.ERROR, e.getMessage(), e);
                     // 無視
                 }
             }
@@ -1656,26 +1661,26 @@ e.printStackTrace();
         }
 
         public static class Rhythm {
-            // ぱん
+            /** pan */
             public byte pan;
-            // おんりょう
+            /** volume level */
             public byte level;
-            // おんりょうせってい
+            /** volume */
             public int volume;
-            // さんぷる
+            /** sample */
             public int[] sample;
-            // さいず
+            /** size */
             public int size;
-            // いち
+            /** position */
             public int pos;
-            // すてっぷち
+            /** stop */
             public int step;
-            // さんぷるのれーと
+            /** sample rate */
             public int rate;
         }
 
         /**
-         * リズム合成
+         * mix rhythm
          */
         private void rhythmMix(int[] buffer, int count) {
             if (rhythmTVol < 128 && rhythm[0].sample != null && ((rhythmKey & 0x3f) != 0)) {
@@ -1721,7 +1726,7 @@ e.printStackTrace();
     /** YM2610/B(OPNB) */
     public static class OPNB extends OPNABase {
         /**
-         * 構築
+         * constructs.
          */
         public OPNB() {
             adpcmaBuf = null;
@@ -1741,11 +1746,11 @@ e.printStackTrace();
         }
 
         /**
-         * 初期化
+         * initializes.
          */
-        public boolean init(int c, int r, boolean ipFlag/* = false*/,
-                            byte[] _adpcmA/* = null*/, int _adpcmASize/* = 0*/,
-                            byte[] _adpcmB/* = null*/, int _adpcmBSize/* = 0*/) {
+        public boolean init(int c, int r, boolean ipFlag /* = false */,
+                            byte[] _adpcmA /* = null */, int _adpcmASize /* = 0 */,
+                            byte[] _adpcmB /* = null */, int _adpcmBSize /* = 0 */) {
             int i;
             if (!setRate(c, r, ipFlag))
                 return false;
@@ -1936,7 +1941,7 @@ e.printStackTrace();
             case 0x15: // Stop Address H
                 adpcmReg[addr - 0x14 + 2] = (byte) data;
                 stopAddr = (adpcmReg[3] * 256 + adpcmReg[2] + 1) << 9;
-//                Debug.printf("  stopaddr %.6x", stopaddr);
+//logger.log(Level.TRACE, "  stopaddr %.6x".formatted(stopaddr));
                 break;
 
             case 0x19: // delta-N L
@@ -1962,7 +1967,7 @@ e.printStackTrace();
                 super.setReg(addr, data);
                 break;
             }
-//            Debug.println();
+//logger.log(Level.TRACE, "");
         }
 
         /**
@@ -2137,7 +2142,7 @@ e.printStackTrace();
 
         public static short[] jedi_table = new short[(48 + 1) * 16];
 
-        //public new Fmgen.Channel4[] ch = new Fmgen.Channel4[6];
+//        public new Fmgen.Channel4[] ch = new Fmgen.Channel4[6];
     }
 
     /** Ym2612Inst/3438(OPN2) */

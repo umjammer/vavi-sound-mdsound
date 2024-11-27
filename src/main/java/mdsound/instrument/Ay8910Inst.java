@@ -68,7 +68,7 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
         for (int i = 0; i < 1; i++) {
             outputs[0][i] = buffer[i * 2 + 0];
             outputs[1][i] = buffer[i * 2 + 1];
-            //Debug.printf("[%8d] : [%8d] [%d]\n", outputs[0][i], outputs[1][i], i);
+            //logger.log(Level.TRACE, "[%8d] : [%8d] [%d]".formatted(outputs[0][i], outputs[1][i], i));
         }
 
         visVolume[chipId][0][0] = outputs[0][0];

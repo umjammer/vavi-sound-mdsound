@@ -339,7 +339,7 @@ public class P86 {
             this.pitch = pitch;
             this.srcRate = rateTable[srcRate];
 
-            //Debug.printf("pitch:%x srcrate:%x", pitch, srcrate);
+            //logger.log(Level.TRACE, "pitch:%x srcrate:%x".formatted(pitch, srcrate));
             pitch = (int) (pitch * this.srcRate / (long) samplingRate);
 
             addSize2 = (pitch & 0xffff) >> 4;

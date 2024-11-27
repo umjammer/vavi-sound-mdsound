@@ -87,7 +87,7 @@ public class PPS {
     public void play(int al, int bh, int bl) {
         int num = al;
         int shift = bh;
-        //Debug.printf(bh);
+        //logger.log(Level.TRACE, bh);
         int volshift = bl;
 
         if (ppsHd[num].address < 0) return;
@@ -199,7 +199,7 @@ public class PPS {
 
             if (!real) {
                 if (!keyonFlag) data += keyoffVol;
-                //if(keyoff_vol!=0) Debug.printf("keyoff_vol%d", keyoff_vol);
+                //if(keyoff_vol!=0) logger.log(Level.DEBUG, "keyoff_vol%d".formatted(keyoff_vol));
                 outputs[0][i] = Math.max(Math.min(outputs[0][i] + data, Short.MAX_VALUE), Short.MIN_VALUE);
                 outputs[1][i] = Math.max(Math.min(outputs[1][i] + data, Short.MAX_VALUE), Short.MIN_VALUE);
             }
@@ -309,11 +309,11 @@ public class PPS {
             if (start_pps < address) start_pps = address;
 
             for (int j = start_pps; j < end_pps; j++) {
-                //Debug.printf("before%d", o[j]);
+                //logger.log(Level.TRACE, "before%d".formatted(o[j]));
                 o.set(j, (byte) ((o.get(j) & 0xff) - (j - start_pps) * 16 / (end_pps - start_pps)));
                 if (o.get(j) < 0)
                     o.set(j, (byte) 0);
-                //Debug.printf("after%d", o[j]);
+                //logger.log(Level.TRACE, "after%d".formatted(o[j]));
             }
 
         }

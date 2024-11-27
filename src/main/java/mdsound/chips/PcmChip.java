@@ -147,7 +147,7 @@ public class PcmChip {
             chan.stepB += data;
             chan.step = (int) ((float) chan.stepB * this.rate);
 
-            //Debug.printf("Step low = %.2X   Step calculated = %.8X", data, chan.Step);
+            //logger.log(Level.TRACE, "Step low = %.2X   Step calculated = %.8X".formatted(data, chan.Step));
             break;
 
         case 0x03: // frequency step (HB) registers
@@ -155,14 +155,14 @@ public class PcmChip {
             chan.stepB += data << 8;
             chan.step = (int) ((float) chan.stepB * this.rate);
 
-            //Debug.printf("Step high = %.2X   Step calculated = %.8X", data, chan.Step);
+            //logger.log(Level.TRACE, "Step high = %.2X   Step calculated = %.8X".formatted(data, chan.Step));
             break;
 
         case 0x04:
             chan.loopAddr &= 0xff00;
             chan.loopAddr += data;
 
-            //Debug.printf("Loop low = %.2X   Loop = %.8X", data, chan.Loop_Addr);
+            //logger.log(Level.TRACE, "Loop low = %.2X   Loop = %.8X".formatted(data, chan.Loop_Addr));
             break;
 
         case 0x05:
@@ -170,14 +170,14 @@ public class PcmChip {
             chan.loopAddr &= 0x00FF;
             chan.loopAddr += data << 8;
 
-            //Debug.printf("Loop high = %.2X   Loop = %.8X", data, chan.Loop_Addr);
+            //logger.log(Level.TRACE, "Loop high = %.2X   Loop = %.8X".formatted(data, chan.Loop_Addr));
             break;
 
         case 0x06: // start address registers
             chan.stAddr = data << (STEP_SHIFT + 8);
             //chan.Addr = chan.St_Addr;
 
-            //Debug.printf("Start addr = %.2X   New Addr = %.8X", data, chan.Addr);
+            //logger.log(Level.TRACE, "Start addr = %.2X   New Addr = %.8X".formatted(data, chan.Addr));
             break;
 
         case 0x07: // control register
@@ -196,14 +196,14 @@ public class PcmChip {
             else
                 this.enable = 0;
 
-            //Debug.printf("General Enable = %.2X", data);
+            //logger.log(Level.TRACE, "General Enable = %.2X".formatted(data));
             break;
 
         case 0x08:
             // Sound on/off register
             data ^= 0xff;
 
-            //Debug.printf("Channel Enable = %.2X", data);
+            //logger.log(Level.TRACE, "Channel Enable = %.2X".formatted(data));
 
             for (i = 0; i < 8; i++) {
                 chan = this.channels[i];

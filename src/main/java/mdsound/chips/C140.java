@@ -177,11 +177,11 @@ public class C140 {
                         v.sample_start = (((this.reg[vreg + 6] & 0xff) * 256) | (this.reg[vreg + 7] & 0xff)) * 2;
                         v.sample_end = (((this.reg[vreg + 8] & 0xff) * 256) | (this.reg[vreg + 9] & 0xff)) * 2;
 
-//                        Debug.printf("219: play v %d mode %02x start %x loop %x end %x\n",
-//                                offset >> 4, v.mode,
-//                                find_sample(info, v.sample_start, v.bank, offset >> 4),
-//                                find_sample(info, v.sample_loop, v.bank, offset >> 4),
-//                                find_sample(info, v.sample_end, v.bank, offset >> 4));
+//logger.log(Level.TRACE, "219: play v %d mode %02x start %x loop %x end %x".formatted(
+// offset >> 4, v.mode,
+// find_sample(info, v.sample_start, v.bank, offset >> 4),
+// find_sample(info, v.sample_loop, v.bank, offset >> 4),
+// find_sample(info, v.sample_end, v.bank, offset >> 4));
                     } else {
                         v.sample_loop = ((this.reg[vreg + 10] & 0xff) << 8) | (this.reg[vreg + 11] & 0xff);
                         v.sample_start = ((this.reg[vreg + 6] & 0xff) << 8) | (this.reg[vreg + 7] & 0xff);
@@ -233,7 +233,7 @@ public class C140 {
 
         if (dataLength >= 0) System.arraycopy(romData, srcStartAdr, this.pRom, dataStart, dataLength);
 
-        //Debug.printf("c140_write_rom2:%d:%d:%d:%d:%d", chipId, romSize, dataStart, dataLength, srcStartAdr);
+        //logger.log(Level.TRACE, "c140_write_rom2:%d:%d:%d:%d:%d".formatted(chipId, romSize, dataStart, dataLength, srcStartAdr));
     }
 
     public void setMuteMask(int muteMask) {
@@ -316,7 +316,7 @@ public class C140 {
                     pos += cnt;
                     // Check for the end of the sample
                     if (pos >= sz) {
-                        //Debug.printf("C140 pos[%x]", pos);
+                        //logger.log(Level.TRACE, "C140 pos[%x]".formatted(pos));
                         //debugCnt = 20;
                         // Check if it's a looping sample, either stop or loop
                         if ((v.mode & 0x10) != 0) {
@@ -355,7 +355,7 @@ public class C140 {
                     pos += cnt;
                     // Check for the end of the sample
                     if (pos >= sz) {
-                        //Debug.printf("C140 pos[%x]", pos);
+                        //logger.log(Level.TRACE, "C140 pos[%x]".formatted(pos));
                         //debugCnt = 20;
                         // Check if it's a looping sample, either stop or loop
                         if ((v.mode & 0x10) != 0) {
@@ -415,7 +415,7 @@ public class C140 {
             dest2[i] = rmix[i] << 3;
 //            if (debugCnt > 0) {
 //                debugCnt--;
-//                Debug.printf("%x  %d", lmix[i]);
+//                logger.log(Level.TRACE, "%x  %d".formatted(lmix[i]));
 //            }
         }
     }

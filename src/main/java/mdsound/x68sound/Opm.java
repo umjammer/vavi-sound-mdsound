@@ -1536,7 +1536,7 @@ public class Opm {
                     out[0] -= outOpm[0] >> (5); // -4096 ～ +4096
                     out[1] -= outOpm[1] >> (5);
 
-                    //Debug.printf("outOpm0:%d outOpm1:%d", OutOpm[0], OutOpm[1]);
+                    //logger.log(Level.TRACE, "outOpm0:%d outOpm1:%d".formatted(OutOpm[0], OutOpm[1]));
                 }
             }
 
@@ -1640,7 +1640,7 @@ public class Opm {
 
             buffer[offset + pcmBufPtr * 2 + 0] = (short) out[0];
             buffer[offset + pcmBufPtr * 2 + 1] = (short) out[1];
-            //Debug.printf("PcmBufPtr:%d out0:%d out1:%d",PcmBufPtr, PcmBuf[PcmBufPtr*2+0], PcmBuf[PcmBufPtr*2+1]);
+//logger.log(Level.TRACE, "PcmBufPtr:%d out0:%d out1:%d".formatted(PcmBufPtr, PcmBuf[PcmBufPtr * 2 + 0], PcmBuf[PcmBufPtr * 2 + 1]));
             ++pcmBufPtr;
             if (pcmBufPtr >= pcmBufSize) {
                 pcmBufPtr = 0;
@@ -1664,9 +1664,9 @@ public class Opm {
     }
 
     private void timer() {
-        //if (_InterlockedCompareExchange(&TimerSemapho, 1, 0) == 1) {
-        // return;
-        //}
+//        if (_InterlockedCompareExchange(&TimerSemapho, 1, 0) == 1) {
+//            return;
+//        }
 
         int prevStat = statReg;
         int flagSet = 0;

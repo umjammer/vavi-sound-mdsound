@@ -1,5 +1,6 @@
 package mdsound.chips;
 
+import java.lang.System.Logger.Level;
 import java.util.Arrays;
 
 
@@ -89,7 +90,7 @@ public class K053260 {
             int channelEnd = channelStart + this.size - 1;
 
             if (channelStart > romSize) {
-                //Debug.printf("K53260: Attempting to start playing past the end of the ROM ( start = %06x, end = %06x ).\n", channelStart, channelEnd);
+//logger.log(Level.TRACE, "K53260: Attempting to start playing past the end of the ROM ( start = %06x, end = %06x ).".formatted(channelStart, channelEnd));
 
                 this.play = 0;
 
@@ -97,11 +98,11 @@ public class K053260 {
             }
 
             if (channelEnd > romSize) {
-                //Debug.printf("K53260: Attempting to play past the end of the ROM ( start = %06x, end = %06x ).\n", channelStart, channelEnd);
+//logger.log(Level.TRACE, "K53260: Attempting to play past the end of the ROM ( start = %06x, end = %06x ).".formatted(channelStart, channelEnd));
 
                 this.size = romSize - channelStart;
             }
-            //if (LOG) Debug.printf("K053260: Sample Start = %06x, Sample End = %06x, Sample rate = %04x, PPCM = %s\n", channelStart, channelEnd, this.rate, this.ppcm ? "yes" : "no");
+//logger.log(Level.TRACE, "K053260: Sample Start = %06x, Sample End = %06x, Sample rate = %04x, PPCM = %s".formatted(channelStart, channelEnd, this.rate, this.ppcm ? "yes" : "no"));
         }
     }
 
@@ -284,7 +285,7 @@ public class K053260 {
     public void write(int offset, byte data) {
 
         if (offset > 0x2f) {
-            //Debug.printf("K053260: Writing past registers\n");
+            //logger.log(Level.TRACE, "K053260: Writing past registers\n");
             return;
         }
 
@@ -372,8 +373,8 @@ public class K053260 {
                 this.channels[0].pos += (1 << 16);
 
                 if (offs > this.romSize) {
-                    //Debug.printf("%s: K53260: Attempting to read past ROM size in ROM Read Mode (offs = %06x, size = %06x).\n", device.machine().describe_context(),offs,this.rom_size );
-                    //Debug.printf("K53260: Attempting to read past ROM size in ROM Read Mode (offs = %06x, size = %06x).\n", offs, this.rom_size);
+//logger.log(Level.TRACE, "%s: K53260: Attempting to read past ROM size in ROM Read Mode (offs = %06x, size = %06x).".formatted(device.machine().describe_context(),offs,this.rom_size));
+//logger.log(Level.TRACE, "K53260: Attempting to read past ROM size in ROM Read Mode (offs = %06x, size = %06x).".formatted(offs, this.rom_size));
 
                     return 0;
                 }

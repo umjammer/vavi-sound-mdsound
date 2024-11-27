@@ -32,7 +32,7 @@ public class NpNesApu {
         SQR1_MASK,
     }
 
-    // 各種オプション
+    // Various options
     public int[] option = new int[OPT.END.ordinal()];
     public int mask;
     public int[][] sm = new int[][] {new int[2], new int[2]};
@@ -80,13 +80,13 @@ public class NpNesApu {
         int shifted = this.freq[i] >> this.sweepAmount[i];
         if (i == 0 && this.sweepMode[i]) shifted += 1;
         this.sfreq[i] = this.freq[i] + (this.sweepMode[i] ? -shifted : shifted);
-        //Debug.printf("shifted[%d] = %d (%d >> %d)\n",i,shifted,this.freq[i],this.sweep_amount[i]);
+        //logger.log(Level.TRACE, "shifted[%d] = %d (%d >> %d)".formatted(i,shifted,this.freq[i],this.sweep_amount[i]));
     }
 
     public void sequenceFrame(int s) {
         int i;
 
-        //Debug.printf("sequenceFrame(%d)\n", s);
+        //logger.log(Level.TRACE, "sequenceFrame(%d)".formatted(s));
 
         if (s > 3) return; // no operation in step 4
 
@@ -119,14 +119,14 @@ public class NpNesApu {
                     --this.lengthCounter[i];
 
                 if (this.sweepEnable[i]) {
-                    //Debug.printf("Clock sweep: %d\n", i);
+                    //logger.log(Level.TRACE, "Clock sweep: %d".formatted(i));
 
                     --this.sweepDiv[i];
                     if (this.sweepDiv[i] <= 0) {
                         sweepSqr(i); // calculate new sweep target
 
-                        //Debug.printf("sweep_div[%d] (0/%d)\n",i,this.sweep_div_period[i]);
-                        //Debug.printf("freq[%d]=%d > sfreq[%d]=%d\n",i,this.freq[i],i,this.sfreq[i]);
+                        //logger.log(Level.TRACE, "sweep_div[%d] (0/%d)".formatted(i,this.sweep_div_period[i]));
+                        //logger.log(Level.TRACE, "freq[%d]=%d > sfreq[%d]=%d".formatted(i,this.freq[i],i,this.sfreq[i]));
 
                         if (this.freq[i] >= 8 && this.sfreq[i] < 0x800 && this.sweepAmount[i] > 0) { // update frequency if appropriate
                             this.freq[i] = Math.max(this.sfreq[i], 0);
@@ -134,7 +134,7 @@ public class NpNesApu {
                         }
                         this.sweepDiv[i] = this.sweepDivPeriod[i] + 1;
 
-                        //Debug.printf("freq[%d]=%d\n",i,this.freq[i]);
+                        //logger.log(Level.TRACE, "freq[%d]=%d".formatted(i,this.freq[i]));
                     }
 
                     if (this.sweepWrite[i]) {
@@ -192,7 +192,7 @@ public class NpNesApu {
 
     private int[] m = new int[2];
 
-    // 生成される波形の振幅は0-8191
+    // The amplitude of the generated waveform is 0-8191.
     public int render(int[] b) {
         this.tickCount.iup();
         tick((this.tickCount.value() - this.tickLast) & 0xff);
@@ -350,7 +350,7 @@ public class NpNesApu {
         int ch;
 
         if (0x4000 <= adr && adr < 0x4008) {
-            //Debug.printf("$%04X = %02X\n",adr,val);
+//logger.log(Level.TRACE, "$%04X = %02X".formatted(adr, val));
 
             adr &= 0xf;
             ch = adr >> 2;

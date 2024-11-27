@@ -501,7 +501,7 @@ public class Saa1099 {
             }
             break;
         default: // Error!
-            //throw new Exception(String.format("SAA1099: Unknown operation (reg:%02x, data:%02x)\n", reg, data));
+            //throw new Exception("SAA1099: Unknown operation (reg:%02x, data:%02x)".formatted(reg, data));
             break;
         }
     }

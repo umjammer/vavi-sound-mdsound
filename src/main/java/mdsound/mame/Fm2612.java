@@ -891,7 +891,7 @@ public class Fm2612 {
                             else
                                 this.volOut = this.volume + this.tl;
                         }
-//Debug.printf(Level.FINE, "this.state:%d this.volOut:%d", this.state, this.vol_out));
+//logger.log(Level.TRACE, "this.state:%d this.volOut:%d".formatted(this.state, this.vol_out));
                     }
 
                     public void decay(int egCnt) {
@@ -921,7 +921,7 @@ public class Fm2612 {
                             if (this.volume >= this.sl)
                                 this.state = EG_SUS;
                         }
-//Debug.printf(Level.FINE, "this.state:%d this.volOut:%d", this.state, this.volOut));
+//logger.log(Level.TRACE, "this.state:%d this.volOut:%d".formatted(this.state, this.volOut));
                     }
 
                     public void sustain(int egCnt) {
@@ -951,7 +951,7 @@ public class Fm2612 {
                                 this.volOut = this.volume + this.tl;
                             }
                         }
-//Debug.printf(Level.FINE, "this.state:%d this.volOut:%d", this.state, this.volOut));
+//logger.log(Level.TRACE, "this.state:%d this.volOut:%d".formatted(this.state, this.volOut));
                     }
 
                     public void release(int egCnt) {
@@ -980,7 +980,7 @@ public class Fm2612 {
                             // recalculate EG output
                             this.volOut = this.volume + this.tl;
                         }
-//Debug.printf(Level.FINE, "this.state:%d this.volOut:%d", this.state, this.volOut));
+//logger.log(Level.TRACE, "this.state:%d this.volOut:%d".formatted(this.state, this.volOut));
                     }
 
                     /**
@@ -1198,7 +1198,7 @@ public class Fm2612 {
                     Channel.Slot slot = this.slots[s];
                     slot.keyOn(b);
 
-                    //Debug.printf(Level.FINE, "volOut:%d", this.volOut);
+//logger.log(Level.TRACE, "volOut:%d".formatted(this.volOut);
                 }
 
                 private void keyOff(int s, boolean b) {
@@ -1364,35 +1364,35 @@ public class Fm2612 {
                             _out = 0;
 
                         this.op1Out[1] = Op.calc1(this.slots[SLOT1].phase, egOut, (_out << this.fb));
-                        //Debug.printf(Level.FINE, "SLOT1:egOut:%d", egOut);
-                        //Debug.printf(Level.FINE, "op1_out[1]:%d", this.op1_out[1]);
-                        //Debug.printf(Level.FINE, "this.SLOT[SLOT4].phase:%d", this.SLOT[SLOT1].phase);
-                        //Debug.printf(Level.FINE, "out:%d", _out);
-                        //Debug.printf(Level.FINE, "this.FB:%d", this.FB);
-                        //Debug.printf(Level.FINE, "o<c:%d", (_out << this.FB));
+                        //logger.log(Level.TRACE, "SLOT1:egOut:%d".formatted(egOut));
+                        //logger.log(Level.TRACE, "op1_out[1]:%d".formatted(this.op1_out[1]));
+                        //logger.log(Level.TRACE, "this.SLOT[SLOT4].phase:%d".formatted(this.SLOT[SLOT1].phase));
+                        //logger.log(Level.TRACE, "out:%d".formatted(_out));
+                        //logger.log(Level.TRACE, "this.FB:%d".formatted(this.FB));
+                        //logger.log(Level.TRACE, "o<c:%d".formatted(_out << this.FB));
                     }
 
                     egOut = this.slots[SLOT3].calcVolume(am);
                     if (egOut < ENV_QUIET) { // SLOT 3
                         this.connect3.val += opn.m2.calc(this.slots[SLOT3].phase, egOut);
-                        //Debug.printf(Level.FINE, "SLOT3:egOut:%d", egOut);
-                        //Debug.printf(Level.FINE, "this.connect3.val:%d", this.connect3.val);
+                        //logger.log(Level.TRACE, "SLOT3:egOut:%d".formatted(egOut));
+                        //logger.log(Level.TRACE, "this.connect3.val:%d".formatted(this.connect3.val));
                     }
 
                     egOut = this.slots[SLOT2].calcVolume(am);
                     if (egOut < ENV_QUIET) { // SLOT 2
                         this.connect2.val += opn.c1.calc(this.slots[SLOT2].phase, egOut);
-                        //Debug.printf(Level.FINE, "SLOT2:egOut:%d", egOut);
-                        //Debug.printf(Level.FINE, "this.connect2.val:%d", this.connect2.val);
+                        //logger.log(Level.TRACE, "SLOT2:egOut:%d".formatted(egOut));
+                        //logger.log(Level.TRACE, "this.connect2.val:%d".formatted(this.connect2.val));
                     }
 
                     egOut = this.slots[SLOT4].calcVolume(am);
                     if (egOut < ENV_QUIET) { // SLOT 4
                         this.connect4.val += opn.c2.calc(this.slots[SLOT4].phase, egOut);
-                        //Debug.printf(Level.FINE, "SLOT4:egOut:%d", egOut);
-                        //Debug.printf(Level.FINE, "this.connect4.val:%d", this.connect4.val);
-                        //Debug.printf(Level.FINE, "this.SLOT[SLOT4].phase:%d", this.SLOT[SLOT4].phase);
-                        //Debug.printf(Level.FINE, "opn.c2:%d", opn.c2.val);
+                        //logger.log(Level.TRACE, "SLOT4:egOut:%d".formatted(egOut));
+                        //logger.log(Level.TRACE, "this.connect4.val:%d".formatted(this.connect4.val));
+                        //logger.log(Level.TRACE, "this.SLOT[SLOT4].phase:%d".formatted(this.SLOT[SLOT4].phase));
+                        //logger.log(Level.TRACE, "opn.c2:%d".formatted(opn.c2.val));
                     }
 
                     // store current MEM
@@ -2391,7 +2391,7 @@ public class Fm2612 {
             }
 
 //for (x = 0; x < TL_TAB_LEN; x++) {
-// Debug.printf(Level.FINE, "%d,", tl_tab[x]));
+// logger.log(Level.TRACE, "%d,".formatted(tl_tab[x]));
 //}
 
             // build Logarithmic Sinus table
@@ -2419,7 +2419,7 @@ public class Fm2612 {
             }
 
 //for (x = 0; x < SIN_LEN; x++) {
-// Debug.printf(Level.FINE, "%d,", sin_tab[x]);
+// logger.log(Level.TRACE, "%d,".formatted(sin_tab[x]));
 //}
 
             // build LFO PM modulation table
@@ -2450,7 +2450,7 @@ public class Fm2612 {
             }
 
 //for (int j = 0; j < 128*8*32; j++) {
-// Debug.printf(Level.FINE, "%d,", lfo_pm_table[j]);
+// logger.log(Level.TRACE, "%d,".formatted(lfo_pm_table[j]));
 //}
         }
 
@@ -2517,8 +2517,8 @@ public class Fm2612 {
                 this.waveOutMode = 0x01;
             else
                 this.waveOutMode = 0x03;
-//Debug.printf(hFile, "Clock: %d, Sample Rate: %d\n", clock, rate);
-//Debug.printf(hFile, "Sample\tCh 0\tCh 1\tCh 2\tCh 3\tCh 4\tCh 5\n");
+//logger.log(Level.TRACE, "Clock: %d, Sample Rate: %d".formatted(clock, rate);
+//logger.log(Level.TRACE, "Sample\tCh 0\tCh 1\tCh 2\tCh 3\tCh 4\tCh 5\n");
         }
 
         private void resetChannels(int num) {
@@ -2534,7 +2534,7 @@ public class Fm2612 {
             case 1:
             case 2:
             case 3:
-                //Debug.printf("Ym2612Inst #%p:A=%d read unmapped area\n",this.OPN.ST.param,a);
+//logger.log(Level.TRACE, "Ym2612Inst #%p:A=%d read unmapped area".formatted(this.OPN.ST.param, a));
                 return this.opn.st.setStatus();
             }
             return 0;
@@ -2690,7 +2690,7 @@ public class Fm2612 {
                 // advance LFO
                 opn.advanceLfo();
 
-//Debug.printf(Level.FINE, "opn.eg_timer_add:%d opn.eg_timer:%d opn.eg_timer_overflow:%d", opn.eg_timer_add,opn.eg_timer,opn.eg_timer_overflow));
+//logger.log(Level.TRACE, "opn.eg_timer_add:%d opn.eg_timer:%d opn.eg_timer_overflow:%d".formatted(opn.eg_timer_add, opn.eg_timer, opn.eg_timer_overflow));
 
                 // advance envelope generator
                 opn.egTimer += opn.egTimerAdd;
@@ -2706,10 +2706,10 @@ public class Fm2612 {
                     cch[5].advanceEg(opn.egCnt);
                 }
 
-//Debug.printf(hFile, "%u", FileSample, outFm[0]);
+//logger.log(Level.TRACE, "%d".formatted(outFm[0])); // > FileSample?
 //for (lt = 0; lt < 6; lt ++)
-// Debug.printf(hFile, "\t%d", outFm[lt]);
-//Debug.printf(hFile, "\n");
+// logger.log(Level.TRACE, "\t%d".formatted(outFm[lt]));
+//logger.log(Level.TRACE, "\n");
 
                 if (outFm[0].val > 8192) outFm[0].val = 8192;
                 else if (outFm[0].val < -8192) outFm[0].val = -8192;
@@ -2758,7 +2758,7 @@ public class Fm2612 {
                 bufR[i] = this.waveR;
 
 //if (this.WaveL != 0)
-// Debug.printf(Level.FINE, "L:%d R:%d", this.WaveL, this.WaveR));
+// logger.log(Level.TRACE, "L:%d R:%d".formatted(this.WaveL, this.WaveR));
 
                 // CSM mode: if CSM Key ON has occured, CSM Key OFF need to be sent
                 // only if Timer A does not overflow again (i.e CSM Key ON not set again)
@@ -2876,7 +2876,7 @@ public class Fm2612 {
      * @param v    value
      */
     public int ym2612_write(int chipId, BaseChip chip, int a, int v) {
-        //Debug.printf(Level.FINE, "a:%x v:%x",a,v));
+//logger.log(Level.TRACE, "a:%x v:%x".formatted(a, v));
 
         Ym2612 f2612 = (Ym2612) chip;
         return f2612.write(a, v);

@@ -330,7 +330,7 @@ public class CtrQsound {
         rom_addr = (bank << 16) | (address << 0);
 
         sample_data = rom_addr < this.romData.length ? this.romData[rom_addr] : (byte) 0;
-        //Debug.printf("adr:%10x dat:%02x", rom_addr, sample_data);
+        //logger.log(Level.TRACE, "adr:%10x dat:%02x".formatted(rom_addr, sample_data));
 
         return (short) ((sample_data << 8) | (sample_data << 0)); // MAME currently expands the 8 bit ROM data to 16 bits this way.
     }
@@ -529,11 +529,11 @@ public class CtrQsound {
         //output = (short)((v.volume * get_sample(chips, v.bank, v.addr)) >> 14);
         output = (short) ((registerMap[(voiceNo << 3) + 6]
                 * get_sample(registerMap[(((voiceNo - 1 + 16) % 16) << 3) + 0], registerMap[(voiceNo << 3) + 1])) >> 14);
-        //Debug.printf("output:%d vadr:%d", output, register_map[(voiceNo << 3) + 1]);
+        //logger.log(Level.TRACE, "output:%d vadr:%d".formatted(output, register_map[(voiceNo << 3) + 1]));
 
         //if (voiceNo == 2) {
-        //MDSound.debugMsg = String.format("%d:%d:%d:%d",
-        //register_map[(voiceNo << 3) + 6], register_map[(voiceNo << 3) + 0], register_map[(voiceNo << 3) + 1], register_map[(voiceNo << 3) + 5]);
+        // MDSound.debugMsg = "%d:%d:%d:%d".formatted(
+        //  register_map[(voiceNo << 3) + 6], register_map[(voiceNo << 3) + 0], register_map[(voiceNo << 3) + 1], register_map[(voiceNo << 3) + 5]);
         //}
 
         //echoOut += (output * v.echo) << 2;
@@ -550,17 +550,17 @@ public class CtrQsound {
             //new_phase -= (v.loop_len << 12);
             a = (registerMap[(voiceNo << 3) + 4] << 12);
             a = (a & 0x0800_0000) != 0 ? (a | 0xf000_0000) : a;
-            new_phase -= a;// (register_map[(voiceNo << 3) + 4] << 12);
+            new_phase -= a; // (register_map[(voiceNo << 3) + 4] << 12);
         }
 
         //if (voiceNo == 0) {
-        //Debug.printf("Bf:%d", new_phase);
+        //logger.log(Level.TRACE, "Bf:%d".formatted(new_phase));
         //}
 
         new_phase = clamp(new_phase, -0x800_0000, 0x7FF_FFFF);
 
         //if (voiceNo == 0) {
-        //Debug.printf("Af:%d", new_phase);
+        //logger.log(Level.TRACE, "Af:%d".formatted(new_phase));
         //}
         //v.addr = (int)(new_phase >> 12);
         registerMap[(voiceNo << 3) + 1] = new_phase >> 12;

@@ -59,34 +59,37 @@ public class X1_010 {
 
     /** Frequency fixed decimal shift bits */
     private static final int FREQ_BASE_BITS = 14;
-    // wave form envelope fixed decimal shift bits */
+    /** wave form envelope fixed decimal shift bits */
     private static final int ENV_BASE_BITS = 16;
-    // Volume base */
+    /** Volume base */
     private static final int VOL_BASE = 2 * 32 * 256 / 30;
 
     // this structure defines the parameters for a channel */
     private static class Channel {
         private int status;
-        // volume / wave form no. */
+        /** volume / wave form no. */
         private int volume;
-        // frequency / pitch lo */
+        /** frequency / pitch lo */
         private int frequency;
-        // reserved / pitch hi */
+        /** reserved / pitch hi */
         private int pitchHi;
-        // start address / envelope time */
+        /** start address / envelope time */
         private int start;
-        // end address / envelope no. */
+        /** end address / envelope no. */
         private int end;
         private byte[] reserve = new byte[2];
     }
 
     // Variables only used here
 
-    private int rate; // Output sampling rate (Hz) */
+    /** Output sampling rate (Hz) */
+    private int rate;
     private int romSize;
     private byte[] rom;
-    private int soundEnable; // Sound output enable/disable */
-    private byte[] reg = new byte[0x2000]; // X1-010 Register & wave form area */
+    /** Sound output enable/disable */
+    private int soundEnable;
+    /** X1-010 Register & wave form area */
+    private byte[] reg = new byte[0x2000];
     private int[] smpOffset = new int[SETA_NUM_CHANNELS];
     private int[] envOffset = new int[SETA_NUM_CHANNELS];
 
@@ -104,7 +107,7 @@ public class X1_010 {
             outputs[1][i] = 0;
         }
 
-        //  if( this.sound_enable == 0 ) return;
+//        if (this.sound_enable == 0 ) return;
 
         for (int ch = 0; ch < SETA_NUM_CHANNELS; ch++) {
             if ((this.reg[ch * 8 + 0] & 1) != 0 && this.muted[ch] == 0) { // reg.status
@@ -126,8 +129,8 @@ public class X1_010 {
                     int smpStep = (int) ((float) this.baseClock / 8192.0f
                             * freq * (1 << FREQ_BASE_BITS) / (float) this.rate + 0.5f);
                     if (smpOffs == 0) {
-                        //Debug.printf("Play sample %p - %p, channel %X volume %d:%d freq %X step %X offset %X\n",
-                        // start, end, ch, volL, volR, freq, smpStep, smpOffs);
+//logger.log(Level.TRACE, "Play sample %p - %p, channel %X volume %d:%d freq %X step %X offset %X".formatted(
+// start, end, ch, volL, volR, freq, smpStep, smpOffs));
                     }
                     for (int i = 0; i < samples; i++) {
                         int delta = smpOffs >> FREQ_BASE_BITS;
@@ -156,8 +159,8 @@ public class X1_010 {
                     );
                     // Print some more debug info
                     if (smpOffs == 0) {
-                        //Debug.printf("Play waveform %X, channel %X volume %X freq %4X step %X offset %X\n",
-                        //reg.volume, ch, reg.end, freq, smpStep, smpOffs);
+//logger.log(Level.TRACE, "Play waveform %X, channel %X volume %X freq %4X step %X offset %X".formatted(
+// reg.volume, ch, reg.end, freq, smpStep, smpOffs));
                     }
                     for (int i = 0; i < samples; i++) {
                         int delta = envOffs >> ENV_BASE_BITS;
@@ -193,7 +196,7 @@ public class X1_010 {
             this.envOffset[i] = 0;
         }
         // Print some more debug info
-        //Debug.printf("masterclock = %d rate = %d\n", device.clock(), this.rate);
+//logger.log(Lvel.DEBUG, "masterclock = %d rate = %d".formatted(device.clock(), this.rate));
     }
 
     public void stop() {
@@ -220,7 +223,7 @@ public class X1_010 {
             this.smpOffset[channel] = 0;
             this.envOffset[channel] = 0;
         }
-        //Debug.printf("%s: offset %6X : data %2X\n", device.machine().describe_context(), offset, data);
+//logger.log(Level.TRACE, "%s: offset %6X : data %2X".formatted(device.machine().describe_context(), offset, data));
         this.reg[offset] = (byte) data;
     }
 

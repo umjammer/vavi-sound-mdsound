@@ -331,7 +331,7 @@ public class OotakeHuC6280 {
         private void setOnDdaAl(int data) {
             if (honeyInTheSky) { // はにいいんざすかいのポーズ時に、微妙なボリューム調整タイミングの問題でプチノイズが載ってしまうので、現状はパッチ処理で対応。v2.60更新
                 if ((this.on) && (data == 0)) { // 発声中にdataが0の場合、LRボリュームも0にリセット。はにいいんざすかいのポーズ時のノイズが解消。(data & 0x1F)だけが0のときにリセットすると、サイレントデバッガーズ等でNG。発声してない時にリセットするとアトミックロボでNG。ｖ2.55
-//Debug.printf("test %X %X %X %X",this.Channel,this.bOn,this.MainVolumeL,this.MainVolumeR);
+//logger.log(Level.TRACE, "test %X %X %X %X".formatted(this.Channel, this.bOn, this.MainVolumeL, this.MainVolumeR));
                     if ((mainVolumeL & 1) == 0) // メインボリュームのbit0が0のときだけ処理(はにいいんざすかいでイレギュラーな0xE。他のゲームは0xF。※ヘビーユニットも0xEだった)。これがないとミズバク大冒険で音が出ない。実機の仕組みと同じかどうかは未確認。v2.53追加
                         this.volumeL = 0;
                     if ((mainVolumeR & 1) == 0) // 右チャンネルも同様とする
@@ -567,19 +567,19 @@ public class OotakeHuC6280 {
         case 8: // LFO frequency
             this.lfoFreq = data;
             // Kitaoテスト用
-            // Debug.printf("LFO Frq = %X",this.LfoFrq);
+//logger.log(Level.TRACE, "LFO Frq = %X".formatted(this.LfoFrq));
             break;
 
         case 9: // LFO control
             // Kitao更新。シンプルに実装してみた。実機で同じ動作かは未確認。はにいいんざすかいの音が似るように実装。v1.59
             if ((data & 0x80) != 0) { // bit7を立てて呼ぶと恐らくリセット
                 this.psgs[1].phase = 0; // LfoFrqは初期化しない。はにいいんざすかい。
-                //Debug.printf("LFO control = %X",data);
+//logger.log(Level.TRACE, "LFO control = %X".formatted(data));
             }
             this.lfoControl = data & 7; // ドロップロックほらホラで 5 が使われる。v1.61更新
             if ((this.lfoControl & 4) != 0)
                 this.lfoControl = 0; // ドロップロックほらホラ。実機で聴いた感じはLFOオフと同じ音のようなのでbit2が立っていた(負の数扱い？)ら0と同じこととする。
-            //Debug.printf("LFO control = %X,  Frq =%X",data,this.LfoFrq);
+//logger.log(Level.TRACE, "LFO control = %X,  Frq =%X".formatted(data, this.LfoFrq));
             break;
 
         default: // invalid write
@@ -620,12 +620,12 @@ public class OotakeHuC6280 {
             }
             //Kitao更新。6ch合わさったところで、ボリューム調整してバッファに書き込む。
             sampleAllL[0] = (int) ((double) sampleAllL[0] * this.vol);
-            //if ((sampleAllL>32767)||(sampleAllL<-32768)) Debug.printf("Psg Sachitta!");//test用
+            //if ((sampleAllL>32767)||(sampleAllL<-32768)) logger.log(Level.DEBUG, "Psg Sachitta!");//test用
             //  if (sampleAllL> 32767) sampleAllL= 32767; // Volをアップしたのでサチレーションチェックが必要。v2.39
             //  if (sampleAllL<-32768) sampleAllL=-32768; //  パックランドでUFO等にやられたときぐらいで、通常のゲームでは起こらない。音量の大きなビックリマンワールドもOK。パックランドも通常はOKでサチレーションしたときでもわずかなので音質的に大丈夫。
             //  なので音質的には、PSGを２つのDirectXチャンネルに分けて鳴らすべき(処理は重くなる)だが、現状はパックランドでもサチレーション処理だけで音質的に問題なし(速度優先)とする。
             sampleAllR[0] = (int) ((double) sampleAllR[0] * this.vol);
-            //if ((sampleAllR>32767)||(sampleAllR<-32768)) Debug.printf("Psg Satitta!");//test用
+            //if ((sampleAllR>32767)||(sampleAllR<-32768)) logger.log(Level.DEBUG, "Psg Satitta!");//test用
             //  if (sampleAllR> 32767) sampleAllR= 32767; // Volをアップしたのでサチレーションチェックが必要。v2.39
             //  if (sampleAllR<-32768) sampleAllR=-32768; //
             buffer[0][i] = sampleAllL[0] << 1;

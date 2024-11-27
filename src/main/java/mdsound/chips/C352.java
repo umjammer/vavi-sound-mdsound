@@ -122,7 +122,7 @@ public class C352 {
             short volDelta = (short) (this.currVol[ch] - val);
             if (volDelta != 0)
                 this.currVol[ch] = (byte) (this.currVol[ch] + ((volDelta > 0) ? -1 : 1));
-            //Debug.printf("this.curr_vol[ch%d] = %d val=%d", ch, this.curr_vol[ch], val);
+            //logger.log(Level.TRACE, "this.curr_vol[ch%d] = %d val=%d".formatted(ch, this.curr_vol[ch], val));
         }
 
         private void fetchSample(byte s) {
@@ -170,7 +170,7 @@ public class C352 {
                 break;
             case 2:
                 this.freq = val;
-//                Debug.printf("this.v[ch%d].freq = %d", ch, val);
+//                logger.log(Level.TRACE, "this.v[ch%d].freq = %d".formatted(ch, val));
                 break;
             case 3:
                 this.flags = val;
@@ -252,7 +252,7 @@ public class C352 {
     private static byte muteAllRear = 0x00;
 
     private void fetchSample(Voice v) {
-//        Debug.printf("v.sample = %d  v.pos = %d  this.wave_mask = %d  v.flags =%d ", v.sample, v.pos, this.wave_mask, v.flags);
+//        logger.log(Level.TRACE, "v.sample = %d  v.pos = %d  this.wave_mask = %d  v.flags =%d ".formatted(v.sample, v.pos, this.wave_mask, v.flags));
 
         v.lastSample = v.sample;
 
@@ -283,14 +283,14 @@ public class C352 {
                 short s = 0;
                 flags[j] = v.flags;
 
-//                Debug.printf(" v.flags=%d", v.flags);
+//logger.log(Level.TRACE, " v.flags=%d".formatted(v.flags));
                 if ((v.flags & 0x8000) != 0) {
                     int nextCounter = v.counter + v.freq;
 
                     if ((nextCounter & 0x10000) != 0) {
                         fetchSample(v);
-//                        Debug.printf("fetch");
-//                        Debug.printf(" ch=%d 0=%d  1=%d  2=%d  3=%d",j, _out[0], _out[1], _out[2], _out[3]);
+//logger.log(Level.TRACE, "fetch");
+//logger.log(Level.TRACE, " ch=%d 0=%d  1=%d  2=%d  3=%d".formatted(j, _out[0], _out[1], _out[2], _out[3]));
                     }
 
                     if (((nextCounter ^ v.counter) & 0x18000) != 0) {
@@ -301,8 +301,8 @@ public class C352 {
                     }
 
                     v.counter = nextCounter & 0xffff;
-                    //Debug.printf(" v.freq=%d", v.freq);
-                    //Debug.printf(" v.counter=%d", v.counter);
+//logger.log(Level.TRACE, " v.freq=%d".formatted(v.freq));
+//logger.log(Level.TRACE, " v.counter=%d".formatted(v.counter));
 
                     s = v.sample;
 
@@ -320,7 +320,7 @@ public class C352 {
                     out[3] += ((((v.flags & 0x0200) != 0 ? -s : s) * v.currVol[3]) >> 9);
                 }
 
-                //Debug.printf("out [0]=%d  [1]=%d  [2]=%d  [3]=%d", _out[0] , _out[1] , _out[2] , _out[3]);
+//logger.log(Level.TRACE, "out [0]=%d  [1]=%d  [2]=%d  [3]=%d".formatted(_out[0] , _out[1] , _out[2] , _out[3]));
             }
 
             outputs[0][i] += out[0];
@@ -329,8 +329,8 @@ public class C352 {
                 outputs[0][i] += out[2];
                 outputs[1][i] += out[3];
             }
-            //outputs[0][i] = Math.max(Math.min(outputs[0][i], Short.MAX_VALUE), Short.MIN_VALUE);
-            //outputs[1][i] = Math.max(Math.min(outputs[1][i], Short.MAX_VALUE), Short.MIN_VALUE);
+//            outputs[0][i] = Math.max(Math.min(outputs[0][i], Short.MAX_VALUE), Short.MIN_VALUE);
+//            outputs[1][i] = Math.max(Math.min(outputs[1][i], Short.MAX_VALUE), Short.MIN_VALUE);
         }
     }
 
@@ -339,15 +339,15 @@ public class C352 {
         this.waveSize = 0x00;
 
         this.divider = clkdiv != 0 ? clkdiv : 288;
-        this.sampleRateBase = (clock & 0x7FFFFFFF) / this.divider;
-        this.muteRear = (byte) ((clock & 0x80000000) >> 31);
+        this.sampleRateBase = (clock & 0x7fff_ffff) / this.divider;
+        this.muteRear = (byte) ((clock & 0x8000_0000) >> 31);
 
         this.voices = new Voice[VOICES];
         for (int i = 0; i < VOICES; i++) {
             this.voices[i] = new Voice();
         }
 
-        setMuteMask(0x00000000);
+        setMuteMask(0x0000_0000);
 
         return this.sampleRateBase;
     }
@@ -383,14 +383,14 @@ public class C352 {
     }
 
     public void write(int address, int val) {
-        //Debug.printf("address = %d  val = %d", address, val);
+//logger.log(Level.TRACE, "address = %d  val = %d".formatted(address, val));
 
         if (address < 0x100) { // Channel registers, see map above.
             int ch = address / 8;
             this.voices[ch].setRegisters(address, val);
         } else if (address == 0x200) {
             this.control = val;
-            //Debug.printf("C352 control register write: %04x\n",val);
+//logger.log(Level.TRACE, "C352 control register write: %04x".formatted(val));
         } else if (address == 0x202) { // execute keyons/keyoffs
             for (int i = 0; i < VOICES; i++) {
                 this.voices[i].keyOnOff();
@@ -418,7 +418,7 @@ public class C352 {
     }
 
     public void writeRom2(int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
-        //Debug.printf("romSize=%x , dataStart=%x , dataLength=%x", romSize, dataStart, dataLength);
+//logger.log(Level.TRACE, "romSize=%x , dataStart=%x , dataLength=%x".formatted(romSize, dataStart, dataLength));
         if (this.waveSize != romSize) {
             this.wave = new byte[romSize];
             this.waveSize = romSize;

@@ -270,7 +270,7 @@ public class DacControl {
                 System.arraycopy(tempBnk.data, 0, tempPCM.data, 0 + tempBnk.dataStart, bankSize);
             }
         }
-        //if (bankSize != tempBnk.dataSize) Debug.printf("Error reading data Block! data Size conflict!\n");
+        //if (bankSize != tempBnk.dataSize) logger.log(Level.DEBUG, "Error reading data Block! data Size conflict!\n");
         if (retVal)
             tempPCM.dataSize += bankSize;
 
@@ -356,11 +356,11 @@ public class DacControl {
                 ent2B = 0; //
                 if (pcmTbl.entryCount == 0) {
                     bank.dataSize = 0x00;
-                    //Debug.printf("Error loading table-compressed data block! No table loaded!\n");
+                    //logger.log(Level.TRACE, "Error loading table-compressed data block! No table loaded!\n");
                     return false;
                 } else if (bitDec != pcmTbl.bitDec || bitCmp != pcmTbl.bitCmp) {
                     bank.dataSize = 0x00;
-                    //Debug.printf("Warning! data block and loaded value table incompatible!\n");
+                    //logger.log(Level.TRACE, "Warning! data block and loaded value table incompatible!\n");
                     return false;
                 }
             }
@@ -444,11 +444,11 @@ public class DacControl {
             ent2B = 0;
             if (pcmTbl.entryCount == 0) {
                 bank.dataSize = 0x00;
-                //Debug.printf("Error loading table-compressed data block! No table loaded!\n");
+                //logger.log(Level.TRACE, "Error loading table-compressed data block! No table loaded!\n");
                 return false;
             } else if (bitDec != pcmTbl.bitDec || bitCmp != pcmTbl.bitCmp) {
                 bank.dataSize = 0x00;
-                //Debug.printf("Warning! data block and loaded value table incompatible!\n");
+                //logger.log(Level.TRACE, "Warning! data block and loaded value table incompatible!\n");
                 return false;
             }
 
@@ -510,7 +510,7 @@ public class DacControl {
             }
             break;
         default:
-            //Debug.printf("Error: Unknown data block compression!\n");
+            //logger.log(Level.TRACE, "Error: Unknown data block compression!\n");
             return false;
         }
 
@@ -534,7 +534,7 @@ public class DacControl {
         for (int i = 0; i < tblSize; i++) pcmTbl.entries[i] = vgmBuf[adr + 6 + i];
 
 //        if (dataSize < 0x06 + tblSize) {
-//            //Debug.printf("Warning! Bad PCM Table Length!\n");
+//            //logger.log(Level.TRACE, "Warning! Bad PCM Table Length!\n");
 //        }
     }
 
@@ -724,7 +724,7 @@ public class DacControl {
             int newPos;
             int realDataStp;
 
-            //Debug.printf("DAC update chipId%d samples%d chips.Running%d ", chipId, samples, chips.Running);
+            //logger.log(Level.TRACE, "DAC update chipId%d samples%d chips.Running%d ".formatted(chipId, samples, chips.Running));
             if ((chip.running & 0x80) != 0) // disabled
                 return;
             if ((chip.running & 0x01) == 0) // stopped
@@ -749,13 +749,13 @@ public class DacControl {
             chip.step += samples;
             // Formula: Step * Freq / SampleRate
             newPos = muldiv64round(chip.step * chip.dataStep, chip.frequency, DAC_SMPL_RATE);
-            //Debug.printf("newPos%d chips.Step%d chips.DataStep%d chips.Frequency%d DAC_SMPL_RATE%d \n", newPos, chips.Step, chips.DataStep, chips.Frequency, (int)common.SampleRate);
+            //logger.log(Level.TRACE, "newPos%d chips.Step%d chips.DataStep%d chips.Frequency%d DAC_SMPL_RATE%d".formatted(newPos, chips.Step, chips.DataStep, chips.Frequency, (int) common.SampleRate));
             sendCommand(chip);
 
             while (chip.remainCmds != 0 && chip.pos < newPos) {
                 sendCommand(chip);
                 chip.pos += chip.dataStep;
-                //if(model== enmModel.RealModel)                log.Write(String.format("datastep:%d",chips.DataStep));
+                //if(model== enmModel.RealModel) logger.log(Level.TRACE, "datastep:%d".formatted(chips.DataStep));
                 chip.realPos = chip.realPos + realDataStp;
                 chip.running &= 0xef;// ~0x10;
                 chip.remainCmds--;
@@ -901,7 +901,7 @@ public class DacControl {
 
     private void set_frequency(int chipId, int frequency) {
         synchronized (lock) {
-            //Debug.printf("chipId%d frequency%d", chipId, frequency);
+            //logger.log(Level.TRACE, "chipId%d frequency%d".formatted(chipId, frequency));
             Control chip = dacData[chipId];
 
             if ((chip.running & 0x80) != 0)
@@ -1040,7 +1040,7 @@ public class DacControl {
             mds.write(IntFNesInst.class, chipIndex, chipId, port, offset, data);
             break;
         case 0x17: // OKIM6258
-            //Debug.printf("[DAC]");
+            //logger.log(Level.TRACE, "[DAC]");
             mds.write(OkiM6258Inst.class, chipIndex, chipId, offset, data);
             break;
         case 0x1b: // OotakeHuC6280

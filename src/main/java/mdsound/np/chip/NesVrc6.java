@@ -1,13 +1,20 @@
 package mdsound.np.chip;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.function.Consumer;
 
 import mdsound.np.Device.SoundChip;
 import mdsound.np.chip.DeviceInfo.TrackInfo;
 import mdsound.np.chip.DeviceInfo.BasicTrackInfo;
 
+import static java.lang.System.getLogger;
+
 
 public class NesVrc6 implements SoundChip {
+
+    private static final Logger logger = getLogger(NesVrc6.class.getName());
+
     public static final double DEFAULT_CLOCK = 1789772.0;
     public static final int DEFAULT_RATE = 44100;
 
@@ -94,7 +101,7 @@ public class NesVrc6 implements SoundChip {
 
             return trkInfo;
         } catch (Exception e) {
-e.printStackTrace();
+logger.log(Level.ERROR, e.getMessage(), e);
             return null;
         }
     }

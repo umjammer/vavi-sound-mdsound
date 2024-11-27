@@ -24,11 +24,11 @@ public interface Device {
 
     interface Renderable extends Device {
         /**
-         * 音声のレンダリング
+         * Audio Rendering
          *
-         * @param b 合成されたデータを格納する配列．
-         *             b[0]が左チャンネル，b[1]が右チャンネルの音声データ．
-         * @return 合成したデータのサイズ．1ならモノラル．2ならステレオ．0は合成失敗．
+         * @param b The array that stores the composite data.
+         *             b[0] is the left channel audio data and b[1] is the right channel audio data.
+         * @return The size of the synthesized data. 1 is mono, 2 is stereo, 0 is synthesis failure.
          */
         int render(int[] b);
 
@@ -40,7 +40,7 @@ public interface Device {
     }
 
     /**
-     * 音声合成チップ
+     * Audio synthesis chip
      */
     interface SoundChip extends Renderable {
         /**
@@ -49,16 +49,16 @@ public interface Device {
         @Override void tick(int clocks);
 
         /**
-         * チップの動作クロックを設定
+         * Set the chip's operating clock
          *
-         * @param clock 動作周波数
+         * @param clock operating clock
          */
         void setClock(double clock);
 
         /**
-         * 音声合成レート設定
+         * Audio synthesis rate settings
          *
-         * @param rate 出力周波数
+         * @param rate Output Frequency
          */
         void setRate(double rate);
 
@@ -90,10 +90,10 @@ public interface Device {
         protected List<Device> vd = new ArrayList<>();
 
         /**
-         * リセット
+         * Reset
          * <p>
-         * 取り付けられている全てのデバイスの，Resetメソッドを呼び出す．
-         * 呼び出し順序は，デバイスが取り付けられた順序に等しい．
+         * Calls the Reset method on all attached devices.
+         * The order of calls is equal to the order in which the devices were installed.
          */
         @Override
         public void reset() {
@@ -103,18 +103,18 @@ public interface Device {
         }
 
         /**
-         * 全デバイスの取り外し
+         * Detaches all devices.
          */
         public void detachAll() {
             vd.clear();
         }
 
         /**
-         * デバイスの取り付け
+         * Attaches the Device.
          * <p>
-         * このバスにデバイスを取り付ける．
+         * Attach the device to this bus.
          *
-         * @param d 取り付けるデバイスへのポインタ
+         * @param d A device to attach to.
          */
         public void attach(Device d) {
             vd.add(d);

@@ -63,7 +63,7 @@ public class Ym2413 {
     private int MASK_TOM = 1 << 11;
     private int MASK_SD = 1 << 12;
     private int MASK_BD = 1 << 13;
-    //private int OPLL_MASK_RHYTHM = 0x1f << 9;//(OPLL_MASK_HH | OPLL_MASK_CYM | OPLL_MASK_TOM | OPLL_MASK_SD | OPLL_MASK_BD);
+//    private int OPLL_MASK_RHYTHM = 0x1f << 9; // (OPLL_MASK_HH | OPLL_MASK_CYM | OPLL_MASK_TOM | OPLL_MASK_SD | OPLL_MASK_BD);
 
     private enum Tone {_2413, _VRC7, _281B}
 
@@ -156,10 +156,10 @@ public class Ym2413 {
          */
         private int calcCar(int fm) {
             if (egOut >= (DB_MUTE - 1)) {
-                //Debug.printf("calc_slot_car: output over");
+                //logger.log(Level.TRACE, "calc_slot_car: output over");
                 output[0] = 0;
             } else {
-                //Debug.printf("calc_slot_car: slot.egout %d", slot.egout);
+                //logger.log(Level.TRACE, "calc_slot_car: slot.egout %d".formatted(slot.egout));
                 output[0] = db2LinTable[sinTbl[(pgOut + wave2_8pi(fm)) & (PG_WIDTH - 1)] + egOut];
             }
 
@@ -321,7 +321,7 @@ public class Ym2413 {
                 egOut = eg2db(egOut + tll) + lfo;
             else {
                 egOut = eg2db(egOut + tll);
-                //Debug.printf("egOut %d slot.tll %d (e_int32)(EG_STEP/DB_STEP) %d", egOut, slot.tll, (short)(EG_STEP / DB_STEP));
+//logger.log(Level.TRACE, "egOut %d slot.tll %d (e_int32)(EG_STEP/DB_STEP) %d".formatted(egOut, slot.tll, (short) (EG_STEP / DB_STEP)));
             }
 
             if (egOut >= DB_MUTE)
@@ -1469,7 +1469,7 @@ public class Ym2413 {
     // I/O Ctrl
 
     public void writeReg(int reg, int data) {
-        //Debug.printf("OPLL_writeReg:reg:%d:data:%d", reg,data);
+        //logger.log(Level.TRACE, "OPLL_writeReg:reg:%d:data:%d".formatted(reg,data));
 
         int v, ch;
 
@@ -1867,9 +1867,9 @@ public class Ym2413 {
             bufMO[i] <<= 1;
             bufRO[i] <<= 1;
 
-            //Debug.printf("OPLL_calc_stereo:out[0][%d]:%d:out[1][%d]:%d:samples:%d", i, out[0][i], out[1][i], samples);
+            //logger.log(Level.TRACE, "OPLL_calc_stereo:out[0][%d]:%d:out[1][%d]:%d:samples:%d".formatted(i, out[0][i], out[1][i], samples));
         }
-        //Debug.printf("elapsed:%d:%d:%d:%d:%d:%d", e0,e1,e2,e3,e4,e5);
+        //logger.log(Level.TRACE, "elapsed:%d:%d:%d:%d:%d:%d".formatted(e0,e1,e2,e3,e4,e5));
     }
 
 //#endif /* EMU2413_COMPACTION */

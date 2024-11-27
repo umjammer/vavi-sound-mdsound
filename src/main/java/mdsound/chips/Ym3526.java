@@ -571,7 +571,7 @@ public class Ym3526 {
                         egShAr = 0;
                         egSelAr = 13 * RATE_STEPS;
                     }
-                    //Debug.printf("CALC_FCSLOT slot.eg_sel_ar:%d slot.ar:%d slot.ksr:%d\n", slot.eg_sel_ar, slot.ar, slot.ksr);
+                    //logger.log(Level.TRACE, "CALC_FCSLOT slot.eg_sel_ar:%d slot.ar:%d slot.ksr:%d".formatted(slot.eg_sel_ar, slot.ar, slot.ksr));
                     egShDr = egRateShift[dr + this.ksr];
                     egSelDr = egRateSelect[dr + this.ksr];
                     egShRr = egRateShift[rr + this.ksr];
@@ -605,7 +605,7 @@ public class Ym3526 {
                     this.egShAr = 0;
                     this.egSelAr = 13 * Opl.Slot.RATE_STEPS;
                 }
-                //Debug.printf("this.eg_sel_ar:%d this.ar:%d this.ksr:%d\n", this.eg_sel_ar, this.ar, this.ksr);
+                //logger.log(Level.TRACE, "this.eg_sel_ar:%d this.ar:%d this.ksr:%d".formatted(this.eg_sel_ar, this.ar, this.ksr));
 
                 this.dr = (v & 0x0f) != 0 ? (16 + ((v & 0x0f) << 2)) : 0;
                 this.egShDr = Opl.Slot.egRateShift[this.dr + this.ksr];
@@ -792,7 +792,7 @@ public class Ym3526 {
                 this.lfoAmCnt -= (Opl.Slot.LFO_AM_TAB_ELEMENTS << LFO_SH);
 
             byte tmp = Opl.Slot.lfoAmTable[this.lfoAmCnt >> LFO_SH];
-            //Debug.printf("tmp %d\n", tmp);
+            //logger.log(Level.TRACE, "tmp %d".formatted(tmp));
 
             if (this.lfoAmDepth != 0)
                 this.lfoAm = tmp;
@@ -869,9 +869,9 @@ public class Ym3526 {
                     switch (op.state) {
                     case EG_ATT: // attack phase
                         if ((this.egCnt & ((1 << op.egShAr) - 1)) == 0) {
-//Debug.printf("eg_inc:%d Op.eg_sel_ar:%d this.eg_cnt:%d Op.eg_sh_ar:%d\n"
-//    ,eg_inc[Op.eg_sel_ar + ((this.eg_cnt >> Op.eg_sh_ar) & 7)]
-//    ,Op.eg_sel_ar, this.eg_cnt, Op.eg_sh_ar);
+//logger.log(Level.TRACE, "eg_inc:%d Op.eg_sel_ar:%d this.eg_cnt:%d Op.eg_sh_ar:%d".formatted(
+// eg_inc[Op.eg_sel_ar + ((this.eg_cnt >> Op.eg_sh_ar) & 7)]
+// ,Op.eg_sel_ar, this.eg_cnt, Op.eg_sh_ar));
                             op.volume += ((~op.volume) *
                                     (Opl.Slot.eg_inc[op.egSelAr + ((this.egCnt >> op.egShAr) & 7)])
                             ) >> 3;
@@ -990,7 +990,7 @@ public class Ym3526 {
             int p;
 
             p = (env << 4) + sinTab[wave_tab + ((((phase & ~FREQ_MASK) + (pm << 16)) >> FREQ_SH) & SIN_MASK)];
-            //Debug.printf("op_calc:%d",p);
+//logger.log(Level.TRACE, "op_calc:%d".formatted(p));
             if (p >= TL_TAB_LEN)
                 return 0;
             return tl_tab[p];
@@ -1000,7 +1000,7 @@ public class Ym3526 {
             int p;
 
             p = (env << 4) + sinTab[wave_tab + ((((phase & ~FREQ_MASK) + pm) >> FREQ_SH) & SIN_MASK)];
-            //Debug.printf("op_calc1:%d", p);
+//logger.log(Level.TRACE, "op_calc1:%d".formatted(p));
 
             if (p >= TL_TAB_LEN)
                 return 0;
@@ -1017,7 +1017,7 @@ public class Ym3526 {
             // slot 1
             Opl.Slot slot = ch.slots[SLOT1];
             int env = slot.calcVolume(this.lfoAm);
-            //Debug.printf("env1 %d %d %d %d %d\n", env, slot.TLL, slot.volume, this.LFO_AM, slot.aMmask);
+            //logger.log(Level.TRACE, "env1 %d %d %d %d %d".formatted(env, slot.TLL, slot.volume, this.LFO_AM, slot.aMmask));
             int out = slot.op1Out[0] + slot.op1Out[1];
             slot.op1Out[0] = slot.op1Out[1];
             if (slot.ptrConnect1 == 0) this.output[0] += slot.op1Out[0];
@@ -1032,7 +1032,7 @@ public class Ym3526 {
             // slot 2
             slot = ch.slots[SLOT2];
             env = slot.calcVolume(this.lfoAm);
-            //Debug.printf("env2 %d\n", env);
+            //logger.log(Level.TRACE, "env2 %d".formatted(env));
             if (env < ENV_QUIET)
                 this.output[0] += opCalc(slot.cnt, env, this.phaseModulation, slot.waveTable);
         }
@@ -1245,7 +1245,7 @@ public class Ym3526 {
                     tl_tab[x * 2 + 1 + i * 2 * TL_RES_LEN] = -tl_tab[x * 2 + 0 + i * 2 * TL_RES_LEN];
                 }
             }
-            // Debug.printf("FMthis.C: TL_TAB_LEN = %i elements (%i bytes)\n",TL_TAB_LEN, (int)sizeof(tl_tab));
+//logger.log(Level.TRACE, "FMthis.C: TL_TAB_LEN = %i elements (%i bytes)".formatted(TL_TAB_LEN, (int) sizeof(tl_tab)));
 
             for (int i = 0; i < SIN_LEN; i++) {
                 // non-standard sinus
@@ -1269,7 +1269,7 @@ public class Ym3526 {
 
                 sinTab[i] = n * 2 + (m >= 0.0 ? 0 : 1);
 
-                //Debug.printf("FMthis.C: sin [%4i (hex=%03x)]= %4i (tl_tab value=%5i)\n", i, i, sin_tab[i], tl_tab[sin_tab[i]] );
+//logger.log(Level.TRACE, "FMthis.C: sin [%4i (hex=%03x)]= %4i (tl_tab value=%5i)".formatted(i, i, sin_tab[i], tl_tab[sin_tab[i]]));
             }
 
             for (int i = 0; i < SIN_LEN; i++) {
@@ -1297,25 +1297,25 @@ public class Ym3526 {
                 else
                     sinTab[3 * SIN_LEN + i] = sinTab[i & (SIN_MASK >> 2)];
 
-//Debug.printf("FMthis.C: sin1[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[1*SIN_LEN+i], tl_tab[sin_tab[1*SIN_LEN+i]] );
-//Debug.printf("FMthis.C: sin2[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[2*SIN_LEN+i], tl_tab[sin_tab[2*SIN_LEN+i]] );
-//Debug.printf("FMthis.C: sin3[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[3*SIN_LEN+i], tl_tab[sin_tab[3*SIN_LEN+i]] );
+//logger.log(Level.TRACE, "FMthis.C: sin1[%4i]= %4i (tl_tab value=%5i)".formatted(i, sin_tab[1 * SIN_LEN + i], tl_tab[sin_tab[1 * SIN_LEN + i]]));
+//logger.log(Level.TRACE, "FMthis.C: sin2[%4i]= %4i (tl_tab value=%5i)".formatted(i, sin_tab[2 * SIN_LEN + i], tl_tab[sin_tab[2 * SIN_LEN + i]]));
+//logger.log(Level.TRACE, "FMthis.C: sin3[%4i]= %4i (tl_tab value=%5i)".formatted(i, sin_tab[3 * SIN_LEN + i], tl_tab[sin_tab[3 * SIN_LEN + i]]));
             }
-            //Debug.printf("FMthis.C: ENV_QUIET= %08x (dec*8=%i)\n", ENV_QUIET, ENV_QUIET*8 );
+//logger.log(Level.TRACE, "FMthis.C: ENV_QUIET= %08x (dec*8=%i)".formatted(ENV_QUIET, ENV_QUIET * 8));
         }
 
         private void initialize() {
             // frequency base
             this.freqBase = (this.rate != 0) ? ((double) this.clock / 72.0) / this.rate : 0;
 
-            //Debug.printf("freqbase=%f\n", this.freqbase);
+//logger.log(Level.TRACE, "freqbase=%f".formatted(this.freqbase));
 
             // make fnumber . increment counter table
             for (int i = 0; i < 1024; i++) {
                 // opn phase increment counter = 20bit
                 this.fnTab[i] = (int) ((double) i * 64 * this.freqBase * (1 << (FREQ_SH - 10))); // -10 because chips works with 10.10 fixed point, while we use 16.16
 
-                //Debug.printf("FMthis.C: fn_tab[%d] = %x (dec=%d)\n", i, this.fn_tab[i] >> 6, this.fn_tab[i] >> 6);
+//logger.log(Level.TRACE, "FMthis.C: fn_tab[%d] = %x (dec=%d)".formatted(i, this.fn_tab[i] >> 6, this.fn_tab[i] >> 6));
             }
 
             for (int i = 0; i < 9; i++)
@@ -1330,14 +1330,14 @@ public class Ym3526 {
             // Vibrato: 8 output levels (triangle waveform); 1 level takes 1024 samples
             this.lfoPmInc = (int) ((1.0 / 1024.0) * (1 << LFO_SH) * this.freqBase);
 
-            //Debug.printf("this.lfo_am_inc = %8x ; this.lfo_pm_inc = %8x\n", this.lfo_am_inc, this.lfo_pm_inc);
+//logger.log(Level.TRACE, "this.lfo_am_inc = %8x ; this.lfo_pm_inc = %8x".formatted(this.lfo_am_inc, this.lfo_pm_inc));
 
             // Noise generator: a step takes 1 sample
             this.noiseF = (int) ((1.0 / 1.0) * (1 << FREQ_SH) * this.freqBase);
 
             this.egTimerAdd = (int) ((1 << EG_SH) * this.freqBase);
             this.egTimerOverflow = 1 * (1 << EG_SH);
-            //Debug.printf("OPLinit eg_timer_add=%8x eg_timer_overflow=%8x\n", this.eg_timer_add, this.eg_timer_overflow);
+//logger.log(Level.TRACE, "OPLinit eg_timer_add=%8x eg_timer_overflow=%8x".formatted(this.eg_timer_add, this.eg_timer_overflow));
         }
 
         private void keyOn(Opl.Slot slot, int keySet) {
@@ -1394,7 +1394,7 @@ public class Ym3526 {
         private void writeReg(int r, int v) {
             int slotNo;
 
-            //Debug.printf("writeReg:%d:%d\n", r, v);
+            //logger.log(Level.TRACE, "writeReg:%d:%d".formatted(r, v));
 
             // adjust bus to 8 bits
             r &= 0xff;
@@ -1449,7 +1449,7 @@ public class Ym3526 {
                     break;
 
                 default:
-                    //Debug.printf("FMthis.C: write to unknown register: %02x\n", r);
+                    //logger.log(Level.TRACE, "FMthis.C: write to unknown register: %02x".formatted(r));
                     break;
                 }
                 break;

@@ -393,7 +393,7 @@ public class YmF262 {
                     }
                     //this.connect += this.op1_out[1];
                     this.connect.setValue(this.connect.getValue() + this.op1Out[1]);
-//Debug.printf("out0=%5i vol0=%4i ", this.op1_out[1], env );
+//logger.log(Level.TRACE, "out0=%5i vol0=%4i ".formatted(this.op1_out[1], env ));
                 }
 
                 public void calc(int lfoAm, int phaseModulation) {
@@ -401,7 +401,7 @@ public class YmF262 {
                     if (env < ENV_QUIET) {
                         this.connect.setValue(this.connect.getValue() + calcOp(this.cnt, env, phaseModulation, this.waveTable));
                     }
-//Debug.printf("out1=%5i vol1=%4i\n", op_calc(this.Cnt, env, this.phase_modulation, this.wavetable), env );
+//logger.log(Level.TRACE, "out1=%5i vol1=%4i".formatted(op_calc(this.Cnt, env, this.phase_modulation, this.wavetable), env));
                 }
 
                 public void calcRhythm(int lfoAm) {
@@ -1420,15 +1420,15 @@ public class YmF262 {
                     tlTab[x * 2 + 0 + i * 2 * TL_RES_LEN] = tlTab[x * 2 + 0] >> i;
                     tlTab[x * 2 + 1 + i * 2 * TL_RES_LEN] = ~tlTab[x * 2 + 0 + i * 2 * TL_RES_LEN]; // this *is* different from OPL2 (verified on real YMF262)
                 }
-//Debug.printf("tl %04i", x*2);
+//logger.log(Level.TRACE, "tl %04i".formatted(x*2));
 //for (i=0; i<13; i++)
-// Debug.printf(", [%02i] %5i", i*2, tl_tab[ x*2 +0 + i*2*TL_RES_LEN ] ); // positive
-//Debug.printf("\n");
+// logger.log(Level.TRACE, ", [%02i] %5i".formatted(i*2, tl_tab[ x*2 +0 + i*2*TL_RES_LEN ] )); // positive
+//logger.log(Level.TRACE, "\n");
 
-//Debug.printf("tl %04i", x*2);
+//logger.log(Level.TRACE, "tl %04i".formatted(x*2));
 //for (i=0; i<13; i++)
-// Debug.printf(", [%02i] %5i", i*2, tl_tab[ x*2 +1 + i*2*TL_RES_LEN ] ); /* negative
-//Debug.printf("\n");
+// logger.log(Level.TRACE, ", [%02i] %5i".formatted(i*2, tl_tab[ x*2 +1 + i*2*TL_RES_LEN ] )); /* negative
+//logger.log(Level.TRACE, "\n");
             }
 
             for (int i = 0; i < SIN_LEN; i++) {
@@ -1453,7 +1453,7 @@ public class YmF262 {
 
                 sinTab[i] = n * 2 + (m >= 0.0 ? 0 : 1);
 
-//Debug.printf("YMF262.C: sin [%4i (hex=%03x)]= %4i (tl_tab value=%5i)\n", i, i, sin_tab[i], tl_tab[sin_tab[i]]);
+//logger.log(Level.TRACE, YMF262.C: sin [%4i (hex=%03x)]= %4i (tl_tab value=%5i)".formatted(i, i, sin_tab[i], tl_tab[sin_tab[i]]));
             }
 
             for (int i = 0; i < SIN_LEN; i++) {
@@ -1528,15 +1528,15 @@ public class YmF262 {
 
                 sinTab[7 * SIN_LEN + i] = x;
 
-//Debug.printf("YMF262.C: sin1[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[1*SIN_LEN+i], tl_tab[sin_tab[1*SIN_LEN+i]]);
-//Debug.printf("YMF262.C: sin2[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[2*SIN_LEN+i], tl_tab[sin_tab[2*SIN_LEN+i]]);
-//Debug.printf("YMF262.C: sin3[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[3*SIN_LEN+i], tl_tab[sin_tab[3*SIN_LEN+i]]);
-//Debug.printf("YMF262.C: sin4[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[4*SIN_LEN+i], tl_tab[sin_tab[4*SIN_LEN+i]]);
-//Debug.printf("YMF262.C: sin5[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[5*SIN_LEN+i], tl_tab[sin_tab[5*SIN_LEN+i]]);
-//Debug.printf("YMF262.C: sin6[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[6*SIN_LEN+i], tl_tab[sin_tab[6*SIN_LEN+i]]);
-//Debug.printf("YMF262.C: sin7[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[7*SIN_LEN+i], tl_tab[sin_tab[7*SIN_LEN+i]]);
+//logger.log(Level.TRACE, "YMF262.C: sin1[%4i]= %4i (tl_tab value=%5i)".formatted(i, sin_tab[1*SIN_LEN+i], tl_tab[sin_tab[1*SIN_LEN+i]]));
+//logger.log(Level.TRACE, "YMF262.C: sin2[%4i]= %4i (tl_tab value=%5i)".formatted(i, sin_tab[2*SIN_LEN+i], tl_tab[sin_tab[2*SIN_LEN+i]]));
+//logger.log(Level.TRACE, "YMF262.C: sin3[%4i]= %4i (tl_tab value=%5i)".formatted(i, sin_tab[3*SIN_LEN+i], tl_tab[sin_tab[3*SIN_LEN+i]]));
+//logger.log(Level.TRACE, "YMF262.C: sin4[%4i]= %4i (tl_tab value=%5i)".formatted(i, sin_tab[4*SIN_LEN+i], tl_tab[sin_tab[4*SIN_LEN+i]]));
+//logger.log(Level.TRACE, "YMF262.C: sin5[%4i]= %4i (tl_tab value=%5i)".formatted(i, sin_tab[5*SIN_LEN+i], tl_tab[sin_tab[5*SIN_LEN+i]]));
+//logger.log(Level.TRACE, "YMF262.C: sin6[%4i]= %4i (tl_tab value=%5i)".formatted(i, sin_tab[6*SIN_LEN+i], tl_tab[sin_tab[6*SIN_LEN+i]]));
+//logger.log(Level.TRACE, "YMF262.C: sin7[%4i]= %4i (tl_tab value=%5i)".formatted(i, sin_tab[7*SIN_LEN+i], tl_tab[sin_tab[7*SIN_LEN+i]]));
             }
-//Debug.printf("YMF262.C: ENV_QUIET= %08x (dec*8=%i)\n", ENV_QUIET, ENV_QUIET*8 );
+//logger.log(Level.TRACE, "YMF262.C: ENV_QUIET= %08x (dec*8=%i)".formatted(ENV_QUIET, ENV_QUIET * 8));
         }
 
         private void init() {
@@ -1545,7 +1545,7 @@ public class YmF262 {
             // frequency base
             this.freqbase = (this.rate) != 0 ? ((double) this.clock / (8.0 * 36)) / this.rate : 0;
 
-            // Debug.printf("YMF262: freqbase=%f\n", this.freqbase);
+//logger.log(Level.TRACE, "YMF262: freqbase=%f".formatted(this.freqbase));
 
             // Timer base time
             //this.TimerBase = attotime_mul(ATTOTIME_IN_HZ(this.clock), 8*36);
@@ -1554,7 +1554,7 @@ public class YmF262 {
             for (int i = 0; i < 1024; i++) {
                 // opn phase increment counter = 20bit
                 this.fnTab[i] = (int) ((double) i * 64 * this.freqbase * (1 << (FREQ_SH - 10))); // -10 because chips works with 10.10 fixed point, while we use 16.16
-//Debug.printf("YMF262.C: fn_tab[%4i] = %08x (dec=%8i)\n", i, this.fn_tab[i]>>6, this.fn_tab[i]>>6);
+//logger.log(Level.TRACE, "YMF262.C: fn_tab[%4i] = %08x (dec=%8i)".formatted(i, this.fn_tab[i] >> 6, this.fn_tab[i] >> 6));
             }
 
             // Amplitude modulation: 27 output levels (triangle waveform); 1 level takes one of: 192, 256 or 448 samples
@@ -1564,14 +1564,14 @@ public class YmF262 {
             // Vibrato: 8 output levels (triangle waveform); 1 level takes 1024 samples
             this.lfoPmInc = (int) ((1.0 / 1024.0) * (1 << LFO_SH) * this.freqbase);
 
-//System.err.printf ("this.lfo_am_inc = %8x ; this.lfo_pm_inc = %8x\n", this.lfo_am_inc, this.lfo_pm_inc);
+//logger.log(Level.TRACE, "this.lfo_am_inc = %8x ; this.lfo_pm_inc = %8x".formatted(this.lfo_am_inc, this.lfo_pm_inc));
 
             // Noise generator: a step takes 1 sample
             this.noiseF = (int) ((1.0 / 1.0) * (1 << FREQ_SH) * this.freqbase);
 
             this.egTimerAdd = (int) ((1 << EG_SH) * this.freqbase);
             this.egTimerOverflow = (1) * (1 << EG_SH);
-//Debug.printf("YMF262init eg_timer_add=%8x eg_timer_overflow=%8x\n", this.eg_timer_add, this.eg_timer_overflow);
+//logger.log(Level.TRACE, "YMF262init eg_timer_add=%8x eg_timer_overflow=%8x".formatted(this.eg_timer_add, this.eg_timer_overflow));
         }
 
         public void reset() {
@@ -1935,8 +1935,8 @@ public class YmF262 {
                     return;
 
                 default:
-// if (r < 0x120)
-//  Debug.printf("YMF262: write to unknown register (set#2): %03x value=%02x\n", r, v);
+//if (r < 0x120)
+// logger.log(Level.TRACE, "YMF262: write to unknown register (set#2): %03x value=%02x".formatted(r, v));
                     break;
                 }
 
@@ -1988,7 +1988,7 @@ public class YmF262 {
                     break;
 
                 default:
-//Debug.printf("YMF262: write to unknown register: %02x value=%02x\n", r, v);
+//logger.log(Level.TRACE, "YMF262: write to unknown register: %02x value=%02x".formatted(r, v));
                     break;
                 }
                 break;
@@ -2597,7 +2597,7 @@ public class YmF262 {
                 ch_a[i] = a + c;
                 ch_b[i] = b + d;
 
-//Debug.printf("%d %d", ch_a[i], ch_b[i]);
+//logger.log(Level.TRACE, "%d %d".formatted(ch_a[i], ch_b[i]));
 
                 advance();
             }
@@ -3287,7 +3287,7 @@ public class YmF262 {
         }
 
         private Opl2(int clock, int sampleRate, UpdateHandler updateHandler) {
-            //Debug.printf("clock:%d rate:%d", clock, sampleRate);
+            //logger.log(Level.TRACE, "clock:%d rate:%d".formatted(clock, sampleRate));
 
             this.chipClock = clock;
             this.intSamplerate = sampleRate;
@@ -3331,7 +3331,7 @@ public class YmF262 {
 
         public int write(int addr, int val) {
             if ((addr & 1) != 0) {
-                //Debug.printf("adr=%x  dat=%x", this.opl_addr, val);
+                //logger.log(Level.TRACE, "adr=%x  dat=%x".formatted(this.opl_addr, val));
                 writeInternal(this.oplAddr, (byte) (val & 0xff));
             } else
                 this.oplAddr = val | ((addr & 2) << 7);
@@ -4389,7 +4389,7 @@ public class YmF262 {
 //                    }
 //                }
 
-                //Debug.printf("bufl:%d bufr:%d", outBufL[curSmp], outBufR[curSmp]);
+                //logger.log(Level.TRACE, "bufl:%d bufr:%d".formatted(outBufL[curSmp], outBufR[curSmp]));
             }
         }
 

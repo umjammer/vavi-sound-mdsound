@@ -348,7 +348,7 @@ public class Opl {
                 if (this.now_addr != (this.end << 1)) {
                     v = this.memory[this.now_addr >> 1] & 0xff;
 
-//Debug.printf("YM Delta-T memory read  $%08x, v=$%02x\n", this.now_addr >> 1, v);
+//logger.log(Level.TRACE, "YM Delta-T memory read  $%08x, v=$%02x".formatted(this.now_addr >> 1, v));
 
                     this.now_addr += 2; // two nibbles at a time
 
@@ -437,7 +437,7 @@ public class Opl {
                     this.adpcmD = DELTA_DEF;
                     this.nowData = 0;
                     //if (this.start > this.end)
-                    // Debug.printf("DeltaT-Warning: Start: %06X, End: %06X\n", this.start, this.end);
+                    // logger.log(Level.TRACE, "DeltaT-Warning: Start: %06X, End: %06X".formatted(this.start, this.end));
                 }
 
                 if ((this.portState & 0x20) != 0) { // do we access external memory?
@@ -446,16 +446,16 @@ public class Opl {
 
                     // if yes, then let's check if ADPCM memory is mapped and big enough
                     if (this.memory == null) {
-                        //Debug.printf("YM Delta-T ADPCM rom not mapped\n");
+                        //logger.log(Level.TRACE, "YM Delta-T ADPCM rom not mapped\n");
                         this.portState = 0x00;
                         this.pcmBsy = 0;
                     } else {
                         if (this.end >= this.memorySize) { // Check End in Range
-                            //Debug.printf("YM Delta-T ADPCM end out of range: $%08x\n", this.end);
+                            //logger.log(Level.TRACE, "YM Delta-T ADPCM end out of range: $%08x".formatted(this.end));
                             this.end = this.memorySize - 1;
                         }
                         if (this.start >= this.memorySize) { // Check Start in Range
-                            //Debug.printf("YM Delta-T ADPCM start out of range: $%08x\n", this.start);
+                            //logger.log(Level.TRACE, "YM Delta-T ADPCM start out of range: $%08x".formatted(this.start));
                             this.portState = 0x00;
                             this.pcmBsy = 0;
                         }
@@ -506,13 +506,13 @@ public class Opl {
             case 0x02: // Start Address L
             case 0x03: // Start Address H
                 this.start = ((this.reg[0x3] & 0xff) * 0x0100 | (this.reg[0x2] & 0xff)) << (this.portshift - this.dramPortShift);
-                //Debug.printf("deltaT start: 02=%2x 03=%2x addr=%8x\n",this.reg[0x2], this.reg[0x3],this.start );
+//logger.log(Level.TRACE, "deltaT start: 02=%2x 03=%2x addr=%8x".formatted(this.reg[0x2], this.reg[0x3],this.start));
                 break;
             case 0x04: // Stop Address L
             case 0x05: // Stop Address H
                 this.end = ((this.reg[0x5] & 0xff) * 0x0100 | (this.reg[0x4] & 0xff)) << (this.portshift - this.dramPortShift);
                 this.end += (1 << (this.portshift - this.dramPortShift)) - 1;
-                //Debug.printf("deltaT end  : 04=%2x 05=%2x addr=%8x\n",this.reg[0x4], this.reg[0x5],this.end   );
+//logger.log(Level.TRACE, "deltaT end  : 04=%2x 05=%2x addr=%8x".formatted(this.reg[0x4], this.reg[0x5],this.end));
                 break;
             case 0x06: // Prescale L (ADPCM and Record frq)
             case 0x07: // Prescale H
@@ -536,7 +536,7 @@ public class Opl {
                         this.memRead = 0;
                     }
 
-                    //Debug.printf("YM Delta-T memory write $%08x, v=$%02x\n", this.now_addr >> 1, v);
+//logger.log(Level.TRACE, "YM Delta-T memory write $%08x, v=$%02x".formatted(this.now_addr >> 1, v));
 
                     if (this.now_addr != (this.end << 1)) {
                         this.memory[this.now_addr >> 1] = (byte) v;
@@ -580,8 +580,8 @@ public class Opl {
             case 0x09: // DELTA-N L (ADPCM Playback Prescaler)
             case 0x0a: // DELTA-N H
                 this.delta = (this.reg[0xa] & 0xff) * 0x0100 | (this.reg[0x9] & 0xff);
-                this.step = (int) ((this.delta /* *(1<<(YM_DELTAT_SHIFT-16)) */) * (this.freqVase));
-                //Debug.printf("deltaT deltan:09=%2x 0a=%2x\n",this.reg[0x9], this.reg[0xa]);
+                this.step = (int) ((this.delta /* * (1 << (YM_DELTAT_SHIFT - 16)) */) * (this.freqVase));
+//logger.log(Level.TRACE, "deltaT deltan:09=%2x 0a=%2x".formatted(this.reg[0x9], this.reg[0xa]);
                 break;
             case 0x0b: { // Output level control (volume, linear)
                 int oldvol = this.volume;
@@ -591,7 +591,7 @@ public class Opl {
                 //  thus: output_range must be (1 << (15+8)) at least
                 //          v     *     ((1<<23)>>8)        >>  15;
                 //          v     *     (1<<15)             >>  15;
-                //Debug.printf("deltaT vol = %2x\n",v&0xff);
+//logger.log(Level.TRACE, "deltaT vol = %2x".formatted(v & 0xff));
                 if (oldvol != 0) {
                     this.adpcmL = (int) (this.adpcmL / (double) oldvol * this.volume);
                 }
@@ -600,7 +600,7 @@ public class Opl {
             case 0x0c: // Limit Address L
             case 0x0d: // Limit Address H
                 this.limit = ((this.reg[0xd] & 0xff) * 0x0100 | (this.reg[0xc] & 0xff)) << (this.portshift - this.dramPortShift);
-                //Debug.printf("deltaT limit: 0c=%2x 0d=%2x addr=%8x\n",this.reg[0xc], this.reg[0xd],this.limit );
+//logger.log(Level.TRACE, "deltaT limit: 0c=%2x 0d=%2x addr=%8x".formatted(this.reg[0xc], this.reg[0xd],this.limit));
                 break;
             }
         }
@@ -2139,13 +2139,13 @@ public class Opl {
                 tlTab[x * 2 + 1 + i * 2 * TL_RES_LEN] = -tlTab[x * 2 + 0 + i * 2 * TL_RES_LEN];
             }
 //#if 0
-// Debug.printf("tl %04i", x * 2);
+// logger.log(Level.TRACE, "tl %04i".formatted(x * 2));
 // for (i = 0; i < 12; i++)
-//  Debug.printf(", [%02i] %5i", i * 2, tl_tab[x * 2 /*+1 + i*2*TL_RES_LEN ] );
-// Debug.printf("\n");
+//  logger.log(Level.TRACE, ", [%02i] %5i".formatted(i * 2, tl_tab[x * 2 /* + 1 + i * 2 * TL_RES_LEN]));
+// logger.log(Level.TRACE, "\n");
 //#endif
         }
-// Debug.printf("FMthis.C: TL_TAB_LEN = %i elements (%i bytes)\n",TL_TAB_LEN, (int)sizeof(tl_tab));
+//logger.log(Level.TRACE, "FMthis.C: TL_TAB_LEN = %i elements (%i bytes)".formatted(TL_TAB_LEN, (int) sizeof(tl_tab)));
 
         for (int i = 0; i < SIN_LEN; i++) {
             // non-standard sinus
@@ -2169,7 +2169,7 @@ public class Opl {
 
             sinTab[i] = n * 2 + (m >= 0.0 ? 0 : 1);
 
-// Debug.printf("FMthis.C: sin [%4i (hex=%03x)]= %4i (tl_tab value=%5i)\n", i, i, sin_tab[i], tl_tab[sin_tab[i]] );
+//logger.log(Level.TRACE, "FMthis.C: sin [%4i (hex=%03x)]= %4i (tl_tab value=%5i)".formatted(i, i, sin_tab[i], tl_tab[sin_tab[i]]));
         }
 
         for (int i = 0; i < SIN_LEN; i++) {
@@ -2197,11 +2197,11 @@ public class Opl {
             else
                 sinTab[3 * SIN_LEN + i] = sinTab[i & (SIN_MASK >> 2)];
 
-            //Debug.printf("FMthis.C: sin1[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[1*SIN_LEN+i], tl_tab[sin_tab[1*SIN_LEN+i]] );
-            //Debug.printf("FMthis.C: sin2[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[2*SIN_LEN+i], tl_tab[sin_tab[2*SIN_LEN+i]] );
-            //Debug.printf("FMthis.C: sin3[%4i]= %4i (tl_tab value=%5i)\n", i, sin_tab[3*SIN_LEN+i], tl_tab[sin_tab[3*SIN_LEN+i]] );
+//logger.log(Level.TRACE, "FMthis.C: sin1[%4i]= %4i (tl_tab value=%5i)".formatted(i, sin_tab[1 * SIN_LEN + i], tl_tab[sin_tab[1 * SIN_LEN + i]]));
+//logger.log(Level.TRACE, "FMthis.C: sin2[%4i]= %4i (tl_tab value=%5i)".formatted(i, sin_tab[2 * SIN_LEN + i], tl_tab[sin_tab[2 * SIN_LEN + i]]));
+//logger.log(Level.TRACE, "FMthis.C: sin3[%4i]= %4i (tl_tab value=%5i)".formatted(i, sin_tab[3 * SIN_LEN + i], tl_tab[sin_tab[3 * SIN_LEN + i]]));
         }
-        //Debug.printf("FMthis.C: ENV_QUIET= %08x (dec*8=%i)\n", ENV_QUIET, ENV_QUIET*8);
+//logger.log(Level.TRACE, "FMthis.C: ENV_QUIET= %08x (dec*8=%i)".formatted(ENV_QUIET, ENV_QUIET * 8));
 
         return 1;
     }
@@ -2211,7 +2211,7 @@ public class Opl {
         // frequency base
         this.freqBase = (this.rate != 0) ? ((double) this.clock / 72.0) / this.rate : 0;
 
-        //Debug.printf("freqbase=%f\n", this.freqbase);
+        //logger.log(Level.TRACE, "freqbase=%f".formatted(this.freqbase));
 
         // Timer base time
         //this.TimerBase = attotime_mul(ATTOTIME_IN_HZ(this.clock), 72);
@@ -2235,14 +2235,14 @@ public class Opl {
         // Vibrato: 8 output levels (triangle waveform); 1 level takes 1024 samples
         this.lfoPmInc = (int) ((1.0 / 1024.0) * (1 << LFO_SH) * this.freqBase);
 
-        //System.err.printf ("this.lfo_am_inc = %8x ; this.lfo_pm_inc = %8x\n", this.lfo_am_inc, this.lfo_pm_inc);
+        //logger.log(Level.TRACE, "this.lfo_am_inc = %8x ; this.lfo_pm_inc = %8x".formatted(this.lfo_am_inc, this.lfo_pm_inc));
 
         // Noise generator: a step takes 1 sample
         this.noiseF = (int) ((1.0 / 1.0) * (1 << FREQ_SH) * this.freqBase);
 
         this.egTimerAdd = (int) ((1 << EG_SH) * this.freqBase);
         this.egTimerOverflow = (1) * (1 << EG_SH);
-        //Debug.printf("OPLinit eg_timer_add=%8x eg_timer_overflow=%8x\n", this.eg_timer_add, this.eg_timer_overflow);
+        //logger.log(Level.TRACE, "OPLinit eg_timer_add=%8x eg_timer_overflow=%8x".formatted(this.eg_timer_add, this.eg_timer_overflow));
     }
 
     /**
@@ -2388,7 +2388,7 @@ public class Opl {
                         this.keyboardWriteHandler.accept(v);
 //# ifdef _DEBUG
 //else
-// Debug.printf("Y8950: write unmapped KEYBOARD port\n");
+// logger.log(Level.TRACE, "Y8950: write unmapped KEYBOARD port\n");
 //#endif
                 }
                 break;
@@ -2421,7 +2421,7 @@ public class Opl {
             case 0x15: // DAC data high 8 bits (F7,F6...F2)
             case 0x16: // DAC data low 2 bits (F1, F0 in bits 7,6)
             case 0x17: // DAC data shift (S2,S1,S0 in bits 2,1,0)
-//Debug.printf("FMthis.C: DAC data register written, but not implemented reg=%02x val=%02x\n", r, v);
+//logger.log(Level.TRACE, "FMthis.C: DAC data register written, but not implemented reg=%02x val=%02x".formatted(r, v));
                 break;
 
             case 0x18: // I/O CTRL (Direction)
@@ -2436,7 +2436,7 @@ public class Opl {
                 }
                 break;
             default:
-//Debug.printf("FMthis.C: write to unknown register: %02x\n", r);
+//logger.log(Level.TRACE, "FMthis.C: write to unknown register: %02x".formatted(r));
                 break;
             }
             break;
@@ -2664,7 +2664,7 @@ public class Opl {
             if ((this.type & SUB_TYPE_KEYBOARD) != 0) {
                 if (this.keyboardReadHandler != null)
                     return this.keyboardReadHandler.get();
-                //Debug.printf("Y8950: read unmapped KEYBOARD port\n");
+//logger.log(Level.TRACE, "Y8950: read unmapped KEYBOARD port");
             }
             return 0;
 
@@ -2673,7 +2673,7 @@ public class Opl {
                 int val;
 
                 val = this.deltaT.read();
-                // Debug.printf("Y8950: read ADPCM value read=%02x\n",val);
+//logger.log(Level.TRACE, "Y8950: read ADPCM value read=%02x".formatted(val));
                 return val;
             }
             return 0;
@@ -2682,12 +2682,12 @@ public class Opl {
             if ((this.type & SUB_OPL_TYPE_IO) != 0) {
                 if (this.portReadHandler != null)
                     return this.portReadHandler.get();
-                //Debug.printf("Y8950:read unmapped I/O port\n");
+//logger.log(Level.TRACE, "Y8950:read unmapped I/O port");
             }
             return 0;
         case 0x1a: // PCM-DATA
             if ((this.type & SUB_TYPE_ADPCM) != 0) {
-                //Debug.printf("Y8950 A/D conversion is accessed but not implemented !\n");
+//logger.log(Level.TRACE, "Y8950 A/D conversion is accessed but not implemented !");
                 return 0x80; // 2's complement PCM data - result from A/D conversion
             }
             return 0;
@@ -2789,7 +2789,7 @@ public class Opl {
                 int[] bufR = buffer[1];
 
                 for (int i = 0; i < length; i++) {
-//Debug.printf("clock=%d:rate=%d:freqbase=%d:cnt=%d", chips.clock, chips.rate, chips.freqbase, cnt++);
+//logger.log(Level.TRACE, "clock=%d:rate=%d:freqbase=%d:cnt=%d".formatted(chips.clock, chips.rate, chips.freqbase, cnt++));
 
                     this.output[0] = 0;
                     this.outputDeltaT[0] = 0;
@@ -2802,32 +2802,32 @@ public class Opl {
 
                     // FM part
                     this.calcCh(this.channels[0]);
-                    //Debug.printf("P_CH[0] this.output[0]=%d", this.output[0]);
+                    //logger.log(Level.TRACE, "P_CH[0] this.output[0]=%d".formatted(this.output[0]));
                     this.calcCh(this.channels[1]);
-                    //Debug.printf("P_CH[1] this.output[0]=%d", this.output[0]);
+                    //logger.log(Level.TRACE, "P_CH[1] this.output[0]=%d".formatted(this.output[0]));
                     this.calcCh(this.channels[2]);
-                    //Debug.printf("P_CH[2] this.output[0]=%d", this.output[0]);
+                    //logger.log(Level.TRACE, "P_CH[2] this.output[0]=%d".formatted(this.output[0]));
                     this.calcCh(this.channels[3]);
-                    //Debug.printf("P_CH[3] this.output[0]=%d", this.output[0]);
+                    //logger.log(Level.TRACE, "P_CH[3] this.output[0]=%d".formatted(this.output[0]));
                     this.calcCh(this.channels[4]);
-                    //Debug.printf("P_CH[4] this.output[0]=%d %d %d", this.output[0], this.P_CH[4].SLOT[SLOT1].op1_out[0], this.P_CH[4].SLOT[SLOT1].op1_out[1]);
+                    //logger.log(Level.TRACE, "P_CH[4] this.output[0]=%d %d %d".formatted(this.output[0], this.P_CH[4].SLOT[SLOT1].op1_out[0], this.P_CH[4].SLOT[SLOT1].op1_out[1]));
                     this.calcCh(this.channels[5]);
-                    //Debug.printf("P_CH[5] this.output[0]=%d", this.output[0]);
+                    //logger.log(Level.TRACE, "P_CH[5] this.output[0]=%d".formatted(this.output[0]));
 
                     if (rhythm == 0) {
                         this.calcCh(this.channels[6]);
-                        //Debug.printf("P_CH[6] this.output[0]=%d", this.output[0]);
+                        //logger.log(Level.TRACE, "P_CH[6] this.output[0]=%d".formatted(this.output[0]));
                         this.calcCh(this.channels[7]);
-                        //Debug.printf("P_CH[7] this.output[0]=%d", this.output[0]);
+                        //logger.log(Level.TRACE, "P_CH[7] this.output[0]=%d".formatted(this.output[0]));
                         this.calcCh(this.channels[8]);
-                        //Debug.printf("P_CH[8] this.output[0]=%d", this.output[0]);
+                        //logger.log(Level.TRACE, "P_CH[8] this.output[0]=%d".formatted(this.output[0]));
                     } else { // Rhythm part
                         this.calcRh(this.channels, (this.noiseRng >> 0) & 1);
-                        //Debug.printf("P_CH[0R] this.output[0]=%d", this.output[0]);
+                        //logger.log(Level.TRACE, "P_CH[0R] this.output[0]=%d".formatted(this.output[0]));
                     }
 
                     int lt = this.output[0] + (this.outputDeltaT[0] >> 11);
-//Debug.printf("this.output_deltat[0]=%d acc=%d now_step=%d adpcmd=%d", this.output_deltat[0] ,deltaT.acc ,deltaT.now_step , deltaT.adpcmd);
+//logger.log(Level.TRACE, "this.output_deltat[0]=%d acc=%d now_step=%d adpcmd=%d".formatted(this.output_deltat[0] ,deltaT.acc ,deltaT.now_step , deltaT.adpcmd));
                     lt >>= FINAL_SH;
 
                     // limit check

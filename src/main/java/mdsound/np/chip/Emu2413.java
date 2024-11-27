@@ -235,10 +235,10 @@ public class Emu2413 {
             /** CARRIOR */
             private int calcCar(int fm) {
                 if (this.egOut >= (DB_MUTE - 1)) {
-                    //Debug.printf("calc_slot_car: output over");
+                    //logger.log(Level.TRACE, "calc_slot_car: output over");
                     this.output[0] = 0;
                 } else {
-                    //Debug.printf("calc_slot_car: this.egout %d", this.egout);
+                    //logger.log(Level.TRACE, "calc_slot_car: this.egout %d".formatted(this.egout));
                     this.output[0] = db2linTable[this.sinTbl[(this.pgOut + wave2_8pi(fm)) & (PG_WIDTH - 1)] + this.egOut];
                 }
 
@@ -827,7 +827,7 @@ public class Emu2413 {
                 egout = EG2DB(egout + slot.tll) + lfo;
             else {
                 egout = EG2DB(egout + slot.tll);
-                //Debug.printf("egout %d slot.tll %d (e_int32)(EG_STEP/DB_STEP) %d", egout, slot.tll, (short)(EG_STEP / DB_STEP));
+                //logger.log(Level.TRACE, "egout %d slot.tll %d (e_int32)(EG_STEP/DB_STEP) %d".formatted(egout, slot.tll, (short)(EG_STEP / DB_STEP)));
             }
 
             if (egout >= DB_MUTE)
@@ -921,7 +921,7 @@ public class Emu2413 {
          I/O Ctrl
          */
         private void writeReg(int reg, int data) {
-            //Debug.printf("OPLL_writeReg:reg:%d:data:%d", reg,data);
+            //logger.log(Level.TRACE, "OPLL_writeReg:reg:%d:data:%d".formatted(reg,data));
 
             int i, v, ch;
 
