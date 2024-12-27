@@ -27,8 +27,8 @@ public class MultiPcmInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int samplingrate, int clockValue, Object... option) {
-        return device_start_multipcm(chipId, clockValue);
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        return device_start_multipcm(chipId, clock);
     }
 
     @Override
@@ -45,7 +45,7 @@ public class MultiPcmInst extends Instrument.BaseInstrument {
     }
 
     private static final int MAX_CHIPS = 0x02;
-    private MultiPCM[] chips = new MultiPCM[MAX_CHIPS];
+    private final MultiPCM[] chips = new MultiPCM[MAX_CHIPS];
 
     @Override
     public String getName() {
@@ -124,7 +124,7 @@ public class MultiPcmInst extends Instrument.BaseInstrument {
 //    /**
 //     * Generic get_info
 //     */
-//    DEVICE_GET_INFO( MultiPcmInst ) {
+//    DEVICE_GET_INFO( MultiPcm ) {
 //            case DEVINFO_STR_NAME:       strcpy(info.s, "Sega/Yamaha 315-5560");  break;
 //            case DEVINFO_STR_FAMILY:     strcpy(info.s, "Sega custom");     break;
 //            case DEVINFO_STR_VERSION:     strcpy(info.s, "2.0");       break;

@@ -11,7 +11,7 @@ import mdsound.fmgen.Opna.OPNB;
 public class Ym2610Inst extends Instrument.BaseInstrument {
 
     private static final int DefaultYM2610ClockValue = 8000000;
-    private OPNB[] chip = new OPNB[2];
+    private final OPNB[] chip = new OPNB[2];
 
     @Override
     public String getName() {
@@ -38,19 +38,19 @@ public class Ym2610Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
+    public int start(int chipId, int samplingRate) {
         chip[chipId] = new OPNB();
-        chip[chipId].init(DefaultYM2610ClockValue, clock);
+        chip[chipId].init(DefaultYM2610ClockValue, samplingRate);
 
-        return clock;
+        return samplingRate;
     }
 
     @Override
-    public int start(int chipId, int clock, int clockValue, Object... option) {
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
         chip[chipId] = new OPNB();
-        chip[chipId].init(clockValue, clock, false, new byte[0x20_ffff], 0x20_ffff, new byte[0x20_ffff], 0x20_ffff);
+        chip[chipId].init(clock, samplingRate, false, new byte[0x20_ffff], 0x20_ffff, new byte[0x20_ffff], 0x20_ffff);
 
-        return clock;
+        return samplingRate;
     }
 
     @Override
@@ -86,7 +86,7 @@ public class Ym2610Inst extends Instrument.BaseInstrument {
     @Override
     public int write(int chipId, int port, int adr, int data) {
         if (chip[chipId] == null) return 0;
-        chip[chipId].setReg(adr, data);
+        chip[chipId].setReg(port * 0x100 + adr, data);
         return 0;
     }
 

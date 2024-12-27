@@ -33,8 +33,8 @@ public class CtrQSoundInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock, int clockValue, Object... option) {
-        return device_start_qsound(chipId, clockValue);
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        return device_start_qsound(chipId, clock);
     }
 
     @Override

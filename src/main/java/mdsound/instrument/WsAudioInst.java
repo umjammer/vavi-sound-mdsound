@@ -12,7 +12,7 @@ public class WsAudioInst extends Instrument.BaseInstrument {
     private int masterClock = DefaultWSwanClockValue;
     private int sampleRate = 44100;
 
-    private WsAudio[] chip = new WsAudio[] {new WsAudio(DefaultWSwanClockValue), new WsAudio(DefaultWSwanClockValue)};
+    private final WsAudio[] chip = new WsAudio[] {new WsAudio(DefaultWSwanClockValue), new WsAudio(DefaultWSwanClockValue)};
 
     @Override
     public String getName() {
@@ -35,10 +35,10 @@ public class WsAudioInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock, int clockValue, Object... option) {
-        chip[chipId].init(clock, clockValue);
-        sampleRate = clock;
-        masterClock = clockValue;
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        chip[chipId].init(samplingRate, clock);
+        sampleRate = samplingRate;
+        masterClock = clock;
 
         visVolume = new int[2][][];
         visVolume[0] = new int[2][];
@@ -48,7 +48,7 @@ public class WsAudioInst extends Instrument.BaseInstrument {
         visVolume[0][1] = new int[2];
         visVolume[1][1] = new int[2];
 
-        return clock;
+        return samplingRate;
     }
 
     @Override
@@ -57,8 +57,8 @@ public class WsAudioInst extends Instrument.BaseInstrument {
     }
 
     private double sampleCounter = 0;
-    private int[][] frm = new int[][] {new int[1], new int[1]};
-    private int[][] before = new int[][] {new int[1], new int[1]};
+    private final int[][] frm = new int[][] {new int[1], new int[1]};
+    private final int[][] before = new int[][] {new int[1], new int[1]};
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {

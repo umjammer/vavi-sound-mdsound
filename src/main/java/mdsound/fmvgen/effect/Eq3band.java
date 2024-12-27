@@ -1,48 +1,51 @@
 package mdsound.fmvgen.effect;
 
 //
-// 3バンドイコライザー(https://vstcpp.wpblog.jp/?p=1417 より)
+// 3-band equalizer (https://vstcpp.wpblog.jp/?p=1417)
 //
 public class Eq3band {
     private float fL, fR;
     private int sampleRate = 44100;
 
-    // エフェクターのパラメーター
+    // Effector parameters
     private boolean lowSw = false;
-    private float lowFreq = 400.0f; // 低音域の周波数。50Hz～1kHz程度
-    private float lowGain = 2.0f; // 低音域のゲイン(増幅値)。-15～15dB程度
+    private float lowFreq = 400.0f; // Low frequency range. Approximately 50Hz to 1kHz
+    private float lowGain = 2.0f; // Low frequency gain (amplification value). Approximately -15 to 15 dB.
     private float lowQ = (float) (1.0f / Math.sqrt(2.0f));
 
     private boolean midSw = false;
-    private float midfreq = 1000.0f; // 中音域の周波数。500Hz～4kHz程度
-    private float midGain = -4.0f; // 中音域のゲイン(増幅値)。-15～15dB程度
+    private float midfreq = 1000.0f; // Mid-range frequency. Approximately 500Hz to 4kHz
+    private float midGain = -4.0f; // Mid-range gain (amplification value). Approximately -15 to 15 dB.
     private float midQ = (float) (1.0f / Math.sqrt(2.0f));
 
     private boolean highSw = false;
-    private float highFreq = 4000.0f; // 高音域の周波数。1kHz～12kHz程度
-    private float highGain = 4.0f; // 高音域のゲイン(増幅値)。-15～15dB程度
+    private float highFreq = 4000.0f; // High-pitched frequency: 1kHz to 12kHz
+    private float highGain = 4.0f; // Treble gain (amplification value). Approximately -15 to 15 dB.
     private float highQ = (float) (1.0f / Math.sqrt(2.0f));
 
-    //パラメータのdefault値は
-    //low
-    // freq:126
-    // gain:141
-    // Q:67
-    //mid
-    // freq:162
-    // gain:102
-    // Q:67
-    //high
-    // freq:192
-    // gain:154
-    // Q:67
+    // The default value of the parameter is
+    // low
+    //  freq:126
+    //  gain:141
+    //  Q:67
+    // mid
+    //  freq:162
+    //  gain:102
+    //  Q:67
+    // high
+    //  freq:192
+    //  gain:154
+    //  Q:67
 
-    // 内部変数
-    private Filter lowL = new Filter(), lowR = new Filter();
-    private Filter midL = new Filter(), midR = new Filter();
-    private Filter highL = new Filter(), highR = new Filter(); // フィルタークラス(https://vstcpp.wpblog.jp/?page_id=728 より)
+    // Internal variables
+    private final Filter lowL = new Filter();
+    private final Filter lowR = new Filter();
+    private final Filter midL = new Filter();
+    private final Filter midR = new Filter();
+    private final Filter highL = new Filter();
+    private final Filter highR = new Filter(); // Filter class (https://vstcpp.wpblog.jp/?page_id=728)
 
-    public Eq3band(int sampleRate/* = 44100*/) {
+    public Eq3band(int sampleRate /* = 44100 */) {
         this.sampleRate = sampleRate;
         updateParam();
     }
@@ -53,10 +56,10 @@ public class Eq3band {
             fR = buffer[i * 2 + 1] / Filter.convInt;
 
 
-            // inL[]、inR[]、outL[]、outR[]はそれぞれ入力信号と出力信号のバッファ(左右)
-            // wavelenghtはバッファのサイズ、サンプリング周波数は44100Hzとする
-            // 入力信号にエフェクトをかける
-            // 入力信号にフィルタをかける
+            // inL[], inR[], outL[], and outR[] are the input and output signal buffers (left and right) respectively.
+            // wavelenght is the buffer size, and the sampling frequency is 44100Hz.
+            // Applying effects to the input signal
+            // Filtering the input signal
             if (lowSw) {
                 fL = lowL.process(fL);
                 fR = lowR.process(fR);
@@ -69,7 +72,6 @@ public class Eq3band {
                 fL = highL.process(fL);
                 fR = highR.process(fR);
             }
-
 
             buffer[i * 2 + 0] = (int) (fL * Filter.convInt);
             buffer[i * 2 + 1] = (int) (fR * Filter.convInt);
@@ -122,13 +124,13 @@ public class Eq3band {
     }
 
     private void updateParam() {
-        // 低音域を持ち上げる(ローシェルフ)フィルタ設定(左右分)
+        // Low-shelf filter settings (left and right)
         lowL.lowShelf(lowFreq, lowQ, lowGain, sampleRate);
         lowR.lowShelf(lowFreq, lowQ, lowGain, sampleRate);
-        // 中音域を持ち上げる(ピーキング)フィルタ設定(左右分)
+        // Mid-range boost (peaking) filter setting (left and right)
         midL.peaking(midfreq, midQ, midGain, sampleRate);
         midL.peaking(midfreq, midQ, midGain, sampleRate);
-        // 高音域を持ち上げる(ローシェルフ)フィルタ設定(左右分)
+        // Low shelf filter setting (left and right)
         highL.highShelf(highFreq, highQ, highGain, sampleRate);
         highR.highShelf(highFreq, highQ, highGain, sampleRate);
     }

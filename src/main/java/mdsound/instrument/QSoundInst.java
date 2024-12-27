@@ -31,12 +31,12 @@ public class QSoundInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock, int clockValue, Object... option) {
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
         if (chipId >= MAX_CHIPS)
             return 0;
 
         QSound chip = qSoundData[chipId];
-        return chip.start(clockValue);
+        return chip.start(clock);
     }
 
     @Override
@@ -55,7 +55,7 @@ public class QSoundInst extends Instrument.BaseInstrument {
     }
 
     private static final int MAX_CHIPS = 0x02;
-    private QSound[] qSoundData = new QSound[] {new QSound(), new QSound()};
+    private final QSound[] qSoundData = new QSound[] {new QSound(), new QSound()};
 
     @Override
     public String getName() {
@@ -101,7 +101,7 @@ public class QSoundInst extends Instrument.BaseInstrument {
 //    /**
 //     * Generic get_info
 //     */
-//    DEVICE_GET_INFO( QSoundInst ) {
+//    DEVICE_GET_INFO( QSound ) {
 //            case DEVINFO_STR_NAME:       strcpy(info.s, "Q-Sound");      break;
 //            case DEVINFO_STR_FAMILY:     strcpy(info.s, "Capcom custom");    break;
 //            case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;

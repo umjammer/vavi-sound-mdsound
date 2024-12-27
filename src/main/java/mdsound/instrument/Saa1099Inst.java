@@ -38,8 +38,8 @@ public class Saa1099Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock, int clockValue, Object... option) {
-        return device_start_saa1099(chipId, clockValue);
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        return device_start_saa1099(chipId, clock);
     }
 
     @Override
@@ -64,7 +64,7 @@ public class Saa1099Inst extends Instrument.BaseInstrument {
     }
 
     private static final int MAX_CHIPS = 0x02;
-    private Saa1099[] saa1099Data = new Saa1099[] {new Saa1099(), new Saa1099()};
+    private final Saa1099[] saa1099Data = new Saa1099[] {new Saa1099(), new Saa1099()};
 
     private void saa1099_update(int chipId, int[][] outputs, int samples) {
         Saa1099 saa = saa1099Data[chipId];

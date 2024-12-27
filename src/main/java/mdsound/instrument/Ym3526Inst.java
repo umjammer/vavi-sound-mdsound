@@ -38,8 +38,8 @@ public class Ym3526Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock, int clockValue, Object... option) {
-        return device_start_ym3526(chipId, clockValue);
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        return device_start_ym3526(chipId, clock);
     }
 
     @Override
@@ -70,7 +70,7 @@ public class Ym3526Inst extends Instrument.BaseInstrument {
         info.updateOne(outputs, samples);
     }
 
-    private int[][] DUMMYBUF = new int[][] {null, null};
+    private final int[][] DUMMYBUF = new int[][] {null, null};
 
     private void _stream_update(/*, int interval*/) {
         chips[0].updateOne(DUMMYBUF, 0);

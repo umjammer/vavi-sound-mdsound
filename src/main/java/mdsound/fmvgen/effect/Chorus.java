@@ -2,51 +2,54 @@
 package mdsound.fmvgen.effect;
 
 /**
- * コーラス・フランジャーの実装例
+ * Chorus Flanger implementation example
  *
  * @see "https://vstcpp.wpblog.jp/?p=1797"
  */
 public class Chorus {
 
-    private float clock;
-    private int maxCh;
+    private final float clock;
+    private final int maxCh;
     private ChInfo[] chInfo = null;
     private int currentCh = 0;
 
     public static class ChInfo {
         public boolean sw;
 
-        // コーラスのかかり具合。0.0～1.0の間
+        /** Chorus effect level. Between 0.0 and 1.0 */
         public float mix = 0.3f;
-        // コーラスの揺らぎの間隔。0Hz～16Hz程度
+        /** Chorus fluctuation interval. 0Hz to 16Hz */
         public float rate = 3.0f;
-        // コーラスの揺らぎの深さ。5.0～200.0サンプル程度
+        /** Depth of chorus fluctuation. Approximately 5.0 to 200.0 samples */
         public float depth = 10.0f;
-        // コーラスのフィードバック量。0.0～1.0の間
+        /** Chorus feedback amount. Between 0.0 and 1.0 */
         public float feedback = 0.3f;
 
         /**
-         * リングバッファ
+         * Ring Buffer
          * @see "https://vstcpp.wpblog.jp/?p=1505"
          */
-        public RingBuffur ringBufL, ringBufR;
+        public RingBuffer ringBufL, ringBufR;
 
-        // ディレイタイムをサンプル数に変換して設定
-        // depth分だけ読み込むサンプル位置が動くので、動いた際にintervalが0以下にならないようにする
-        // とりあえず1000サンプル程度とする
-        // (intervalはリングバッファ https://vstcpp.wpblog.jp/?p=1505 参照)
+        /**
+         * Set the delay time by converting it into a number of samples
+         * The sample position to be read will move according to the depth,
+         * so make sure that the interval does not become 0 or less when it moves.
+         * For now, let’s take about 1000 samples.
+         * (Interval is a ring buffer. See https://vstcpp.wpblog.jp/?p=1505)
+         */
         public int delaySample;
 
         public float theta;
-        // public float speed;
+//        public float speed;
 
         public ChInfo(int clock) {
             delaySample = 10;
-            theta = 0; // ディレイ読み込み位置を揺らすためのsin関数の角度 θ。初期値は0
+            theta = 0; // The angle θ of the sine function to fluctuate the delay reading position. The initial value is 0.
 
             sw = false;
-            ringBufL = new RingBuffur(clock, 0.02f);
-            ringBufR = new RingBuffur(clock, 0.02f);
+            ringBufL = new RingBuffer(clock, 0.02f);
+            ringBufR = new RingBuffer(clock, 0.02f);
             ringBufL.setInterval(delaySample);
             ringBufR.setInterval(delaySample);
         }
@@ -65,11 +68,12 @@ public class Chorus {
         }
     }
 
-    /** 線形補間関数
-    // v1とv2を割合tで線形補間する。tは0.0～1.0の範囲とする
-    // tが0.0の時v1の値となり、tが1.0の時v2の値となる
+    /**
+     * 線形補間関数
+     * v1とv2を割合tで線形補間する。tは0.0～1.0の範囲とする
+     * tが0.0の時v1の値となり、tが1.0の時v2の値となる
      */
-    private float lerp(float v1, float v2, float t) {
+    private static float lerp(float v1, float v2, float t) {
         return (1.0f - t) * v1 + t * v2;
     }
 

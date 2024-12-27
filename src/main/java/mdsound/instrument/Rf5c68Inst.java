@@ -34,8 +34,8 @@ public class Rf5c68Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock, int clockValue, Object... option) {
-        return device_start_rf5c68(chipId, clockValue);
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        return device_start_rf5c68(chipId, clock);
     }
 
     @Override
@@ -116,7 +116,7 @@ public class Rf5c68Inst extends Instrument.BaseInstrument {
 //    /**
 //     * Generic get_info
 //     */
-//    DEVICE_GET_INFO( Rf5c68Inst ) {
+//    DEVICE_GET_INFO( Rf5c68 ) {
 //            case DEVINFO_STR_NAME:       strcpy(info.s, "RF5C68");      break;
 //            case DEVINFO_STR_FAMILY:     strcpy(info.s, "Ricoh PCM");     break;
 //            case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;

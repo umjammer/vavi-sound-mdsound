@@ -5,8 +5,6 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import vavi.util.Debug;
-
 
 /**
  * OPL (used by {@link Y8950} and {@link Ym3812})
@@ -302,7 +300,7 @@ public class Opl {
         /**
          * adpcm registers
          */
-        private byte[] reg = new byte[16];
+        private final byte[] reg = new byte[16];
         /**
          * which chips we're emulating
          */
@@ -963,7 +961,7 @@ public class Opl {
         /**
          * slot1 output for feedback
          */
-        private int[] op1Out = new int[2];
+        private final int[] op1Out = new int[2];
         /**
          * connection (algorithm) type
          */
@@ -1089,7 +1087,7 @@ public class Opl {
         // phase generator state
 
         /**
-         * block+fnum
+         * block+fNum
          */
         private int blockFNum;
         /**
@@ -1206,7 +1204,7 @@ public class Opl {
     /**
      * timer counters
      */
-    private int[] t = new int[2];
+    private final int[] t = new int[2];
     /** timer enable */
     private final int[] st = new int[2];
 
@@ -1242,7 +1240,7 @@ public class Opl {
     /**
      * chips type
      */
-    private int type;
+    private final int type;
     /**
      * address register
      */
@@ -1611,7 +1609,7 @@ public class Opl {
 
     // synchronized level of common table
 
-    private int numLock = 0;
+    private final int numLock = 0;
 
     private Slot slot7_1() {
         return this.channels[7].slots[SLOT1];
@@ -2503,7 +2501,7 @@ public class Opl {
                 }
                 return;
             }
-            // keyon,block,fnum
+            // keyon,block,fNum
             if ((r & 0x0f) > 8) return;
             ch = this.channels[r & 0x0f];
             if ((r & 0x10) == 0) { // a0-a8
@@ -2532,8 +2530,8 @@ public class Opl {
                 ch.kCode = (ch.blockFNum & 0x1c00) >> 9;
 
                 // the info below is actually opposite to what is stated in the Manuals (verifed on real YM3812)
-                // if notesel == 0 . lsb of kcode is bit 10 (MSB) of fnum
-                // if notesel == 1 . lsb of kcode is bit 9 (MSB-1) of fnum
+                // if notesel == 0 . lsb of kcode is bit 10 (MSB) of fNum
+                // if notesel == 1 . lsb of kcode is bit 9 (MSB-1) of fNum
                 if ((this.mode & 0x40) != 0)
                     ch.kCode |= (ch.blockFNum & 0x100) >> 8; // notesel == 1
                 else

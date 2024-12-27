@@ -42,8 +42,8 @@ public class K054539Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int SamplingRate, int clockValue, Object... Option) {
-        int sampRate = device_start_k054539(chipId, clockValue);
+    public int start(int chipId, int samplingRate, int clock, Object... Option) {
+        int sampRate = device_start_k054539(chipId, clock);
         int flags = 1;
         if (Option != null && Option.length > 0) flags = (int) (byte) Option[0];
         k054539_init_flags(chipId, flags);
@@ -52,7 +52,7 @@ public class K054539Inst extends Instrument.BaseInstrument {
     }
 
     private static final int MAX_CHIPS = 0x02;
-    private static K054539[] chips = new K054539[] {new K054539(), new K054539()};
+    private static final K054539[] chips = new K054539[] {new K054539(), new K054539()};
 
     @Override
     public String getName() {

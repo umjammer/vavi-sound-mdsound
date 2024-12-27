@@ -28,8 +28,8 @@ public class CtrQsound {
         private int tapCount = 0; // usually 95
         private int delayPos = 0;
         //private short table_pos = 0;
-        private short[] taps = new short[95];
-        private short[] delay_line = new short[95];
+        private final short[] taps = new short[95];
+        private final short[] delay_line = new short[95];
 
         // Apply the FIR filter used as the Q1 transfer function
         private int fir(short input) {
@@ -58,7 +58,7 @@ public class CtrQsound {
         //private short volume;
         private short writePos;
         private short readPos;
-        private short[] delayLine = new short[51];
+        private final short[] delayLine = new short[51];
     }
 
     private static class Echo {
@@ -67,7 +67,7 @@ public class CtrQsound {
         //private short feedback;
         private short length;
         private short last_sample;
-        private short[] delayLine = new short[1024];
+        private final short[] delayLine = new short[1024];
         private short delay_pos;
 
         // The echo effect is pretty simple. A moving average filter is used on
@@ -101,31 +101,31 @@ public class CtrQsound {
     //
 
     private int dataLatch;
-    private short[] _out = new short[2];
+    private final short[] _out = new short[2];
 
-    private short[][][] panTables = new short[][][] {
+    private final short[][][] panTables = new short[][][] {
             new short[][] {new short[98], new short[98]},
             new short[][] {new short[98], new short[98]}
     };
 
-    private Adpcm[] adpcm = new Adpcm[3];
+    private final Adpcm[] adpcm = new Adpcm[3];
 
-    private short[] voiceOutput = new short[16 + 3];
+    private final short[] voiceOutput = new short[16 + 3];
 
     private Echo echo = new Echo();
 
-    private Fir[] filter = new Fir[2];
-    private Fir[] altFilter = new Fir[2];
+    private final Fir[] filter = new Fir[2];
+    private final Fir[] altFilter = new Fir[2];
 
-    private Delay[] wet = new Delay[2];
-    private Delay[] dry = new Delay[2];
+    private final Delay[] wet = new Delay[2];
+    private final Delay[] dry = new Delay[2];
 
     private int state;
 
     private int stateCounter;
     private byte readyFlag;
 
-    private static int[] registerMap = new int[256];
+    private static final int[] registerMap = new int[256];
 
     private static final short[] dryMixTable = new short[] {
             -16384, -16384, -16384, -16384, -16384, -16384, -16384, -16384,
@@ -273,7 +273,7 @@ public class CtrQsound {
         }
     }
 
-    private void initRegisterMap() {
+    private static void initRegisterMap() {
         // unused registers
         for (int i = 0; i < 256; i++) registerMap[i] = 0;// null;
 
@@ -348,7 +348,7 @@ public class CtrQsound {
     // return null; // no filter found.
     //}
 
-    private Short getFilterTable(int offset) {
+    private static Short getFilterTable(int offset) {
         if (offset >= 0xf2e && offset < 0xfff)
             return filterData2[offset - 0xf2e]; // overlapping filter data
 
@@ -711,7 +711,7 @@ public class CtrQsound {
     }
 
     // Apply delay line and component volume
-    private int delay(boolean isDry, int ch, Delay d, int input) {
+    private static int delay(boolean isDry, int ch, Delay d, int input) {
         int output;
 
         d.delayLine[d.writePos++] = (short) (input >> 16);
@@ -726,7 +726,7 @@ public class CtrQsound {
     }
 
     // Update the delay read position to match new delay length
-    private void delayedUpdate(boolean isDry, int ch, Delay d) {
+    private static void delayedUpdate(boolean isDry, int ch, Delay d) {
         short new_read_pos = (short) ((d.writePos - registerMap[(ch << 1) + (isDry ? 0xdf : 0xde)]) % 51);
         if (new_read_pos < 0)
             new_read_pos += 51;
@@ -742,7 +742,7 @@ public class CtrQsound {
         setMuteMask(0x00000);
 
         this.initPanTables();
-        this.initRegisterMap();
+        CtrQsound.initRegisterMap();
 
         return clock / 2 / 1248;
     }

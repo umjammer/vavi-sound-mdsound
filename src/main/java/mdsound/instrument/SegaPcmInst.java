@@ -1,6 +1,5 @@
 package mdsound.instrument;
 
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,8 +25,8 @@ public class SegaPcmInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int samplingRate, int clockValue, Object... option) {
-        return device_start_segapcm(chipId, clockValue, (int) option[0]);
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        return device_start_segapcm(chipId, clock, (int) option[0]);
     }
 
     @Override
@@ -61,12 +60,12 @@ public class SegaPcmInst extends Instrument.BaseInstrument {
         return "SPCM";
     }
 
-    public void SEGAPCM_update(int chipId, int[][] outputs, int samples) {
+    private void SEGAPCM_update(int chipId, int[][] outputs, int samples) {
         SegaPcm spcm = SPCMData[chipId];
         spcm.update(outputs, samples);
     }
 
-    public int device_start_segapcm(int chipId, int clock, int intf_bank) {
+    private int device_start_segapcm(int chipId, int clock, int intf_bank) {
         if (chipId >= MAX_CHIPS)
             return 0;
 
@@ -74,12 +73,12 @@ public class SegaPcmInst extends Instrument.BaseInstrument {
         return spcm.start(clock, intf_bank);
     }
 
-    public void device_stop_segapcm(int chipId) {
+    private void device_stop_segapcm(int chipId) {
         SegaPcm spcm = SPCMData[chipId];
         spcm.stop();
     }
 
-    public void device_reset_segapcm(int chipId) {
+    private void device_reset_segapcm(int chipId) {
         SegaPcm spcm = SPCMData[chipId];
         spcm.reset();
     }

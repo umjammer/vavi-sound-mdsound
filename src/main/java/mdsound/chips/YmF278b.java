@@ -600,15 +600,15 @@ public class YmF278b {
             addr = op.startAddr + ((op.pos / 2) * 3);
             addrp = readMemAddr(addr);
             if ((op.pos & 1) != 0)
-                sample = (addrp.getItem1()[addrp.getItem2() + 2] << 8) | ((addrp.getItem1()[addrp.getItem2() + 1] << 4) & 0xF0);
+                sample = ((addrp.getItem1()[addrp.getItem2() + 2] & 0xff) << 8) | ((addrp.getItem1()[addrp.getItem2() + 1] << 4) & 0xF0);
             else
-                sample = (addrp.getItem1()[addrp.getItem2() + 0] << 8) | (addrp.getItem1()[addrp.getItem2() + 1] & 0xF0);
+                sample = ((addrp.getItem1()[addrp.getItem2() + 0] & 0xff) << 8) | (addrp.getItem1()[addrp.getItem2() + 1] & 0xF0);
             break;
         case 2:
             // 16 bit
             addr = op.startAddr + (op.pos * 2);
             addrp = readMemAddr(addr);
-            sample = ((addrp.getItem1()[addrp.getItem2() + 0] << 8) | addrp.getItem1()[addrp.getItem2() + 1]) & 0xffff;
+            sample = (((addrp.getItem1()[addrp.getItem2() + 0] & 0xff) << 8) | (addrp.getItem1()[addrp.getItem2() + 1] & 0xff)) & 0xffff;
             break;
         default:
             // TODO unspecified

@@ -48,9 +48,10 @@ public class MultiPCM {
 
         // I include these in the chips because they depend on the chips clock
         // Envelope step table
-        private static int[] arStep = new int[0x40], drStep = new int[0x40];
+        private static final int[] arStep = new int[0x40];
+        private static final int[] drStep = new int[0x40];
 
-        private static int[] lin2expvol = new int[0x400];
+        private static final int[] lin2expvol = new int[0x400];
 
         // Times are based on a 44100Hz timesuper. It's adjusted to the actual sampling rate on startup
         private static final double[] BaseTimes = new double[] {
@@ -68,7 +69,7 @@ public class MultiPCM {
 
         private int volume; //
         private Eg.State state;
-        private int step = 0;
+        private final int step = 0;
         //step vals
         /** Attack */
         private int ar;
@@ -186,14 +187,14 @@ public class MultiPCM {
             return lFix((float) Math.pow(2.0, v / 1200.0));
         }
 
-        private static int[] pLfoTri = new int[256];
-        private static int[] aLfoTri = new int[256];
+        private static final int[] pLfoTri = new int[256];
+        private static final int[] aLfoTri = new int[256];
 
         private static final float[] LFOFreq = new float[] {0.168f, 2.019f, 3.196f, 4.206f, 5.215f, 5.888f, 6.224f, 7.066f}; //Hz;
         private static final float[] PSCALE = new float[] {0.0f, 3.378f, 5.065f, 6.750f, 10.114f, 20.170f, 40.180f, 79.307f}; //cents
         private static final float[] ASCALE = new float[] {0.0f, 0.4f, 0.8f, 1.5f, 3.0f, 6.0f, 12.0f, 24.0f}; //DB
-        private static int[][] pScales = new int[][] {new int[256], new int[256], new int[256], new int[256], new int[256], new int[256], new int[256], new int[256]};
-        private static int[][] aScales = new int[][] {new int[256], new int[256], new int[256], new int[256], new int[256], new int[256], new int[256], new int[256]};
+        private static final int[][] pScales = new int[][] {new int[256], new int[256], new int[256], new int[256], new int[256], new int[256], new int[256], new int[256]};
+        private static final int[][] aScales = new int[][] {new int[256], new int[256], new int[256], new int[256], new int[256], new int[256], new int[256], new int[256]};
 
         static {
             for (int i = 0; i < 256; ++i) {
@@ -277,9 +278,9 @@ public class MultiPCM {
             public int am;
 
             private void writeRom(byte[] rom, int ptSample) {
-                this.start = (rom[ptSample + 0] << 16) | (rom[ptSample + 1] << 8) | (rom[ptSample + 2] << 0);
-                this.loop = (rom[ptSample + 3] << 8) | (rom[ptSample + 4] << 0);
-                this.end = 0xffff - ((rom[ptSample + 5] << 8) | (rom[ptSample + 6] << 0));
+                this.start = ((rom[ptSample + 0] & 0xff) << 16) | ((rom[ptSample + 1] & 0xff) << 8) | ((rom[ptSample + 2] & 0xff) << 0);
+                this.loop = ((rom[ptSample + 3] & 0xff) << 8) | ((rom[ptSample + 4] & 0xff) << 0);
+                this.end = 0xffff - (((rom[ptSample + 5] & 0xff) << 8) | ((rom[ptSample + 6] & 0xff) << 0));
                 this.lfoVib = rom[ptSample + 7];
                 this.dr1 = rom[ptSample + 8] & 0xf;
                 this.ar = (rom[ptSample + 8] >> 4) & 0xf;
@@ -287,7 +288,7 @@ public class MultiPCM {
                 this.dl = (rom[ptSample + 9] >> 4) & 0xf;
                 this.rr = rom[ptSample + 10] & 0xf;
                 this.krs = (rom[ptSample + 10] >> 4) & 0xf;
-                this.am = rom[ptSample + 11];
+                this.am = rom[ptSample + 11] & 0xff;
             }
         }
 
@@ -517,7 +518,7 @@ public class MultiPCM {
                 if (slot.playing != 0 && slot.muted == 0) {
                     int vol = (slot.tl >> SHIFT) | (slot.pan << 7);
                     int adr = slot.offset >> SHIFT;
-                    int sample = slot.update((short) (this.rom[(slot.base + adr) & this.romMask] << 8));
+                    int sample = slot.update((this.rom[(slot.base + adr) & this.romMask] & 0xff) << 8);
 
                     sampleL += (LPANTABLE[vol] * sample) >> SHIFT;
                     sampleR += (RPANTABLE[vol] * sample) >> SHIFT;

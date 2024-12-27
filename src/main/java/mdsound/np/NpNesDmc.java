@@ -40,7 +40,7 @@ public class NpNesDmc {
 
     public Counter counter_ = new Counter();
 
-    private Random rnd = new Random();
+    private final Random rnd = new Random();
 
     public int[][][][] tndTable; //[2][16][16][128];
 
@@ -493,7 +493,7 @@ public class NpNesDmc {
         this.out[2] = calcDmcOrg(clocks);
     }
 
-    private int[] m = new int[3];
+    private final int[] m = new int[3];
 
     public int render(int[] b) {
         int clocks;

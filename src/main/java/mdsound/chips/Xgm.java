@@ -16,21 +16,21 @@ public class Xgm {
     }
 
     private static class SampleID {
-        private int addr = 0;
-        private int size = 0;
+        private final int addr = 0;
+        private final int size = 0;
     }
 
     /** 各チャンネルの情報 */
-    private Pcm[][] xgmPcm = new Pcm[][] {new Pcm[4], new Pcm[4]};
+    private final Pcm[][] xgmPcm = new Pcm[][] {new Pcm[4], new Pcm[4]};
     /** PCMデータ群 */
-    private byte[][] pcmBuf = new byte[][] {null, null};
+    private final byte[][] pcmBuf = new byte[][] {null, null};
     /** PCMテーブル */
-    private SampleID[][] sampleID = new SampleID[][] {new SampleID[63], new SampleID[63]};
+    private final SampleID[][] sampleID = new SampleID[][] {new SampleID[63], new SampleID[63]};
 
-    private double[] pcmStep = new double[2];
-    private double[] pcmExecDelta = new double[2];
-    private byte[] dacEnable = new byte[] {0, 0};
-    private Object[] lockobj = new Object[] {new Object(), new Object()};
+    private final double[] pcmStep = new double[2];
+    private final double[] pcmExecDelta = new double[2];
+    private final byte[] dacEnable = new byte[] {0, 0};
+    private final Object[] lockobj = new Object[] {new Object(), new Object()};
     private boolean ox2b = false;
 
     public void reset(int chipId, int sampleRate) {

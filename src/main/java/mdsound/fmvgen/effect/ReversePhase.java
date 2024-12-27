@@ -47,59 +47,59 @@ public class ReversePhase {
 
     public void setReg(int adr, byte data) {
         switch (adr) {
-        case 0:// $CC
+        case 0: // $CC
             for (int i = 0; i < 6; i++)
                 ssg[0][i / 2][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
             break;
-        case 1:// $CD
+        case 1: // $CD
             for (int i = 0; i < 6; i++)
                 ssg[1][i / 2][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
             break;
-        case 2:// $CE
+        case 2: // $CE
             for (int i = 0; i < 6; i++)
                 ssg[2][i / 2][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
             break;
-        case 3:// $CF
+        case 3: // $CF
             for (int i = 0; i < 6; i++)
                 ssg[3][i / 2][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
             break;
 
-        case 4:// $D0
+        case 4: // $D0
             for (int i = 0; i < 6; i++)
                 fm[0][i / 2][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
             break;
-        case 5:// $D1
+        case 5: // $D1
             for (int i = 0; i < 6; i++)
                 fm[0][i / 2 + 3][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
             break;
-        case 6:// $D2
+        case 6: // $D2
             for (int i = 0; i < 6; i++)
                 fm[1][i / 2][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
             break;
-        case 7:// $D3
+        case 7: // $D3
             for (int i = 0; i < 6; i++)
                 fm[1][i / 2 + 3][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
             break;
 
-        case 8:// $D4
+        case 8: // $D4
             for (int i = 0; i < 6; i++)
                 rhythm[i / 2][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
             break;
-        case 9:// $D5
+        case 9: // $D5
             for (int i = 0; i < 6; i++)
                 rhythm[i / 2 + 3][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
             break;
 
-        case 10:// $D6
+        case 10: // $D6
             for (int i = 0; i < 6; i++)
                 adpcmA[i / 2][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
             break;
-        case 11:// $D7
+        case 11: // $D7
             for (int i = 0; i < 6; i++)
                 adpcmA[i / 2 + 3][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
             break;
 
-        case 12:// $D8
+        case 12: // $D8
             for (int i = 0; i < 6; i++)
                 adpcm[i / 2][(i + 1) & 1] = (data & (1 << i)) != 0 ? -1 : 1;
             break;

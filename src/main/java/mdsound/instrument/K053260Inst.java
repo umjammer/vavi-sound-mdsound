@@ -36,8 +36,8 @@ public class K053260Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock, int clockValue, Object... option) {
-        return device_start_k053260(chipId, clockValue);
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        return device_start_k053260(chipId, clock);
     }
 
     @Override
@@ -60,7 +60,7 @@ public class K053260Inst extends Instrument.BaseInstrument {
     }
 
     private static final int MAX_CHIPS = 0x02;
-    private K053260[] chips = new K053260[] {new K053260(), new K053260()};
+    private final K053260[] chips = new K053260[] {new K053260(), new K053260()};
 
     public void device_reset_k053260(int chipId) {
         K053260 chip = chips[chipId];

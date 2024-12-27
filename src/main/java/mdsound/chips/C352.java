@@ -24,8 +24,8 @@ package mdsound.chips;
  */
 public class C352 {
 
-    private static short[] mulawTable = new short[256];
-    private int[] out = new int[4];
+    private static final short[] mulawTable = new short[256];
+    private final int[] out = new int[4];
 
     static {
         int j = 0;
@@ -46,7 +46,7 @@ public class C352 {
             mulawTable[i] = (short) ((~mulawTable[i - 128]) & 0xffe0);
     }
 
-    private int[] flags = new int[32];
+    private final int[] flags = new int[32];
 
     private static final int VOICES = 32;
 
@@ -102,7 +102,7 @@ public class C352 {
 
         private int volF = 0;
         private int volR = 0;
-        private byte[] currVol = new byte[] {0, 0, 0, 0};
+        private final byte[] currVol = new byte[] {0, 0, 0, 0};
         private int freq = 0;
         private int flags = 0;
 

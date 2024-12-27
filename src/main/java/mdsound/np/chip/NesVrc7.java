@@ -101,8 +101,8 @@ public class NesVrc7 implements SoundChip {
         }
     }
 
-    private ChipKeyInfo ki = new ChipKeyInfo(6);
-    private ChipKeyInfo kiRet = new ChipKeyInfo(6);
+    private final ChipKeyInfo ki = new ChipKeyInfo(6);
+    private final ChipKeyInfo kiRet = new ChipKeyInfo(6);
 
     public ChipKeyInfo getKeyInfo(int chipId) {
         for (int ch = 0; ch < 6; ch++) {

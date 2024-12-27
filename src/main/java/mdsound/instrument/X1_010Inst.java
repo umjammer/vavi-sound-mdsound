@@ -31,8 +31,8 @@ public class X1_010Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock, int clockValue, Object... option) {
-        return device_start_x1_010(chipId, clockValue);
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        return device_start_x1_010(chipId, clock);
     }
 
     @Override
@@ -52,7 +52,7 @@ public class X1_010Inst extends Instrument.BaseInstrument {
     }
 
     private static final int MAX_CHIPS = 0x02;
-    private X1_010[] x1010Data = new X1_010[] {new X1_010(), new X1_010()};
+    private final X1_010[] x1010Data = new X1_010[] {new X1_010(), new X1_010()};
 
     private void seta_update(int chipId, int[][] outputs, int samples) {
         X1_010 info = x1010Data[chipId];

@@ -2,7 +2,7 @@
 package mdsound.fmvgen.effect;
 
 /**
- * フィルタークラス
+ * Filter Class
  *
  * @see "https://vstcpp.wpblog.jp/?p=1939"
  */
@@ -11,31 +11,31 @@ public class Compressor {
     private int sampleRate = 44100;
 
     private int currentCh = 0;
-    private int maxCh;
+    private final int maxCh;
     private ChInfo[] chInfo = null;
-    private float[] fBuf = new float[2];
+    private final float[] fBuf = new float[2];
 
     private static class ChInfo {
 
         public boolean sw;
 
-        // エフェクターのパラメーター
+        // Effector parameters
 
-        // 圧縮が始まる音圧。0.1～1.0程度
+        /** The sound pressure at which compression begins. Approximately 0.1 to 1.0 */
         public float threshold;
-        // 圧縮する割合。2.0～10.0程度
+        /** Compression ratio: 2.0 to 10.0 */
         public float ratio;
-        // 最終的な音量。1.0～3.0程度
+        /** Final volume. Approximately 1.0 to 3.0 */
         public float volume;
 
-        // 内部変数
+        // Internal variables
 
         /**
-         * 音圧を検知するために使うローパスフィルタ
+         * A low-pass filter used to detect sound pressure
          * @see "https://vstcpp.wpblog.jp/?page_id=728"
          */
         public Filter envfilterL, envfilterR;
-        // 急激な音量変化を避けるためのローパスフィルタ
+        // Low-pass filter to avoid sudden volume changes
         public Filter gainfilterL, gainfilterR;
 
         public float envFreq;
@@ -55,9 +55,9 @@ public class Compressor {
             this.gainFreq = 5.0f;
             this.gainQ = 1.0f;
             this.envfilterL = new Filter();
-            this.envfilterR = new Filter(); // 音圧を検知するために使うローパスフィルタ
+            this.envfilterR = new Filter(); // A low-pass filter used to detect sound pressure
             this.gainfilterL = new Filter();
-            this.gainfilterR = new Filter(); // 急激な音量変化を避けるためのローパスフィルタ
+            this.gainfilterR = new Filter(); // Low-pass filter to avoid sudden volume changes
         }
 
         public void setReg(int adr, byte data, int sampleRate) {
@@ -88,10 +88,12 @@ public class Compressor {
         }
 
         public void setLowPass(float envFreq, float envQ, float gainFreq, float gainQ, int sampleRate) {
-            // カットオフ周波数が高いほど音圧変化に敏感になる。目安は10～50Hz程度
+            // The higher the cutoff frequency, the more sensitive it is to changes in sound pressure.
+            // A good guideline is around 10 to 50 Hz.
             this.envfilterL.lowPass(envFreq, envQ, sampleRate);
             this.envfilterR.lowPass(envFreq, envQ, sampleRate);
-            // カットオフ周波数が高いほど急激な音量変化になる。目安は5～50Hz程度
+            // The higher the cutoff frequency, the more rapid the volume change.
+            // A good guideline is around 5 to 50 Hz.
             this.gainfilterL.lowPass(gainFreq, gainQ, sampleRate);
             this.gainfilterR.lowPass(gainFreq, gainQ, sampleRate);
         }
@@ -126,39 +128,39 @@ public class Compressor {
         fBuf[0] = inL[0] / 21474.83647f;
         fBuf[1] = inR[0] / 21474.83647f;
 
-        // inL[]、inR[]、outL[]、outR[]はそれぞれ入力信号と出力信号のバッファ(左右)
-        // wavelenghtはバッファのサイズ、サンプリング周波数は44100Hzとする
+        // inL[], inR[], outL[], and outR[] are the input and output signal buffers (left and right) respectively.
+        // wavelenght is the buffer size, and the sampling frequency is 44100Hz.
 
-        // 入力信号にエフェクトをかける
-        // 入力信号の絶対値をとったものをローパスフィルタにかけて音圧を検知する
+        // Applying effects to the input signal
+        // The absolute value of the input signal is passed through a low-pass filter to detect the sound pressure.
         float tmpL = chInfo[ch].envfilterL.process(Math.abs(fBuf[0]));
         float tmpR = chInfo[ch].envfilterR.process(Math.abs(fBuf[1]));
 
-        // 音圧をもとに音量(ゲイン)を調整(左)
+        // Adjusting the volume (gain) based on sound pressure (left)
         float gainL = 1.0f;
 
         if (tmpL > chInfo[ch].threshold) {
-            // スレッショルドを超えたので音量(ゲイン)を調節(圧縮)
+            // The threshold has been exceeded so the volume (gain) is adjusted (compressed)
             gainL = chInfo[ch].threshold + (tmpL - chInfo[ch].threshold) / chInfo[ch].ratio;
         }
-        // 音量(ゲイン)が急激に変化しないようローパスフィルタを通す
+        // Pass the signal through a low-pass filter to prevent sudden changes in volume (gain)
         gainL = chInfo[ch].gainfilterL.process(gainL);
 
-        // 左と同様に右も音圧をもとに音量(ゲイン)を調整
+        // The volume (gain) of the right side is adjusted based on the sound pressure just like the left side.
         float gainR = 1.0f;
         if (tmpR > chInfo[ch].threshold) {
             gainR = chInfo[ch].threshold + (tmpR - chInfo[ch].threshold) / chInfo[ch].ratio;
         }
         gainR = chInfo[ch].gainfilterR.process(gainR);
 
-        // 入力信号に音量(ゲイン)をかけ、さらに最終的な音量を調整し出力する
+        // The volume (gain) is applied to the input signal, and then the final volume is adjusted before being output.
         fBuf[0] = chInfo[ch].volume * gainL * fBuf[0];
         fBuf[1] = chInfo[ch].volume * gainR * fBuf[1];
         inL[0] = (int) (fBuf[0] * 21474.83647f);
         inR[0] = (int) (fBuf[1] * 21474.83647f);
     }
 
-    // ローパスフィルターを設定
+    /** Set the low pass filter */
     private void setLowPass(int ch, float envFreq, float envQ, float gainFreq, float gainQ) {
         chInfo[ch].setLowPass(envFreq, envQ, gainFreq, gainQ, sampleRate);
     }

@@ -57,7 +57,7 @@ public class PcmChip {
     private int curChan;
     private int bank;
 
-    private Channel[] channels = new Channel[] {
+    private final Channel[] channels = new Channel[] {
             new Channel(), new Channel(), new Channel(), new Channel(),
             new Channel(), new Channel(), new Channel(), new Channel()
     };

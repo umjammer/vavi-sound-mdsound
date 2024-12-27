@@ -1,6 +1,7 @@
 package mdsound.chips;
 
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 import mdsound.MDSound;
 
@@ -52,7 +53,7 @@ public class OkiM6258 {
     private int outputMask;
 
     // Valley Bell: Added a small queue to prevent race conditions.
-    private byte[] dataBuf = new byte[8];
+    private final byte[] dataBuf = new byte[8];
     private int dataInLast;
     private int dataBufPos;
     // data Empty Values:
@@ -67,12 +68,11 @@ public class OkiM6258 {
     private int signal;
     private int step;
 
-    private int[] clockBuffer = new int[0x04];
+    private final int[] clockBuffer = new int[0x04];
     private int initialClock;
     private int initialDiv;
 
-    private SampleRateCallback smpRateFunc;
-    private MDSound.Chip smpRateData;
+    private Consumer<Integer> smpRateFunc;
 
     /**
      * get the VCLK/sampling frequency
@@ -107,9 +107,6 @@ public class OkiM6258 {
 
         /* return the signal scaled up to 32767 */
         return this.signal << 4;
-    }
-
-    public interface SampleRateCallback extends BiConsumer<MDSound.Chip, Integer> {
     }
 
     /* step size index shift table */
@@ -262,7 +259,7 @@ public class OkiM6258 {
         this.clockBuffer[0x03] = (this.initialClock & 0xff00_0000) >>> 24;
         this.divider = dividers[this.initialDiv];
         if (this.smpRateFunc != null) {
-            this.smpRateFunc.accept(this.smpRateData, this.getVclk());
+            this.smpRateFunc.accept(this.getVclk());
             //;
         }
 
@@ -284,7 +281,7 @@ public class OkiM6258 {
     public void setDivider(int val) {
         this.divider = dividers[val];
         if (this.smpRateFunc != null)
-            this.smpRateFunc.accept(this.smpRateData, this.getVclk());
+            this.smpRateFunc.accept(this.getVclk());
     }
 
     /**
@@ -300,7 +297,7 @@ public class OkiM6258 {
                     (this.clockBuffer[0x03] << 24);
         }
         if (this.smpRateFunc != null)
-            this.smpRateFunc.accept(this.smpRateData, this.getVclk());
+            this.smpRateFunc.accept(this.getVclk());
     }
 
     /**
@@ -394,10 +391,9 @@ public class OkiM6258 {
         }
     }
 
-    public void setCallback(SampleRateCallback callbackFunc, MDSound.Chip chip) {
-        // set sample rate change callback routine
+    /** set sample rate change callback routine */
+    public void setCallback(Consumer<Integer> callbackFunc) {
         this.smpRateFunc = callbackFunc;
-        this.smpRateData = chip;
     }
 
     public static void setOptions(int options) {

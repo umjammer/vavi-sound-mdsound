@@ -6,7 +6,7 @@ import mdsound.np.Device;
 
 
 /**
- * 4KB * 16 バンクのバンク空間
+ * 4KB * 16 Bank Space of the Bank
  */
 public class NesBank implements Device {
 
@@ -28,7 +28,7 @@ public class NesBank implements Device {
     }
 
     public boolean setImage(byte[] data, int offset, int size) {
-        // バンクスイッチの初期値は全て「バンク無効」
+        // The initial value of all bank switches is "bank disabled"
         for (int i = 0; i < 16; i++)
             bankDefault[i] = -1; // -1 is special empty bank
 

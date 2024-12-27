@@ -82,31 +82,31 @@ public class Ym2151 {
         // end of channel specific data
 
         /** LFO Amplitude Modulation enable mask */
-        private int aMmask;
+        private int amMask;
         /** Envelope state: 4-attack(AR) 3-decay(D1R) 2-sustain(D2R) 1-release(RR) 0-off */
         private int state;
         /** (attack state) */
-        private byte eg_sh_ar;
+        private int eg_sh_ar;
         /** (attack state) */
-        private byte eg_sel_ar;
+        private int eg_sel_ar;
         /** Total attenuation Level */
         private int tl;
         /** current envelope attenuation level */
         private int volume;
         /** (decay state) */
-        private byte eg_sh_d1r;
+        private int eg_sh_d1r;
         /** (decay state) */
-        private byte eg_sel_d1r;
+        private int eg_sel_d1r;
         /** envelope switches to sustain state after reaching this level */
         private int d1l;
         /** (sustain state) */
-        private byte eg_sh_d2r;
+        private int eg_sh_d2r;
         /** (sustain state) */
-        private byte eg_sel_d2r;
+        private int eg_sel_d2r;
         /** (release state) */
-        private byte eg_sh_rr;
+        private int eg_sh_rr;
         /** (release state) */
-        private byte eg_sel_rr;
+        private int eg_sel_rr;
 
         /** 0=last key was KEY OFF, 1=last key was KEY ON */
         private int key;
@@ -179,33 +179,33 @@ public class Ym2151 {
 
 
         private int volumeCalc(int am) {
-            return this.tl + this.volume + (am & this.aMmask);
+            return this.tl + this.volume + (am & this.amMask);
         }
     }
 
     /** the 32 operators */
-    private Operator[] oper = new Operator[32];
+    private final Operator[] oper = new Operator[32];
 
     /** channels output masks (0xffff_ffff = enable) */
-    private int[] pan = new int[16];
+    private final int[] pan = new int[16];
     /** used for muting */
-    private byte[] muted = new byte[8];
+    private final int[] muted = new int[8];
 
     /** Global envelope generator counter */
     private int eg_cnt;
     /** Global envelope generator counter works at frequency = chipclock / 64 / 3 */
     private int eg_timer;
     /** step of eg_timer */
-    private int eg_timer_add;
+    private final int eg_timer_add;
     /** envelope generator timer overlfows every 3 samples (on real chips) */
-    private int eg_timer_overflow;
+    private final int eg_timer_overflow;
 
     /** accumulated LFO phase (0 to 255) */
     private int lfo_phase;
     /** LFO timer */
     private int lfo_timer;
     /** step of lfo_timer */
-    private int lfo_timer_add;
+    private final int lfo_timer_add;
     /** LFO generates new output when lfo_timer reaches this value */
     private int lfo_overflow;
     /** LFO phase increment counter */
@@ -213,20 +213,20 @@ public class Ym2151 {
     /** step of lfo_counter */
     private int lfo_counter_add;
     /** LFO waveform (0-saw, 1-square, 2-triangle, 3-random noise) */
-    private byte lfo_wsel;
+    private int lfo_wsel;
     /** LFO Amplitude Modulation Depth */
-    private byte amd;
+    private int amd;
     /** LFO Phase Modulation Depth */
-    private byte pmd;
+    private int pmd;
     /** LFO current AM output */
     private int lfa;
     /** LFO current PM output */
     private int lfp;
 
     /** TEST register */
-    private byte test;
+    private int test;
     /** output control pins (bit1-CT2, bit0-CT1) */
-    private byte ct;
+    private int ct;
 
     /** noise enable/period register (bit 7 - noise enable, bits 4-0 - noise period */
     private int noise;
@@ -248,27 +248,28 @@ public class Ym2151 {
     /** chips status (BUSY, IRQ Flags) */
     private int status;
     /** channels connections */
-    private byte[] connect = new byte[8];
+    private final int[] connect = new int[8];
 
     /** timer A enable (0-disabled) */
-    private byte tim_A;
+    private int tim_A;
     /** timer B enable (0-disabled) */
-    private byte tim_B;
+    private int tim_B;
     /** current value of timer A */
     private int tim_A_val;
     /** current value of timer B */
     private int tim_B_val;
-    private int[] tim_A_tab = new int[1024];
     /** timer A deltas */
-    private int[] tim_B_tab = new int[256];
+    private final int[] tim_A_tab = new int[1024];
     /** timer B deltas */
-    private int timer_A_index;
+    private final int[] tim_B_tab = new int[256];
     /** timer A index */
-    private int timer_B_index;
+    private int timer_A_index;
     /** timer B index */
-    private int timer_A_index_old;
+    private int timer_B_index;
     /** timer A previous index */
-    private int timer_B_index_old; /** timer B previous index */
+    private int timer_A_index_old;
+    /** timer B previous index */
+    private int timer_B_index_old;
 
     // Frequency-deltas to get the closest frequency possible.
     //   There are 11 octaves because of DT2 (max 950 cents over base frequency)
@@ -287,21 +288,21 @@ public class Ym2151 {
     //              10      note code + DT2 + LFO PM
 
     /** 11 octaves, 768 'cents' per octave */
-    private int[] freq = new int[11 * 768];
+    private final int[] freq = new int[11 * 768];
 
     // Frequency deltas for DT1. These deltas alter Operator frequency
     // after it has been taken from frequency-deltas table.
 
     /** 8 DT1 levels, 32 KC values */
-    private int[] dt1_freq = new int[8 * 32];
+    private final int[] dt1_freq = new int[8 * 32];
 
     /** 17bit Noise Generator periods */
-    private int[] noise_tab = new int[32];
+    private final int[] noise_tab = new int[32];
 
     /** chips clock in Hz (passed from 2151intf.c) */
-    private int clock;
+    private final int clock;
     /** sampling frequency in Hz (passed from 2151intf.c) */
-    private int sampfreq;
+    private final int sampfreq;
 
     /** 16.16 fixed point (frequency calculations) */
     private static final int FREQ_SH = 16;
@@ -343,98 +344,98 @@ public class Ym2151 {
     // 2  - sinus sign bit           (Y axis)
     // TL_RES_LEN - sinus resolution (X axis)
     private static final int TL_TAB_LEN = (13 * 2 * TL_RES_LEN);
-    private static int[] tl_tab = new int[TL_TAB_LEN];
+    private static final int[] tl_tab = new int[TL_TAB_LEN];
 
     private static final int ENV_QUIET = (TL_TAB_LEN >> 3);
 
     /* sin waveform table in 'decibel' scale */
-    private static int[] sin_tab = new int[SIN_LEN];
+    private static final int[] sin_tab = new int[SIN_LEN];
 
     /* translate from D1L to volume index (16 D1L levels) */
-    private static int[] d1l_tab = new int[16];
+    private static final int[] d1l_tab = new int[16];
 
     private static final int RATE_STEPS = 8;
-    private static final byte[] eg_inc = new byte[] {
-            //cycle:0  1  2  3  4  5  6  7
+    private static final int[] eg_inc = {
+            // cycle:0  1  2  3  4  5  6  7
 
-            /* 0 */ 0, 1, 0, 1, 0, 1, 0, 1, // rates 00..11 0 (increment by 0 or 1)
-            /* 1 */ 0, 1, 0, 1, 1, 1, 0, 1, // rates 00..11 1
-            /* 2 */ 0, 1, 1, 1, 0, 1, 1, 1, // rates 00..11 2
-            /* 3 */ 0, 1, 1, 1, 1, 1, 1, 1, // rates 00..11 3
+            /*  0 */ 0, 1, 0, 1, 0, 1, 0, 1, // rates 00..11 0 (increment by 0 or 1)
+            /*  1 */ 0, 1, 0, 1, 1, 1, 0, 1, // rates 00..11 1
+            /*  2 */ 0, 1, 1, 1, 0, 1, 1, 1, // rates 00..11 2
+            /*  3 */ 0, 1, 1, 1, 1, 1, 1, 1, // rates 00..11 3
 
-            /* 4 */ 1, 1, 1, 1, 1, 1, 1, 1, // rate 12 0 (increment by 1)
-            /* 5 */ 1, 1, 1, 2, 1, 1, 1, 2, // rate 12 1
-            /* 6 */ 1, 2, 1, 2, 1, 2, 1, 2, // rate 12 2
-            /* 7 */ 1, 2, 2, 2, 1, 2, 2, 2, // rate 12 3
+            /*  4 */ 1, 1, 1, 1, 1, 1, 1, 1, // rate 12 0 (increment by 1)
+            /*  5 */ 1, 1, 1, 2, 1, 1, 1, 2, // rate 12 1
+            /*  6 */ 1, 2, 1, 2, 1, 2, 1, 2, // rate 12 2
+            /*  7 */ 1, 2, 2, 2, 1, 2, 2, 2, // rate 12 3
 
-            /* 8 */ 2, 2, 2, 2, 2, 2, 2, 2, // rate 13 0 (increment by 2)
-            /* 9 */ 2, 2, 2, 4, 2, 2, 2, 4, // rate 13 1
-            /*10 */ 2, 4, 2, 4, 2, 4, 2, 4, // rate 13 2
-            /*11 */ 2, 4, 4, 4, 2, 4, 4, 4, // rate 13 3
+            /*  8 */ 2, 2, 2, 2, 2, 2, 2, 2, // rate 13 0 (increment by 2)
+            /*  9 */ 2, 2, 2, 4, 2, 2, 2, 4, // rate 13 1
+            /* 10 */ 2, 4, 2, 4, 2, 4, 2, 4, // rate 13 2
+            /* 11 */ 2, 4, 4, 4, 2, 4, 4, 4, // rate 13 3
 
-            /*12 */ 4, 4, 4, 4, 4, 4, 4, 4, // rate 14 0 (increment by 4)
-            /*13 */ 4, 4, 4, 8, 4, 4, 4, 8, // rate 14 1
-            /*14 */ 4, 8, 4, 8, 4, 8, 4, 8, // rate 14 2
-            /*15 */ 4, 8, 8, 8, 4, 8, 8, 8, // rate 14 3
+            /* 12 */ 4, 4, 4, 4, 4, 4, 4, 4, // rate 14 0 (increment by 4)
+            /* 13 */ 4, 4, 4, 8, 4, 4, 4, 8, // rate 14 1
+            /* 14 */ 4, 8, 4, 8, 4, 8, 4, 8, // rate 14 2
+            /* 15 */ 4, 8, 8, 8, 4, 8, 8, 8, // rate 14 3
 
-            /*16 */ 8, 8, 8, 8, 8, 8, 8, 8, // rates 15 0, 15 1, 15 2, 15 3 (increment by 8)
-            /*17 */ 16, 16, 16, 16, 16, 16, 16, 16, /* rates 15 2, 15 3 for attack
-            /*18 */ 0, 0, 0, 0, 0, 0, 0, 0, // infinity rates for attack and decay(s)
+            /* 16 */ 8, 8, 8, 8, 8, 8, 8, 8, // rates 15 0, 15 1, 15 2, 15 3 (increment by 8)
+            /* 17 */ 16, 16, 16, 16, 16, 16, 16, 16, /* rates 15 2, 15 3 for attack
+            /* 18 */ 0, 0, 0, 0, 0, 0, 0, 0, // infinity rates for attack and decay(s)
     };
 
     // note that there is no O(17) in this table - it's directly in the code
 
     /** Envelope Generator rates (32 + 64 rates + 32 RKS) */
-    private static final byte[] eg_rate_select = new byte[] {
+    private static final int[] eg_rate_select = {
             // 32 dummy (infinite time) rates
-            (byte) ((byte) (18 * RATE_STEPS)), (byte) (18 * RATE_STEPS), (byte) (18 * RATE_STEPS), (byte) (18 * RATE_STEPS), (byte) (18 * RATE_STEPS), (byte) (18 * RATE_STEPS), (byte) (18 * RATE_STEPS), (byte) (18 * RATE_STEPS),
-            (byte) (18 * RATE_STEPS), (byte) (18 * RATE_STEPS), (byte) (18 * RATE_STEPS), (byte) (18 * RATE_STEPS), (byte) (18 * RATE_STEPS), (byte) (18 * RATE_STEPS), (byte) (18 * RATE_STEPS), (byte) (18 * RATE_STEPS),
-            (byte) (18 * RATE_STEPS), (byte) (18 * RATE_STEPS), (byte) (18 * RATE_STEPS), (byte) (18 * RATE_STEPS), (byte) (18 * RATE_STEPS), (byte) (18 * RATE_STEPS), (byte) (18 * RATE_STEPS), (byte) (18 * RATE_STEPS),
-            (byte) (18 * RATE_STEPS), (byte) (18 * RATE_STEPS), (byte) (18 * RATE_STEPS), (byte) (18 * RATE_STEPS), (byte) (18 * RATE_STEPS), (byte) (18 * RATE_STEPS), (byte) (18 * RATE_STEPS), (byte) (18 * RATE_STEPS),
+            ((18 * RATE_STEPS)), (18 * RATE_STEPS), (18 * RATE_STEPS), (18 * RATE_STEPS), (18 * RATE_STEPS), (18 * RATE_STEPS), (18 * RATE_STEPS), (18 * RATE_STEPS),
+            (18 * RATE_STEPS), (18 * RATE_STEPS), (18 * RATE_STEPS), (18 * RATE_STEPS), (18 * RATE_STEPS), (18 * RATE_STEPS), (18 * RATE_STEPS), (18 * RATE_STEPS),
+            (18 * RATE_STEPS), (18 * RATE_STEPS), (18 * RATE_STEPS), (18 * RATE_STEPS), (18 * RATE_STEPS), (18 * RATE_STEPS), (18 * RATE_STEPS), (18 * RATE_STEPS),
+            (18 * RATE_STEPS), (18 * RATE_STEPS), (18 * RATE_STEPS), (18 * RATE_STEPS), (18 * RATE_STEPS), (18 * RATE_STEPS), (18 * RATE_STEPS), (18 * RATE_STEPS),
 
             // rates 00-11
-            (byte) (0 * RATE_STEPS), (byte) (1 * RATE_STEPS), (byte) (2 * RATE_STEPS), (byte) (3 * RATE_STEPS),
-            (byte) (0 * RATE_STEPS), (byte) (1 * RATE_STEPS), (byte) (2 * RATE_STEPS), (byte) (3 * RATE_STEPS),
-            (byte) (0 * RATE_STEPS), (byte) (1 * RATE_STEPS), (byte) (2 * RATE_STEPS), (byte) (3 * RATE_STEPS),
-            (byte) (0 * RATE_STEPS), (byte) (1 * RATE_STEPS), (byte) (2 * RATE_STEPS), (byte) (3 * RATE_STEPS),
-            (byte) (0 * RATE_STEPS), (byte) (1 * RATE_STEPS), (byte) (2 * RATE_STEPS), (byte) (3 * RATE_STEPS),
-            (byte) (0 * RATE_STEPS), (byte) (1 * RATE_STEPS), (byte) (2 * RATE_STEPS), (byte) (3 * RATE_STEPS),
-            (byte) (0 * RATE_STEPS), (byte) (1 * RATE_STEPS), (byte) (2 * RATE_STEPS), (byte) (3 * RATE_STEPS),
-            (byte) (0 * RATE_STEPS), (byte) (1 * RATE_STEPS), (byte) (2 * RATE_STEPS), (byte) (3 * RATE_STEPS),
-            (byte) (0 * RATE_STEPS), (byte) (1 * RATE_STEPS), (byte) (2 * RATE_STEPS), (byte) (3 * RATE_STEPS),
-            (byte) (0 * RATE_STEPS), (byte) (1 * RATE_STEPS), (byte) (2 * RATE_STEPS), (byte) (3 * RATE_STEPS),
-            (byte) (0 * RATE_STEPS), (byte) (1 * RATE_STEPS), (byte) (2 * RATE_STEPS), (byte) (3 * RATE_STEPS),
-            (byte) (0 * RATE_STEPS), (byte) (1 * RATE_STEPS), (byte) (2 * RATE_STEPS), (byte) (3 * RATE_STEPS),
+            (0 * RATE_STEPS), (1 * RATE_STEPS), (2 * RATE_STEPS), (3 * RATE_STEPS),
+            (0 * RATE_STEPS), (1 * RATE_STEPS), (2 * RATE_STEPS), (3 * RATE_STEPS),
+            (0 * RATE_STEPS), (1 * RATE_STEPS), (2 * RATE_STEPS), (3 * RATE_STEPS),
+            (0 * RATE_STEPS), (1 * RATE_STEPS), (2 * RATE_STEPS), (3 * RATE_STEPS),
+            (0 * RATE_STEPS), (1 * RATE_STEPS), (2 * RATE_STEPS), (3 * RATE_STEPS),
+            (0 * RATE_STEPS), (1 * RATE_STEPS), (2 * RATE_STEPS), (3 * RATE_STEPS),
+            (0 * RATE_STEPS), (1 * RATE_STEPS), (2 * RATE_STEPS), (3 * RATE_STEPS),
+            (0 * RATE_STEPS), (1 * RATE_STEPS), (2 * RATE_STEPS), (3 * RATE_STEPS),
+            (0 * RATE_STEPS), (1 * RATE_STEPS), (2 * RATE_STEPS), (3 * RATE_STEPS),
+            (0 * RATE_STEPS), (1 * RATE_STEPS), (2 * RATE_STEPS), (3 * RATE_STEPS),
+            (0 * RATE_STEPS), (1 * RATE_STEPS), (2 * RATE_STEPS), (3 * RATE_STEPS),
+            (0 * RATE_STEPS), (1 * RATE_STEPS), (2 * RATE_STEPS), (3 * RATE_STEPS),
 
             // rate 12
-            (byte) (4 * RATE_STEPS), (byte) (5 * RATE_STEPS), (byte) (6 * RATE_STEPS), (byte) (7 * RATE_STEPS),
+            (4 * RATE_STEPS), (5 * RATE_STEPS), (6 * RATE_STEPS), (7 * RATE_STEPS),
 
             // rate 13
-            (byte) (8 * RATE_STEPS), (byte) (9 * RATE_STEPS), (byte) (10 * RATE_STEPS), (byte) (11 * RATE_STEPS),
+            (8 * RATE_STEPS), (9 * RATE_STEPS), (10 * RATE_STEPS), (11 * RATE_STEPS),
 
             // rate 14
-            (byte) (12 * RATE_STEPS), (byte) (13 * RATE_STEPS), (byte) (14 * RATE_STEPS), (byte) (15 * RATE_STEPS),
+            (12 * RATE_STEPS), (13 * RATE_STEPS), (14 * RATE_STEPS), (15 * RATE_STEPS),
 
             // rate 15
-            (byte) (16 * RATE_STEPS), (byte) (16 * RATE_STEPS), (byte) (16 * RATE_STEPS), (byte) (16 * RATE_STEPS),
+            (16 * RATE_STEPS), (16 * RATE_STEPS), (16 * RATE_STEPS), (16 * RATE_STEPS),
 
             // 32 dummy rates (same as 15 3)
-            (byte) (16 * RATE_STEPS), (byte) (16 * RATE_STEPS), (byte) (16 * RATE_STEPS), (byte) (16 * RATE_STEPS),
-            (byte) (16 * RATE_STEPS), (byte) (16 * RATE_STEPS), (byte) (16 * RATE_STEPS), (byte) (16 * RATE_STEPS),
-            (byte) (16 * RATE_STEPS), (byte) (16 * RATE_STEPS), (byte) (16 * RATE_STEPS), (byte) (16 * RATE_STEPS),
-            (byte) (16 * RATE_STEPS), (byte) (16 * RATE_STEPS), (byte) (16 * RATE_STEPS), (byte) (16 * RATE_STEPS),
-            (byte) (16 * RATE_STEPS), (byte) (16 * RATE_STEPS), (byte) (16 * RATE_STEPS), (byte) (16 * RATE_STEPS),
-            (byte) (16 * RATE_STEPS), (byte) (16 * RATE_STEPS), (byte) (16 * RATE_STEPS), (byte) (16 * RATE_STEPS),
-            (byte) (16 * RATE_STEPS), (byte) (16 * RATE_STEPS), (byte) (16 * RATE_STEPS), (byte) (16 * RATE_STEPS),
-            (byte) (16 * RATE_STEPS), (byte) (16 * RATE_STEPS), (byte) (16 * RATE_STEPS), (byte) (16 * RATE_STEPS)
+            (16 * RATE_STEPS), (16 * RATE_STEPS), (16 * RATE_STEPS), (16 * RATE_STEPS),
+            (16 * RATE_STEPS), (16 * RATE_STEPS), (16 * RATE_STEPS), (16 * RATE_STEPS),
+            (16 * RATE_STEPS), (16 * RATE_STEPS), (16 * RATE_STEPS), (16 * RATE_STEPS),
+            (16 * RATE_STEPS), (16 * RATE_STEPS), (16 * RATE_STEPS), (16 * RATE_STEPS),
+            (16 * RATE_STEPS), (16 * RATE_STEPS), (16 * RATE_STEPS), (16 * RATE_STEPS),
+            (16 * RATE_STEPS), (16 * RATE_STEPS), (16 * RATE_STEPS), (16 * RATE_STEPS),
+            (16 * RATE_STEPS), (16 * RATE_STEPS), (16 * RATE_STEPS), (16 * RATE_STEPS),
+            (16 * RATE_STEPS), (16 * RATE_STEPS), (16 * RATE_STEPS), (16 * RATE_STEPS)
     };
 
-    //rate  0,    1,    2,   3,   4,   5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15
-    //shift 11,   10,   9,   8,   7,   6,  5,  4,  3,  2, 1,  0,  0,  0,  0,  0
-    //mask  2047, 1023, 511, 255, 127, 63, 31, 15, 7,  3, 1,  0,  0,  0,  0,  0
+    // rate  0,    1,    2,   3,   4,   5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15
+    // shift 11,   10,   9,   8,   7,   6,  5,  4,  3,  2, 1,  0,  0,  0,  0,  0
+    // mask  2047, 1023, 511, 255, 127, 63, 31, 15, 7,  3, 1,  0,  0,  0,  0,  0
 
     /** Envelope Generator counter shifts (32 + 64 rates + 32 RKS) */
-    private static final byte[] eg_rate_shift = new byte[] {
+    private static final int[] eg_rate_shift = {
             // 32 infinite time rates
             0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0,
@@ -490,7 +491,7 @@ public class Ym2151 {
      * DT2=0 DT2=1 DT2=2 DT2=3
      * 0     600   781   950
      */
-    private static final int[] dt2_tab = new int[] {0, 384, 500, 608};
+    private static final int[] dt2_tab = {0, 384, 500, 608};
 
     /**
      * DT1 defines offset in Hertz from base note
@@ -499,7 +500,7 @@ public class Ym2151 {
      * <p>
      * 4*32 DT1 values
      */
-    private static final byte[] dt1_tab = new byte[] {
+    private static final int[] dt1_tab = {
             /* DT1=0 */
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -517,7 +518,7 @@ public class Ym2151 {
             8, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 20, 22, 22, 22, 22
     };
 
-    private static final int[] phaseinc_rom = new int[] {
+    private static final int[] phaseinc_rom = {
             1299, 1300, 1301, 1302, 1303, 1304, 1305, 1306, 1308, 1309, 1310, 1311, 1313, 1314, 1315, 1316,
             1318, 1319, 1320, 1321, 1322, 1323, 1324, 1325, 1327, 1328, 1329, 1330, 1332, 1333, 1334, 1335,
             1337, 1338, 1339, 1340, 1341, 1342, 1343, 1344, 1346, 1347, 1348, 1349, 1351, 1352, 1353, 1354,
@@ -585,34 +586,36 @@ public class Ym2151 {
         To be exact:
             some 0x80 could be 0x81 as well as some 0x00 could be 0x01.
     */
-    private static final byte[] lfo_noise_waveform = new byte[] {
-            (byte) 0xff, (byte) 0xEE, (byte) 0xD3, (byte) 0x80, 0x58, (byte) 0xDA, 0x7F, (byte) 0x94, (byte) 0x9E, (byte) 0xE3, (byte) 0xFA, 0x00, 0x4D, (byte) 0xFA, (byte) 0xff, 0x6A,
-            0x7A, (byte) 0xDE, 0x49, (byte) 0xF6, 0x00, 0x33, (byte) 0xBB, 0x63, (byte) 0x91, 0x60, 0x51, (byte) 0xff, 0x00, (byte) 0xD8, 0x7F, (byte) 0xDE,
-            (byte) 0xDC, 0x73, 0x21, (byte) 0x85, (byte) 0xB2, (byte) 0x9C, 0x5D, 0x24, (byte) 0xCD, (byte) 0x91, (byte) 0x9E, 0x76, 0x7F, 0x20, (byte) 0xFB, (byte) 0xF3,
-            0x00, (byte) 0xA6, 0x3E, 0x42, 0x27, 0x69, (byte) 0xAE, 0x33, 0x45, 0x44, 0x11, 0x41, 0x72, 0x73, (byte) 0xDF, (byte) 0xA2,
+    private static final int[] lfo_noise_waveform = {
+            0xff, 0xee, 0xd3, 0x80, 0x58, 0xda, 0x7f, 0x94, 0x9e, 0xe3, 0xfa, 0x00, 0x4d, 0xfa, 0xff, 0x6a,
+            0x7a, 0xde, 0x49, 0xf6, 0x00, 0x33, 0xbb, 0x63, 0x91, 0x60, 0x51, 0xff, 0x00, 0xd8, 0x7f, 0xde,
+            0xdc, 0x73, 0x21, 0x85, 0xb2, 0x9c, 0x5d, 0x24, 0xcd, 0x91, 0x9e, 0x76, 0x7f, 0x20, 0xfb, 0xf3,
+            0x00, 0xa6, 0x3e, 0x42, 0x27, 0x69, 0xae, 0x33, 0x45, 0x44, 0x11, 0x41, 0x72, 0x73, 0xdf, 0xa2,
 
-            0x32, (byte) 0xBD, 0x7E, (byte) 0xA8, 0x13, (byte) 0xEB, (byte) 0xD3, 0x15, (byte) 0xDD, (byte) 0xFB, (byte) 0xC9, (byte) 0x9D, 0x61, 0x2F, (byte) 0xBE, (byte) 0x9D,
-            0x23, 0x65, 0x51, 0x6A, (byte) 0x84, (byte) 0xF9, (byte) 0xC9, (byte) 0xD7, 0x23, (byte) 0xBF, 0x65, 0x19, (byte) 0xDC, 0x03, (byte) 0xF3, 0x24,
-            0x33, (byte) 0xB6, 0x1E, 0x57, 0x5C, (byte) 0xAC, 0x25, (byte) 0x89, 0x4D, (byte) 0xC5, (byte) 0x9C, (byte) 0x99, 0x15, 0x07, (byte) 0xCF, (byte) 0xBA,
-            (byte) 0xC5, (byte) 0x9B, 0x15, 0x4D, (byte) 0x8D, 0x2A, 0x1E, 0x1F, (byte) 0xEA, 0x2B, 0x2F, 0x64, (byte) 0xA9, 0x50, 0x3D, (byte) 0xAB,
+            0x32, 0xbd, 0x7e, 0xa8, 0x13, 0xeb, 0xd3, 0x15, 0xdd, 0xfb, 0xc9, 0x9d, 0x61, 0x2f, 0xbe, 0x9d,
+            0x23, 0x65, 0x51, 0x6a, 0x84, 0xf9, 0xc9, 0xd7, 0x23, 0xbf, 0x65, 0x19, 0xdc, 0x03, 0xf3, 0x24,
+            0x33, 0xb6, 0x1e, 0x57, 0x5c, 0xac, 0x25, 0x89, 0x4d, 0xc5, 0x9c, 0x99, 0x15, 0x07, 0xcf, 0xba,
+            0xc5, 0x9b, 0x15, 0x4d, 0x8d, 0x2a, 0x1e, 0x1f, 0xea, 0x2b, 0x2f, 0x64, 0xa9, 0x50, 0x3d, 0xab,
 
-            0x50, 0x77, (byte) 0xE9, (byte) 0xC0, (byte) 0xAC, 0x6D, 0x3F, (byte) 0xCA, (byte) 0xCF, 0x71, 0x7D, (byte) 0x80, (byte) 0xA6, (byte) 0xFD, (byte) 0xff, (byte) 0xB5,
-            (byte) 0xBD, 0x6F, 0x24, 0x7B, 0x00, (byte) 0x99, 0x5D, (byte) 0xB1, 0x48, (byte) 0xB0, 0x28, 0x7F, (byte) 0x80, (byte) 0xEC, (byte) 0xBF, 0x6F,
-            0x6E, 0x39, (byte) 0x90, 0x42, (byte) 0xD9, 0x4E, 0x2E, 0x12, 0x66, (byte) 0xC8, (byte) 0xCF, 0x3B, 0x3F, 0x10, 0x7D, 0x79,
-            0x00, (byte) 0xD3, 0x1F, 0x21, (byte) 0x93, 0x34, (byte) 0xD7, 0x19, 0x22, (byte) 0xA2, 0x08, 0x20, (byte) 0xB9, (byte) 0xB9, (byte) 0xEF, 0x51,
+            0x50, 0x77, 0xe9, 0xc0, 0xac, 0x6d, 0x3f, 0xca, 0xcf, 0x71, 0x7d, 0x80, 0xa6, 0xfd, 0xff, 0xb5,
+            0xbd, 0x6f, 0x24, 0x7b, 0x00, 0x99, 0x5d, 0xb1, 0x48, 0xb0, 0x28, 0x7f, 0x80, 0xec, 0xbf, 0x6f,
+            0x6e, 0x39, 0x90, 0x42, 0xd9, 0x4e, 0x2e, 0x12, 0x66, 0xc8, 0xcf, 0x3b, 0x3f, 0x10, 0x7d, 0x79,
+            0x00, 0xd3, 0x1f, 0x21, 0x93, 0x34, 0xd7, 0x19, 0x22, 0xa2, 0x08, 0x20, 0xb9, 0xb9, 0xef, 0x51,
 
-            (byte) 0x99, (byte) 0xDE, (byte) 0xBF, (byte) 0xD4, 0x09, 0x75, (byte) 0xE9, (byte) 0x8A, (byte) 0xEE, (byte) 0xFD, (byte) 0xE4, 0x4E, 0x30, 0x17, (byte) 0xDF, (byte) 0xCE,
-            0x11, (byte) 0xB2, 0x28, 0x35, (byte) 0xC2, 0x7C, 0x64, (byte) 0xEB, (byte) 0x91, 0x5F, 0x32, 0x0C, 0x6E, 0x00, (byte) 0xF9, (byte) 0x92,
-            0x19, (byte) 0xDB, (byte) 0x8F, (byte) 0xAB, (byte) 0xAE, (byte) 0xD6, 0x12, (byte) 0xC4, 0x26, 0x62, (byte) 0xCE, (byte) 0xCC, 0x0A, 0x03, (byte) 0xE7, (byte) 0xDD,
-            (byte) 0xE2, 0x4D, (byte) 0x8A, (byte) 0xA6, 0x46, (byte) 0x95, 0x0F, (byte) 0x8F, (byte) 0xF5, 0x15, (byte) 0x97, 0x32, (byte) 0xD4, 0x28, 0x1E, 0x55
+            0x99, 0xde, 0xbf, 0xd4, 0x09, 0x75, 0xe9, 0x8a, 0xee, 0xfd, 0xe4, 0x4e, 0x30, 0x17, 0xdf, 0xce,
+            0x11, 0xb2, 0x28, 0x35, 0xc2, 0x7c, 0x64, 0xeb, 0x91, 0x5f, 0x32, 0x0c, 0x6e, 0x00, 0xf9, 0x92,
+            0x19, 0xdb, 0x8f, 0xab, 0xae, 0xd6, 0x12, 0xc4, 0x26, 0x62, 0xce, 0xcc, 0x0a, 0x03, 0xe7, 0xdd,
+            0xe2, 0x4d, 0x8a, 0xa6, 0x46, 0x95, 0x0f, 0x8f, 0xf5, 0x15, 0x97, 0x32, 0xd4, 0x28, 0x1e, 0x55
     };
 
     // these variables stay here for speedup purposes only
-    private RInt[] chanout = new RInt[] {new RInt(), new RInt(), new RInt(), new RInt(), new RInt(), new RInt(), new RInt(), new RInt()};
+    private final RInt[] chanout = new RInt[] {new RInt(), new RInt(), new RInt(), new RInt(), new RInt(), new RInt(), new RInt(), new RInt()};
     // Phase Modulation input for operators 2,3,4
-    private RInt m2 = new RInt(), c1 = new RInt(), c2 = new RInt();
+    private final RInt m2 = new RInt();
+    private final RInt c1 = new RInt();
+    private final RInt c2 = new RInt();
     /** one sample delay memory */
-    private RInt mem = new RInt();
+    private final RInt mem = new RInt();
 
     /** for tru state? */
     private static class RInt {
@@ -910,7 +913,7 @@ public class Ym2151 {
             op.eg_sel_ar = eg_rate_select[op.ar + v];
         } else {
             op.eg_sh_ar = 0;
-            op.eg_sel_ar = (byte) (17 * RATE_STEPS);
+            op.eg_sel_ar = 17 * RATE_STEPS;
         }
         op.eg_sh_d1r = eg_rate_shift[op.d1r + v];
         op.eg_sel_d1r = eg_rate_select[op.d1r + v];
@@ -929,7 +932,7 @@ public class Ym2151 {
             op.eg_sel_ar = eg_rate_select[op.ar + v];
         } else {
             op.eg_sh_ar = 0;
-            op.eg_sel_ar = (byte) (17 * RATE_STEPS);
+            op.eg_sel_ar = 17 * RATE_STEPS;
         }
         op.eg_sh_d1r = eg_rate_shift[op.d1r + v];
         op.eg_sel_d1r = eg_rate_select[op.d1r + v];
@@ -947,7 +950,7 @@ public class Ym2151 {
             op.eg_sel_ar = eg_rate_select[op.ar + v];
         } else {
             op.eg_sh_ar = 0;
-            op.eg_sel_ar = (byte) (17 * RATE_STEPS);
+            op.eg_sel_ar = 17 * RATE_STEPS;
         }
         op.eg_sh_d1r = eg_rate_shift[op.d1r + v];
         op.eg_sel_d1r = eg_rate_select[op.d1r + v];
@@ -965,7 +968,7 @@ public class Ym2151 {
             op.eg_sel_ar = eg_rate_select[op.ar + v];
         } else {
             op.eg_sh_ar = 0;
-            op.eg_sel_ar = (byte) (17 * RATE_STEPS);
+            op.eg_sel_ar = 17 * RATE_STEPS;
         }
         op.eg_sh_d1r = eg_rate_shift[op.d1r + v];
         op.eg_sel_d1r = eg_rate_select[op.d1r + v];
@@ -990,7 +993,7 @@ public class Ym2151 {
         case 0x00:
             switch (r) {
             case 0x01: // LFO reset(bit 1), Test Register (other bits)
-                this.test = (byte) v;
+                this.test = v;
                 if ((v & 2) != 0) this.lfo_phase = 0;
                 break;
 
@@ -1057,14 +1060,14 @@ public class Ym2151 {
 
             case 0x19: // PMD (bit 7==1) or AMD (bit 7==0)
                 if ((v & 0x80) != 0)
-                    this.pmd = (byte) (v & 0x7f);
+                    this.pmd = v & 0x7f;
                 else
-                    this.amd = (byte) (v & 0x7f);
+                    this.amd = v & 0x7f;
                 break;
 
             case 0x1b: // CT2, CT1, LFO waveform
-                this.ct = (byte) (v >> 6);
-                this.lfo_wsel = (byte) (v & 3);
+                this.ct = v >> 6;
+                this.lfo_wsel = v & 3;
                 break;
 
             default:
@@ -1082,7 +1085,7 @@ public class Ym2151 {
                 op.fb_shift = ((v >> 3) & 7) != 0 ? ((v >> 3) & 7) + 6 : 0;
                 this.pan[(r & 7) * 2] = (v & 0x40) != 0 ? ~0 : 0;
                 this.pan[(r & 7) * 2 + 1] = (v & 0x80) != 0 ? ~0 : 0;
-                this.connect[r & 7] = (byte) (v & 7);
+                this.connect[r & 7] = v & 7;
                 set_connect(opBuf, opPtr, r & 7, v & 7);
                 break;
 
@@ -1181,7 +1184,7 @@ public class Ym2151 {
                     op.eg_sel_ar = eg_rate_select[op.ar + (op.kc >> op.ks)];
                 } else {
                     op.eg_sh_ar = 0;
-                    op.eg_sel_ar = (byte) (17 * RATE_STEPS);
+                    op.eg_sel_ar = 17 * RATE_STEPS;
                 }
             }
 
@@ -1197,7 +1200,7 @@ public class Ym2151 {
         break;
 
         case 0xa0: // LFO AM enable, D1R
-            op.aMmask = (v & 0x80) != 0 ? ~0 : 0;
+            op.amMask = (v & 0x80) != 0 ? ~0 : 0;
             op.d1r = (v & 0x1f) != 0 ? 32 + ((v & 0x1f) << 1) : 0;
             op.eg_sh_d1r = eg_rate_shift[op.d1r + (op.kc >> op.ks)];
             op.eg_sel_d1r = eg_rate_select[op.d1r + (op.kc >> op.ks)];
@@ -1970,6 +1973,6 @@ public class Ym2151 {
 
     private void setMuteMask(int muteMask) {
         for (int c = 0; c < 8; c++)
-            muted[c] = (byte) ((muteMask >> c) & 0x01);
+            muted[c] = (muteMask >> c) & 0x01;
     }
 }

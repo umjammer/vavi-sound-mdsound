@@ -10,7 +10,7 @@ import mdsound.fmvgen.OPNA2;
 public class Ym2609Inst extends Instrument.BaseInstrument {
 
     private static final int DefaultYM2609ClockValue = 8000000;
-    private OPNA2[] chip = new OPNA2[2];
+    private final OPNA2[] chip = new OPNA2[2];
 
     @Override
     public String getName() {
@@ -39,27 +39,27 @@ public class Ym2609Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
-        chip[chipId] = new OPNA2(clock);
-        chip[chipId].init(DefaultYM2609ClockValue, clock);
+    public int start(int chipId, int samplingRate) {
+        chip[chipId] = new OPNA2(samplingRate);
+        chip[chipId].init(DefaultYM2609ClockValue, samplingRate);
 
-        return clock;
+        return samplingRate;
     }
 
     @Override
-    public int start(int chipId, int clock, int clockValue, Object... option) {
-        chip[chipId] = new OPNA2(clock);
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        chip[chipId] = new OPNA2(samplingRate);
 
         if (option != null && option.length > 0 && option[0] instanceof Function) { //<String, Stream>
             if (option[0] instanceof Function) // <String, Stream>
-                chip[chipId].init(clockValue, clock, false, (Function<String, Stream>) option[0], null, 0);
+                chip[chipId].init(clock, samplingRate, false, (Function<String, Stream>) option[0], null, 0);
             else if (option[0] instanceof String)
-                chip[chipId].init(clockValue, clock, false, (String) option[0]);
+                chip[chipId].init(clock, samplingRate, false, (String) option[0]);
         } else {
-            chip[chipId].init(clockValue, clock);
+            chip[chipId].init(clock, samplingRate);
         }
 
-        return clock;
+        return samplingRate;
     }
 
     @Override
@@ -97,7 +97,7 @@ public class Ym2609Inst extends Instrument.BaseInstrument {
     public int write(int chipId, int port, int adr, int data) {
         if (chip[chipId] == null) return 0;
 
-        chip[chipId].setReg(adr, data);
+        chip[chipId].setReg(port * 0x100 + adr, data);
         return 0;
     }
 

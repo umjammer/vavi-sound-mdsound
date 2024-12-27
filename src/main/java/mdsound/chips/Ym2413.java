@@ -58,11 +58,11 @@ public class Ym2413 {
         return 1 << x;
     }
 
-    private int MASK_HH = 1 << 9;
-    private int MASK_CYM = 1 << 10;
-    private int MASK_TOM = 1 << 11;
-    private int MASK_SD = 1 << 12;
-    private int MASK_BD = 1 << 13;
+    private final int MASK_HH = 1 << 9;
+    private final int MASK_CYM = 1 << 10;
+    private final int MASK_TOM = 1 << 11;
+    private final int MASK_SD = 1 << 12;
+    private final int MASK_BD = 1 << 13;
 //    private int OPLL_MASK_RHYTHM = 0x1f << 9; // (OPLL_MASK_HH | OPLL_MASK_CYM | OPLL_MASK_TOM | OPLL_MASK_SD | OPLL_MASK_BD);
 
     private enum Tone {_2413, _VRC7, _281B}
@@ -372,7 +372,7 @@ public class Ym2413 {
 
         private int feedback;
         /** Output value of slot */
-        private int[] output = new int[2];
+        private final int[] output = new int[2];
 
         // for Phase Generator (PG)
 
@@ -418,15 +418,15 @@ public class Ym2413 {
     private int opllTime;
     private int opllStep;
     private int prev, next;
-    private int[] sPrev = new int[2];
-    private int[] sNext = new int[2];
-    private float[][] pan = new float[][] {new float[2], new float[2], new float[2], new float[2], new float[2], new float[2], new float[2],
+    private final int[] sPrev = new int[2];
+    private final int[] sNext = new int[2];
+    private final float[][] pan = new float[][] {new float[2], new float[2], new float[2], new float[2], new float[2], new float[2], new float[2],
             new float[2], new float[2], new float[2], new float[2], new float[2], new float[2], new float[2]};
 //#endif
 
     // Register
-    private byte[] reg = new byte[0x40];
-    private int[] slotOnFlag = new int[18];
+    private final byte[] reg = new byte[0x40];
+    private final int[] slotOnFlag = new int[18];
 
     // Pitch Modulator
     private int pmPhase;
@@ -442,14 +442,14 @@ public class Ym2413 {
     private int noiseSeed;
 
     // Channel data
-    private int[] patchNumber = new int[9];
-    private int[] keyStatus = new int[9];
+    private final int[] patchNumber = new int[9];
+    private final int[] keyStatus = new int[9];
 
     /** Slot */
-    private Slot[] slot = new Slot[18];
+    private final Slot[] slot = new Slot[18];
 
     /** Voice data */
-    private Slot.Patch[][] patch = new Slot.Patch[][] {
+    private final Slot.Patch[][] patch = new Slot.Patch[][] {
             new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2]
             , new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2]
             , new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2]
@@ -457,7 +457,7 @@ public class Ym2413 {
             , new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2]
     };
     /** flag for check patch update */
-    private int[] patch_update = new int[2];
+    private final int[] patch_update = new int[2];
 
     private int mask;
 
@@ -604,30 +604,30 @@ public class Ym2413 {
     private int rate = 3354932;
 
     // WaveTable for each envelope amp
-    private static int[] fullSinTable = new int[PG_WIDTH];
-    private static int[] halfSinTable = new int[PG_WIDTH];
+    private static final int[] fullSinTable = new int[PG_WIDTH];
+    private static final int[] halfSinTable = new int[PG_WIDTH];
 
-    private static int[][] waveForm = new int[2][];
+    private static final int[][] waveForm = new int[2][];
 
     // LFO Table
-    private static int[] pmTable = new int[PM_PG_WIDTH];
-    private static int[] amTable = new int[AM_PG_WIDTH];
+    private static final int[] pmTable = new int[PM_PG_WIDTH];
+    private static final int[] amTable = new int[AM_PG_WIDTH];
 
     // Phase delta for LFO
     private int pmDPhase;
     private int amDPhase;
 
     /** dB to Liner table */
-    private static short[] db2LinTable = new short[(DB_MUTE + DB_MUTE) * 2];
+    private static final short[] db2LinTable = new short[(DB_MUTE + DB_MUTE) * 2];
 
     /** Liner to Log curve conversion table (for Attack rate). */
-    private static int[] arAdjustTable = new int[1 << EG_BITS];
+    private static final int[] arAdjustTable = new int[1 << EG_BITS];
 
     /** Empty Voice data */
     private static final Slot.Patch nullPatch = new Slot.Patch();
 
     /** Basic Voice data */
-    private Slot.Patch[][] defaultPatch;
+    private final Slot.Patch[][] defaultPatch;
 
     /** Definition of envelope mode */
     private enum EgState {
@@ -635,21 +635,21 @@ public class Ym2413 {
     }
 
     /** Phase incr table for Attack */
-    private int[][] dPhaseArTable = new int[][] {
+    private final int[][] dPhaseArTable = new int[][] {
             new int[16], new int[16], new int[16], new int[16],
             new int[16], new int[16], new int[16], new int[16],
             new int[16], new int[16], new int[16], new int[16],
             new int[16], new int[16], new int[16], new int[16]};
     /** Phase incr table for Decay and Release */
-    private int[][] dPhaseDrTable = new int[][] {
+    private final int[][] dPhaseDrTable = new int[][] {
             new int[16], new int[16], new int[16], new int[16],
             new int[16], new int[16], new int[16], new int[16],
             new int[16], new int[16], new int[16], new int[16],
             new int[16], new int[16], new int[16], new int[16]};
 
     /** KSL + TL Table */
-    private static int[][][][] tllTable;
-    private static int[][][] rksTable;
+    private static final int[][][][] tllTable;
+    private static final int[][][] rksTable;
 
     /** Phase incr table for PG */
     private int[][][] dPhaseTable;

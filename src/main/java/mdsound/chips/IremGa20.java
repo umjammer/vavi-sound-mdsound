@@ -95,8 +95,8 @@ public class IremGa20 {
 
     private byte[] rom;
     private int romSize;
-    private int[] regs = new int[0x40];
-    private Channel[] channel = new Channel[] {
+    private final int[] regs = new int[0x40];
+    private final Channel[] channel = new Channel[] {
             new Channel(),
             new Channel(),
             new Channel(),
@@ -105,7 +105,12 @@ public class IremGa20 {
 
     public void update(int[][] outputs, int samples) {
         class Update {
-            int rate, pos, frac, end, vol, play;
+            final int rate;
+            int pos;
+            int frac;
+            final int end;
+            final int vol;
+            int play;
 
             Update(Channel ch) {
                 rate = ch.rate;

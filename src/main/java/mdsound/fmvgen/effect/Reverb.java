@@ -8,7 +8,7 @@ public class Reverb {
     private int delta = 0;
     public double[] sendLevel = null;
     private int currentCh = 0;
-    private int chs;
+    private final int chs;
 
     public Reverb(int bufSize, int ch) {
         this.buf = new int[][] {
@@ -49,7 +49,7 @@ public class Reverb {
         // logger.log(Level.TRACE, "%d %d".formatted(ch, SendLevel[ch]));
     }
 
-    private static final double[] sl = new double[] {
+    private static final double[] sl = {
         0.0050000, 0.0150000, 0.0300000, 0.0530000, 0.0680000,
         0.0800000, 0.0960000, 0.1300000, 0.2000000, 0.3000000, 0.4000000,
         0.5000000, 0.6000000, 0.7000000, 0.8000000, 0.9000000

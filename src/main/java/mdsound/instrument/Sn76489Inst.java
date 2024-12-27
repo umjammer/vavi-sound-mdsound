@@ -44,10 +44,10 @@ public class Sn76489Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int samplingRate, int clockValue, Object... option) {
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
         chips[chipId] = new Sn76489();
         Sn76489 chip = chips[chipId];
-        return chip.start(samplingRate, clockValue);
+        return chip.start(samplingRate, clock);
     }
 
     @Override

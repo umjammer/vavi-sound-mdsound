@@ -6,6 +6,8 @@ import java.util.function.Function;
 
 import mdsound.Common;
 import mdsound.fmgen.Opna;
+import mdsound.fmgen.Opna.OPNA.Rhythm;
+import mdsound.fmgen.Opna.OPNA.Whdr;
 import mdsound.fmvgen.Fmvgen.Effects;
 import dotnet4j.io.File;
 import dotnet4j.io.FileAccess;
@@ -22,12 +24,14 @@ import static mdsound.fmgen.Fmgen.limit;
 public class OPNA2 extends Opna.OPNABase {
     public static final float[] panTable = new float[] {1.0f, 0.7512f, 0.4512f, 0.0500f};
 
-    // リズム音源関係
-    private Rhythm[] rhythm;
+    /** Rhythm Sound Source */
+    private final Rhythm[] rhythm;
 
-    private byte rhythmTl; // リズム全体の音量
+    /** Overall rhythm volume */
+    private byte rhythmTl;
     private int rhythmTVol;
-    private byte rhythmKey; // リズムのキー
+    /** Rhythm Key */
+    private byte rhythmKey;
 
     protected FM6[] fm6;
     protected PSG2[] psg2;
@@ -39,21 +43,21 @@ public class OPNA2 extends Opna.OPNABase {
     public Effects effects;
 
     public static class Rhythm {
-        // ぱん
+        /** pan */
         public byte pan;
-        // おんりょう
+        /** level */
         public byte level;
-        // おんりょうせってい
+        /** volume */
         public int volume;
-        // さんぷる
+        /** sample */
         public int[] sample;
-        // さいず
+        /** size */
         public int size;
-        // いち
+        /** position */
         public int pos;
-        // すてっぷち
+        /** step */
         public int step;
-        // さんぷるのれーと
+        /** sampling rate */
         public int rate;
         public int efcCh;
         public int num;
@@ -78,7 +82,7 @@ public class OPNA2 extends Opna.OPNABase {
     }
 
     /**
-     * 構築
+     * construction
      */
     public OPNA2(int clock) {
         this.effects = new Effects(clock);
@@ -197,9 +201,9 @@ public class OPNA2 extends Opna.OPNABase {
     }
 
     /**
-     * サンプリングレート変更
+     * Sampling rate change
      */
-    public boolean setRate(int c, int r, boolean ipflag/* = false*/) {
+    public boolean setRate(int c, int r, boolean ipflag /* = false*/) {
         if (!super.setRate(c, r, ipflag))
             return false;
 
@@ -218,9 +222,9 @@ public class OPNA2 extends Opna.OPNABase {
     }
 
     /**
-     * 合成
-     * @param buffer 合成先
-     * @param samples 合成サンプル数
+     * Synthesis
+     * @param buffer Destination
+     * @param samples Number of composite samples
      */
     public void mix(int[] buffer, int samples) {
         fm6[0].mix(buffer, samples, regTc);
@@ -238,7 +242,7 @@ public class OPNA2 extends Opna.OPNABase {
     }
 
     /**
-     * リセット
+     * Reset
      */
     public void reset() {
         reg29 = 0x1f;
@@ -283,7 +287,7 @@ public class OPNA2 extends Opna.OPNABase {
 
             rate = psgRate;
 
-            // 合成周波数と出力周波数の比
+            // Ratio of synthesis frequency to output frequency
             //assert(fmclock< (0x80000000 >> FM_RATIOBITS));
             int ratio = ((fmclock << Fmvgen.FM_RATIOBITS) + rate / 2) / rate;
 
@@ -304,7 +308,7 @@ public class OPNA2 extends Opna.OPNABase {
     }
 
     /**
-     * レジスタアレイにデータを設定
+     * Set data in the register array
      */
     public void setReg(int addr, int data) {
         addr &= 0x3ff;
@@ -347,17 +351,17 @@ public class OPNA2 extends Opna.OPNABase {
         } else if (addr >= 0x322 && addr < 0x325) {
             effects.reverb.setReg(addr - 0x322, (byte) data);
             if (addr == 0x323) {
-                effects.distortion.setReg(0, (byte) data); // channel 変更はアドレスを共有
+                effects.distortion.setReg(0, (byte) data); // Channel change shares address
                 effects.chorus.setReg(0, (byte) data);
                 effects.hpflpf.setReg(0, (byte) data);
                 effects.compressor.setReg(0, (byte) data);
             }
             return;
         } else if (addr >= 0x325 && addr < 0x328) {
-            effects.distortion.setReg(addr - 0x324, (byte) data); // distortion のアドレス 0 はリバーブと共有
+            effects.distortion.setReg(addr - 0x324, (byte) data); // Distortion address 0 is shared with reverb
             return;
         } else if (addr >= 0x328 && addr < 0x32C) {
-            effects.chorus.setReg(addr - 0x327, (byte) data); // chorus のアドレス 0 はリバーブと共有
+            effects.chorus.setReg(addr - 0x327, (byte) data); // Address 0 of chorus is shared with reverb
             return;
         } else if (addr >= 0x32C && addr < 0x330) {
             return;
@@ -422,15 +426,16 @@ public class OPNA2 extends Opna.OPNABase {
         return 0;
     }
 
-    // 音量設定
+    // Volume Settings
+
     public void setVolumeFM(int db) {
         db = Math.min(db, 20);
         if (db > -192) {
-            fm6[0].fmvolume = (int) (16384.0 * Math.pow(10.0, db / 40.0));
-            fm6[1].fmvolume = (int) (16384.0 * Math.pow(10.0, db / 40.0));
+            fm6[0].fmVolume = (int) (16384.0 * Math.pow(10.0, db / 40.0));
+            fm6[1].fmVolume = (int) (16384.0 * Math.pow(10.0, db / 40.0));
         } else {
-            fm6[0].fmvolume = 0;
-            fm6[1].fmvolume = 0;
+            fm6[0].fmVolume = 0;
+            fm6[1].fmVolume = 0;
         }
     }
 
@@ -459,7 +464,7 @@ public class OPNA2 extends Opna.OPNABase {
     }
 
     /**
-     * チャンネルマスクの設定
+     * Channel Mask Settings
      */
     public void setChannelMask(int mask) {
         for (int i = 0; i < 6; i++) {
@@ -484,7 +489,7 @@ public class OPNA2 extends Opna.OPNABase {
     }
 
     /**
-     * リズム合成
+     * Rhythm Synthesis
      */
     private void rhythmMix(int[] buffer, int count) {
         if (rhythmTVol < 128 && rhythm[0].sample != null && ((rhythmKey & 0x3f) != 0)) {
@@ -541,7 +546,7 @@ public class OPNA2 extends Opna.OPNABase {
     }
 
     /**
-     * リズム音を読みこむ
+     * Loading rhythm sounds
      */
     public boolean loadRhythmSample(Function<String, Stream> appendFileReaderCallback) throws IOException {
         String[] rhythmName = {
@@ -578,14 +583,14 @@ public class OPNA2 extends Opna.OPNABase {
             byte[] bufWhdr = new byte[4 + 2 + 2 + 4 + 4 + 2 + 2 + 2];
             System.arraycopy(buf, filePtr, bufWhdr, 0, bufWhdr.length);
 
-            whdr.chunkSize = bufWhdr[0] + bufWhdr[1] * 0x100 + bufWhdr[2] * 0x10000 + bufWhdr[3] * 0x10000;
-            whdr.tag = bufWhdr[4] + bufWhdr[5] * 0x100;
-            whdr.nch = bufWhdr[6] + bufWhdr[7] * 0x100;
-            whdr.rate = bufWhdr[8] + bufWhdr[9] * 0x100 + bufWhdr[10] * 0x10000 + bufWhdr[11] * 0x10000;
-            whdr.avgbytes = bufWhdr[12] + bufWhdr[13] * 0x100 + bufWhdr[14] * 0x10000 + bufWhdr[15] * 0x10000;
-            whdr.align = bufWhdr[16] + bufWhdr[17] * 0x100;
-            whdr.bps = bufWhdr[18] + bufWhdr[19] * 0x100;
-            whdr.size = bufWhdr[20] + bufWhdr[21] * 0x100;
+            whdr.chunkSize = (bufWhdr[0] & 0xff) + (bufWhdr[1] & 0xff) * 0x100 + (bufWhdr[2] & 0xff) * 0x1_0000 + (bufWhdr[3] & 0xff) * 0x1_0000;
+            whdr.tag = (bufWhdr[4] & 0xff) + (bufWhdr[5] & 0xff) * 0x100;
+            whdr.nch = (bufWhdr[6] & 0xff) + (bufWhdr[7] & 0xff) * 0x100;
+            whdr.rate = (bufWhdr[8] & 0xff) + (bufWhdr[9] & 0xff) * 0x100 + (bufWhdr[10] & 0xff) * 0x1_0000 + (bufWhdr[11] & 0xff) * 0x1_0000;
+            whdr.avgbytes = (bufWhdr[12] & 0xff) + (bufWhdr[13] & 0xff) * 0x100 + (bufWhdr[14] & 0xff) * 0x1_0000 + (bufWhdr[15] & 0xff) * 0x1_0000;
+            whdr.align = (bufWhdr[16] & 0xff) + (bufWhdr[17] & 0xff) * 0x100;
+            whdr.bps = (bufWhdr[18] & 0xff) + (bufWhdr[19] & 0xff) * 0x100;
+            whdr.size = (bufWhdr[20] & 0xff) + (bufWhdr[21] & 0xff) * 0x100;
 
             byte[] subChunkName = new byte[4];
             fSize = 4 + whdr.chunkSize;
@@ -597,13 +602,13 @@ public class OPNA2 extends Opna.OPNABase {
                 for (int ind = 0; ind < 4; ind++) {
                     bufWhdr[ind] = buf[filePtr++];
                 }
-                fSize = bufWhdr[0] + bufWhdr[1] * 0x100 + bufWhdr[2] * 0x10000 + bufWhdr[3] * 0x10000;
+                fSize = (bufWhdr[0] & 0xff) + (bufWhdr[1] & 0xff) * 0x100 + (bufWhdr[2] & 0xff) * 0x1_0000 + (bufWhdr[3] & 0xff) * 0x1_0000;
             } while ('d' != subChunkName[0] && 'a' != subChunkName[1] && 't' != subChunkName[2] && 'a' != subChunkName[3]);
 
             fSize /= 2;
             if (fSize >= 0x100000 || whdr.tag != 1 || whdr.nch != 1)
                 break;
-            fSize = Math.max(fSize, (1 << 31) / 1024);
+            fSize = Math.max(fSize, 1 << 13);
 
             rhythm[i].sample = null;
             rhythm[i].sample = new int[fSize];
@@ -614,7 +619,7 @@ public class OPNA2 extends Opna.OPNABase {
                 bufSample[ind] = buf[filePtr++];
             }
             for (int si = 0; si < fSize; si++) {
-                rhythm[i].sample[si] = (short) (bufSample[si * 2] + bufSample[si * 2 + 1] * 0x100);
+                rhythm[i].sample[si] = (bufSample[si * 2] & 0xff) + (bufSample[si * 2 + 1] & 0xff) * 0x100;
             }
 
             rhythm[i].rate = whdr.rate;
@@ -631,7 +636,7 @@ public class OPNA2 extends Opna.OPNABase {
     }
 
     /**
-     * 音量設定
+     * Volume Settings
      */
     public void setVolumeRhythmTotal(int db) {
         db = Math.min(db, 20);

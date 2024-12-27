@@ -2,16 +2,17 @@
 package mdsound.fmvgen.effect;
 
 /**
- * フィルタークラス
+ * Filter Class
  * @see "https://vstcpp.wpblog.jp/?page_id=728"
  */
 public class Distortion {
-    // エフェクターのパラメーター
-    private int clock;
-    private int maxCh;
+
+    // Effector parameters
+    private final int clock;
+    private final int maxCh;
     private ChInfo[] chInfo = null;
 
-    private float[] fbuf = new float[] {
+    private final float[] fbuf = new float[] {
         0f, 0f
     };
 
@@ -23,9 +24,9 @@ public class Distortion {
         public Filter highpassL = new Filter();
 
         public Filter highpassR = new Filter();
-        // 増幅量。10～300程度(dB換算で20dB～50dB程度)
+        /** Amplification amount: 10 to 300 (20 dB to 50 dB in dB conversion) */
         public float gain = 300.0f;
-        // 出力信号の音量。0.0～1.0の範囲
+        /** The volume of the output signal, ranging from 0.0 to 1.0. */
         public float volume = 0.1f;
     }
 
@@ -41,10 +42,10 @@ public class Distortion {
             chInfo[i] = new ChInfo();
             chInfo[i].sw = false;
 
-            // 内部変数
-            // 高音域のみ通す(低音域をカットする)フィルタ設定(左右分)
-            // カットする周波数の目安は20Hz～300Hz程度
-            // 増幅量が大きくなれば、カットオフ周波数も大きくするとよい
+            // Internal variables
+            // Filter setting (left and right) to pass only high frequencies (cut low frequencies)
+            // The recommended frequency range for cutting is around 20Hz to 300Hz.
+            // The larger the amplification amount, the larger the cutoff frequency should be.
             chInfo[i].highpassL = new Filter();
             chInfo[i].highpassL.highPass(200.0f, (float) (1.0f / Math.sqrt(2.0f)), clock);
             chInfo[i].highpassR = new Filter();
@@ -73,17 +74,17 @@ public class Distortion {
         fbuf[0] = inL[0] / 21474.83647f;
         fbuf[1] = inR[0] / 21474.83647f;
 
-        // inL[]、inR[]、outL[]、outR[]はそれぞれ入力信号と出力信号のバッファ(左右)
-        // wavelenghtはバッファのサイズ、サンプリング周波数は44100Hzとする
+        // inL[], inR[], outL[], and outR[] are the input and output signal buffers (left and right) respectively.
+        // wavelenght is the buffer size, and the sampling frequency is 44100Hz.
 
-        // 入力信号にエフェクターを適用する
+        // Applying effects to the input signal
         for (int i = 0; i < waveLength * 2; i += 2) {
-            // 入力信号にフィルタを適用する
+            // Applying a filter to the input signal
             float tmpL = chInfo[ch].highpassL.process(fbuf[i + 0]);
-            // 入力信号にゲインを掛けて増幅する
+            // Amplify the input signal by applying gain
             tmpL = chInfo[ch].gain * tmpL;
 
-            // 振幅の最大値(ここでは-1.0～1.0)を超えたものをクリッピングする
+            // Clipping occurs when the amplitude exceeds the maximum value (here, -1.0 to 1.0).
             if (tmpL > 1.0) {
                 tmpL = 1.0f;
             }
@@ -91,7 +92,7 @@ public class Distortion {
                 tmpL = -1.0f;
             }
 
-            // 右側の入力信号も同様に処理
+            // The right input signal is processed in the same way.
             float tmpR = chInfo[ch].highpassR.process(fbuf[i + 1]);
             tmpR = chInfo[ch].gain * tmpR;
             if (tmpR > 1.0) {
@@ -101,7 +102,7 @@ public class Distortion {
                 tmpR = -1.0f;
             }
 
-            // 入力信号にフィルタをかける
+            // Filtering the input signal
             fbuf[i + 0] = chInfo[ch].volume * tmpL;
             fbuf[i + 1] = chInfo[ch].volume * tmpR;
         }

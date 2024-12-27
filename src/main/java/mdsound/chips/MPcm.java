@@ -7,29 +7,30 @@ import java.util.Arrays;
 
 
 /**
- * MPCM (c)wachoman 互換えんじん(mndrvが使ってる機能のみ)
- *
- * ADPCMデコードはXM6をぱk参考にした．
+ * MPCM (c)wachoman compatible engine (only functions used by mndrv)
+ * <p>
+ * ADPCM decoding was based on XM6.
  */
 public class MPcm {
 
     public static class PCM {
-        // -1:ADPCM 0:なし 1:16bit 2:8bit
+
+        // -1: ADPCM 0: None 1: 16bit 2: 8bit
         public byte type;
-        // 基本note
+        // Basic note
         public byte orig;
         public byte[] adrsBuf;
         public int adrsPtr;
         public int size;
-        // ループ開始点
+        // Loop Start Point
         public int start;
-        // ループ終点
+        // Loop End Point
         public int end;
-        // ループ回数(0:無限)
+        // Loop count (0: infinite)
         public int count;
     }
 
-    // 効果音用の chは未サポート
+    // Sound effect ch is not supported
     private static final int VOICE_MAX = 16;
 
     private enum TYPE {
@@ -51,11 +52,12 @@ public class MPcm {
     private static final int TBL_DIFF = 49 * 16;
 
     private static class Channel {
+
         private boolean enable;
         private int vol;
         private int volWork;
         private int type;
-        private int[] lr = new int[2];
+        private final int[] lr = new int[2];
         private int orig;
         private byte[] adrsBuf;
         private int adrsPtr;
@@ -66,8 +68,8 @@ public class MPcm {
         private int lpCount;
         private int lpWork;
         private int pitch;
-        private long pos;
-        private long ppos;
+        private int pos;
+        private int ppos;
         private int offset;
         private int sample;
         private int lpSample;
@@ -106,16 +108,16 @@ public class MPcm {
             if (this.lpEnd == 0) this.lpEnd = this.size;
 
             switch (TYPE.valueOf(ptr.type & 0xff)) {
-            case _16:
-                this.size /= 2;
-                this.lpStart /= 2;
-                this.lpEnd /= 2;
-                break;
-            case _ADPCM:
-                this.size *= 2;
-                this.lpStart *= 2;
-                this.lpEnd *= 2;
-                break;
+                case _16:
+                    this.size /= 2;
+                    this.lpStart /= 2;
+                    this.lpEnd /= 2;
+                    break;
+                case _ADPCM:
+                    this.size *= 2;
+                    this.lpStart *= 2;
+                    this.lpEnd *= 2;
+                    break;
             }
         }
 
@@ -128,16 +130,16 @@ public class MPcm {
         private void setPitch(int note, float base) {
             int orig = this.orig;
             int pitch = 0x10000;
-            short doct = 0, dnote = 0;
+            int doct = 0, dnote = 0;
 
-            dnote = (short) note;
+            dnote = note;
 
             if (orig > 0x1fc0) {
                 this.pitch = (int) (0x10000 * base);
                 return;
             }
 
-            dnote -= (short) orig;
+            dnote -= orig;
             if (dnote == 0) {
                 pitch = 0x10000;
             } else if (dnote > 0) {
@@ -157,24 +159,24 @@ public class MPcm {
             if (pan < 0x80) {
                 // 3段階
                 switch (pan) {
-                case 1:
-                    this.lr[0] = 1;
-                    this.lr[1] = 0;
-                    break;
-                case 2:
-                    this.lr[0] = 0;
-                    this.lr[1] = 1;
-                    break;
-                case 3:
-                    this.lr[0] = 1;
-                    this.lr[1] = 1;
-                    break;
-                case 0:
-                    this.lr[0] = 0;
-                    this.lr[1] = 0;
-                    break;
-                default:
-                    break;
+                    case 1:
+                        this.lr[0] = 1;
+                        this.lr[1] = 0;
+                        break;
+                    case 2:
+                        this.lr[0] = 0;
+                        this.lr[1] = 1;
+                        break;
+                    case 3:
+                        this.lr[0] = 1;
+                        this.lr[1] = 1;
+                        break;
+                    case 0:
+                        this.lr[0] = 0;
+                        this.lr[1] = 0;
+                        break;
+                    default:
+                        break;
                 }
             } else {
                 // 128段階
@@ -184,8 +186,8 @@ public class MPcm {
 
     private int[] volTbl;
 
-    private static final int[][] VolTbl = new int[][] {
-            new int[] {
+    private static final int[][] VolTbl = {
+            {
                     16, 16, 16, 16, 16, 16, 16, 16,
                     24, 24, 24, 24, 24, 24, 24, 24,
                     32, 32, 32, 32, 32, 32, 32, 32,
@@ -203,7 +205,7 @@ public class MPcm {
                     512, 512, 512, 512, 512, 512, 512, 512,
                     640, 640, 640, 640, 640, 640, 640, 640
             },
-            new int[] {
+            {
                     16, 17, 18, 19, 20, 21, 22, 23,
                     24, 25, 26, 27, 28, 29, 30, 31,
                     32, 33, 34, 35, 36, 37, 38, 39,
@@ -234,13 +236,13 @@ public class MPcm {
     }
 
     private Channel[] channels;
-    private static int[] diffTable;
+    private static final int[] diffTable = new int[TBL_DIFF];
     private float rate;
     private float base;
     private int mask = 0;
 
-    // これ，計算で作ろうとすると合わないんだが．．．
-    private static final int[] pitchTbl = new int[] {
+    // If I try to make this by calculation, it doesn't add up...
+    private static final int[] pitchTbl = {
             0x0000, 0x003b, 0x0076, 0x00b2, 0x00ed, 0x0128, 0x0164, 0x019f,
             0x01db, 0x0217, 0x0252, 0x028e, 0x02ca, 0x0305, 0x0341, 0x037d,
             0x03b9, 0x03f5, 0x0431, 0x046e, 0x04aa, 0x04e6, 0x0522, 0x055f,
@@ -339,12 +341,12 @@ public class MPcm {
             0xfc51, 0xfcc7, 0xfd3c, 0xfdb2, 0xfe28, 0xfe9e, 0xff14, 0xff8a
     };
 
-    private static final int[] NextTable = new int[] {
+    private static final int[] NextTable = {
             -1, -1, -1, -1, 2, 4, 6, 8,
             -1, -1, -1, -1, 2, 4, 6, 8
     };
 
-    private static final int[] OffsetTable = new int[] {
+    private static final int[] OffsetTable = {
             0,
             0, 1, 2, 3, 4, 5, 6, 7,
             8, 9, 10, 11, 12, 13, 14, 15,
@@ -361,11 +363,9 @@ public class MPcm {
         for (int i = 0; i < VOICE_MAX; i++) {
             this.channels[i] = new Channel();
         }
-        diffTable = new int[TBL_DIFF];
     }
 
     public void unmount() {
-        diffTable = null;
         this.channels = null;
     }
 
@@ -475,16 +475,16 @@ public class MPcm {
         }
     }
 
-    public int decode(int ch, byte[] adrsBuf, int adrsPtr, long pos) {
+    public int decode(int ch, byte[] adrsBuf, int adrsPtr, int pos) {
         int index;
-        byte data;
-        long cnt = 0;
-        long prev = this.channels[ch].ppos;
+        int data;
+        int cnt = 0;
+        int prev = this.channels[ch].ppos;
         int sample = this.channels[ch].sample;
         int offset = this.channels[ch].offset;
         int diff = 0;
-        //int store = 0;
-        //int poffset = 0;
+//        int store = 0;
+//        int poffset = 0;
 
         if (pos == prev) {
             return sample;
@@ -501,10 +501,10 @@ public class MPcm {
             cnt = pos - prev;
         }
 
-        for (long c = 0; c < cnt; c++) {
-            data = adrsBuf[(int) (adrsPtr + ((prev + c) >> 1))];
+        for (int c = 0; c < cnt; c++) {
+            data = adrsBuf[adrsPtr + ((prev + c) >> 1)] & 0xff;
             if (((prev + c) & 1) != 0) {
-                data = (byte) ((data >> 4) & 0x0f);
+                data = (data >> 4) & 0x0f;
             } else {
                 data &= 0x0f;
             }
@@ -550,24 +550,24 @@ public class MPcm {
 
             byte[] ptrBuf = this.channels[ch].adrsBuf;
             int ptrPtr = this.channels[ch].adrsPtr;
-            long offset = this.channels[ch].pos;
+            int offset = this.channels[ch].pos;
             int pitch = this.channels[ch].pitch;
             for (int bufsize = 0; (bufsize < count) && (this.channels[ch].enable); bufsize++) {
                 int sample = 0;
-                long pos = offset >> 16;
+                int pos = offset >> 16;
 
                 switch (TYPE.valueOf(this.channels[ch].type)) {
-                case _NONE:
-                    break;
-                case _ADPCM:
-                    sample = decode(ch, ptrBuf, ptrPtr, pos);
-                    break;
-                case _16:
-                    sample = (short) ((ptrBuf[(int) (ptrPtr + pos * 2)] << 8) + ptrBuf[(int) (ptrPtr + pos * 2 + 1)]);
-                    break;
-                case _8:
-                    sample = ptrBuf[(int) (ptrPtr + pos)];
-                    break;
+                    case _NONE:
+                        break;
+                    case _ADPCM:
+                        sample = decode(ch, ptrBuf, ptrPtr, pos);
+                        break;
+                    case _16:
+                        sample = ((ptrBuf[ptrPtr + pos * 2] & 0xff) << 8) + (ptrBuf[ptrPtr + pos * 2 + 1] & 0xff);
+                        break;
+                    case _8:
+                        sample = ptrBuf[ptrPtr + pos] & 0xff;
+                        break;
                 }
                 sample = (sample * this.channels[ch].vol) >> 3;
 
@@ -584,7 +584,7 @@ public class MPcm {
                         keyOff(ch);
                     } else {
                         offset &= 0xffff;
-                        offset += ((long) this.channels[ch].lpStart << 16);
+                        offset += this.channels[ch].lpStart << 16;
                         this.channels[ch].ppos = offset;
                         this.channels[ch].sample = this.channels[ch].lpSample;
                         this.channels[ch].offset = this.channels[ch].lpOffset;

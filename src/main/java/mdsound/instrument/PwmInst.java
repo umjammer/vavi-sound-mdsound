@@ -33,7 +33,7 @@ import mdsound.chips.PwmChip;
 public class PwmInst extends Instrument.BaseInstrument {
 
     private static final int MAX_CHIPS = 0x02;
-    private PwmChip[] chips = new PwmChip[] {new PwmChip(), new PwmChip()};
+    private final PwmChip[] chips = new PwmChip[] {new PwmChip(), new PwmChip()};
 
     @Override
     public String getName() {
@@ -64,8 +64,8 @@ public class PwmInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int samplingRate, int clockValue, Object... option) {
-        return start(chipId, clockValue);
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        return start(chipId, clock);
     }
 
     @Override

@@ -27,7 +27,7 @@ public class K005289Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock, int clockValue, Object... option) {
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
         throw new UnsupportedOperationException();
     }
 

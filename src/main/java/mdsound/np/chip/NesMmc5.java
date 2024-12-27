@@ -207,7 +207,7 @@ public class NesMmc5 implements SoundChip {
         out[2] = pcm;
     }
 
-    private int[] m = new int[3];
+    private final int[] m = new int[3];
 
     @Override
     public int render(int[] b) {

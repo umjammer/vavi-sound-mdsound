@@ -8,16 +8,16 @@ class Filter {
     public static float[] gainTable;
     public static float[] qTable;
 
-    // フィルタの係数
+    // Filter Coefficients
     private float a0, a1, a2, b0, b1, b2;
 
-    // バッファ
+    // buffer
     private float out1, out2;
     private float in1, in2;
 
     public Filter() {
-        // メンバー変数を初期化
-        a0 = 1.0f; // 0以外にしておかないと除算でエラーになる
+        // Initialize member variables
+        a0 = 1.0f; // If the value is not 0, an error will occur during division.
         a1 = 0.0f;
         a2 = 0.0f;
         b0 = 1.0f;
@@ -32,28 +32,28 @@ class Filter {
     }
 
     /**
-     * 入力信号にフィルタを適用する関数
+     * A function that applies a filter to an input signal
      */
     public float process(float in) {
-        // 入力信号にフィルタを適用し、出力信号変数に保存。
+        // Apply a filter to the input signal and store it in the output signal variable.
         float out = b0 / a0 * in + b1 / a0 * in1 + b2 / a0 * in2 - a1 / a0 * out1 - a2 / a0 * out2;
 
-        in2 = in1; // 2つ前の入力信号を更新
-        in1 = in; // 1つ前の入力信号を更新
+        in2 = in1; // Update the previous two input signals
+        in1 = in; // Update the previous input signal
 
-        out2 = out1; // 2つ前の出力信号を更新
-        out1 = out; // 1つ前の出力信号を更新
+        out2 = out1; // Update the previous two output signals
+        out1 = out; // Update the previous output signal
 
-        // 出力信号を返す
+        // Return the output signal
         return out;
     }
 
     public void lowPass(float freq, float q, float sampleRate) {
-        // フィルタ係数計算で使用する中間値を求める。
+        // Obtain intermediate values for use in filter coefficient calculations.
         float omega = 2.0f * (float) Math.PI * freq / sampleRate;
         float alpha = (float) (Math.sin(omega) / (2.0f * q));
 
-        // フィルタ係数を求める。
+        // Find the filter coefficients.
         a0 = 1.0f + alpha;
         a1 = (float) (-2.0f * Math.cos(omega));
         a2 = 1.0f - alpha;
@@ -63,11 +63,11 @@ class Filter {
     }
 
     public void highPass(float freq, float q, float sampleRate) {
-        // フィルタ係数計算で使用する中間値を求める。
+        // Obtain intermediate values for use in filter coefficient calculations.
         float omega = 2.0f * (float) Math.PI * freq / sampleRate;
         float alpha = (float) (Math.sin(omega) / (2.0f * q));
 
-        // フィルタ係数を求める。
+        // Find the filter coefficients.
         a0 = 1.0f + alpha;
         a1 = (float) (-2.0f * Math.cos(omega));
         a2 = 1.0f - alpha;
@@ -77,11 +77,11 @@ class Filter {
     }
 
     public void bandPass(float freq, float bw, float sampleRate) {
-        // フィルタ係数計算で使用する中間値を求める。
+        // Obtain intermediate values for use in filter coefficient calculations.
         float omega = 2.0f * (float) Math.PI * freq / sampleRate;
         float alpha = (float) (Math.sin(omega) * Math.sinh(Math.log(2.0f) / 2.0 * bw * omega / Math.sin(omega)));
 
-        // フィルタ係数を求める。
+        // Find the filter coefficients.
         a0 = 1.0f + alpha;
         a1 = (float) (-2.0f * Math.cos(omega));
         a2 = 1.0f - alpha;
@@ -91,11 +91,11 @@ class Filter {
     }
 
     public void notch(float freq, float bw, float sampleRate) {
-        // フィルタ係数計算で使用する中間値を求める。
+        // Obtain intermediate values for use in filter coefficient calculations.
         float omega = 2.0f * (float) Math.PI * freq / sampleRate;
         float alpha = (float) (Math.sin(omega) * Math.sinh(Math.log(2.0f) / 2.0 * bw * omega / Math.sin(omega)));
 
-        // フィルタ係数を求める。
+        // Find the filter coefficients.
         a0 = 1.0f + alpha;
         a1 = (float) (-2.0f * Math.cos(omega));
         a2 = 1.0f - alpha;
@@ -105,13 +105,13 @@ class Filter {
     }
 
     public void lowShelf(float freq, float q, float gain, float sampleRate) {
-        // フィルタ係数計算で使用する中間値を求める。
+        // Obtain intermediate values for use in filter coefficient calculations.
         float omega = 2.0f * 3.14159265f * freq / sampleRate;
         float alpha = (float) (Math.sin(omega) / (2.0f * q));
         float A = (float) (Math.pow(10.0f, (gain / 40.0f)));
         float beta = (float) (Math.sqrt(A) / q);
 
-        // フィルタ係数を求める。
+        // Find the filter coefficients.
         a0 = (float) ((A + 1.0f) + (A - 1.0f) * Math.cos(omega) + beta * Math.sin(omega));
         a1 = (float) (-2.0f * ((A - 1.0f) + (A + 1.0f) * Math.cos(omega)));
         a2 = (float) ((A + 1.0f) + (A - 1.0f) * Math.cos(omega) - beta * Math.sin(omega));
@@ -121,13 +121,13 @@ class Filter {
     }
 
     public void highShelf(float freq, float q, float gain, float sampleRate) {
-        // フィルタ係数計算で使用する中間値を求める。
+        // Obtain intermediate values for use in filter coefficient calculations.
         float omega = 2.0f * 3.14159265f * freq / sampleRate;
         float alpha = (float) (Math.sin(omega) / (2.0f * q));
         float A = (float) (Math.pow(10.0f, (gain / 40.0f)));
         float beta = (float) (Math.sqrt(A) / q);
 
-        // フィルタ係数を求める。
+        // Find the filter coefficients.
         a0 = (float) ((A + 1.0f) - (A - 1.0f) * Math.cos(omega) + beta * Math.sin(omega));
         a1 = (float) (2.0f * ((A - 1.0f) - (A + 1.0f) * Math.cos(omega)));
         a2 = (float) ((A + 1.0f) - (A - 1.0f) * Math.cos(omega) - beta * Math.sin(omega));
@@ -137,12 +137,12 @@ class Filter {
     }
 
     public void peaking(float freq, float bw, float gain, float sampleRate) {
-        // フィルタ係数計算で使用する中間値を求める。
+        // Obtain intermediate values for use in filter coefficient calculations.
         float omega = 2.0f * 3.14159265f * freq / sampleRate;
         float alpha = (float) (Math.sin(omega) * Math.sinh(Math.log(2.0f) / 2.0 * bw * omega / Math.sin(omega)));
         float A = (float) (Math.pow(10.0f, (gain / 40.0f)));
 
-        // フィルタ係数を求める。
+        // Find the filter coefficients.
         a0 = 1.0f + alpha / A;
         a1 = (float) (-2.0f * Math.cos(omega));
         a2 = 1.0f - alpha / A;
@@ -152,11 +152,11 @@ class Filter {
     }
 
     public void allPass(float freq, float q, float sampleRate) {
-        // フィルタ係数計算で使用する中間値を求める。
+        // Obtain intermediate values for use in filter coefficient calculations.
         float omega = 2.0f * 3.14159265f * freq / sampleRate;
         float alpha = (float) (Math.sin(omega) / (2.0f * q));
 
-        // フィルタ係数を求める。
+        // Find the filter coefficients.
         a0 = 1.0f + alpha;
         a1 = (float) (-2.0f * Math.cos(omega));
         a2 = 1.0f - alpha;
@@ -171,7 +171,7 @@ class Filter {
         qTable = new float[256];
 
         for (int i = 0; i < 256; i++) {
-            // freqTableの作成(1～38500まで)
+            // Create freqTable (1 to 38500)
             if (i < 256 / 8 * 3) {
                 freqTable[i] = i + 1;
             } else if (i < 256 / 8 * 5) {
@@ -182,14 +182,14 @@ class Filter {
                 freqTable[i] = (i - 256 / 8 * 7) * 1000 + 7500;
             }
 
-            // gainTableの作成(-20～+19.84375まで)
+            // Create a gainTable (-20 to +19.84375)
             if (i < 128) {
                 gainTable[i] = (float) (-20.0 / 128.0 * (128 - i));
             } else {
                 gainTable[i] = (float) (20.0 / 128.0 * (i - 128));
             }
 
-            // QTableの作成(0.1～20.0まで)
+            // Creating a QTable (0.1 to 20.0)
             if (i < 256 / 8 * 3) {
                 // 0-95 : 0.01041667 ～ 1.0
                 qTable[i] = (float) (1.0 / (256 / 8 * 3) * (i + 1));

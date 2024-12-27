@@ -476,7 +476,7 @@ public class Ym3526 {
             };
 
             /* synchronized level of common table */
-            private int numLock = 0;
+            private final int numLock = 0;
 
             /* attack rate: AR<<2 */
             private int ar;
@@ -506,7 +506,7 @@ public class Ym3526 {
             /* slot1 output pointer */
             private int ptrConnect1;
             /* slot1 output for feedback */
-            private int[] op1Out = new int[2];
+            private final int[] op1Out = new int[2];
             /* connection (algorithm) type  */
             private byte CON;
 
@@ -623,9 +623,9 @@ public class Ym3526 {
 
         private static class Channel {
 
-            private Opl.Slot[] slots = new Opl.Slot[] {new Opl.Slot(), new Opl.Slot()};
+            private final Opl.Slot[] slots = new Opl.Slot[] {new Opl.Slot(), new Opl.Slot()};
             // phase generator state
-            /** block+fnum */
+            /** block+fNum */
             private int blockFNum;
             /** Freq. Increment base */
             private int fc;
@@ -641,23 +641,23 @@ public class Ym3526 {
         //  2  - sinus sign bit           (Y axis)
         //  TL_RES_LEN - sinus resolution (X axis)
         private static final int TL_TAB_LEN = 12 * 2 * TL_RES_LEN;
-        private static int[] tl_tab = new int[TL_TAB_LEN];
+        private static final int[] tl_tab = new int[TL_TAB_LEN];
 
         private static final int ENV_QUIET = TL_TAB_LEN >> 4;
 
         /** sin waveform table in 'decibel' scale */
         /** four waveforms on OPL2 type chips */
-        private static int[] sinTab = new int[SIN_LEN * 4];
+        private static final int[] sinTab = new int[SIN_LEN * 4];
 
         // FM channel slots
 
         /** OPL/OPL2 chips have 9 channels */
-        private Opl.Channel[] chs = new Opl.Channel[] {
+        private final Opl.Channel[] chs = new Opl.Channel[] {
                 new Opl.Channel(), new Opl.Channel(), new Opl.Channel(), new Opl.Channel(), new Opl.Channel(),
                 new Opl.Channel(), new Opl.Channel(), new Opl.Channel(), new Opl.Channel()
         };
         /** Mute Special: 5 Rhythm + 1 DELTA-T Channel */
-        private byte[] muteSpc = new byte[6];
+        private final byte[] muteSpc = new byte[6];
 
         /** Global envelope generator counter */
         private int egCnt;
@@ -672,7 +672,7 @@ public class Ym3526 {
         private byte rhythm;
 
         /** fnumber.increment counter */
-        private int[] fnTab = new int[1024];
+        private final int[] fnTab = new int[1024];
 
         /** LFO */
         private int lfoAm;
@@ -696,9 +696,9 @@ public class Ym3526 {
         private byte waveSel;
 
         /** timer counters */
-        private int[] t = new int[2];
+        private final int[] t = new int[2];
         /** timer enable */
-        private byte[] st = new byte[2];
+        private final byte[] st = new byte[2];
 
         // external event Callback handlers
 
@@ -731,7 +731,7 @@ public class Ym3526 {
 
         /** phase modulation input (SLOT 2) */
         private int phaseModulation;
-        private int[] output = new int[1];
+        private final int[] output = new int[1];
 
         private Opl.Slot slot7_1() {
             return this.chs[7].slots[SLOT1];
@@ -1516,7 +1516,7 @@ public class Ym3526 {
                     }
                     return;
                 }
-                // keyon,block,fnum
+                // keyon,block,fNum
                 if ((r & 0x0f) > 8) return;
                 Opl.Channel ch = this.chs[r & 0x0f];
                 int blockFNum;
@@ -1546,8 +1546,8 @@ public class Ym3526 {
                     ch.kCode = (byte) ((ch.blockFNum & 0x1c00) >> 9);
 
                     // the info below is actually opposite to what is stated in the Manuals (verifed on real YM3812)
-                    // if notesel == 0 . lsb of kcode is bit 10 (MSB) of fnum
-                    // if notesel == 1 . lsb of kcode is bit 9 (MSB-1) of fnum
+                    // if notesel == 0 . lsb of kcode is bit 10 (MSB) of fNum
+                    // if notesel == 1 . lsb of kcode is bit 9 (MSB-1) of fNum
                     if ((this.mode & 0x40) != 0)
                         ch.kCode |= (byte) ((ch.blockFNum & 0x100) >> 8); // notesel == 1
                     else

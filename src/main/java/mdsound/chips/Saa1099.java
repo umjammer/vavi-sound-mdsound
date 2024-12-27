@@ -79,9 +79,9 @@ public class Saa1099 {
         /* octave (0x00..0x07) */
         private int octave;
         /* amplitude (0x00..0x0f) */
-        private int[] amplitude = new int[2];
+        private final int[] amplitude = new int[2];
         /* envelope (0x00..0x0f or 0x10 == off) */
-        private int[] envelope = new int[2];
+        private final int[] envelope = new int[2];
 
         /* vars to simulate the square wave */
         private double counter;
@@ -187,28 +187,28 @@ public class Saa1099 {
     };
 
     /** noise generators parameters */
-    private int[] noiseParams = new int[2];
+    private final int[] noiseParams = new int[2];
     /** envelope generators enable */
-    private int[] envEnable = new int[2];
+    private final int[] envEnable = new int[2];
     /** envelope reversed for right channel */
-    private int[] envReverseRight = new int[2];
+    private final int[] envReverseRight = new int[2];
     /** envelope generators mode */
-    private int[] envMode = new int[2];
+    private final int[] envMode = new int[2];
     /** non zero = 3 bits resolution */
-    private int[] envBits = new int[2];
+    private final int[] envBits = new int[2];
     /** envelope clock mode (non-zero external) */
-    private int[] envClock = new int[2];
+    private final int[] envClock = new int[2];
     /** current envelope step */
-    private int[] envStep = new int[2];
+    private final int[] envStep = new int[2];
     /** all channels enable */
     private int allChEnable;
     /** sync all channels */
     private int syncState;
     /** selected register */
     private int selectedReg;
-    private Channel[] channels = new Channel[] {new Channel(), new Channel(), new Channel(), new Channel(), new Channel(), new Channel()}; /* channels */
+    private final Channel[] channels = new Channel[] {new Channel(), new Channel(), new Channel(), new Channel(), new Channel(), new Channel()}; /* channels */
     /** noise generators */
-    private Noise[] noise = new Noise[] {new Noise(), new Noise()};
+    private final Noise[] noise = new Noise[] {new Noise(), new Noise()};
     private double sampleRate;
     private int masterClock;
 

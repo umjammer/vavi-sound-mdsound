@@ -41,8 +41,8 @@ public class YmF262Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock, int clockValue, Object... option) {
-        return device_start_ymf262(chipId, clockValue);
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        return device_start_ymf262(chipId, clock);
     }
 
     @Override
@@ -74,7 +74,7 @@ public class YmF262Inst extends Instrument.BaseInstrument {
         emuCore = (byte) ((emulator < 0x02) ? emulator : 0x00);
     }
 
-    private int[][] dummyBuf = new int[][] {null, null};
+    private final int[][] dummyBuf = new int[][] {null, null};
 
     private void updateHandler() {
         chips[0].update(dummyBuf, 0);

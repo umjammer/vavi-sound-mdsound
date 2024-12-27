@@ -25,13 +25,13 @@ public class PwmChip {
     private static final int PWM_Loudness = 0;
 //#endif
 
-    private int[] fifoR = new int[8];
-    private int[] fifoL = new int[8];
+    private final int[] fifoR = new int[8];
+    private final int[] fifoL = new int[8];
     private int rpR;
     private int wpR;
     private int rpL;
     private int wpL;
-    private int cycles = 0;
+    private final int cycles = 0;
     private int cycle;
     private int cycleCnt;
     private int int_;
@@ -42,7 +42,7 @@ public class PwmChip {
     private int outL;
 
     private int cycleTmp;
-    private int cyclesTmp = 0;
+    private final int cyclesTmp = 0;
     private int intTmp;
     private int fifoLTmp;
     private int fifoRTmp;

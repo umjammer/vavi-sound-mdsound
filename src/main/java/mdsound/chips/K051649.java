@@ -38,7 +38,7 @@ public class K051649 {
         public int frequency;
         public int volume;
         public int key;
-        private byte[] waveRam = new byte[32];
+        private final byte[] waveRam = new byte[32];
         /** 19991207.CAB */
         private int muted;
 
@@ -50,7 +50,7 @@ public class K051649 {
         }
     }
 
-    private Channel[] channelList = new Channel[5];
+    private final Channel[] channelList = new Channel[5];
 
     public Channel getChannel(int ch) {
         return channelList[ch];

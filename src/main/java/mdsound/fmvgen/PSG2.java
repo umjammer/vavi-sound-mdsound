@@ -13,12 +13,12 @@ public class PSG2 extends mdsound.fmgen.PSG {
     protected int[] phaseReset = new int[3];
     protected boolean[] phaseResetBefore = new boolean[3];
     protected int[] duty = new int[3];
-    private Fmvgen.Effects effects;
-    private int efcStartCh;
-    private byte[][] user = new byte[][] {new byte[64], new byte[64], new byte[64], new byte[64], new byte[64], new byte[64]};
+    private final Fmvgen.Effects effects;
+    private final int efcStartCh;
+    private final byte[][] user = new byte[][] {new byte[64], new byte[64], new byte[64], new byte[64], new byte[64], new byte[64]};
     private int userDefCounter = 0;
-    private BiFunction<Integer, Integer, Integer>[] tblGetSample;
-    private int num;
+    private final BiFunction<Integer, Integer, Integer>[] tblGetSample;
+    private final int num;
     protected double ncountDbl;
     private static final double ncountDiv = 32.0;
 
@@ -51,32 +51,32 @@ public class PSG2 extends mdsound.fmgen.PSG {
     }
 
     @Override
-    public void setReg(int regnum, int data) {
-        if (regnum >= 0x10) return;
+    public void setReg(int regNum, int data) {
+        if (regNum >= 0x10) return;
 
-        reg[regnum] = (byte) data;
+        reg[regNum] = (byte) data;
         int tmp;
-        switch (regnum) {
+        switch (regNum) {
         case 0: // ChA Fine Tune
         case 1: // ChA Coarse Tune
             tmp = ((reg[0] & 0xff) + (reg[1] & 0xff) * 256) & 0xfff;
-            speriod[0] = tmp != 0 ? tPeriodBase / tmp : tPeriodBase;
+            sPeriod[0] = tmp != 0 ? tPeriodBase / tmp : tPeriodBase;
             duty[0] = (reg[1] & 0xff) >> 4;
             duty[0] = duty[0] < 8 ? (7 - duty[0]) : duty[0];
             break;
 
         case 2: // ChB Fine Tune
         case 3: // ChB Coarse Tune
-            tmp = ((reg[2] + reg[3] * 256) & 0xfff);
-            speriod[1] = tmp != 0 ? tPeriodBase / tmp : tPeriodBase;
+            tmp = (((reg[2] & 0xff) + (reg[3] & 0xff) * 256) & 0xfff);
+            sPeriod[1] = tmp != 0 ? tPeriodBase / tmp : tPeriodBase;
             duty[1] = (reg[3] & 0xff) >> 4;
             duty[1] = duty[1] < 8 ? (7 - duty[1]) : duty[1];
             break;
 
         case 4: // ChC Fine Tune
         case 5: // ChC Coarse Tune
-            tmp = ((reg[4] + reg[5] * 256) & 0xfff);
-            speriod[2] = tmp != 0 ? tPeriodBase / tmp : tPeriodBase;
+            tmp = (((reg[4] & 0xff) + (reg[5] & 0xff) * 256) & 0xfff);
+            sPeriod[2] = tmp != 0 ? tPeriodBase / tmp : tPeriodBase;
             duty[2] = (reg[5] & 0xff) >> 4;
             duty[2] = duty[2] < 8 ? (7 - duty[2]) : duty[2];
             break;
@@ -98,21 +98,21 @@ public class PSG2 extends mdsound.fmgen.PSG {
             }
             break;
         case 8:
-            olevel[0] = (mask & 1) != 0 ? emitTable[(data & 15) * 2 + 1] : 0;
+            oLevel[0] = (mask & 1) != 0 ? emitTable[(data & 15) * 2 + 1] : 0;
             panpot[0] = data >> 6;
             panpot[0] = panpot[0] == 0 ? 3 : panpot[0];
             phaseReset[0] = (byte) ((data & 0x20) != 0 ? 1 : 0);
             break;
 
         case 9:
-            olevel[1] = (mask & 2) != 0 ? emitTable[(data & 15) * 2 + 1] : 0;
+            oLevel[1] = (mask & 2) != 0 ? emitTable[(data & 15) * 2 + 1] : 0;
             panpot[1] = data >> 6;
             panpot[1] = panpot[1] == 0 ? 3 : panpot[1];
             phaseReset[1] = (byte) ((data & 0x20) != 0 ? 1 : 0);
             break;
 
         case 10:
-            olevel[2] = (mask & 4) != 0 ? emitTable[(data & 15) * 2 + 1] : 0;
+            oLevel[2] = (mask & 4) != 0 ? emitTable[(data & 15) * 2 + 1] : 0;
             panpot[2] = data >> 6;
             panpot[2] = panpot[2] == 0 ? 3 : panpot[2];
             phaseReset[2] = (data & 0x20) != 0 ? 1 : 0;
@@ -121,11 +121,11 @@ public class PSG2 extends mdsound.fmgen.PSG {
         case 11: // Envelop period
         case 12:
             tmp = ((reg[11] & 0xff) + (reg[12] & 0xff) * 256) & 0xffff;
-            eperiod = tmp != 0 ? eperiodbase / tmp : eperiodbase * 2;
+            ePeriod = tmp != 0 ? ePeriodBase / tmp : ePeriodBase * 2;
             break;
 
         case 13: // Envelop shape
-            ecount = 0;
+            eCount = 0;
             envelop = envelopTable[data & 15];
             break;
 
@@ -138,18 +138,18 @@ public class PSG2 extends mdsound.fmgen.PSG {
         }
     }
 
-    private int[] chEnable = new int[3];
-    private int[] nEnable = new int[3];
-    private Integer[] p = new Integer[3];
+    private final int[] chEnable = new int[3];
+    private final int[] nEnable = new int[3];
+    private final Integer[] p = new Integer[3];
 
     @Override
-    public void mix(int[] dest, int nsamples) {
+    public void mix(int[] dest, int nSamples) {
         int r7 = ~(reg[7] & 0xff);
 
         if (((r7 & 0x3f) | ((reg[8] | reg[9] | reg[10]) & 0x1f)) != 0) {
-            chEnable[0] = (((r7 & 0x01) != 0) && (speriod[0] <= (1 << toneShift))) ? 15 : 0;
-            chEnable[1] = (((r7 & 0x02) != 0) && (speriod[1] <= (1 << toneShift))) ? 15 : 0;
-            chEnable[2] = (((r7 & 0x04) != 0) && (speriod[2] <= (1 << toneShift))) ? 15 : 0;
+            chEnable[0] = (((r7 & 0x01) != 0) && (sPeriod[0] <= (1 << toneShift))) ? 15 : 0;
+            chEnable[1] = (((r7 & 0x02) != 0) && (sPeriod[1] <= (1 << toneShift))) ? 15 : 0;
+            chEnable[2] = (((r7 & 0x04) != 0) && (sPeriod[2] <= (1 << toneShift))) ? 15 : 0;
             nEnable[0] = (r7 & 0x08) != 0 ? 1 : 0;
             nEnable[1] = (r7 & 0x10) != 0 ? 1 : 0;
             nEnable[2] = (r7 & 0x20) != 0 ? 1 : 0;
@@ -174,11 +174,11 @@ public class PSG2 extends mdsound.fmgen.PSG {
             int nv = 0;
 
             if (p[0] != null && p[1] != null && p[2] != null) {
-                // エンベロープ無し
+                // No Envelope
                 if ((r7 & 0x38) == 0) {
                     int ptrDest = 0;
-                    // ノイズ無し
-                    for (int i = 0; i < nsamples; i++) {
+                    // Noiseless
+                    for (int i = 0; i < nSamples; i++) {
                         sampleL = 0;
                         sampleR = 0;
                         revSampleL = 0;
@@ -186,7 +186,7 @@ public class PSG2 extends mdsound.fmgen.PSG {
 
                         for (int j = 0; j < (1 << overSampling); j++) {
                             for (int k = 0; k < 3; k++) {
-                                sample = tblGetSample[duty[k]].apply(k, olevel[k]);
+                                sample = tblGetSample[duty[k]].apply(k, oLevel[k]);
                                 int[] l = new int[] {sample};
                                 int[] r = new int[] {sample};
                                 effects.distortion.mix(efcStartCh + k, l, r);
@@ -200,7 +200,7 @@ public class PSG2 extends mdsound.fmgen.PSG {
                                 revSampleR += (int) (r[0] * effects.reverb.sendLevel[efcStartCh + k] * 0.6);
                                 sampleL += l[0];
                                 sampleR += r[0];
-                                sCount[k] += speriod[k];
+                                sCount[k] += sPeriod[k];
                             }
 
                         }
@@ -218,8 +218,8 @@ public class PSG2 extends mdsound.fmgen.PSG {
                     }
                 } else {
                     int ptrDest = 0;
-                    // ノイズ有り
-                    for (int i = 0; i < nsamples; i++) {
+                    // Noise
+                    for (int i = 0; i < nSamples; i++) {
                         sampleL = 0;
                         sampleR = 0;
                         revSampleL = 0;
@@ -232,13 +232,13 @@ public class PSG2 extends mdsound.fmgen.PSG {
                             ncountDbl += ((double) nPeriod / ((reg[6] & 0x20) != 0 ? ncountDiv : 1.0));
 
                             for (int k = 0; k < 3; k++) {
-                                sample = tblGetSample[duty[k]].apply(k, olevel[k]);
+                                sample = tblGetSample[duty[k]].apply(k, oLevel[k]);
                                 int[] l = new int[] {sample};
                                 int[] r = new int[] {sample};
 
                                 //ノイズ
                                 nv = ((sCount[k] >> (toneShift + overSampling)) & 0 | (nEnable[k] & noise)) - 1;
-                                sample = (olevel[k] + nv) ^ nv;
+                                sample = (oLevel[k] + nv) ^ nv;
                                 l[0] += sample;
                                 r[0] += sample;
 
@@ -254,7 +254,7 @@ public class PSG2 extends mdsound.fmgen.PSG {
                                 revSampleR += (int) (r[0] * effects.reverb.sendLevel[efcStartCh + k] * 0.6);
                                 sampleL += l[0];
                                 sampleR += r[0];
-                                sCount[k] += speriod[k];
+                                sCount[k] += sPeriod[k];
                             }
                         }
 
@@ -269,37 +269,37 @@ public class PSG2 extends mdsound.fmgen.PSG {
                     }
                 }
 
-                // エンベロープの計算をさぼった帳尻あわせ
-                ecount = (ecount >> 8) + (eperiod >> (8 - overSampling)) * nsamples;
-                if (ecount >= (1 << (envShift + 6 + overSampling - 8))) {
+                // Balancing the accounts by skipping the envelope calculations
+                eCount = (eCount >> 8) + (ePeriod >> (8 - overSampling)) * nSamples;
+                if (eCount >= (1 << (envShift + 6 + overSampling - 8))) {
                     if ((reg[0x0d] & 0x0b) != 0x0a)
-                        ecount |= (1 << (envShift + 5 + overSampling - 8));
-                    ecount &= (1 << (envShift + 6 + overSampling - 8)) - 1;
+                        eCount |= (1 << (envShift + 5 + overSampling - 8));
+                    eCount &= (1 << (envShift + 6 + overSampling - 8)) - 1;
                 }
-                ecount <<= 8;
+                eCount <<= 8;
             } else {
                 int ptrDest = 0;
-                // エンベロープあり
-                for (int i = 0; i < nsamples; i++) {
+                // With envelope
+                for (int i = 0; i < nSamples; i++) {
                     sampleL = 0;
                     sampleR = 0;
                     revSampleL = 0;
                     revSampleR = 0;
 
                     for (int j = 0; j < (1 << overSampling); j++) {
-                        env = envelop[ecount >> (envShift + overSampling)];
-                        ecount += eperiod;
-                        if (ecount >= (1 << (envShift + 6 + overSampling))) {
+                        env = envelop[eCount >> (envShift + overSampling)];
+                        eCount += ePeriod;
+                        if (eCount >= (1 << (envShift + 6 + overSampling))) {
                             if ((reg[0x0d] & 0x0b) != 0x0a)
-                                ecount |= (1 << (envShift + 5 + overSampling));
-                            ecount &= (1 << (envShift + 6 + overSampling)) - 1;
+                                eCount |= (1 << (envShift + 5 + overSampling));
+                            eCount &= (1 << (envShift + 6 + overSampling)) - 1;
                         }
                         noise = noiseTable[((int) ncountDbl >> (noiseShift + overSampling + 6) & (noiseTableSize - 1))]
                                 >> ((int) ncountDbl >> (noiseShift + overSampling + 1));
                         ncountDbl += (nPeriod / ((reg[6] & 0x20) != 0 ? ncountDiv : 1.0));
 
                         for (int k = 0; k < 3; k++) {
-                            int lv = (p[k] == null ? env : olevel[k]);
+                            int lv = (p[k] == null ? env : oLevel[k]);
                             sample = tblGetSample[duty[k]].apply(k, lv);
                             int[] l = new int[] {sample};
                             int[] r = new int[] {sample};
@@ -322,7 +322,7 @@ public class PSG2 extends mdsound.fmgen.PSG {
                             revSampleR += (int) (r[0] * effects.reverb.sendLevel[efcStartCh + k] * 0.6);
                             sampleL += l[0];
                             sampleR += r[0];
-                            sCount[k] += speriod[k];
+                            sCount[k] += sPeriod[k];
                         }
                     }
                     sampleL /= (1 << overSampling);
@@ -344,7 +344,7 @@ public class PSG2 extends mdsound.fmgen.PSG {
     private int getSampleFromUserDef(int k, int lv) {
         if (chEnable[k] == 0) return 0;
 
-        // ユーザー定義
+        // User defined
         int pos = (sCount[k] >> (toneShift + overSampling - 3 - 2)) & 63;
         int n = user[duty[k] - 10][pos] & chEnable[k];
         int x = n - 8;
@@ -355,7 +355,7 @@ public class PSG2 extends mdsound.fmgen.PSG {
         if (chEnable[k] == 0) return 0;
 
         int n = ((sCount[k] >> (toneShift + overSampling - 3)) & chEnable[k]);
-        // のこぎり波
+        // Sawtooth Wave
         int x = n < 7 ? n : (n - 16);
         return (lv * x) >> 2;
     }
@@ -364,7 +364,7 @@ public class PSG2 extends mdsound.fmgen.PSG {
         if (chEnable[k] == 0) return 0;
 
         int n = ((sCount[k] >> (toneShift + overSampling - 3)) & chEnable[k]);
-        // 三角波
+        // Triangle wave
         int x = n < 8 ? (n - 4) : (15 - 4 - n);
         return (lv * x) >> 1;
     }
@@ -373,7 +373,7 @@ public class PSG2 extends mdsound.fmgen.PSG {
         if (chEnable[k] == 0) return 0;
 
         int n = ((sCount[k] >> (toneShift + overSampling - 3)) & chEnable[k]);
-        // 矩形波
+        // Square wave
         int x = n > duty[k] ? 0 : -1;
         return (lv + x) ^ x;
     }

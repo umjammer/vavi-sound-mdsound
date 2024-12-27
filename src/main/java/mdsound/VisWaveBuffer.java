@@ -3,11 +3,11 @@ package mdsound;
 
 public class VisWaveBuffer {
 
-    private short[][] buf;
+    private final short[][] buf;
 
     private int crntPos;
 
-    private int size;
+    private final int size;
 
     public VisWaveBuffer() {
         this(2048);

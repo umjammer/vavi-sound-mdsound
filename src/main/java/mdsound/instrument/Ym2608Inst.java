@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-import dotnet4j.io.Stream;
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
 import mdsound.fmgen.Opna;
@@ -14,7 +13,7 @@ public class Ym2608Inst extends Instrument.BaseInstrument {
 
     private static final int DefaultYM2608ClockValue = 8000000;
 
-    private Opna.OPNA[] chip = new Opna.OPNA[2];
+    private final Opna.OPNA[] chip = new Opna.OPNA[2];
 
     @Override
     public String getName() {
@@ -40,34 +39,30 @@ public class Ym2608Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
+    public int start(int chipId, int samplingRate) {
         chip[chipId] = new Opna.OPNA(chipId);
-        chip[chipId].init(DefaultYM2608ClockValue, clock);
+        chip[chipId].init(DefaultYM2608ClockValue, samplingRate);
 
-        return clock;
+        return samplingRate;
     }
 
     /**
-     * @param chipId
-     * @param clock
-     * @param clockValue
-     * @param option リズム音ファイルのパス(終端に\をつけること)
-     * @return
+     * @param option String: Path of rhythm sound file or Function<String, Stream>:
      */
     @Override
-    public int start(int chipId, int clock, int clockValue, Object... option) {
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
         chip[chipId] = new Opna.OPNA(chipId);
         //chips[chipId] = new Fmgen.OPNA2();
-        if (option != null && option.length > 0 && option[0] instanceof Function) { // <string, Stream>
-            if (option[0] instanceof Function) // <String, Stream>
-                chip[chipId].init(clockValue, clock, false, (Function<String, Stream>) option[0]);
-            else if (option[0] instanceof String)
-                chip[chipId].init(clockValue, clock, false, (String) option[0]);
+        if (option != null && option.length > 0) {
+            if (option[0] instanceof Function function) // <String, Stream>
+                chip[chipId].init(clock, samplingRate, false, function);
+            else if (option[0] instanceof String string)
+                chip[chipId].init(clock, samplingRate, false, string);
         } else {
-            chip[chipId].init(clockValue, clock);
+            chip[chipId].init(clock, samplingRate);
         }
 
-        return clock;
+        return samplingRate;
     }
 
     @Override
@@ -103,7 +98,7 @@ public class Ym2608Inst extends Instrument.BaseInstrument {
     @Override
     public int write(int chipId, int port, int adr, int data) {
         if (chip[chipId] == null) return 0;
-        chip[chipId].setReg(adr, data);
+        chip[chipId].setReg(port * 0x100 + adr, data);
         return 0;
     }
 
@@ -159,25 +154,25 @@ public class Ym2608Inst extends Instrument.BaseInstrument {
 
     // TODO automatic wired, use annotation?
     public void setFMVolume(int vol, double ignored) {
-        setFMVolume((byte) 0, vol);
-        setFMVolume((byte) 1, vol);
+        setFMVolume(0, vol);
+        setFMVolume(1, vol);
     }
 
     // TODO automatic wired, use annotation?
     public void setPSGVolume(int vol, double ignored) {
-        setPSGVolume((byte) 0, vol);
-        setPSGVolume((byte) 1, vol);
+        setPSGVolume(0, vol);
+        setPSGVolume(1, vol);
     }
 
     // TODO automatic wired, use annotation?
     public void setRhythmVolume(int vol, double ignored) {
-        setRhythmVolume((byte) 0, vol);
-        setRhythmVolume((byte) 1, vol);
+        setRhythmVolume(0, vol);
+        setRhythmVolume(1, vol);
     }
 
     // TODO automatic wired, use annotation?
     public void setAdpcmVolume(int vol, double ignored) {
-        setAdpcmVolume((byte) 0, vol);
-        setAdpcmVolume((byte) 1, vol);
+        setAdpcmVolume(0, vol);
+        setAdpcmVolume(1, vol);
     }
 }

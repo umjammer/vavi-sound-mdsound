@@ -30,12 +30,12 @@ public class X68Sound {
         global.mountMemory(mem);
     }
 
-    public int start(int samprate /*= 44100*/, int opmflag/* = 1*/, int adpcmflag/* = 1*/,
-                     int betw /*= 5*/, int pcmbuf /*= 5*/, int late/* = 200*/, double rev/* = 1.0*/) {
+    public int start(int samprate /* = 44100 */, int opmflag /* = 1 */, int adpcmflag /* = 1 */,
+                     int betw /* = 5 */, int pcmbuf /* = 5 */, int late /* = 200 */, double rev /* = 1.0 */) {
         return opm.start(samprate, opmflag, adpcmflag, betw, pcmbuf, late, rev);
     }
 
-    public int sampRate(int samprate/*=44100*/) {
+    public int sampRate(int samprate /* = 44100 */) {
         return opm.setSamprate(samprate);
     }
 
@@ -55,7 +55,7 @@ public class X68Sound {
         opm.betwInt(proc);
     }
 
-    public int startPcm(int samprate/* = 44100*/, int opmflag/* = 1*/, int adpcmflag/* = 1*/, int pcmbuf/* = 5*/) {
+    public int startPcm(int samprate /* = 44100 */, int opmflag /* = 1 */, int adpcmflag /* = 1 */, int pcmbuf /* = 5 */) {
         return opm.startPcm(samprate, opmflag, adpcmflag, pcmbuf);
     }
 
@@ -67,15 +67,15 @@ public class X68Sound {
         return opm.getPcm(buf, offset, len, oneFrameProc);
     }
 
-    public byte opmPeek() {
+    public int opmPeek() {
         return opm.opmPeek();
     }
 
-    public void opmReg(byte no) {
+    public void opmReg(int no) {
         opm.opmReg(no);
     }
 
-    public void opmPoke(byte data) {
+    public void opmPoke(int data) {
         opm.opmPoke(data);
     }
 
@@ -87,47 +87,47 @@ public class X68Sound {
         return opm.setOpmWait(wait);
     }
 
-    public byte adpcmPeek() {
+    public int adpcmPeek() {
         return opm.adpcmPeek();
     }
 
-    public void adpcmPoke(byte data) {
+    public void adpcmPoke(int data) {
         opm.adpcmPoke(data);
     }
 
-    public byte ppiPeek() {
+    public int ppiPeek() {
         return opm.ppiPeek();
     }
 
-    public void ppiPoke(byte data) {
+    public void ppiPoke(int data) {
         opm.ppiPoke(data);
     }
 
-    public void ppiCtrl(byte data) {
+    public void ppiCtrl(int data) {
         opm.ppiCtrl(data);
     }
 
-    public byte dmaPeek(byte adrs) {
+    public int dmaPeek(int adrs) {
         return opm.dmaPeek(adrs);
     }
 
-    public void dmaPoke(byte adrs, byte data) {
+    public void dmaPoke(int adrs, int data) {
         opm.dmaPoke(adrs, data);
     }
 
-    public void dmaPokeW(byte adrs, int data) {
-        opm.dmaPoke(adrs, (byte) (data >> 8));
-        opm.dmaPoke((byte) (adrs + 1), (byte) data);
+    public void dmaPokeW(int adrs, int data) {
+        opm.dmaPoke(adrs, data >> 8);
+        opm.dmaPoke(adrs + 1, data);
     }
 
-    public void dmaPokeL(byte adrs, int dataPtr) {
-        opm.dmaPoke(adrs, (byte) (dataPtr >> 24));
-        opm.dmaPoke((byte) (adrs + 1), (byte) (dataPtr >> 16));
-        opm.dmaPoke((byte) (adrs + 2), (byte) (dataPtr >> 8));
-        opm.dmaPoke((byte) (adrs + 3), (byte) (dataPtr));
+    public void dmaPokeL(int adrs, int dataPtr) {
+        opm.dmaPoke(adrs, dataPtr >> 24);
+        opm.dmaPoke(adrs + 1, dataPtr >> 16);
+        opm.dmaPoke(adrs + 2, dataPtr >> 8);
+        opm.dmaPoke(adrs + 3, dataPtr);
     }
 
-    public void y(byte no, byte data) {
+    public void y(int no, int data) {
         opm.opmReg(no);
         opm.opmPoke(data);
     }

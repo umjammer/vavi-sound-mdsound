@@ -11,7 +11,7 @@ import mdsound.fmgen.Opna;
 public class Ym2203Inst extends Instrument.BaseInstrument {
 
     private static final int DefaultYM2203ClockValue = 3000000;
-    private Opna.OPN[] chips = new Opna.OPN[2];
+    private final Opna.OPN[] chips = new Opna.OPN[2];
 
     @Override
     public String getName() {
@@ -24,11 +24,11 @@ public class Ym2203Inst extends Instrument.BaseInstrument {
     }
 
     public Ym2203Inst() {
+        // 0..Main 1..FM 2..SSG
         visVolume = new int[][][] {
                 new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}},
                 new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}}
         };
-        //0..Main 1..FM 2..SSG
     }
 
     @Override
@@ -38,19 +38,19 @@ public class Ym2203Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
+    public int start(int chipId, int samplingRate) {
         chips[chipId] = new Opna.OPN();
-        chips[chipId].init(DefaultYM2203ClockValue, clock);
+        chips[chipId].init(DefaultYM2203ClockValue, samplingRate);
 
-        return clock;
+        return samplingRate;
     }
 
     @Override
-    public int start(int chipId, int clock, int clockValue, Object... option) {
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
         chips[chipId] = new Opna.OPN();
-        chips[chipId].init(clockValue, clock);
+        chips[chipId].init(clock, samplingRate);
 
-        return clock;
+        return samplingRate;
     }
 
     @Override
@@ -89,7 +89,6 @@ public class Ym2203Inst extends Instrument.BaseInstrument {
         Opna.OPN chip = chips[chipId];
         if (chip == null) return;
 
-
         chip.setChannelMask(val);
     }
 
@@ -103,7 +102,7 @@ public class Ym2203Inst extends Instrument.BaseInstrument {
         chips[chipId].setVolumePSG(db);
     }
 
-    //----
+    // ----
 
     @Override
     public Tuple<Integer, Double> getRegulationVolume() {

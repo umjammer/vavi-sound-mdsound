@@ -9,9 +9,9 @@ public class Ym3438XInst extends Ym3438Inst {
     private int sampleRate = 0;
 
     @Override
-    public int start(int chipId, int clock, int clockValue, Object... option) {
-        sampleRate = super.start(chipId, clock, clockValue, option);
-        return clock;
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        sampleRate = super.start(chipId, samplingRate, clock, option);
+        return samplingRate;
     }
 
     @Override

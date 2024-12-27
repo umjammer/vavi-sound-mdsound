@@ -1,10 +1,14 @@
 package mdsound.chips;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.Arrays;
-import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
-import mdsound.MDSound;
+import vavi.util.StringUtil;
+
+import static java.lang.System.getLogger;
 
 
 /**
@@ -23,6 +27,8 @@ import mdsound.MDSound;
  * ???? abcd = one bit per Voice, set to 0 if nothing is playing, or 1 if it is active
  */
 public class OkiM6295 {
+
+    private static final Logger logger = getLogger(OkiM6295.class.getName());
 
     private static final int VOICES = 4;
 
@@ -57,7 +63,7 @@ public class OkiM6295 {
         private static final int[] indexShift = {-1, -1, -1, -1, 2, 4, 6, 8};
 
         /* lookup table for the precomputed difference */
-        private static int[] diffLookup = new int[49 * 16];
+        private static final int[] diffLookup = new int[49 * 16];
 
         /*
          * compute the difference tables
@@ -165,10 +171,17 @@ public class OkiM6295 {
         private int count;
 
         /** current ADPCM state */
-        private Adpcm adpcm = new Adpcm();
+        private final Adpcm adpcm = new Adpcm();
         /** output volume */
         private int volume;
         private int muted;
+
+        public void reset() {
+            this.volume = 0;
+            this.adpcm.reset();
+
+            this.playing = 0;
+        }
 
         private void generateAdpcm(short[] buffer, int samples, Function<Integer, Integer> read) {
             int ptrBuffer = 0;
@@ -176,7 +189,7 @@ public class OkiM6295 {
             // if this Voice is active
             if (playing != 0) {
                 //logger.log(Level.TRACE, "base_offset[%x] sample[%x] count[%x]".formatted(Voice.base_offset, Voice.sample, Voice.count));
-                int iBase = baseOffset;
+                int iBase = this.baseOffset;
                 int sample = this.sample;
                 int count = this.count;
 
@@ -185,13 +198,12 @@ public class OkiM6295 {
                     // compute the new amplitude and update the current step
                     //int nibble = memory_raw_read_byte(this.device.space(), base + sample / 2) >> (((sample & 1) << 2) ^ 4);
                     //logger.log(Level.TRACE, "nibblecal1[%d]2[%d]".formatted(iBase + sample / 2, (((sample & 1) << 2) ^ 4));
-                    int nibble = read.apply((iBase + sample / 2) >> (((sample & 1) << 2) ^ 4));
-                    //logger.log(Level.TRACE, "nibble[%x]".formatted(nibble));
+                    int nibble = read.apply(iBase + sample / 2) >> (((sample & 1) << 2) ^ 4);
 
                     // output to the buffer, scaling by the volume
                     // signal in range -2048..2047, volume in range 2..32 => signal * volume / 2 in range -32768..32767
-                    buffer[ptrBuffer++] = (short) (adpcm.clock(nibble) * volume / 2);
-                    //logger.log(Level.TRACE, "*buffer[%d]".formatted(buffer[ptrBuffer - 1]);
+                    buffer[ptrBuffer++] = (short) ((adpcm.clock(nibble) * volume / 2) & 0xffff);
+//logger.log(Level.TRACE, "nibble: %x, buffer: %d".formatted(nibble, buffer[ptrBuffer - 1]));
                     samples--;
 
                     // next!
@@ -217,7 +229,7 @@ public class OkiM6295 {
     private int bankOffs;
     private int pin7State;
     private int nmkMode;
-    private int[] nmkBank = new int[4];
+    private final int[] nmkBank = new int[4];
     /** master clock frequency */
     private int masterClock;
     private int initialClock;
@@ -226,11 +238,7 @@ public class OkiM6295 {
     private int ptrROM;
     private byte[] rom;
 
-    private SamplingRateCallback samplingRateFunc;
-    private MDSound.Chip smpRateData;
-
-    public interface SamplingRateCallback extends BiConsumer<MDSound.Chip, Integer> {
-    }
+    private Consumer<Integer> samplingRateFunc;
 
     // general ADPCM decoding routine
 
@@ -264,9 +272,10 @@ public class OkiM6295 {
             // (Usually it moves the data by NMK_ROMBASE.)
             //curOfs += NMK_ROMBASE;
         }
-        if (curOfs < this.romSize)
+        if (curOfs < this.romSize) {
+//logger.log(Level.DEBUG, "offset:%d, curOfs: %d".formatted(offset, curOfs));
             return this.rom[curOfs] & 0xff;
-        else
+        } else
             return 0x00;
     }
 
@@ -315,7 +324,7 @@ public class OkiM6295 {
 
         this.initialClock = clock;
         this.masterClock = clock & 0x7fff_ffff;
-        this.pin7State = (clock & 0x8000_0000) >> 31;
+        this.pin7State = (clock & 0x8000_0000) >>> 31;
         chInfo.masterClock = this.masterClock;
         chInfo.pin7State = this.pin7State;
 
@@ -339,14 +348,11 @@ public class OkiM6295 {
         }
         this.masterClock = this.initialClock & 0x7fff_ffff;
         chInfo.masterClock = this.masterClock;
-        this.pin7State = (this.initialClock & 0x8000_0000) >> 31;
-        chInfo.pin7State = (this.initialClock & 0x8000_0000) >> 31;
+        this.pin7State = (this.initialClock & 0x8000_0000) >>> 31;
+        chInfo.pin7State = (this.initialClock & 0x8000_0000) >>> 31;
 
-        for (int voice = 0; voice < OkiM6295.VOICES; voice++) {
-            this.voices[voice].volume = 0;
-            this.voices[voice].adpcm.reset();
-
-            this.voices[voice].playing = 0;
+        for (int voice = 0; voice < VOICES; voice++) {
+            voices[voice].reset();
         }
     }
 
@@ -373,7 +379,7 @@ public class OkiM6295 {
     private void clockChanged() {
         int divisor;
         divisor = this.pin7State != 0 ? 132 : 165;
-        this.samplingRateFunc.accept(this.smpRateData, this.masterClock / divisor);
+        this.samplingRateFunc.accept(this.masterClock / divisor);
     }
 
     /**
@@ -408,27 +414,27 @@ public class OkiM6295 {
     private void writeCommand(int data) {
         // if a command is pending, process the second half
         if (this.command != -1) {
-            int temp = data >> 4, i, start, stop;
+            int temp = data >> 4;
 
             // the manual explicitly says that it's not possible to start multiple voices at the same time
 //if (temp != 0 && temp != 1 && temp != 2 && temp != 4 && temp != 8)
 // logger.log(Level.TRACE, "OKI6295 start %x contact MAMEDEV".formatted(temp);
 
             // determine which Voice(s) (Voice is set by a 1 bit in the upper 4 bits of the second byte)
-            for (i = 0; i < VOICES; i++, temp >>= 1) {
+            for (int i = 0; i < VOICES; i++, temp >>= 1) {
                 if ((temp & 1) != 0) {
                     Voice voice = this.voices[i];
 
                     // determine the start/stop positions
                     int iBase = this.command * 8;
 
-                    start = readRawMemoryByte(iBase + 0) << 16;
+                    int start = readRawMemoryByte(iBase + 0) << 16;
                     start |= readRawMemoryByte(iBase + 1) << 8;
                     start |= readRawMemoryByte(iBase + 2) << 0;
                     start &= 0x3_ffff;
                     chInfo.chInfo[i].stAdr = start;
 
-                    stop = readRawMemoryByte(iBase + 3) << 16;
+                    int stop = readRawMemoryByte(iBase + 3) << 16;
                     stop |= readRawMemoryByte(iBase + 4) << 8;
                     stop |= readRawMemoryByte(iBase + 5) << 0;
                     stop &= 0x3_ffff;
@@ -466,10 +472,10 @@ public class OkiM6295 {
             this.command = data & 0x7f;
         } else {
             // otherwise, see if this is a silence command
-            int temp = data >> 3, i;
+            int temp = data >>> 3;
 
             // determine which Voice(s) (Voice is set by a 1 bit in bits 3-6 of the command
-            for (i = 0; i < VOICES; i++, temp >>= 1) {
+            for (int i = 0; i < VOICES; i++, temp >>>= 1) {
                 if ((temp & 1) != 0) {
                     Voice voice = this.voices[i];
 
@@ -480,28 +486,29 @@ public class OkiM6295 {
     }
 
     public void write(int offset, int data) {
+//logger.log(Level.TRACE, "offset: %x data: %x".formatted(offset, data));
         switch (offset) {
         case 0x00:
             writeCommand(data);
             break;
         case 0x08:
-            this.masterClock &= ~((int) 0x0000_00FF);
+            this.masterClock &= ~0x0000_00FF;
             this.masterClock |= data << 0;
             chInfo.masterClock = this.masterClock;
             break;
         case 0x09:
-            this.masterClock &= ~((int) 0x0000_FF00);
+            this.masterClock &= ~0x0000_FF00;
             this.masterClock |= data << 8;
             chInfo.masterClock = this.masterClock;
             break;
         case 0x0A:
-            this.masterClock &= ~((int) 0x00FF_0000);
+            this.masterClock &= ~0x00FF_0000;
             this.masterClock |= data << 16;
             chInfo.masterClock = this.masterClock;
             break;
         case 0x0B:
             data &= 0x7F;
-            this.masterClock &= ~((int) 0xff00_0000);
+            this.masterClock &= ~0xff00_0000;
             this.masterClock |= data << 24;
             clockChanged();
             chInfo.masterClock = this.masterClock;
@@ -541,20 +548,22 @@ public class OkiM6295 {
     }
 
     public void writeRom2(int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddr) {
-//logger.log(Level.TRACE, "OKIM6295::writeRom2: chipId:%d romSize:%x dataStart:%x dataLength:%x srcStartAddr:%x".formatted(chipId, romSize, dataStart), dataLength, srcStartAddr));
         if (this.romSize != romSize) {
             this.rom = new byte[romSize];
             this.romSize = romSize;
 //logger.log(Level.TRACE, "OKIM6295: New ROM Size: 0x%05X".formatted(romSize);
             Arrays.fill(this.rom, 0, romSize, (byte) 0xff);
         }
-        if (dataStart > romSize)
+        if (dataStart > romSize) {
+logger.log(Level.WARNING, dataStart + " > " +  romSize);
             return;
+        }
         if (dataStart + dataLength > romSize)
             dataLength = romSize - dataStart;
 
-//logger.log(Level.TRACE, "%02x ".formatted(this.ROM[i + dataStart]);
-        if (dataLength >= 0) System.arraycopy(romData, srcStartAddr, this.rom, dataStart, dataLength);
+        System.arraycopy(romData, srcStartAddr, this.rom, dataStart, dataLength);
+//logger.log(Level.TRACE, "OKIM6295::writeRom2: romSize: %x, dataStart: %x, dataLength: %x, srcStartAddr: %x".formatted(romSize, dataStart, dataLength, srcStartAddr));
+//logger.log(Level.TRACE, "\n" + StringUtil.getDump(this.rom, dataStart, 64));
     }
 
     public void setMuteMask(int muteMask) {
@@ -562,10 +571,9 @@ public class OkiM6295 {
             this.voices[curChn].muted = (muteMask >> curChn) & 0x01;
     }
 
-    public void setCallback(SamplingRateCallback callbackFunc, MDSound.Chip dataPtr) {
+    public void setCallback(Consumer<Integer> callbackFunc) {
         // set Sample Rate Change Callback routine
         this.samplingRateFunc = callbackFunc;
-        this.smpRateData = dataPtr;
     }
 
     public static class ChannelInfo {

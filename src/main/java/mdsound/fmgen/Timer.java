@@ -1,11 +1,17 @@
 package mdsound.fmgen;
 
-public class Timer {
+
+public abstract class Timer {
+
     public void reset() {
         timerACount = 0;
         timerBCount = 0;
     }
 
+    /**
+     * Advance the sound source's timer by t [10^(-6) seconds].
+     * Returns true when the internal state of the sound source changes (timer overflow).
+     */
     public boolean count(int us) {
         boolean event = false;
 
@@ -36,12 +42,15 @@ public class Timer {
         return event;
     }
 
+    /**
+     * Returns the time [μsec] required until one of the sound source's timers overflows.
+     * If the timer is stopped, it returns 0.
+     */
     public int getNextEvent() {
         int ta = ((timerACount + 0xffff) >> 16) - 1;
         int tb = ((timerBCount + 0xfff) >> 12) - 1;
         return (Math.min(ta, tb)) + 1;
     }
-
 
     protected void setStatus(int bit) {
     }
@@ -55,20 +64,20 @@ public class Timer {
 
     protected void setTimerA(int addr, int data) {
         int tmp;
-        regta[addr & 1] = (byte) (data & 0xff);
-        tmp = (regta[0] << 2) + (regta[1] & 3);
+        regTa[addr & 1] = data & 0xff;
+        tmp = (regTa[0] << 2) + (regTa[1] & 3);
         timerA = (1024 - tmp) * timerStep;
-        // logger.log(Level.TRACE, "Timer A = %d   %d us".formatted(tmp, timera >> 16));
+//        logger.log(Level.TRACE, "Timer A = %d   %d us".formatted(tmp, timerA >> 16));
     }
 
     protected void setTimerB(int data) {
         timerB = (256 - (data & 0xff)) * timerStep;
-        // logger.log(Level.TRACE, "Timer B = %d   %d us".formatted(data, timerb >> 12));
+//        logger.log(Level.TRACE, "Timer B = %d   %d us".formatted(data, timerB >> 12));
     }
 
     protected void setTimerControl(int data) {
         int tmp = regTc ^ (data & 0xff);
-        regTc = (byte) (data & 0xff);
+        regTc = data & 0xff;
 
         if ((data & 0x10) != 0)
             resetStatus(1);
@@ -81,13 +90,13 @@ public class Timer {
             timerBCount = (data & 2) != 0 ? timerB : 0;
     }
 
-    protected byte status;
-    protected byte regTc;
+    protected int status;
+    protected int regTc;
 
     private void timerA() {
     }
 
-    private byte[] regta = new byte[2];
+    private final int[] regTa = new int[2];
 
     private int timerA, timerACount;
     private int timerB, timerBCount;

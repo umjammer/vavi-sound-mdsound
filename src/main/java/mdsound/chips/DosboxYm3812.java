@@ -49,7 +49,7 @@ public class DosboxYm3812 {
     private void irqHandler(int irq) {
     }
 
-    private void timerHandler(int c, int period) {
+    private static void timerHandler(int c, int period) {
         if (period == 0) { // Reset FM Timer
         } else { // Start FM Timer
         }
@@ -76,7 +76,7 @@ public class DosboxYm3812 {
         private static final int WAVEPREC = 1024;
 
         // clocking of the chips
-        private double intFreqU(double n) {
+        private static double intFreqU(double n) {
             return n / 72.0;
         }
 
@@ -139,13 +139,13 @@ public class DosboxYm3812 {
         };
 
         // vibrato value tables (used per-Operator)
-        private int[] vibval_var1 = new int[BLOCKBUF_SIZE];
-        private int[] vibval_var2 = new int[BLOCKBUF_SIZE];
+        private final int[] vibval_var1 = new int[BLOCKBUF_SIZE];
+        private final int[] vibval_var2 = new int[BLOCKBUF_SIZE];
 
         private interface OpFuncs extends Consumer<Opl.Op> {
         }
 
-        private Opl.OpFuncs[] opFuncs = new Opl.OpFuncs[] {
+        private final Opl.OpFuncs[] opFuncs = new Opl.OpFuncs[] {
                 Opl.Op::attack,
                 Opl.Op::decay,
                 Opl.Op::release,
@@ -167,14 +167,14 @@ public class DosboxYm3812 {
          * channel.
          */
         private static class Op {
-            private static short[] wavTable = new short[WAVEPREC * 3]; // wave form table
+            private static final short[] wavTable = new short[WAVEPREC * 3]; // wave form table
 
             // vibrato/tremolo tables
-            private static int[] vibTable = new int[VIBTAB_SIZE];
-            private static int[] tremTable = new int[TREMTAB_SIZE * 2];
+            private static final int[] vibTable = new int[VIBTAB_SIZE];
+            private static final int[] tremTable = new int[TREMTAB_SIZE * 2];
 
-            private static int[] vibValConst = new int[BLOCKBUF_SIZE];
-            private static int[] tremValConst = new int[BLOCKBUF_SIZE];
+            private static final int[] vibValConst = new int[BLOCKBUF_SIZE];
+            private static final int[] tremValConst = new int[BLOCKBUF_SIZE];
 
             // vibrato/trmolo value table pointers
             // moved to adlib_getsample
@@ -188,7 +188,7 @@ public class DosboxYm3812 {
             //static double frqmul[16]; // moved to Opl
 
             // key scale levels
-            private static int[][] ksLev = new int[][] {
+            private static final int[][] ksLev = new int[][] {
                     new int[16], new int[16], new int[16], new int[16],
                     new int[16], new int[16], new int[16], new int[16]
             };
@@ -266,7 +266,7 @@ public class DosboxYm3812 {
                 for (int i = 0; i < TREMTAB_SIZE; i++) {
                     // 0.0 .. -26/26*4.8/6 == [0.0 .. -0.8], 4/53 steps == [1 .. 0.57]
                     double trem_val1 = ((double) tremTableInt[i]) * 4.8 / 26.0 / 6.0; // 4.8db
-                    double trem_val2 = (double) (tremTableInt[i] / 4d) * 1.2 / 6.0 / 6.0; // 1.2db (larger stepping)
+                    double trem_val2 = (tremTableInt[i] / 4d) * 1.2 / 6.0 / 6.0; // 1.2db (larger stepping)
 
                     tremTable[i] = (int) (Math.pow(FL2, trem_val1) * FIXEDPT);
                     tremTable[TREMTAB_SIZE + i] = (int) (Math.pow(FL2, trem_val2) * FIXEDPT);
@@ -311,7 +311,7 @@ public class DosboxYm3812 {
                 }
             }
 
-            private static Random rand = new Random();
+            private static final Random rand = new Random();
 
             private static void advanceDrums(Opl.Op op_pt1, int vib1, Opl.Op op_pt2, int vib2, Opl.Op op_pt3, int vib3, int generatorAdd) {
                 int c1 = op_pt1.tcount / FIXEDPT;
@@ -718,37 +718,37 @@ public class DosboxYm3812 {
         }
 
         // per-chips variables
-        private Opl.Op[] ops = new Opl.Op[MAXOPERATORS];
-        private int[] muteChn = new int[NUM_CHANNELS + 5];
-        private int chipClock;
+        private final Opl.Op[] ops = new Opl.Op[MAXOPERATORS];
+        private final int[] muteChn = new int[NUM_CHANNELS + 5];
+        private final int chipClock;
 
-        private int intSampleRate;
+        private final int intSampleRate;
 
         private int status;
         private int oplIndex;
         private int oplAddr;
         // adlib register set
-        private byte[] adlibReg = new byte[256];
+        private final byte[] adlibReg = new byte[256];
         // waveform selection
-        private byte[] waveSel = new byte[22];
+        private final byte[] waveSel = new byte[22];
 
         // vibrato/tremolo increment/counter
         private int vibtabPos;
-        private int vibtabAdd;
+        private final int vibtabAdd;
         private int tremtabPos;
-        private int tremtabAdd;
+        private final int tremtabAdd;
 
         // should be a chips parameter
-        private int generatorAdd;
+        private final int generatorAdd;
 
         // inverse of sampling rate
-        private double recipSamp;
-        private double[] frqMul = new double[16];
+        private final double recipSamp;
+        private final double[] frqMul = new double[16];
 
         // stream update handler
-        private UpdateHandler updateHandler;
+        private final UpdateHandler updateHandler;
         // stream update parameter
-        private DosboxYm3812 updateParam;
+        private final DosboxYm3812 updateParam;
 
         Opl(int clock, int sampleRate, UpdateHandler updateHandler, DosboxYm3812 param) {
 
@@ -1027,13 +1027,13 @@ public class DosboxYm3812 {
         // Changes by Valley Bell:
         // - Changed to always output to both channels
         // - added parameter "chn" to fix panning for 4-Op channels and the Rhythm Cymbal
-        private void outChannelValue(int chn, int[] outBufL, int[] outBufR, int i, int chanVal) {
+        private static void outChannelValue(int chn, int[] outBufL, int[] outBufR, int i, int chanVal) {
             outBufL[i] += chanVal;
             outBufR[i] += chanVal;
         }
 
-        private int[] vibLut = new int[BLOCKBUF_SIZE];
-        private int[] tremLut = new int[BLOCKBUF_SIZE];
+        private final int[] vibLut = new int[BLOCKBUF_SIZE];
+        private final int[] tremLut = new int[BLOCKBUF_SIZE];
 
         private void getSample(int[][] sndPtr, int numSamples) {
 

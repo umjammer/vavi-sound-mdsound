@@ -18,8 +18,8 @@ public class SegaPcm {
     }
 
     private byte[] ram;
-    private int ptrRam = 0;
-    private byte[] low = new byte[16];
+    private final int ptrRam = 0;
+    private final int[] low = new int[16];
     private int romSize;
     private byte[] rom;
     private int ptrRom = 0;
@@ -27,8 +27,8 @@ public class SegaPcm {
     private int bankShift;
     private int bankMask;
     private int rgnMask;
-    private SegaPcmInterface intf = new SegaPcmInterface();
-    private int[] muted = new int[16];
+    private final SegaPcmInterface intf = new SegaPcmInterface();
+    private final int[] muted = new int[16];
 
     public void update(int[][] outputs, int samples) {
         int rgnMask = this.rgnMask;
@@ -83,7 +83,7 @@ public class SegaPcm {
                     // handle looping if we've hit the end
                     if ((addr >> 16) == end) {
                         if ((this.ram[ptrRegs + 0x86] & 2) != 0) {
-                            this.ram[ptrRegs + 0x86] |= 1;
+                            this.ram[ptrRegs + 0x86] = (byte) ((this.ram[ptrRegs + 0x86] & 0xff) | 1);
                             break;
                         } else addr = loop;
                     }
@@ -103,20 +103,19 @@ public class SegaPcm {
                     // fixed Bitmask for volume multiplication, thanks to ctr -Valley Bell
                     outputs[0][i] += v * (this.ram[ptrRegs + 2] & 0x7f);
                     outputs[1][i] += v * (this.ram[ptrRegs + 3] & 0x7f);
-                    addr = (addr + this.ram[ptrRegs + 7]) & 0xf_fffff;
-
+                    addr = (addr + (this.ram[ptrRegs + 7] & 0xff)) & 0xf_fffff;
                 }
 
                 // store back the updated address
-                this.ram[ptrRegs + 0x84] = (byte) (addr >> 8);
-                this.ram[ptrRegs + 0x85] = (byte) (addr >> 16);
-                this.low[ch] = (byte) (((this.ram[ptrRegs + 0x86] & 1) != 0) ? 0 : addr);
+                this.ram[ptrRegs + 0x84] = (byte) (addr >>> 8);
+                this.ram[ptrRegs + 0x85] = (byte) (addr >>> 16);
+                this.low[ch] = ((this.ram[ptrRegs + 0x86] & 1) != 0) ? 0 : addr;
             }
         }
     }
 
     public int start(int clock, int intfBank) {
-        final int STD_ROM_SIZE = 0x80000;
+        final int STD_ROM_SIZE = 0x8_0000;
 
         SegaPcmInterface intf = this.intf;
         intf.bank = intfBank;
@@ -131,16 +130,16 @@ public class SegaPcm {
         }
 
         this.bankShift = intf.bank;
-        int mask = intf.bank >> 16;
+        int mask = intf.bank >>> 16;
         if (mask == 0)
-            mask = BANK_MASK7 >> 16;
+            mask = BANK_MASK7 >>> 16;
 
         this.rgnMask = STD_ROM_SIZE - 1;
         int romMask;
         for (romMask = 1; romMask < STD_ROM_SIZE; romMask *= 2) ;
         romMask--;
 
-        this.bankMask = mask & (romMask >> this.bankShift);
+        this.bankMask = mask & (romMask >>> this.bankShift);
 
         for (mask = 0; mask < 16; mask++)
             this.muted[mask] = 0x00;
@@ -161,7 +160,7 @@ public class SegaPcm {
     }
 
     public void write(int offset, int data) {
-        this.ram[offset & 0x07ff] = (byte) data;
+        this.ram[offset & 0x07ff] = (byte) (data & 0xff);
     }
 
     public int read(int offset) {
@@ -180,15 +179,15 @@ public class SegaPcm {
             }
 
             // recalculate bankmask
-            mask = this.intf.bank >> 16;
+            mask = this.intf.bank >>> 16;
             if (mask == 0)
-                mask = BANK_MASK7 >> 16;
+                mask = BANK_MASK7 >>> 16;
 
             for (rom_mask = 1; rom_mask < romSize; rom_mask *= 2) ;
             rom_mask--;
             this.rgnMask = rom_mask; // fix for ROMs with e.g 0x60000 bytes (stupid M1)
 
-            this.bankMask = mask & (rom_mask >> this.bankShift);
+            this.bankMask = mask & (rom_mask >>> this.bankShift);
         }
         if (dataStart > romSize)
             return;
@@ -210,11 +209,11 @@ public class SegaPcm {
             }
 
             // recalculate bankmask
-            mask = this.intf.bank >> 16;
+            mask = this.intf.bank >>> 16;
             if (mask == 0)
-                mask = BANK_MASK7 >> 16;
+                mask = BANK_MASK7 >>> 16;
 
-            for (rom_mask = 1; rom_mask < (long) romSize; rom_mask *= 2) ;
+            for (rom_mask = 1; rom_mask < romSize; rom_mask *= 2) ;
             rom_mask--;
             this.rgnMask = rom_mask; // fix for ROMs with e.g 0x60000 bytes (stupid M1)
 
@@ -228,8 +227,9 @@ public class SegaPcm {
         System.arraycopy(romData, srcStartAdr, this.rom, dataStart, dataLength);
     }
 
+    /** @mdsound */
     public void setMuteMask(int muteMask) {
         for (int curChn = 0; curChn < 16; curChn++)
-            this.muted[curChn] = (muteMask >> curChn) & 0x01;
+            this.muted[curChn] = (muteMask >>> curChn) & 0x01;
     }
 }

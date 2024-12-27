@@ -8,6 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -25,13 +26,13 @@ import vavi.util.properties.annotation.PropsEntity;
 
 
 /**
- * Test1.
+ * TestCase.
  *
  * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
  * @version 0.00 2022-05-26 nsano initial version <br>
  */
 @PropsEntity(url = "file:local.properties")
-public class Test1 {
+public class TestCase {
 
     static boolean localPropertiesExists() {
         return Files.exists(Paths.get("local.properties"));
@@ -64,6 +65,8 @@ public class Test1 {
         Program app = new Program();
 Debug.println(filename);
         app.prePlay(filename);
+        CountDownLatch cdl = new CountDownLatch(1);
+        cdl.await();
     }
 
     @Test
@@ -77,7 +80,7 @@ System.err.println("48: " + Global.OPMLOWPASS_44.length);
      * @param args
      */
     public static void main(String[] args) throws Exception {
-        Path path = Paths.get(Test1.class.getResource("/test_data").toURI());
+        Path path = Paths.get(TestCase.class.getResource("/test_data").toURI());
         short[][] d;
         List<String> ls = Files.readAllLines(path);
         d = new short[ls.size()][];

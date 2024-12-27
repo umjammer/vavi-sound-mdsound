@@ -32,7 +32,7 @@ import java.util.function.Consumer;
  */
 public class YmF262 {
 
-    private boolean OPLTYPE_IS_OPL3 = true;
+    private final boolean OPLTYPE_IS_OPL3 = true;
 
     /** DosBox OPL (AdLibEmu) */
     public static final byte EC_DBOPL = 0x00;
@@ -667,7 +667,7 @@ public class YmF262 {
             public Slot[] slots = new Slot[] {new Slot(), new Slot()};
 
             /**
-             * block+fnum
+             * block+fNum
              */
             public int blockFNum;
             /**
@@ -767,13 +767,13 @@ public class YmF262 {
          *  TL_RES_LEN - sinus resolution (X axis)
          */
         private static final int TL_TAB_LEN = 13 * 2 * TL_RES_LEN;
-        private static int[] tlTab = new int[TL_TAB_LEN];
+        private static final int[] tlTab = new int[TL_TAB_LEN];
 
         private static final int ENV_QUIET = TL_TAB_LEN >> 4;
 
         /** sin waveform table in 'decibel' scale
          * there are eight waveforms on Opl3 chips */
-        private static int[] sinTab = new int[SIN_LEN * 8];
+        private static final int[] sinTab = new int[SIN_LEN * 8];
 
         /** LFO Amplitude Modulation table (verified on real YM3812)
            27 output levels (triangle waveform); 1 level takes one of: 192, 256 or 448 samples
@@ -1028,15 +1028,15 @@ public class YmF262 {
         /**
          * chips type
          */
-        private byte type;
+        private final byte type;
         /**
          * master clock  (Hz)
          */
-        private int clock;
+        private final int clock;
         /**
          * sampling rate (Hz)
          */
-        private int rate;
+        private final int rate;
         /**
          * frequency base
          */
@@ -2059,7 +2059,7 @@ public class YmF262 {
                     return;
                 }
 
-                // keyon,block,fnum
+                // keyon,block,fNum
                 if ((r & 0x0f) > 8) return;
                 ch = this.channels[(r & 0x0f) + chOffset];
                 chP3 = (((r & 0xf) + chOffset + 3) >= 0 && ((r & 0xf) + chOffset + 3) < this.channels.length) ? this.channels[(r & 0xf) + chOffset + 3] : null;
@@ -2167,8 +2167,8 @@ public class YmF262 {
                     ch.kCode = (byte) ((ch.blockFNum & 0x1c00) >> 9);
 
                     // the info below is actually opposite to what is stated in the Manuals (verifed on real YMF262)
-                    // if notesel == 0 . lsb of kcode is bit 10 (MSB) of fnum
-                    // if notesel == 1 . lsb of kcode is bit 9 (MSB-1) of fnum
+                    // if notesel == 0 . lsb of kcode is bit 10 (MSB) of fNum
+                    // if notesel == 1 . lsb of kcode is bit 9 (MSB-1) of fNum
                     if ((this.nts & 0x40) != 0)
                         ch.kCode |= (byte) ((ch.blockFNum & 0x100) >> 8); // notesel == 1
                     else
@@ -2726,10 +2726,10 @@ public class YmF262 {
                     1 / 1.59744
             };
 
-            private static Random rnd = new Random();
+            private static final Random rnd = new Random();
 
             /** wave form table */
-            private static short[] wavtable = new short[WAVEPREC * 3];
+            private static final short[] wavtable = new short[WAVEPREC * 3];
 
             static {
                 // create waveform tables
@@ -3138,15 +3138,15 @@ public class YmF262 {
         }
 
         // vibrato/tremolo tables */
-        private static int[] vibTable = new int[VIBTAB_SIZE];
-        private static int[] tremTable = new int[TREMTAB_SIZE * 2];
+        private static final int[] vibTable = new int[VIBTAB_SIZE];
+        private static final int[] tremTable = new int[TREMTAB_SIZE * 2];
 
-        private static int[] vibValConst = new int[BLOCKBUF_SIZE];
-        private static int[] tremValConst = new int[BLOCKBUF_SIZE];
+        private static final int[] vibValConst = new int[BLOCKBUF_SIZE];
+        private static final int[] tremValConst = new int[BLOCKBUF_SIZE];
 
         // vibrato value tables (used per-Operator) */
-        private static int[] vibValVar1 = new int[BLOCKBUF_SIZE];
-        private static int[] vibval_var2 = new int[BLOCKBUF_SIZE];
+        private static final int[] vibValVar1 = new int[BLOCKBUF_SIZE];
+        private static final int[] vibval_var2 = new int[BLOCKBUF_SIZE];
 
         // key scale level lookup table */
         private static final double[] kslMul = new double[] {
@@ -3161,7 +3161,7 @@ public class YmF262 {
         // calculated frequency multiplication values (depend on sampling rate)
 
         // key scale levels */
-        private static byte[][] ksLev = new byte[][] {new byte[16], new byte[16], new byte[16], new byte[16], new byte[16], new byte[16], new byte[16], new byte[16]};
+        private static final byte[][] ksLev = new byte[][] {new byte[16], new byte[16], new byte[16], new byte[16], new byte[16], new byte[16], new byte[16], new byte[16]};
 
         // map a channel number to the register offset of the modulator (=register base) */
         private static final byte[] modulatorbase = new byte[] {
@@ -3191,16 +3191,16 @@ public class YmF262 {
         // per-chips variables
 
         // adlib register set (including second set) */
-        private byte[] adlibReg = new byte[512];
+        private final byte[] adlibReg = new byte[512];
 
         // waveform selection */
-        private byte[] waveSel = new byte[44];
+        private final byte[] waveSel = new byte[44];
 
-        private Operator[] ops = new Operator[MAXOPERATORS];
-        private byte[] muteChn = new byte[NUM_CHANNELS + 5];
-        private int chipClock;
+        private final Operator[] ops = new Operator[MAXOPERATORS];
+        private final byte[] muteChn = new byte[NUM_CHANNELS + 5];
+        private final int chipClock;
 
-        private int intSamplerate;
+        private final int intSamplerate;
 
         private byte status;
         private int oplIndex;
@@ -3208,26 +3208,26 @@ public class YmF262 {
 
         // vibrato/tremolo increment/counter
         private int vibTabPos;
-        private int vibTabAdd;
+        private final int vibTabAdd;
         private int tremTabPos;
-        private int tremTabAdd;
+        private final int tremTabAdd;
 
         /** should be a chips parameter */
-        private int generatorAdd;
+        private final int generatorAdd;
 
         /** inverse of sampling rate */
-        private double recLpSamp;
-        private double[] frqMul = new double[16];
+        private final double recLpSamp;
+        private final double[] frqMul = new double[16];
 
         /** stream update handler */
-        private UpdateHandler updateHandler;
+        private final UpdateHandler updateHandler;
         /** stream update parameter */
 //        private YmF262 updateParam;
 
         private interface Operators extends Consumer<Operator> {
         }
 
-        private Operators[] opFuncs = new Operators[] {
+        private final Operators[] opFuncs = new Operators[] {
                 Operator::attack,
                 Operator::decay,
                 Operator::release,
@@ -3257,7 +3257,7 @@ public class YmF262 {
             for (int i = 0; i < TREMTAB_SIZE; i++) {
                 // 0.0 .. -26/26*4.8/6 == [0.0 .. -0.8], 4/53 steps == [1 .. 0.57]
                 double trem_val1 = ((double) tremTableInt[i]) * 4.8 / 26.0 / 6.0; // 4.8db
-                double trem_val2 = ((double) (tremTableInt[i] / 4d) * 1.2) / 6.0 / 6.0; // 1.2db (larger stepping)
+                double trem_val2 = ((tremTableInt[i] / 4d) * 1.2) / 6.0 / 6.0; // 1.2db (larger stepping)
 
                 tremTable[i] = (int) (Math.pow(FL2, trem_val1) * FIXEDPT);
                 tremTable[TREMTAB_SIZE + i] = (int) (Math.pow(FL2, trem_val2) * FIXEDPT);

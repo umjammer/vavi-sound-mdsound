@@ -48,19 +48,19 @@ public class FileIO {
         }
     }
 
-    // 構築/消滅
+    // constructor/destructor
 
     public FileIO() {
         flags = 0;
     }
 
-    public FileIO(String filename, int flg/* = 0*/) {
+    public FileIO(String filename, int flg /* = 0 */) {
         flags = 0;
         open(filename, flg);
     }
 
     /**
-     * ファイルを開く
+     * Opens a file.
      */
     public boolean open(String filename, int flg /* = 0 */) {
         close();
@@ -97,7 +97,7 @@ public class FileIO {
     }
 
     /**
-     * ファイルがない場合は作成
+     * Creates a file is the file does not exist.
      */
     public boolean createNew(String filename) {
         close();
@@ -122,9 +122,9 @@ logger.log(Level.ERROR, e.getMessage(), e);
     }
 
     /**
-     * ファイルを作り直す
+     * Reopens the file.
      */
-    public boolean reopen(int flg/* = 0*/) {
+    public boolean reopen(int flg /* = 0 */) {
         if ((flags & Flags.Open.v) == 0) return false;
         if ((flags & Flags.Readonly.v) > 0 && (flg & Flags.Create.v) > 0) return false;
 
@@ -150,7 +150,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
     }
 
     /**
-     * ファイルを閉じる
+     * Closes the file.
      */
     public void close() {
         if ((getFlags() & Flags.Open.v) > 0) {
@@ -164,20 +164,20 @@ logger.log(Level.ERROR, e.getMessage(), e);
     }
 
     /**
-     * ファイルからの読み出し
+     * Reads from the file.
      */
     public int read(byte[] dest, int len) {
         if ((getFlags() & Flags.Open.v) == 0)
             return -1;
 
-        int readsize;
-        if ((readsize = hFile.read(dest, 0, len)) == 0) return -1;
+        int readSize;
+        if ((readSize = hFile.read(dest, 0, len)) == 0) return -1;
 
-        return readsize;
+        return readSize;
     }
 
     /**
-     * ファイルへの書き出し
+     * Writes to the file.
      */
     public int write(byte[] src, int len) {
         if (((getFlags() & Flags.Open.v) == 0) || ((getFlags() & Flags.Readonly.v) > 0))
@@ -194,7 +194,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
     }
 
     /**
-     * ファイルをシーク
+     * Seeks the file.
      */
     public boolean seek(int fpos, SeekMethod method) {
         if ((getFlags() & Flags.Open.v) == 0)
@@ -227,7 +227,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
     }
 
     /**
-     * ファイルの位置を得る
+     * Gets the position of the file.
      */
     public long tellp() {
         if ((getFlags() & Flags.Open.v) == 0)
@@ -237,13 +237,13 @@ logger.log(Level.ERROR, e.getMessage(), e);
     }
 
     /**
-     * 現在の位置をファイルの終端とする
+     * Let the current position the end of file.
      */
     public boolean setEndOfFile() {
         if ((getFlags() & Flags.Open.v) == 0)
             return false;
 
-        //未サポート
+        // unsupported
         //return ::SetEndOfFile(hfile) != 0;
 
         return true;

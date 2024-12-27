@@ -572,21 +572,19 @@ public class Ay8910 {
     private static final int DEVCB_TYPE_NULL = 0;
     private static final int[] DEVCB_NULL = new int[] {DEVCB_TYPE_NULL};
 
-    /*
-     * AY-3-8910A: 2 I/O ports
-     * AY-3-8912A: 1 I/O port
-     * AY-3-8913A: 0 I/O port
-     * AY8930: upper compatible with 8910.
-     * In extended mode, it has higher resolution and duty ratio setting
-     * YM2149: higher resolution
-     * YM3439: same as 2149
-     * YMZ284: 0 I/O port, different clock divider
-     * YMZ294: 0 I/O port
-     */
+    // AY-3-8910A: 2 I/O ports
+    // AY-3-8912A: 1 I/O port
+    // AY-3-8913A: 0 I/O port
+    // AY8930: upper compatible with 8910.
+    // In extended mode, it has higher resolution and duty ratio setting
+    // YM2149: higher resolution
+    // YM3439: same as 2149
+    // YMZ284: 0 I/O port, different clock divider
+    // YMZ294: 0 I/O port
 
     private static final int ALL_8910_CHANNELS = -1;
 
-    /* Internal resistance at Volume level 7. */
+    // Internal resistance at Volume level 7.
 
     private static final int AY8910_INTERNAL_RESISTANCE = 356;
     private static final int YM2149_INTERNAL_RESISTANCE = 353;
@@ -629,36 +627,36 @@ public class Ay8910 {
      */
     // TODO: implement mixing module
     private static final int AY8910_RAW_OUTPUT = 8;
-    //private static final int AY8910_ZX_STEREO = 0x80;
+//    private static final int AY8910_ZX_STEREO = 0x80;
 
-    /*
-     * This define specifies the initial state of YM2149
-     * pin 26 (SEL pin). By default it is set to high,
-     * compatible with AY8910.
-     */
+//    /**
+//     * This define specifies the initial state of YM2149
+//     * pin 26 (SEL pin). By default it is set to high,
+//     * compatible with AY8910.
+//     */
     // TODO: make it controllable while it's running (used by any hw???)
-    //private static final int YM2149_PIN26_HIGH = 0x00; /** or N/C */
-    //private static final int YM2149_PIN26_LOW = 0x10;
+//    private static final int YM2149_PIN26_HIGH = 0x00; /** or N/C */
+//    private static final int YM2149_PIN26_LOW = 0x10;
 
-    private static class Interface {
-        /** Flags */
-        public int flags;
-        /** Load on channel in ohms */
-        public int[] resLoad = new int[3];
-    }
+//    private static class Interface {
+//        /** Flags */
+//        public int flags;
+//        /** Load on channel in ohms */
+//        public int[] resLoad = new int[3];
+//    }
 
-    /*
-     *  Defines
-     */
+    //
+    // Defines
+    //
 
-//#define  ENABLE_REGISTER_TEST = 0; // Enable preprogrammed registers
-//#define  LOG_IGNORED_WRITES = 0;
+//#define ENABLE_REGISTER_TEST = 0; // Enable preprogrammed registers
+//#define LOG_IGNORED_WRITES = 0;
 //#define ENABLE_CUSTOM_OUTPUTS = 0;
 
     private static final int MAX_OUTPUT = 0x4000;
     private static final int NUM_CHANNELS = 3;
 
-    /* register id's */
+    // register id's
     private static final int AY_AFINE = 0;
     private static final int AY_ACOARSE = 1;
     private static final int AY_BFINE = 2;
@@ -677,9 +675,9 @@ public class Ay8910 {
     private static final int AY_PORTA = 14;
     private static final int AY_PORTB = 15;
 
-    /*
-     *  Type definitions
-     */
+    //
+    // Type definitions
+    //
 
     private enum PsgType {
         AY,
@@ -707,10 +705,10 @@ public class Ay8910 {
     //(int)8 ready;
     private int active;
     private int register_latch;
-    private byte[] regs = new byte[16];
+    private final int[] regs = new int[16];
     private int lastEnable;
-    private int[] count = new int[NUM_CHANNELS];
-    private byte[] output = new byte[NUM_CHANNELS];
+    private final int[] count = new int[NUM_CHANNELS];
+    private final int[] output = new int[NUM_CHANNELS];
     private int preScaleNoise;
     private int countNoise;
     private int countEnv;
@@ -783,10 +781,10 @@ public class Ay8910 {
 
     public void writeReg(int r, int v) {
         //if (r >= 11 && r <= 13 ) printf("%d %x %02x\n", this.index, r, v);
-        this.regs[r] = (byte) v;
+        this.regs[r] = v;
 
         switch (r) {
-        case AY_AFINE:
+        case AY_AFINE:   // 0
         case AY_ACOARSE:
         case AY_BFINE:
         case AY_BCOARSE:
@@ -800,7 +798,7 @@ public class Ay8910 {
         case AY_ECOARSE:
             // No action required
             break;
-        case AY_ENABLE:
+        case AY_ENABLE: // 7
             if (this.lastEnable == 0xff)
                 this.lastEnable = ~(this.regs[AY_ENABLE] & 0xff);
 
@@ -816,9 +814,9 @@ public class Ay8910 {
                 //    this.port_b_write_cb(psg, 0, (this.regs[AY_ENABLE] & 0x80) ? this.regs[AY_PORTB] : 0xff);
             }
 
-            this.lastEnable = (byte) (this.regs[AY_ENABLE] & 0xc0);
+            this.lastEnable = this.regs[AY_ENABLE] & 0xc0;
             break;
-        case AY_ESHAPE:
+        case AY_ESHAPE: // 13
             this.attack = (this.regs[AY_ESHAPE] & 0x04) != 0 ? this.envStepMask : 0x00;
             if ((this.regs[AY_ESHAPE] & 0x08) == 0) {
                 // if "Continue = 0", map the shape to the equivalent one which has "Continue = 1"
@@ -832,7 +830,7 @@ public class Ay8910 {
             this.holding = 0;
             this.envVolume = this.envStep ^ this.attack;
             break;
-        case AY_PORTA:
+        case AY_PORTA: // 14
             if ((this.regs[AY_ENABLE] & 0x40) != 0) {
 //                if (this.port_a_write_cb != null)
 //                    this.port_a_write_cb(psg, 0, this.regs[AY_PORTA]);
@@ -842,7 +840,7 @@ public class Ay8910 {
                 logger.log(Level.WARNING, "write %02x to %s Port A set as input - ignored".formatted(v, "AY8910"));
             }
             break;
-        case AY_PORTB:
+        case AY_PORTB: // 15
             if ((this.regs[AY_ENABLE] & 0x80) != 0) {
 //                if (this.port_b_write_cb != null)
 //                    this.port_b_write_cb(psg, 0, this.regs[AY_PORTB]);
@@ -987,10 +985,8 @@ public class Ay8910 {
 //            build_single_table(this.res_load[chan], this.par_env, normalize, this.env_table[chan], 0);
 //        }
 //    }
-        /*
-         * The previous implementation added all three channels up instead of averaging them.
-         * The factor of 3 will force the same levels if normalizing is used.
-         */
+        // The previous implementation added all three channels up instead of averaging them.
+        // The factor of 3 will force the same levels if normalizing is used.
 //    else {
 //        build_3D_table(this.res_load[0], this.param, this.par_env, normalize, 3, this.zero_is_off, this.vol3d_table);
 //    }
@@ -1068,7 +1064,7 @@ public class Ay8910 {
         }
     }
 
-//    private byte device_start_ay8910_mame(DEV_INFO retDevInf) {
+//    private int device_start_ay8910_mame(DEV_INFO retDevInf) {
 //        Ay8910 chips;
 //        DEV_DATA devData;
 //        int rate;
@@ -1132,19 +1128,19 @@ public class Ay8910 {
             writeReg(i & 0xff, 0);
 //        this.ready = 1;
 //#if ENABLE_REGISTER_TEST
-//        writeReg((byte) AY_AFINE, (byte) 0);
-//        writeReg((byte) AY_ACOARSE, (byte) 1);
-//        writeReg((byte) AY_BFINE, (byte) 0);
-//        writeReg((byte) AY_BCOARSE, (byte) 2);
-//        writeReg((byte) AY_CFINE, (byte) 0);
-//        writeReg((byte) AY_CCOARSE, (byte) 4);
-//        //#define AY_NOISEPER   (6)
-//        writeReg((byte) AY_ENABLE, (byte) ~7);
-//        writeReg((byte) AY_AVOL, (byte) 10);
-//        writeReg((byte) AY_BVOL, (byte) 10);
-//        writeReg((byte) AY_CVOL, (byte) 10);
-//        //#define AY_EFINE  (11)
-//        //#define AY_ECOARSE    (12)
+//        writeReg(AY_AFINE, 0);
+//        writeReg(AY_ACOARSE, 1);
+//        writeReg(AY_BFINE, 0);
+//        writeReg(AY_BCOARSE, 2);
+//        writeReg(AY_CFINE, 0);
+//        writeReg(AY_CCOARSE, 4);
+//        //#define AY_NOISEPER 6)
+//        writeReg(AY_ENABLE, ~7);
+//        writeReg(AY_AVOL, 10);
+//        writeReg(AY_BVOL, 10);
+//        writeReg(AY_CVOL, 10);
+//        //#define AY_EFINE (11)
+//        //#define AY_ECOARSE (12)
 //        //#define AY_ESHAPE (13)
 //#endif
     }
@@ -1185,16 +1181,12 @@ public class Ay8910 {
         }
     }
 
-    private static final int[][] ayMask = new int[][] {
-            new int[] {
-                    0xff, 0x0f, 0xff, 0x0f, 0xff, 0x0f, 0x1f, 0xff, 0x3f, 0x3f, 0x3f, 0xff, 0xff, 0x0f, 0xff, 0xff
-            },
-            new int[] {
-                    0xff, 0x0f, 0xff, 0x0f, 0xff, 0x0f, 0x1f, 0xff, 0x1f, 0x1f, 0x1f, 0xff, 0xff, 0x0f, 0xff, 0xff
-            }
+    private static final int[][] ayMask = {
+            {0xff, 0x0f, 0xff, 0x0f, 0xff, 0x0f, 0x1f, 0xff, 0x3f, 0x3f, 0x3f, 0xff, 0xff, 0x0f, 0xff, 0xff},
+            {0xff, 0x0f, 0xff, 0x0f, 0xff, 0x0f, 0x1f, 0xff, 0x1f, 0x1f, 0x1f, 0xff, 0xff, 0x0f, 0xff, 0xff}
     };
 
-    public int read(byte addr) {
+    public int read(int addr) {
         int r = this.register_latch;
 
         if (this.active == 0) return 0xff; // high impedance
@@ -1262,7 +1254,7 @@ public class Ay8910 {
         smpRateData = dataPtr;
     }
 
-    private void buildSingleTable(double rl, YmParam par, int normalize, int[] tab, int zeroIsOff) {
+    private static void buildSingleTable(double rl, YmParam par, int normalize, int[] tab, int zeroIsOff) {
         double[] temp = new double[32];
         double min = 10.0, max = 0.0;
 

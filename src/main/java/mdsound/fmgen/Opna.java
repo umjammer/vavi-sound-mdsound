@@ -12,6 +12,7 @@ import java.lang.System.Logger.Level;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.function.Function;
 
 import dotnet4j.io.FileAccess;
@@ -25,77 +26,13 @@ import static mdsound.fmgen.Fmgen.limit;
 
 
 /**
- * class OPN/OPNA
- * OPN/OPNA に良く似た音を生成する音源ユニット
- * <p>
- * interface:
- * boolean Init(int clock, int rate, bool, final char* path);
- * 初期化．このクラスを使用する前にかならず呼んでおくこと．
- * OPNA の場合はこの関数でリズムサンプルを読み込む
- * <p>
- * clock: OPN/OPNA/OPNB のクロック周波数(Hz)
- * <p>
- * rate: 生成する PCM の標本周波数(Hz)
- * <p>
- * path: リズムサンプルのパス(OPNA のみ有効)
- * 省略時はカレントディレクトリから読み込む
- * 文字列の末尾には '\' や '/' などをつけること
- * <p>
- * 返り値 初期化に成功すれば true
- * <p>
- * boolean LoadRhythmSample(final char* path)
- * (OPNA ONLY)
- * Rhythm サンプルを読み直す．
- * path は Init の path と同じ．
- * <p>
- * boolean SetRate(int clock, int rate, bool)
- * クロックや PCM レートを変更する
- * 引数等は Init を参照のこと．
- * <p>
- * void Mix(FM_SAMPLETYPE* dest, int nsamples)
- * Stereo PCM データを nsamples 分合成し， dest で始まる配列に
- * 加える(加算する)
- * ・dest には sample*2 個分の領域が必要
- * ・格納形式は L, R, L, R... となる．
- * ・あくまで加算なので，あらかじめ配列をゼロクリアする必要がある
- * ・FM_SAMPLETYPE が short 型の場合クリッピングが行われる.
- * ・この関数は音源内部のタイマーとは独立している．
- * Timer は Count と GetNextEvent で操作する必要がある．
- * <p>
- * void Reset()
- * 音源をリセット(初期化)する
- * <p>
- * void SetReg(int reg, int data)
- * 音源のレジスタ reg に data を書き込む
- * <p>
- * int GetReg(int reg)
- * 音源のレジスタ reg の内容を読み出す
- * 読み込むことが出来るレジスタは Psg, ADPCM の一部，ID(0xff) とか
- * <p>
- * int ReadStatus()/ReadStatusEx()
- * 音源のステータスレジスタを読み出す
- * ReadStatusEx は拡張ステータスレジスタの読み出し(OPNA)
- * busy フラグは常に 0
- * <p>
- * boolean Count((int)32 t)
- * 音源のタイマーを t [μ秒] 進める．
- * 音源の内部状態に変化があった時(timer オーバーフロー)
- * true を返す
- * <p>
- * (int)32 GetNextEvent()
- * 音源のタイマーのどちらかがオーバーフローするまでに必要な
- * 時間[μ秒]を返す
- * タイマーが停止している場合は ULONG_MAX を返す… と思う
- * <p>
- * void SetVolumeFM(int db)/SetVolumePSG(int db) ...
- * 各音源の音量を＋－方向に調節する．標準値は 0.
- * 単位は約 1/2 dB，有効範囲の上限は 20 (10dB)
+ * A sound source unit that produces a sound similar to OPN/OPNA.
  */
 public class Opna {
 
     private static final Logger logger = getLogger(Opna.class.getName());
 
-    // OPN Base
+    /** OPN Base */
     static class OPNBase extends Timer {
         public OPNBase() {
             preScale = 0;
@@ -103,7 +40,7 @@ public class Opna {
             chip = new Fmgen.Channel4.Chip();
         }
 
-        // 初期化
+        /** Initializes. */
         public boolean init(int c, int r) {
             clock = c;
             psgRate = r;
@@ -118,7 +55,7 @@ public class Opna {
             psg.reset();
         }
 
-        // 音量設定
+        /** Sets volume. */
         public void setVolumeFM(int db) {
             db = Math.min(db, 20);
             if (db > -192)
@@ -131,12 +68,13 @@ public class Opna {
             psg.setVolume(db);
         }
 
+        // obsolete
         public void setLPFCutoff(int freq) {
-        }    // obsolete
+        }
 
         protected void setParameter(Fmgen.Channel4 ch, int addr, int data) {
-            int[] slotTable = new int[] {0, 2, 1, 3};
-            byte[] slTable = new byte[] {
+            int[] slotTable = {0, 2, 1, 3};
+            int[] slTable = {
                     0, 4, 8, 12, 16, 20, 24, 28,
                     32, 36, 40, 44, 48, 52, 56, 124
             };
@@ -182,18 +120,18 @@ public class Opna {
         }
 
         protected void setPreScaler(int p) {
-            byte[][] table = new byte[][] {new byte[] {6, 4}, new byte[] {3, 2}, new byte[] {2, 1}};
-            byte[] table2 = new byte[] {108, 77, 71, 67, 62, 44, 8, 5};
+            int[][] table = {{6, 4}, {3, 2}, {2, 1}};
+            int[] table2 = new int[] {108, 77, 71, 67, 62, 44, 8, 5};
             // 512
             if (preScale != p) {
-                preScale = (byte) p;
+                preScale = p & 0xff;
                 //assert(0 <= prescale && prescale< 3);
 
                 int fmClock = clock / table[p][0] / 12;
 
                 rate = psgRate;
 
-                // 合成周波数と出力周波数の比
+                // Ratio of synthesis frequency to output frequency
                 //assert(fmClock< (0x80000000 >> FM_RATIOBITS));
                 int ratio = ((fmClock << Fmgen.FM_RATIOBITS) + rate / 2) / rate;
 
@@ -210,17 +148,17 @@ public class Opna {
 
         protected void rebuildTimeTable() {
             int p = preScale;
-            preScale = (byte) 0xff;
+            preScale = 0xff;
             setPreScaler(p);
         }
 
         protected int fmVolume;
 
-        // OPN クロック
+        // OPN Clock
         protected int clock;
-        // FM 音源合成レート
+        // FM synthesis rate
         protected int rate;
-        // FMGen  出力レート
+        // FMGen Output Rate
         protected int psgRate;
         protected int status;
         protected Fmgen.Channel4 csmCh;
@@ -229,7 +167,7 @@ public class Opna {
 
         protected int[] lfoTable = new int[8];
 
-        // タイマー時間処理
+        // Timer processing
         private void timerA() {
             if ((regTc & 0x80) != 0) {
                 csmCh.keyControl(0x00);
@@ -237,13 +175,13 @@ public class Opna {
             }
         }
 
-        protected byte preScale;
+        protected int preScale;
 
         protected Fmgen.Channel4.Chip chip;
         public PSG psg;
     }
 
-    // OPN2 Base
+    /** OPN2 Base */
     public static class OPNABase extends OPNBase {
         public int[] visRtmVolume = new int[] {0, 0};
         public int[] visAPCMVolume = new int[] {0, 0};
@@ -274,7 +212,7 @@ public class Opna {
         }
 
         /**
-         * 拡張ステータスを読みこむ
+         * Read Extended Status
          */
         public int readStatusEx() {
             int a = status | 8;
@@ -288,7 +226,7 @@ public class Opna {
         }
 
         /**
-         * チャンネルマスクの設定
+         * Channel Mask Settings.
          */
         public void setChannelMask(int mask) {
             for (int i = 0; i < 6; i++)
@@ -302,9 +240,9 @@ public class Opna {
         }
 
         /**
-         * テーブル作成
+         * Table Creation
          */
-        private void makeTable2() {
+        private static void makeTable2() {
             if (!tableHasMade) {
                 for (int i = -Fmgen.FM_TLPOS; i < Fmgen.FM_TLENTS; i++) {
                     tlTable[i + Fmgen.FM_TLPOS] = (int) (65536.0 * Math.pow(2.0, i * -16.0 / Fmgen.FM_TLENTS)) - 1;
@@ -315,7 +253,7 @@ public class Opna {
         }
 
         /**
-         * 初期化
+         * Initializes.
          */
         protected boolean init(int c, int r, boolean f) {
             rebuildTimeTable();
@@ -329,14 +267,14 @@ public class Opna {
         }
 
         /**
-         * サンプリングレート変更
+         * Sampling rate change
          */
         protected boolean setRate(int c, int r, boolean f) {
-            c /= 2; // 従来版との互換性を重視したけりゃコメントアウトしよう
+            c /= 2; // If you want to prioritize compatibility with previous versions, comment it out.
 
             super.init(c, r);
 
-            adplBase = (int) ((int) (8192.0 * (clock / 72.0) / r));
+            adplBase = (int) (8192.0 * (clock / 72.0) / r);
             adplD = deltaN * adplBase >> 16;
 
             rebuildTimeTable();
@@ -346,18 +284,18 @@ public class Opna {
         }
 
         /**
-         * リセット
+         * Resets.
          */
+        @Override
         public void reset() {
-            int i;
 
             super.reset();
-            for (i = 0x20; i < 0x28; i++) setReg(i, 0);
-            for (i = 0x30; i < 0xc0; i++) setReg(i, 0);
-            for (i = 0x130; i < 0x1c0; i++) setReg(i, 0);
-            for (i = 0x100; i < 0x110; i++) setReg(i, 0);
-            for (i = 0x10; i < 0x20; i++) setReg(i, 0);
-            for (i = 0; i < 6; i++) {
+            for (int i = 0x20; i < 0x28; i++) setReg(i, 0);
+            for (int i = 0x30; i < 0xc0; i++) setReg(i, 0);
+            for (int i = 0x130; i < 0x1c0; i++) setReg(i, 0);
+            for (int i = 0x100; i < 0x110; i++) setReg(i, 0);
+            for (int i = 0x10; i < 0x20; i++) setReg(i, 0);
+            for (int i = 0; i < 6; i++) {
                 pan[i] = 3;
                 ch[i].reset();
             }
@@ -376,7 +314,7 @@ public class Opna {
         }
 
         /**
-         * レジスタアレイにデータを設定
+         * Set data in the register array.
          */
         protected void setReg(int addr, int data) {
             int c = addr & 3;
@@ -424,38 +362,38 @@ public class Opna {
             case 0x1a1:
             case 0x1a2:
                 c += 3;
-                fnum[c] = data + fnum2[c] * 0x100;
-                ch[c].setFNum(fnum[c]);
+                fNum[c] = data + fNum2[c] * 0x100;
+                ch[c].setFNum(fNum[c]);
                 break;
             case 0xa0:
             case 0xa1:
             case 0xa2:
-                fnum[c] = data + fnum2[c] * 0x100;
-                ch[c].setFNum(fnum[c]);
+                fNum[c] = data + fNum2[c] * 0x100;
+                ch[c].setFNum(fNum[c]);
                 break;
 
             case 0x1a4:
             case 0x1a5:
             case 0x1a6:
                 c += 3;
-                fnum2[c] = (byte) (data);
+                fNum2[c] = data & 0xff;
                 break;
             case 0xa4:
             case 0xa5:
             case 0xa6:
-                fnum2[c] = (byte) (data);
+                fNum2[c] = data & 0xff;
                 break;
 
             case 0xa8:
             case 0xa9:
             case 0xaa:
-                fnum3[c] = data + fnum2[c + 6] * 0x100;
+                fNum3[c] = data + (fNum2[c + 6] & 0xff) * 0x100;
                 break;
 
             case 0xac:
             case 0xad:
             case 0xae:
-                fnum2[c + 6] = (byte) (data);
+                fNum2[c + 6] = data & 0xff;
                 break;
 
             // Algorithm--
@@ -478,20 +416,20 @@ public class Opna {
             case 0x1b5:
             case 0x1b6:
                 c += 3;
-                pan[c] = (byte) ((data >> 6) & 3);
+                pan[c] = (data >>> 6) & 3;
                 ch[c].setMS(data);
                 break;
             case 0xb4:
             case 0xb5:
             case 0xb6:
-                pan[c] = (byte) ((data >> 6) & 3);
+                pan[c] = (data >>> 6) & 3;
                 ch[c].setMS(data);
                 break;
 
             // LFO--
             case 0x22:
                 modified = reg22 ^ data;
-                reg22 = (byte) data;
+                reg22 = data;
                 if ((modified & 0x8) != 0)
                     lfoCount = 0;
                 lfoDCount = (reg22 & 8) != 0 ? lfoTable[reg22 & 7] : 0;
@@ -517,7 +455,7 @@ public class Opna {
                 psg.setReg(addr, (byte) data);
                 break;
 
-            // 音色-
+            // Tone-
             default:
                 if (c < 3) {
                     if ((addr & 0x100) != 0)
@@ -544,18 +482,18 @@ public class Opna {
                 if ((data & 1) != 0) {
                     adpcmPlay = false;
                 }
-                control1 = (byte) data;
+                control1 = data & 0xff;
                 break;
 
             case 0x01: // Controller Register 2
-                control2 = (byte) data;
-                granuality = (byte) ((control2 & 2) != 0 ? 1 : 4);
+                control2 = data & 0xff;
+                granularity = (control2 & 2) != 0 ? 1 : 4;
                 break;
 
             case 0x02: // Start Address L
             case 0x03: // Start Address H
                 adpcmReg[addr - 0x02 + 0] = (byte) data;
-                startAddr = (adpcmReg[1] * 256 + adpcmReg[0]) << 6;
+                startAddr = ((adpcmReg[1] & 0xff) * 256 + (adpcmReg[0] & 0xff)) << 6;
                 if ((control1 & 0x40) != 0) {
                     memAddr = startAddr;
                 }
@@ -565,7 +503,7 @@ public class Opna {
             case 0x04: // Stop Address L
             case 0x05: // Stop Address H
                 adpcmReg[addr - 0x04 + 2] = (byte) data;
-                stopAddr = (adpcmReg[3] * 256 + adpcmReg[2] + 1) << 6;
+                stopAddr = ((adpcmReg[3] & 0xff) * 256 + (adpcmReg[2] & 0xff) + 1) << 6;
                 //logger.log(Level.TRACE, "  stopaddr %.6x".formatted(stopaddr));
                 break;
 
@@ -592,7 +530,7 @@ public class Opna {
             case 0x0c: // Limit Address L
             case 0x0d: // Limit Address H
                 adpcmReg[addr - 0x0c + 6] = (byte) data;
-                limitAddr = (adpcmReg[7] * 256 + adpcmReg[6] + 1) << 6;
+                limitAddr = ((adpcmReg[7] & 0xff) * 256 + (adpcmReg[6] & 0xff) + 1) << 6;
                 //logger.log(Level.TRACE, "  limitaddr %.6x".formatted(limitaddr));
                 break;
 
@@ -609,7 +547,7 @@ public class Opna {
         }
 
         /**
-         * レジスタ取得
+         * Register Acquisition
          */
         protected int getReg(int addr) {
             if (addr < 0x10)
@@ -635,22 +573,22 @@ public class Opna {
         }
 
         /**
-         * 合成
-         * @param buffer  合成先
-         * @param nsamples 合成サンプル数
+         * Synthesis.
+         * @param buffer  Destination
+         * @param nSamples Number of composite samples
          */
-        protected void fmMix(int[] buffer, int nsamples) {
+        protected void fmMix(int[] buffer, int nSamples) {
             if (fmVolume > 0) {
-                // 準備
+                // Preparation
                 // Set F-Number
                 if ((regTc & 0xc0) == 0)
-                    csmCh.setFNum(fnum[2]);// csmch - ch]);
+                    csmCh.setFNum(fNum[2]);// csmch - ch]);
                 else {
-                    // 効果音モード
-                    csmCh.op[0].setFNum(fnum3[1]);
-                    csmCh.op[1].setFNum(fnum3[2]);
-                    csmCh.op[2].setFNum(fnum3[0]);
-                    csmCh.op[3].setFNum(fnum[2]);
+                    // Sound Effects Mode
+                    csmCh.op[0].setFNum(fNum3[1]);
+                    csmCh.op[1].setFNum(fNum3[2]);
+                    csmCh.op[2].setFNum(fNum3[0]);
+                    csmCh.op[3].setFNum(fNum[2]);
                 }
 
                 int act = (((ch[2].prepare() << 2) | ch[1].prepare()) << 2) | ch[0].prepare();
@@ -660,12 +598,12 @@ public class Opna {
                     act &= 0x555;
 
                 if ((act & 0x555) != 0) {
-                    mix6(buffer, nsamples, act);
+                    mix6(buffer, nSamples, act);
                 }
             }
         }
 
-        protected void mix6(int[] buffer, int nsamples, int activech) {
+        protected void mix6(int[] buffer, int nSamples, int activeCh) {
             // Mix
             int[] ibuf = new int[6];
             int[] idest = new int[6];
@@ -676,14 +614,14 @@ public class Opna {
             idest[4] = pan[4];
             idest[5] = pan[5];
 
-            int limit = nsamples * 2;
+            int limit = nSamples * 2;
             for (int dest = 0; dest < limit; dest += 2) {
                 ibuf[1] = ibuf[2] = ibuf[3] = 0;
-                if ((activech & 0xaaa) != 0) {
+                if ((activeCh & 0xaaa) != 0) {
                     lfo();
-                    mixSubSL(activech, idest, ibuf);
+                    mixSubSL(activeCh, idest, ibuf);
                 } else {
-                    mixSubS(activech, idest, ibuf);
+                    mixSubS(activeCh, idest, ibuf);
                 }
 
                 int v = ((limit(ibuf[2] + ibuf[3], 0x7fff, -0x8000) * fmVolume) >> 14);
@@ -696,26 +634,26 @@ public class Opna {
             }
         }
 
-        protected void mixSubS(int activech, int[] dest, int[] buf) {
-            if ((activech & 0x001) != 0) buf[dest[0]] = ch[0].calc();
-            if ((activech & 0x004) != 0) buf[dest[1]] += ch[1].calc();
-            if ((activech & 0x010) != 0) buf[dest[2]] += ch[2].calc();
-            if ((activech & 0x040) != 0) buf[dest[3]] += ch[3].calc();
-            if ((activech & 0x100) != 0) buf[dest[4]] += ch[4].calc();
-            if ((activech & 0x400) != 0) buf[dest[5]] += ch[5].calc();
+        protected void mixSubS(int activeCh, int[] dest, int[] buf) {
+            if ((activeCh & 0x001) != 0) buf[dest[0]] = ch[0].calc();
+            if ((activeCh & 0x004) != 0) buf[dest[1]] += ch[1].calc();
+            if ((activeCh & 0x010) != 0) buf[dest[2]] += ch[2].calc();
+            if ((activeCh & 0x040) != 0) buf[dest[3]] += ch[3].calc();
+            if ((activeCh & 0x100) != 0) buf[dest[4]] += ch[4].calc();
+            if ((activeCh & 0x400) != 0) buf[dest[5]] += ch[5].calc();
         }
 
-        protected void mixSubSL(int activech, int[] dest, int[] buf) {
-            if ((activech & 0x001) != 0) buf[dest[0]] = ch[0].calcL();
-            if ((activech & 0x004) != 0) buf[dest[1]] += ch[1].calcL();
-            if ((activech & 0x010) != 0) buf[dest[2]] += ch[2].calcL();
-            if ((activech & 0x040) != 0) buf[dest[3]] += ch[3].calcL();
-            if ((activech & 0x100) != 0) buf[dest[4]] += ch[4].calcL();
-            if ((activech & 0x400) != 0) buf[dest[5]] += ch[5].calcL();
+        protected void mixSubSL(int activeCh, int[] dest, int[] buf) {
+            if ((activeCh & 0x001) != 0) buf[dest[0]] = ch[0].calcL();
+            if ((activeCh & 0x004) != 0) buf[dest[1]] += ch[1].calcL();
+            if ((activeCh & 0x010) != 0) buf[dest[2]] += ch[2].calcL();
+            if ((activeCh & 0x040) != 0) buf[dest[3]] += ch[3].calcL();
+            if ((activeCh & 0x100) != 0) buf[dest[4]] += ch[4].calcL();
+            if ((activeCh & 0x400) != 0) buf[dest[5]] += ch[5].calcL();
         }
 
         /**
-         * ステータスフラグ設定
+         * Status Flag Settings
          */
         protected void setStatus(int bits) {
             if ((status & bits) == 0) {
@@ -741,8 +679,8 @@ public class Opna {
         protected void lfo() {
 //logger.log(Level.TRACE, "%4d - %8d, %8d".formatted(c, lfocount, lfodcount));
 
-            chip.setPML(pmTable[(lfoCount >> (Fmgen.FM_LFOCBITS + 1)) & 0xff]);
-            chip.setAML(amTable[(lfoCount >> (Fmgen.FM_LFOCBITS + 1)) & 0xff]);
+            chip.setPML(pmTable[(lfoCount >>> (Fmgen.FM_LFOCBITS + 1)) & 0xff]);
+            chip.setAML(amTable[(lfoCount >>> (Fmgen.FM_LFOCBITS + 1)) & 0xff]);
             lfoCount += lfoDCount;
         }
 
@@ -763,7 +701,7 @@ public class Opna {
         }
 
         /**
-         * ADPCM 展開
+         * Decodes ADPCM
          */
         protected void decodeADPCMB() {
             apOut0 = apOut1;
@@ -773,7 +711,7 @@ public class Opna {
         }
 
         /**
-         * ADPCM 合成
+         * Mix ADPCM
          */
         protected void adpcmBMix(int[] dest, int count) {
             int maskL = (control2 & 0x80) != 0 ? -1 : 0;
@@ -844,48 +782,48 @@ stop:
         }
 
         /**
-         * ADPCM RAM への書込み操作
+         * Write operation to ADPCM RAM
          */
         protected void writeRAM(int data) {
             if (NO_BITTYPE_EMULATION) {
                 if ((control2 & 2) == 0) {
                     // 1 bit mode
-                    adpcmBuf[(memAddr >> 4) & 0x3ffff] = (byte) data;
+                    adpcmBuf[(memAddr >> 4) & 0x3_ffff] = (byte) data;
                     memAddr += 16;
                 } else {
                     // 8 bit mode
                     //(int)8* p = &adpcmbuf[(memaddr >> 4) & 0x7fff];
                     int p = (memAddr >> 4) & 0x7fff;
-                    int bank = (memAddr >> 1) & 7;
-                    byte mask = (byte) (1 << bank);
+                    int bank = (memAddr >>> 1) & 7;
+                    int mask = 1 << bank;
                     data <<= bank;
 
-                    adpcmBuf[p + 0x00000] = (byte) ((adpcmBuf[p + 0x00000] & ~mask) | ((byte) (data) & mask));
+                    adpcmBuf[p + 0x0_0000] = (byte) ((adpcmBuf[p + 0x0_0000] & ~mask) | (data & mask));
                     data >>= 1;
-                    adpcmBuf[p + 0x08000] = (byte) ((adpcmBuf[p + 0x08000] & ~mask) | ((byte) (data) & mask));
+                    adpcmBuf[p + 0x0_8000] = (byte) ((adpcmBuf[p + 0x0_8000] & ~mask) | (data & mask));
                     data >>= 1;
-                    adpcmBuf[p + 0x10000] = (byte) ((adpcmBuf[p + 0x10000] & ~mask) | ((byte) (data) & mask));
+                    adpcmBuf[p + 0x1_0000] = (byte) ((adpcmBuf[p + 0x1_0000] & ~mask) | (data & mask));
                     data >>= 1;
-                    adpcmBuf[p + 0x18000] = (byte) ((adpcmBuf[p + 0x18000] & ~mask) | ((byte) (data) & mask));
+                    adpcmBuf[p + 0x1_8000] = (byte) ((adpcmBuf[p + 0x1_8000] & ~mask) | (data & mask));
                     data >>= 1;
-                    adpcmBuf[p + 0x20000] = (byte) ((adpcmBuf[p + 0x20000] & ~mask) | ((byte) (data) & mask));
+                    adpcmBuf[p + 0x2_0000] = (byte) ((adpcmBuf[p + 0x2_0000] & ~mask) | (data & mask));
                     data >>= 1;
-                    adpcmBuf[p + 0x28000] = (byte) ((adpcmBuf[p + 0x28000] & ~mask) | ((byte) (data) & mask));
+                    adpcmBuf[p + 0x2_8000] = (byte) ((adpcmBuf[p + 0x2_8000] & ~mask) | (data & mask));
                     data >>= 1;
-                    adpcmBuf[p + 0x30000] = (byte) ((adpcmBuf[p + 0x30000] & ~mask) | ((byte) (data) & mask));
+                    adpcmBuf[p + 0x3_0000] = (byte) ((adpcmBuf[p + 0x3_0000] & ~mask) | (data & mask));
                     data >>= 1;
-                    adpcmBuf[p + 0x38000] = (byte) ((adpcmBuf[p + 0x38000] & ~mask) | ((byte) (data) & mask));
+                    adpcmBuf[p + 0x3_8000] = (byte) ((adpcmBuf[p + 0x3_8000] & ~mask) | (data & mask));
                     memAddr += 2;
                 }
             } else {
-                adpcmBuf[(memAddr >> granuality) & 0x3ffff] = (byte) data;
-                memAddr += 1 << granuality;
+                adpcmBuf[(memAddr >> granularity) & 0x3_ffff] = (byte) data;
+                memAddr += 1 << granularity;
             }
 
             if (memAddr == stopAddr) {
                 setStatus(4);
-                statusNext = 0x04;// EOS
-                memAddr &= 0x3fffff;
+                statusNext = 0x04; // EOS
+                memAddr &= 0x3f_ffff;
             }
             if (memAddr == limitAddr) {
 //logger.log(Level.TRACE, "Limit ! (%.8x)".formatted(limitaddr));
@@ -895,42 +833,42 @@ stop:
         }
 
         /**
-         * ADPCM RAM からの読み込み操作
+         * Read operation from ADPCM RAM
          */
         protected int readRAM() {
             int data;
             if (NO_BITTYPE_EMULATION) {
                 if ((control2 & 2) == 0) {
                     // 1 bit mode
-                    data = adpcmBuf[(memAddr >> 4) & 0x3ffff];
+                    data = adpcmBuf[(memAddr >> 4) & 0x3_ffff] & 0xff;
                     memAddr += 16;
                 } else {
                     // 8 bit mode
                     //(int)8* p = &adpcmbuf[(memaddr >> 4) & 0x7fff];
                     int p = (memAddr >> 4) & 0x7fff;
-                    int bank = (memAddr >> 1) & 7;
-                    byte mask = (byte) (1 << bank);
+                    int bank = (memAddr >>> 1) & 7;
+                    int mask = 1 << bank;
 
                     data = adpcmBuf[p + 0x38000] & mask;
-                    data = data * 2 + (adpcmBuf[p + 0x30000] & mask);
-                    data = data * 2 + (adpcmBuf[p + 0x28000] & mask);
-                    data = data * 2 + (adpcmBuf[p + 0x20000] & mask);
-                    data = data * 2 + (adpcmBuf[p + 0x18000] & mask);
-                    data = data * 2 + (adpcmBuf[p + 0x10000] & mask);
-                    data = data * 2 + (adpcmBuf[p + 0x08000] & mask);
-                    data = data * 2 + (adpcmBuf[p + 0x00000] & mask);
+                    data = data * 2 + (adpcmBuf[p + 0x3_0000] & mask);
+                    data = data * 2 + (adpcmBuf[p + 0x2_8000] & mask);
+                    data = data * 2 + (adpcmBuf[p + 0x2_0000] & mask);
+                    data = data * 2 + (adpcmBuf[p + 0x1_8000] & mask);
+                    data = data * 2 + (adpcmBuf[p + 0x1_0000] & mask);
+                    data = data * 2 + (adpcmBuf[p + 0x0_8000] & mask);
+                    data = data * 2 + (adpcmBuf[p + 0x0_0000] & mask);
                     data >>= bank;
                     memAddr += 2;
                 }
             } else {
-                data = adpcmBuf[(memAddr >> granuality) & 0x3ffff];
-                memAddr += 1 << granuality;
+                data = adpcmBuf[(memAddr >>> granularity) & 0x3_ffff] & 0xff;
+                memAddr += 1 << granularity;
             }
 
             if (memAddr == stopAddr) {
                 setStatus(4);
                 statusNext = 0x04; // EOS
-                memAddr &= 0x3fffff;
+                memAddr &= 0x3f_ffff;
             }
             if (memAddr == limitAddr) {
 //logger.log(Level.TRACE, "Limit ! (%.8x)".formatted(limitaddr));
@@ -942,14 +880,14 @@ stop:
         }
 
         /**
-         * ADPCM RAM からの nibble 読み込み及び ADPCM 展開
+         * Read nibble from ADPCM RAM and decompress ADPCM
          */
         protected int readRAMN() {
             int data;
-            if (granuality > 0) {
+            if (granularity > 0) {
                 if (NO_BITTYPE_EMULATION) {
                     if ((control2 & 2) == 0) {
-                        data = adpcmBuf[(memAddr >> 4) & 0x3ffff];
+                        data = adpcmBuf[(memAddr >> 4) & 0x3_ffff] & 0xff;
                         memAddr += 8;
                         if ((memAddr & 8) != 0)
                             return decodeADPCMBSample(data >> 4);
@@ -957,27 +895,27 @@ stop:
                     } else {
                         //(int)8* p = &adpcmbuf[(memaddr >> 4) & 0x7fff] + ((~memaddr & 1) << 17);
                         int p = ((memAddr >> 4) & 0x7fff) + ((~memAddr & 1) << 17);
-                        int bank = (memAddr >> 1) & 7;
-                        byte mask = (byte) (1 << bank);
+                        int bank = (memAddr >>> 1) & 7;
+                        int mask = 1 << bank;
 
                         data = adpcmBuf[p + 0x18000] & mask;
-                        data = data * 2 + (adpcmBuf[p + 0x10000] & mask);
-                        data = data * 2 + (adpcmBuf[p + 0x08000] & mask);
-                        data = data * 2 + (adpcmBuf[p + 0x00000] & mask);
+                        data = data * 2 + (adpcmBuf[p + 0x1_0000] & mask);
+                        data = data * 2 + (adpcmBuf[p + 0x0_8000] & mask);
+                        data = data * 2 + (adpcmBuf[p + 0x0_0000] & mask);
                         data >>= bank;
                         memAddr++;
                         if ((memAddr & 1) != 0)
                             return decodeADPCMBSample(data);
                     }
                 } else {
-                    data = adpcmBuf[(memAddr >> granuality) & adpcmMask];
-                    memAddr += 1 << (granuality - 1);
-                    if ((memAddr & (1 << (granuality - 1))) != 0)
+                    data = adpcmBuf[(memAddr >>> granularity) & adpcmMask] & 0xff;
+                    memAddr += 1 << (granularity - 1);
+                    if ((memAddr & (1 << (granularity - 1))) != 0)
                         return decodeADPCMBSample(data >> 4);
                     data &= 0x0f;
                 }
             } else {
-                data = adpcmBuf[(memAddr >> 1) & adpcmMask];
+                data = adpcmBuf[(memAddr >> 1) & adpcmMask] & 0xff;
                 ++memAddr;
                 if ((memAddr & 1) != 0)
                     return decodeADPCMBSample(data >> 4);
@@ -1008,12 +946,12 @@ stop:
         }
 
         protected int decodeADPCMBSample(int data) {
-            int[] table1 = new int[] {
+            int[] table1 = {
                     1, 3, 5, 7, 9, 11, 13, 15,
                     -1, -3, -5, -7, -9, -11, -13, -15,
             };
 
-            int[] table2 = new int[] {
+            int[] table2 = {
                     57, 57, 57, 57, 77, 102, 128, 153,
                     57, 57, 57, 57, 77, 102, 128, 153,
             };
@@ -1025,12 +963,12 @@ stop:
 
         public static boolean NO_BITTYPE_EMULATION = false;
 
-        // FM 音源関係
+        // FM Sound Source
 
-        protected byte[] pan = new byte[6];
-        protected byte[] fnum2 = new byte[9];
+        protected int[] pan = new int[6];
+        protected int[] fNum2 = new int[9];
 
-        protected byte reg22;
+        protected int reg22;
         protected int reg29; // OPNA only?
 
         protected int stMask;
@@ -1039,60 +977,60 @@ stop:
         protected int lfoCount;
         protected int lfoDCount;
 
-        protected int[] fnum = new int[6];
-        protected int[] fnum3 = new int[3];
+        protected int[] fNum = new int[6];
+        protected int[] fNum3 = new int[3];
 
-        // ADPCM 関係
+        // ADPCM related
 
-        // ADPCM RAM
+        /** ADPCM RAM */
         protected byte[] adpcmBuf;
-        // メモリアドレスに対するビットマスク
+        /** A bit mask for memory addresses */
         protected int adpcmMask;
-        // ADPCM 再生終了時にたつビット
+        /** ADPCM playback end bit */
         protected int adpcmNotice;
-        // Start address
+        /** Start address */
         protected int startAddr;
-        // Stop address
+        /** Stop address */
         protected int stopAddr;
-        // 再生中アドレス
+        /** Playing address */
         protected int memAddr;
-        // Limit address/mask
+        /** Limit address/mask */
         protected int limitAddr;
-        // ADPCM 音量
+        // ADPCM Volume
         protected int adpcmLevel;
         protected int adpcmVolume;
         protected int adpcmVol;
-        // ⊿ N
+        /** ⊿ N */
         protected int deltaN;
-        // 周波数変換用変数
+        /** Frequency conversion variables */
         protected int adplC;
-        // 周波数変換用変数差分値
+        /** Frequency conversion variable difference value */
         protected int adplD;
-        // adpld の元
+        /** Originally from adpld */
         protected int adplBase;
-        // ADPCM 合成用 x
+        /** ADPCM synthesis x */
         protected int adpcmX;
-        // ADPCM 合成用 ⊿
+        /** ADPCM synthesis ⊿ */
         protected int adpcmD;
-        // ADPCM 合成後の出力
+        /** ADPCM synthesis output */
         protected int adpcmOut;
-        // out(t - 2) + out(t - 1)
+        /** out(t - 2) + out(t - 1) */
         protected int apOut0;
-        // out(t - 1) + out(t)
+        /** out(t - 1) + out(t) */
         protected int apOut1;
 
-        // ADPCM リード用バッファ
+        /** ADPCM read buffer */
         protected int adpcmReadBuf;
-        // ADPCM 再生中
+        /** ADPCM Playing */
         protected boolean adpcmPlay;
-        protected byte granuality;
+        protected int granularity;
         protected boolean adpcmMask_;
 
-        // ADPCM コントロールレジスタ１
-        protected byte control1;
-        // ADPCM コントロールレジスタ２
-        protected byte control2;
-        // ADPCM レジスタの一部分
+        /** ADPCM Control Register 1 */
+        protected int control1;
+        /** ADPCM Control Register 2 */
+        protected int control2;
+        /** ADPCM Part of a register */
         protected byte[] adpcmReg = new byte[8];
 
         protected int rhythmMask_;
@@ -1120,7 +1058,7 @@ stop:
             }
         }
 
-        // 初期化
+        /** Initializes. */
         public boolean init(int c, int r, boolean ip /* = false */, String s /* = "" */) {
             if (!setRate(c, r, ip))
                 return false;
@@ -1133,14 +1071,14 @@ stop:
             return true;
         }
 
-        // サンプリングレート変更
+        /** Sampling rate change */
         public boolean setRate(int c, int r, boolean f /* = false */) {
             super.init(c, r);
             rebuildTimeTable();
             return true;
         }
 
-        // リセット
+        /** Rests */
         public void reset() {
             for (int i = 0x20; i < 0x28; i++) setReg(i, 0);
             for (int i = 0x30; i < 0xc0; i++) setReg(i, 0);
@@ -1150,32 +1088,32 @@ stop:
             ch[2].reset();
         }
 
-        // 合成(2ch)
-        public void mix(int[] buffer, int nsamples) {
+        /** Synthesis (2ch) */
+        public void mix(int[] buffer, int nSamples) {
 
-            psg.mix(buffer, nsamples);
+            psg.mix(buffer, nSamples);
 
             // Set F-Number
-            ch[0].setFNum(fnum[0]);
-            ch[1].setFNum(fnum[1]);
+            ch[0].setFNum(fNum[0]);
+            ch[1].setFNum(fNum[1]);
             if ((regTc & 0xc0) == 0)
-                ch[2].setFNum(fnum[2]);
-            else { // 効果音
-                ch[2].op[0].setFNum(fnum3[1]);
-                ch[2].op[1].setFNum(fnum3[2]);
-                ch[2].op[2].setFNum(fnum3[0]);
-                ch[2].op[3].setFNum(fnum[2]);
+                ch[2].setFNum(fNum[2]);
+            else { // Sound effects
+                ch[2].op[0].setFNum(fNum3[1]);
+                ch[2].op[1].setFNum(fNum3[2]);
+                ch[2].op[2].setFNum(fNum3[0]);
+                ch[2].op[3].setFNum(fNum[2]);
             }
 
-            int actch = (((ch[2].prepare() << 2) | ch[1].prepare()) << 2) | ch[0].prepare();
-            if ((actch & 0x15) != 0) {
-                int limit = nsamples * 2;
+            int actCh = (((ch[2].prepare() << 2) | ch[1].prepare()) << 2) | ch[0].prepare();
+            if ((actCh & 0x15) != 0) {
+                int limit = nSamples * 2;
                 for (int dest = 0; dest < limit; dest += 2) {
                     int s = 0;
-                    if ((actch & 0x01) != 0) s = ch[0].calc();
-                    if ((actch & 0x04) != 0) s += ch[1].calc();
-                    if ((actch & 0x10) != 0) s += ch[2].calc();
-                    s = ((limit(s, 0x7fff, -0x8000) * fmVolume) >> 14);
+                    if ((actCh & 0x01) != 0) s = ch[0].calc();
+                    if ((actCh & 0x04) != 0) s += ch[1].calc();
+                    if ((actCh & 0x10) != 0) s += ch[2].calc();
+                    s = (limit(s, 0x7fff, -0x8000) * fmVolume) >> 14;
                     buffer[dest + 0] += s;
                     buffer[dest + 1] += s;
 
@@ -1185,9 +1123,9 @@ stop:
             }
         }
 
-        // レジスタアレイにデータを設定
+        /** Set data in the register array */
         public void setReg(int addr, int data) {
-// logger.log(Level.TRACE, "reg[%.2x] <- %.2x".formatted(addr, data));
+logger.log(Level.TRACE, "reg[%2x] <- %2x".formatted(addr, data));
             if (addr >= 0x100)
                 return;
 
@@ -1209,7 +1147,7 @@ stop:
             case 13:
             case 14:
             case 15:
-                psg.setReg(addr, (byte) data);
+                psg.setReg(addr, data);
                 break;
 
             case 0x24:
@@ -1227,7 +1165,7 @@ stop:
 
             case 0x28: // Key On/Off
                 if ((data & 3) < 3)
-                    ch[data & 3].keyControl(data >> 4);
+                    ch[data & 3].keyControl(data >>> 4);
                 break;
 
             case 0x2d:
@@ -1240,31 +1178,31 @@ stop:
             case 0xa0:
             case 0xa1:
             case 0xa2:
-                fnum[c] = data + fnum2[c] * 0x100;
+                fNum[c] = data + fNum2[c] * 0x100;
                 break;
 
             case 0xa4:
             case 0xa5:
             case 0xa6:
-                fnum2[c] = (byte) (data);
+                fNum2[c] = data;
                 break;
 
             case 0xa8:
             case 0xa9:
             case 0xaa:
-                fnum3[c] = data + fnum2[c + 3] * 0x100;
+                fNum3[c] = data + fNum2[c + 3] * 0x100;
                 break;
 
             case 0xac:
             case 0xad:
             case 0xae:
-                fnum2[c + 3] = (byte) (data);
+                fNum2[c + 3] = data;
                 break;
 
             case 0xb0:
             case 0xb1:
             case 0xb2:
-                ch[c].setFB((data >> 3) & 7);
+                ch[c].setFB((data >>> 3) & 7);
                 ch[c].setAlgorithm(data & 7);
                 break;
 
@@ -1278,7 +1216,7 @@ stop:
             }
         }
 
-        // レジスタ読み込み
+        /** Register Read */
         public int getReg(int addr) {
             if (addr < 0x10)
                 return psg.getReg(addr);
@@ -1294,10 +1232,11 @@ stop:
             return 0xff;
         }
 
-        // マスク設定
+        /** Mask Settings */
         public void setChannelMask(int mask) {
             for (int i = 0; i < 3; i++)
                 ch[i].mute(!!((mask & (1 << i)) != 0));
+logger.log(Level.INFO, Arrays.toString(ch));
             psg.setChannelMask(mask >> 6);
         }
 
@@ -1316,7 +1255,7 @@ stop:
         private void intr(boolean f) {
         }
 
-        // ステータスフラグ設定
+        /** Status Flag Settings */
         protected void setStatus(int bits) {
             if ((status & bits) == 0) {
                 status |= bits;
@@ -1330,11 +1269,11 @@ stop:
                 intr(false);
         }
 
-        private int[] fnum = new int[3];
-        private int[] fnum3 = new int[3];
-        private byte[] fnum2 = new byte[6];
+        private final int[] fNum = new int[3];
+        private final int[] fNum3 = new int[3];
+        private final int[] fNum2 = new int[6];
 
-        private Fmgen.Channel4[] ch = new Fmgen.Channel4[] {
+        private final Fmgen.Channel4[] ch = new Fmgen.Channel4[] {
                 new Fmgen.Channel4(), new Fmgen.Channel4(), new Fmgen.Channel4()
         };
     }
@@ -1342,7 +1281,7 @@ stop:
     /** YM2608(OPNA) */
     public static class OPNA extends OPNABase {
         /**
-         * 構築
+         * Constructs.
          */
         public OPNA(int chipId) {
             for (int i = 0; i < 6; i++) {
@@ -1352,7 +1291,7 @@ stop:
                 rhythm[i].volume = 0;
             }
             rhythmTVol = 0;
-            adpcmMask = 0x3ffff;
+            adpcmMask = 0x3_ffff;
             adpcmNotice = 4;
             csmCh = ch[2];
             this.chipId = chipId;
@@ -1363,19 +1302,19 @@ stop:
         }
 
         public boolean init(int c, int r, boolean ipFlag, String path) {
-            return init(c, r, ipFlag, fname -> createRhythmFileStream(path, fname));
+            return init(c, r, ipFlag, fName -> createRhythmFileStream(path, fName));
         }
 
-        public boolean init(int c, int r, boolean ipflag, Function<String, Stream> appendFileReaderCallback/* = null*/) {
+        public boolean init(int c, int r, boolean ipFlag, Function<String, Stream> appendFileReaderCallback /* = null */) {
             rate = 8000;
             loadRhythmSample(appendFileReaderCallback);
 
             if (adpcmBuf == null)
-                adpcmBuf = new byte[0x40000];
+                adpcmBuf = new byte[0x4_0000];
 
-            if (!setRate(c, r, ipflag))
+            if (!setRate(c, r, ipFlag))
                 return false;
-            if (!super.init(c, r, ipflag))
+            if (!super.init(c, r, ipFlag))
                 return false;
 
             this.reset();
@@ -1398,9 +1337,9 @@ stop:
             public int size;
         }
 
-        private FileStream createRhythmFileStream(String dir, String fname) {
+        private static FileStream createRhythmFileStream(String dir, String fname) {
             Path path = dir == null || dir.isEmpty() ? Paths.get(fname) : Paths.get(dir, fname);
-logger.log(Level.DEBUG, path);
+logger.log(Level.DEBUG, path + ", " + Files.exists(path));
             return Files.exists(path) ? new FileStream(path.toString(), FileMode.Open, FileAccess.Read) : null;
         }
 
@@ -1409,10 +1348,10 @@ logger.log(Level.DEBUG, path);
         }
 
         /**
-         * リズム音を読みこむ
+         * Loading rhythm sounds.
          */
         public boolean loadRhythmSample(Function<String, Stream> appendFileReaderCallback) {
-            String[] rhythmNames = new String[] {
+            String[] rhythmNames = {
                     "bd", "sd", "top", "hh", "tom", "rim",
             };
 
@@ -1422,7 +1361,7 @@ logger.log(Level.DEBUG, path);
 
             for (i = 0; i < 6; i++) {
                 try {
-                    int fsize;
+                    int fSize;
                     boolean f = true;
                     String buf1 = "2608_%s_%d.wav".formatted(rhythmNames[i], chipId);
                     String buf2 = "2608_%s.wav".formatted(rhythmNames[i]);
@@ -1466,47 +1405,47 @@ logger.log(Level.DEBUG, path);
                     byte[] bufWhdr = new byte[4 + 2 + 2 + 4 + 4 + 2 + 2 + 2];
                     for (int j = 0; j < 4 + 2 + 2 + 4 + 4 + 2 + 2 + 2; j++) bufWhdr[j] = file[fInd++];
 
-                    int chunkSize = bufWhdr[0] + bufWhdr[1] * 0x100 + bufWhdr[2] * 0x10000 + bufWhdr[3] * 0x10000;
+                    int chunkSize = (bufWhdr[0] & 0xff) + (bufWhdr[1] & 0xff) * 0x100 + (bufWhdr[2] & 0xff) * 0x1_0000 + (bufWhdr[3] & 0xff) * 0x100_0000;
                     whdr.chunkSize = chunkSize;
-                    whdr.tag = bufWhdr[4] + bufWhdr[5] * 0x100;
-                    whdr.nch = bufWhdr[6] + bufWhdr[7] * 0x100;
-                    whdr.rate = bufWhdr[8] + bufWhdr[9] * 0x100 + bufWhdr[10] * 0x10000 + bufWhdr[11] * 0x10000;
-                    whdr.avgBytes = bufWhdr[12] + bufWhdr[13] * 0x100 + bufWhdr[14] * 0x10000 + bufWhdr[15] * 0x10000;
-                    whdr.align = bufWhdr[16] + bufWhdr[17] * 0x100;
-                    whdr.bps = bufWhdr[18] + bufWhdr[19] * 0x100;
-                    whdr.size = bufWhdr[20] + bufWhdr[21] * 0x100;
+                    whdr.tag = (bufWhdr[4] & 0xff) + (bufWhdr[5] & 0xff) * 0x100;
+                    whdr.nch = (bufWhdr[6] & 0xff) + (bufWhdr[7] & 0xff) * 0x100;
+                    whdr.rate = (bufWhdr[8] & 0xff) + (bufWhdr[9] & 0xff) * 0x100 + (bufWhdr[10] & 0xff) * 0x1_0000 + (bufWhdr[11] & 0xff) * 0x100_000;
+                    whdr.avgBytes = (bufWhdr[12] & 0xff) + (bufWhdr[13] & 0xff) * 0x100 + (bufWhdr[14] & 0xff) * 0x1_0000 + (bufWhdr[15] & 0xff) * 0x100_0000;
+                    whdr.align = (bufWhdr[16] & 0xff) + (bufWhdr[17] & 0xff) * 0x100;
+                    whdr.bps = (bufWhdr[18] & 0xff) + (bufWhdr[19] & 0xff) * 0x100;
+                    whdr.size = (bufWhdr[20] & 0xff) + (bufWhdr[21] & 0xff) * 0x100;
 
-                    byte[] subchunkname = new byte[4];
-                    fsize = 4 + whdr.chunkSize - (4 + 2 + 2 + 4 + 4 + 2 + 2 + 2);
+                    byte[] subChunkName = new byte[4];
+                    fSize = 4 + whdr.chunkSize - (4 + 2 + 2 + 4 + 4 + 2 + 2 + 2);
                     do {
-                        fInd += fsize;
-                        for (int j = 0; j < 4; j++) subchunkname[j] = file[fInd++];
+                        fInd += fSize;
+                        for (int j = 0; j < 4; j++) subChunkName[j] = file[fInd++];
                         for (int j = 0; j < 4; j++) bufWhdr[j] = file[fInd++];
 
-                        fsize = chunkSize;
-                    } while ('d' != subchunkname[0] || 'a' != subchunkname[1] || 't' != subchunkname[2] || 'a' != subchunkname[3]);
+                        fSize = chunkSize;
+                    } while ('d' != subChunkName[0] || 'a' != subChunkName[1] || 't' != subChunkName[2] || 'a' != subChunkName[3]);
 
-                    fsize /= 2;
-                    if (fsize >= 0x100000 || whdr.tag != 1 || whdr.nch != 1)
+                    fSize /= 2;
+                    if (fSize >= 0x10_0000 || whdr.tag != 1 || whdr.nch != 1)
                         break;
-                    fsize = Math.max(fsize, (1 << 31) / 1024);
+                    fSize = Math.min(fSize, (int) ((1L << 31) / 1024));
 
                     rhythm[i].sample = null;
-                    rhythm[i].sample = new int[fsize];
+                    rhythm[i].sample = new int[fSize];
                     if (rhythm[i].sample == null)
                         break;
-                    byte[] bufSample = new byte[fsize * 2];
-                    for (int j = 0; j < fsize * 2; j++) bufSample[j] = file[fInd++];
-                    for (int si = 0; si < fsize; si++) {
-                        rhythm[i].sample[si] = (short) (bufSample[si * 2] + bufSample[si * 2 + 1] * 0x100);
+                    byte[] bufSample = new byte[fSize * 2];
+                    for (int j = 0; j < fSize * 2; j++) bufSample[j] = file[fInd++];
+                    for (int si = 0; si < fSize; si++) {
+                        rhythm[i].sample[si] = (short) ((bufSample[si * 2] & 0xff) + (bufSample[si * 2 + 1] & 0xff) * 0x100);
                     }
 
                     rhythm[i].rate = whdr.rate;
                     rhythm[i].step = rhythm[i].rate * 1024 / rate;
-                    rhythm[i].pos = rhythm[i].size = fsize * 1024;
+                    rhythm[i].pos = rhythm[i].size = fSize * 1024;
                 } catch (Exception e) {
 logger.log(Level.ERROR, e.getMessage(), e);
-                    // 無視
+                    // ignore
                 }
             }
             if (i != 6) {
@@ -1519,9 +1458,9 @@ logger.log(Level.ERROR, e.getMessage(), e);
         }
 
         /**
-         * サンプリングレート変更
+         * Sampling rate change
          */
-        public boolean setRate(int c, int r, boolean ipFlag/* = false*/) {
+        public boolean setRate(int c, int r, boolean ipFlag /* = false */) {
             if (!super.setRate(c, r, ipFlag))
                 return false;
 
@@ -1532,19 +1471,19 @@ logger.log(Level.ERROR, e.getMessage(), e);
         }
 
         /**
-         * 合成
-         * @param buffer  合成先
-         * @param nsamples 合成サンプル数
+         * Synthesis
+         * @param buffer  Destination
+         * @param nSamples Number of composite samples
          */
-        public void mix(int[] buffer, int nsamples) {
-            fmMix(buffer, nsamples);
-            psg.mix(buffer, nsamples);
-            adpcmBMix(buffer, nsamples);
-            rhythmMix(buffer, nsamples);
+        public void mix(int[] buffer, int nSamples) {
+            fmMix(buffer, nSamples);
+            psg.mix(buffer, nSamples);
+            adpcmBMix(buffer, nSamples);
+            rhythmMix(buffer, nSamples);
         }
 
         /**
-         * リセット
+         * Resets.
          */
         public void reset() {
             reg29 = 0x1f;
@@ -1554,7 +1493,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
         }
 
         /**
-         * レジスタアレイにデータを設定
+         * Sets data in the register array.
          */
         public void setReg(int addr, int data) {
             addr &= 0x1ff;
@@ -1568,7 +1507,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
             // Rhythm
             case 0x10: // DM/KEYON
                 if ((data & 0x80) == 0) { // KEY ON
-                    rhythmKey |= (byte) (data & 0x3f);
+                    rhythmKey |= data & 0x3f;
                     if ((data & 0x01) != 0) rhythm[0].pos = 0;
                     if ((data & 0x02) != 0) rhythm[1].pos = 0;
                     if ((data & 0x04) != 0) rhythm[2].pos = 0;
@@ -1576,12 +1515,12 @@ logger.log(Level.ERROR, e.getMessage(), e);
                     if ((data & 0x10) != 0) rhythm[4].pos = 0;
                     if ((data & 0x20) != 0) rhythm[5].pos = 0;
                 } else { // DUMP
-                    rhythmKey &= (byte) (~(byte) data);
+                    rhythmKey &= ~data;
                 }
                 break;
 
             case 0x11:
-                rhythmTl = (byte) (~data & 63);
+                rhythmTl = ~data & 63;
                 break;
 
             case 0x18: // Bass Drum
@@ -1590,8 +1529,8 @@ logger.log(Level.ERROR, e.getMessage(), e);
             case 0x1b: // Hihat
             case 0x1c: // Tom-tom
             case 0x1d: // Rim shot
-                rhythm[addr & 7].pan = (byte) ((data >> 6) & 3);
-                rhythm[addr & 7].level = (byte) (~data & 31);
+                rhythm[addr & 7].pan = (data >> 6) & 3;
+                rhythm[addr & 7].level = ~data & 31;
                 break;
 
             case 0x100:
@@ -1631,7 +1570,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
         }
 
         /**
-         * 音量設定
+         * Volume Settings.
          */
         public void setVolumeRhythmTotal(int db) {
             db = Math.min(db, 20);
@@ -1662,9 +1601,9 @@ logger.log(Level.ERROR, e.getMessage(), e);
 
         public static class Rhythm {
             /** pan */
-            public byte pan;
+            public int pan;
             /** volume level */
-            public byte level;
+            public int level;
             /** volume */
             public int volume;
             /** sample */
@@ -1712,15 +1651,15 @@ logger.log(Level.ERROR, e.getMessage(), e);
             }
         }
 
-        // リズム音源関係
-        private Rhythm[] rhythm = new Rhythm[] {new Rhythm(), new Rhythm(), new Rhythm(), new Rhythm(), new Rhythm(), new Rhythm()};
+        /** Rhythm Sound Source */
+        private final Rhythm[] rhythm = new Rhythm[] {new Rhythm(), new Rhythm(), new Rhythm(), new Rhythm(), new Rhythm(), new Rhythm()};
 
-        // リズム全体の音量
-        private byte rhythmTl;
+        /** Overall rhythm volume */
+        private int rhythmTl;
         private int rhythmTVol;
-        // リズムのキー
-        private byte rhythmKey;
-        private int chipId;
+        /** Rhythm Key */
+        private int rhythmKey;
+        private final int chipId;
     }
 
     /** YM2610/B(OPNB) */
@@ -1729,7 +1668,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
          * constructs.
          */
         public OPNB() {
-            adpcmaBuf = null;
+            adpcmABuf = null;
             adpcmASize = 0;
             for (int i = 0; i < 6; i++) {
                 adpcmA[i].reset();
@@ -1739,7 +1678,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
             adpcmATVol = 0;
             adpcmMask = 0;
             adpcmNotice = 0x8000;
-            granuality = -1;
+            granularity = -1;
             csmCh = ch[2];
 
             initADPCMATable();
@@ -1773,7 +1712,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
         }
 
         public void setAdpcmA(byte[] _adpcmA, int _adpcmASize) {
-            adpcmaBuf = _adpcmA;
+            adpcmABuf = _adpcmA;
             adpcmASize = _adpcmASize;
         }
 
@@ -1792,10 +1731,10 @@ logger.log(Level.ERROR, e.getMessage(), e);
         }
 
         /**
-         * サンプリングレート変更
+         * Changes sampling rate.
          */
-        public boolean setRate(int c, int r, boolean ipflag/* = false*/) {
-            if (!super.setRate(c, r, ipflag))
+        public boolean setRate(int c, int r, boolean ipFlag /* = false */) {
+            if (!super.setRate(c, r, ipFlag))
                 return false;
 
             adpcmAStep = (int) ((double) (c) / 54 * 8192 / r);
@@ -1803,19 +1742,19 @@ logger.log(Level.ERROR, e.getMessage(), e);
         }
 
         /**
-         * 合成
-         * @param buffer  合成先
-         * @param nsamples 合成サンプル数
+         * Synthesis.
+         * @param buffer synthesised data
+         * @param nSamples number of synthesised data
          */
-        public void mix(int[] buffer, int nsamples) {
-            fmMix(buffer, nsamples);
-            psg.mix(buffer, nsamples);
-            adpcmBMix(buffer, nsamples);
-            adpcmAMix(buffer, nsamples);
+        public void mix(int[] buffer, int nSamples) {
+            fmMix(buffer, nSamples);
+            psg.mix(buffer, nSamples);
+            adpcmBMix(buffer, nSamples);
+            adpcmAMix(buffer, nSamples);
         }
 
         /**
-         * リセット
+         * Resets.
          */
         public void reset() {
             super.reset();
@@ -1830,7 +1769,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
         }
 
         /**
-         * レジスタアレイにデータを設定
+         * Set data in the register array.
          */
         public void setReg(int addr, int data) {
             addr &= 0x1ff;
@@ -1846,7 +1785,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
             // ADPCM A----
             case 0x100: // DM/KEYON
                 if ((data & 0x80) == 0) { // KEY ON
-                    adpcmAKey |= (byte) (data & 0x3f);
+                    adpcmAKey |= data & 0x3f;
                     for (int c = 0; c < 6; c++) {
                         if ((data & (1 << c)) != 0) {
                             resetStatus(0x100 << c);
@@ -1859,12 +1798,12 @@ logger.log(Level.ERROR, e.getMessage(), e);
                         }
                     }
                 } else { // DUMP
-                    adpcmAKey &= (byte) ~data;
+                    adpcmAKey &= ~data;
                 }
                 break;
 
             case 0x101:
-                adpcmATl = (byte) (~data & 63);
+                adpcmATl = ~data & 63;
                 break;
 
             case 0x108:
@@ -1873,8 +1812,8 @@ logger.log(Level.ERROR, e.getMessage(), e);
             case 0x10b:
             case 0x10c:
             case 0x10d:
-                adpcmA[addr & 7].pan = (byte) ((data >> 6) & 3);
-                adpcmA[addr & 7].level = (byte) (~data & 31);
+                adpcmA[addr & 7].pan = (data >>> 6) & 3;
+                adpcmA[addr & 7].level = ~data & 31;
                 break;
 
             case 0x110:
@@ -1891,7 +1830,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
             case 0x11d:
                 adpcmAReg[addr - 0x110] = (byte) data;
                 adpcmA[addr & 7].pos = adpcmA[addr & 7].start =
-                        (adpcmAReg[(addr & 7) + 8] * 256 + adpcmAReg[addr & 7]) << 9;
+                        ((adpcmAReg[(addr & 7) + 8] & 0xff) * 256 + (adpcmAReg[addr & 7] & 0xff)) << 9;
                 break;
 
             case 0x120:
@@ -1908,7 +1847,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
             case 0x12d:
                 adpcmAReg[addr - 0x110] = (byte) data;
                 adpcmA[addr & 7].stop =
-                        (adpcmAReg[(addr & 7) + 24] * 256 + adpcmAReg[(addr & 7) + 16] + 1) << 9;
+                        ((adpcmAReg[(addr & 7) + 24] & 0xff) * 256 + (adpcmAReg[(addr & 7) + 16] & 0xff) + 1) << 9;
                 break;
 
             // AdpcmB
@@ -1922,32 +1861,32 @@ logger.log(Level.ERROR, e.getMessage(), e);
                 }
                 if ((data & 1) != 0)
                     adpcmPlay = false;
-                control1 = (byte) (data & 0x91);
+                control1 = data & 0x91;
                 break;
 
 
             case 0x11: // Controller Register 2
-                control2 = (byte) (data & 0xc0);
+                control2 = data & 0xc0;
                 break;
 
             case 0x12: // Start Address L
             case 0x13: // Start Address H
                 adpcmReg[addr - 0x12 + 0] = (byte) data;
-                startAddr = (adpcmReg[1] * 256 + adpcmReg[0]) << 9;
+                startAddr = ((adpcmReg[1] & 0xff) * 256 + (adpcmReg[0] & 0xff)) << 9;
                 memAddr = startAddr;
                 break;
 
             case 0x14: // Stop Address L
             case 0x15: // Stop Address H
                 adpcmReg[addr - 0x14 + 2] = (byte) data;
-                stopAddr = (adpcmReg[3] * 256 + adpcmReg[2] + 1) << 9;
+                stopAddr = ((adpcmReg[3] & 0xff) * 256 + (adpcmReg[2] & 0xff) + 1) << 9;
 //logger.log(Level.TRACE, "  stopaddr %.6x".formatted(stopaddr));
                 break;
 
             case 0x19: // delta-N L
             case 0x1a: // delta-N H
                 adpcmReg[addr - 0x19 + 4] = (byte) data;
-                deltaN = adpcmReg[5] * 256 + adpcmReg[4];
+                deltaN = (adpcmReg[5] & 0xff) * 256 + (adpcmReg[4] & 0xff);
                 deltaN = Math.max(256, deltaN);
                 adplD = deltaN * adplBase >> 16;
                 break;
@@ -1971,7 +1910,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
         }
 
         /**
-         * レジスタ取得
+         * Register Acquisition
          */
         public int getReg(int addr) {
             if (addr < 0x10)
@@ -1981,7 +1920,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
         }
 
         /**
-         * 拡張ステータスを読みこむ
+         * Read Extended Status
          */
         public int readStatusEx() {
             return (status & stMask) >> 8;
@@ -2008,26 +1947,26 @@ logger.log(Level.ERROR, e.getMessage(), e);
 //        void SetChannelMask(int mask);
 
         public static class ADPCMA {
-            // ぱん
-            public byte pan;
-            // おんりょう
-            public byte level;
-            // おんりょうせってい
+            // pan
+            public int pan;
+            // volume level
+            public int level;
+            // volume
             public int volume;
-            // いち
+            // position
             public int pos;
-            // すてっぷち
+            // number of steps
             public int step;
 
-            // 開始
+            // start
             public int start;
-            // 終了
+            // stop
             public int stop;
-            // 次の 4 bit
+            // next 4 bit
             public int nibble;
-            // 変換用
+            // for decoding
             public short adpcmX;
-            // 変換用
+            // for decoding
             public short adpcmD;
 
             public void reset() {
@@ -2079,14 +2018,14 @@ logger.log(Level.ERROR, e.getMessage(), e);
                             r.step += adpcmAStep;
                             if (r.pos >= r.stop) {
                                 setStatus(0x100 << i);
-                                adpcmAKey &= (byte) ~(1 << i);
+                                adpcmAKey &= ~(1 << i);
                                 break;
                             }
 
                             for (; r.step > 0x10000; r.step -= 0x10000) {
                                 int data;
                                 if ((r.pos & 1) == 0) {
-                                    r.nibble = adpcmaBuf[r.pos >> 1];
+                                    r.nibble = adpcmABuf[r.pos >> 1] & 0xff;
                                     data = r.nibble >> 4;
                                 } else {
                                     data = r.nibble & 0x0f;
@@ -2109,7 +2048,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
             }
         }
 
-        static final byte[] table2 = new byte[] {
+        private static final int[] table2 = {
                 1, 3, 5, 7, 9, 11, 13, 15,
                 -1, -3, -5, -7, -9, -11, -13, -15,
         };
@@ -2124,19 +2063,19 @@ logger.log(Level.ERROR, e.getMessage(), e);
             }
         }
 
-        // AdpcmA 関係
+        // AdpcmA related
 
         // AdpcmA ROM
-        public byte[] adpcmaBuf;
+        public byte[] adpcmABuf;
         public int adpcmASize;
         public ADPCMA[] adpcmA = {
                 new ADPCMA(), new ADPCMA(), new ADPCMA(), new ADPCMA(), new ADPCMA(), new ADPCMA()
         };
-        // AdpcmA 全体の音量
-        public byte adpcmATl;
+        // AdpcmA Overall Volume
+        public int adpcmATl;
         public int adpcmATVol;
-        // AdpcmA のキー
-        public byte adpcmAKey;
+        // AdpcmA key
+        public int adpcmAKey;
         public int adpcmAStep;
         public byte[] adpcmAReg = new byte[32];
 
@@ -2148,7 +2087,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
     /** Ym2612Inst/3438(OPN2) */
     static class OPN2 extends OPNBase {
 
-        public boolean init(int c, int r, boolean f /*= false*/, String s/* = null*/) {
+        public boolean init(int c, int r, boolean f /* = false */, String s /* = null */) {
             return false;
         }
 
@@ -2156,10 +2095,12 @@ logger.log(Level.ERROR, e.getMessage(), e);
             return false;
         }
 
+        @Override
         public void reset() {
         }
 
         public void mix(int[] buffer, int nsamples) {
+            // TODO document why this method is empty
         }
 
         public void setReg(int addr, int data) {
@@ -2183,19 +2124,21 @@ logger.log(Level.ERROR, e.getMessage(), e);
         private void intr(boolean f) {
         }
 
+        @Override
         public void setStatus(int bit) {
         }
 
+        @Override
         public void resetStatus(int bit) {
         }
 
-        private int[] fnum = new int[3];
-        private int[] fnum3 = new int[3];
-        private byte[] fnum2 = new byte[6];
+        private final int[] fNum = new int[3];
+        private final int[] fNum3 = new int[3];
+        private final byte[] fNum2 = new byte[6];
 
-        // 線形補間用ワーク
+        // Linear Interpolation Workpiece
 //        private int mixc, mixc1;
 
-        private Fmgen.Channel4[] ch = new Fmgen.Channel4[3];
+        private final Fmgen.Channel4[] ch = new Fmgen.Channel4[3];
     }
 }

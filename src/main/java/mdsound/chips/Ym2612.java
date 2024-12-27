@@ -36,7 +36,7 @@ public class Ym2612 {
     private static final int OUTPUT_BITS = 15;
 
     /** Change it if you need to do long update */
-    private static final int MAX_UPDATE_LENGTH = 0x100; // for in_vgm
+    public static final int MAX_UPDATE_LENGTH = 0x100; // for in_vgm
 
     // Gens always uses 16 bits Sound (in 32 bits buffer) and do the conversion later if needed.
 
@@ -126,7 +126,7 @@ public class Ym2612 {
     /** Decay rate table */
     private final int[] drTab = new int[96];
     /** Detune table */
-    private int[][] dtTab = new int[][] {
+    private final int[][] dtTab = new int[][] {
             new int[32], new int[32], new int[32], new int[32],
             new int[32], new int[32], new int[32], new int[32]
     };
@@ -150,7 +150,7 @@ public class Ym2612 {
     }
 
     /** Update Channel functions pointer table */
-    private final UpdateChan[] updateChan = new UpdateChan[] {
+    private final UpdateChan[] updateChan = {
             this::updateChanAlgo0,
             this::updateChanAlgo1,
             this::updateChanAlgo2,
@@ -197,7 +197,7 @@ public class Ym2612 {
             null, null, null, null
     };
 
-    private static final int[] DT_DEF_TAB = new int[] {
+    private static final int[] DT_DEF_TAB = {
             // FD = 0
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -212,18 +212,18 @@ public class Ym2612 {
             8, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 20, 22, 22, 22, 22
     };
 
-    private static final int[] FKEY_TAB = new int[] {
+    private static final int[] FKEY_TAB = {
             0, 0, 0, 0,
             0, 0, 0, 1,
             2, 3, 3, 3,
             3, 3, 3, 3
     };
 
-    private static final int[] LFO_AMS_TAB = new int[] {
+    private static final int[] LFO_AMS_TAB = {
             31, 4, 1, 0
     };
 
-    private static final int[] LFO_FMS_TAB = new int[] {
+    private static final int[] LFO_FMS_TAB = {
             LFO_FMS_BASE * 0, LFO_FMS_BASE * 1,
             LFO_FMS_BASE * 2, LFO_FMS_BASE * 3,
             LFO_FMS_BASE * 4, LFO_FMS_BASE * 6,
@@ -238,7 +238,7 @@ public class Ym2612 {
 
 //    int DAC_Enable = 1;
 
-    private int[][] YM_Buf = new int[2][];
+    private final int[][] YM_Buf = new int[2][];
 
     /** enable SSG-EG envelope (causes inaccurate Sound sometimes - rodrigo) */
     private static int enableSsgEg = 1; // TODO
@@ -249,7 +249,7 @@ public class Ym2612 {
 
     private static class Channel {
 
-        private void reset() {
+        private void reset(int[][] dtTab) {
             this.oldOutD = 0;
             this.outD = 0;
             this.left = -1;
@@ -265,7 +265,7 @@ public class Ym2612 {
                 this.fOct[j] = 0;
                 this.kc[j] = 0;
 
-                this.slots[j].reset();
+                this.slots[j].reset(dtTab);
             }
         }
 
@@ -373,7 +373,8 @@ public class Ym2612 {
             /** AMS enable flag = AMS activation flag */
             private int amsOn;
 
-            private void reset() {
+            private void reset(int[][] dtTab) {
+                this.dt = dtTab[0];
                 this.fCnt = 0;
                 this.fInc = 0;
                 this.eCnt = ENV_END; // Put it at the end of Decay phase...
@@ -391,7 +392,7 @@ public class Ym2612 {
                     // Fix Ecco 2 splash Sound
 
                     this.eCnt = (DECAY_TO_ATTACK[ENV_TAB[this.eCnt >> ENV_LBITS]] + ENV_ATTACK) & this.chgEnM;
-                    this.chgEnM = -1;
+                    this.chgEnM = 0xffff_ffff;
 
                     this.eInc = this.eIncA;
                     this.eCmp = ENV_DECAY;
@@ -403,6 +404,7 @@ public class Ym2612 {
                 if (this.eCurp != RELEASE) { // is the key pressed?
                     if (this.eCnt < ENV_DECAY) { // attack phase ?
                         this.eCnt = (ENV_TAB[this.eCnt >> ENV_LBITS] << ENV_LBITS) + ENV_DECAY;
+logger.log(Level.TRACE, "keyOff:eCnt: " + eCnt);
                     }
 
                     this.eInc = this.eIncR;
@@ -415,7 +417,7 @@ public class Ym2612 {
                 if ((this.amsOn = (data & 0x80)) != 0) this.ams = ams;
                 else this.ams = 31;
 
-                if ((data &= 0x1f) > 0) {
+                if ((data &= 0x1f) != 0) {
                     this.dr = drTab;
                     this.drIndex = data << 1;
                 } else {
@@ -584,6 +586,7 @@ public class Ym2612 {
         private void keyOn(int nsl) {
             Slot sl = this.slots[nsl]; // we get the right slot pointer
             sl.keyOn();
+//logger.log(Level.TRACE, "keyOn::[%d].eCnt: %d".formatted(nsl, sl.eCnt));
         }
 
         private void keyOff(int nsl) {
@@ -619,7 +622,7 @@ public class Ym2612 {
     }
 
     /** Ym2612 clock */
-    private int clock;
+    private final int clock;
     /** Sample Rate (11025/22050/44100) */
     private int rate;
     /** TimerBase calculation */
@@ -678,6 +681,7 @@ public class Ym2612 {
     private int dacMute;
 
     private void controlCsmKey() {
+logger.log(Level.TRACE, "controlCsmKey");
         this.channels[2].keyOn(0);
         this.channels[2].keyOn(1);
         this.channels[2].keyOn(2);
@@ -809,7 +813,6 @@ public class Ym2612 {
         return 0;
     }
 
-    @SuppressFBWarnings("SF_SWITCH_NO_DEFAULT")
     private int setChannel(int adr, int data) {
         Channel ch;
         int num;
@@ -916,7 +919,6 @@ public class Ym2612 {
         return 0;
     }
 
-    @SuppressFBWarnings("SF_SWITCH_NO_DEFAULT")
     private int setData(int adr, int data) {
         Channel ch;
         int nch;
@@ -1014,7 +1016,7 @@ public class Ym2612 {
             if ((data & 0x80) != 0) ch.keyOn(S3); // Press the key for slot 4
             else ch.keyOff(S3); // Release the key for slot 4
 
-    //logger.log(Level.TRACE, "CHANNEL[%d]  KEY %.1X".formatted(nch, ((data & 0xf0) >> 4));
+//logger.log(Level.TRACE, "CHANNEL[%d]  KEY %1X".formatted(nch, ((data & 0xf0) >> 4)));
             break;
 
         case 0x2A:
@@ -1211,7 +1213,7 @@ public class Ym2612 {
     private static void doOutput(Channel ch, int[][] buf, int i) {
         buf[0][i] += ch.outD & ch.left;
         buf[1][i] += ch.outD & ch.right;
-logger.log(Level.DEBUG, "fm: %04x, %04x".formatted(buf[0][i], buf[1][i]));
+//logger.log(Level.DEBUG, "fm: %04x, %04x".formatted(buf[0][i] & 0xffff, buf[1][i] & 0xffff));
         vol[0] = Math.max(vol[0], Math.abs(ch.outD & ch.left));
         vol[1] = Math.max(vol[1], Math.abs(ch.outD & ch.right));
     }
@@ -1268,7 +1270,7 @@ logger.log(Level.DEBUG, "fm: %04x, %04x".formatted(buf[0][i], buf[1][i]));
     private void updateChanAlgo0(Channel ch, int[][] buf, int length) {
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-logger.log(Level.TRACE, "Algo 0 len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 0 len = %d".formatted(length));
 
         for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
@@ -1283,7 +1285,7 @@ logger.log(Level.TRACE, "Algo 0 len = %d".formatted(length));
     private void updateChanAlgo1(Channel ch, int[][] buf, int length) {
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-logger.log(Level.TRACE, "Algo 1 len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 1 len = %d".formatted(length));
 
         for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
@@ -1298,7 +1300,7 @@ logger.log(Level.TRACE, "Algo 1 len = %d".formatted(length));
     private void updateChanAlgo2(Channel ch, int[][] buf, int length) {
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-logger.log(Level.TRACE, "Algo 2 len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 2 len = %d".formatted(length));
 
         for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
@@ -1313,7 +1315,7 @@ logger.log(Level.TRACE, "Algo 2 len = %d".formatted(length));
     private void updateChanAlgo3(Channel ch, int[][] buf, int length) {
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-logger.log(Level.TRACE, "Algo 3 len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 3 len = %d".formatted(length));
 
         for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
@@ -1328,7 +1330,7 @@ logger.log(Level.TRACE, "Algo 3 len = %d".formatted(length));
     private void updateChanAlgo4(Channel ch, int[][] buf, int length) {
         if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END)) return;
 
-logger.log(Level.TRACE, "Algo 4 len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 4 len = %d".formatted(length));
 
         for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
@@ -1345,7 +1347,7 @@ logger.log(Level.TRACE, "Algo 4 len = %d".formatted(length));
         if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S2].eCnt == ENV_END) &&
                 (ch.slots[S3].eCnt == ENV_END)) return;
 
-logger.log(Level.TRACE, "Algo 5 len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 5 len = %d".formatted(length));
 
         for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
@@ -1362,7 +1364,7 @@ logger.log(Level.TRACE, "Algo 5 len = %d".formatted(length));
         if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S2].eCnt == ENV_END) &&
                 (ch.slots[S3].eCnt == ENV_END)) return;
 
-logger.log(Level.TRACE, "Algo 6 len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 6 len = %d".formatted(length));
 
         for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
@@ -1380,7 +1382,7 @@ logger.log(Level.TRACE, "Algo 6 len = %d".formatted(length));
                 (ch.slots[S2].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END))
             return;
 
-logger.log(Level.TRACE, "Algo 7 len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 7 len = %d".formatted(length));
 
         for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
@@ -1397,7 +1399,7 @@ logger.log(Level.TRACE, "Algo 7 len = %d".formatted(length));
 
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-logger.log(Level.TRACE, "Algo 0 LFO len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 0 LFO len = %d".formatted(length));
 
         for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
@@ -1414,7 +1416,7 @@ logger.log(Level.TRACE, "Algo 0 LFO len = %d".formatted(length));
 
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-logger.log(Level.TRACE, "Algo 1 LFO len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 1 LFO len = %d".formatted(length));
 
         for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
@@ -1431,7 +1433,7 @@ logger.log(Level.TRACE, "Algo 1 LFO len = %d".formatted(length));
 
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-logger.log(Level.TRACE, "Algo 2 LFO len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 2 LFO len = %d".formatted(length));
 
         for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
@@ -1448,7 +1450,7 @@ logger.log(Level.TRACE, "Algo 2 LFO len = %d".formatted(length));
 
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-logger.log(Level.TRACE, "Algo 3 LFO len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 3 LFO len = %d".formatted(length));
 
         for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
@@ -1465,7 +1467,7 @@ logger.log(Level.TRACE, "Algo 3 LFO len = %d".formatted(length));
 
         if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END)) return;
 
-logger.log(Level.TRACE, "Algo 4 LFO len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 4 LFO len = %d".formatted(length));
 
         for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
@@ -1483,7 +1485,7 @@ logger.log(Level.TRACE, "Algo 4 LFO len = %d".formatted(length));
         if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S2].eCnt == ENV_END) &&
                 (ch.slots[S3].eCnt == ENV_END)) return;
 
-logger.log(Level.TRACE, "Algo 5 LFO len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 5 LFO len = %d".formatted(length));
 
         for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
@@ -1500,7 +1502,7 @@ logger.log(Level.TRACE, "Algo 5 LFO len = %d".formatted(length));
 
         if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S2].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END)) return;
 
-logger.log(Level.TRACE, "Algo 6 LFO len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 6 LFO len = %d".formatted(length));
 
         for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
@@ -1519,7 +1521,7 @@ logger.log(Level.TRACE, "Algo 6 LFO len = %d".formatted(length));
                 (ch.slots[S2].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END))
             return;
 
-logger.log(Level.TRACE, "Algo 7 LFO len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 7 LFO len = %d".formatted(length));
 
         for (int i = 0; i < length; i++) {
             getCurrentPhase(ch);
@@ -1535,7 +1537,7 @@ logger.log(Level.TRACE, "Algo 7 LFO len = %d".formatted(length));
 
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-logger.log(Level.TRACE, "Algo 0 len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 0 len = %d".formatted(length));
 
         intCnt = this.interCnt;
 
@@ -1553,7 +1555,7 @@ logger.log(Level.TRACE, "Algo 0 len = %d".formatted(length));
 
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-logger.log(Level.TRACE, "Algo 1 len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 1 len = %d".formatted(length));
 
         intCnt = this.interCnt;
 
@@ -1571,7 +1573,7 @@ logger.log(Level.TRACE, "Algo 1 len = %d".formatted(length));
 
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-logger.log(Level.TRACE, "Algo 2 len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 2 len = %d".formatted(length));
 
         intCnt = this.interCnt;
 
@@ -1589,7 +1591,7 @@ logger.log(Level.TRACE, "Algo 2 len = %d".formatted(length));
 
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-logger.log(Level.TRACE, "Algo 3 len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 3 len = %d".formatted(length));
 
         intCnt = this.interCnt;
 
@@ -1607,7 +1609,7 @@ logger.log(Level.TRACE, "Algo 3 len = %d".formatted(length));
 
         if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END)) return;
 
-logger.log(Level.TRACE, "Algo 4 len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 4 len = %d".formatted(length));
 
         intCnt = this.interCnt;
 
@@ -1626,7 +1628,7 @@ logger.log(Level.TRACE, "Algo 4 len = %d".formatted(length));
         if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S2].eCnt == ENV_END) &&
                 (ch.slots[S3].eCnt == ENV_END)) return;
 
-logger.log(Level.TRACE, "Algo 5 len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 5 len = %d".formatted(length));
 
         intCnt = this.interCnt;
 
@@ -1645,7 +1647,7 @@ logger.log(Level.TRACE, "Algo 5 len = %d".formatted(length));
         if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S2].eCnt == ENV_END) &&
                 (ch.slots[S3].eCnt == ENV_END)) return;
 
-logger.log(Level.TRACE, "Algo 6 len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 6 len = %d".formatted(length));
 
         intCnt = this.interCnt;
 
@@ -1665,7 +1667,7 @@ logger.log(Level.TRACE, "Algo 6 len = %d".formatted(length));
                 (ch.slots[S2].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END))
             return;
 
-logger.log(Level.TRACE, "Algo 7 len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 7 len = %d".formatted(length));
 
         intCnt = this.interCnt;
 
@@ -1684,7 +1686,7 @@ logger.log(Level.TRACE, "Algo 7 len = %d".formatted(length));
 
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-logger.log(Level.TRACE, "Algo 0 LFO len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 0 LFO len = %d".formatted(length));
 
         intCnt = this.interCnt;
 
@@ -1722,7 +1724,7 @@ logger.log(Level.TRACE, "Algo 1 LFO len = %d".formatted(length));
 
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-logger.log(Level.TRACE, "Algo 2 LFO len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 2 LFO len = %d".formatted(length));
 
         intCnt = this.interCnt;
 
@@ -1741,7 +1743,7 @@ logger.log(Level.TRACE, "Algo 2 LFO len = %d".formatted(length));
 
         if (ch.slots[S3].eCnt == ENV_END) return;
 
-logger.log(Level.TRACE, "Algo 3 LFO len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 3 LFO len = %d".formatted(length));
 
         intCnt = this.interCnt;
 
@@ -1760,7 +1762,7 @@ logger.log(Level.TRACE, "Algo 3 LFO len = %d".formatted(length));
 
         if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END)) return;
 
-logger.log(Level.TRACE, "Algo 4 LFO len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 4 LFO len = %d".formatted(length));
 
         intCnt = this.interCnt;
 
@@ -1779,7 +1781,7 @@ logger.log(Level.TRACE, "Algo 4 LFO len = %d".formatted(length));
 
         if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S2].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END)) return;
 
-logger.log(Level.TRACE, "Algo 5 LFO len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 5 LFO len = %d".formatted(length));
 
         intCnt = this.interCnt;
 
@@ -1798,7 +1800,7 @@ logger.log(Level.TRACE, "Algo 5 LFO len = %d".formatted(length));
 
         if ((ch.slots[S1].eCnt == ENV_END) && (ch.slots[S2].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END)) return;
 
-logger.log(Level.TRACE, "Algo 6 LFO len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 6 LFO len = %d".formatted(length));
 
         intCnt = this.interCnt;
 
@@ -1818,7 +1820,7 @@ logger.log(Level.TRACE, "Algo 6 LFO len = %d".formatted(length));
         if ((ch.slots[S0].eCnt == ENV_END) && (ch.slots[S1].eCnt == ENV_END) && (ch.slots[S2].eCnt == ENV_END) && (ch.slots[S3].eCnt == ENV_END))
             return;
 
-logger.log(Level.TRACE, "Algo 7 LFO len = %d".formatted(length));
+//logger.log(Level.TRACE, "Algo 7 LFO len = %d".formatted(length));
 
         intCnt = this.interCnt;
 
@@ -1831,6 +1833,8 @@ logger.log(Level.TRACE, "Algo 7 LFO len = %d".formatted(length));
             i = doOutputInt(ch, buf, i);
         }
     }
+
+//boolean INIT;
 
     /** Initializing the Ym2612 emulator */
     public Ym2612(int clock, int rate, int interpolation) {
@@ -2065,6 +2069,7 @@ logger.log(Level.INFO, "Ym2612 logging: clock: %d, rate: %d".formatted(clock, ra
             this.regs[1][i] = -1;
         }
 
+//INIT = true;
         for (int i = 0xb6; i >= 0xb4; i--) {
             write(0, i);
             write(1, 0xc0);
@@ -2081,6 +2086,7 @@ logger.log(Level.INFO, "Ym2612 logging: clock: %d, rate: %d".formatted(clock, ra
 
         write(0, 0x2a);
         write(1, 0x80);
+//INIT = false;
 
 //logger.log(Level.TRACE, "Finishing resetting Ym2612 ...");
 
@@ -2100,7 +2106,8 @@ logger.log(Level.INFO, "Ym2612 logging: clock: %d, rate: %d".formatted(clock, ra
     public int write(int adr, int data) {
         data &= 0xff;
         adr &= 0x03;
-logger.log(Level.TRACE, "fm%d: a: %02x, d: %02x".formatted(adr / 2, adr, data));
+
+//if (!INIT) { logger.log(Level.TRACE, "fm%d: a: %02x, d: %02x".formatted(adr / 2, adr, data)); }
 
         switch (adr) {
         case 0:
@@ -2201,6 +2208,9 @@ logger.log(Level.TRACE, "fm%d: a: %02x, d: %02x".formatted(adr / 2, adr, data));
         }
     }
 
+    /**
+     * @param length max length is {@link #MAX_UPDATE_LENGTH}
+     */
     public void update(int[][] buf, int length) {
         int algoType;
 
@@ -2237,7 +2247,7 @@ logger.log(Level.TRACE, "fm%d: a: %02x, d: %02x".formatted(adr / 2, adr, data));
                 this.lfoEnvUp[i] = LFO_ENV_TAB[j];
                 this.lfoFreqUp[i] = LFO_FREQ_TAB[j];
 
-logger.log(Level.TRACE, "LFO_ENV_UP[%d] = %d   LFO_FREQ_UP[%d] = %d".formatted(i, this.lfoEnvUp[i], i, this.lfoFreqUp[i]));
+//logger.log(Level.TRACE, "LFO_ENV_UP[%d] = %d   LFO_FREQ_UP[%d] = %d".formatted(i, this.lfoEnvUp[i], i, this.lfoFreqUp[i]));
             }
 
             algoType |= 8;

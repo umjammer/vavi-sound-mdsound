@@ -192,7 +192,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
         out[2] = calcSaw(clocks);
     }
 
-    private int[] m = new int[3];
+    private final int[] m = new int[3];
 
     @Override
     public int render(int[] b) {

@@ -12,7 +12,7 @@ public class Ym2151Inst extends Instrument.BaseInstrument {
 
     public static final int DefaultYM2151ClockValue = 3579545;
 
-    private OPM[] chip = new OPM[2];
+    private final OPM[] chip = new OPM[2];
 
     public Ym2151Inst() {
         visVolume = new int[][][] {
@@ -46,11 +46,11 @@ public class Ym2151Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock, int clockValue, Object... option) {
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
         chip[chipId] = new OPM();
-        chip[chipId].init(clockValue, clock, false);
+        chip[chipId].init(clock, samplingRate, false);
 
-        return clock;
+        return samplingRate;
     }
 
     @Override

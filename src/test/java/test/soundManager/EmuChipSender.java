@@ -31,7 +31,7 @@ Debug.println("start");
                 while (true) {
                     Thread.yield();
                     if (ringBuffer.getDataSize() == 0) {
-                        // 送信データが無く、停止指示がある場合のみ停止する
+                        // It will stop only if there is no data to send and there is a stop command.
                         if (!getStart()) {
                             if (receiveBuffer.getDataSize() > 0) {
                                 continue;
@@ -41,7 +41,7 @@ Debug.println("start");
                         continue;
                     }
 
-                    // dataが貯まってます！
+                    // Data is being accumulated!
                     synchronized (lockObj) {
                         busy = true;
                     }
@@ -69,7 +69,7 @@ Debug.println("start");
                             }
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        Debug.printStackTrace(e);
                     }
 
                     synchronized (lockObj) {

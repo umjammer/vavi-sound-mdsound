@@ -123,7 +123,7 @@ public class QSound {
     private int sampleRomLength;
 
     /** Pan volume table */
-    private static int[] panTable = new int[33];
+    private static final int[] panTable = new int[33];
 
     static {
         // Create pan table

@@ -9,6 +9,7 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.SourceDataLine;
 
 import dotnet4j.io.File;
+import mdsound.Instrument;
 import mdsound.MDSound;
 import mdsound.chips.C140;
 import mdsound.instrument.*;
@@ -20,13 +21,15 @@ import vavi.util.ByteUtil;
 import vavi.util.Debug;
 import vavi.util.StringUtil;
 
+import static vavi.sound.SoundUtil.volume;
+
 
 public class Program {
 
     static String[] args;
 
     /**
-     * アプリケーションのメイン エントリ ポイントです。
+     * The main entry point for the application.
      */
     public static void main(String[] args) {
         Program.args = args;
@@ -37,7 +40,7 @@ public class Program {
 
     private static final int SamplingRate = 44100;
     private static final int SamplingBuffer = 1024 * 8;
-    private short[] frames = new short[SamplingBuffer * 4];
+    private final short[] frames = new short[SamplingBuffer * 4];
     MDSound mds;
 
     private SourceDataLine audioOutput = null;
@@ -48,7 +51,7 @@ public class Program {
     private int vgmAdr;
     private int vgmEof;
     private boolean vgmAnalyze;
-    private VgmStream[] vgmStreams = new VgmStream[0x100];
+    private final VgmStream[] vgmStreams = new VgmStream[0x100];
 
     private byte[] bufYM2610AdpcmA = null;
     private byte[] bufYM2610AdpcmB = null;
@@ -78,15 +81,15 @@ public class Program {
         public double wkDataStep;
     }
 
-    private short[] emuRenderBuf = new short[2];
+    private final short[] emuRenderBuf = new short[2];
     private int packCounter = 0;
-    private Pack pack = new Pack();
+    private final Pack pack = new Pack();
 
     int driverSeqCounter = 0;
     int emuSeqCounter = 0;
 
     private final static int PCM_BANK_COUNT = 0x40;
-    private VgmPcmBank[] pcmBanks = new VgmPcmBank[PCM_BANK_COUNT];
+    private final VgmPcmBank[] pcmBanks = new VgmPcmBank[PCM_BANK_COUNT];
 
     public static class VgmPcmData {
         public int dataSize;
@@ -111,7 +114,7 @@ public class Program {
 
     /** */
     public Program() {
-        // 実チップ(OPNA)を探す(無ければrscはnull)
+        // Search for the actual chip (OPNA) (rsc is null if not available)
 //        rc = new RealChip();
 //        rsc = rc.SearchOPNA();
 //        if (rsc != null) {
@@ -125,6 +128,7 @@ public class Program {
         try {
             audioOutput = AudioSystem.getSourceDataLine(new AudioFormat(SamplingRate, 16, 2, true, false));
             audioOutput.open();
+            volume(audioOutput, Double.parseDouble(System.getProperty("mdsound.volume", "0.2")));
             audioOutput.start();
         } catch (Exception e) {
             e.printStackTrace();
@@ -202,7 +206,7 @@ public class Program {
 
         data.add(new Pack(dev, 0, 0x2d, 0x00));
         data.add(new Pack(dev, 0, 0x29, 0x82));
-        data.add(new Pack(dev, 0, 0x07, 0x38)); // Psg TONE でリセット
+        data.add(new Pack(dev, 0, 0x07, 0x38)); // Reset with Psg TONE
         for (int i = 0xb4; i < 0xb4 + 3; i++) {
             data.add(new Pack(dev, 0, i, 0xc0));
             data.add(new Pack(dev, 0, 0x100 + i, 0xc0));
@@ -215,7 +219,7 @@ public class Program {
     private static Pack[] softResetYM2608(int dev) {
         List<Pack> data = new ArrayList<>();
 
-        // FM全チャネルキーオフ
+        // FM all channel key off
         data.add(new Pack(dev, 0, 0x28, 0x00));
         data.add(new Pack(dev, 0, 0x28, 0x01));
         data.add(new Pack(dev, 0, 0x28, 0x02));
@@ -260,13 +264,13 @@ public class Program {
         data.add(new Pack(dev, 0, 0x27, 0x30)); // Timer Controller
         data.add(new Pack(dev, 0, 0x29, 0x80)); // FM4-6 Enable
 
-        // SSG 音程(2byte*3ch)
+        // SSG Pitch (2byte*3ch)
         for (int i = 0x00; i < 0x05 + 1; i++) {
             data.add(new Pack(dev, 0, i, 0x00));
         }
         data.add(new Pack(dev, 0, 0x06, 0x00)); // SSG Noise Frequency
         data.add(new Pack(dev, 0, 0x07, 0x38)); // SSG Mixer
-        // SSG ボリューム(3ch)
+        // SSG Volume (3ch)
         for (int i = 0x08; i < 0x0A + 1; i++) {
             data.add(new Pack(dev, 0, i, 0x00));
         }
@@ -276,19 +280,19 @@ public class Program {
         }
 
         // RHYTHM
-        data.add(new Pack(dev, 0, 0x10, 0xBF)); // 強制発音停止
+        data.add(new Pack(dev, 0, 0x10, 0xBF)); // Forced sound stop
         data.add(new Pack(dev, 0, 0x11, 0x00)); // Total Level
-        data.add(new Pack(dev, 0, 0x18, 0x00)); // BD音量
-        data.add(new Pack(dev, 0, 0x19, 0x00)); // SD音量
-        data.add(new Pack(dev, 0, 0x1A, 0x00)); // CYM音量
-        data.add(new Pack(dev, 0, 0x1B, 0x00)); // HH音量
-        data.add(new Pack(dev, 0, 0x1C, 0x00)); // TOM音量
-        data.add(new Pack(dev, 0, 0x1D, 0x00)); // RIM音量
+        data.add(new Pack(dev, 0, 0x18, 0x00)); // BD volume
+        data.add(new Pack(dev, 0, 0x19, 0x00)); // SD volume
+        data.add(new Pack(dev, 0, 0x1A, 0x00)); // CYM volume
+        data.add(new Pack(dev, 0, 0x1B, 0x00)); // HH volume
+        data.add(new Pack(dev, 0, 0x1C, 0x00)); // TOM volume
+        data.add(new Pack(dev, 0, 0x1D, 0x00)); // RIM volume
 
         // ADPCM
-        data.add(new Pack(dev, 0, 0x100 + 0x00, 0x21)); // ADPCMリセット
-        data.add(new Pack(dev, 0, 0x100 + 0x01, 0x06)); // ADPCM消音
-        data.add(new Pack(dev, 0, 0x100 + 0x10, 0x9C)); // FLAGリセット
+        data.add(new Pack(dev, 0, 0x100 + 0x00, 0x21)); // ADPCM reset
+        data.add(new Pack(dev, 0, 0x100 + 0x01, 0x06)); // ADPCM mute
+        data.add(new Pack(dev, 0, 0x100 + 0x10, 0x9C)); // FLAG reset
 
         return data.toArray(Pack[]::new);
     }
@@ -348,13 +352,13 @@ Debug.println("\n" + StringUtil.getDump(vgmBuf, 128));
             pcmBanks[i] = new VgmPcmBank();
         }
 
-        // ヘッダーを読み込めるサイズをもっているかチェック
+        // Check if the header is large enough to read
         if (vgmBuf.length < 0x40) {
 Debug.printf("not enough vgm buffer size: ", vgmBuf.length);
             return;
         }
 
-        // ヘッダーから情報取得
+        // Get information from the header
 
         int vgm = ByteUtil.readLeInt(vgmBuf, 0x00);
         if (vgm != 0x206d6756) {
@@ -387,7 +391,7 @@ Debug.printf("version is after 1.50, %04x", version);
         if (ByteUtil.readLeInt(vgmBuf, 0x0c) != 0) {
             chip = new MDSound.Chip();
             chip.id = 0;
-            chip.instrument = new Sn76496Inst();
+            chip.instrument = Instrument.getInstrument(Sn76496Inst.class);
             chip.samplingRate = SamplingRate;
             chip.clock = ByteUtil.readLeInt(vgmBuf, 0x0c);
             chip.volume = 0;
@@ -402,7 +406,7 @@ Debug.printf("version is after 1.50, %04x", version);
         if (ByteUtil.readLeInt(vgmBuf, 0x10) != 0) {
             chip = new MDSound.Chip();
             chip.id = 0;
-            Ym2413Inst ym2413 = new Ym2413Inst();
+            Ym2413Inst ym2413 = Instrument.getInstrument(Ym2413Inst.class);
             chip.instrument = ym2413;
             chip.samplingRate = SamplingRate;
             chip.clock = ByteUtil.readLeInt(vgmBuf, 0x10);
@@ -414,7 +418,7 @@ Debug.printf("version is after 1.50, %04x", version);
         if (ByteUtil.readLeInt(vgmBuf, 0x2c) != 0) {
             chip = new MDSound.Chip();
             chip.id = 0;
-            MameYm2612Inst ym2612 = new MameYm2612Inst();
+            MameYm2612Inst ym2612 = Instrument.getInstrument(MameYm2612Inst.class);
             chip.instrument = ym2612;
             chip.samplingRate = SamplingRate;
             chip.clock = ByteUtil.readLeInt(vgmBuf, 0x2c);
@@ -426,7 +430,7 @@ Debug.printf("version is after 1.50, %04x", version);
         if (ByteUtil.readLeInt(vgmBuf, 0x30) != 0) {
             chip = new MDSound.Chip();
             chip.id = 0;
-            X68SoundYm2151Inst ym2151 = new X68SoundYm2151Inst();
+            X68SoundYm2151Inst ym2151 = Instrument.getInstrument(X68SoundYm2151Inst.class);
             chip.instrument = ym2151;
             chip.samplingRate = SamplingRate;
             chip.clock = ByteUtil.readLeInt(vgmBuf, 0x30);
@@ -438,7 +442,7 @@ Debug.printf("version is after 1.50, %04x", version);
         if (ByteUtil.readLeInt(vgmBuf, 0x38) != 0 && 0x38 < vgmDataOffset - 3) {
             chip = new MDSound.Chip();
             chip.id = 0;
-            SegaPcmInst segapcm = new SegaPcmInst();
+            SegaPcmInst segapcm = Instrument.getInstrument(SegaPcmInst.class);
             chip.instrument = segapcm;
             chip.samplingRate = SamplingRate;
             chip.clock = ByteUtil.readLeInt(vgmBuf, 0x38);
@@ -451,7 +455,7 @@ Debug.printf("version is after 1.50, %04x", version);
         if (ByteUtil.readLeInt(vgmBuf, 0x44) != 0 && 0x44 < vgmDataOffset - 3) {
             chip = new MDSound.Chip();
             chip.id = 0;
-            Ym2203Inst ym2203 = new Ym2203Inst();
+            Ym2203Inst ym2203 = Instrument.getInstrument(Ym2203Inst.class);
             chip.instrument = ym2203;
             chip.samplingRate = SamplingRate;
             chip.clock = ByteUtil.readLeInt(vgmBuf, 0x44);
@@ -465,7 +469,7 @@ Debug.printf("version is after 1.50, %04x", version);
         if (ByteUtil.readLeInt(vgmBuf, 0x48) != 0 && 0x48 < vgmDataOffset - 3) {
             chip = new MDSound.Chip();
             chip.id = 0;
-            Ym2608Inst ym2608 = new Ym2608Inst();
+            Ym2608Inst ym2608 = Instrument.getInstrument(Ym2608Inst.class);
             chip.instrument = ym2608;
             chip.samplingRate = SamplingRate;
             chip.clock = ByteUtil.readLeInt(vgmBuf, 0x48);
@@ -480,8 +484,8 @@ Debug.printf("version is after 1.50, %04x", version);
 //        if (getLE32(0x48) != 0 && 0x48 < vgmDataOffset - 3) {
 //            chips = new MDSound.Chip();
 //            chips.id = 0;
-//            mdsound.instrument.Ym2609Inst Ym2609Inst = new mdsound.instrument.Ym2609Inst();
-//            chips.instrument = Ym2609Inst;
+//            mdsound.instrument.Ym2609Inst Ym2609 = Instrument.getInstrument(mdsound.instrument.Ym2609Inst.class);
+//            chips.instrument = Ym2609;
 //            chips.samplingRate = SamplingRate;
 //            chips.clock = getLE32(0x48);
 //            chips.volume = 0;
@@ -492,7 +496,7 @@ Debug.printf("version is after 1.50, %04x", version);
         if (ByteUtil.readLeInt(vgmBuf, 0x4c) != 0 && 0x4c < vgmDataOffset - 3) {
             chip = new MDSound.Chip();
             chip.id = 0;
-            Ym2610Inst ym2610 = new Ym2610Inst();
+            Ym2610Inst ym2610 = Instrument.getInstrument(Ym2610Inst.class);
             chip.instrument = ym2610;
             chip.samplingRate = SamplingRate;
             chip.clock = ByteUtil.readLeInt(vgmBuf, 0x4c) & 0x7fff_ffff;
@@ -510,7 +514,7 @@ Debug.printf("version is after 1.50, %04x", version);
         if (ByteUtil.readLeInt(vgmBuf, 0x50) != 0 && 0x50 < vgmDataOffset - 3) {
             chip = new MDSound.Chip();
             chip.id = 0;
-            Ym3812Inst ym3812 = new Ym3812Inst();
+            Ym3812Inst ym3812 = Instrument.getInstrument(Ym3812Inst.class);
             chip.instrument = ym3812;
             chip.samplingRate = SamplingRate;
             chip.clock = ByteUtil.readLeInt(vgmBuf, 0x50) & 0x7fff_ffff;
@@ -522,7 +526,7 @@ Debug.printf("version is after 1.50, %04x", version);
         if (ByteUtil.readLeInt(vgmBuf, 0x54) != 0 && 0x54 < vgmDataOffset - 3) {
             chip = new MDSound.Chip();
             chip.id = 0;
-            Ym3526Inst ym3526 = new Ym3526Inst();
+            Ym3526Inst ym3526 = Instrument.getInstrument(Ym3526Inst.class);
             chip.instrument = ym3526;
             chip.samplingRate = SamplingRate;
             chip.clock = ByteUtil.readLeInt(vgmBuf, 0x54) & 0x7fff_ffff;
@@ -534,7 +538,7 @@ Debug.printf("version is after 1.50, %04x", version);
         if (ByteUtil.readLeInt(vgmBuf, 0x5c) != 0 && 0x5c < vgmDataOffset - 3) {
             chip = new MDSound.Chip();
             chip.id = 0;
-            YmF262Inst ymf262 = new YmF262Inst();
+            YmF262Inst ymf262 = Instrument.getInstrument(YmF262Inst.class);
             chip.instrument = ymf262;
             chip.samplingRate = SamplingRate;
             chip.clock = ByteUtil.readLeInt(vgmBuf, 0x5c) & 0x7fff_ffff;
@@ -555,7 +559,7 @@ Debug.printf("version is after 1.50, %04x", version);
         if (ByteUtil.readLeInt(vgmBuf, 0x58) != 0 && 0x58 < vgmDataOffset - 3) {
             chip = new MDSound.Chip();
             chip.id = 0;
-            Y8950Inst y8950 = new Y8950Inst();
+            Y8950Inst y8950 = Instrument.getInstrument(Y8950Inst.class);
             chip.instrument = y8950;
             chip.samplingRate = SamplingRate;
             chip.clock = ByteUtil.readLeInt(vgmBuf, 0x58) & 0x7fff_ffff;
@@ -567,7 +571,7 @@ Debug.printf("version is after 1.50, %04x", version);
         if (ByteUtil.readLeInt(vgmBuf, 0x60) != 0 && 0x60 < vgmDataOffset - 3) {
             chip = new MDSound.Chip();
             chip.id = 0;
-            YmF278bInst ymf278b = new YmF278bInst();
+            YmF278bInst ymf278b = Instrument.getInstrument(YmF278bInst.class);
             chip.instrument = ymf278b;
             chip.samplingRate = SamplingRate;
             chip.clock = ByteUtil.readLeInt(vgmBuf, 0x60) & 0x7fff_ffff;
@@ -579,7 +583,7 @@ Debug.printf("version is after 1.50, %04x", version);
         if (ByteUtil.readLeInt(vgmBuf, 0x64) != 0 && 0x64 < vgmDataOffset - 3) {
             chip = new MDSound.Chip();
             chip.id = 0;
-            YmF271Inst ymf271 = new YmF271Inst();
+            YmF271Inst ymf271 = Instrument.getInstrument(YmF271Inst.class);
             chip.instrument = ymf271;
             chip.samplingRate = SamplingRate;
             chip.clock = ByteUtil.readLeInt(vgmBuf, 0x64) & 0x7fff_ffff;
@@ -591,7 +595,7 @@ Debug.printf("version is after 1.50, %04x", version);
         if (ByteUtil.readLeInt(vgmBuf, 0x68) != 0 && 0x68 < vgmDataOffset - 3) {
             chip = new MDSound.Chip();
             chip.id = 0;
-            YmZ280bInst ymz280b = new YmZ280bInst();
+            YmZ280bInst ymz280b = Instrument.getInstrument(YmZ280bInst.class);
             chip.instrument = ymz280b;
             chip.samplingRate = SamplingRate;
             chip.clock = ByteUtil.readLeInt(vgmBuf, 0x68) & 0x7fff_ffff;
@@ -603,7 +607,7 @@ Debug.printf("version is after 1.50, %04x", version);
         if (ByteUtil.readLeInt(vgmBuf, 0x74) != 0 && 0x74 < vgmDataOffset - 3) {
             chip = new MDSound.Chip();
             chip.id = 0;
-            MameAy8910Inst ay8910 = new MameAy8910Inst();
+            MameAy8910Inst ay8910 = Instrument.getInstrument(MameAy8910Inst.class);
             chip.instrument = ay8910;
             chip.samplingRate = SamplingRate;
             chip.clock = ByteUtil.readLeInt(vgmBuf, 0x74) & 0x7fff_ffff;
@@ -619,7 +623,7 @@ Debug.printf("version is after 1.50, %04x", version);
             if (ByteUtil.readLeInt(vgmBuf, 0x80) != 0 && 0x80 < vgmDataOffset - 3) {
                 chip = new MDSound.Chip();
                 chip.id = 0;
-                DmgInst gb = new DmgInst();
+                DmgInst gb = Instrument.getInstrument(DmgInst.class);
                 chip.instrument = gb;
                 chip.samplingRate = SamplingRate;
                 chip.clock = ByteUtil.readLeInt(vgmBuf, 0x80);
@@ -631,7 +635,7 @@ Debug.printf("version is after 1.50, %04x", version);
             if (ByteUtil.readLeInt(vgmBuf, 0x84) != 0 && 0x84 < vgmDataOffset - 3) {
                 chip = new MDSound.Chip();
                 chip.id = 0;
-                IntFNesInst nes_intf = new IntFNesInst();
+                IntFNesInst nes_intf = Instrument.getInstrument(IntFNesInst.class);
                 chip.instrument = nes_intf;
                 chip.samplingRate = SamplingRate;
                 chip.clock = ByteUtil.readLeInt(vgmBuf, 0x84);
@@ -643,7 +647,7 @@ Debug.printf("version is after 1.50, %04x", version);
             if (ByteUtil.readLeInt(vgmBuf, 0x88) != 0 && 0x88 < vgmDataOffset - 3) {
                 chip = new MDSound.Chip();
                 chip.id = 0;
-                MultiPcmInst multipcm = new MultiPcmInst();
+                MultiPcmInst multipcm = Instrument.getInstrument(MultiPcmInst.class);
                 chip.instrument = multipcm;
                 chip.samplingRate = SamplingRate;
                 chip.clock = ByteUtil.readLeInt(vgmBuf, 0x88) & 0x7fff_ffff;
@@ -655,7 +659,7 @@ Debug.printf("version is after 1.50, %04x", version);
             if (ByteUtil.readLeInt(vgmBuf, 0x90) != 0 && 0x90 < vgmDataOffset - 3) {
                 chip = new MDSound.Chip();
                 chip.id = 0;
-                OkiM6258Inst okim6258 = new OkiM6258Inst();
+                OkiM6258Inst okim6258 = Instrument.getInstrument(OkiM6258Inst.class);
                 chip.instrument = okim6258;
                 chip.samplingRate = SamplingRate;
                 chip.clock = ByteUtil.readLeInt(vgmBuf, 0x90) & 0xbfff_ffff;
@@ -668,7 +672,7 @@ Debug.printf("version is after 1.50, %04x", version);
             if (ByteUtil.readLeInt(vgmBuf, 0x98) != 0 && 0x98 < vgmDataOffset - 3) {
                 chip = new MDSound.Chip();
                 chip.id = 0;
-                OkiM6295Inst okim6295 = new OkiM6295Inst();
+                OkiM6295Inst okim6295 = Instrument.getInstrument(OkiM6295Inst.class);
                 chip.instrument = okim6295;
                 chip.samplingRate = SamplingRate;
                 chip.clock = ByteUtil.readLeInt(vgmBuf, 0x98) & 0xbfff_ffff;
@@ -681,7 +685,7 @@ Debug.printf("version is after 1.50, %04x", version);
             if (ByteUtil.readLeInt(vgmBuf, 0x9c) != 0 && 0x9c < vgmDataOffset - 3) {
                 chip = new MDSound.Chip();
                 chip.id = 0;
-                K051649Inst k051649 = new K051649Inst();
+                K051649Inst k051649 = Instrument.getInstrument(K051649Inst.class);
                 chip.instrument = k051649;
                 chip.samplingRate = SamplingRate;
                 chip.clock = ByteUtil.readLeInt(vgmBuf, 0x9c);
@@ -691,7 +695,7 @@ Debug.printf("version is after 1.50, %04x", version);
             }
 
             if (ByteUtil.readLeInt(vgmBuf, 0xa0) != 0 && 0xa0 < vgmDataOffset - 3) {
-                K054539Inst k054539 = new K054539Inst();
+                K054539Inst k054539 = Instrument.getInstrument(K054539Inst.class);
                 int max = (ByteUtil.readLeInt(vgmBuf, 0xa0) & 0x4000_0000) != 0 ? 2 : 1;
                 for (int i = 0; i < max; i++) {
                     chip = new MDSound.Chip();
@@ -709,7 +713,7 @@ Debug.printf("version is after 1.50, %04x", version);
             if (ByteUtil.readLeInt(vgmBuf, 0xa4) != 0 && 0xa4 < vgmDataOffset - 3) {
                 chip = new MDSound.Chip();
                 chip.id = 0;
-                HuC6280Inst huc8910 = new HuC6280Inst();
+                HuC6280Inst huc8910 = Instrument.getInstrument(HuC6280Inst.class);
                 chip.instrument = huc8910;
                 chip.samplingRate = SamplingRate;
                 chip.clock = ByteUtil.readLeInt(vgmBuf, 0xa4);
@@ -721,7 +725,7 @@ Debug.printf("version is after 1.50, %04x", version);
             if (ByteUtil.readLeInt(vgmBuf, 0xa8) != 0 && 0xa8 < vgmDataOffset - 3) {
                 chip = new MDSound.Chip();
                 chip.id = 0;
-                C140Inst c140 = new C140Inst();
+                C140Inst c140 = Instrument.getInstrument(C140Inst.class);
                 chip.instrument = c140;
                 chip.samplingRate = SamplingRate;
                 chip.clock = ByteUtil.readLeInt(vgmBuf, 0xa8);
@@ -733,7 +737,7 @@ Debug.printf("version is after 1.50, %04x", version);
             if (ByteUtil.readLeInt(vgmBuf, 0xac) != 0 && 0xac < vgmDataOffset - 3) {
                 chip = new MDSound.Chip();
                 chip.id = 0;
-                K053260Inst k053260 = new K053260Inst();
+                K053260Inst k053260 = Instrument.getInstrument(K053260Inst.class);
                 chip.instrument = k053260;
                 chip.samplingRate = SamplingRate;
                 chip.clock = ByteUtil.readLeInt(vgmBuf, 0xac);
@@ -745,7 +749,7 @@ Debug.printf("version is after 1.50, %04x", version);
             if (ByteUtil.readLeInt(vgmBuf, 0xb4) != 0 && 0xb4 < vgmDataOffset - 3) {
                 chip = new MDSound.Chip();
                 chip.id = 0;
-                CtrQSoundInst qsound = new CtrQSoundInst();
+                CtrQSoundInst qsound = Instrument.getInstrument(CtrQSoundInst.class);
                 chip.instrument = qsound;
                 chip.samplingRate = SamplingRate;
                 chip.clock = ByteUtil.readLeInt(vgmBuf, 0xb4);
@@ -759,7 +763,7 @@ Debug.printf("version is after 1.50, %04x", version);
                     if (ByteUtil.readLeInt(vgmBuf, 0xc0) != 0 && 0xc0 < vgmDataOffset - 3) {
                         chip = new MDSound.Chip();
                         chip.id = 0;
-                        WsAudioInst wswan = new WsAudioInst();
+                        WsAudioInst wswan = Instrument.getInstrument(WsAudioInst.class);
                         chip.instrument = wswan;
                         chip.samplingRate = SamplingRate;
                         chip.clock = ByteUtil.readLeInt(vgmBuf, 0xc0);
@@ -772,7 +776,7 @@ Debug.printf("version is after 1.50, %04x", version);
                     if (ByteUtil.readLeInt(vgmBuf, 0xdc) != 0 && 0xdc < vgmDataOffset - 3) {
                         chip = new MDSound.Chip();
                         chip.id = 0;
-                        C352Inst c352 = new C352Inst();
+                        C352Inst c352 = Instrument.getInstrument(C352Inst.class);
                         chip.instrument = c352;
                         chip.samplingRate = SamplingRate;
                         chip.clock = ByteUtil.readLeInt(vgmBuf, 0xdc);
@@ -785,7 +789,7 @@ Debug.printf("version is after 1.50, %04x", version);
                     if (ByteUtil.readLeInt(vgmBuf, 0xe0) != 0 && 0xe0 < vgmDataOffset - 3) {
                         chip = new MDSound.Chip();
                         chip.id = 0;
-                        Ga20Inst ga20 = new Ga20Inst();
+                        Ga20Inst ga20 = Instrument.getInstrument(Ga20Inst.class);
                         chip.instrument = ga20;
                         chip.samplingRate = SamplingRate;
                         chip.clock = ByteUtil.readLeInt(vgmBuf, 0xe0);
@@ -818,7 +822,7 @@ Debug.println("chips: " + chips.length);
         caa.smpLast = 0x00;
     }
 
-    static int dummy = 0;
+//static int dummy = 0;
 
     private void emuCallback() {
         int len = 512;
@@ -829,7 +833,7 @@ Debug.println("chips: " + chips.length);
         emuSeqCounter = Math.max(emuSeqCounter, 0);
 
         for (int i = 0; i < bufCnt; i++) {
-            mds.update(emuRenderBuf, 0, 2, this::oneFrameVGMaaa);
+            mds.update(emuRenderBuf, 0, 1, this::oneFrameVGMaaa);
 
             ByteUtil.writeLeShort(emuRenderBuf[0], frames, i * 4 + 0);
             ByteUtil.writeLeShort(emuRenderBuf[1], frames, i * 4 + 2);
@@ -838,8 +842,8 @@ Debug.println("chips: " + chips.length);
 //            dummy %= 500;
 //            frames[i * 2 + 0] = (short) dummy; // (dummy < 100 ? 0xfff : 0x000);
         }
-if (dummy++ > 300) System.exit(1);
-Debug.println("\n" + StringUtil.getDump(frames, 32));
+//if (dummy++ > 300) System.exit(1);
+//Debug.println("\n" + StringUtil.getDump(frames, len));
         audioOutput.write(frames, 0, len / 2);
     }
 
@@ -855,7 +859,7 @@ Debug.println("\n" + StringUtil.getDump(frames, 32));
     private void oneFrameVGM() {
 
         if (!vgmAnalyze) {
-Debug.println("vgmAnalyz is flase");
+//Debug.println("vgmAnalyz is flase");
             return;
         }
 
@@ -867,7 +871,7 @@ Debug.println("vgmAnalyz is flase");
         if (vgmAdr == vgmBuf.length || vgmAdr == vgmEof) {
             vgmAnalyze = false;
             sm.requestStopAtDataMaker();
-Debug.println("eof");
+Debug.println("eof: vgmAdr: " + vgmAdr + ", vgmBuf.length: " + vgmBuf.length + ", vgmEof: " + vgmEof);
             return;
         }
 
@@ -887,8 +891,8 @@ Debug.println("eof");
             vgmAdr += 3;
             //mds.write(YM2413Inst.class, 0, rAdr, rDat);
             break;
-        case 0x52: // Ym2612Inst Port0
-        case 0x53: // Ym2612Inst Port1
+        case 0x52: // Ym2612 Port0
+        case 0x53: // Ym2612 Port1
             p = (cmd == 0x52) ? 0 : 1;
             rAdr = vgmBuf[vgmAdr + 1] & 0xff;
             rDat = vgmBuf[vgmAdr + 2] & 0xff;
@@ -1071,7 +1075,7 @@ Debug.println("eof");
                             new Pack(0, 0, 0x100 + 0x0c, 0xff),
                             new Pack(0, 0, 0x100 + 0x0d, 0xff));
 
-                    // データ転送
+                    // Data Transfer
                     for (int cnt = 0; cnt < bLen - 8; cnt++) {
                         data.add(new Pack(0, 0, 0x100 + 0x08, vgmBuf[vgmAdr + 15 + cnt] & 0xff));
                     }
@@ -1354,14 +1358,14 @@ Debug.println("eof");
             mds.write(QSoundInst.class, 0, 0, 0x00, vgmBuf[vgmAdr + 1] & 0xff);
             mds.write(QSoundInst.class, 0, 0, 0x01, vgmBuf[vgmAdr + 2] & 0xff);
             mds.write(QSoundInst.class, 0, 0, 0x02, vgmBuf[vgmAdr + 3] & 0xff);
-            //rDat = vgmBuf[vgmAdr + 3];
-            //if (rsc == null) dataEnq(DriverSeqCounter, 0xc4, 0, vgmBuf[vgmAdr + 1] * 0x100 + vgmBuf[vgmAdr + 2], rDat);
+            //rDat = vgmBuf[vgmAdr + 3] & 0xff;
+            //if (rsc == null) dataEnq(DriverSeqCounter, 0xc4, 0, (vgmBuf[vgmAdr + 1] & 0xff) * 0x100 + (vgmBuf[vgmAdr + 2] & 0xff), rDat);
             vgmAdr += 4;
             break;
         case 0xd0: // YMF278B
             int ymf278b_port = vgmBuf[vgmAdr + 1] & 0x7f;
             int ymf278b_offset = vgmBuf[vgmAdr + 2] & 0xff;
-            rDat = vgmBuf[vgmAdr + 3];
+            rDat = vgmBuf[vgmAdr + 3] & 0xff;
             int ymf278b_chipId = (vgmBuf[vgmAdr + 1] & 0x80) != 0 ? 1 : 0;
             vgmAdr += 4;
             //mds.write(YMF278BInst.class, ymf278b_chipId, ymf278b_port, ymf278b_offset, rDat);

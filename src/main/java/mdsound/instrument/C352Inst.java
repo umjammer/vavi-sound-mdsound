@@ -12,7 +12,7 @@ import mdsound.chips.C352;
 public class C352Inst extends Instrument.BaseInstrument {
 
     private static final int MAX_CHIPS = 0x02;
-    private static C352[] chips = new C352[MAX_CHIPS];
+    private static final C352[] chips = new C352[MAX_CHIPS];
 
     @Override
     public String getName() {
@@ -59,7 +59,7 @@ public class C352Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int SamplingRate, int clockValue, Object... Option) {
+    public int start(int chipId, int samplingRate, int clock, Object... Option) {
         byte clockDivider;
         if (Option == null || Option.length < 1) clockDivider = 0;
         else clockDivider = (byte) Option[0];
@@ -68,7 +68,7 @@ public class C352Inst extends Instrument.BaseInstrument {
             return 0;
 
         C352 chip = chips[chipId];
-        return chip.start(clockValue, clockDivider * 4);
+        return chip.start(clock, clockDivider * 4);
     }
 
     @Override
@@ -94,12 +94,12 @@ public class C352Inst extends Instrument.BaseInstrument {
         c.writeRom2(romSize, dataStart, dataLength, romData, srcStartAdr);
     }
 
-    private void c352_set_mute_mask(int chipId, int muteMask) {
+    private static void c352_set_mute_mask(int chipId, int muteMask) {
         C352 c = chips[chipId];
         c.setMuteMask(muteMask);
     }
 
-    private int c352_get_mute_mask(int chipId) {
+    private static int c352_get_mute_mask(int chipId) {
         C352 c = chips[chipId];
         return c.getMuteMask();
     }
@@ -108,7 +108,7 @@ public class C352Inst extends Instrument.BaseInstrument {
         C352.setOptions(flags);
     }
 
-    private int get_mute_mask(int chipId) {
+    private static int get_mute_mask(int chipId) {
         C352 c = chips[chipId];
         return c.getMuteMask();
     }

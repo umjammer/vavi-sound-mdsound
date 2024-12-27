@@ -14,7 +14,8 @@ public class DCFilter {
 
     private double r, c;
     private double a;
-    private double[] in = new double[2], out = new double[2];
+    private final double[] in = new double[2];
+    private final double[] out = new double[2];
     private double rate;
 
     public DCFilter() {

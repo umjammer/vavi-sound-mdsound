@@ -54,8 +54,8 @@ public class IntFNesInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int samplingRate, int clockValue, Object... Option) {
-        return start(chipId, clockValue);
+    public int start(int chipId, int samplingRate, int clock, Object... Option) {
+        return start(chipId, clock);
     }
 
     @Override
@@ -127,7 +127,7 @@ public class IntFNesInst extends Instrument.BaseInstrument {
 
     //----
 
-    private Consumer<int[]> listenr = ds -> {
+    private final Consumer<int[]> listenr = ds -> {
         if (ds[0] != -1) np_nes_apu_volume = ds[0];
         if (ds[1] != -1) np_nes_dmc_volume = ds[1];
         if (ds[2] != -1) np_nes_fds_volume = ds[2];

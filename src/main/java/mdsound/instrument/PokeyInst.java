@@ -28,8 +28,8 @@ public class PokeyInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock, int clockValue, Object... option) {
-        return device_start_pokey(chipId, clockValue);
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        return device_start_pokey(chipId, clock);
     }
 
     @Override
@@ -49,7 +49,7 @@ public class PokeyInst extends Instrument.BaseInstrument {
     }
 
     private static final int MAX_CHIPS = 0x02;
-    private Pokey[] chips = new Pokey[MAX_CHIPS];
+    private final Pokey[] chips = new Pokey[MAX_CHIPS];
 
     private void pokey_update(int chipId, int[][] outputs, int samples) {
         Pokey chip = chips[chipId];
@@ -95,7 +95,7 @@ public class PokeyInst extends Instrument.BaseInstrument {
 //    /**
 //     * Generic get_info
 //     */
-//    DEVICE_GET_INFO( PokeyInst ) {
+//    DEVICE_GET_INFO( Pokey ) {
 //      case DEVINFO_STR_NAME:       strcpy(info.s, "POKEY");      break;
 //      case DEVINFO_STR_FAMILY:     strcpy(info.s, "Atari custom");    break;
 //      case DEVINFO_STR_VERSION:     strcpy(info.s, "4.51");      break;

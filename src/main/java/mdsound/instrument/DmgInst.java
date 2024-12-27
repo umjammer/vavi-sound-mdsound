@@ -29,8 +29,8 @@ public class DmgInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock, int clockValue, Object... option) {
-        return startDevice(chipId, clockValue);
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        return startDevice(chipId, clock);
     }
 
     @Override
@@ -47,7 +47,7 @@ public class DmgInst extends Instrument.BaseInstrument {
     }
 
     private static final int MAX_CHIPS = 0x02;
-    private GbSound[] gbSoundData = new GbSound[] {new GbSound(), new GbSound()};
+    private final GbSound[] gbSoundData = new GbSound[] {new GbSound(), new GbSound()};
 
     public int readWave(int chipId, int offset) {
         GbSound gb = gbSoundData[chipId];

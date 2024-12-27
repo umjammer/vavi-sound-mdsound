@@ -131,11 +131,11 @@ public class Pokey {
      */
     private static final int POKEY_DEFAULT_GAIN = (32767 / 11 / 4);
 
-    private Logger logger = System.getLogger(PokeyInst.class.getName());
-    private Logger LOG_SOUND = System.getLogger(PokeyInst.class.getName() + ".SOUND");
-    private Logger LOG_TIMER = System.getLogger(PokeyInst.class.getName() + ".TIMER");
-    private Logger LOG_POLY = System.getLogger(PokeyInst.class.getName() + ".POLY");
-    private Logger LOG_RAND = System.getLogger(PokeyInst.class.getName() + ".RAND");
+    private final Logger logger = System.getLogger(PokeyInst.class.getName());
+    private final Logger LOG_SOUND = System.getLogger(PokeyInst.class.getName() + ".SOUND");
+    private final Logger LOG_TIMER = System.getLogger(PokeyInst.class.getName() + ".TIMER");
+    private final Logger LOG_POLY = System.getLogger(PokeyInst.class.getName() + ".POLY");
+    private final Logger LOG_RAND = System.getLogger(PokeyInst.class.getName() + ".RAND");
 
     private static final int CHAN1 = 0;
     private static final int CHAN2 = 1;
@@ -239,16 +239,16 @@ public class Pokey {
     private static final int DIV_15 = 114;
 
     /** channel counter */
-    private int[] counter = new int[4];
+    private final int[] counter = new int[4];
     /** channel divisor (modulo value) */
-    private int[] divisor = new int[4];
+    private final int[] divisor = new int[4];
     /** channel volume - derived */
-    private int[] volume = new int[4];
+    private final int[] volume = new int[4];
     /** channel output signal (1 active, 0 inactive) */
-    private int[] output = new int[4];
+    private final int[] output = new int[4];
     /** channel plays an audible tone/effect */
-    private int[] audible = new int[4];
-    private int[] muted = new int[4];
+    private final int[] audible = new int[4];
+    private final int[] muted = new int[4];
     /** sample rate in 24.8 format */
     private int samplerate24_8;
     /** sample position fractional part */
@@ -273,11 +273,11 @@ public class Pokey {
     private int clockMult;
 
     /** AUDFx (D200, D202, D204, D206) */
-    private int[] audioF = new int[4];
+    private final int[] audioF = new int[4];
     /** AUDCx (D201, D203, D205, D207) */
-    private int[] audioC = new int[4];
+    private final int[] audioC = new int[4];
     /** POTx   (R/D200-D207) */
-    private int[] POTx = new int[8];
+    private final int[] POTx = new int[8];
     /** AUDCTL (W/D208) */
     private int audioControl;
     /** ALLPOT (R/D208) */
@@ -300,13 +300,13 @@ public class Pokey {
     private int skCtl;
     private double clockPeriod;
 
-    private byte[] poly4 = new byte[0x0f];
-    private byte[] poly5 = new byte[0x1f];
-    private byte[] poly9 = new byte[0x1ff];
-    private byte[] poly17 = new byte[0x1ffff];
+    private final byte[] poly4 = new byte[0x0f];
+    private final byte[] poly5 = new byte[0x1f];
+    private final byte[] poly9 = new byte[0x1ff];
+    private final byte[] poly17 = new byte[0x1ffff];
 
-    private byte[] rand9 = new byte[0x1ff];
-    private byte[] rand17 = new byte[0x1ffff];
+    private final byte[] rand9 = new byte[0x1ff];
+    private final byte[] rand17 = new byte[0x1ffff];
 
     private byte P4() {
         return this.poly4[this.p4];

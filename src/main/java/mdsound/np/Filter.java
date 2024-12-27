@@ -4,8 +4,7 @@ package mdsound.np;
 import mdsound.np.Device.Renderable;
 
 //
-// filter.h から抜粋
-//
+// Excerpt from filter.h
 //
 public class Filter {
 
@@ -20,7 +19,7 @@ public class Filter {
     public Filter() {
         getaBits = 20;
         target = null;
-        rate = 48000;// DEFAULT_RATE;
+        rate = 48000; // DEFAULT_RATE;
         r = 4700;
         C = 10.0E-9;
         disable = false;

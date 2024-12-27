@@ -124,13 +124,13 @@ public class Sn76496 {
     private static final int MAX_OUTPUT = 0x8000;
 
     /** volume table (for 4-bit to db conversion) */
-    private int[] volTable = new int[16];
+    private final int[] volTable = new int[16];
     /** registers */
-    private int[] register = new int[8];
+    private final int[] register = new int[8];
     /** last register written */
     private int lastRegister;
     /** db volume of Voice 0-2 and noise */
-    private int[] volume = new int[4];
+    private final int[] volume = new int[4];
     /** noise generator LFSR */
     private int rng;
     /** clock divider */
@@ -149,16 +149,16 @@ public class Sn76496 {
     /** the stereo output mask */
     private int stereoMask;
     /** Length of 1/2 of waveform */
-    private int[] period = new int[4];
+    private final int[] period = new int[4];
     /** Position within the waveform */
-    private int[] count = new int[4];
+    private final int[] count = new int[4];
     /** 1-bit output of each channel, pre-volume */
-    private int[] output = new int[4];
+    private final int[] output = new int[4];
     /** number of cycles until the READY line goes active */
     private int cyclestoReady;
     /** flag for if frequency zero acts as if it is one more than max (0x3ff+1) or if it acts like 0 */
     private int freq0IsMax;
-    private int[] muteMsk = new int[4];
+    private final int[] muteMsk = new int[4];
     /** bit 7 - NGP Mode on/off, bit 0 - is 2nd NGP chips */
     private int ngpFlags;
     /** Pointer to other Chip */

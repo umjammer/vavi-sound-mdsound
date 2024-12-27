@@ -347,7 +347,7 @@ public class Emu2413 {
             }
 
             /* dB to Liner table */
-            private static short[] db2linTable = new short[(DB_MUTE + DB_MUTE) * 2];
+            private static final short[] db2linTable = new short[(DB_MUTE + DB_MUTE) * 2];
 
             /* Table for dB(0 -- (1<<DB_BITS)-1) to Liner(0 -- DB2LIN_AMP_WIDTH) */
             static {
@@ -509,7 +509,7 @@ public class Emu2413 {
             this.car(c).volume = volume;
         }
 
-        /* Set F-Number ( fnum : 9bit ) */
+        /* Set F-Number ( fNum : 9bit ) */
         private void setFnumber(int c, int fnum) {
             this.car(c).fnum = fnum;
             this.mod(c).fnum = fnum;
@@ -755,7 +755,7 @@ public class Emu2413 {
         }
 
         /** EG */
-        private void calc_envelope(Slot slot, int lfo) {
+        private static void calc_envelope(Slot slot, int lfo) {
             int egout;
 
             switch (EgState.valueOf(slot.egMode)) {
@@ -1455,11 +1455,11 @@ public class Emu2413 {
         private static final int SL_BITS = 4;
         private static final int SL_MUTE = (1 << SL_BITS);
 
-        private int EG2DB(int d) {
+        private static int EG2DB(int d) {
             return ((d) * (int) (EG_STEP / DB_STEP));
         }
 
-        private int TL2EG(int d) {
+        private static int TL2EG(int d) {
             return ((d) * (int) (TL_STEP / EG_STEP));
         }
 
@@ -1503,7 +1503,7 @@ public class Emu2413 {
         }
 
         /* Leave the lower b bit(s). */
-        private int lowBits(int c, int b) {
+        private static int lowBits(int c, int b) {
             return ((c) & ((1 << (b)) - 1));
         }
 
@@ -1513,7 +1513,7 @@ public class Emu2413 {
         }
 
         /* Expand x which is s bits to d bits and fill expanded bits '1' */
-        private int expandBitsX(int x, int s, int d) {
+        private static int expandBitsX(int x, int s, int d) {
             return (((x) << ((d) - (s))) | ((1 << ((d) - (s))) - 1));
         }
 
@@ -1532,21 +1532,21 @@ public class Emu2413 {
         private int rate = 3354932;
 
         /* WaveTable for each envelope amp */
-        private static int[] fullSinTable = new int[PG_WIDTH];
-        private static int[] halfSinTable = new int[PG_WIDTH];
+        private static final int[] fullSinTable = new int[PG_WIDTH];
+        private static final int[] halfSinTable = new int[PG_WIDTH];
 
-        private static int[][] waveForm = new int[2][];//{ fullsintable, halfsintable };
+        private static final int[][] waveForm = new int[2][];//{ fullsintable, halfsintable };
 
         /* LFO Table */
-        private int[] pmTable = new int[PM_PG_WIDTH];
-        private int[] amTable = new int[AM_PG_WIDTH];
+        private final int[] pmTable = new int[PM_PG_WIDTH];
+        private final int[] amTable = new int[AM_PG_WIDTH];
 
         /* Phase delta for LFO */
         private int pmDPhase;
         private int amDPhase;
 
         /* Liner to Log curve conversion table (for Attack rate). */
-        private static int[] AR_ADJUST_TABLE = new int[1 << EG_BITS];
+        private static final int[] AR_ADJUST_TABLE = new int[1 << EG_BITS];
 
         /* Empty Voice data */
         private static final Slot.Patch null_patch = new Slot.Patch();
@@ -1602,13 +1602,13 @@ public class Emu2413 {
         }
 
         /* Phase incr table for Attack */
-        private static int[][] dPhaseARTable = new int[][] {
+        private static final int[][] dPhaseARTable = new int[][] {
                 new int[16], new int[16], new int[16], new int[16], new int[16], new int[16], new int[16], new int[16],
                 new int[16], new int[16], new int[16], new int[16], new int[16], new int[16], new int[16], new int[16]
         };
 
         /* Phase incr table for Decay and Release */
-        private static int[][] dPhaseDRTable = new int[][] {
+        private static final int[][] dPhaseDRTable = new int[][] {
                 new int[16], new int[16], new int[16], new int[16], new int[16], new int[16], new int[16], new int[16],
                 new int[16], new int[16], new int[16], new int[16], new int[16], new int[16], new int[16], new int[16]
         };
@@ -1626,14 +1626,14 @@ public class Emu2413 {
          */
 
         /* Table for AR to LogCurve. */
-        private void makeAdjustTable() {
+        private static void makeAdjustTable() {
             AR_ADJUST_TABLE[0] = (1 << EG_BITS) - 1;
             for (int i = 1; i < (1 << EG_BITS); i++)
                 AR_ADJUST_TABLE[i] = (int) ((double) (1 << EG_BITS) - 1 - ((1 << EG_BITS) - 1) * Math.log(i) / Math.log(127));
         }
 
         /* Liner(+0.0 - +1.0) to dB((1<<DB_BITS) - 1 -- 0) */
-        private int lin2db(double d) {
+        private static int lin2db(double d) {
             if (d == 0)
                 return (DB_MUTE - 1);
             else
@@ -1641,7 +1641,7 @@ public class Emu2413 {
         }
 
         /* Sin Table */
-        private void makeSinTable() {
+        private static void makeSinTable() {
             for (int i = 0; i < PG_WIDTH / 4; i++) {
                 fullSinTable[i] = lin2db(Math.sin(2.0 * Math.PI * i / PG_WIDTH));
             }
@@ -1659,7 +1659,7 @@ public class Emu2413 {
                 halfSinTable[i] = fullSinTable[0];
         }
 
-        private double saw(double phase) {
+        private static double saw(double phase) {
             if (phase <= Math.PI / 2)
                 return phase * 2 / Math.PI;
             else if (phase <= Math.PI * 3 / 2)
@@ -1693,7 +1693,7 @@ public class Emu2413 {
                         dphaseTable[fnum][block][ml] = adjustRate(((fnum * mlTable[ml]) << block) >> (20 - DP_BITS));
         }
 
-        private void makeTllTable() {
+        private static void makeTllTable() {
             //#define dB2(x) ((x)*2)
 
             double[] klTable = new double[] {
@@ -1799,7 +1799,7 @@ public class Emu2413 {
                 }
         }
 
-        public void makeRksTable() {
+        public static void makeRksTable() {
             for (int fnum8 = 0; fnum8 < 2; fnum8++)
                 for (int block = 0; block < 8; block++)
                     for (int kr = 0; kr < 2; kr++) {
@@ -1810,7 +1810,7 @@ public class Emu2413 {
                     }
         }
 
-        private void OPLL_dump2patch(byte[] dump, int type, int ptr, Slot.Patch[][][] patch) {
+        private static void OPLL_dump2patch(byte[] dump, int type, int ptr, Slot.Patch[][][] patch) {
             patch[type][ptr][0].am = (dump[0 + ptr * 16] >> 7) & 1;
             patch[type][ptr][1].am = (dump[1 + ptr * 16] >> 7) & 1;
             patch[type][ptr][0].pm = ((dump[0 + ptr * 16] >> 6) & 1);
@@ -1837,7 +1837,7 @@ public class Emu2413 {
             patch[type][ptr][1].rr = ((dump[7 + ptr * 16]) & 15);
         }
 
-        private void OPLL_getDefaultPatch(int type, int num, Slot.Patch[][][] patch) {
+        private static void OPLL_getDefaultPatch(int type, int num, Slot.Patch[][][] patch) {
             OPLL_dump2patch(default_inst[type], type, num, patch);
         }
 
@@ -1858,7 +1858,7 @@ public class Emu2413 {
             }
         }
 
-        private void OPLL_patch2dump(Slot.Patch[] patch, byte[] dump) {
+        private static void OPLL_patch2dump(Slot.Patch[] patch, byte[] dump) {
             dump[0] = (byte) ((patch[0].am << 7) + (patch[0].pm << 6) + (patch[0].eg << 5) + (patch[0].kr << 4) + patch[0].ml);
             dump[1] = (byte) ((patch[1].am << 7) + (patch[1].pm << 6) + (patch[1].eg << 5) + (patch[1].kr << 4) + patch[1].ml);
             dump[2] = (byte) ((patch[0].kl << 6) + patch[0].tl);

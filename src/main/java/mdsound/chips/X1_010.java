@@ -77,7 +77,7 @@ public class X1_010 {
         private int start;
         /** end address / envelope no. */
         private int end;
-        private byte[] reserve = new byte[2];
+        private final byte[] reserve = new byte[2];
     }
 
     // Variables only used here
@@ -89,13 +89,13 @@ public class X1_010 {
     /** Sound output enable/disable */
     private int soundEnable;
     /** X1-010 Register & wave form area */
-    private byte[] reg = new byte[0x2000];
-    private int[] smpOffset = new int[SETA_NUM_CHANNELS];
-    private int[] envOffset = new int[SETA_NUM_CHANNELS];
+    private final byte[] reg = new byte[0x2000];
+    private final int[] smpOffset = new int[SETA_NUM_CHANNELS];
+    private final int[] envOffset = new int[SETA_NUM_CHANNELS];
 
     private int baseClock;
 
-    private int[] muted = new int[SETA_NUM_CHANNELS];
+    private final int[] muted = new int[SETA_NUM_CHANNELS];
 
     /**
      * generate Sound to the mix buffer
@@ -148,7 +148,7 @@ public class X1_010 {
                 } else { // Wave form
                     int start = (this.reg[ch * 8 + 1] & 0xff) * 128 + 0x1000;
                     int smpOffs = this.smpOffset[ch];
-                    int freq = ((this.reg[ch * 8 + 3] << 8) + this.reg[ch * 8 + 2]) >> div;
+                    int freq = (((this.reg[ch * 8 + 3] & 0xff) << 8) + (this.reg[ch * 8 + 2] & 0xff)) >> div;
                     int smpStep = (int) ((float) this.baseClock / 128.0 / 1024.0 / 4.0 * freq * (1 << FREQ_BASE_BITS) / (float) this.rate + 0.5f);
 
                     int env = (this.reg[ch * 8 + 5] & 0xff) * 128;

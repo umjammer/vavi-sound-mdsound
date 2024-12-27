@@ -30,9 +30,9 @@ public class Vrc6Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int sampleRate, int clockValue, Object... option) {
-        vrc6[chipId].setClock(clockValue);
-        vrc6[chipId].setRate(sampleRate);
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        vrc6[chipId].setClock(clock);
+        vrc6[chipId].setRate(samplingRate);
 
         if (option != null && option.length > 0) {
             for (Object o : option) {
@@ -44,7 +44,7 @@ public class Vrc6Inst extends Instrument.BaseInstrument {
         }
         setVolumeVRC6(0);
 
-        return sampleRate;
+        return samplingRate;
     }
 
     @Override
@@ -70,14 +70,24 @@ public class Vrc6Inst extends Instrument.BaseInstrument {
         outputs[1][0] += (short) ((limit(b[1], 0x7fff, -0x8000) * volume) >> 12); // 12 以下だと音割れる
     }
 
+    private static final int[] vrc6AddressTable = {
+            0x9000, 0x9001, 0x9002, 0x9003,
+            0xa000, 0xa001, 0xa002, 0xa003,
+            0xb000, 0xb001, 0xb002, 0xb003
+    };
+
     @Override
-    public int write(int chipId, int port, int adr, int data) {
-        vrc6[chipId].write(adr, data);
+    public synchronized int write(int chipIndex, int chipId, int adr, int data) {
+        writeInternal(chipId, 0, vrc6AddressTable[adr], data);
         return 0;
     }
 
-    private NesVrc6[] vrc6;
-    private int[] b = new int[2];
+    public void writeInternal(int chipId, int port, int adr, int data) {
+        vrc6[chipId].write(adr, data);
+    }
+
+    private final NesVrc6[] vrc6;
+    private final int[] b = new int[2];
     private int volume = 0;
 
     public Vrc6Inst() {

@@ -19,7 +19,7 @@ import mdsound.chips.MultiPCM;
 import mdsound.chips.OkiM6258;
 import mdsound.chips.OkiM6295;
 import mdsound.chips.OotakeHuC6280;
-import mdsound.chips.PPZ8Status;
+import mdsound.chips.PPZ8;
 import mdsound.chips.PcmChip;
 import mdsound.chips.Rf5c68;
 import mdsound.chips.SegaPcm;
@@ -43,10 +43,10 @@ public class MDSound {
     public DacControl dacControl = null;
 
     private Chip[] chips = null;
-    private Map<Class<? extends Instrument>, Instrument[]> instruments = new HashMap<>();
+    private final Map<Class<? extends Instrument>, Instrument[]> instruments = new HashMap<>();
 
     private int[][] buffer = null;
-    private int[][] buff = new int[][] {new int[1], new int[1]};
+    private final int[][] buff = new int[][] {new int[1], new int[1]};
 
     private List<int[]> sn76489Mask = Arrays.asList(new int[][] {new int[] {15, 15}}); // psgはmuteを基準にしているのでビットが逆です
     private List<int[]> ym2612Mask = Arrays.asList(new int[][] {new int[] {0, 0}});
@@ -54,13 +54,13 @@ public class MDSound {
     private List<int[]> segapcmMask = Arrays.asList(new int[][] {new int[] {0, 0}});
     private List<int[]> qsoundMask = Arrays.asList(new int[][] {new int[] {0, 0}});
     private List<int[]> qsoundCtrMask = Arrays.asList(new int[][] {new int[] {0, 0}});
-    private List<int[]> okim6295Mask = Arrays.asList(new int[][] {new int[] {0, 0}});
+    private final List<int[]> okim6295Mask = Arrays.asList(new int[][] {new int[] {0, 0}});
     private List<int[]> c140Mask = Arrays.asList(new int[][] {new int[] {0, 0}});
     private List<int[]> ay8910Mask = Arrays.asList(new int[][] {new int[] {0, 0}});
-    private List<int[]> huc6280Mask = Arrays.asList(new int[][] {new int[] {0, 0}});
-    private List<int[]> nesMask = Arrays.asList(new int[][] {new int[] {0, 0}});
-    private List<int[]> saa1099Mask = Arrays.asList(new int[][] {new int[] {0, 0}});
-    private List<int[]> x1_010Mask = Arrays.asList(new int[][] {new int[] {0, 0}});
+    private final List<int[]> huc6280Mask = Arrays.asList(new int[][] {new int[] {0, 0}});
+    private final List<int[]> nesMask = Arrays.asList(new int[][] {new int[] {0, 0}});
+    private final List<int[]> saa1099Mask = Arrays.asList(new int[][] {new int[] {0, 0}});
+    private final List<int[]> x1_010Mask = Arrays.asList(new int[][] {new int[] {0, 0}});
     private final List<int[]> WsAudioMask = Arrays.asList(new int[][] {new int[] {0, 0}});
 
     private final int[][][] rf5c164Vol = new int[][][] {
@@ -77,7 +77,7 @@ public class MDSound {
 
     private boolean incFlag = false;
     private final Object lockobj = new Object();
-    private int resampleMode = 0;
+    private final int resampleMode = 0;
 
     private static final int FIXPNT_BITS = 11;
     private static final int FIXPNT_FACT = (1 << FIXPNT_BITS);
@@ -91,27 +91,27 @@ public class MDSound {
 //#endif
 
     private static int getfriction(int x) {
-        return ((x) & FIXPNT_MASK);
+        return x & FIXPNT_MASK;
     }
 
     private static int getnfriction(int x) {
-        return ((FIXPNT_FACT - (x)) & FIXPNT_MASK);
+        return (FIXPNT_FACT - (x)) & FIXPNT_MASK;
     }
 
     private static int fpi_floor(int x) {
-        return (x) & ~FIXPNT_MASK;
+        return x & ~FIXPNT_MASK;
     }
 
     private static int fpi_ceil(int x) {
         return (x + FIXPNT_MASK) & ~FIXPNT_MASK;
     }
 
-    private static int fp2i_floor(int x) {
-        return ((x) / FIXPNT_FACT);
+    private static int fp2i_floor(long x) {
+        return (int) (x / FIXPNT_FACT);
     }
 
-    private static int fp2i_ceil(int x) {
-        return ((x + FIXPNT_MASK) / FIXPNT_FACT);
+    private static int fp2i_ceil(long x) {
+        return (int) ((x + FIXPNT_MASK) / FIXPNT_FACT);
     }
 
     public static class Chip {
@@ -124,7 +124,7 @@ public class MDSound {
         public AdditionalUpdate additionalUpdate = null;
         public Map<String, SetVolume> setVolumes = new HashMap<>();
 
-        static final String MAIN_TAG = "MAIN";
+        public static final String MAIN_TAG = "MAIN";
 
         {
             setVolumes.put(MAIN_TAG, this::setDefaultSetVolume);
@@ -164,7 +164,11 @@ public class MDSound {
         }
 
         public void setVolume(String tag, int vol, double volumeMul) {
-            setVolumes.get(tag).accept(vol, volumeMul);
+            SetVolume setVolume = setVolumes.get(tag);
+            if (setVolume != null)
+                setVolumes.get(tag).accept(vol, volumeMul);
+            else
+                logger.log(Level.WARNING, "no such tag: " + tag);
         }
 
         public SetVolume mainWrappedSetVolume(SetVolume setVolume) {
@@ -354,25 +358,25 @@ instruments.forEach((k, v) -> logger.log(Level.DEBUG, k + ": " + Arrays.toString
 
                 clip(a, b);
 
-                buf[offset + i + 0] = (short) (a[0] & 0xffff);
-                buf[offset + i + 1] = (short) (b[0] & 0xffff);
-logger.log(Level.DEBUG, "[%d] %04x, %04x".formatted(i, buf[offset + i + 0], buf[offset + i + 1]));
-                visWaveBuffer.enq((short) (a[0] & 0xffff), (short) (b[0] & 0xffff));
+                buf[offset + i + 0] = (short) a[0];
+                buf[offset + i + 1] = (short) b[0];
+logger.log(Level.TRACE, "[%d] %+04d, %+04d".formatted(i, a[0], b[0]));
+                visWaveBuffer.enq((short) a[0], (short) b[0]);
             }
 
             return Math.min(i, sampleCount);
         }
     }
 
-    private void clip(int[] a, int[] b) {
-        if ((a[0] & 0xffff) + 32767 > 32767 * 2) {
+    private static void clip(int[] a, int[] b) {
+        if (((a[0] + 32767) & 0xffff) > 32767 * 2) {
             if ((a[0] + 32767) >= (32767 * 2)) {
                 a[0] = 32767;
             } else {
                 a[0] = -32767;
             }
         }
-        if ((b[0] & 0xffff) + 32767 > 32767 * 2) {
+        if (((b[0] + 32767) & 0xffff) > 32767 * 2) {
             if ((b[0] + 32767) >= (32767 * 2)) {
                 b[0] = 32767;
             } else {
@@ -382,7 +386,7 @@ logger.log(Level.DEBUG, "[%d] %04x, %04x".formatted(i, buf[offset + i + 0], buf[
     }
 
     public static int limit(int v, int max, int min) {
-        return v > max ? max : Math.max(v, min);
+        return Math.min(max, Math.max(v, min));
     }
 
     private int[][] tempSample = new int[][] {new int[1], new int[1]};
@@ -391,9 +395,11 @@ logger.log(Level.DEBUG, "[%d] %04x, %04x".formatted(i, buf[offset + i + 0], buf[
     public static String debugMsg;
     private double volumeMul;
 
+int CC = 0;
+static int INTERVAL = 1024;
     private void resampleChipStream(Chip[] insts, int[][] retSample, int length) {
         if (insts == null || insts.length < 1) {
-logger.log(Level.DEBUG, "no insts");
+logger.log(Level.WARNING, "no insts");
             return;
         }
         if (length > tempSample[0].length) {
@@ -413,7 +419,7 @@ logger.log(Level.DEBUG, "no insts");
         int smpFrc; // Sample Friction
         int inPre = 0;
         int inNow;
-        int inPosL;
+        long inPosL;
         int tempSmpL;
         int tempSmpR;
         int tempS32L;
@@ -454,6 +460,7 @@ logger.log(Level.DEBUG, "no insts");
 
                         streamBufs[0][ind] += limit((buff[0][0] * mul) >> 15, 0x7fff, -0x8000);
                         streamBufs[1][ind] += limit((buff[1][0] * mul) >> 15, 0x7fff, -0x8000);
+if ((CC % INTERVAL) == 0) { logger.log(Level.DEBUG, "%s[%d] O: %+04d, %+04d".formatted(inst.instrument.getName(), ind, streamBufs[0][ind], streamBufs[1][ind]));}
                     }
 
                     if (smpCnt == 1) {
@@ -485,13 +492,11 @@ logger.log(Level.DEBUG, "no insts");
                 break;
             case 0x01: // up sampling
                 chipSmpRate = inst.samplingRate;
-                inPosL = (int) (FIXPNT_FACT * inst.smpP * chipSmpRate / samplingRate);
+                inPosL = (long) FIXPNT_FACT * inst.smpP * chipSmpRate / samplingRate;
                 inPre = fp2i_floor(inPosL);
                 inNow = fp2i_ceil(inPosL);
 
-//if (inst.getClass() == Ym2612Inst.class) {
-// logger.log(Level.TRACE, "inPosL=%d , inPre=%d , inNow=%d , inst.SmpNext=%d".formatted(inPosL, inPre, inNow, inst.SmpNext));
-//}
+//logger.log(Level.TRACE, "inPosL=%d, inst.smpP=%d, inPre=%d, inNow=%d, inst.SmpNext=%d".formatted(inPosL, inst.smpP, inPre, inNow, inst.smpNext));
 
                 curBufL[0x00] = inst.lsmpl[0];
                 curBufR[0x00] = inst.lsmpl[1];
@@ -508,18 +513,19 @@ logger.log(Level.DEBUG, "no insts");
 
                     streamPnt[0][0] = limit((buff[0][0] * mul) >> 15, 0x7fff, -0x8000);
                     streamPnt[1][0] = limit((buff[1][0] * mul) >> 15, 0x7fff, -0x8000);
+if ((CC % INTERVAL) == 0) { logger.log(Level.DEBUG, "%s[%d] U: %+04d, %+04d".formatted(inst.instrument.getName(), ind, streamPnt[0][0], streamPnt[1][0]));}
                 }
-                for (int ind = 0; ind < (inNow - inst.smpNext); ind++) {
+                for (int ind = 0; ind < inNow - inst.smpNext; ind++) {
                     curBufL[0x02 + ind] = streamPnt[0x00][ind];
                     curBufR[0x02 + ind] = streamPnt[0x01][ind];
                 }
 
-                inBase = FIXPNT_FACT + (inPosL - inst.smpNext * FIXPNT_FACT);
+                inBase = (int) (FIXPNT_FACT + (inPosL - inst.smpNext * FIXPNT_FACT));
                 smpCnt = FIXPNT_FACT;
                 inst.smpLast = inPre;
                 inst.smpNext = inNow;
                 for (outPos = 0x00; outPos < length; outPos++) {
-                    inPos = inBase + (int) (FIXPNT_FACT * outPos * chipSmpRate / samplingRate);
+                    inPos = inBase + (FIXPNT_FACT * outPos * chipSmpRate / samplingRate);
 
                     inPre = fp2i_floor(inPos);
                     inNow = fp2i_ceil(inPos);
@@ -546,11 +552,10 @@ logger.log(Level.DEBUG, "no insts");
                     buff[0][0] = 0;
                     buff[1][0] = 0;
                     inst.instrument.update(inst.id, buff, 1);
-//logger.log(Level.TRACE, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(), ind, buff[0][ind], buff[1][ind]));
 
                     streamBufs[0][ind] = limit((buff[0][0] * mul) >> 15, 0x7fff, -0x8000);
                     streamBufs[1][ind] = limit((buff[1][0] * mul) >> 15, 0x7fff, -0x8000);
-logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(), ind, streamBufs[0][ind], streamBufs[1][ind]));
+if ((CC % INTERVAL) == 0) { logger.log(Level.DEBUG, "%s[%d] C: %+04d, %+04d".formatted(inst.instrument.getName(), ind, streamBufs[0][ind], streamBufs[1][ind]));}
                 }
                 for (outPos = 0x00; outPos < length; outPos++) {
                     tempSample[0][outPos] = curBufL[outPos];
@@ -561,7 +566,7 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
                 break;
             case 0x03: // down sampling
                 chipSmpRate = inst.samplingRate;
-                inPosL = FIXPNT_FACT * (inst.smpP + length) * chipSmpRate / samplingRate;
+                inPosL = (long) FIXPNT_FACT * (inst.smpP + length) * chipSmpRate / samplingRate;
                 inst.smpNext = fp2i_ceil(inPosL);
 
                 curBufL[0x00] = inst.lsmpl[0];
@@ -575,23 +580,23 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
                     buff[0][0] = 0;
                     buff[1][0] = 0;
                     inst.instrument.update(inst.id, buff, 1);
-                    //logger.log(Level.TRACE, "%d : %d".formatted(i, buff[0][0]));
 
                     streamPnt[0][ind] = limit((buff[0][0] * mul) >> 15, 0x7fff, -0x8000);
                     streamPnt[1][ind] = limit((buff[1][0] * mul) >> 15, 0x7fff, -0x8000);
+if ((CC % INTERVAL) == 0) { logger.log(Level.DEBUG, "%s[%d] D: %+04d, %+04d".formatted(inst.instrument.getName(), ind, streamPnt[0][0], streamPnt[1][0]));}
                 }
                 for (int ind = 0; ind < inst.smpNext - inst.smpLast; ind++) {
                     curBufL[0x01 + ind] = streamPnt[0x00][ind];
                     curBufR[0x01 + ind] = streamPnt[0x01][ind];
                 }
 
-                inPosL = (int) (FIXPNT_FACT * inst.smpP * chipSmpRate / samplingRate);
+                inPosL = (long) FIXPNT_FACT * inst.smpP * chipSmpRate / samplingRate;
                 // I'm adding 1.0 to avoid negative indexes
-                inBase = FIXPNT_FACT + (inPosL - inst.smpLast * FIXPNT_FACT);
+                inBase = (int) (FIXPNT_FACT + (inPosL - inst.smpLast * FIXPNT_FACT));
                 InPosNext = inBase;
                 for (outPos = 0x00; outPos < length; outPos++) {
                     inPos = InPosNext;
-                    InPosNext = inBase + (int) (FIXPNT_FACT * (outPos + 1) * chipSmpRate / samplingRate);
+                    InPosNext = inBase + (FIXPNT_FACT * (outPos + 1) * chipSmpRate / samplingRate);
 
                     // first frictional Sample
                     smpFrc = getnfriction(inPos);
@@ -645,17 +650,18 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
             if (inst.additionalUpdate != null) {
                 inst.additionalUpdate.accept(inst, inst.id, tempSample, length);
             }
-                for (int j = 0; j < length; j++) {
-                    retSample[0][j] += tempSample[0][j];
-                    retSample[1][j] += tempSample[1][j];
-                }
+            for (int j = 0; j < length; j++) {
+                retSample[0][j] += tempSample[0][j];
+                retSample[1][j] += tempSample[1][j];
+            }
 
             //if (tempSample[0][0] != 0) logger.log(Level.DEBUG, "%d %d %d".formatted(i, tempSample[0][0], inst.resampler));
 //logger.log(Level.TRACE, "%s: %04x, %04x".formatted(inst.instrument.getName(), streamBufs[0][0], streamBufs[1][0]));
         }
+CC++;
     }
 
-    private int getChipVolume(VGMX_CHP_EXTRA16 tempCX, int chipId, int chipNum, int chipCnt, int sn76496VGMHeaderClock, String strSystemNameE, boolean doubleSSGVol) {
+    private static int getChipVolume(VGMX_CHP_EXTRA16 tempCX, int chipId, int chipNum, int chipCnt, int sn76496VGMHeaderClock, String strSystemNameE, boolean doubleSSGVol) {
         // chipId: ID of Chip
         //  Bit 7 - Is Paired Chip
         // chipNum: chips number (0 - first chips, 1 - second chips)
@@ -675,7 +681,7 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
 
         volume = CHIP_VOLS[chipId & 0x7F];
         switch (chipId & 0xff) {
-        case 0x00: // Sn76496Inst
+        case 0x00: // Sn76496
             // if T6W28, set volume Divider to 01
             if ((sn76496VGMHeaderClock & 0x8000_0000) != 0) {
                 // The T6W28 consists of 2 "half" chips.
@@ -683,19 +689,19 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
                 chipCnt = 0x01;
             }
             break;
-        case 0x18: // OkiM6295Inst
+        case 0x18: // OkiM6295
             // CP System 1 patch
             if ((strSystemNameE != null && !strSystemNameE.isEmpty()) && strSystemNameE.indexOf("CP") == 0)
                 volume = 110;
             break;
-        case 0x86: // Ym2203Inst's AY
+        case 0x86: // Ym2203's AY
             volume /= 2;
             break;
-        case 0x87: // Ym2608Inst's AY
-            // The Ym2608Inst outputs twice as loud as the Ym2203Inst here.
+        case 0x87: // Ym2608's AY
+            // The Ym2608 outputs twice as loud as the Ym2203 here.
             //volume *= 1;
             break;
-        case 0x88: // Ym2610Inst's AY
+        case 0x88: // Ym2610's AY
             //volume *= 1;
             break;
         }
@@ -749,7 +755,7 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
         }
     }
 
-    // TODO ???
+    // TODO unused ???
     public void write(String tag, Class<? extends Instrument> i, int chipIndex, int chipId, int port, int adr, int data) {
         synchronized (lockobj) {
             if (!instruments.containsKey(i)) return;
@@ -757,6 +763,8 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
             instruments.get(i)[chipIndex].write(chipId, port, adr, data);
         }
     }
+
+    // --- TODO from here should be the Instruments interfaces method
 
 //#region AY8910
 
@@ -1663,7 +1671,7 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
 //        }
 //    }
 
-    public void WriteSegaPcmPCMData(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
+    public void writeSegaPcmPCMData(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
         synchronized (lockobj) {
             if (!instruments.containsKey(SegaPcmInst.class)) return;
 
@@ -1671,7 +1679,7 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
         }
     }
 
-    public void WriteSegaPcmPCMData(int chipIndex, int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
+    public void writeSegaPcmPCMData(int chipIndex, int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
         synchronized (lockobj) {
             if (!instruments.containsKey(SegaPcmInst.class)) return;
 
@@ -1698,38 +1706,38 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
 //            ((instruments.get(Ym2151Inst.class)[chipIndex])).write(chipId, 0, adr, data);
 //        }
 //    }
-
-    public void WriteYm2151Mame(int chipId, int adr, int data) {
-        synchronized (lockobj) {
-            if (!instruments.containsKey(MameYm2151Inst.class)) return;
-
-            ((instruments.get(MameYm2151Inst.class)[0])).write(chipId, 0, adr, data);
-        }
-    }
-
-    public void WriteYm2151Mame(int chipIndex, int chipId, int adr, int data) {
-        synchronized (lockobj) {
-            if (!instruments.containsKey(MameYm2151Inst.class)) return;
-
-            ((instruments.get(MameYm2151Inst.class)[chipIndex])).write(chipId, 0, adr, data);
-        }
-    }
-
-    public void WriteYm2151X68Sound(int chipId, int adr, int data) {
-        synchronized (lockobj) {
-            if (!instruments.containsKey(X68SoundYm2151Inst.class)) return;
-
-            ((instruments.get(X68SoundYm2151Inst.class)[0])).write(chipId, 0, adr, data);
-        }
-    }
-
-    public void WriteYm2151X68Sound(int chipIndex, int chipId, int adr, int data) {
-        synchronized (lockobj) {
-            if (!instruments.containsKey(X68SoundYm2151Inst.class)) return;
-
-            ((instruments.get(X68SoundYm2151Inst.class)[chipIndex])).write(chipId, 0, adr, data);
-        }
-    }
+//
+//    public void WriteYm2151Mame(int chipId, int adr, int data) {
+//        synchronized (lockobj) {
+//            if (!instruments.containsKey(MameYm2151Inst.class)) return;
+//
+//            ((instruments.get(MameYm2151Inst.class)[0])).write(chipId, 0, adr, data);
+//        }
+//    }
+//
+//    public void WriteYm2151Mame(int chipIndex, int chipId, int adr, int data) {
+//        synchronized (lockobj) {
+//            if (!instruments.containsKey(MameYm2151Inst.class)) return;
+//
+//            ((instruments.get(MameYm2151Inst.class)[chipIndex])).write(chipId, 0, adr, data);
+//        }
+//    }
+//
+//    public void WriteYm2151X68Sound(int chipId, int adr, int data) {
+//        synchronized (lockobj) {
+//            if (!instruments.containsKey(X68SoundYm2151Inst.class)) return;
+//
+//            ((instruments.get(X68SoundYm2151Inst.class)[0])).write(chipId, 0, adr, data);
+//        }
+//    }
+//
+//    public void WriteYm2151X68Sound(int chipIndex, int chipId, int adr, int data) {
+//        synchronized (lockobj) {
+//            if (!instruments.containsKey(X68SoundYm2151Inst.class)) return;
+//
+//            ((instruments.get(X68SoundYm2151Inst.class)[chipIndex])).write(chipId, 0, adr, data);
+//        }
+//    }
 
 //#endregion
 
@@ -1841,7 +1849,6 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
 
 //#endregion
 
-
 //#region Ym2610Inst
 
 //    public void writeYm2610(int chipId, byte Port, byte adr, byte data) {
@@ -1894,7 +1901,6 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
 
 //#endregion
 
-
 //#region YmF262Inst
 
 //    public void writeYmF262(int chipId, byte Port, byte adr, byte data) {
@@ -1914,7 +1920,6 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
 //    }
 
 //#endregion
-
 
 //#region YmF271Inst
 
@@ -1936,7 +1941,6 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
 
 //#endregion
 
-
 //#region YmF278bInst
 
 //    public void writeYmF278b(int chipId, byte Port, byte adr, byte data) {
@@ -1954,7 +1958,6 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
 //    }
 
 //#endregion
-
 
 //#region Ym3526Inst
 
@@ -1976,7 +1979,6 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
 
 //#endregion
 
-
 //#region Y8950Inst
 
 //    public void writeY8950(int chipId, byte adr, byte data) {
@@ -1997,7 +1999,6 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
 
 //#endregion
 
-
 //#region YmZ280bInst
 
 //    public void writeYmZ280b(int chipId, byte adr, byte data) {
@@ -2017,7 +2018,6 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
 //    }
 
 //#endregion
-
 
 //#region HuC6280Inst
 
@@ -2055,7 +2055,6 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
 
 //#endregion
 
-
 //#region Ga20Inst
 
 //    public void WriteIremga20(int chipId, byte adr, byte data) {
@@ -2075,7 +2074,6 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
 //    }
 
 //#endregion
-
 
 //#region Ym2413Inst
 
@@ -2097,7 +2095,6 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
 
 //#endregion
 
-
 //#region K051649Inst
 
 //    public void WriteK051649(int chipId, int adr, byte data) {
@@ -2117,7 +2114,6 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
 //    }
 
 //#endregion
-
 
 //#region K053260Inst
 
@@ -2155,7 +2151,6 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
 
 //#endregion
 
-
 //#region K054539Inst
 
 //    public void WriteK054539(int chipId, int adr, byte data) {
@@ -2191,7 +2186,6 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
     }
 
 //#endregion
-
 
 //#region Ppz8Inst
 
@@ -2237,7 +2231,6 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
 
 //#endregion
 
-
 //#region PpsDrvInst
 
     public void writePPSDRV(int chipId, int port, int address, int data, byte[] additionalData) {
@@ -2274,7 +2267,6 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
 
 //#endregion
 
-
 //#region P86Inst
 
     public void writeP86(int chipId, int port, int address, int data, byte[] addtionalData) {
@@ -2305,7 +2297,7 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
         synchronized (lockobj) {
             if (!instruments.containsKey(P86Inst.class)) return;
 
-            ((P86Inst) (instruments.get(P86Inst.class)[0])).loadPcm(chipId, (byte) address, (byte) data, pcmData);
+            ((P86Inst) (instruments.get(P86Inst.class)[0])).loadPcm(chipId, address, data, pcmData);
         }
     }
 
@@ -2313,12 +2305,11 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
         synchronized (lockobj) {
             if (!instruments.containsKey(P86Inst.class)) return;
 
-            ((P86Inst) (instruments.get(P86Inst.class)[chipIndex])).loadPcm(chipId, (byte) address, (byte) data, pcmData);
+            ((P86Inst) (instruments.get(P86Inst.class)[chipIndex])).loadPcm(chipId, address, data, pcmData);
         }
     }
 
 //#endregion
-
 
 //#region QSoundInst
 
@@ -2355,7 +2346,6 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
     }
 
 //#endregion
-
 
 //#region CtrQSoundInst
 
@@ -2397,7 +2387,6 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
 
 //#endregion
 
-
 //#region Ga20Inst
 
     public void WriteIremga20PCMData(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
@@ -2417,7 +2406,6 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
     }
 
 //#endregion
-
 
 //#region DmgInst
 
@@ -2501,7 +2489,6 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
 
 //#endregion
 
-
 //#region NES
 
 //    public void writeNES(int chipId, byte adr, byte data) {
@@ -2570,26 +2557,6 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
 
 //#endregion
 
-
-//#region Vrc6Inst
-
-    int[] vrc6AddressTable = new int[] {
-            0x9000, 0x9001, 0x9002, 0x9003,
-            0xa000, 0xa001, 0xa002, 0xa003,
-            0xb000, 0xb001, 0xb002, 0xb003
-    };
-
-    public void WriteVRC6(int chipIndex, int chipId, int adr, int data) {
-        synchronized (lockobj) {
-            if (!instruments.containsKey(Vrc6Inst.class)) return;
-
-            instruments.get(Vrc6Inst.class)[chipIndex].write(chipId, 0, vrc6AddressTable[adr], data);
-        }
-    }
-
-//#endregion
-
-
 //#region MultiPCM
 
 //    public void WriteMultiPCM(int chipId, byte adr, byte data) {
@@ -2641,7 +2608,6 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
     }
 
 //#endregion
-
 
 //#region FDS
 
@@ -2887,14 +2853,14 @@ logger.log(Level.DEBUG, "%s[%d] %04x, %04x".formatted(inst.instrument.getName(),
         }
     }
 
-    public PPZ8Status.Channel[] readPPZ8Status(int chipId) {
+    public PPZ8.Channel[] readPPZ8Status(int chipId) {
         synchronized (lockobj) {
             if (!instruments.containsKey(Ppz8Inst.class)) return null;
             return ((Ppz8Inst) instruments.get(Ppz8Inst.class)[0]).getPPZ8State(chipId);
         }
     }
 
-    public PPZ8Status.Channel[] readPPZ8Status(int chipIndex, int chipId) {
+    public PPZ8.Channel[] readPPZ8Status(int chipIndex, int chipId) {
         synchronized (lockobj) {
             if (!instruments.containsKey(Ppz8Inst.class)) return null;
             return ((Ppz8Inst) instruments.get(Ppz8Inst.class)[chipIndex]).getPPZ8State(chipId);

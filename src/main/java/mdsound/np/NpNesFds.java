@@ -328,7 +328,7 @@ public class NpNesFds {
         // $4023 master I/O enable/disable
         if (adr == 0x4023) {
             this.masterIo = ((val & 2) != 0);
-            if (!this.masterIo) this.fout = 0; // KUMA:止めたい！
+            if (!this.masterIo) this.fout = 0; // KUMA: I want to stop it!
             return true;
         }
 

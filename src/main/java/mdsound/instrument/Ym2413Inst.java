@@ -12,7 +12,7 @@ public class Ym2413Inst extends Instrument.BaseInstrument {
 
     private static final int DefaultYM2413ClockValue = 3579545;
 
-    private Ym2413[] chips = new Ym2413[2];
+    private final Ym2413[] chips = new Ym2413[2];
 
     public Ym2413Inst() {
         // 0..Main
@@ -45,11 +45,11 @@ public class Ym2413Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int samplingRate, int clockValue, Object... option) {
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
         if (option != null && option.length > 0 && option[0] instanceof byte[] ary) {
-            chips[chipId] = new Ym2413(clockValue, samplingRate, ary);
+            chips[chipId] = new Ym2413(clock, samplingRate, ary);
         } else {
-            chips[chipId] = new Ym2413(clockValue, samplingRate, null);
+            chips[chipId] = new Ym2413(clock, samplingRate, null);
         }
         chips[chipId].setQuality(0);
         return samplingRate;

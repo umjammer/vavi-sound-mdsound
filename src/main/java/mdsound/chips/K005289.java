@@ -33,7 +33,7 @@ package mdsound.chips;
  * here for convenience.
  */
 public class K005289 {
-    private byte[] soundPRom = null;
+    private final byte[] soundPRom = null;
     private int rate;
 
     /* mixer tables and internal buffers */
@@ -41,11 +41,11 @@ public class K005289 {
     private short mixerLookup;
     private short[] mixerBuffer;
 
-    private int[] counter = new int[2];
-    private int[] frequency = new int[2];
-    private int[] freqLatch = new int[2];
-    private int[] waveForm = new int[2];
-    private byte[] volume = new byte[2];
+    private final int[] counter = new int[2];
+    private final int[] frequency = new int[2];
+    private final int[] freqLatch = new int[2];
+    private final int[] waveForm = new int[2];
+    private final byte[] volume = new byte[2];
 
     // is this an actual hardware limit? or just an arbitrary divider
     // to bring the output frequency down to a reasonable value for MAME?

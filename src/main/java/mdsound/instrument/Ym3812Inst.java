@@ -42,8 +42,8 @@ public class Ym3812Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock, int clockValue, Object... option) {
-        return device_start_ym3812(chipId, clockValue);
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        return device_start_ym3812(chipId, clock);
     }
 
     @Override
@@ -71,7 +71,7 @@ public class Ym3812Inst extends Instrument.BaseInstrument {
         info.updateStream(outputs, samples);
     }
 
-    private int[][] dummyBuf = new int[][] {null, null};
+    private final int[][] dummyBuf = new int[][] {null, null};
 
     private void _stream_update(/*, int interval*/) {
         chips[0].updateStream(dummyBuf, 0); // TODO

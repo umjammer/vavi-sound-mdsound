@@ -29,10 +29,10 @@ public class P86Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock, int clockValue, Object... option) {
-        info.samplingRate = clock;
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        info.samplingRate = samplingRate;
         reset(chipId);
-        return clock;
+        return samplingRate;
     }
 
     @Override
@@ -50,7 +50,7 @@ public class P86Inst extends Instrument.BaseInstrument {
         return info.write(port, adr, data);
     }
 
-    public int loadPcm(int chipId, byte address, byte data, byte[] pcmData) {
+    public int loadPcm(int chipId, int address, int data, byte[] pcmData) {
         return info.loadPcm(0, address, data, pcmData);
     }
 }

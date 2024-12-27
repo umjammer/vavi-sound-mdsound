@@ -109,17 +109,17 @@ public class DacControl {
     private static final int DAC_SMPL_RATE = 44100;
     private static final int PCM_BANK_COUNT = 0x40;
 
-    private Control[] dacData = new Control[MAX_CHIPS];
+    private final Control[] dacData = new Control[MAX_CHIPS];
     private MDSound mds = null;
     private final Object lock = new Object();
     private int samplingRate;
     private double pcmStep;
     private double pcmExecDelta;
     private int dacCtrlUsed;
-    private byte[] dacCtrlUsg = new byte[MAX_CHIPS];
-    private ControlData[] dacCtrl = new ControlData[0xff];
+    private final byte[] dacCtrlUsg = new byte[MAX_CHIPS];
+    private final ControlData[] dacCtrl = new ControlData[0xff];
     public PcmBank[] pcmBank = null;
-    private PcmBankTable pcmTbl = new PcmBankTable();
+    private final PcmBankTable pcmTbl = new PcmBankTable();
 
     public DacControl(int samplingRate, MDSound mds) {
         init(samplingRate, mds, null);
@@ -282,7 +282,7 @@ public class DacControl {
     }
 
     public byte getDACFromPCMBank() {
-        // for Ym2612Inst DAC data only
+        // for Ym2612 DAC data only
         int dataPos = pcmBank[0x00].dataPos;
         if (dataPos >= pcmBank[0x00].dataSize)
             return (byte) 0x80;
@@ -383,12 +383,12 @@ public class DacControl {
                     bitMask = (1 << bitReadVal) - 1;
 
                     inShift += bitReadVal;
-                    inValB = (vgmBuf[inPos] << inShift >> 8) & bitMask;
+                    inValB = ((vgmBuf[inPos] & 0xff) << inShift >> 8) & bitMask;
                     if (inShift >= 8) {
                         inShift -= 8;
                         inPos++;
                         if (inShift != 0)
-                            inValB |= (vgmBuf[inPos] << inShift >> 8) & bitMask;
+                            inValB |= ((vgmBuf[inPos] & 0xff) << inShift >> 8) & bitMask;
                     }
 
                     inVal |= inValB << outBit;
@@ -472,12 +472,12 @@ public class DacControl {
                     bitMask = (1 << bitReadVal) - 1;
 
                     inShift += bitReadVal;
-                    inValB = (vgmBuf[inPos] << inShift >> 8) & bitMask;
+                    inValB = ((vgmBuf[inPos] & 0xff) << inShift >> 8) & bitMask;
                     if (inShift >= 8) {
                         inShift -= 8;
                         inPos++;
                         if (inShift != 0)
-                            inValB |= (vgmBuf[inPos] << inShift >> 8) & bitMask;
+                            inValB |= ((vgmBuf[inPos] & 0xff) << inShift >> 8) & bitMask;
                     }
 
                     inVal |= inValB << outBit;
@@ -557,7 +557,7 @@ public class DacControl {
         // ChipData = chips.data + (chips.dataStart + chips.CmdsToSend - 1 - chips.Pos);
         switch (chip.dstChipType) {
         // Support for the important chips
-        case 0x02: // Ym2612Inst (16-bit Register (actually 9 Bit), 8-bit data)
+        case 0x02: // Ym2612 (16-bit Register (actually 9 Bit), 8-bit data)
             port = (chip.dstCommand & 0xff00) >> 8;
             command = chip.dstCommand & 0x00FF;
             data = chip.data[chip.dataStart + chip.realPos] & 0xff;
@@ -576,7 +576,7 @@ public class DacControl {
                     , port, command, data);
             break;
         // Support for other chips (mainly for completeness)
-        case 0x00: // Sn76496Inst (4-bit Register, 4-bit/10-bit data)
+        case 0x00: // Sn76496 (4-bit Register, 4-bit/10-bit data)
             command = chip.dstCommand & 0x00F0;
             data = chip.data[chip.dataStart + chip.realPos] & 0x0F;
 
@@ -638,8 +638,8 @@ public class DacControl {
             // case 0x15: // MultiPCM
         case 0x16: // UPD7759
         case 0x17: // OKIM6258
-        case 0x1D: // K053260Inst - TODO: Verify
-        case 0x1E: // PokeyInst - TODO: Verify
+        case 0x1D: // K053260 - TODO: Verify
+        case 0x1E: // Pokey - TODO: Verify
             command = chip.dstCommand & 0x00FF;
             data = chip.data[chip.dataStart + chip.realPos] & 0xff;
             chipRegWrite(chip.dstChipType
@@ -652,9 +652,9 @@ public class DacControl {
         case 0x0C: // YMF262
         case 0x0D: // YMF278B
         case 0x0E: // YMF271
-        case 0x19: // K051649Inst - TODO: Verify
-        case 0x1A: // K054539Inst - TODO: Verify
-        case 0x1C: // C140Inst - TODO: Verify
+        case 0x19: // K051649 - TODO: Verify
+        case 0x1A: // K054539 - TODO: Verify
+        case 0x1C: // C140 - TODO: Verify
             port = (chip.dstCommand & 0xff00) >> 8;
             command = chip.dstCommand & 0x00FF;
             data = chip.data[chip.dataStart + chip.realPos] & 0xff;
@@ -713,7 +713,7 @@ public class DacControl {
         chip.running |= 0x10;
     }
 
-    private int muldiv64round(int multiplicand, int multiplier, int divisor) {
+    private static int muldiv64round(int multiplicand, int multiplier, int divisor) {
         // Yes, I'm correctly rounding the values.
         return (multiplicand * multiplier + divisor / 2) / divisor;
     }

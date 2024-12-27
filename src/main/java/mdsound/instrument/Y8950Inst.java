@@ -11,7 +11,7 @@ import mdsound.chips.Y8950;
 public class Y8950Inst extends Instrument.BaseInstrument {
 
     private static final int MAX_CHIPS = 0x02;
-    private Y8950[] chips = new Y8950[] {new Y8950(), new Y8950()};
+    private final Y8950[] chips = new Y8950[] {new Y8950(), new Y8950()};
 
     @Override
     public void reset(int chipId) {
@@ -39,8 +39,8 @@ public class Y8950Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock, int clockValue, Object... option) {
-        return device_start_y8950(chipId, clockValue);
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        return device_start_y8950(chipId, clock);
     }
 
     @Override
@@ -191,7 +191,7 @@ public class Y8950Inst extends Instrument.BaseInstrument {
 //            info.intf.keyboardwrite(0,data);
     }
 
-    private int[][] dummyBuf = new int[][] {null, null};
+    private final int[][] dummyBuf = new int[][] {null, null};
 
     private void _stream_update(int interval) {
         //stream_update(info.stream);

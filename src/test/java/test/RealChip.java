@@ -255,7 +255,7 @@ public class RealChip {
         }
     }
 
-    public class RScciSoundChip extends RSoundChip {
+    public static class RScciSoundChip extends RSoundChip {
         public NScci.NScci scci = null;
 
         private NSoundChip realChip = null;
@@ -314,7 +314,7 @@ public class RealChip {
         }
     }
 
-    public class RC86ctlSoundChip extends RSoundChip {
+    public static class RC86ctlSoundChip extends RSoundChip {
         public Nc86ctl.Nc86ctl c86ctl = null;
 
         public Nc86ctl.NIRealChip realChip = null;

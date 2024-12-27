@@ -299,23 +299,23 @@ public class YmZ280b {
             int val;
             int ptrBuffer = 0;
 
-            /* is it even used in any MAME game? */
+            // is it even used in any MAME game?
             //popmessage("YMZ280B 16-bit PCM contact MAMEDEV");
 
-            /* two cases: first cases is non-looping */
+            // two cases: first cases is non-looping
             if (this.looping == 0) {
-                /* loop while we still have samples to generate */
+                // loop while we still have samples to generate
                 while (samples != 0) {
-                    /* fetch the current value */
+                    // fetch the current value
                     //val = (short)((base[position / 2 + 1] << 8) + base[position / 2 + 0]);
                     val = ((readMemory(base, size, position / 2 + 0) & 0xff) << 8) + (readMemory(base, size, position / 2 + 1) & 0xff);
                     // Note: Last MAME updates say it's: ((position / 2 + 1) << 8) + (position / 2 + 0);
 
-                    /* output to the buffer, scaling by the volume */
+                    // output to the buffer, scaling by the volume
                     buffer[ptrBuffer++] = (short) val;
                     samples--;
 
-                    /* next! */
+                    // next!
                     position += 4;
                     if (position >= this.stop) {
                         if (samples == 0)
@@ -327,7 +327,7 @@ public class YmZ280b {
             } else { // second case: looping
                 // loop while we still have samples to generate
                 while (samples != 0) {
-                    // fetch the current value */
+                    // fetch the current value
                     val = ((readMemory(base, size, position / 2 + 0) & 0xff) << 8)
                             + (readMemory(base, size, position / 2 + 1) & 0xff);
 

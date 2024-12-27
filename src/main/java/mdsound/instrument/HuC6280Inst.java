@@ -11,12 +11,12 @@ import mdsound.chips.OotakeHuC6280;
 // OotakeHuC6280
 public class HuC6280Inst extends Instrument.BaseInstrument {
 
-    private OotakeHuC6280[] chips = new OotakeHuC6280[2];
+    private final OotakeHuC6280[] chips = new OotakeHuC6280[2];
     private static final int DefaultHuC6280ClockValue = 3579545;
 
     @Override
     public String getName() {
-        return "OotakeHuC6280";
+        return "HuC6280ootake";
     }
 
     @Override
@@ -25,11 +25,11 @@ public class HuC6280Inst extends Instrument.BaseInstrument {
     }
 
     public HuC6280Inst() {
+        // 0..Main
         visVolume = new int[][][] {
                 new int[][] {new int[] {0, 0}},
                 new int[][] {new int[] {0, 0}}
         };
-        //0..Main
     }
 
     @Override
@@ -40,8 +40,8 @@ public class HuC6280Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int samplingRate, int clockValue, Object... option) {
-        chips[chipId] = new OotakeHuC6280(clockValue, samplingRate);
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        chips[chipId] = new OotakeHuC6280(clock, samplingRate);
 
         return samplingRate;
     }

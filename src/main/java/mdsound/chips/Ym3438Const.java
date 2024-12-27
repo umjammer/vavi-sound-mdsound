@@ -7,7 +7,7 @@ package mdsound.chips;
 public abstract class Ym3438Const {
 
     /** logsin table */
-    public static final int[] logSinRom = new int[] {
+    public static final int[] logSinRom =  {
             0x859, 0x6c3, 0x607, 0x58b, 0x52e, 0x4e4, 0x4a6, 0x471,
             0x443, 0x41a, 0x3f5, 0x3d3, 0x3b5, 0x398, 0x37e, 0x365,
             0x34e, 0x339, 0x324, 0x311, 0x2ff, 0x2ed, 0x2dc, 0x2cd,
@@ -43,7 +43,7 @@ public abstract class Ym3438Const {
     };
 
     /** exp table */
-    public static final int[] expRom = new int[] {
+    public static final int[] expRom =  {
             0x000, 0x003, 0x006, 0x008, 0x00b, 0x00e, 0x011, 0x014,
             0x016, 0x019, 0x01c, 0x01f, 0x022, 0x025, 0x028, 0x02a,
             0x02d, 0x030, 0x033, 0x036, 0x039, 0x03c, 0x03f, 0x042,
@@ -79,45 +79,45 @@ public abstract class Ym3438Const {
     };
 
     /** note table */
-    public static final int[] fnNote = new int[] {0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 3, 3, 3};
+    public static final int[] fnNote =  {0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 3, 3, 3};
 
     /** Env Gen */
-    public static final int[][] egStephi = new int[][] {
-            new int[] {0, 0, 0, 0},
-            new int[] {1, 0, 0, 0},
-            new int[] {1, 0, 1, 0},
-            new int[] {1, 1, 1, 0}
+    public static final int[][] egStephi = {
+             {0, 0, 0, 0},
+             {1, 0, 0, 0},
+             {1, 0, 1, 0},
+             {1, 1, 1, 0}
     };
 
     public static final byte[] egAmShift = {7, 3, 1, 0};
 
     /** Phase Gen */
-    public static final int[] pgDetune = new int[] {16, 17, 19, 20, 22, 24, 27, 29};
+    public static final int[] pgDetune =  {16, 17, 19, 20, 22, 24, 27, 29};
 
-    public static final int[][] pgLfoSh1 = new int[][] {
-            new int[] {7, 7, 7, 7, 7, 7, 7, 7},
-            new int[] {7, 7, 7, 7, 7, 7, 7, 7},
-            new int[] {7, 7, 7, 7, 7, 7, 1, 1},
-            new int[] {7, 7, 7, 7, 1, 1, 1, 1},
-            new int[] {7, 7, 7, 1, 1, 1, 1, 0},
-            new int[] {7, 7, 1, 1, 0, 0, 0, 0},
-            new int[] {7, 7, 1, 1, 0, 0, 0, 0},
-            new int[] {7, 7, 1, 1, 0, 0, 0, 0}
+    public static final int[][] pgLfoSh1 = {
+             {7, 7, 7, 7, 7, 7, 7, 7},
+             {7, 7, 7, 7, 7, 7, 7, 7},
+             {7, 7, 7, 7, 7, 7, 1, 1},
+             {7, 7, 7, 7, 1, 1, 1, 1},
+             {7, 7, 7, 1, 1, 1, 1, 0},
+             {7, 7, 1, 1, 0, 0, 0, 0},
+             {7, 7, 1, 1, 0, 0, 0, 0},
+             {7, 7, 1, 1, 0, 0, 0, 0}
     };
 
-    public static final int[][] pgLfoSh2 = new int[][] {
-            new int[] {7, 7, 7, 7, 7, 7, 7, 7},
-            new int[] {7, 7, 7, 7, 2, 2, 2, 2},
-            new int[] {7, 7, 7, 2, 2, 2, 7, 7},
-            new int[] {7, 7, 2, 2, 7, 7, 2, 2},
-            new int[] {7, 7, 2, 7, 7, 7, 2, 7},
-            new int[] {7, 7, 7, 2, 7, 7, 2, 1},
-            new int[] {7, 7, 7, 2, 7, 7, 2, 1},
-            new int[] {7, 7, 7, 2, 7, 7, 2, 1}
+    public static final int[][] pgLfoSh2 = {
+             {7, 7, 7, 7, 7, 7, 7, 7},
+             {7, 7, 7, 7, 2, 2, 2, 2},
+             {7, 7, 7, 2, 2, 2, 7, 7},
+             {7, 7, 2, 2, 7, 7, 2, 2},
+             {7, 7, 2, 7, 7, 7, 2, 7},
+             {7, 7, 7, 2, 7, 7, 2, 1},
+             {7, 7, 7, 2, 7, 7, 2, 1},
+             {7, 7, 7, 2, 7, 7, 2, 1}
     };
 
     /** Address Decod */
-    public static final int[] opOffset = new int[] {
+    public static final int[] opOffset =  {
             0x000, // Ch1 OP1/OP2
             0x001, // Ch2 OP1/OP2
             0x002, // Ch3 OP1/OP2
@@ -132,7 +132,7 @@ public abstract class Ym3438Const {
             0x106 // Ch6 OP3/OP4
     };
 
-    public static final int[] chOffset = new int[] {
+    public static final int[] chOffset =  {
             0x000, // Ch1
             0x001, // Ch2
             0x002, // Ch3
@@ -143,38 +143,38 @@ public abstract class Ym3438Const {
 
     public static final int[] lfoCycles = {108, 77, 71, 67, 62, 44, 8, 5};
 
-    public static final int[][][] fmAlgorithm = new int[][][] {
-            new int[][] {
-                    new int[] {1, 1, 1, 1, 1, 1, 1, 1}, // OP1_0
-                    new int[] {1, 1, 1, 1, 1, 1, 1, 1}, // OP1_1
-                    new int[] {0, 0, 0, 0, 0, 0, 0, 0}, // OP2
-                    new int[] {0, 0, 0, 0, 0, 0, 0, 0}, // Last Operator
-                    new int[] {0, 0, 0, 0, 0, 0, 0, 0}, // Last Operator
-                    new int[] {0, 0, 0, 0, 0, 0, 0, 1}  // Out
+    public static final int[][][] fmAlgorithm = {
+            {
+                     {1, 1, 1, 1, 1, 1, 1, 1}, // OP1_0
+                     {1, 1, 1, 1, 1, 1, 1, 1}, // OP1_1
+                     {0, 0, 0, 0, 0, 0, 0, 0}, // OP2
+                     {0, 0, 0, 0, 0, 0, 0, 0}, // Last Operator
+                     {0, 0, 0, 0, 0, 0, 0, 0}, // Last Operator
+                     {0, 0, 0, 0, 0, 0, 0, 1}  // Out
             },
-            new int[][] {
-                    new int[] {0, 1, 0, 0, 0, 1, 0, 0}, // OP1_0
-                    new int[] {0, 0, 0, 0, 0, 0, 0, 0}, // OP1_1
-                    new int[] {1, 1, 1, 0, 0, 0, 0, 0}, // OP2
-                    new int[] {0, 0, 0, 0, 0, 0, 0, 0}, // Last Operator
-                    new int[] {0, 0, 0, 0, 0, 0, 0, 0}, // Last Operator
-                    new int[] {0, 0, 0, 0, 0, 1, 1, 1}  // Out
+            {
+                     {0, 1, 0, 0, 0, 1, 0, 0}, // OP1_0
+                     {0, 0, 0, 0, 0, 0, 0, 0}, // OP1_1
+                     {1, 1, 1, 0, 0, 0, 0, 0}, // OP2
+                     {0, 0, 0, 0, 0, 0, 0, 0}, // Last Operator
+                     {0, 0, 0, 0, 0, 0, 0, 0}, // Last Operator
+                     {0, 0, 0, 0, 0, 1, 1, 1}  // Out
             },
-            new int[][] {
-                    new int[] {0, 0, 0, 0, 0, 0, 0, 0}, // OP1_0
-                    new int[] {0, 0, 0, 0, 0, 0, 0, 0}, // OP1_1
-                    new int[] {0, 0, 0, 0, 0, 0, 0, 0}, // OP2
-                    new int[] {1, 0, 0, 1, 1, 1, 1, 0}, // Last Operator
-                    new int[] {0, 0, 0, 0, 0, 0, 0, 0}, // Last Operator
-                    new int[] {0, 0, 0, 0, 1, 1, 1, 1}  // Out
+            {
+                     {0, 0, 0, 0, 0, 0, 0, 0}, // OP1_0
+                     {0, 0, 0, 0, 0, 0, 0, 0}, // OP1_1
+                     {0, 0, 0, 0, 0, 0, 0, 0}, // OP2
+                     {1, 0, 0, 1, 1, 1, 1, 0}, // Last Operator
+                     {0, 0, 0, 0, 0, 0, 0, 0}, // Last Operator
+                     {0, 0, 0, 0, 1, 1, 1, 1}  // Out
             },
-            new int[][] {
-                    new int[] {0, 0, 1, 0, 0, 1, 0, 0}, // OP1_0
-                    new int[] {0, 0, 0, 0, 0, 0, 0, 0}, // OP1_1
-                    new int[] {0, 0, 0, 1, 0, 0, 0, 0}, // OP2
-                    new int[] {1, 1, 0, 1, 1, 0, 0, 0}, // Last Operator
-                    new int[] {0, 0, 1, 0, 0, 0, 0, 0}, // Last Operator
-                    new int[] {1, 1, 1, 1, 1, 1, 1, 1}  // Out
+            {
+                     {0, 0, 1, 0, 0, 1, 0, 0}, // OP1_0
+                     {0, 0, 0, 0, 0, 0, 0, 0}, // OP1_1
+                     {0, 0, 0, 1, 0, 0, 0, 0}, // OP2
+                     {1, 1, 0, 1, 1, 0, 0, 0}, // Last Operator
+                     {0, 0, 1, 0, 0, 0, 0, 0}, // Last Operator
+                     {1, 1, 1, 1, 1, 1, 1, 1}  // Out
             }
     };
 

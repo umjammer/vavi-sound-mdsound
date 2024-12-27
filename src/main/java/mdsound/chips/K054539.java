@@ -2,8 +2,6 @@ package mdsound.chips;
 
 import java.util.Arrays;
 
-import vavi.util.win32.WAVE.data;
-
 
 /**
  Konami 054539 (TOP) PCM Sound Chip
@@ -63,8 +61,8 @@ public class K054539 {
         private int pval;
     }
 
-    private static double[] volTab = new double[256];
-    private static double[] panTab = new double[0xf];
+    private static final double[] volTab = new double[256];
+    private static final double[] panTab = new double[0xf];
 
     static {
         /*
@@ -90,15 +88,15 @@ public class K054539 {
             panTab[i] = Math.sqrt(i) / Math.sqrt(0xe);
     }
 
-    private double[] gain = new double[8];
-    private byte[][] posRegLatch = new byte[][] {
+    private final double[] gain = new double[8];
+    private final byte[][] posRegLatch = new byte[][] {
             new byte[3], new byte[3], new byte[3], new byte[3],
             new byte[3], new byte[3], new byte[3], new byte[3]};
     private int flags;
 
-    private byte[] regs = new byte[0x230];
+    private final byte[] regs = new byte[0x230];
     private byte[] ram;
-    private int ptrRam = 0;
+    private final int ptrRam = 0;
     private int reverbPos;
 
     private int curPtr;
@@ -106,12 +104,12 @@ public class K054539 {
     private byte[] curZone;
     private int ptrCurZone;
     private byte[] rom;
-    private int ptrRom = 0;
+    private final int ptrRom = 0;
 
     private int romSize;
     private int romMask;
 
-    private Channel[] channels = new Channel[] {
+    private final Channel[] channels = new Channel[] {
             new Channel(),
             new Channel(),
             new Channel(),
@@ -122,7 +120,7 @@ public class K054539 {
             new Channel()
     };
 
-    private byte[] muted = new byte[8];
+    private final byte[] muted = new byte[8];
 
     private int clock;
 
@@ -378,7 +376,7 @@ public class K054539 {
             double lVal, rVal;
             if ((this.flags & DISABLE_REVERB) == 0) {
                 //lVal = rVal = rbase[this.reverb_pos];
-                short val = (short) (this.ram[this.reverbPos * 2] + this.ram[this.reverbPos * 2 + 1] * 0x100);
+                short val = (short) ((this.ram[this.reverbPos * 2] & 0xff) + (this.ram[this.reverbPos * 2 + 1] & 0xff) * 0x100);
                 lVal = rVal = val;
             } else
                 lVal = rVal = 0;
@@ -392,7 +390,7 @@ public class K054539 {
                     int regP2 = 0x200 + 0x2 * ch;
 
                     // pitch
-                    int delta = this.regs[regP1 + 0x00] | (this.regs[regP1 + 0x01] << 8) | (this.regs[regP1 + 0x02] << 16);
+                    int delta = (this.regs[regP1 + 0x00] & 0xff) | ((this.regs[regP1 + 0x01] & 0xff) << 8) | ((this.regs[regP1 + 0x02] & 0xff) << 16);
 
                     int vol = this.regs[regP1 + 0x03] & 0xff;
 
@@ -426,10 +424,10 @@ public class K054539 {
 
 //logger.log(Level.TRACE, "ch=%d lVol=%d rVol=%d".formatted(ch, lVol, rVol));
 
-                    int rDelta = (this.regs[regP1 + 6] | (this.regs[regP1 + 7] << 8)) >> 3;
+                    int rDelta = ((this.regs[regP1 + 6] & 0xff) | ((this.regs[regP1 + 7] & 0xff) << 8)) >> 3;
                     rDelta = (rDelta + this.reverbPos) & 0x3fff;
 
-                    int curPos = (this.regs[regP1 + 0x0c] | (this.regs[regP1 + 0x0d] << 8) | (this.regs[regP1 + 0x0e] << 16)) & this.romMask;
+                    int curPos = ((this.regs[regP1 + 0x0c] & 0xff) | ((this.regs[regP1 + 0x0d] & 0xff) << 8) | ((this.regs[regP1 + 0x0e] & 0xff) << 16)) & this.romMask;
 
                     int fDelta, pDelta;
                     if ((this.regs[regP2 + 0] & 0x20) != 0) {
@@ -461,10 +459,10 @@ public class K054539 {
                             curPos += pDelta;
 
                             curPval = curVal;
-                            curVal = (short) (this.rom[curPos] << 8);
+                            curVal = (this.rom[curPos] & 0xff) << 8;
                             if ((this.rom[curPos] & 0xff) == 0x80 && (this.regs[regP2 + 1] & 1) != 0) {
-                                curPos = (this.regs[regP1 + 0x08] | (this.regs[regP1 + 0x09] << 8) | (this.regs[regP1 + 0x0a] << 16)) & this.romMask;
-                                curVal = (short) (this.rom[curPos] << 8);
+                                curPos = ((this.regs[regP1 + 0x08] & 0xff) | ((this.regs[regP1 + 0x09] & 0xff) << 8) | ((this.regs[regP1 + 0x0a] & 0xff) << 16)) & this.romMask;
+                                curVal = (this.rom[curPos] & 0xff) << 8;
                             }
                             if ((this.rom[curPos] & 0xff) == 0x80) {
                                 this.keyOff(ch);
@@ -486,12 +484,12 @@ public class K054539 {
                             curPos += pDelta;
 
                             curPval = curVal;
-                            curVal = (short) (this.rom[curPos] | this.rom[curPos + 1] << 8);
-                            if (curVal == (short) (0x8000 - 0x10000) && (this.regs[regP2 + 1] & 1) != 0) {
-                                curPos = (this.regs[regP1 + 0x08] | (this.regs[regP1 + 0x09] << 8) | (this.regs[regP1 + 0x0a] << 16)) & this.romMask;
-                                curVal = (short) (this.rom[curPos] | this.rom[curPos + 1] << 8);
+                            curVal = (this.rom[curPos] & 0xff) | (this.rom[curPos + 1] & 0xff) << 8;
+                            if (curVal == ((0x8000 - 0x10000) & 0xffff) && (this.regs[regP2 + 1] & 1) != 0) {
+                                curPos = ((this.regs[regP1 + 0x08] & 0xff) | ((this.regs[regP1 + 0x09] & 0xff) << 8) | (this.regs[regP1 + 0x0a] << 16)) & this.romMask;
+                                curVal = (this.rom[curPos] & 0xff) | (this.rom[curPos + 1] & 0xff) << 8;
                             }
-                            if (curVal == (short) (0x8000 - 0x10000)) {
+                            if (curVal == ((0x8000 - 0x10000) & 0xffff)) {
                                 this.keyOff(ch);
                                 curVal = 0;
                                 break;
@@ -517,7 +515,7 @@ public class K054539 {
                             curPval = curVal;
                             curVal = this.rom[curPos >> 1];
                             if ((curVal & 0xff) == 0x88 && (this.regs[regP2 + 1] & 1) != 0) {
-                                curPos = ((this.regs[regP1 + 0x08] | (this.regs[regP1 + 0x09] << 8) | (this.regs[regP1 + 0x0a] << 16)) & this.romMask) << 1;
+                                curPos = (((this.regs[regP1 + 0x08] & 0xff) | ((this.regs[regP1 + 0x09] & 0xff) << 8) | ((this.regs[regP1 + 0x0a] & 0xff) << 16)) & this.romMask) << 1;
                                 curVal = this.rom[curPos >> 1];
                             }
                             if ((curVal & 0xff) == 0x88) {
@@ -553,7 +551,7 @@ public class K054539 {
 // logger.log(Level.TRACE, "ch=%d lVal=%d".formatted(ch, lVal));
 //}
                     int ptr = (rDelta + this.reverbPos) & 0x1fff;
-                    short valu = (short) (this.ram[ptr * 2] + this.ram[ptr * 2 + 1] * 0x100);
+                    short valu = (short) ((this.ram[ptr * 2] & 0xff) + (this.ram[ptr * 2 + 1] & 0xff) * 0x100);
                     valu += (short) (curVal * rbVol);
                     this.ram[ptr * 2] = (byte) (valu & 0xff);
                     this.ram[ptr * 2 + 1] = (byte) ((valu & 0xff00) >> 8);

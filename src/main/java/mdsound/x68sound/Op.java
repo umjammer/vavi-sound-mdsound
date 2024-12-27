@@ -1,7 +1,8 @@
 package mdsound.x68sound;
 
 public class Op {
-    public Global global;
+
+    private final Global global;
 
     public static final int KEYON = -1;
     public static final int ATACK = 0;
@@ -11,52 +12,75 @@ public class Op {
     public static final int RELEASE = 4;
     public static final int RELEASE_MAX = 5;
 
-    public static final int CULC_DELTA_T = 0x7FFFFFFF;
-    public static final int CULC_ALPHA = 0x7FFFFFFF;
+    public static final int CULC_DELTA_T = 0x7fff_ffff;
+    public static final int CULC_ALPHA = 0x7fff_ffff;
 
     public static int IS_ZERO_CLOSS(int a, int b) {
         return ((a < 0 && b >= 0) || (a > 0 && b <= 0)) ? 1 : 0;
     }
 
-    public static final int[] NEXTSTAT = new int[] {
+    static final int[] NEXTSTAT = {
             DECAY, SUSTAIN, SUSTAIN_MAX, SUSTAIN_MAX, RELEASE_MAX, RELEASE_MAX,
     };
-    public static final int[] MAXSTAT = new int[] {
+    static final int[] MAXSTAT = {
             ATACK, SUSTAIN_MAX, SUSTAIN_MAX, SUSTAIN_MAX, RELEASE_MAX, RELEASE_MAX,
     };
 
-    public int[] inp = new int[1]; // FM変調の入力
-    private int lfoPitch; // 前回のlfopitch値, CULC_DELTA_T値の時はDeltaTを再計算する。
-    private int t; // 現在時間 (0 <= T < SIZESINTBL*PRECISION)
-    private int deltaT; // Δt
-    private int ame; // 0(トレモロをかけない), -1(トレモロをかける)
-    private int lfoLevel; // 前回のlfopitch&Ame値, CULC_ALPHA値の時はAlphaを再計算する。
-    private int alpha; // 最終的なエンベロープ出力値
-    //追加 2006.03.26 sam Lfoの更新をSinテーブルの0クロス時に修正するため
+    /** FM Modulation Input */
+    int[] inp = new int[1];
+    /** If it is the previous lfopitch value or CULC_DELTA_T value, recalculate DeltaT. */
+    private int lfoPitch;
+    /** current time (0 <= T < SIZESINTBL*PRECISION) */
+    private int t;
+    /** Δt */
+    private int deltaT;
+    /** 0 (no tremolo), -1 (tremolo) */
+    private int ame;
+    /** Alpha is recalculated based on the previous lfopitch&Ame value and CULC_ALPHA value. */
+    private int lfoLevel;
+    /** Final envelope output value */
+    private int alpha;
+    // Added 2006.03.26 sam: Lfo update to fix 0 crossing of Sin table
     private boolean lfoLevelReCalc;
     private short sinBf;
 
-    public int[] out1 = new int[1]; // オペレータの出力先
-    public int[] out2 = new int[1]; // オペレータの出力先(alg=5時のM1用)
-    public int[] out3 = new int[1]; // オペレータの出力先(alg=5時のM1用)
+    /** Operator Output Destination */
+    int[] out1 = new int[1];
+    /** Operator output destination (for M1 when alg=5) */
+    int[] out2 = new int[1];
+    /** Operator output destination (for M1 when alg=5) */
+    int[] out3 = new int[1];
 
-    private int pitch; // 0<=pitch<10*12*64
-    private int dt1Pitch; // Step に対する補正量
-    private int mul; // 0.5*2 1*2 2*2 3*2 ... 15*2
-    private int tl; // (128-TL)*8
+    /** 0<=pitch<10*12*64 */
+    private int pitch;
+    /** Step correction amount */
+    private int dt1Pitch;
+    /** 0.5*2 1*2 2*2 3*2 ... 15*2 */
+    private int mul;
+    /** (128-TL)*8 */
+    private int tl;
 
-    private int out2Fb; // フィードバックへの出力値
-    private int inpLast; // 最後の入力値
-    private int fl; // フィードバックレベルのシフト値(31,7,6,5,4,3,2,1)
-    private int flMask; // フィードバックのマスク(0,-1)
-    public int arTime = 0; // AR専用 t
+    /** Output value for feedback */
+    private int out2Fb;
+    /** Last input value */
+    private int inpLast;
+    /** Feedback level shift value (31,7,6,5,4,3,2,1) */
+    private int fl;
+    /** Feedback Masking (0,-1) */
+    private int flMask;
+    /** AR-only t */
+    int arTime = 0;
 
-    private int noiseCounter; // Noise用カウンタ
-    private int noiseStep; // Noise用カウントダウン値
-    private int noiseCycle; // Noise周期 32*2^25(0) ～ 1*2^25(31) NoiseCycle==0の時はノイズオフ
-    private int noiseValue; // ノイズ値  1 or -1
+    /** Noise counter */
+    private int noiseCounter;
+    /** Noise countdown value */
+    private int noiseStep;
+    /** Noise cycle 32*2^25(0) to 1*2^25(31) Noise is off when NoiseCycle==0 */
+    private int noiseCycle;
+    /** Noise Value  1 or -1 */
+    private int noiseValue;
 
-    // エンベロープ関係
+    // Envelope
     private int xrStat;
     private int xrEl;
     private int xrStep;
@@ -65,23 +89,35 @@ public class Op {
     private int xrAdd;
     private int xrLimit;
 
-    private int note; // 音階 (0 <= Note < 10*12)
-    private int kc; // 音階 (1 <= Kc <= 128)
-    private int kf; // 微調整 (0 <= Kf < 64)
-    private int ar; // 0 <= Ar < 31
-    private int d1R; // 0 <= D1r < 31
-    private int d2R; // 0 <= D2r < 31
-    private int rr; // 0 <= Rr < 15
-    private int ks; // 0 <= Ks <= 3
-    private int dt2; // Pitch に対する補正量(0, 384, 500, 608)
-    private int dt1; // DT1の値(0～7)
-    private int nfrq; // Noiseflag,NFRQの値
+    /** Note (0 <= Note < 10*12) */
+    private int note;
+    /** Note (1 <= Kc <= 128) */
+    private int kc;
+    /** Fine-tuning (0 <= Kf < 64) */
+    private int kf;
+    /** 0 <= Ar < 31 */
+    private int ar;
+    /** 0 <= D1r < 31 */
+    private int d1R;
+    /** 0 <= D2r < 31 */
+    private int d2R;
+    /** 0 <= Rr < 15 */
+    private int rr;
+    /** 0 <= Ks <= 3 */
+    private int ks;
+    /** Pitch correction amount (0, 384, 500, 608) */
+    private int dt2;
+    /** DT1 value (0～7) */
+    private int dt1;
+    /** Noiseflag,NFRQ value */
+    private int nfrq;
 
     public static class _StatTbl {
-        public int and, cmp, add, limit;
+        int and, cmp, add, limit;
     }
 
-    private _StatTbl[] statTbl = new _StatTbl[RELEASE_MAX + 1]; // 状態推移テーブル
+    /** State Transition Table */
+    private final _StatTbl[] statTbl = new _StatTbl[RELEASE_MAX + 1];
     //           ATACK     DECAY   SUSTAIN     SUSTAIN_MAX RELEASE     RELEASE_MAX
     // and     :                               4097                    4097
     // cmp     :                               2048                    2048
@@ -129,13 +165,13 @@ public class Op {
         setNFRQ(0);
         noiseValue = 1;
 
-        // 状態推移テーブルを作成
-        // StatTbl[ATACK].nextstat = DECAY;
-        // StatTbl[DECAY].nextstat = SUSTAIN;
-        // StatTbl[SUSTAIN].nextstat = SUSTAIN_MAX;
-        // StatTbl[SUSTAIN_MAX].nextstat = SUSTAIN_MAX;
-        // StatTbl[RELEASE].nextstat = RELEASE_MAX;
-        // StatTbl[RELEASE_MAX].nextstat = RELEASE_MAX;
+        // Create a state transition table
+        //StatTbl[ATACK].nextstat = DECAY;
+        //StatTbl[DECAY].nextstat = SUSTAIN;
+        //StatTbl[SUSTAIN].nextstat = SUSTAIN_MAX;
+        //StatTbl[SUSTAIN_MAX].nextstat = SUSTAIN_MAX;
+        //StatTbl[RELEASE].nextstat = RELEASE_MAX;
+        //StatTbl[RELEASE_MAX].nextstat = RELEASE_MAX;
 
         statTbl[0] = new _StatTbl();
         statTbl[1] = new _StatTbl();
@@ -173,7 +209,7 @@ public class Op {
         culcPitch();
         culcDt1Pitch();
 
-        //2006.03.26 追加 sam lfo更新タイミング修正のため
+        // 2006.03.26 Added sam: to correct lfo update timing
         sinBf = 0;
         lfoLevelReCalc = true;
     }
@@ -316,7 +352,7 @@ public class Op {
 
     public void setTL(int n) {
         tl = (128 - (n & 127)) << 3;
-        // LfoLevel = CULC_ALPHA;
+        //LfoLevel = CULC_ALPHA;
         lfoLevelReCalc = true;
     }
 
@@ -450,7 +486,7 @@ public class Op {
                 // DECAY, SUSTAIN, RELEASE
                 xrStep += xrAdd;
                 xrEl += xrStep >> 3;
-                //   LfoLevel = CULC_ALPHA;
+                //LfoLevel = CULC_ALPHA;
                 lfoLevelReCalc = true;
                 xrStep &= 7;
 
@@ -475,7 +511,7 @@ public class Op {
 
     public void setNFRQ(int nfrq) {
         if (((this.nfrq ^ nfrq) & 0x80) != 0) {
-            //  LfoLevel = CULC_ALPHA;
+            //LfoLevel = CULC_ALPHA;
             lfoLevelReCalc = true;
         }
         this.nfrq = nfrq;
@@ -496,7 +532,7 @@ public class Op {
 
     public void output0(int lfoPitch, int lfoLevel) {
         if (this.lfoPitch != lfoPitch) {
-            //  DeltaT = ((STEPTBL[Pitch+lfoPitch]+Dt1Pitch)*Mul)>>1;
+            //DeltaT = ((STEPTBL[Pitch+lfoPitch]+Dt1Pitch)*Mul)>>1;
             deltaT = ((global.STEPTBL[pitch + lfoPitch] + dt1Pitch) * mul) >> (6 + 1);
             this.lfoPitch = lfoPitch;
         }
@@ -505,7 +541,7 @@ public class Op {
 
         int lfolevelame = lfoLevel & ame;
         if ((this.lfoLevel != lfolevelame || lfoLevelReCalc) && IS_ZERO_CLOSS(sinBf, Sin) != 0) {
-            alpha = global.ALPHATBL[global.ALPHAZERO + tl - xrEl - lfolevelame];
+            alpha = global.ALPHATBL[Global.ALPHAZERO + tl - xrEl - lfolevelame];
             this.lfoLevel = lfolevelame;
             lfoLevelReCalc = false;
         }
@@ -513,22 +549,22 @@ public class Op {
                 * (int) Sin;
         sinBf = Sin;
 
-        // int o2 = (o+Inp_last) >> 1;
-        // Out2Fb = (o+o) >> Fl;
+        //int o2 = (o+Inp_last) >> 1;
+        //Out2Fb = (o+o) >> Fl;
         out2Fb = ((o + inpLast) & flMask) >> fl;
         inpLast = o;
 
         out1[0] = o;
         out2[0] = o; // alg=5用
         out3[0] = o; // alg=5用
-        // *out = o2;
-        // *out2 = o2; // alg=5用
-        // *out3 = o2; // alg=5用
+        //*out = o2;
+        //*out2 = o2; // alg=5用
+        //*out3 = o2; // alg=5用
     }
 
     public void output(int lfoPitch, int lfoLevel) {
         if (this.lfoPitch != lfoPitch) {
-            //  DeltaT = ((STEPTBL[Pitch+lfoPitch]+Dt1Pitch)*Mul)>>1;
+            //DeltaT = ((STEPTBL[Pitch+lfoPitch]+Dt1Pitch)*Mul)>>1;
             deltaT = ((global.STEPTBL[pitch + lfoPitch] + dt1Pitch) * mul) >> (6 + 1);
             this.lfoPitch = lfoPitch;
         }
@@ -549,7 +585,7 @@ public class Op {
 
     public void output32(int lfoPitch, int lfoLevel) {
         if (this.lfoPitch != lfoPitch) {
-            //  DeltaT = ((STEPTBL[Pitch+lfoPitch]+Dt1Pitch)*Mul)>>1;
+            //DeltaT = ((STEPTBL[Pitch + lfoPitch] + Dt1Pitch) * Mul) >> 1;
             deltaT = ((global.STEPTBL[pitch + lfoPitch] + dt1Pitch) * mul) >> (6 + 1);
             this.lfoPitch = lfoPitch;
         }
@@ -560,7 +596,7 @@ public class Op {
         if (noiseCycle == 0) {
             int lfoLevelAme = lfoLevel & ame;
             if ((this.lfoLevel != lfoLevelAme || lfoLevelReCalc) && IS_ZERO_CLOSS(sinBf, sin) != 0) {
-                alpha = global.ALPHATBL[global.ALPHAZERO + tl - xrEl - lfoLevelAme];
+                alpha = global.ALPHATBL[Global.ALPHAZERO + tl - xrEl - lfoLevelAme];
                 this.lfoLevel = lfoLevelAme;
                 lfoLevelReCalc = false;
             }
@@ -575,7 +611,7 @@ public class Op {
 
             int lfoLevelAme = lfoLevel & ame;
             if (this.lfoLevel != lfoLevelAme || lfoLevelReCalc) {
-                alpha = global.NOISEALPHATBL[global.ALPHAZERO + tl - xrEl - lfoLevelAme];
+                alpha = global.NOISEALPHATBL[Global.ALPHAZERO + tl - xrEl - lfoLevelAme];
                 this.lfoLevel = lfoLevelAme;
                 lfoLevelReCalc = false;
             }

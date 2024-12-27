@@ -9,7 +9,7 @@ public class MameYm2612Inst extends Instrument.BaseInstrument {
     private static final int MAX_CHIPS = 2;
     private static final int DefaultFMClockValue = 7670454;
     public Fm2612[] chips = new Fm2612[MAX_CHIPS];
-    private Fm2612.Ym2612[] ym2612 = new Fm2612.Ym2612[MAX_CHIPS];
+    private final Fm2612.Ym2612[] ym2612 = new Fm2612.Ym2612[MAX_CHIPS];
 
     @Override
     public String getName() {
@@ -45,12 +45,12 @@ public class MameYm2612Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock, int clockValue, Object... option) {
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
         chips[chipId] = new Fm2612();
-        ym2612[chipId] = new Fm2612.Ym2612(clockValue, clock, null, null);
+        ym2612[chipId] = new Fm2612.Ym2612(clock, samplingRate, null, null);
         ym2612[chipId].updateRequest = () -> ym2612[chipId].updateOne(new int[2][], 0);
 
-        return clock;
+        return samplingRate;
     }
 
     @Override

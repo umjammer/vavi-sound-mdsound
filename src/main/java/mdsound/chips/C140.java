@@ -2,8 +2,6 @@ package mdsound.chips;
 
 import java.util.Arrays;
 
-import vavi.util.Debug;
-
 
 /**
  * C140
@@ -94,11 +92,11 @@ public class C140 {
     private int baserate;
     private int pRomSize;
     private byte[] pRom;
-    private byte[] reg;
+    private final byte[] reg;
 
-    private int[] pcmTbl; // 2000.06.26 CAB
+    private final int[] pcmTbl; // 2000.06.26 CAB
 
-    private Voice[] voi;
+    private final Voice[] voi;
 
     public C140() {
         this.reg = new byte[0x200];
@@ -291,8 +289,8 @@ public class C140 {
             rmix = this.mixerBufferRight;
 
             // Retrieve sample start/end and calculate size
-            st = (int) v.sample_start;
-            ed = (int) v.sample_end;
+            st = v.sample_start;
+            ed = v.sample_end;
             sz = ed - st;
 
             // Retrieve base pointer to the sample data

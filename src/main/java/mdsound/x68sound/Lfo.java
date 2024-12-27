@@ -22,28 +22,44 @@ public class Lfo {
     private static final int[] PMSMUL = new int[] {0, 1, 2, 4, 8, 16, 32, 32};
     private static final int[] PMSSHL = new int[] {0, 0, 0, 0, 0, 0, 1, 2};
 
-    private int[] pmsmul = new int[Global.N_CH]; // 0, 1, 2, 4, 8, 16, 32, 32
-    private int[] pmsshl = new int[Global.N_CH]; // 0, 0, 0, 0, 0,  0,  1,  2
-    private int[] ams = new int[Global.N_CH]; // 左シフト回数 31(0), 0(1), 1(2), 2(3)
-    private int[] pmdPmsmul = new int[Global.N_CH]; // Pmd*Pmsmul[]
+    /** 0, 1, 2, 4, 8, 16, 32, 32 */
+    private final int[] pmsmul = new int[Global.N_CH];
+    /** 0, 0, 0, 0, 0,  0,  1,  2 */
+    private final int[] pmsshl = new int[Global.N_CH];
+    /** Left shift count 31(0), 0(1), 1(2), 2(3) */
+    private final int[] ams = new int[Global.N_CH];
+    /** Pmd*Pmsmul[] */
+    private final int[] pmdPmsmul = new int[Global.N_CH];
     private int pmd;
     private int amd;
 
-    private int lfoStartingFlag; // 0:LFO停止中  1:LFO動作中
-    private int lfoOverFlow; // LFO tのオーバーフロー値
-    private int lfoTime; // LFO専用 t
-    private int lfoTimeAdd; // LFO専用Δt
-    private int lfoIdx; // LFOテーブルへのインデックス値
-    private int lfoSmallCounter; // LFO周期微調整カウンタ (0～15の値をとる)
-    private int lfoSmallCounterStep; // LFO周期微調整カウンタ用ステップ値 (16～31)
-    private int lfrq; // LFO周波数設定値 LFRQ
-    private int lfoWaveForm; // LFO wave form
+    /** 0: LFO stopped 1: LFO operating */
+    private int lfoStartingFlag;
+    /** LFO t overflow value */
+    private int lfoOverFlow;
+    /** LFO only t */
+    private int lfoTime;
+    /** LFO only Δt */
+    private int lfoTimeAdd;
+    /** Index value into the LFO table */
+    private int lfoIdx;
+    /** LFO cycle fine adjustment counter (values range from 0 to 15) */
+    private int lfoSmallCounter;
+    /** Step value for LFO cycle fine adjustment counter (16 to 31) */
+    private int lfoSmallCounterStep;
+    /** LFO frequency setting value LFRQ */
+    private int lfrq;
+    /** LFO wave form */
+    private int lfoWaveForm;
 
     private int pmTblValue, amTblValue;
-    private int[] pmValue = new int[Global.N_CH], amValue = new int[Global.N_CH];
+    private final int[] pmValue = new int[Global.N_CH];
+    private final int[] amValue = new int[Global.N_CH];
 
-    private byte[] pmTbl0 = new byte[SIZELFOTBL], pmTbl2 = new byte[SIZELFOTBL];
-    private byte[] amTbl0 = new byte[SIZELFOTBL], amTbl2 = new byte[SIZELFOTBL];
+    private final byte[] pmTbl0 = new byte[SIZELFOTBL];
+    private final byte[] pmTbl2 = new byte[SIZELFOTBL];
+    private final byte[] amTbl0 = new byte[SIZELFOTBL];
+    private final byte[] amTbl2 = new byte[SIZELFOTBL];
 
     public Lfo(Global global) {
         this.global = global;
@@ -119,19 +135,19 @@ public class Lfo {
         lfoStart();
     }
 
-    public void initSamprate() {
+    public void initSampleRate() {
         lfoTimeAdd = LFOPRECISION * global.opmRate / Global.sampleRate;
     }
 
     public void lfoReset() {
         lfoStartingFlag = 0;
 
-        // LfoTime はリセットされない！！
+        // LfoTime is not reset!!
         lfoIdx = 0;
 
         culcTblValue();
-        culcAllPmValue();
-        culcAllAmValue();
+        calcAllPmValue();
+        calcAllAmValue();
     }
 
     public void lfoStart() {
@@ -149,7 +165,7 @@ public class Lfo {
         }
         lfoOverFlow = (8 << shift) * LFOPRECISION;
 
-        // LfoTime はリセットされる
+        // LfoTime is reset
         lfoTime = 0;
     }
 
@@ -160,10 +176,10 @@ public class Lfo {
             for (ch = 0; ch < Global.N_CH; ++ch) {
                 pmdPmsmul[ch] = pmd * pmsmul[ch];
             }
-            culcAllPmValue();
+            calcAllPmValue();
         } else {
             amd = n & 0x7F;
-            culcAllAmValue();
+            calcAllAmValue();
         }
     }
 
@@ -171,8 +187,8 @@ public class Lfo {
         lfoWaveForm = n & 3;
 
         culcTblValue();
-        culcAllPmValue();
-        culcAllAmValue();
+        calcAllPmValue();
+        calcAllAmValue();
     }
 
     public void setPMSAMS(int ch, int n) {
@@ -180,10 +196,10 @@ public class Lfo {
         pmsmul[ch] = PMSMUL[pms];
         pmsshl[ch] = PMSSHL[pms];
         pmdPmsmul[ch] = pmd * pmsmul[ch];
-        culcPmValue(ch);
+        calcPmValue(ch);
 
         ams[ch] = ((n & 3) - 1) & 31;
-        culcAmValue(ch);
+        calcAmValue(ch);
     }
 
     public void update() {
@@ -192,9 +208,9 @@ public class Lfo {
         }
 
         lfoTime += lfoTimeAdd;
-        //2008.4.19 sam 修正 LfoTimeの誤差を小さくするため,残余を保存する
-        // if (LfoTime >= LfoOverFlow) {
-        //  LfoTime = 0;
+        // 2008.4.19 sam modified Save the residual to reduce the error of LfoTime
+        //if (LfoTime >= LfoOverFlow) {
+        // LfoTime = 0;
         while (lfoTime >= lfoOverFlow) {
             lfoTime -= lfoOverFlow;
             lfoSmallCounter += lfoSmallCounterStep;
@@ -234,8 +250,8 @@ public class Lfo {
             }
             lfoSmallCounter &= 15;
 
-            culcAllPmValue();
-            culcAllAmValue();
+            calcAllPmValue();
+            calcAllAmValue();
         }
     }
 
@@ -273,7 +289,7 @@ public class Lfo {
         }
     }
 
-    public void culcPmValue(int ch) {
+    public void calcPmValue(int ch) {
         if (pmTblValue >= 0) {
             pmValue[ch] = ((pmTblValue * pmdPmsmul[ch]) >> (7 + 5)) << pmsshl[ch];
         } else {
@@ -281,19 +297,19 @@ public class Lfo {
         }
     }
 
-    public void culcAmValue(int ch) {
+    public void calcAmValue(int ch) {
         amValue[ch] = (((amTblValue * amd) >> 7) << ams[ch]) & 0x7FFFFFFF;
     }
 
-    public void culcAllPmValue() {
+    public void calcAllPmValue() {
         for (int ch = 0; ch < Global.N_CH; ++ch) {
-            culcPmValue(ch);
+            calcPmValue(ch);
         }
     }
 
-    public void culcAllAmValue() {
+    public void calcAllAmValue() {
         for (int ch = 0; ch < Global.N_CH; ++ch) {
-            culcAmValue(ch);
+            calcAmValue(ch);
         }
     }
 }

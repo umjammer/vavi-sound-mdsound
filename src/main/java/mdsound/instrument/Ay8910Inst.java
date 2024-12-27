@@ -10,7 +10,7 @@ import mdsound.fmgen.PSG;
 
 public class Ay8910Inst extends Instrument.BaseInstrument {
 
-    private PSG[] chip = new PSG[2];
+    private final PSG[] chip = new PSG[2];
     private static final int DefaultClockValue = 1789750;
 
     @Override
@@ -46,11 +46,11 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock, int clockValue, Object... option) {
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
         chip[chipId] = new PSG();
-        chip[chipId].setClock(clockValue, clock);
+        chip[chipId].setClock(clock, samplingRate);
 
-        return clock;
+        return samplingRate;
     }
 
     @Override

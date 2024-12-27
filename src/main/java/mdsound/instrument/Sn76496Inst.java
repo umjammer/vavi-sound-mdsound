@@ -30,7 +30,7 @@ public class Sn76496Inst extends Instrument.BaseInstrument {
     @Override
     public int start(int chipId, int clock) {
         Sn76496 chip = new Sn76496();
-        int i = (int) chip.start(3579545, 0, 0, 0, 0, 0, 0);
+        int i = chip.start(3579545, 0, 0, 0, 0, 0, 0);
         chip.limitFreq(3579545 & 0x3fff_ffff, 0, clock);
 
         while (chipId >= chips.size()) chips.add(null);
@@ -40,12 +40,12 @@ public class Sn76496Inst extends Instrument.BaseInstrument {
     }
 
     /**
-     * @param clock sampleRate
-     * @param clockValue masterClock
+     * @param samplingRate sampleRate
+     * @param clock masterClock
      * @param option int[4]
      */
     @Override
-    public int start(int chipId, int clock, int clockValue, Object... option) {
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
         int stereo = 0;
         int negate = 0;
         int freq0 = 0;
@@ -55,7 +55,7 @@ public class Sn76496Inst extends Instrument.BaseInstrument {
 
         if (option != null && option.length == 4) {
             noisetaps = (int) option[0] + (int) option[1] * 0x100;
-            shiftreg = (byte) option[2];
+            shiftreg = (int) option[2];
 
             freq0 = ((int) option[3] & 0x1) != 0 ? 1 : 0;
             negate = ((int) option[3] & 0x2) != 0 ? 1 : 0;
@@ -69,8 +69,8 @@ public class Sn76496Inst extends Instrument.BaseInstrument {
         }
 
         Sn76496 chip = new Sn76496();
-        int i = chip.start(clockValue, shiftreg, noisetaps, negate, stereo, divider, freq0);
-        chip.limitFreq(clockValue & 0x3fff_ffff, 0, clock);
+        int i = chip.start(clock, shiftreg, noisetaps, negate, stereo, divider, freq0);
+        chip.limitFreq(clock & 0x3fff_ffff, 0, samplingRate);
 
         while (chipId >= chips.size()) chips.add(null);
         chips.set(chipId, chip);

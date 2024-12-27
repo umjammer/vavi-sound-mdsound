@@ -27,7 +27,7 @@ public class X68SoundYm2151Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int sampleRate, int clockValue, Object... option) {
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
         if (chipId > 1)
             return 0;
 
@@ -43,10 +43,10 @@ public class X68SoundYm2151Inst extends Instrument.BaseInstrument {
                 pcmbuf = (int) option[2];
         }
 
-        x68sound[chipId].startPcm(sampleRate, opmflag, adpcmflag, pcmbuf);
-        x68sound[chipId].opmClock(clockValue);
+        x68sound[chipId].startPcm(samplingRate, opmflag, adpcmflag, pcmbuf);
+        x68sound[chipId].opmClock(clock);
 
-        return sampleRate;
+        return samplingRate;
     }
 
     @Override
@@ -107,7 +107,7 @@ public class X68SoundYm2151Inst extends Instrument.BaseInstrument {
         null, null
     };
 
-    private short[][] buf = new short[][] {
+    private final short[][] buf = new short[][] {
         new short[2], new short[2]
     };
 

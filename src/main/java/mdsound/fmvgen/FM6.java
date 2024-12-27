@@ -7,36 +7,37 @@ import mdsound.fmvgen.effect.ReversePhase;
 
 
 public class FM6 {
+
     public OPNA2 parent = null;
 
-    public int fmvolume;
-    protected Channel4 csmch;
-    protected int[] fnum = new int[6];
-    protected int[] fnum3 = new int[3];
+    public int fmVolume;
+    protected Channel4 csmCh;
+    protected int[] fNum = new int[6];
+    protected int[] fNum3 = new int[3];
     public Channel4[] ch = new Channel4[6];
 
-    protected byte[] fnum2 = new byte[9];
+    protected int[] fNum2 = new int[9];
 
-    protected byte reg22;
+    protected int reg22;
     protected int reg29; // OPNA only?
-    protected byte[] pan = new byte[6];
-    //protected float[] panTable = new float[4] { 1.0f, 0.5012f, 0.2512f, 0.1000f };
+    protected int[] pan = new int[6];
+//    protected float[] panTable = new float[4] { 1.0f, 0.5012f, 0.2512f, 0.1000f };
     protected float[] panL = new float[6];
     protected float[] panR = new float[6];
-    //protected boolean[] ac = new boolean[6];
+//    protected boolean[] ac = new boolean[6];
     protected int lfoCount;
-    protected int lfodCount;
+    protected int lfoDCount;
     public int[] visVolume = new int[] {0, 0};
-    protected byte regtc;
+    protected int regTc;
     public Fmgen.Channel4.Chip chip;
     public int waveType = 0;
     public int waveCh = 0;
     public int waveCounter = 0;
 
     protected int[] lfoTable = new int[8];
-    private Effects effects;
-    private int efcStartCh;
-    private int num;
+    private final Effects effects;
+    private final int efcStartCh;
+    private final int num;
 
     public FM6(int n, Fmvgen.Effects effects, int efcStartCh) {
         this.num = n;
@@ -51,11 +52,11 @@ public class FM6 {
             ch[i].setType(Fmvgen.OpType.typeN);
         }
 
-        csmch = ch[2];
+        csmCh = ch[2];
     }
 
     /**
-     * レジスタアレイにデータを設定
+     * Set data in the register array
      */
     public void setReg(int addr, int data) {
         if (addr < 0x20) return;
@@ -114,7 +115,7 @@ public class FM6 {
 
             int s;
             if (d == 0) {
-                s = (byte) data;
+                s = data;
             } else {
                 s = ((Fmvgen.sineTable[waveCh][waveType][cnt] & 0xff) | ((data & 0x1f) << 8));
             }
@@ -137,40 +138,40 @@ public class FM6 {
         case 0x1a1:
         case 0x1a2:
             c += 3;
-            fnum[c] = data + fnum2[c] * 0x100;
-            ch[c].setFNum(fnum[c]);
+            fNum[c] = data + fNum2[c] * 0x100;
+            ch[c].setFNum(fNum[c]);
             break;
         case 0xa0:
         case 0xa1:
         case 0xa2:
-            fnum[c] = data + fnum2[c] * 0x100;
-            ch[c].setFNum(fnum[c]);
+            fNum[c] = data + fNum2[c] * 0x100;
+            ch[c].setFNum(fNum[c]);
             break;
 
         case 0x1a4:
         case 0x1a5:
         case 0x1a6:
             c += 3;
-            fnum2[c] = (byte) (data);
+            fNum2[c] = data;
             panL[c] = OPNA2.panTable[(data >> 6) & 3];
             break;
         case 0xa4:
         case 0xa5:
         case 0xa6:
-            fnum2[c] = (byte) (data);
+            fNum2[c] = data;
             panL[c] = OPNA2.panTable[(data >> 6) & 3];
             break;
 
         case 0xa8:
         case 0xa9:
         case 0xaa:
-            fnum3[c] = data + fnum2[c + 6] * 0x100;
+            fNum3[c] = data + fNum2[c + 6] * 0x100;
             break;
 
         case 0xac:
         case 0xad:
         case 0xae:
-            fnum2[c + 6] = (byte) (data);
+            fNum2[c + 6] = data;
             break;
 
         case 0x1ac:
@@ -201,14 +202,14 @@ public class FM6 {
         case 0x1b5:
         case 0x1b6:
             c += 3;
-            pan[c] = (byte) ((data >> 6) & 3);
+            pan[c] = (data >> 6) & 3;
             ch[c].setMS(data);
             ch[c].setAC((data & 0x08) != 0);
             break;
         case 0xb4:
         case 0xb5:
         case 0xb6:
-            pan[c] = (byte) ((data >> 6) & 3);
+            pan[c] = (data >> 6) & 3;
             ch[c].setMS(data);
             ch[c].setAC((data & 0x08) != 0);
             break;
@@ -216,13 +217,13 @@ public class FM6 {
         // LFO
         case 0x22:
             modified = reg22 ^ data;
-            reg22 = (byte) data;
+            reg22 = data;
             if ((modified & 0x8) != 0)
                 lfoCount = 0;
-            lfodCount = (reg22 & 8) != 0 ? lfoTable[reg22 & 7] : 0;
+            lfoDCount = (reg22 & 8) != 0 ? lfoTable[reg22 & 7] : 0;
             break;
 
-        // 音色
+        // Tone
         default:
             if (c < 3) {
                 if ((addr & 0x100) != 0)
@@ -234,8 +235,8 @@ public class FM6 {
     }
 
     protected void setParameter(Fmvgen.Channel4 ch, int addr, int data) {
-        int[] slotTable = new int[] {0, 2, 1, 3};
-        byte[] slTable = new byte[] {
+        int[] slotTable = {0, 2, 1, 3};
+        int[] slTable = {
                 0, 4, 8, 12, 16, 20, 24, 28,
                 32, 36, 40, 44, 48, 52, 56, 124
         };
@@ -248,12 +249,12 @@ public class FM6 {
             case 3: // 30-3E DT/MULTI
                 op.setDT((data >> 4) & 0x07);
                 op.setMULTI(data & 0x0f);
-                op.setWaveTypeL((byte) (data >> 7));
+                op.setWaveTypeL(data >> 7);
                 break;
 
             case 4: // 40-4E TL
-                op.setTL(data & 0x7f, ((regtc & 0x80) != 0) && (csmch == ch));
-                op.setWaveTypeH((byte) (data >> 7));
+                op.setTL(data & 0x7f, ((regTc & 0x80) != 0) && (csmCh == ch));
+                op.setWaveTypeH(data >> 7);
                 break;
 
             case 5: // 50-5E KS/AR
@@ -287,20 +288,20 @@ public class FM6 {
         }
     }
 
-    public void mix(int[] buffer, int nsamples, byte regtc) {
-        if (fmvolume <= 0) return;
+    public void mix(int[] buffer, int nsamples, int regtc) {
+        if (fmVolume <= 0) return;
 
-        this.regtc = regtc;
-        // 準備
+        this.regTc = regtc;
+        // Preparation
         // Set F-Number
         if ((regtc & 0xc0) == 0)
-            csmch.setFNum(fnum[2]);// csmch - ch]);
+            csmCh.setFNum(fNum[2]);// csmch - ch]);
         else {
-            // 効果音モード
-            csmch.op[0].setFNum(fnum3[1]);
-            csmch.op[1].setFNum(fnum3[2]);
-            csmch.op[2].setFNum(fnum3[0]);
-            csmch.op[3].setFNum(fnum[2]);
+            // Sound Effects Mode
+            csmCh.op[0].setFNum(fNum3[1]);
+            csmCh.op[1].setFNum(fNum3[2]);
+            csmCh.op[2].setFNum(fNum3[0]);
+            csmCh.op[3].setFNum(fNum[2]);
         }
 
         int act = (((ch[2].prepare() << 2) | ch[1].prepare()) << 2) | ch[0].prepare();
@@ -315,8 +316,8 @@ public class FM6 {
 
     }
 
-    private int[] iBuf = new int[4];
-    private int[] iDest = new int[6];
+    private final int[] iBuf = new int[4];
+    private final int[] iDest = new int[6];
 
     protected void mix6(int[] buffer, int nsamples, int activech) {
 
@@ -331,7 +332,7 @@ public class FM6 {
         int limit = nsamples << 1;
         int v;
         for (int dest = 0; dest < limit; dest += 2) {
-            // 0,1 素
+            // 0,1 Raw
             // 2,3 rev
             iBuf[0] = iBuf[1] = iBuf[2] = iBuf[3] = 0;
             if ((activech & 0xaaa) != 0) {
@@ -341,16 +342,16 @@ public class FM6 {
                 mixSubS(activech, iDest, iBuf);
             }
 
-            v = ((Fmvgen.limit(iBuf[0], 0x7fff, -0x8000) * fmvolume) >> 14);
+            v = ((Fmvgen.limit(iBuf[0], 0x7fff, -0x8000) * fmVolume) >> 14);
             buffer[dest + 0] += v;
             visVolume[0] = v;
 
-            v = ((Fmvgen.limit(iBuf[1], 0x7fff, -0x8000) * fmvolume) >> 14);
+            v = ((Fmvgen.limit(iBuf[1], 0x7fff, -0x8000) * fmVolume) >> 14);
             buffer[dest + 1] += v;
             visVolume[1] = v;
 
-            int rvL = ((Fmvgen.limit(iBuf[2], 0x7fff, -0x8000) * fmvolume) >> 14);
-            int rvR = ((Fmvgen.limit(iBuf[3], 0x7fff, -0x8000) * fmvolume) >> 14);
+            int rvL = ((Fmvgen.limit(iBuf[2], 0x7fff, -0x8000) * fmVolume) >> 14);
+            int rvR = ((Fmvgen.limit(iBuf[3], 0x7fff, -0x8000) * fmVolume) >> 14);
 
             effects.reverb.storeDataC(rvL, rvR);
         }
@@ -546,7 +547,7 @@ public class FM6 {
 
         chip.setPML(OPNA2.pmTable[(lfoCount >> (Fmvgen.FM_LFOCBITS + 1)) & 0xff]);
         chip.setAML(OPNA2.amTable[(lfoCount >> (Fmvgen.FM_LFOCBITS + 1)) & 0xff]);
-        lfoCount += lfodCount;
+        lfoCount += lfoDCount;
     }
 
     public void reset() {

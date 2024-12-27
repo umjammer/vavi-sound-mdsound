@@ -21,211 +21,234 @@ package mdsound.chips;
 
 /**
  * Ootake (PC Engine emulator) PSG
+ * <p>
+ * <li>Simplified cue referencing. Improved tempo stability and sound quality.</li>
+ * <li>No oversampling was used. (This is the author's subjective opinion,
+ * but in the case of PSG, the beauty of the sound is often lost. Speed has also been improved.)</li>
+ * <li>The sound quality and volume of the noise have been adjusted to match the actual device. v0.72</li>
+ * <li>When 0x1F is written to the noise frequency,
+ * it will sound at half the volume at the same frequency as 0x1E. v0.68</li>
+ * <li>Currently, the playback sample rate is fixed at 44.1KHz (to increase the speed when playing CD-DA).</li>
+ * <li>When the DDA sound finishes being produced, the waveform is faded out
+ * instead of being abruptly set to 0, reducing noise. v0.57</li>
+ * <li>Improved sound quality by cutting out the parts of the waveform data
+ * with a lot of noise in DDA mode (sampling voice). Adjusted the volume as well. v0.59</li>
+ * <li>The sound quality and volume of the noise has been adjusted to make it closer to
+ * the atmosphere of the actual machine. v0.68</li>
+ * <li>The initialization of waveIndex and the behavior in DDA mode have been revised
+ * to be closer to the behavior of the actual device. v0.63</li>
+ * <li>The wave table is now initialized when waveIndex is initialized. The sounds of "Fire Pro Wrestling",
+ * "F1 Triple Battle", etc. are now closer to the real machine. v0.65</li>
+ * <li>The positive and negative waveforms of the wave are now the same as in the real machine. v0.74</li>
+ * <li>The minimum value of the wave has been set to -14 to improve the sound quality. v0.74</li>
+ * <li>It seems that the critical section is not necessary (writing is not done simultaneously),
+ * so it was omitted and the speed was improved. v1.09</li>
+ * <li>Queue processing (ApuQueue.c) was integrated here to speed it up. v1.10</li>
+ * <li>The volume of the bass region has been increased to make it easier to hear than the real thing. v1.46</li>
+ * <li>Implemented LFO processing. The opening sound of "Haniinzakai"
+ * and the sound effect of Flash Hiders are closer to the real machine sound. v1.59</li>
+ * <p>
+ * Copyright(C)2006-2012 Kitao Nakamura.
+ *
+ * <li>When releasing a modified or successor version, please be sure to include the source code.</li>
+ * <li>In that case, we would appreciate it if you could let us know, even if it is after the fact.</li>
+ * <li>Commercial use is prohibited.</li>
+ * <li>The rest is subject to the GNU General Public License.</li>
+ * <p>
+ * <h3>[DEV NOTE]</h3>
  * <pre>
-・キューの参照処理をシンプルにした。テンポの安定性および音質の向上。
-・オーバーサンプリングしないようにした。（筆者の主観もあるが、PSGの場合、響きの
-  美しさが損なわれてしまうケースが多いため。速度的にもアップ）
-・ノイズの音質・音量を実機並みに調整した。v0.72
-・ノイズの周波数に0x1Fが書き込まれたときは、0x1Eと同じ周波数で音量を半分にして
-  鳴らすようにした。v0.68
-・現状は再生サンプルレートは44.1KHz固定とした。(CD-DA再生時の速度アップのため)
-・DDA音の発声が終了したときにいきなり波形を0にせず、フェードアウトさせるように
-  し、ノイズを軽減した。v0.57
-・DDAモード(サンプリング発声)のときの波形データのノイズが多く含まれている部分
-  をカットしして、音質を上げた。音量も調節した。v0.59
-・ノイズ音の音質・音量を調整して、実機の雰囲気に近づけた。v0.68
-・waveIndexの初期化とDDAモード時の動作を見直して実機の動作に近づけた。v0.63
-・waveIndexの初期化時にwaveテーブルも初期化するようにした。ファイヤープロレス
-  リング、Ｆ１トリプルバトルなどの音が実機に近づいた。v0.65
-・waveの波形の正負を実機同様にした。v0.74
-・waveの最小値が-14になるようにし音質を整えた。v0.74
-・クリティカルセクションは必要ない(書き込みが同時に行われるわけではない)ような
-  ので、省略し高速化した。v1.09
-・キュー処理(ApuQueue.c)をここに統合して高速化した。v1.10
-・低音領域のボリュームを上げて実機並みの聞こえやすさに近づけた。v1.46
-・LFO処理のの実装。"はにいいんざすかい"のOPや、フラッシュハイダースの効果音が
-  実機の音に近づいた。v1.59
-
-Copyright(C)2006-2012 Kitao Nakamura.
-
-改造版・後継版を公開なさるときは必ずソースコードを添付してください。
-その際に事後でかまいませんので、ひとことお知らせいただけると幸いです。
-商的な利用は禁じます。
-あとは「GNU General Public License(一般公衆利用許諾契約書)」に準じます。
-
-    [DEV NOTE]
-
-    MAL   --- 0 - 15 (15 で -0[dB], １減るごとに -3.0 [dB])
-    AL   --- 0 - 31 (31 で -0[dB], １減るごとに -1.5 [dB])
-    LAL/RAL  --- 0 - 15 (15 で -0[dB], １減るごとに -3.0 [dB])
-
-    次のように解釈しなおす。
-
-    MAL*2  --- 0 - 30 (30 で -0[dB], １減るごとに -1.5 [dB])
-    AL   --- 0 - 31 (31 で -0[dB], １減るごとに -1.5 [dB])
-    LAL/RAL*2 --- 0 - 30 (30 で -0[dB], １減るごとに -1.5 [dB])
-
-
-    dB = 20 * log10(OUT/IN)
-
-    dB / 20 = log10(OUT/IN)
-
-    OUT/IN = 10^(dB/20)
-
-    IN(最大出力) を 1.0 とすると、
-
-    OUT = 10^(dB/20)
-
-                    -91 <= -(MAL*2 + AL + LAL(RAL)*2) <= 0
-
-    だから、最も小さい音は、
-
-        -91 * 1.5 [dB] = -136.5 [dB] = 10^(-136.5/20) ~= 1.496236e-7 [倍]
-
-    となる。
-
-      1e-7 オーダーの値は、固定小数点で表現しようとすると、小数部だけで
-    24 ビット以上必要で、なおかつ１６ビットの音声を扱うためには +16ビット
-    だから 24+16 = 40ビット以上必要になる。よって、32 ビットの処理系で
-    ＰＣＥの音声を固定小数点で表現するのはつらい。そこで、波形の計算は
-    float で行なうことにする。
-
-      float から出力形式に変換するのはＡＰＵの仕事とする。
-
-    [2004.4.28] やっぱり Sint32 で実装することにした(微小な値は無視する)。
-
-      ＣＰＵとPSG は同じＩＣにパッケージしてあるのだが、
-    実際にはPSG はＣＰＵの１／２のクロックで動作すると考えて良いようだ。
-    よって、Psg の動作周波数 Fpsg は、
-
-        Fpsg = 21.47727 [MHz] / 3 / 2 = 3.579545 [MHz]
-
-    となる。
-
-    たとえば３２サンプルを１周期とする波形が再生されるとき、
-    この周波数の周期でサンプルを１つずつ拾い出すと、
-
-        MPcm = 3579545 / 32 = 111860.78125 [Hz]
-
-    というマジックナンバーが得られる（ファミコンと同じ）。
-    ただし、再生周波数が固定では曲の演奏ができないので、
-    FRQ なる周波数パラメータを用いて再生周波数を変化させる。
-    FRQ はPSG のレジスタに書き込まれる１２ビット長のパラメータで、
-    ↑で得られたマジックナンバーの「割る数」になっている。
-
-    上の３２サンプルを１周期とする波形が再生されるとき、
-    この波形の周波数 F は、FRQ を用いて、
-
-        F = MPcm / FRQ [Hz]  (FRQ != 0)
-
-    となる。
-
-      ＰＣの再生サンプリング周波数が Fpc [Hz] だとすると、
-    １周期３２サンプルの波形の再生周波数 F2 は  F2 = Fpc / 32 [Hz]。
-    よって、ＰＣの１サンプルに対して、ＰＣＥの１サンプルを拾い出す
-    カウンタの進み幅 I は
-
-        I = F / F2 = 32 * F / Fpc = Fpsg / FRQ / Fpc [単位なし]
-
-    となる。
-
-    [NOISE CHANNEL]
-
-      擬似ノイズの生成にはＭ系列(maximum length sequence)が用いられる。
-    Ｍ系列のビット長は未調査につき不明。
-    ここでは仮に１５ビットとして実装を行なう。
-    出力は１ビットで、D0 がゼロのときは負の値、１のときは正の値とする。
-
-    ＰＣの１サンプルに対して、ＰＣＥの１サンプルを拾い出す
-    カウンタの進み幅 I は、
-
-        I = Fpsg / 64 / FRQ / Fpc  (FRQ != 0)
-
-    となる。
-
-    [再生クオリティ向上について] 2004.6.22
-
-      エミュレータでは、Psg のレジスタにデータが書き込まれるまで、
-    次に発声すべき音がわからない。レジスタにデータが書き込まれたときに、
-    サウンドバッファを更新したいのだけど、あいにく現在の実装では、
-    サウンドバッファの更新は別スレッドで行なわれていて、
-    エミュレーションスレッドから任意の時間に更新することができない。
-
-      これまでの再生では、サウンドバッファの更新時のレジスタ設定のみが
-    有効だったが、これだと例えばサウンドバッファ更新の合間に一瞬だけ
-    出力された音などが無視されてしまう。これは特にＤＤＡモードやノイズが
-    リズムパートとして使用される上で問題になる。
-
-      レジスタに書き込まれた値をきちんと音声出力に反映させるには、
-    過去に書き込まれたレジスタの値(いつ、どのレジスタに、何が書き込まれたか)
-    を保存しておいて、サウンドバッファ更新時にこれを参照する方法が
-    考えられる。どのくらい過去までレジスタの値を保存しておくかは、
-    サウンドバッファの長さにもよると思われるが、とりあえずは試行錯誤で
-    決めることにする。
-
-      Psg レジスタへの書き込み動作はエミュレーションスレッドで
-    行なわれ、サウンドバッファ更新はその専用スレッドで行なわれる。
-    これだと、エミュレーションスレッドがレジスタのキューに書き込みを
-    行なっている最中に、サウンドバッファ更新スレッドがキューから
-    読み出しを行なってしまい、アクセスが衝突する。この問題を解決するには、
-
-        1. サウンドバッファの更新を別スレッドで行なわない
-        2. キューのアクセス部分を排他処理にする
-
-    の２とおりが考えられる。とりあえず２の方法をとることにする。
- </pre>
-*/
+ *
+ *   MAL   --- 0 - 15 (15 is -0 [dB], each decrease is -3.0 [dB])
+ *   AL   --- 0 - 31 (31 is -0 [dB], each decrease is -1.5 [dB])
+ *   LAL/RAL  --- 0 - 15 (15 is -0 [dB], each decrease is -3.0 [dB])
+ *
+ * </pre>
+ * Let us reinterpret it as follows:
+ * <pre>
+ *
+ *   MAL*2  --- 0 - 30 (30 is -0 [dB], each decrease is -1.5 [dB])
+ *   AL   --- 0 - 31 (31 is -0 [dB], each decrease is -1.5 [dB])
+ *   LAL/RAL*2 --- 0 - 30 (30 is -0 [dB], each decrease is -1.5 [dB])
+ *
+ * </pre>
+ * <pre>
+ *
+ *   dB = 20 * log10(OUT/IN)
+ *
+ *   dB / 20 = log10(OUT/IN)
+ *
+ *   OUT/IN = 10^(dB/20)
+ *
+ * </pre>
+ * If IN (maximum output) is 1.0,
+ * <pre>
+ *
+ *     OUT = 10^(dB/20)
+ *
+ *                 -91 <= -(MAL*2 + AL + LAL(RAL)*2) <= 0
+ *
+ * </pre>
+ * So the quietest sound is:
+ * <pre>
+ *
+ *     -91 * 1.5 [dB] = -136.5 [dB] = 10^(-136.5/20) ~= 1.496236e-7 [times]
+ *
+ * </pre>
+ * <p>
+ * If we try to express a value of the order of 1e-7 in fixed point,
+ * we need more than 24 bits just for the decimal part, and to handle 16-bit audio,
+ * we need +16 bits, so we need 24+16 = 40 bits or more. Therefore,
+ * it is difficult to express PCE audio in fixed point in a 32-bit processing system.
+ * Therefore, we decided to use float for waveform calculations.
+ * </p>
+ * <pre>
+ *
+ *     It is the job of the APU to convert from float to the output format.
+ *
+ *     [2004.4.28] I decided to implement it using Sint32 after all (ignoring tiny values).
+ *
+ * </pre>
+ * <p>
+ * Although the CPU and PSG are packaged in the same IC,
+ * it is safe to assume that the PSG actually operates at half the clock of the CPU.
+ * Therefore, the operating frequency of the PSG, Fpsg, is:
+ * <pre>
+ *
+ *     Fpsg = 21.47727 [MHz] / 3 / 2 = 3.579545 [MHz]
+ *
+ * </pre>
+ * For example, when a waveform with 32 samples per cycle is played,
+ * if you pick out each sample at this frequency, you get the magic number
+ * <pre>
+ *
+ *     MPcm = 3579545 / 32 = 111860.78125 [Hz]
+ *
+ * </pre>
+ * (the same as the NES).
+ * <p>
+ * However, since a song cannot be played with a fixed playback frequency,
+ * the playback frequency is changed using a frequency parameter called FRQ.
+ * FRQ is a 12-bit parameter written to the PSG register,
+ * and is the "divisor" of the magic number obtained above.
+ * </p><p>
+ * When the waveform above, with 32 samples per cycle, is played back,
+ * the frequency F of this waveform is calculated using FRQ as follows:
+ * <pre>
+ *
+ *     F = MPcm / FRQ [Hz] (FRQ != 0)
+ *
+ * </pre>
+ * If the PC playback sampling frequency is Fpc [Hz], the playback frequency F2
+ * of a waveform with 32 samples per period is F2 = Fpc / 32 [Hz].
+ * Therefore, the advance I of the counter that picks up one PCE sample for one PC sample is
+ * <pre>
+ *
+ *     I = F / F2 = 32 * F / Fpc = Fpsg / FRQ / Fpc [unitless]
+ *
+ * <pre>
+ * <h3>[NOISE CHANNEL]</h3>
+ * <p>
+ * A maximum length sequence (M sequence) is used to generate the pseudo-noise.
+ * The bit length of the M sequence has not been investigated and is therefore unknown.
+ * Here, implementation is carried out assuming 15 bits.
+ * The output is one bit, and when D0 is zero it is a negative value, and when it is one it is a positive value.
+ * </p><p>
+ * For each sample of PC, pick out one sample of PCE.
+ * The counter advance I is
+ * <pre>
+ *
+ *     I = Fpsg / 64 / FRQ / Fpc  (FRQ != 0)
+ *
+ * </pre>
+ * <h3>[Improving playback quality] 2004.6.22</h3>
+ * <p>
+ * The emulator does not know the next sound to be played until data is written to the Psg register.
+ * When data is written to the register, we want to update the sound buffer, but unfortunately
+ * in the current implementation, the sound buffer is updated in a separate thread,
+ * so it cannot be updated at any time from the emulation thread.
+ * <p>
+ * In previous versions of the software, only the register settings at the time of
+ * updating the sound buffer were valid, but this meant that, for example,
+ * sounds that were output for only a moment between sound buffer updates were ignored.
+ * This was especially problematic when using DDA mode or noise as a rhythm part.
+ * <p>
+ * In order to ensure that the values written to the registers are reflected in the audio output,
+ * it would be possible to save the previously written register values
+ * (when, which register, and what was written) and refer to these when updating the sound buffer.
+ * How far back in time the register values should be saved probably depends on the length of the sound buffer,
+ * but for now we will decide by trial and error.
+ * <p>
+ * The write operation to the Psg register is done in the emulation thread, and the sound buffer update is done
+ * in its own thread. This causes an access conflict when the sound buffer update thread reads
+ * from the register queue while the emulation thread is writing to it. To solve this problem,
+ * <p>
+ * <ol>
+ *   <li>Do not update the sound buffer in a separate thread</li>
+ *   <li>Use exclusive processing for queue access</li>
+ * </ol>
+ * <p>
+ * There are two possible solutions.
+ * For now, we will use the second solution.
+ */
 public class OotakeHuC6280 {
 
     private static final int N_CHANNEL = 6;
 
     /**
-     * PSGはオーバーサンプリングすると響きの美しさが損なわれてしまうので
-     * オーバーサンプリングしないようにした。速度的にもアップ。
+     * PSG does not oversample because the beauty of the sound is lost
+     * when it is oversampled. Speed has also improved.
      *
      * @author Kitao
      */
     private static final double OVERSAMPLE_RATE = 1.0;
     /**
-     * PSG音量の減少値。* 6.0 は各チャンネル足したぶんを割る意味。
-     * 大きいほど音は減る。CDDA が 100% のときにちょうど良いぐらいの音量に合わせよう。
-     * v2.19,v2.37,v2.39,v2.62更新
+     * PSG volume reduction value. * 6.0 means dividing the sum of each channel.
+     * The louder it is, the less sound there will be. Set it to a volume
+     * that feels just right when CDDA is at 100%.
+     * v2.19,v2.37,v2.39,v2.62 updated
      *
      * @author Kitao
      */
     private static final double PSG_DECLINE = 21.8500 * 6.0;
     /**
-     * ※ PSG_DECLINE の値を変更した場合、減退率のベスト値も変更する必要がある。
-     * 雀探物語２(マイナスが小さいとPSGが目立ちすぎてADPCMが聴きづらい)，
-     * 大魔界村(マイナスが大きいと音篭り),
-     * ソルジャーブレイドで、PSG_DECLINE = (14.4701*6.0) で
-     * 減退率 -1.0498779900db 前後が飛び抜けていい響き(うちの環境で主観)。
-     * モトローダー(マイナスやや大き目がいい),1941(マイナス小さめがいい)なども微妙な値変更で大きく変わる。
+     * * If you change the value of PSG_DECLINE, you must also change the best value for the decay rate.
+     * "Sparrow Detective Story 2" (if the negative value is small, the PSG becomes too prominent
+     * and the ADPCM becomes difficult to hear),
+     * "Makaimura" (If the minus sign is large, the sound will be muffled),
+     * For "Soldier Blade", PSG_DECLINE = (14.4701*6.0), and a decay rate of around -1.0498779900db sounds
+     * exceptionally good (subjective in my environment).
+     * For "Moto Roader" (a slightly larger negative value is better)
+     * and "1941" (a smaller negative value is better),
+     * subtle changes in values can make a big difference.
      */
     private static final int NOISE_TABLE_VALUE_front = -18;
     /**
-     * キレと聴きやすさで-18:-1をベストとした。
-     * 最大値が大きい(+に近い)と重い音に。２つの値が離れていると重い音に。
-     * フォーメーションサッカー，大魔界村のエンディングのドラムなどで調整。
-     * v1.46,v2.40,v2.62更新
+     * In terms of sharpness and ease of listening, -18:-1 was rated the best.
+     * The larger the maximum value (closer to +), the heavier the sound will be.
+     * The farther apart the two values, the heavier the sound will be.
+     * Adjustments were made to "Formation Soccer" and the drums used in the ending theme of "Makaimura".
+     * updated in v1.46,v2.40,v2.62
      */
     private static final int NOISE_TABLE_VALUE_rear = -1;
     /**
-     * ※VOL_TABLE_DECLINEによってこの値の最適値も変化する。
-     * 0.30599899951。Kitao追加。サンプリング音の消音時の音の減退量。
-     * ソルジャーブレイド,将棋初心者無用の音声で調整。
-     * 基本的にこの値が小さいほうがノイズが減る(逆のケースもある)。v2.40
-     * サンプリングドラムの音色が決まるので大事な値。
-     * 値が大きすぎるとファイナルソルジャーやソルジャーブレイド,モトローダーなどでドラムがしょぼくなる。
+     * *The optimal value for this also changes depending on VOL_TABLE_DECLINE.
+     * 0.30599899951. Kitao added. The amount of attenuation when muting a sampled sound.
+     * Adjusted with the audio for "Soldier Blade" and "Shogi Beginners Not Required."
+     * Generally, the smaller this value, the less noise there will be (although the opposite is also true).
+     * This is an important value as it determines the tone of the sampling drum.
+     * If the value is too high, the drums will sound weak on songs like
+     * "Final Soldier", "Soldier Blade", and "Moto Roader."
      */
     private static final double SAMPLE_FADE_DECLINE = 0.305998999951;
 
     public class Psg {
+
         /**
-         * -1.05809999010 で雀探物語2 OK。
-         * Kitao 追加。音量テーブルの減少値。マイナスが大きいほど小さい音が聞こえづらくなる。
-         * マイナスが小さすぎると平面的な音になる。
-         * v2.19,v2.37,v2.39,v2.40,v2.62,v2.65更新
+         * -1.05809999010 is OK for "Sparrow Detective Story 2".
+         * Added by Kitao. Decrease value of the volume table.
+         * The larger the negative value, the harder it is to hear small sounds.
+         * If the negative value is too small, the sound will be flat.
+         * updated in v2.19,v2.37,v2.39,v2.40,v2.62,v2.65
          */
         private static final double VOL_TABLE_DECLINE = -1.05809999010;
 
@@ -246,35 +269,37 @@ public class OotakeHuC6280 {
         public int noiseFrq;
         private int deltaNoisePhase;
 
-        private boolean mute; // Kitao追加。v1.29
-        private int ddaFadeOutL; // Kitao追加
-        private int ddaFadeOutR; // Kitao追加
+        private boolean mute; // Added by Kitao. 1.29
+        private int ddaFadeOutL; // Added by Kitao
+        private int ddaFadeOutR; // Added by Kitao
 
-        private static int[] volumeTable = new int[92];
+        private static final int[] volumeTable = new int[92];
 
         /*
-         * ボリュームテーブルの作成
-         * Kitao 更新。
-         * 低音量の音が実機より聞こえづらいので、減退率をVOL_TABLE_DECLINE[db](試行錯誤したベスト値)とし、
-         * ノーマライズ処理をするようにした。v1.46
-         * おそらく、実機もアンプを通って出力される際にノーマライズ処理されている。
+         * Creating a Volume Table.
+         * Kitao updated.
+         * Since low volume sounds are harder to hear than on the actual device,
+         * the attenuation rate is set to VOL_TABLE_DECLINE[db]
+         * (the best value found through trial and error) and normalization processing is performed. v1.46
+         * The actual unit is probably also normalized when it is output through the amplifier.
          */
         static {
-            volumeTable[0] = 0; // Kitao 追加
+            volumeTable[0] = 0; // Added by Kitao
             for (int i = 1; i <= 91; i++) {
                 double v = 91 - i;
-                // VOL_TABLE_DECLINE: 小さくしすぎると音が平面的な傾向に。ソルジャーブレイドで調整。v1.46。
+                // VOL_TABLE_DECLINE: If it is set too small, the sound tends to become flat.
+                // Adjusted with "Soldier Blade". v1.46.
                 volumeTable[i] = (int) (32768.0 * Math.pow(10.0, v * VOL_TABLE_DECLINE / 20.0));
             }
         }
 
         Psg(boolean ch3) {
-            // Kitao更新。v0.65．waveデータを初期化。
+            // Kitao updated. v0.65. Initialized wave data.
             for (int j = 0; j < 32; j++)
-                this.wave[j] = -14; // 最小値で初期化。ファイプロ，フォーメーションサッカー'90，F1トリプルバトルで必要。
+                this.wave[j] = -14; // Initialized with minimum value. Required for "Fire Pro Wrestling", "Formation Soccer '90", and "F1 Triple Battle".
             if (ch3) {
                 for (int j = 0; j < 32; j++)
-                    this.wave[j] = 17; // ch3は最大値で初期化。F1トリプルバトル。v2.65
+                    this.wave[j] = 17; // Channel 3 is initialized to the maximum value. "F1 Triple Battle". v2.65
             }
         }
 
@@ -291,7 +316,7 @@ public class OotakeHuC6280 {
             this.ddaFadeOutR = 0;
         }
 
-        // Kitao 追加
+        // Added by Kitao
         private void setMute(boolean mute) {
             this.mute = mute;
             if (mute) {
@@ -304,60 +329,60 @@ public class OotakeHuC6280 {
             this.bNoiseOn = ((data & 0x80) != 0);
             this.noiseFrq = 0x1F - (data & 0x1F);
             if (this.noiseFrq == 0)
-                this.deltaNoisePhase = (int) ((2048.0 * resampleRate) + 0.5); // Kitao更新
+                this.deltaNoisePhase = (int) ((2048.0 * resampleRate) + 0.5); // Kitao updated
             else
-                this.deltaNoisePhase = (int) ((2048.0 * resampleRate) / (double) this.noiseFrq + 0.5); //Kitao更新
+                this.deltaNoisePhase = (int) ((2048.0 * resampleRate) / (double) this.noiseFrq + 0.5); // Kitao updated
         }
 
-        // Kitao 更新。DDAモードのときもWaveデータを更新するようにした。v0.63。ファイヤープロレスリング
+        // Kitao updated. Wave data is updated even in DDA mode. v0.63. "Fire Pro Wrestling"
         private void porcessWave(int data) {
             data &= 0x1F;
-            waveCrash = false; // Kitao追加
-            if (!this.on) { // Kitao追加。音を鳴らしていないときだけWaveデータを更新する。v0.65。F1トリプルバトルのエンジン音。
-                this.wave[this.waveIndex++] = 17 - data; // 17。Kitao更新。一番心地よく響く値に。ミズバク大冒険，モトローダー，ドラゴンスピリット等で調整。
+            waveCrash = false; // Added by Kitao.
+            if (!this.on) { // Added by Kitao. Update Wave data only when sound is not being played. v0.65. Engine sound from "F1 Triple Battle".
+                this.wave[this.waveIndex++] = 17 - data; // 17: Kitao updated. The value that resonates most comfortably. Adjusted for "Mizubaku Adventure", "Moto Roader", "Dragon Spirit", etc.
                 this.waveIndex &= 0x1F;
             }
             if (this.dda) {
-                // Kitao更新。ノイズ軽減のため6より下側の値はカットするようにした。v0.59
-                if (data < 6) // サイバーナイトで6に決定
-                    data = 6; // ノイズが多いので小さな値はカット
-                this.ddaSample = 11 - data; //サイバーナイトで11に決定。ドラムの音色が最適。v0.74
+                // Kitao updated. To reduce noise, values below 6 are cut. v0.59
+                if (data < 6) // set to 6 by "Cyber Night"
+                    data = 6; // There is a lot of noise, so small values are cut.
+                this.ddaSample = 11 - data; // 11 by "Cyber Night". The drum sounds are the best. v0.74
 
-                if (!this.on) // DDAモード時にWaveデータを書き換えた場合
+                if (!this.on) // When Wave data is rewritten in DDA mode
                     waveCrash = true;
             }
         }
 
         private void setOnDdaAl(int data) {
-            if (honeyInTheSky) { // はにいいんざすかいのポーズ時に、微妙なボリューム調整タイミングの問題でプチノイズが載ってしまうので、現状はパッチ処理で対応。v2.60更新
-                if ((this.on) && (data == 0)) { // 発声中にdataが0の場合、LRボリュームも0にリセット。はにいいんざすかいのポーズ時のノイズが解消。(data & 0x1F)だけが0のときにリセットすると、サイレントデバッガーズ等でNG。発声してない時にリセットするとアトミックロボでNG。ｖ2.55
+            if (honeyInTheSky) { // When pausing during "Honey in the Sky", a slight noise occurs due to a subtle problem with the volume adjustment timing, so this is currently being addressed with a patch. updated in v2.60
+                if ((this.on) && (data == 0)) { // If data is 0 while speaking, the LR volume is also reset to 0. The noise during the pause of "Honey in the Sky" is resolved. If you reset when only (data & 0x1F) is 0, it will not work with "Silent Debuggers" etc. If you reset when not speaking, it will not work with "Atomic Robo". v2.55
 //logger.log(Level.TRACE, "test %X %X %X %X".formatted(this.Channel, this.bOn, this.MainVolumeL, this.MainVolumeR));
-                    if ((mainVolumeL & 1) == 0) // メインボリュームのbit0が0のときだけ処理(はにいいんざすかいでイレギュラーな0xE。他のゲームは0xF。※ヘビーユニットも0xEだった)。これがないとミズバク大冒険で音が出ない。実機の仕組みと同じかどうかは未確認。v2.53追加
+                    if ((mainVolumeL & 1) == 0) // Processes only when bit 0 of the main volume is 0 (irregular 0xE in "Honey in the Sky". 0xF in other games. * "Heavy Unit" was also 0xE). Without this, there will be no sound in "Mizubaku Great Adventure". Not confirmed if this is the same as the mechanism of the actual machine. Added in v2.53
                         this.volumeL = 0;
-                    if ((mainVolumeR & 1) == 0) // 右チャンネルも同様とする
+                    if ((mainVolumeR & 1) == 0) // The same applies to the right channel.
                         this.volumeR = 0;
                 }
             }
 
             this.on = ((data & 0x80) != 0);
-            if ((this.dda) && ((data & 0x40) == 0)) { // DDAからWAVEへ切り替わるとき or DDAから消音するとき
-                // Kitao追加。DDAはいきなり消音すると目立つノイズが載るのでフェードアウトする。
+            if ((this.dda) && ((data & 0x40) == 0)) { // When switching from DDA to WAVE or muting from DDA
+                // Added by Kitao. If you suddenly mute the DDA, noticeable noise will be introduced, so it will fade out.
                 int i = 1 + (1 >> 3) + (1 >> 4) + (1 >> 5) + (1 >> 7) + (1 >> 12) + (1 >> 14) + (1 >> 15);
                 this.ddaFadeOutL = (int) ((double) (this.ddaSample * this.outVolumeL) *
-                        (i * SAMPLE_FADE_DECLINE)); // 元の音量。v2.65更新
+                        (i * SAMPLE_FADE_DECLINE)); // Original volume. updated in v2.65
                 this.ddaFadeOutR = (int) ((double) (this.ddaSample * this.outVolumeR) *
                         (i * SAMPLE_FADE_DECLINE));
 
             }
             this.dda = ((data & 0x40) != 0);
 
-            // Kitao追加。dataのbit7,6が01のときにWaveインデックスをリセットする。
-            // DDAモード時にWaveデータを書き込んでいた場合はここでWaveデータを修復（初期化）する。ファイヤープロレスリング。
+            // Added by Kitao. Resets the Wave index when bits 7 and 6 of data are 01.
+            // If you have written Wave data in DDA mode, you can restore (initialize) the Wave data here. "Fire Pro Wrestling".
             if ((data & 0xC0) == 0x40) {
                 this.waveIndex = 0;
                 if (waveCrash) {
                     for (int i = 0; i < 32; i++)
-                        this.wave[i] = -14; // Waveデータを最小値で初期化
+                        this.wave[i] = -14; // Initialize Wave data to minimum value
                     waveCrash = false;
                 }
             }
@@ -371,60 +396,60 @@ public class OotakeHuC6280 {
          * @param r OUT
          */
         private void mix(int c, int[] l, int[] r) {
-            if ((this.on) && ((c != 1) || (lfoControl == 0)) && (!this.mute)) { // Kitao更新
-                // Kitao 追加。DDA音量,ノイズ音量計算用
+            if ((this.on) && ((c != 1) || (lfoControl == 0)) && (!this.mute)) { // Kitao updated
+                // Added by Kitao. for DDA volume and noise volume calculation.
                 int smp;
                 if (this.dda) {
                     smp = this.ddaSample * this.outVolumeL;
-                    // Kitao更新。サンプリング音の音量を実機並みに調整。v2.39,v2.40,v2.62,v2.65再調整した。
+                    // Kitao updated. The volume of the sampled sounds has been adjusted to match the real machine. Re-adjusted in v2.39, v2.40, v2.62, and v2.65.
                     l[0] += smp + (smp >> 3) + (smp >> 4) + (smp >> 5) + (smp >> 7) + (smp >> 12) + (smp >> 14) + (smp >> 15);
                     smp = this.ddaSample * this.outVolumeR;
-                    // Kitao更新。サンプリング音の音量を実機並みに調整。v2.39,v2.40,v2.62,v2.65再調整した。
+                    // Kitao updated. The volume of the sampled sounds has been adjusted to match the real machine. Re-adjusted in v2.39, v2.40, v2.62, and v2.65.
                     r[0] += smp + (smp >> 3) + (smp >> 4) + (smp >> 5) + (smp >> 7) + (smp >> 12) + (smp >> 14) + (smp >> 15);
                 } else if (this.bNoiseOn) {
-                    // Kitao 追加
-                    int sample = noiseTable[this.phase >> 17];
+                    // Added by Kitao
+                    int sample = noiseTable[this.phase >>> 17];
 
                     if (this.noiseFrq == 0) {
-                        // Kitao追加。noiseFrq=0(dataに0x1Fが書き込まれた)のときは音量が通常の半分とした。
-                        // (ファイヤープロレスリング３、パックランド、桃太郎活劇、がんばれゴルフボーイズなど)
+                        // Added by Kitao. When noiseFrq=0 (0x1F is written to data), the volume is half the normal volume.
+                        // ("Fire Pro Wrestling 3", "Pac-Land", "Momotaro Action", "Ganbare Golf Boys", etc.)
                         smp = sample * this.outVolumeL;
                         l[0] += (smp >> 1) + (smp >> 12) + (smp >> 14); // (1/2 + 1/4096 + (1/32768 + 1/32768))
                         smp = sample * this.outVolumeR;
                         r[0] += (smp >> 1) + (smp >> 12) + (smp >> 14);
-                    } else { // 通常
+                    } else { // Normal
                         smp = sample * this.outVolumeL;
-                        // Kitao更新。ノイズの音量を実機並みに調整(1 + 1/2048 + 1/16384 + 1/32768)。
-                        // この"+1/32768"で絶妙(主観。大魔界村,ソルジャーブレイドなど)になる。v2.62更新
+                        // Kitao updated. Adjusted the noise volume to match the actual device (1 + 1/2048 + 1/16384 + 1/32768)
+                        // This "+1/32768" is perfect (subjective. "Dai Makaimura" and "Soldier Blade" etc.). Updated in v2.62
                         l[0] += smp + (smp >> 11) + (smp >> 14) + (smp >> 15);
                         smp = sample * this.outVolumeR;
-                        // Kitao更新。ノイズの音量を実機並みに調整
+                        // Kitao updated. Adjusted the noise volume to match the actual device
                         r[0] += smp + (smp >> 11) + (smp >> 14) + (smp >> 15);
                     }
 
-                    this.phase += this.deltaNoisePhase; //Kitao更新
+                    this.phase += this.deltaNoisePhase; // Kitao updated
                 } else if (this.deltaPhase != 0) {
-                    // Kitao更新。オーバーサンプリングしないようにした。
-                    int sample = this.wave[this.phase >> 27];
+                    // Kitao updated. No oversampling was done.
+                    int sample = this.wave[this.phase >>> 27];
                     if (this.frq < 128)
-                        sample -= sample >> 2; // 低周波域の音量を制限。ブラッドギアのスタート時などで実機と同様の音に。ソルジャーブレイドなども実機に近くなった。v2.03
+                        sample -= sample >> 2; // The volume of the low frequency range has been limited. The sound at the start of "Blood Gear" is now the same as the real machine. "Soldier Blade" and other games are now closer to the real machine. v2.03
 
-                    l[0] += sample * this.outVolumeL; // Kitao更新
-                    r[0] += sample * this.outVolumeR; // Kitao更新
+                    l[0] += sample * this.outVolumeL; // Kitao updated
+                    r[0] += sample * this.outVolumeR; // Kitao updated
 
-                    // Kitao更新。Lfoオンが有効になるようにし、Lfoの掛かり具合を実機に近づけた。v1.59
+                    // Kitao updated. Lfo On is now enabled, and the Lfo effect is closer to that of the real device. v1.59
                     if ((c == 0) && (lfoControl > 0)) {
-                        // _LfoCtrlが1のときに0回シフト(そのまま)で、はにいいんざすかいが実機の音に近い。
-                        // _LfoCtrlが3のときに4回シフトで、フラッシュハイダースが実機の音に近い。
-                        int lfo = psgs[1].wave[psgs[1].phase >> 27] << ((lfoControl - 1) << 1); //v1.60更新
+                        // When _LfoCtrl is 1 and shifts 0 times (as is), "Honey in the Sky" sounds closer to the actual instrument.
+                        // When _LfoCtrl is 3 and there are 4 shifts, the "Flash Hiders" sound is closer to the real thing.
+                        int lfo = psgs[1].wave[psgs[1].phase >> 27] << ((lfoControl - 1) << 1); // Updated in v1.60
                         psgs[0].phase += (int) ((65536.0 * 256.0 * 8.0 * resampleRate) / (double) (psgs[0].frq + lfo) + 0.5);
-                        psgs[1].phase += (int) ((65536.0 * 256.0 * 8.0 * resampleRate) / (double) (psgs[1].frq * lfoFreq) + 0.5); //v1.60更新
+                        psgs[1].phase += (int) ((65536.0 * 256.0 * 8.0 * resampleRate) / (double) (psgs[1].frq * lfoFreq) + 0.5); // Updated in v1.60
                     } else
                         this.phase += this.deltaPhase;
                 }
             }
-            // Kitao追加。DDA消音時はノイズ軽減のためフェードアウトで消音する。
-            // ベラボーマン(「わしがばくだはかせじゃ」から数秒後)やパワーテニス(タイトル曲終了から数秒後。点数コール)，将棋初心者無用(音声)等で効果あり。
+            // Added by Kitao. When the DDA is muted, the sound is muted by fading out to reduce noise.
+            // It is effective in "Berabou Man" (a few seconds after "I'm the Doctor Bakuda"), "Power Tennis" (a few seconds after the title song ends, when the score is called out), and "Shogi Beginners Not Allowed" (audio), etc.
             if (this.ddaFadeOutL > 0)
                 --this.ddaFadeOutL;
             else if (this.ddaFadeOutL < 0)
@@ -438,39 +463,42 @@ public class OotakeHuC6280 {
         }
     }
 
-    private double sampleRate;
-    private double psgFreq;
-    private double resampleRate;
+    private final double sampleRate;
+    private final double psgFreq;
+    private final double resampleRate;
 
-    private Psg[] psgs = new Psg[8]; // 6, 7 is unused
+    private final Psg[] psgs = new Psg[8]; // 6, 7 is unused
     private int channel; // 0 - 5;
     public int mainVolumeL; // 0 - 15
     public int mainVolumeR; // 0 - 15
     public int lfoFreq;
-    // v1.59から非使用。過去verのステートロードのために残してある。
-    private boolean lfoOn = false;
+    /** Not used since v1.59. Retained for state loading of previous versions. */
+    private final boolean lfoOn = false;
     public int lfoControl;
-    // v1.59から非使用。過去verのステートロードのために残してある。
-    private int lfoShift = 0;
-    //Kitao追加
-    private int psgVolumeEffect;
-    //Kitao追加
+    /** Not used since v1.59. Retained for state loading of previous versions. */
+    private final int lfoShift = 0;
+    /** Added by Kitao. */
+    private final int psgVolumeEffect;
+    /** Added by Kitao. */
     private double volume;
-    //Kitao追加。v1.08
+    /** Added by Kitao. v1.08 */
     private double vol;
 
-    // Kitao追加。DDA再生中にWaveデータが書き換えられたらTRUE
+    /** Added by Kitao. true if Wave data is rewritten during DDA playback */
     private boolean waveCrash;
-    // はにいいんざすかいパッチ用。v2.60
+    /**
+     * For "Honey in the Sky" patch.
+     * @since 2.60
+     */
     private boolean honeyInTheSky;
 
     // for debug purpose
-    private byte[] port = new byte[16];
+    private final byte[] port = new byte[16];
 
-    private static int[] noiseTable = new int[32768];
+    private static final int[] noiseTable = new int[32768];
 
     /*
-     * ノイズテーブルの作成
+     * Creating a Noise Table
      */
     static {
         int reg = 0x100;
@@ -481,13 +509,13 @@ public class OotakeHuC6280 {
             int bit14 = (bit0 ^ bit1);
             reg >>= 1;
             reg |= (bit14 << 14);
-            // Kitao更新。 ノイズのボリュームと音質を調整した。
+            // Kitao updated. The volume and sound quality of the noise have been adjusted.
             noiseTable[i] = (bit0 != 0) ? NOISE_TABLE_VALUE_front : NOISE_TABLE_VALUE_rear;
         }
     }
 
     /**
-     * Psg ポートの書き込みに対する動作を記述します。
+     * Describes the behavior for writing to the Psg port.
      */
     public void writeReg(int reg, int data) {
         Psg psg;
@@ -495,145 +523,145 @@ public class OotakeHuC6280 {
         this.port[reg & 15] = (byte) data;
 
         switch (reg & 15) {
-        case 0: // register select
-            this.channel = data & 7;
-            break;
+            case 0: // register select
+                this.channel = data & 7;
+                break;
 
-        case 1: // main volume
-            this.mainVolumeL = (data >> 4) & 0x0F;
-            this.mainVolumeR = data & 0x0F;
+            case 1: // main volume
+                this.mainVolumeL = (data >> 4) & 0x0F;
+                this.mainVolumeR = data & 0x0F;
 
-            /* LMAL, RMAL は全チャネルの音量に影響する */
-            for (int c = 0; c < N_CHANNEL; c++) {
-                psg = this.psgs[c];
-                psg.mainVolume();
-            }
-            break;
+                /* LMAL, RMAL affect the volume of all channels */
+                for (int c = 0; c < N_CHANNEL; c++) {
+                    psg = this.psgs[c];
+                    psg.mainVolume();
+                }
+                break;
 
-        case 2: // frequency low
-            psg = this.psgs[this.channel];
-            psg.frq &= ~(int) 0xff;
-            psg.frq |= data;
-            // Kitao更新。update_frequencyは、速度アップのためサブルーチンにせず直接実行するようにした。
-            int frq = (psg.frq - 1) & 0xffF;
-            if (frq != 0)
-                // Kitao更新。速度アップのためfrq以外は定数計算にした。
-                // 精度向上のため、先に値の小さいOVERSAMPLE_RATEのほうで割るようにした。
-                // +0.5は四捨五入で精度アップ。プチノイズ軽減のため。
-                psg.deltaPhase = (int) ((65536.0 * 256.0 * 8.0 * this.resampleRate) / (double) frq + 0.5);
-            else
-                psg.deltaPhase = 0;
-            break;
-
-        case 3: // frequency high
-            psg = this.psgs[this.channel];
-            psg.frq &= ~(int) 0xF00;
-            psg.frq |= (data & 0x0F) << 8;
-            // Kitao更新。update_frequencyは、速度アップのためサブルーチンにせず直接実行するようにした。
-            frq = (psg.frq - 1) & 0xffF;
-            if (frq != 0)
-                // Kitao更新。速度アップのためfrq以外は定数計算にした。
-                // 精度向上のため、先に値の小さいOVERSAMPLE_RATEのほうで割るようにした。
-                // +0.5は四捨五入で精度アップ。プチノイズ軽減のため。
-                psg.deltaPhase = (int) ((65536.0 * 256.0 * 8.0 * this.resampleRate) / (double) frq + 0.5);
-            else
-                psg.deltaPhase = 0;
-            break;
-
-        case 4: // ON, DDA, AL
-            psg = this.psgs[this.channel];
-            psg.setOnDdaAl(data);
-            break;
-
-        case 5: // LAL, RAL
-            psg = this.psgs[this.channel];
-            psg.volumeL = (data >> 4) & 0xF;
-            psg.volumeR = data & 0xF;
-            psg.mainVolume();
-            break;
-
-        case 6: // wave data
-            psg = this.psgs[this.channel];
-            psg.porcessWave(data);
-            break;
-
-        case 7: // noise on, noise frq
-            if (this.channel >= 4) {
+            case 2: // frequency low
                 psg = this.psgs[this.channel];
-                psg.noise(data);
-            }
-            break;
+                psg.frq &= ~(int) 0xff;
+                psg.frq |= data;
+                // Kitao To increase speed, updated.update_frequency is now executed directly rather than as a subroutine.
+                int frq = (psg.frq - 1) & 0xffF;
+                if (frq != 0)
+                    // Kitao updated. To increase speed, all calculations except frq are constants.
+                    // To improve accuracy, we divide by the smaller value of OVERSAMPLE_RATE first.
+                    // +0.5 is rounded off to improve accuracy and reduce noise.
+                    psg.deltaPhase = (int) ((65536.0 * 256.0 * 8.0 * this.resampleRate) / (double) frq + 0.5);
+                else
+                    psg.deltaPhase = 0;
+                break;
 
-        case 8: // LFO frequency
-            this.lfoFreq = data;
-            // Kitaoテスト用
+            case 3: // frequency high
+                psg = this.psgs[this.channel];
+                psg.frq &= ~(int) 0xF00;
+                psg.frq |= (data & 0x0F) << 8;
+                // Kitao To increase speed, updated.update_frequency is now executed directly rather than as a subroutine.
+                frq = (psg.frq - 1) & 0xffF;
+                if (frq != 0)
+                    // Kitao updated. To increase speed, all calculations except frq are constants.
+                    // To improve accuracy, we divide by the smaller value of OVERSAMPLE_RATE first.
+                    // +0.5 is rounded off to improve accuracy and reduce noise.
+                    psg.deltaPhase = (int) ((65536.0 * 256.0 * 8.0 * this.resampleRate) / (double) frq + 0.5);
+                else
+                    psg.deltaPhase = 0;
+                break;
+
+            case 4: // ON, DDA, AL
+                psg = this.psgs[this.channel];
+                psg.setOnDdaAl(data);
+                break;
+
+            case 5: // LAL, RAL
+                psg = this.psgs[this.channel];
+                psg.volumeL = (data >> 4) & 0xF;
+                psg.volumeR = data & 0xF;
+                psg.mainVolume();
+                break;
+
+            case 6: // wave data
+                psg = this.psgs[this.channel];
+                psg.porcessWave(data);
+                break;
+
+            case 7: // noise on, noise frq
+                if (this.channel >= 4) {
+                    psg = this.psgs[this.channel];
+                    psg.noise(data);
+                }
+                break;
+
+            case 8: // LFO frequency
+                this.lfoFreq = data;
+                // for test by Kitao
 //logger.log(Level.TRACE, "LFO Frq = %X".formatted(this.LfoFrq));
-            break;
+                break;
 
-        case 9: // LFO control
-            // Kitao更新。シンプルに実装してみた。実機で同じ動作かは未確認。はにいいんざすかいの音が似るように実装。v1.59
-            if ((data & 0x80) != 0) { // bit7を立てて呼ぶと恐らくリセット
-                this.psgs[1].phase = 0; // LfoFrqは初期化しない。はにいいんざすかい。
+            case 9: // LFO control
+                // Kitao updated. I tried to implement it simply. I haven't confirmed if it works the same on the actual device. I implemented it to make the sound of "Honey in the Sky" sound similar. v1.59
+                if ((data & 0x80) != 0) { // If you set bit 7 and call it, it will probably reset.
+                    this.psgs[1].phase = 0; // LfoFrq is not initialized. "Honey in the Sky"
 //logger.log(Level.TRACE, "LFO control = %X".formatted(data));
-            }
-            this.lfoControl = data & 7; // ドロップロックほらホラで 5 が使われる。v1.61更新
-            if ((this.lfoControl & 4) != 0)
-                this.lfoControl = 0; // ドロップロックほらホラ。実機で聴いた感じはLFOオフと同じ音のようなのでbit2が立っていた(負の数扱い？)ら0と同じこととする。
+                }
+                this.lfoControl = data & 7; // "Drop Rock Hora Hora" uses 5. v1.61 update
+                if ((this.lfoControl & 4) != 0)
+                    this.lfoControl = 0; // "Drop Rock Hora Hora" When I listened to it on the actual machine, it sounded the same as with LFO off, so since bit 2 was set (treated as a negative number?), I decided to treat it as 0.
 //logger.log(Level.TRACE, "LFO control = %X,  Frq =%X".formatted(data, this.LfoFrq));
-            break;
+                break;
 
-        default: // invalid write
-            break;
+            default: // invalid write
+                break;
         }
     }
 
-    // Kitao追加
+    // Added by Kitao.
     private void setVOL() {
         if (this.psgVolumeEffect == 0)
-            //this.VOL = 0.0; //ミュート
+            //this.VOL = 0.0; // mute
             this.vol = 1.0 / 128.0;
         else if (this.psgVolumeEffect == 3)
-            // 3/4。v1.29追加
+            // 3/4: updated in v1.29
             this.vol = this.volume / (OVERSAMPLE_RATE * 4.0 / 3.0);
         else
-            // Kitao追加。_PsgVolumeEffect=ボリューム調節効果。
+            // Added by Kitao. _PsgVolumeEffect=Volume adjustment effect.
             this.vol = this.volume / (OVERSAMPLE_RATE * this.psgVolumeEffect);
     }
 
     /**
-     * Psg の出力をミックスします。
+     * Mixes the output of Psg.
      *
-     * @param buffer  出力先バッファ Kitao更新。PSG専用バッファにしたためSint16に。
-     * @param samples 書き出すサンプル数
+     * @param buffer  Output buffer. Kitao updated: Changed to Sint16 since it is a PSG-only buffer.
+     * @param samples Number of samples to write
      */
     public void mix(int[][] buffer, int samples) {
 
         for (int i = 0; i < samples; i++) {
-            // Kitao追加。6chぶんのサンプルを足していくためのバッファ。精度を維持するために必要。
-            // 6chぶん合計が終わった後に、これをSint16に変換して書き込むようにした。
+            // Added by Kitao. A buffer for adding 6ch samples. Necessary to maintain accuracy.
+            // After the total for all 6 channels has been calculated, this is converted to Sint16 and written.
             int[] sampleAllL = new int[] {0};
-            // Kitao 追加。上のＲチャンネル用
+            // Added by Kitao. R channel of the above.
             int[] sampleAllR = new int[] {0};
             for (int c = 0; c < N_CHANNEL; c++) {
                 Psg psg = this.psgs[c];
                 psg.mix(c, sampleAllL, sampleAllR);
             }
-            //Kitao更新。6ch合わさったところで、ボリューム調整してバッファに書き込む。
+            // Kitao updated. Once the 6 channels are combined, adjust the volume and write it to the buffer.
             sampleAllL[0] = (int) ((double) sampleAllL[0] * this.vol);
-            //if ((sampleAllL>32767)||(sampleAllL<-32768)) logger.log(Level.DEBUG, "Psg Sachitta!");//test用
-            //  if (sampleAllL> 32767) sampleAllL= 32767; // Volをアップしたのでサチレーションチェックが必要。v2.39
-            //  if (sampleAllL<-32768) sampleAllL=-32768; //  パックランドでUFO等にやられたときぐらいで、通常のゲームでは起こらない。音量の大きなビックリマンワールドもOK。パックランドも通常はOKでサチレーションしたときでもわずかなので音質的に大丈夫。
-            //  なので音質的には、PSGを２つのDirectXチャンネルに分けて鳴らすべき(処理は重くなる)だが、現状はパックランドでもサチレーション処理だけで音質的に問題なし(速度優先)とする。
+            //if ((sampleAllL>32767)||(sampleAllL<-32768)) logger.log(Level.DEBUG, "Psg is saturated!"); // for test
+            //  if (sampleAllL> 32767) sampleAllL= 32767; // The saturation check is required since the Vol. has been updated. v2.39
+            //  if (sampleAllL<-32768) sampleAllL=-32768; // This only happens when you get hit by a UFO in "Pac-Land" and doesn't happen in normal games. "Bikkuri-Man World" with its loud volume is also OK. "Pac-Land" is usually OK and even when saturated, it's only slight, so it's fine sound quality-wise.
+            // So, in terms of sound quality, the PSG should be split into two DirectX channels (this would require heavier processing), but currently "Pac-Land" can be played without any sound quality issues using only saturation processing (speed is prioritized).
             sampleAllR[0] = (int) ((double) sampleAllR[0] * this.vol);
-            //if ((sampleAllR>32767)||(sampleAllR<-32768)) logger.log(Level.DEBUG, "Psg Satitta!");//test用
-            //  if (sampleAllR> 32767) sampleAllR= 32767; // Volをアップしたのでサチレーションチェックが必要。v2.39
+            //if ((sampleAllR>32767)||(sampleAllR<-32768)) logger.log(Level.DEBUG, "Psg is saturated!"); // for test
+            //  if (sampleAllR> 32767) sampleAllR= 32767; // The saturation check is required since the Vol. has been updated. v2.39
             //  if (sampleAllR<-32768) sampleAllR=-32768; //
             buffer[0][i] = sampleAllL[0] << 1;
             buffer[1][i] = sampleAllR[0] << 1;
         }
     }
 
-    // Kitao更新
+    // Kitao updated
     public void reset() {
         for (int c = 0; c < 8; c++) {
             this.psgs[c] = new Psg(c == 3);
@@ -643,23 +671,23 @@ public class OotakeHuC6280 {
         this.mainVolumeR = 0;
         this.lfoFreq = 0;
         this.lfoControl = 0;
-        this.channel = 0; // Kitao追加。v2.65
-        this.waveCrash = false; // Kitao追加
+        this.channel = 0; // Added by Kitao. v2.65
+        this.waveCrash = false; // Added by Kitao.
     }
 
     /**
-     * Psg を初期化します。
+     * Initialize Psg.
      */
     public OotakeHuC6280(int clock, int sampleRate) {
 
-        this.psgFreq = clock & 0x7FFFFFFF;
+        this.psgFreq = clock & 0x7fff_ffff;
         setHoneyInTheSky(((clock >> 31) & 0x01) != 0);
 
         this.psgVolumeEffect = 0;
         this.volume = 0;
         this.vol = 0.0;
 
-        setVolume(); // Kitao追加
+        setVolume(); // Added by Kitao.
 
         reset();
 
@@ -668,7 +696,7 @@ public class OotakeHuC6280 {
     }
 
     /**
-     * Psg ポートの読み出しに対する動作を記述します。
+     * Describes the behavior for reading the Psg port.
      */
     public int read(int regNum) {
         if (regNum == 0)
@@ -678,23 +706,23 @@ public class OotakeHuC6280 {
     }
 
     /**
-     * Psg ポートの書き込みに対する動作を記述します。
+     * Describes the behavior for writing to the Psg port.
      */
-    private void write(int regNum, int data) {
+    public void write(int regNum, int data) {
         writeReg(regNum, data);
     }
 
     /**
      * @author Kitao
-     * Kitao追加。PSGのボリュームも個別に設定可能にした。
+     * Added by Kitao. The PSG volume can also be set individually.
      */
-    private void setVolume() {
+    public void setVolume() {
         this.volume = 1.0 / PSG_DECLINE;
         setVOL();
     }
 
     /** @author Kitao */
-    private void resetVolumeReg() {
+    public void resetVolumeReg() {
         this.mainVolumeL = 0;
         this.mainVolumeR = 0;
         for (int c = 0; c < N_CHANNEL; c++) {
@@ -708,7 +736,7 @@ public class OotakeHuC6280 {
     }
 
     /** @author Kitao */
-    private boolean getMutePsgChannel(int c) {
+    public boolean getMutePsgChannel(int c) {
         return this.psgs[c].mute;
     }
 
@@ -716,7 +744,7 @@ public class OotakeHuC6280 {
      * @author Kitao
      * @since v2.60
      */
-    private void setHoneyInTheSky(boolean bHoneyInTheSky) {
+    public void setHoneyInTheSky(boolean bHoneyInTheSky) {
         this.honeyInTheSky = bHoneyInTheSky;
     }
 

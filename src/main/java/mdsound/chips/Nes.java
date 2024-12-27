@@ -15,7 +15,7 @@ import mdsound.np.NpNesFds;
  */
 public class Nes {
 
-    // 音量設定
+    // Volume Settings
     public void setVolumeAPU(int db) {
         db = Math.min(db, 20);
         if (db > -192)

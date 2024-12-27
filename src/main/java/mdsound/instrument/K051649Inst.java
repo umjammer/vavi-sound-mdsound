@@ -25,12 +25,12 @@ public class K051649Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int SamplingRate, int clockValue, Object... Option) {
+    public int start(int chipId, int samplingRate, int clock, Object... Option) {
         if (scc1Data[chipId] == null) {
             scc1Data[chipId] = new K051649();
         }
 
-        int sampRate = device_start_k051649(chipId, clockValue);
+        int sampRate = device_start_k051649(chipId, clock);
         //int flags = 1;
         //if (Option != null && Option.length > 0) flags = (int)(byte)Option[0];
         //k054539_init_flags(chipId, flags);
@@ -52,7 +52,7 @@ public class K051649Inst extends Instrument.BaseInstrument {
     }
 
     private static final int MAX_CHIPS = 0x02;
-    private K051649[] scc1Data = new K051649[MAX_CHIPS];
+    private final K051649[] scc1Data = new K051649[MAX_CHIPS];
 
     @Override
     public String getName() {

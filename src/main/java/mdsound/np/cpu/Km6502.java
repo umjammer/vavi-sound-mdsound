@@ -1,7 +1,6 @@
 
 package mdsound.np.cpu;
 
-import java.lang.System.Logger.Level;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 

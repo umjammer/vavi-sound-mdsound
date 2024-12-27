@@ -25,8 +25,8 @@ public class YmZ280bInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock, int clockValue, Object... option) {
-        return device_start_ymz280b(chipId, clockValue);
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        return device_start_ymz280b(chipId, clock);
     }
 
     @Override
@@ -129,7 +129,7 @@ public class YmZ280bInst extends Instrument.BaseInstrument {
 //    /**
 //     * Generic get_info
 //     */
-//    DEVICE_GET_INFO( YmZ280bInst ) {
+//    DEVICE_GET_INFO( YmZ280b ) {
 //            case DEVINFO_STR_NAME:       strcpy(info.s, "YMZ280B");      break;
 //            case DEVINFO_STR_FAMILY:     strcpy(info.s, "Yamaha Wavetable");   break;
 //            case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;

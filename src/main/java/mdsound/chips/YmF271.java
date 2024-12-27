@@ -511,17 +511,17 @@ public class YmF271 {
     private static final int[] pcmTab = new int[] {0, 4, 8, -1, 12, 16, 20, -1, 24, 28, 32, -1, 36, 40, 44, -1};
 
     // lookup tables
-    private static short[][] lutWaves = new short[8][];
-    private static double[][][] lutPlfo = new double[][][] {new double[8][], new double[8][], new double[8][], new double[8][]};
-    private static int[][] lutALfo = new int[4][];
-    private double[] lutAr = new double[64];
-    private double[] lutDc = new double[64];
-    private double[] lutLfo = new double[256];
-    private static int[] lutAttenuation = new int[16];
-    private static int[] lutTotalLevel = new int[128];
-    private static int[] lutEnvVolume = new int[256];
+    private static final short[][] lutWaves = new short[8][];
+    private static final double[][][] lutPlfo = new double[][][] {new double[8][], new double[8][], new double[8][], new double[8][]};
+    private static final int[][] lutALfo = new int[4][];
+    private final double[] lutAr = new double[64];
+    private final double[] lutDc = new double[64];
+    private final double[] lutLfo = new double[256];
+    private static final int[] lutAttenuation = new int[16];
+    private static final int[] lutTotalLevel = new int[128];
+    private static final int[] lutEnvVolume = new int[256];
 
-    private Slot[] slots = new Slot[] {
+    private final Slot[] slots = new Slot[] {
             new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(),
             new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(),
             new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(),
@@ -529,16 +529,17 @@ public class YmF271 {
             new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(),
             new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot()
     };
-    private Group[] groups = new Group[] {
+    private final Group[] groups = new Group[] {
             new Group(), new Group(), new Group(), new Group(),
             new Group(), new Group(), new Group(), new Group(),
             new Group(), new Group(), new Group(), new Group()
     };
 
-    private byte[] regsMain = new byte[0x10];
+    private final byte[] regsMain = new byte[0x10];
 
     private int timerA, timerB;
-    private int timerAVal = 0, timerBVal = 0;
+    private final int timerAVal = 0;
+    private final int timerBVal = 0;
     private int irqState;
     private int status;
     private int enable;
@@ -837,11 +838,11 @@ public class YmF271 {
                             break;
                         }
 
-                        mixP[ptrMixp++] += (int) ((output1 * lutAttenuation[this.slots[slot1].ch0Level]) +
+                        mixP[ptrMixp++] += ((output1 * lutAttenuation[this.slots[slot1].ch0Level]) +
                                 (output2 * lutAttenuation[this.slots[slot2].ch0Level]) +
                                 (output3 * lutAttenuation[this.slots[slot3].ch0Level]) +
                                 (output4 * lutAttenuation[this.slots[slot4].ch0Level])) >> 16;
-                        mixP[ptrMixp++] += (int) ((output1 * lutAttenuation[this.slots[slot1].ch1Level]) +
+                        mixP[ptrMixp++] += ((output1 * lutAttenuation[this.slots[slot1].ch1Level]) +
                                 (output2 * lutAttenuation[this.slots[slot2].ch1Level]) +
                                 (output3 * lutAttenuation[this.slots[slot3].ch1Level]) +
                                 (output4 * lutAttenuation[this.slots[slot4].ch1Level])) >> 16;
@@ -1005,10 +1006,10 @@ public class YmF271 {
                             break;
                         }
 
-                        mixP[ptrMixp++] += (int) ((output1 * lutAttenuation[this.slots[slot1].ch0Level]) +
+                        mixP[ptrMixp++] += ((output1 * lutAttenuation[this.slots[slot1].ch0Level]) +
                                 (output2 * lutAttenuation[this.slots[slot2].ch0Level]) +
                                 (output3 * lutAttenuation[this.slots[slot3].ch0Level])) >> 16;
-                        mixP[ptrMixp++] += (int) ((output1 * lutAttenuation[this.slots[slot1].ch1Level]) +
+                        mixP[ptrMixp++] += ((output1 * lutAttenuation[this.slots[slot1].ch1Level]) +
                                 (output2 * lutAttenuation[this.slots[slot2].ch1Level]) +
                                 (output3 * lutAttenuation[this.slots[slot3].ch1Level])) >> 16;
                     }

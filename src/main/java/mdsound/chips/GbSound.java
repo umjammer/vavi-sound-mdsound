@@ -5,9 +5,6 @@
 package mdsound.chips;
 
 
-import vavi.util.win32.WAVE.data;
-
-
 /**
  * Game Boy Sound emulation (c) Anthony Kruize (trandor@labyrinth.net.au)
  * <p>

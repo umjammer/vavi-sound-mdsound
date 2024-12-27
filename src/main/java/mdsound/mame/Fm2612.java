@@ -1,6 +1,6 @@
 /*
  *
- * software implementation of Yamaha Ym2612Inst FM Sound generator
+ * software implementation of Yamaha Ym2612 FM Sound generator
  * Split from Fm.c to keep 2612 fixes from infecting other OPN chips
  *
  * Copyright Jarek Burczynski (bujar at mame dot net)
@@ -23,7 +23,7 @@ import mdsound.mame.Fm.BaseChip;
  * <p>
  * 2006~2012  Eke-Eke (Genesis Plus GX):
  * Huge thanks to Nemesis, lot of those fixes came from his tests on Sega Genesis hardware
- * More informations at http://gendev.spritesmind.net/forum/viewtopic.php?t=386
+ * More information at http://gendev.spritesmind.net/forum/viewtopic.php?t=386
  * <p>
  *  TODO:
  * <p>
@@ -42,7 +42,7 @@ import mdsound.mame.Fm.BaseChip;
  * - fixed EG behavior when Attack Rate is maximal
  * - fixed EG behavior when SL=0 (Mega Turrican tracks 03,09...) or/and Key ON occurs at minimal attenuation
  * - implemented EG output immediate changes on register writes
- * - fixed Ym2612Inst initial values (after the reset): fixes missing intro in B.O.B
+ * - fixed Ym2612 initial values (after the reset): fixes missing intro in B.O.B
  * - implemented Detune overflow (Ariel, Comix Zone, Shaq Fu, Spiderman & many other games using GEMS Sound engine)
  * - implemented accurate CSM mode emulation
  * - implemented accurate SSG-EG emulation (Asterix, Beavis&Butthead, Bubba'n Stix & many other games)
@@ -120,7 +120,7 @@ import mdsound.mame.Fm.BaseChip;
  * <p>
  * 09-12-98 hiro-shi:
  * change ADPCM volume. (8.16, 48.64)
- * replace Ym2610Inst ch0/3 (YM-2610B)
+ * replace Ym2610 ch0/3 (YM-2610B)
  * change ADPCM_SHIFT (10.8) missing bank change 0x4000-0xffff.
  * add ADPCM_SHIFT_MASK
  * change ADPCMA_DECODE_MIN/MAX.
@@ -222,46 +222,46 @@ public class Fm2612 {
          * TL_RES_LEN - sinus resolution (X axis)
          */
         private static final int TL_TAB_LEN = 13 * 2 * TL_RES_LEN;
-        private static int[] tlTab = new int[TL_TAB_LEN];
+        private static final int[] tlTab = new int[TL_TAB_LEN];
 
         private static final int ENV_QUIET = TL_TAB_LEN >> 3;
 
         /**
          * sin waveform table in 'decibel' scale
          */
-        private static int[] sinTab = new int[SIN_LEN];
+        private static final int[] sinTab = new int[SIN_LEN];
 
         private static final int RATE_STEPS = 8;
         private static final byte[] egInc = new byte[] {
-                /*cycle:0 1  2 3  4 5  6 7*/
+                /* cycle: 0 1  2 3  4 5  6 7 */
 
-                /* 0 */ 0, 1, 0, 1, 0, 1, 0, 1, // rates 00..11 0 (increment by 0 or 1)
-                /* 1 */ 0, 1, 0, 1, 1, 1, 0, 1, // rates 00..11 1
-                /* 2 */ 0, 1, 1, 1, 0, 1, 1, 1, // rates 00..11 2
-                /* 3 */ 0, 1, 1, 1, 1, 1, 1, 1, // rates 00..11 3
+                /*  0 */ 0, 1, 0, 1, 0, 1, 0, 1, // rates 00..11 0 (increment by 0 or 1)
+                /*  1 */ 0, 1, 0, 1, 1, 1, 0, 1, // rates 00..11 1
+                /*  2 */ 0, 1, 1, 1, 0, 1, 1, 1, // rates 00..11 2
+                /*  3 */ 0, 1, 1, 1, 1, 1, 1, 1, // rates 00..11 3
 
-                /* 4 */ 1, 1, 1, 1, 1, 1, 1, 1, // rate 12 0 (increment by 1)
-                /* 5 */ 1, 1, 1, 2, 1, 1, 1, 2, // rate 12 1
-                /* 6 */ 1, 2, 1, 2, 1, 2, 1, 2, // rate 12 2
-                /* 7 */ 1, 2, 2, 2, 1, 2, 2, 2, // rate 12 3
+                /*  4 */ 1, 1, 1, 1, 1, 1, 1, 1, // rate 12 0 (increment by 1)
+                /*  5 */ 1, 1, 1, 2, 1, 1, 1, 2, // rate 12 1
+                /*  6 */ 1, 2, 1, 2, 1, 2, 1, 2, // rate 12 2
+                /*  7 */ 1, 2, 2, 2, 1, 2, 2, 2, // rate 12 3
 
-                /* 8 */ 2, 2, 2, 2, 2, 2, 2, 2, // rate 13 0 (increment by 2)
-                /* 9 */ 2, 2, 2, 4, 2, 2, 2, 4, // rate 13 1
-                /*10 */ 2, 4, 2, 4, 2, 4, 2, 4, // rate 13 2
-                /*11 */ 2, 4, 4, 4, 2, 4, 4, 4, // rate 13 3
+                /*  8 */ 2, 2, 2, 2, 2, 2, 2, 2, // rate 13 0 (increment by 2)
+                /*  9 */ 2, 2, 2, 4, 2, 2, 2, 4, // rate 13 1
+                /* 10 */ 2, 4, 2, 4, 2, 4, 2, 4, // rate 13 2
+                /* 11 */ 2, 4, 4, 4, 2, 4, 4, 4, // rate 13 3
 
-                /*12 */ 4, 4, 4, 4, 4, 4, 4, 4, // rate 14 0 (increment by 4)
-                /*13 */ 4, 4, 4, 8, 4, 4, 4, 8, // rate 14 1
-                /*14 */ 4, 8, 4, 8, 4, 8, 4, 8, // rate 14 2
-                /*15 */ 4, 8, 8, 8, 4, 8, 8, 8, // rate 14 3
+                /* 12 */ 4, 4, 4, 4, 4, 4, 4, 4, // rate 14 0 (increment by 4)
+                /* 13 */ 4, 4, 4, 8, 4, 4, 4, 8, // rate 14 1
+                /* 14 */ 4, 8, 4, 8, 4, 8, 4, 8, // rate 14 2
+                /* 15 */ 4, 8, 8, 8, 4, 8, 8, 8, // rate 14 3
 
-                /*16 */ 8, 8, 8, 8, 8, 8, 8, 8, // rates 15 0, 15 1, 15 2, 15 3 (increment by 8)
-                /*17 */ 16, 16, 16, 16, 16, 16, 16, 16, // rates 15 2, 15 3 for attack
-                /*18 */ 0, 0, 0, 0, 0, 0, 0, 0, // infinity rates for attack and decay(s)
+                /* 16 */ 8, 8, 8, 8, 8, 8, 8, 8, // rates 15 0, 15 1, 15 2, 15 3 (increment by 8)
+                /* 17 */ 16, 16, 16, 16, 16, 16, 16, 16, // rates 15 2, 15 3 for attack
+                /* 18 */ 0, 0, 0, 0, 0, 0, 0, 0, // infinity rates for attack and decay(s)
         };
 
         /**
-         * this is YM2151 and Ym2612Inst phase increment data (in 10.10 fixed point format)
+         * this is YM2151 and Ym2612 phase increment data (in 10.10 fixed point format)
          */
         private static final byte[] dtTab = new byte[] {
                 // FD=0
@@ -280,7 +280,7 @@ public class Fm2612 {
 
         /**
          * OPN key frequency number . key code follow table
-         * fnum higher 4bit . keycode lower 2bit
+         * fNum higher 4bit . keycode lower 2bit
          */
         private static final byte[] opnFkTable = new byte[] {0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 3, 3, 3};
 
@@ -410,7 +410,7 @@ public class Fm2612 {
          *
          * 128 combinations of 7 bits meaningful (of F-NUMBER), 8 LFO depths, 32 LFO output levels per one depth
          */
-        private static int[] lfoPmTable = new int[128 * 8 * 32];
+        private static final int[] lfoPmTable = new int[128 * 8 * 32];
 
         // slot number
 
@@ -1069,7 +1069,7 @@ public class Fm2612 {
                             break;
                         }
 
-                        // Valley Bell: These few lines are missing in Genesis Plus GX' Ym2612Inst core file.
+                        // Valley Bell: These few lines are missing in Genesis Plus GX' Ym2612 core file.
                         //              Disabling them fixes the SSG-EG.
                         // Additional Note: Asterix and the Great Rescue: Level 1 sounds "better" with these lines,
                         //                  but less accurate.
@@ -1181,7 +1181,7 @@ public class Fm2612 {
                 public int ams;
 
                 /**
-                 * fnum,blk:adjusted to sample rate
+                 * fNum,blk:adjusted to sample rate
                  */
                 public int fc;
                 /**
@@ -1189,7 +1189,7 @@ public class Fm2612 {
                  */
                 public int kCode;
                 /**
-                 * current blk/fnum value for this slot (can be different betweeen slots of one channel in 3slot mode)
+                 * current blk/fNum value for this slot (can be different betweeen slots of one channel in 3slot mode)
                  */
                 public int blockFnum;
                 public int muted;
@@ -1636,7 +1636,7 @@ public class Fm2612 {
              */
             static class _3SLOT {
                 /**
-                 * fnum3,blk3: calculated
+                 * fNum3,blk3: calculated
                  */
                 public int[] fc = new int[3];
                 /**
@@ -1648,7 +1648,7 @@ public class Fm2612 {
                  */
                 public byte[] kCode = new byte[3];
                 /**
-                 * current fnum value for this slot (can be different betweeen slots of one channel in 3slot mode)
+                 * current fNum value for this slot (can be different betweeen slots of one channel in 3slot mode)
                  */
                 public int[] blockFnum = new int[3];
                 /**
@@ -1661,11 +1661,11 @@ public class Fm2612 {
 
             // register number to channel number , slot offset
 
-            private int chan(int n) {
+            private static int chan(int n) {
                 return n & 3;
             }
 
-            private int slot(int s) {
+            private static int slot(int s) {
                 return (s >> 2) & 3;
             }
 
@@ -2233,7 +2233,7 @@ public class Fm2612 {
                         // phase increment counter
                         ch.fc = this.fnTable[fn * 2] >> (7 - blk);
 
-                        // store fnum in clear form for LFO PM calculations
+                        // store fNum in clear form for LFO PM calculations
                         ch.blockFnum = (blk << 11) | fn;
 
                         ch.slots[SLOT1].incr = -1;
@@ -2454,7 +2454,7 @@ public class Fm2612 {
 //}
         }
 
-        // Ym2612Inst local section
+        // Ym2612 local section
 
         Opn.Channel[] cch = new Opn.Channel[6];
 
@@ -2495,7 +2495,7 @@ public class Fm2612 {
         public int waveR;
 
         /**
-         * initialize Ym2612Inst emulator(s)
+         * initialize Ym2612 emulator(s)
          */
         public Ym2612(int clock, int rate,
                       Opn.State.TimerHandler timer_handler, Opn.State.IrqHandler irqHandler) {
@@ -2534,7 +2534,7 @@ public class Fm2612 {
             case 1:
             case 2:
             case 3:
-//logger.log(Level.TRACE, "Ym2612Inst #%p:A=%d read unmapped area".formatted(this.OPN.ST.param, a));
+//logger.log(Level.TRACE, "Ym2612 #%p:A=%d read unmapped area".formatted(this.OPN.ST.param, a));
                 return this.opn.st.setStatus();
             }
             return 0;
@@ -2846,7 +2846,7 @@ public class Fm2612 {
         f2612.updateOne(buffer, length);
     }
 
-    private void postLoad(BaseChip chip) {
+    private static void postLoad(BaseChip chip) {
         if (chip != null) {
             Ym2612 f2612 = (Ym2612) chip;
             f2612.postLoad();
@@ -2856,7 +2856,7 @@ public class Fm2612 {
     /**
      * shut down emulator
      */
-    private void ym2612_shutdown(BaseChip chip) {
+    private static void ym2612_shutdown(BaseChip chip) {
         Ym2612 f2612 = (Ym2612) chip;
     }
 
@@ -2869,7 +2869,7 @@ public class Fm2612 {
     }
 
     /**
-     * Ym2612Inst write
+     * Ym2612 write
      *
      * @param chip number
      * @param a    address
@@ -2882,12 +2882,12 @@ public class Fm2612 {
         return f2612.write(a, v);
     }
 
-    private int ym2612_read(BaseChip chip, int a) {
+    private static int ym2612_read(BaseChip chip, int a) {
         Ym2612 f2612 = (Ym2612) chip;
         return f2612.read(a);
     }
 
-    private int ym2612_timer_over(int chipId, BaseChip chip, int c) {
+    private static int ym2612_timer_over(int chipId, BaseChip chip, int c) {
         Ym2612 f2612 = (Ym2612) chip;
         return f2612.timerOver(c);
     }
@@ -2897,33 +2897,33 @@ public class Fm2612 {
         f2612.setMuteMask(muteMask);
     }
 
-    private void ym2612_update_req(int chipId, Ym2612 chip) {
+    private static void ym2612_update_req(int chipId, Ym2612 chip) {
         Ym2612 f2612 = chip;
         f2612.updateReq();
     }
 
     static class RunningDevice {
         private void saveState(Ym2612 f2612) {
-            this.state_save_register_device_item_array(0, f2612.regs);
+            RunningDevice.state_save_register_device_item_array(0, f2612.regs);
             this.saveState(f2612.opn.st);
             this.saveChannel(f2612.ch, 6);
             // 3slots
-            this.state_save_register_device_item_array(0, f2612.opn.sl3.fc);
-            this.state_save_register_device_item(0, f2612.opn.sl3.fnH);
-            this.state_save_register_device_item_array(0, f2612.opn.sl3.kCode);
+            RunningDevice.state_save_register_device_item_array(0, f2612.opn.sl3.fc);
+            RunningDevice.state_save_register_device_item(0, f2612.opn.sl3.fnH);
+            RunningDevice.state_save_register_device_item_array(0, f2612.opn.sl3.kCode);
             // address register1
-            this.state_save_register_device_item(0, f2612.addr_A1);
+            RunningDevice.state_save_register_device_item(0, f2612.addr_A1);
         }
 
-        private void state_save_register_device_item(int v, byte fn_h) {
+        private static void state_save_register_device_item(int v, byte fn_h) {
             throw new UnsupportedOperationException();
         }
 
-        private void state_save_register_device_item_array(int v, byte[] rEGS) {
+        private static void state_save_register_device_item_array(int v, byte[] rEGS) {
             throw new UnsupportedOperationException();
         }
 
-        private void state_save_register_device_item(int v, int volume) {
+        private static void state_save_register_device_item(int v, int volume) {
             throw new UnsupportedOperationException();
         }
 
@@ -2935,26 +2935,26 @@ public class Fm2612 {
 //            throw new UnsupportedOperationException();
 //        }
 
-        private void state_save_register_device_item_array(int v, int[] fc) {
+        private static void state_save_register_device_item_array(int v, int[] fc) {
             throw new UnsupportedOperationException();
         }
 
         /**
          * FM channel save , internal state only
          */
-        private void saveChannel(Ym2612.Opn.Channel[] ch_, int numCh) {
+        private static void saveChannel(Ym2612.Opn.Channel[] ch_, int numCh) {
             int chPtr = 0;
 
             for (int ch = 0; ch < numCh; ch++, chPtr++) {
                 // channel
                 state_save_register_device_item_array(ch, ch_[chPtr].op1Out);
-                this.state_save_register_device_item(ch, ch_[chPtr].fc);
+                RunningDevice.state_save_register_device_item(ch, ch_[chPtr].fc);
                 // slots
                 for (int slot = 0; slot < 4; slot++) {
                     Ym2612.Opn.Channel.Slot SLOT = ch_[chPtr].slots[slot];
-                    this.state_save_register_device_item(ch * 4 + slot, SLOT.phase);
-                    this.state_save_register_device_item(ch * 4 + slot, SLOT.state);
-                    this.state_save_register_device_item(ch * 4 + slot, SLOT.volume);
+                    RunningDevice.state_save_register_device_item(ch * 4 + slot, SLOT.phase);
+                    RunningDevice.state_save_register_device_item(ch * 4 + slot, SLOT.state);
+                    RunningDevice.state_save_register_device_item(ch * 4 + slot, SLOT.volume);
                 }
             }
         }
@@ -2964,17 +2964,17 @@ public class Fm2612 {
 //            state_save_register_device_item(device, 0, st.busy_expiry_time.seconds );
 //            state_save_register_device_item(device, 0, st.busy_expiry_time.attoseconds );
 //#endif
-            this.state_save_register_device_item(0, st.address);
-            this.state_save_register_device_item(0, st.irq);
-            this.state_save_register_device_item(0, st.irqmask);
-            this.state_save_register_device_item(0, st.status);
-            this.state_save_register_device_item(0, st.mode);
-            this.state_save_register_device_item(0, st.prescalerSel);
-            this.state_save_register_device_item(0, st.fn_h);
-            this.state_save_register_device_item(0, st.ta);
-            this.state_save_register_device_item(0, st.tac);
-            this.state_save_register_device_item(0, st.tb);
-            this.state_save_register_device_item(0, st.tbc);
+            RunningDevice.state_save_register_device_item(0, st.address);
+            RunningDevice.state_save_register_device_item(0, st.irq);
+            RunningDevice.state_save_register_device_item(0, st.irqmask);
+            RunningDevice.state_save_register_device_item(0, st.status);
+            RunningDevice.state_save_register_device_item(0, st.mode);
+            RunningDevice.state_save_register_device_item(0, st.prescalerSel);
+            RunningDevice.state_save_register_device_item(0, st.fn_h);
+            RunningDevice.state_save_register_device_item(0, st.ta);
+            RunningDevice.state_save_register_device_item(0, st.tac);
+            RunningDevice.state_save_register_device_item(0, st.tb);
+            RunningDevice.state_save_register_device_item(0, st.tbc);
         }
 //#endif /* _STATE_H
     }

@@ -38,12 +38,12 @@ public class SinWaveInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock, int clockValue, Object... option) {
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
         reset(chipId);
-        chip[chipId].clock = clock;
+        chip[chipId].clock = samplingRate;
         chip[chipId].render = true;
 
-        return clock; // samplingRate
+        return samplingRate; // samplingRate
     }
 
     @Override
@@ -65,5 +65,5 @@ public class SinWaveInst extends Instrument.BaseInstrument {
     }
 
     private static final int DefaultClockValue = 0;
-    private SinWaveGen[] chip = new SinWaveGen[2];
+    private final SinWaveGen[] chip = new SinWaveGen[2];
 }

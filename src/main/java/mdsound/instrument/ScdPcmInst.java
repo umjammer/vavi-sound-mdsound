@@ -69,8 +69,8 @@ public class ScdPcmInst extends Instrument.BaseInstrument {
 
     // samplingRate 未使用
     @Override
-    public int start(int chipId, int samplingRate, int clockValue, Object... option) {
-        return start(chipId, clockValue);
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        return start(chipId, clock);
     }
 
     @Override

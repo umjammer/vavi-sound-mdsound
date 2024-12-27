@@ -49,13 +49,13 @@ public class Ym2612Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int rate, int clock, Object... option) {
-        if (rate == 0) return 0;
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        if (samplingRate == 0) return 0;
         if (clock == 0) {
             clock = DefaultFMClockValue;
         }
 
-        chips[chipId] = new Ym2612(clock, rate, clock);
+        chips[chipId] = new Ym2612(clock, samplingRate, clock);
         chips[chipId].reset();
 
         // 動作オプション設定
@@ -64,7 +64,7 @@ logger.log(Level.DEBUG, "option: " + optFlags);
             chips[chipId].setOptions(optFlags & 0x3);
         }
 
-        return rate;
+        return samplingRate;
     }
 
     @Override
@@ -93,7 +93,14 @@ logger.log(Level.DEBUG, "option: " + optFlags);
     }
 
     @Override
-    public int write(int chipId, int port, int adr, int data) {
+    public synchronized int write(int chipId, int port, int adr, int data) {
+        int r = 0;
+        r += writeInternal(chipId, 0, 0 + (port & 1) * 2, adr);
+        r += writeInternal(chipId, 0, 1 + (port & 1) * 2, data);
+        return r;
+    }
+
+    private int writeInternal(int chipId, int port, int adr, int data) {
         Ym2612 chip = chips[chipId];
         if (chip == null) return 0;
 

@@ -2,19 +2,19 @@
 package mdsound.fmvgen.effect;
 
 /**
- * フィルタークラス
+ * Filter Class
  *
  * @see "https://vstcpp.wpblog.jp/?page_id=728"
  */
 public class HPFLPF {
-    // エフェクターのパラメーター
-    private int clock;
+    // Effector parameters
+    private final int clock;
 
-    private int maxCh;
+    private final int maxCh;
 
     private ChInfo[] chInfo = null;
 
-    private float[] fBuf = new float[] {
+    private final float[] fBuf = new float[] {
             0f, 0f
     };
 
@@ -45,10 +45,10 @@ public class HPFLPF {
         for (int i = 0; i < chInfo.length; i++) {
             chInfo[i] = new ChInfo();
 
-            // 内部変数
-            // 高音域のみ通す(低音域をカットする)フィルタ設定(左右分)
-            // カットする周波数の目安は20Hz～300Hz程度
-            // 増幅量が大きくなれば、カットオフ周波数も大きくするとよい
+            // Internal variables
+            // Filter setting (left and right) to pass only high frequencies (cut low frequencies)
+            // The recommended frequency range for cutting is around 20Hz to 300Hz.
+            // The larger the amplification amount, the larger the cutoff frequency should be.
             chInfo[i].hFreq = 1000f;
             chInfo[i].hQ = (float) (1.0f / Math.sqrt(2.0f));
             chInfo[i].lFreq = 300f;
@@ -102,7 +102,7 @@ public class HPFLPF {
         fBuf[0] = inL[0] / Filter.convInt;
         fBuf[1] = inR[0] / Filter.convInt;
 
-        // 入力信号にフィルタを適用する
+        // Applying a filter to the input signal
         if (chInfo[ch].hsw) {
             fBuf[0] = chInfo[ch].highPassL.process(fBuf[0]);
             fBuf[1] = chInfo[ch].highPassR.process(fBuf[1]);

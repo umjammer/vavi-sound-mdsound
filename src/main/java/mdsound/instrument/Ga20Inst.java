@@ -27,8 +27,8 @@ public class Ga20Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock, int clockValue, Object... option) {
-        return device_start_iremga20(chipId, clockValue);
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        return device_start_iremga20(chipId, clock);
     }
 
     @Override
@@ -45,7 +45,7 @@ public class Ga20Inst extends Instrument.BaseInstrument {
     }
 
     private static final int MAX_CHIPS = 0x02;
-    private IremGa20[] ga20Data = new IremGa20[] {new IremGa20(), new IremGa20()};
+    private final IremGa20[] ga20Data = new IremGa20[] {new IremGa20(), new IremGa20()};
 
     @Override
     public String getName() {

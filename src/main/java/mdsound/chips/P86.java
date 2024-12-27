@@ -7,58 +7,58 @@ public class P86 {
     public double samplingRate = 44100.0;
     private byte[] pcmData = null;
     private static final int MAXInst = 256;
-    private Inst[] inst = new Inst[MAXInst];
+    private final Inst[] inst = new Inst[MAXInst];
 
-    /** 補完するか？ */
+    /** use interpolation? */
     private boolean interpolation = false;
-    /** 再生周波数 */
+    /** Playback Frequency */
     private int rate;
-    /** 元データの周波数 */
+    /** Frequency of the original data */
     private int srcRate;
-    /** 音程(fnum) */
+    /** Pitch(fNum) */
     private int pitch;
-    /** 音量 */
+    /** volume */
     private int vol;
-    /** P86Inst 保存用メモリポインタ */
+    /** P86 Memory pointer for saving */
     private int _addr;
-    /** 発音中PCMデータ番地 */
+    /** PCM data address during sound generation */
     private int currentOffset;
-    /** 発音中PCMデータ番地（小数部） */
+    /** PCM data address during sounding (decimal part) */
     private int currestOffsetX;
-    /** 残りサイズ */
+    /** Remaining size */
     private int remainingSize;
-    /** 発音開始PCMデータ番地 */
+    /** Sound start PCM data address */
     private int startOffset;
-    /** PCMデータサイズ */
+    /** PCM data size */
     private int size;
-    /** PCMアドレス加算値 (整数部) */
+    /** PCM address addition value (integer part) */
     private int addsize1;
-    /** PCMアドレス加算値 (小数部) */
+    /** PCM address addition value (decimal part) */
     private int addSize2;
-    /** リピート開始位置 */
+    /** Repeat start position */
     private int repeatOffset;
-    /** リピート後のサイズ */
+    /** Size after repeat */
     private int repeatSize;
-    /** リリース開始位置 */
+    /** Release start position */
     private int releaseOffset;
-    /** リリース後のサイズ */
+    /** Size after release */
     private int releaseSize;
-    /** リピートするかどうかのflag */
+    /** Repeat flag */
     private boolean repeatFlag;
-    /** リリースするかどうかのflag */
+    /** Flag to release or not */
     private boolean releaseFlag1;
-    /** リリースしたかどうかのflag */
+    /** Flag of whether it has been released */
     private boolean releaseFlag2;
 
-    /** パンデータ１(bit0=左/bit1=右/bit2=逆) */
+    /** Pan data 1 (bit0=left/bit1=right/bit2=reverse) */
     private int panFlag;
-    /** パンデータ２(音量を下げるサイドの音量値) */
+    /** Pan data 2 (volume value of the side that lowers the volume) */
     private int panDat;
-    /** 発音中?flag */
+    /** playing?flag */
     private boolean playing;
 
     private int volume;
-    /** 音量テーブル */
+    /** Volume table */
     private int[][] volumeTable;
     private static final int[] rateTable = new int[] {4135, 5513, 8270, 11025, 16540, 22050, 33080, 44100};
 
@@ -67,17 +67,17 @@ public class P86 {
         public int size;
 
         public Inst(byte[] pcmData, int i) {
-            this.start = pcmData[i * 6 + 0 + 12 + 1 + 3] +
-                    pcmData[i * 6 + 1 + 12 + 1 + 3] * 0x100 +
-                    pcmData[i * 6 + 2 + 12 + 1 + 3] * 0x10000; // - 0x610;
-            this.size = pcmData[i * 6 + 3 + 12 + 1 + 3] +
-                    pcmData[i * 6 + 4 + 12 + 1 + 3] * 0x100 +
-                    pcmData[i * 6 + 5 + 12 + 1 + 3] * 0x10000;
+            this.start = (pcmData[i * 6 + 0 + 12 + 1 + 3] & 0xff) +
+                    (pcmData[i * 6 + 1 + 12 + 1 + 3] & 0xff) * 0x100 +
+                    (pcmData[i * 6 + 2 + 12 + 1 + 3] & 0xff) * 0x10000; // - 0x610;
+            this.size = (pcmData[i * 6 + 3 + 12 + 1 + 3] & 0xff) +
+                    (pcmData[i * 6 + 4 + 12 + 1 + 3] & 0xff) * 0x100 +
+                    (pcmData[i * 6 + 5 + 12 + 1 + 3] & 0xff) * 0x10000;
         }
     }
 
     /** from PMDWin p86drv.cpp */
-    public int loadPcm(int port, byte address, byte data, byte[] pcmData) {
+    public int loadPcm(int port, int address, int data, byte[] pcmData) {
         this.pcmData = pcmData;
 
         for (int i = 0; i < MAXInst; i++) {
@@ -88,7 +88,7 @@ public class P86 {
     }
 
     /**
-     * 初期化(内部処理)
+     * Initialization (internal processing)
      */
     public void init() {
 
@@ -122,14 +122,14 @@ public class P86 {
     }
 
     /**
-     * 音量調整用
+     * For volume adjustment
      */
     private void setVolume(int volume) {
         makeVolumeTable(volume);
     }
 
     /**
-     * 音量テーブル作成
+     * Creating a volume table
      */
     private void makeVolumeTable(int volume) {
         volumeTable = new int[16][];
@@ -148,7 +148,7 @@ public class P86 {
     }
 
     /**
-     * 真ん中（一次補間なし）
+     * Middle (no linear interpolation)
      */
     private void doubleTrans(int[][] buffer, int samples) {
         for (int i = 0; i < samples; i++) {
@@ -166,7 +166,7 @@ public class P86 {
     }
 
     /**
-     * 真ん中（逆相、一次補間なし）
+     * Center (reverse phase, no linear interpolation)
      */
     private void doubleTransG(int[][] buffer, int samples) {
         for (int i = 0; i < samples; i++) {
@@ -183,7 +183,7 @@ public class P86 {
     }
 
     /**
-     * 左寄り（一次補間なし）
+     * Leftward (no linear interpolation)
      */
     private void leftTrans(int[][] buffer, int samples) {
         for (int i = 0; i < samples; i++) {
@@ -201,7 +201,7 @@ public class P86 {
     }
 
     /**
-     * 左寄り（逆相、一次補間なし）
+     * Leftward (reverse phase, no primary interpolation)
      */
     private void leftTransG(int[][] buffer, int samples) {
         for (int i = 0; i < samples; i++) {
@@ -219,7 +219,7 @@ public class P86 {
     }
 
     /**
-     * 右寄り（一次補間なし）
+     * Rightward (no linear interpolation)
      */
     private void rightTrans(int[][] buffer, int samples) {
         for (int i = 0; i < samples; i++) {
@@ -237,7 +237,7 @@ public class P86 {
     }
 
     /**
-     * 右寄り（逆相、一次補間なし）
+     * Rightward (reverse phase, no linear interpolation)
      */
     private void rightTransG(int[][] buffer, int samples) {
         for (int i = 0; i < samples; i++) {
@@ -264,7 +264,7 @@ public class P86 {
         currentOffset += addsize1;
         remainingSize -= addsize1;
 
-        if (remainingSize > 1) { // 一次補間対策
+        if (remainingSize > 1) { // First-order interpolation measures
             return false;
         } else if (!repeatFlag || releaseFlag2) {
             return true;
@@ -277,7 +277,7 @@ public class P86 {
 
     public void update(int[][] outputs, int samples) {
         if (!playing) return;
-        if (remainingSize <= 1) { // 一次補間対策
+        if (remainingSize <= 1) { // First-order interpolation measures
             playing = false;
             return;
         }
@@ -315,20 +315,20 @@ public class P86 {
             break;
         case 0x01: // LoadPcm
             break;
-        case 0x02: // 音色
+        case 0x02: // tone
             startOffset = inst[data].start;
             size = inst[data].size;
             repeatFlag = false;
             releaseFlag1 = false;
             break;
-        case 0x03: // パン
+        case 0x03: // pan
             panFlag = adr;
             panDat = data;
             break;
-        case 0x04: // 音量
+        case 0x04: // volume
             vol = (byte) data;
             break;
-        case 0x05: // ontei
+        case 0x05: // pitch
             int srcRate = adr >> 5;
             int pitch = (adr & 0x1f) * 0x10000 + data;
             if (srcRate < 0 || srcRate > 7)
@@ -358,11 +358,11 @@ public class P86 {
         case 0x08: // stop
             playing = false;
             break;
-        case 0x09: // keyoff
-            if (releaseFlag1) { // リリースが設定されているか?
+        case 0x09: // key off
+            if (releaseFlag1) { // Is the release set?
                 currentOffset = releaseOffset;
                 remainingSize = releaseSize;
-                releaseFlag2 = true; // リリースした
+                releaseFlag2 = true; // Released
             } else {
                 playing = false;
             }

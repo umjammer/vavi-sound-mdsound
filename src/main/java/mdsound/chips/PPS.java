@@ -26,17 +26,17 @@ public class PPS {
     private static final int MAX_PPS = 14;
     private byte[] ppsDt = null;
     private Header[] ppsHd = null;
-    // 単音モードか？
+    // Single note mode?
     private boolean singleFlag;
-    // 周波数半分で再生か？
+    // Reproduce at half the frequency?
     private boolean lowCpuCheckFlag;
-    // Keyon 中か？
+    // during Keyon ?
     private boolean keyonFlag;
     private int dataOffset1;
     private int dataOffset2;
-    // 現在の位置 (小数部)
+    // Current position (decimal)
     private int dataXor1;
-    // 現在の位置 (小数部)
+    // Current position (decimal)
     private int dataXor2;
     private int tick1;
     private int tick2;
@@ -71,7 +71,7 @@ public class PPS {
     };
 
     /**
-     * 音量設定
+     * Volume Settings
      */
     public void setVolume(int vol) {
         // psg.SetVolume(vol);
@@ -98,24 +98,24 @@ public class PPS {
         a = Math.min(Math.max(a, 1), 255);
 
         if (ppsHd[num].volumeOfs + volshift >= 15) return;
-        // 音量が 0 以下の時は再生しない
+        // Do not play when volume is below 0
 
         if (!singleFlag && keyonFlag) {
-            // 2 重発音処理
-            volume2 = volume1; // 1 音目を 2 音目に移動
+            // Double Polyphony Processing
+            volume2 = volume1; // Move 1st note to 2nd note
             dataOffset2 = dataOffset1;
             dataSize2 = dataSize1;
             dataXor2 = dataXor1;
             tick2 = tick1;
             tickXor2 = tickXor1;
         } else {
-            // 1 音目で再生
-            dataSize2 = -1; // 2 音目は停止中
+            // Play on first note
+            dataSize2 = -1; // The second sound is stopped
         }
 
         volume1 = ppsHd[num].volumeOfs + volshift;
         dataOffset1 = ppsHd[num].address;
-        dataSize1 = ppsHd[num].length; // 1 音目を消して再生
+        dataSize1 = ppsHd[num].length; // Mute the first sound and play
         dataXor1 = 0;
         if (lowCpuCheckFlag) {
             tick1 = (int) (((int) (8000 * a / 225.) << 16) / samplingRate);
@@ -128,7 +128,7 @@ public class PPS {
         }
 
         // psg.SetReg(0x07, psg.GetReg(0x07) | 0x24); // Tone/Noise C off
-        keyonFlag = true; // 発音開始
+        keyonFlag = true; // Start of play
     }
 
     public void stop() {
@@ -151,7 +151,7 @@ public class PPS {
     }
 
     private void int04() {
-        // TODO: 未実装
+        // TODO: Not implemented
     }
 
     public void update(int[][] outputs, int samples) {
@@ -207,7 +207,7 @@ public class PPS {
             //  psg.mix(dest, 1);
             //  dest += 2;
 
-            if (dataSize2 > 1) { // ２音合成再生
+            if (dataSize2 > 1) { // Double Polyphony synthesis playback
                 dataXor2 += tickXor2;
                 if (dataXor2 >= 0x1_0000) {
                     dataSize2--;
@@ -249,17 +249,17 @@ public class PPS {
                 dataOffset1 += tick1;
             }
 
-            if (dataSize1 <= 1 && dataSize2 <= 1) { // 両方停止
+            if (dataSize1 <= 1 && dataSize2 <= 1) { // Both stopped
                 if (keyonFlag) {
                     int ad = dataSize1 - 1;
                     if (ad >= 0 && ad < ppsDt.length)
                         keyoffVol += emitTable[ppsDt[ad]] / 8;
                 }
-                keyonFlag = false; // 発音停止
+                keyonFlag = false; // Stop sound
                 if (real) {
-                    psg.accept(0x0a, 0); // Volume を0に
+                    psg.accept(0x0a, 0); // Set Volume to 0
                 }
-            } else if (dataSize1 <= 1 && dataSize2 > 1) { // 2 音目のみが停止
+            } else if (dataSize1 <= 1 && dataSize2 > 1) { // Only the second note is stopped
                 volume1 = volume2;
                 dataSize1 = dataSize2;
                 dataOffset1 = dataOffset2;
@@ -272,7 +272,7 @@ public class PPS {
                 if (ad >= 0 && ad < ppsDt.length)
                     keyoffVol += emitTable[ppsDt[ad]] / 8;
 
-            } else if (dataSize1 > 1 && dataSize2 < 1) { // 2 音目のみが停止
+            } else if (dataSize1 > 1 && dataSize2 < 1) { // Only the second note is stopped
                 if (dataOffset2 != -1) {
                     int ad = dataSize2 - 1;
                     if (ad >= 0 && ad < ppsDt.length)
@@ -288,24 +288,24 @@ public class PPS {
 
         List<Byte> o = new ArrayList<>();
 
-        // 仮バッファに読み込み
+        // Read into temporary buffer
         for (int i = MAX_PPS * 6; i < pcmData.length; i++) {
             o.add((byte) ((pcmData[i] >> 4) & 0xf));
             o.add((byte) ((pcmData[i] >> 0) & 0xf));
         }
 
-        // データの作成
-        // PPS 補正(プチノイズ対策）/ 160 サンプルで減衰させる
+        // Creating Data
+        // PPS correction (to combat small noise) / Attenuate with 160 samples
         for (int i = 0; i < MAX_PPS; i++) {
             int address = (pcmData[i * 6 + 0] & 0xff) + (pcmData[i * 6 + 1] & 0xff) * 0x100 - MAX_PPS * 6;
             int leng = (pcmData[i * 6 + 2] & 0xff) + (pcmData[i * 6 + 3] & 0xff) * 0x100;
 
-            // 仮バッファは 2 倍の大きさにしている為。
+            // The temporary buffer is doubled in size.
             address *= 2;
             leng *= 2;
 
             int end_pps = address + leng;
-            int start_pps = end_pps - 160; // 160サンプル
+            int start_pps = end_pps - 160; // 160 samples
             if (start_pps < address) start_pps = address;
 
             for (int j = start_pps; j < end_pps; j++) {
@@ -319,7 +319,7 @@ public class PPS {
         }
         ppsDt = toByteArray(o);
 
-        // ヘッダの作成
+        // Creating a Header
         List<Header> h = new ArrayList<>();
         for (int i = 0; i < MAX_PPS; i++) {
             Header p = new Header();
@@ -338,13 +338,13 @@ public class PPS {
     public void reset() {
         ppsDt = null;
         ppsHd = null;
-        singleFlag = false; // 単音モードか？
-        lowCpuCheckFlag = false; // 周波数半分で再生か？
-        keyonFlag = false; // Keyon 中か？
+        singleFlag = false; // Single note mode?
+        lowCpuCheckFlag = false; // Reproduce at half the frequency?
+        keyonFlag = false; // during Keyon?
         dataOffset1 = -1;
         dataOffset2 = -1;
-        dataXor1 = 0; // 現在の位置(小数部)
-        dataXor2 = 0; // 現在の位置(小数部)
+        dataXor1 = 0; // Current position (decimal part)
+        dataXor2 = 0; // Current position (decimal part)
         tick1 = 0;
         tick2 = 0;
         tickXor1 = 0;

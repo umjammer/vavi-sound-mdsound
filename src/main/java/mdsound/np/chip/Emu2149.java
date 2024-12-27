@@ -278,7 +278,7 @@ public class Emu2149 {
 
             case 11:
             case 12:
-                this.envFreq = (this.reg[12] << 8) + this.reg[11];
+                this.envFreq = ((this.reg[12] & 0xff) << 8) + (this.reg[11] & 0xff);
                 break;
 
             case 13:

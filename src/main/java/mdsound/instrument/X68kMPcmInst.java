@@ -29,9 +29,9 @@ public class X68kMPcmInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int samplingRate, int clockValue, Object... option) {
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
         mountMpcmX68K(chipId);
-        initialize(chipId, clockValue, samplingRate);
+        initialize(chipId, clock, samplingRate);
         return samplingRate;
     }
 
@@ -108,7 +108,7 @@ public class X68kMPcmInst extends Instrument.BaseInstrument {
         chip.setVolTable(sel, tbl);
     }
 
-    private int decode(int chipId, int ch, byte[] buffer, int bufferP, long pos) {
+    private int decode(int chipId, int ch, byte[] buffer, int bufferP, int pos) {
         MPcm chip = chips[chipId];
         return chip.decode(ch, buffer, bufferP, pos);
     }

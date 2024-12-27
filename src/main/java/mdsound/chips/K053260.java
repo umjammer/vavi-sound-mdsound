@@ -1,6 +1,5 @@
 package mdsound.chips;
 
-import java.lang.System.Logger.Level;
 import java.util.Arrays;
 
 
@@ -107,11 +106,11 @@ public class K053260 {
     }
 
     private int mode;
-    private int[] regs = new int[0x30];
+    private final int[] regs = new int[0x30];
     private byte[] rom;
     private int romSize;
     private int[] deltaTable;
-    private Channel[] channels = new Channel[] {new Channel(), new Channel(), new Channel(), new Channel()};
+    private final Channel[] channels = new Channel[] {new Channel(), new Channel(), new Channel(), new Channel()};
 
     private void initDeltaTable(int rate, int clock) {
         double base = rate;
@@ -148,11 +147,17 @@ public class K053260 {
     private static final int MINOUT = -0x8000;
 
     private static final byte[] dpcmcnv = new byte[] {0, 1, 2, 4, 8, 16, 32, 64, -128, -64, -32, -16, -8, -4, -2, -1};
-    private int[] lVol = new int[4], rVol = new int[4], play = new int[4], loop = new int[4], ppcm = new int[4];
+    private final int[] lVol = new int[4];
+    private final int[] rVol = new int[4];
+    private final int[] play = new int[4];
+    private final int[] loop = new int[4];
+    private final int[] ppcm = new int[4];
     //byte[] rom = new byte[4];
-    private int[] ptrRom = new int[4];
-    private int[] delta = new int[4], end = new int[4], pos = new int[4];
-    private byte[] ppcmData = new byte[4];
+    private final int[] ptrRom = new int[4];
+    private final int[] delta = new int[4];
+    private final int[] end = new int[4];
+    private final int[] pos = new int[4];
+    private final byte[] ppcmData = new byte[4];
 
     public void reset() {
         for (int i = 0; i < 4; i++) {

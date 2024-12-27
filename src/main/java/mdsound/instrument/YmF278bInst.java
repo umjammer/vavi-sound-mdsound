@@ -28,7 +28,7 @@ public class YmF278bInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock, int clockValue, Object... option) {
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
         String romPath = null;
         Function<String, Stream> romStream = null;
 
@@ -42,7 +42,7 @@ public class YmF278bInst extends Instrument.BaseInstrument {
                 romStream = (Function<String, Stream>) option[0];
             }
         }
-        return device_start_ymf278b(chipId, clockValue, romPath, romStream);
+        return device_start_ymf278b(chipId, clock, romPath, romStream);
     }
 
     @Override

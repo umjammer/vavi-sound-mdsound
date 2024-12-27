@@ -5,31 +5,32 @@ import mdsound.fmvgen.effect.ReversePhase;
 
 
 public class AdpcmA {
+
     public OPNA2 parent = null;
 
     static class Channel {
-        // ぱん
+        /** pan L */
         public float panL;
-        // ぱん
+        /** pan R */
         public float panR;
-        // おんりょう
+        /** level */
         public byte level;
-        // おんりょうせってい
+        /** volume */
         public int volume;
-        // いち
+        /** position */
         public int pos;
-        // すてっぷち
+        /** step */
         public int step;
 
-        // 開始
+        /** start */
         public int start;
-        // 終了
+        /** stop */
         public int stop;
-        // 次の 4 bit
+        /** next 4 bit */
         public int nibble;
-        // 変換用
+        /** for encoding */
         public short adpcmX;
-        // 変換用
+        /** for encoding */
         public short adpcmD;
 
         public void init() {
@@ -65,21 +66,21 @@ public class AdpcmA {
             new Channel(), new Channel(), new Channel()
     };
 
-    // AdpcmA ROM
+    /** AdpcmA ROM */
     public byte[] buf;
     public int size;
-    // AdpcmA 全体の音量
+    /** AdpcmA whole volume */
     public byte tl;
     public int tVol;
-    // AdpcmA のキー
+    /** AdpcmA key */
     public byte key;
     public int step;
     public byte[] reg = new byte[32];
     public static short[] jediTable = new short[(48 + 1) * 16];
 
-    private Fmvgen.Effects effects;
-    private int revStartCh;
-    private int num;
+    private final Fmvgen.Effects effects;
+    private final int revStartCh;
+    private final int num;
 
     private static final byte[] table2 = new byte[] {
             1, 3, 5, 7, 9, 11, 13, 15,
@@ -92,7 +93,7 @@ public class AdpcmA {
     };
     private int currentCh;
     private boolean currentIsLSB;
-    //protected float[] panTable = new float[4] { 1.0f, 0.5012f, 0.2512f, 0.1000f };
+//    protected float[] panTable = new float[4] { 1.0f, 0.5012f, 0.2512f, 0.1000f };
 
     public AdpcmA(int num, Fmvgen.Effects effects, int revStartCh) {
         this.num = num;
@@ -119,7 +120,7 @@ public class AdpcmA {
     }
 
     /**
-     * AdpcmA 合成
+     * AdpcmA synthesis
      */
     public void mix(int[] buffer, int count) {
 

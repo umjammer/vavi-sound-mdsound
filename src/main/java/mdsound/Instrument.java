@@ -10,22 +10,39 @@ import dotnet4j.util.compat.Tuple;
 
 public interface Instrument {
 
+    /** for view */
     Map<String, Object> getView(String key, Map<String, Object> args);
 
+    /**
+     * Returns type name.
+     */
     String getName();
 
+    /**
+     * Returns common name.
+     */
     String getShortName();
 
+    /**
+     * @return sampling rate
+     */
     int start(int chipId, int clock);
 
-    int start(int chipId, int clock, int clockValue, Object... option);
+    /**
+     * @return sampling rate
+     */
+    int start(int chipId, int samplingRate, int clock, Object... option);
 
+    /** */
     void stop(int chipId);
 
+    /** */
     void reset(int chipId);
 
+    /** */
     void update(int chipId, int[][] outputs, int samples);
 
+    /** */
     int write(int chipId, int port, int adr, int data);
 
     //
@@ -58,11 +75,12 @@ public interface Instrument {
         }
     }
 
-    static Instrument getInstrument(Class<? extends Instrument> c) {
+    @SuppressWarnings("unchecked")
+    static <T extends Instrument> T getInstrument(Class<T> c) {
         ServiceLoader<Instrument> loader = ServiceLoader.load(Instrument.class);
         for (Instrument i : loader) {
             if (i.getClass() == c) {
-                return i;
+                return (T) i;
             }
         }
         return null;

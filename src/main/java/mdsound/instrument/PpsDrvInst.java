@@ -8,7 +8,7 @@ import mdsound.chips.PPS;
 
 public class PpsDrvInst extends Instrument.BaseInstrument {
 
-    private PPS[] chips = new PPS[] {new PPS(), new PPS()};
+    private final PPS[] chips = new PPS[] {new PPS(), new PPS()};
 
     @Override
     public String getName() {
@@ -33,9 +33,9 @@ public class PpsDrvInst extends Instrument.BaseInstrument {
 
     /** @param option BiConsumer&lt;Integer, Integer&gt; */
     @Override
-    public int start(int chipId, int clock, int clockValue, Object... option) {
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
         PPS chip = chips[chipId];
-        return chip.start(clock, (option != null && option.length > 0) ? (BiConsumer<Integer, Integer>) option[0] : null);
+        return chip.start(samplingRate, (option != null && option.length > 0) ? (BiConsumer<Integer, Integer>) option[0] : null);
     }
 
     @Override

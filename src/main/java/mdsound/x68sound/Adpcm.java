@@ -11,37 +11,42 @@ public class Adpcm {
 
     private static final Logger logger = getLogger(Adpcm.class.getName());
 
-    private Global global;
+    private final Global global;
 
     //
     private int scale;
-    // 16bit PCM data
+    /** 16bit PCM data */
     private int pcm;
-    // HPF用 16bit PCM data
+    /** 16bit PCM data for HPF */
     private int inpPcm, inpPcmPrev, outPcm;
-    // HPF用
+    /** for HPF */
     private int outInpPcm, outInpPcmPrev;
-    // 187500(15625*12), 125000(10416.66*12), 93750(7812.5*12), 62500(5208.33*12), 46875(3906.25*12), ...
+    /** 187500(15625*12), 125000(10416.66*12), 93750(7812.5*12), 62500(5208.33*12), 46875(3906.25*12), ... */
     private int adpcmRate;
     private int rateCounter;
-    // ADPCM 1サンプルのデータの保存
+    /** ADPCM 1 sample data storage */
     private int n1Data;
-    // 0 or 1
+    /** 0 or 1 */
     private int n1DataFlag;
 
-    // 割り込みアドレス
+    /** Interrupt Address */
     public Runnable intProc;
-    // 割り込みアドレス
+    /** Interrupt Address */
     public Runnable errIntProc;
-    //// int AdpcmFlag; // 0:非動作  1:再生中
-    //// int PpiReg; // PPI レジスタの内容
-    //// int DmaCsr; // DMA CSR レジスタの内容
-    //// int DmaCcr; // DMA CCR レジスタの内容
-    //// int DmaFlag; // 0:DMA非動作  1:DMA動作中
-    //inline int DmaGetByte();
-    public byte dmaLastValue;
-    public byte adpcmReg;
-    public byte[] dmaReg = new byte[0x40];
+//    /** 0: Not working 1: Playing */
+//    int adpcmFlag;
+//    /** PPI Register Contents */
+//    int ppiReg;
+//    /** DMA CSR Register Contents */
+//    int dmaCsr;
+//    /** DMA CCR register contents */
+//    int dmaCcr;
+//    /** 0: DMA not operating 1: DMA operating */
+//    int dmaFlag;
+//    inline int dmaGetByte();
+    public int dmaLastValue;
+    public int adpcmReg;
+    public int[] dmaReg = new int[0x40];
     public int finishCounter;
 
     public Adpcm(Global global) {
@@ -52,39 +57,39 @@ public class Adpcm {
         adpcmRate = Global.ADPCMRATEADDTBL[rate & 7];
     }
 
-    private static final byte[] DmaRegInit = new byte[] {
-        /*+00*/ 0x00, 0x00, // CSR/CER
-        /*+02*/ (byte) 0xff, (byte) 0xff,
-        /*+04*/ (byte) 0x80, 0x32, // DCR/OCR
-        /*+06*/ 0x04, 0x08, // SCR/CCR
-        /*+08*/ (byte) 0xff, (byte) 0xff,
-        /*+0A*/ 0x00, 0x00, // MTC
-        /*+0C*/ 0x00, 0x00, // MAR
-        /*+0E*/ 0x00, 0x00, // MAR
-        /*+10*/ (byte) 0xff, (byte) 0xff,
-        /*+12*/ (byte) 0xff, (byte) 0xff,
-        /*+14*/ 0x00, (byte) 0xE9, // DAR
-        /*+16*/ 0x20, 0x03, // DAR
-        /*+18*/ (byte) 0xff, (byte) 0xff,
-        /*+1A*/ 0x00, 0x00, // BTC
-        /*+1C*/ 0x00, 0x00, // BAR
-        /*+1E*/ 0x00, 0x00, // BAR
-        /*+20*/ (byte) 0xff, (byte) 0xff,
-        /*+22*/ (byte) 0xff, (byte) 0xff,
-        /*+24*/ (byte) 0xff, 0x6A, // NIV
-        /*+26*/ (byte) 0xff, 0x6B, // EIV
-        /*+28*/ (byte) 0xff, 0x05, // MFC
-        /*+2A*/ (byte) 0xff, (byte) 0xff,
-        /*+2C*/ (byte) 0xff, 0x01, // CPR
-        /*+2E*/ (byte) 0xff, (byte) 0xff,
-        /*+30*/ (byte) 0xff, 0x05, // DFC
-        /*+32*/ (byte) 0xff, (byte) 0xff,
-        /*+34*/ (byte) 0xff, (byte) 0xff,
-        /*+36*/ (byte) 0xff, (byte) 0xff,
-        /*+38*/ (byte) 0xff, 0x05, // BFC
-        /*+3A*/ (byte) 0xff, (byte) 0xff,
-        /*+3C*/ (byte) 0xff, (byte) 0xff,
-        /*+3E*/ (byte) 0xff, 0x00, // GCR
+    private static final int[] DmaRegInit = {
+        /* +00 */ 0x00, 0x00, // CSR/CER
+        /* +02 */ 0xff, 0xff,
+        /* +04 */ 0x80, 0x32, // DCR/OCR
+        /* +06 */ 0x04, 0x08, // SCR/CCR
+        /* +08 */ 0xff, 0xff,
+        /* +0A */ 0x00, 0x00, // MTC
+        /* +0C */ 0x00, 0x00, // MAR
+        /* +0E */ 0x00, 0x00, // MAR
+        /* +10 */ 0xff, 0xff,
+        /* +12 */ 0xff, 0xff,
+        /* +14 */ 0x00, 0xE9, // DAR
+        /* +16 */ 0x20, 0x03, // DAR
+        /* +18 */ 0xff, 0xff,
+        /* +1A */ 0x00, 0x00, // BTC
+        /* +1C */ 0x00, 0x00, // BAR
+        /* +1E */ 0x00, 0x00, // BAR
+        /* +20 */ 0xff, 0xff,
+        /* +22 */ 0xff, 0xff,
+        /* +24 */ 0xff, 0x6A, // NIV
+        /* +26 */ 0xff, 0x6B, // EIV
+        /* +28 */ 0xff, 0x05, // MFC
+        /* +2A */ 0xff, 0xff,
+        /* +2C */ 0xff, 0x01, // CPR
+        /* +2E */ 0xff, 0xff,
+        /* +30 */ 0xff, 0x05, // DFC
+        /* +32 */ 0xff, 0xff,
+        /* +34 */ 0xff, 0xff,
+        /* +36 */ 0xff, 0xff,
+        /* +38 */ 0xff, 0x05, // BFC
+        /* +3A */ 0xff, 0xff,
+        /* +3C */ 0xff, 0xff,
+        /* +3E */ 0xff, 0x00, // GCR
     };
 
     public void init() {
@@ -99,16 +104,16 @@ public class Adpcm {
         intProc = null;
         errIntProc = null;
         dmaLastValue = 0;
-        adpcmReg = (byte) 0xC7;
+        adpcmReg = 0xc7;
         System.arraycopy(DmaRegInit, 0, dmaReg, 0, 0x40);
         finishCounter = 3;
     }
 
-    public void initSamprate() {
+    public void initSampleRate() {
         rateCounter = 0;
     }
 
-    // ADPCM キーオン時の処理
+    /** ADPCM Key-on processing */
     public void reset() {
         scale = 0;
 
@@ -120,10 +125,10 @@ public class Adpcm {
         n1DataFlag = 0;
     }
 
-    public void dmaError(byte errorCode) {
-        dmaReg[0x00] &= 0xF7; // ACT=0
+    public void dmaError(int errorCode) {
+        dmaReg[0x00] &= 0xf7; // ACT=0
         dmaReg[0x00] |= 0x90; // COC=ERR=1
-        dmaReg[0x01] = errorCode; // CER=errorcode
+        dmaReg[0x01] = errorCode; // CER=error-code
         if ((dmaReg[0x07] & 0x08) != 0) { // INT==1?
             errIntProc.run();
         }
@@ -140,17 +145,17 @@ public class Adpcm {
     public int dmaContinueSetNextMtcMar() {
         dmaReg[0x07] &= (0xff - 0x40); // CNT=0
 
-        dmaReg[0x0A] = dmaReg[0x1A]; // BTC . MTC
-        dmaReg[0x0B] = dmaReg[0x1B];
-        dmaReg[0x0C] = dmaReg[0x1C]; // BAR . MAR
-        dmaReg[0x0D] = dmaReg[0x1D];
-        dmaReg[0x0E] = dmaReg[0x1E];
-        dmaReg[0x0F] = dmaReg[0x1F];
+        dmaReg[0x0a] = dmaReg[0x1a]; // BTC . MTC
+        dmaReg[0x0b] = dmaReg[0x1b];
+        dmaReg[0x0c] = dmaReg[0x1c]; // BAR . MAR
+        dmaReg[0x0d] = dmaReg[0x1d];
+        dmaReg[0x0e] = dmaReg[0x1e];
+        dmaReg[0x0f] = dmaReg[0x1f];
 
         dmaReg[0x29] = dmaReg[0x39]; // BFC . MFC
 
-        if ((dmaReg[0x0A] | dmaReg[0x0B]) == 0) { // MTC == 0 ?
-            dmaError((byte) 0x0D); // カウントエラー(メモリアドレス/メモリカウンタ)
+        if ((dmaReg[0x0a] | dmaReg[0x0b]) == 0) { // MTC == 0 ?
+            dmaError(0x0d); // Count error (memory address/memory counter)
             return 1;
         }
 
@@ -163,20 +168,20 @@ public class Adpcm {
     }
 
     public int dmaArrayChainSetNextMtcMar() {
-        int btc = dmaReg[0x1A] * 0x100 + dmaReg[0x1B];
+        int btc = dmaReg[0x1a] * 0x100 + dmaReg[0x1b];
         if (btc == 0) {
             dmaFinish();
             finishCounter = 0;
             return 1;
         }
         --btc;
-        dmaReg[0x1A] = (byte) (btc >> 8);
-        dmaReg[0x1B] = (byte) btc;
+        dmaReg[0x1a] = btc >> 8;
+        dmaReg[0x1b] = btc;
 
-        int bar = dmaReg[0x1C] * 0x1000000
-                + dmaReg[0x1D] * 0x10000
-                + dmaReg[0x1E] * 0x100
-                + dmaReg[0x1F];
+        int bar = dmaReg[0x1c] * 0x100_0000
+                + dmaReg[0x1d] * 0x1_0000
+                + dmaReg[0x1e] * 0x100
+                + dmaReg[0x1f];
         int mem0 = global.memRead.apply(bar++);
         int mem1 = global.memRead.apply(bar++);
         int mem2 = global.memRead.apply(bar++);
@@ -184,34 +189,34 @@ public class Adpcm {
         int mem4 = global.memRead.apply(bar++);
         int mem5 = global.memRead.apply(bar++);
         if ((mem0 | mem1 | mem2 | mem3 | mem4 | mem5) == -1) {
-            dmaError((byte) 0x0B); // バスエラー(ベースアドレス/ベースカウンタ)
+            dmaError(0x0B); // Bus error (base address/base counter)
             return 1;
         }
-        //*(byte**)&DmaReg[0x1C] = Global.bswapl(bar);
-        dmaReg[0x1C] = (byte) (bar >> 24);
-        dmaReg[0x1D] = (byte) (bar >> 16);
-        dmaReg[0x1E] = (byte) (bar >> 8);
-        dmaReg[0x1F] = (byte) (bar);
+//        dmaReg[0x1c] = Global.bswapl(bar);
+        dmaReg[0x1c] = bar >> 24;
+        dmaReg[0x1d] = bar >> 16;
+        dmaReg[0x1e] = bar >> 8;
+        dmaReg[0x1f] = bar;
 
-        dmaReg[0x0C] = (byte) mem0; // MAR
-        dmaReg[0x0D] = (byte) mem1;
-        dmaReg[0x0E] = (byte) mem2;
-        dmaReg[0x0F] = (byte) mem3;
-        dmaReg[0x0A] = (byte) mem4; // MTC
-        dmaReg[0x0B] = (byte) mem5;
+        dmaReg[0x0c] = mem0; // MAR
+        dmaReg[0x0d] = mem1;
+        dmaReg[0x0e] = mem2;
+        dmaReg[0x0f] = mem3;
+        dmaReg[0x0a] = mem4; // MTC
+        dmaReg[0x0b] = mem5;
 
-        if ((dmaReg[0x0A] | dmaReg[0x0B]) == 0) { // MTC == 0 ?
-            dmaError((byte) 0x0D); // カウントエラー(メモリアドレス/メモリカウンタ)
+        if ((dmaReg[0x0a] | dmaReg[0x0b]) == 0) { // MTC == 0 ?
+            dmaError(0x0d); // Count error (memory address/memory counter)
             return 1;
         }
         return 0;
     }
 
     public int dmaLinkArrayChainSetNextMtcMar() {
-        int bar = dmaReg[0x1C] * 0x1000000
-                + dmaReg[0x1D] * 0x10000
-                + dmaReg[0x1E] * 0x100
-                + dmaReg[0x1F];
+        int bar = dmaReg[0x1c] * 0x10_00000
+                + dmaReg[0x1d] * 0x1_0000
+                + dmaReg[0x1e] * 0x100
+                + dmaReg[0x1f];
         if (bar == 0) {
             dmaFinish();
             finishCounter = 0;
@@ -229,28 +234,28 @@ public class Adpcm {
         int mem8 = global.memRead.apply(bar++);
         int mem9 = global.memRead.apply(bar++);
         if ((mem0 | mem1 | mem2 | mem3 | mem4 | mem5 | mem6 | mem7 | mem8 | mem9) == -1) {
-            dmaError((byte) 0x0B); // バスエラー(ベースアドレス/ベースカウンタ)
+            dmaError(0x0b); // Bus error (base address/base counter)
             return 1;
         }
-        //*(byte**)&DmaReg[0x1C] = Global.bswapl(bar);
-        dmaReg[0x1C] = (byte) (bar >> 24);
-        dmaReg[0x1D] = (byte) (bar >> 16);
-        dmaReg[0x1E] = (byte) (bar >> 8);
-        dmaReg[0x1F] = (byte) (bar);
+        //dDmaReg[0x1C] = Global.bswapl(bar);
+        dmaReg[0x1c] = bar >> 24;
+        dmaReg[0x1d] = bar >> 16;
+        dmaReg[0x1e] = bar >> 8;
+        dmaReg[0x1f] = bar;
 
-        dmaReg[0x0C] = (byte) mem0; // MAR
-        dmaReg[0x0D] = (byte) mem1;
-        dmaReg[0x0E] = (byte) mem2;
-        dmaReg[0x0F] = (byte) mem3;
-        dmaReg[0x0A] = (byte) mem4; // MTC
-        dmaReg[0x0B] = (byte) mem5;
-        dmaReg[0x1C] = (byte) mem6; // BAR
-        dmaReg[0x1D] = (byte) mem7;
-        dmaReg[0x1E] = (byte) mem8;
-        dmaReg[0x1F] = (byte) mem9;
+        dmaReg[0x0c] = mem0; // MAR
+        dmaReg[0x0d] = mem1;
+        dmaReg[0x0e] = mem2;
+        dmaReg[0x0f] = mem3;
+        dmaReg[0x0a] = mem4; // MTC
+        dmaReg[0x0b] = mem5;
+        dmaReg[0x1c] = mem6; // BAR
+        dmaReg[0x1d] = mem7;
+        dmaReg[0x1e] = mem8;
+        dmaReg[0x1f] = mem9;
 
-        if ((dmaReg[0x0A] | dmaReg[0x0B]) == 0) { // MTC == 0 ?
-            dmaError((byte) 0x0D); // カウントエラー(メモリアドレス/メモリカウンタ)
+        if ((dmaReg[0x0a] | dmaReg[0x0b]) == 0) { // MTC == 0 ?
+            dmaError(0x0d); // Count error (memory address/memory counter)
             return 1;
         }
         return 0;
@@ -260,66 +265,66 @@ public class Adpcm {
 
     public int dmaGetByte() {
         if (((dmaReg[0x00] & 0x08) == 0) || ((dmaReg[0x07] & 0x20) != 0)) { // ACT==0 || HLT==1 ?
-            return 0x80000000;
+            return 0x8000_0000;
         }
         int mtc;
-        mtc = dmaReg[0x0A] * 0x100 + dmaReg[0x0B];
+        mtc = dmaReg[0x0a] * 0x100 + dmaReg[0x0b];
         if (mtc == 0) {
-            //if (DmaReg[0x07] & 0x40) { // Continue動作
-            // if (DmaContinueSetNextMtcMar()) {
-            //return 0x80000000;
-            // }
-            // mtc = bswapw(*(unsigned short *)&DmaReg[0x0A]);
-            //} else {
-            return 0x80000000;
-            //}
+//            if (dmaReg[0x07] & 0x40) { // Continue動作
+//                if (dmaContinueSetNextMtcMar()) {
+//                    return 0x80000000;
+//                }
+//                mtc = bswapw((short) dmaReg[0x0a]);
+//            } else {
+                return 0x8000_0000;
+//            }
         }
 
-        int mar = dmaReg[0x0C] * 0x1000000
-                + dmaReg[0x0D] * 0x10000
-                + dmaReg[0x0E] * 0x100
-                + dmaReg[0x0F];
+        int mar = dmaReg[0x0c] * 0x100_0000
+                + dmaReg[0x0d] * 0x1_0000
+                + dmaReg[0x0e] * 0x100
+                + dmaReg[0x0f];
         int mem = global.memRead.apply(mar);
         if (mem == -1) {
-            dmaError((byte) 0x09); // バスエラー(メモリアドレス/メモリカウンタ)
-            return -2147483648;// 0x80000000;
+            dmaError(0x09); // Bus error (memory address/memory counter)
+            return -2147483648; // 0x8000_0000;
         }
-        dmaLastValue = (byte) mem;
+        dmaLastValue = mem;
         mar += MACTBL[(dmaReg[0x06] >> 2) & 3];
-        dmaReg[0x0C] = (byte) (mar >> 24);
-        dmaReg[0x0D] = (byte) (mar >> 16);
-        dmaReg[0x0E] = (byte) (mar >> 8);
-        dmaReg[0x0F] = (byte) (mar);
+        dmaReg[0x0c] = mar >> 24;
+        dmaReg[0x0d] = mar >> 16;
+        dmaReg[0x0e] = mar >> 8;
+        dmaReg[0x0f] = mar;
 
         --mtc;
-        dmaReg[0x0A] = (byte) (mtc >> 8);
-        dmaReg[0x0B] = (byte) mtc;
+        dmaReg[0x0a] = mtc >> 8;
+        dmaReg[0x0b] = mtc;
 
         try {
             if (mtc == 0) {
-                if ((dmaReg[0x07] & 0x40) != 0) { // Continue動作
+                if ((dmaReg[0x07] & 0x40) != 0) { // Continue action
                     if (dmaContinueSetNextMtcMar() != 0) {
                         throw new IllegalStateException("dmaContinueSetNextMtcMar");
                     }
-                } else if ((dmaReg[0x05] & 0x08) != 0) { // チェイニング動作
-                    if ((dmaReg[0x05] & 0x04) == 0) { // アレイチェイン
+                } else if ((dmaReg[0x05] & 0x08) != 0) { // Chaining Operation
+                    if ((dmaReg[0x05] & 0x04) == 0) { // Array Chain
                         if (dmaArrayChainSetNextMtcMar() != 0) {
                             throw new IllegalStateException("dmaArrayChainSetNextMtcMar");
                         }
-                    } else { // リンクアレイチェイン
+                    } else { // Link Array Chain
                         if (dmaLinkArrayChainSetNextMtcMar() != 0) {
                             throw new IllegalStateException("dmaLinkArrayChainSetNextMtcMar");
                         }
                     }
-                } else { // ノーマル転送終了
-                    //   if (!(DmaReg[0x00] & 0x40)) { // BTC=1 ?
-                    //    if (DmaContinueSetNextMtcMar()) {
-                    //     throw "";
-                    //    }
-                    //   } else {
-                    dmaFinish();
-                    finishCounter = 0;
-                    //   }
+                } else { // Normal transfer completed
+//                    if (!(dmaReg[0x00] & 0x40)) { // BTC=1 ?
+//                        if (dmaContinueSetNextMtcMar()) {
+//                            throw new IllegalStateException("");
+//                        }
+//                    } else {
+                        dmaFinish();
+                        finishCounter = 0;
+//                    }
                 }
             }
         } catch (Exception e) {
@@ -329,11 +334,13 @@ public class Adpcm {
         return dmaLastValue;
     }
 
-    private static final int MAXPCMVAL = (2047);
+    private static final int MAX_PCM_VAL = 2047;
 
-    // adpcmを入力して InpPcm の値を変化させる
-    // -2047<<(4+4) <= InpPcm <= +2047<<(4+4)
-    public void adpcm2pcm(byte adpcm) {
+    /**
+     * Enter adpcm to change the value of InpPcm
+     * -2047<<(4+4) <= InpPcm <= +2047<<(4+4)
+     */
+    public void adpcm2pcm(int adpcm) {
 
         int dltL = Global.dltLTBL[scale];
         dltL = (dltL & ((adpcm & 4) != 0 ? -1 : 0))
@@ -343,11 +350,11 @@ public class Adpcm {
         dltL = (dltL ^ sign) + (sign & 1);
         pcm += dltL;
 
-        if ((pcm + MAXPCMVAL) > (MAXPCMVAL * 2)) {
-            if ((pcm + MAXPCMVAL) >= (MAXPCMVAL * 2)) {
-                pcm = MAXPCMVAL;
+        if ((pcm + MAX_PCM_VAL) > (MAX_PCM_VAL * 2)) {
+            if ((pcm + MAX_PCM_VAL) >= (MAX_PCM_VAL * 2)) {
+                pcm = MAX_PCM_VAL;
             } else {
-                pcm = -MAXPCMVAL;
+                pcm = -MAX_PCM_VAL;
             }
         }
 
@@ -365,23 +372,23 @@ public class Adpcm {
 
     // -32768<<4 <= retval <= +32768<<4
     public int getPcm() {
-        if ((adpcmReg & 0x80) != 0) { // ADPCM 停止中
-            return 0x80000000;
+        if ((adpcmReg & 0x80) != 0) { // ADPCM stopped
+            return 0x8000_0000;
         }
         rateCounter -= adpcmRate;
         while (rateCounter < 0) {
-            if (n1DataFlag == 0) { // 次のADPCMデータが内部にない場合
+            if (n1DataFlag == 0) { // If the next ADPCM data is not available
                 int n10Data; // (N1Data << 4) | N0Data
-                n10Data = dmaGetByte(); // DMA転送(1バイト)
-                if (n10Data == 0x80000000) {
+                n10Data = dmaGetByte(); // DMA transfer (1 byte)
+                if (n10Data == 0x8000_0000) {
                     rateCounter = 0;
-                    return 0x80000000;
+                    return 0x8000_0000;
                 }
-                adpcm2pcm((byte) (n10Data & 0x0F)); // InpPcm に値が入る
+                adpcm2pcm(n10Data & 0x0F); // A value is entered in InpPcm
                 n1Data = (n10Data >> 4) & 0x0F;
                 n1DataFlag = 1;
             } else {
-                adpcm2pcm((byte) n1Data); // InpPcm に値が入る
+                adpcm2pcm(n1Data); // A value is entered in InpPcm
                 n1DataFlag = 0;
             }
             rateCounter += 15625 * 12;
@@ -394,23 +401,23 @@ public class Adpcm {
 
     // -32768<<4 <= retval <= +32768<<4
     public int getPcm62() {
-        if ((adpcmReg & 0x80) != 0) { // ADPCM 停止中
-            return 0x80000000;
+        if ((adpcmReg & 0x80) != 0) { // ADPCM stopped
+            return 0x8000_0000;
         }
         rateCounter -= adpcmRate;
         while (rateCounter < 0) {
-            if (n1DataFlag == 0) { // 次のADPCMデータが内部にない場合
+            if (n1DataFlag == 0) { // If the next ADPCM data is not available
                 int n10Data; // (N1Data << 4) | N0Data
-                n10Data = dmaGetByte(); // DMA転送(1バイト)
-                if (n10Data == 0x80000000) {
+                n10Data = dmaGetByte(); // DMA transfer (1 byte)
+                if (n10Data == 0x8000_0000) {
                     rateCounter = 0;
-                    return 0x80000000;
+                    return 0x8000_0000;
                 }
-                adpcm2pcm((byte) (n10Data & 0x0F)); // InpPcm に値が入る
-                n1Data = (n10Data >> 4) & 0x0F;
+                adpcm2pcm(n10Data & 0x0f); // A value is entered in InpPcm
+                n1Data = (n10Data >> 4) & 0x0f;
                 n1DataFlag = 1;
             } else {
-                adpcm2pcm((byte) n1Data); // InpPcm に値が入る
+                adpcm2pcm(n1Data); // A value is entered in InpPcm
                 n1DataFlag = 0;
             }
             rateCounter += 15625 * 12 * 4;

@@ -121,10 +121,10 @@ public interface Device {
         }
 
         /**
-         * 書き込み
+         * Writes.
          * <p>
-         * 取り付けられている全てのデバイスの，Writeメソッドを呼び出す．
-         * 呼び出し順序は，デバイスが取り付けられた順序に等しい．
+         * Calls the Write method of all attached devices.
+         * The order of calls is equal to the order in which the devices were installed.
          */
         @Override
         public boolean write(int adr, int val, int id/* = 0*/) {
@@ -135,12 +135,11 @@ public interface Device {
         }
 
         /**
-         * 読み込み
+         * Reads.
          * <p>
-         * 取り付けられている全てのデバイスのReadメソッドを呼び出す．
-         * 呼び出し順序は，デバイスが取り付けられた順序に等しい．
-         * 帰り値は有効な(Readメソッドがtrueを返却した)デバイスの
-         * 返り値の論理和．
+         * Calls the Read method on all attached devices.
+         * The order of calls is equal to the order in which the devices were installed.
+         * The return value is the logical OR of the return values of valid devices (the Read method returns true).
          */
         @Override
         public boolean read(int adr, int[] val, int id/* = 0*/) {
@@ -164,19 +163,19 @@ public interface Device {
     }
 
     /**
-     * レイヤー
+     * Layer.
      * <p>
-     * バスと似ているが，読み書きの動作を全デバイスに伝播させない．
-     * 最初に読み書きに成功したデバイスを発見した時点で終了する．
+     * It is similar to a bus, but does not propagate read and write operations to all devices.
+     * The program will stop when it finds the first device that it can successfully read from and write to.
      */
     class Layer extends Bus {
 
         /**
-         * 書き込み
+         * Writes.
          * <p>
-         * 取り付けられているデバイスのWriteメソッドを呼び出す．
-         * 呼び出し順序は，デバイスが取り付けられた順序に等しい．
-         * Writeに成功したデバイスが見つかった時点で終了．
+         * Call the Write method of the attached device.
+         * The order of calls is equal to the order in which the devices were installed.
+         * The process ends when a device that was successfully written to is found.
          */
         @Override
         public boolean write(int adr, int val, int id/* = 0*/) {
@@ -188,11 +187,11 @@ public interface Device {
         }
 
         /**
-         * 読み込み
+         * Reads.
          * <p>
-         * 取り付けられているデバイスのReadメソッドを呼び出す．
-         * 呼び出し順序は，デバイスが取り付けられた順序に等しい．
-         * Readに成功したデバイスが見つかった時点で終了．
+         * Call the Read method of the attached device.
+         * The order of calls is equal to the order in which the devices were installed.
+         * The process ends when a device that was successfully read from is found.
          */
         @Override
         public boolean read(int adr, int[] val, int id/* = 0*/) {

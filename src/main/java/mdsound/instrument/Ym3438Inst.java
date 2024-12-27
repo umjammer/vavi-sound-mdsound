@@ -35,7 +35,7 @@ public class Ym3438Inst extends Instrument.BaseInstrument {
         chip.update(buf);
     }
 
-    private int[] gsBuffer = new int[2];
+    private final int[] gsBuffer = new int[2];
 
     private void generateStream(int chipId, int[][] sndPtr, int numSamples) {
 
@@ -69,10 +69,10 @@ public class Ym3438Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock, int clockValue, Object... option) {
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
         chips[chipId].setChipType(type);
-        chips[chipId].reset(clock, clockValue);
-        return clock;
+        chips[chipId].reset(samplingRate, clock);
+        return samplingRate;
     }
 
     @Override
@@ -94,9 +94,14 @@ public class Ym3438Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int write(int chipId, int port, int adr, int data) {
-        writeBuffered(chipId, adr, data);
+    public synchronized int write(int chipId, int port, int adr, int data) {
+        writeInternal(chipId, 0, 0 + (port & 1) * 2, adr);
+        writeInternal(chipId, 0, 1 + (port & 1) * 2, data);
         return 0;
+    }
+
+    private void writeInternal(int chipId, int port, int adr, int data) {
+        writeBuffered(chipId, adr, data);
     }
 }
 

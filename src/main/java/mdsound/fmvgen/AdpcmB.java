@@ -12,66 +12,66 @@ public class AdpcmB {
     public int stMask;
     public int statusNext;
 
-    // ADPCM RAM
+    /** ADPCM RAM */
     public byte[] adpcmBuf;
-    // メモリアドレスに対するビットマスク
+    /** A bit mask for memory addresses */
     public int adpcmMask;
-    // ADPCM 再生終了時にたつビット
+    /** ADPCM playback end bit */
     public int adpcmNotice;
-    // Start address
+    /** Start address */
     protected int startAddr;
-    // Stop address
+    /** Stop address */
     protected int stopAddr;
-    // 再生中アドレス
+    /** Playing address */
     public int memAddr;
-    // Limit address/mask
+    /** Limit address/mask */
     protected int limitAddr;
-    // ADPCM 音量
+    // ADPCM Volume
     public int adpcmLevel;
     public int adpcmVolume;
     public int adpcmVol;
-    // ⊿N
+    /** ⊿N */
     public int deltaN;
-    // 周波数変換用変数
+    /** Frequency conversion variables */
     public int adplC;
-    // 周波数変換用変数差分値
+    /** Frequency conversion variable difference value */
     public int adplD;
-    // adpld の元
+    /** Originally from adpld */
     public int adplBase;
-    // ADPCM 合成用 x
+    /** For ADPCM synthesis x */
     public int adpcMx;
-    // ADPCM 合成用 ⊿
+    /** For ADPCM synthesis ⊿ */
     public int adpcmD;
-    // ADPCM 合成後の出力
+    /** ADPCM synthesis output */
     protected int adpcmOut;
-    // out(t-2)+out(t-1)
+    /** out(t-2)+out(t-1) */
     protected int apOut0;
-    // out(t-1)+out(t)
+    /** out(t-1)+out(t) */
     protected int apOut1;
 
-    //メモリ
+    // Memory
     public int shiftBit = 6;
 
     protected int status;
 
-    // ADPCM リード用バッファ
+    /** ADPCM read buffer */
     protected int adpcmReadBuf;
-    // ADPCM 再生中
+    /** ADPCM Playing */
     public boolean adpcmPlay;
     protected byte granuality;
     public boolean adpcmMask_;
 
-    // ADPCM コントロールレジスタ１
+    /** ADPCM Control Register 1 */
     protected byte control1;
-    // ADPCM コントロールレジスタ２
+    /** ADPCM Control Register 2 */
     public byte control2;
-    // ADPCM レジスタの一部分
+    /** Part of the ADPCM register */
     protected byte[] adpcmReg = new byte[8];
     protected float panL = 1.0f;
     protected float panR = 1.0f;
-    private Fmvgen.Effects effects;
-    private int efcCh;
-    private int num;
+    private final Fmvgen.Effects effects;
+    private final int efcCh;
+    private final int num;
 
     public AdpcmB(int num, Fmvgen.Effects effects, int efcCh) {
         this.num = num;
@@ -88,7 +88,7 @@ public class AdpcmB {
 
         if (adpcmPlay) {
             int ptrDest = 0;
-            //  LOG2("ADPCM Play: %d   DeltaN: %d\n", adpld, deltan);
+            // logger.log(Level.DEBUG, "ADPCM Play: %d   DeltaN: %d\n", adpld, deltan);
             if (adplD <= 8192) { // fplay < fsamp
                 for (; count > 0; count--) {
                     if (adplC < 0) {
@@ -225,7 +225,7 @@ stop:
 
         case 0x08: // ADPCM data
             if ((control1 & 0x60) == 0x60) {
-                //   LOG2("  Wr [0x%.5x] = %.2x", memaddr, data);
+                //   logger.log(Level.DEBUG, "  Wr [0x%.5x] = %.2x", memaddr, data);
                 writeRam(data);
             }
             break;
@@ -263,7 +263,7 @@ stop:
     }
 
     /**
-     * ADPCM RAM への書込み操作
+     * Write operation to ADPCM RAM
      */
     protected void writeRam(int data) {
         if (NO_BITTYPE_EMULATION) {
@@ -278,21 +278,21 @@ stop:
                 byte mask = (byte) (1 << bank);
                 data <<= bank;
 
-                adpcmBuf[p + 0x00000] = (byte) ((adpcmBuf[p + 0x00000] & ~mask) | ((byte) (data) & mask));
+                adpcmBuf[p + 0x0_0000] = (byte) ((adpcmBuf[p + 0x0_0000] & ~mask) | ((byte) (data) & mask));
                 data >>= 1;
-                adpcmBuf[p + 0x08000] = (byte) ((adpcmBuf[p + 0x08000] & ~mask) | ((byte) (data) & mask));
+                adpcmBuf[p + 0x0_8000] = (byte) ((adpcmBuf[p + 0x0_8000] & ~mask) | ((byte) (data) & mask));
                 data >>= 1;
-                adpcmBuf[p + 0x10000] = (byte) ((adpcmBuf[p + 0x10000] & ~mask) | ((byte) (data) & mask));
+                adpcmBuf[p + 0x1_0000] = (byte) ((adpcmBuf[p + 0x1_0000] & ~mask) | ((byte) (data) & mask));
                 data >>= 1;
-                adpcmBuf[p + 0x18000] = (byte) ((adpcmBuf[p + 0x18000] & ~mask) | ((byte) (data) & mask));
+                adpcmBuf[p + 0x1_8000] = (byte) ((adpcmBuf[p + 0x1_8000] & ~mask) | ((byte) (data) & mask));
                 data >>= 1;
-                adpcmBuf[p + 0x20000] = (byte) ((adpcmBuf[p + 0x20000] & ~mask) | ((byte) (data) & mask));
+                adpcmBuf[p + 0x2_0000] = (byte) ((adpcmBuf[p + 0x2_0000] & ~mask) | ((byte) (data) & mask));
                 data >>= 1;
-                adpcmBuf[p + 0x28000] = (byte) ((adpcmBuf[p + 0x28000] & ~mask) | ((byte) (data) & mask));
+                adpcmBuf[p + 0x2_8000] = (byte) ((adpcmBuf[p + 0x2_8000] & ~mask) | ((byte) (data) & mask));
                 data >>= 1;
-                adpcmBuf[p + 0x30000] = (byte) ((adpcmBuf[p + 0x30000] & ~mask) | ((byte) (data) & mask));
+                adpcmBuf[p + 0x3_0000] = (byte) ((adpcmBuf[p + 0x3_0000] & ~mask) | ((byte) (data) & mask));
                 data >>= 1;
-                adpcmBuf[p + 0x38000] = (byte) ((adpcmBuf[p + 0x38000] & ~mask) | ((byte) (data) & mask));
+                adpcmBuf[p + 0x3_8000] = (byte) ((adpcmBuf[p + 0x3_8000] & ~mask) | ((byte) (data) & mask));
                 memAddr += 2;
             }
         } else {
@@ -303,7 +303,7 @@ stop:
         if (memAddr == stopAddr) {
             setStatus(4);
             statusNext = 0x04; // EOS
-            memAddr &= (shiftBit == 6) ? 0x3fffff : 0x1ffffff;
+            memAddr &= (shiftBit == 6) ? 0x3f_ffff : 0x1ff_ffff;
         }
         if (memAddr == limitAddr) {
 //logger.log(Level.TRACE, "Limit ! (%.8x)".formatted(limitaddr));
@@ -313,7 +313,7 @@ stop:
     }
 
     /**
-     * ADPCM 展開
+     * ADPCM Deployment
      */
     protected void decode() {
         apOut0 = apOut1;
@@ -323,7 +323,7 @@ stop:
     }
 
     /**
-     * ADPCM RAM からの nibble 読み込み及び ADPCM 展開
+     * Read nibble from ADPCM RAM and decompress ADPCM
      */
     protected int readRam() {
         int data;
@@ -340,10 +340,10 @@ stop:
                     int bank = (memAddr >> 1) & 7;
                     byte mask = (byte) (1 << bank);
 
-                    data = adpcmBuf[p + 0x18000] & mask;
-                    data = data * 2 + (adpcmBuf[p + 0x10000] & mask);
-                    data = data * 2 + (adpcmBuf[p + 0x08000] & mask);
-                    data = data * 2 + (adpcmBuf[p + 0x00000] & mask);
+                    data = adpcmBuf[p + 0x1_8000] & mask;
+                    data = data * 2 + (adpcmBuf[p + 0x1_0000] & mask);
+                    data = data * 2 + (adpcmBuf[p + 0x0_8000] & mask);
+                    data = data * 2 + (adpcmBuf[p + 0x0_0000] & mask);
                     data >>= bank;
                     memAddr++;
                     if ((memAddr & 1) != 0)
@@ -375,7 +375,7 @@ stop:
                 adpcmD = 127;
                 return data;
             } else {
-                memAddr &= adpcmMask; // 0x3fffff;
+                memAddr &= adpcmMask; // 0x3f_ffff;
                 setStatus(adpcmNotice);
                 adpcmPlay = false;
             }
@@ -387,12 +387,12 @@ stop:
         return adpcMx;
     }
 
-    private static final int[] table1 = new int[] {
+    private static final int[] table1 = {
             1, 3, 5, 7, 9, 11, 13, 15,
             -1, -3, -5, -7, -9, -11, -13, -15,
     };
 
-    private static final int[] table2 = new int[] {
+    private static final int[] table2 = {
             57, 57, 57, 57, 77, 102, 128, 153,
             57, 57, 57, 57, 77, 102, 128, 153,
     };
@@ -404,7 +404,7 @@ stop:
     }
 
     /**
-     * ステータスフラグ設定
+     * Status Flag Settings
      */
     protected void setStatus(int bits) {
         if ((status & bits) == 0) {

@@ -77,18 +77,18 @@ public class C140Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int samplingrate, int clockValue, Object... option) {
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
         if (chipId >= MAX_CHIPS)
             return 0;
 
         C140 info = c140Data[chipId];
-        int sampleRate = clockValue;
+        int sampleRate = clock;
         if ((Instrument.BaseInstrument.CHIP_SAMPLING_MODE == 0x01 && sampleRate < Instrument.BaseInstrument.CHIP_SAMPLE_RATE) ||
                 Instrument.BaseInstrument.CHIP_SAMPLING_MODE == 0x02)
             sampleRate = Instrument.BaseInstrument.CHIP_SAMPLE_RATE;
         if (sampleRate >= 0x100_0000) // limit to 16 MHz sample rate (32 MB buffer)
             return 0;
-        info.start(clockValue, sampleRate, (C140.Type) option[0]);
+        info.start(clock, sampleRate, (C140.Type) option[0]);
         return sampleRate;
     }
 

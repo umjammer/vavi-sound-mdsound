@@ -15,7 +15,7 @@ package mdsound.chips;
  */
 public class Y8950 {
 
-    private byte CHIP_SAMPLING_MODE = 0;
+    private final byte CHIP_SAMPLING_MODE = 0;
 
     private Opl opl;
 

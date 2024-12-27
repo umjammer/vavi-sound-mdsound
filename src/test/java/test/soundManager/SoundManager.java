@@ -173,8 +173,8 @@ public class SoundManager {
     }
 
     public boolean isRunningAsync() {
-if (true) return false;
-        else
+//if (true) return false;
+//        else
 try {
         if (dataMaker.isRunning())
             return true;

@@ -210,7 +210,7 @@ public class Sn76489 {
             this.intermediatePos[i] = Float.MIN_VALUE;
 
             // Set panning to centre
-            //centerPanning( this.panning[i] );
+            //centerPanning(this.panning[i]);
         }
 
         this.latchedRegister = 0;

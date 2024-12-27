@@ -8,7 +8,7 @@ public class SinWaveGen {
     public boolean render = true;
 
     public double clock = 44100.0;
-    private double tone = 440.0;
+    private final double tone = 440.0;
     private double delta = 0;
 
     public void update(int[][] outputs, int samples) {

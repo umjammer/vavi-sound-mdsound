@@ -354,7 +354,7 @@ public class WsAudio {
         }
 
         private int getVal() {
-            return (int) (this.val >> 20);
+            return this.val >> 20;
         }
 
         private void mask() {
@@ -376,7 +376,7 @@ public class WsAudio {
     private int pcmVolumeLeft;
     private int pcmVolumeRight;
 
-    private byte[] ioRam = new byte[0x100];
+    private final byte[] ioRam = new byte[0x100];
     private byte[] internalRam;
 
     private int clock;

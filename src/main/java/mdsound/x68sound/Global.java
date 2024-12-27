@@ -35,13 +35,13 @@ public class Global {
     public static int sampleRate = 44100;
     public static int waveOutSamp = 44100;
     public static int OpmWait = 240; // 24.0μｓ
-    public int opmRate = 62500; // 入力クロック÷64
+    public int opmRate = 62500; // Input clock ÷ 64
 
     public int[] STEPTBL = new int[11 * 12 * 64];
     public static final int ALPHAZERO = (SIZEALPHATBL * 3);
     public int[] ALPHATBL = new int[ALPHAZERO + SIZEALPHATBL + 1];
     public short[] SINTBL = new short[SIZESINTBL];
-    public static final int[] STEPTBL_O2 = new int[] {
+    public static final int[] STEPTBL_O2 = {
             1299, 1300, 1301, 1302, 1303, 1304, 1305, 1306,
             1308, 1309, 1310, 1311, 1313, 1314, 1315, 1316,
             1318, 1319, 1320, 1321, 1322, 1323, 1324, 1325,
@@ -142,7 +142,7 @@ public class Global {
     public int[] D1LTBL = new int[16];
 
     public int[] DT1TBL = new int[128 + 4];
-    public static final int[] DT1TBL_org = new int[] {
+    public static final int[] DT1TBL_org = {
             0, 0, 1, 2,
             0, 0, 1, 2,
             0, 0, 1, 2,
@@ -188,7 +188,7 @@ public class Global {
         }
     }
 
-    public static final XR_ELE[] XRTBL = new XR_ELE[] {
+    public static final XR_ELE[] XRTBL = {
             new XR_ELE(4095, 8),
             new XR_ELE(2047, 5), new XR_ELE(2047, 6), new XR_ELE(2047, 7), new XR_ELE(2047, 8),
             new XR_ELE(1023, 5), new XR_ELE(1023, 6), new XR_ELE(1023, 7), new XR_ELE(1023, 8),
@@ -217,32 +217,32 @@ public class Global {
     };
 
 
-    public static final int[] DT2TBL = new int[] {0, 384, 500, 608};
+    public static final int[] DT2TBL = {0, 384, 500, 608};
     public int[] NOISEALPHATBL = new int[ALPHAZERO + SIZEALPHATBL + 1];
 
 
-    public static final int[] dltLTBL = new int[] {
+    public static final int[] dltLTBL = {
             16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45, 50, 55, 60, 66,
             73, 80, 88, 97, 107, 118, 130, 143, 157, 173, 190, 209, 230, 253, 279, 307,
             337, 371, 408, 449, 494, 544, 598, 658, 724, 796, 876, 963, 1060, 1166, 1282, 1411, 1552,
     };
 
-    public static final int[] DCT = new int[] {
+    public static final int[] DCT = {
             -1, -1, -1, -1, 2, 4, 6, 8,
             -1, -1, -1, -1, 2, 4, 6, 8,
     };
 
 
-    public static final int[][] ADPCMRATETBL = new int[][] {
-            new int[] {2, 3, 4, 4},
-            new int[] {0, 1, 2, 2}
+    public static final int[][] ADPCMRATETBL = {
+            {2, 3, 4, 4},
+            {0, 1, 2, 2}
     };
 
-    public static final int[] ADPCMRATEADDTBL = new int[] {
+    public static final int[] ADPCMRATEADDTBL = {
             46875, 62500, 93750, 125000, 15625 * 12, 15625 * 12, 15625 * 12, 0,
     };
 
-    public static final int[] PCM8VOLTBL = new int[] {
+    public static final int[] PCM8VOLTBL = {
             2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32, 40, 48, 64, 80,
     };
 
@@ -270,9 +270,9 @@ public class Global {
         return seed;
     }
 
-    public int totalVolume; // 音量 x/256
+    public int totalVolume; // Volume x/256
 
-    //public int Semaphore = 0;
+//    public int semaphore = 0;
     public int timerSemaphore = 0;
 
     public static final int OPMLPF_COL = 64;
@@ -293,7 +293,7 @@ public class Global {
     }
 
     public int OPMLPF_ROW = OPMLPF_ROW_44;
-    public short[][] OPMLOWPASS = null; //コンストラクタで実施
+    public short[][] OPMLOWPASS; // Implemented in the constructor
 
     public int Betw_Time; // 5 ms
     public int Late_Time; // (200+Bet_time) ms
@@ -303,20 +303,20 @@ public class Global {
     public int betwSamplesFaster; // ceil(44100.0*5/1000.0+rev)
     public int betwSamplesVerySlower; // floor(44100.0*5/1000.0-rev)/4.0
     public int Slower_Limit, fasterLimit;
-    //public HWAVEOUT hwo = null;
-    //public LPWAVEHDR lpwh = null;
+//    public HWAVEOUT hwo = null;
+//    public LPWAVEHDR lpwh = null;
     public int N_wavehdr = 0;
-    //public WAVEFORMATEX wfx;
+//    public WAVEFORMATEX wfx;
     public int TimerResolution = 1;
-    //unsigned int SamplesCounter=0;
-    //unsigned int SamplesCounterRev=0;
+//    int SamplesCounter = 0;
+//    int SamplesCounterRev = 0;
     public int nSamples;
 
-    //public HANDLE thread_handle = null;
+//    public HANDLE thread_handle = null;
     public int thread_id = 0;
     public int thread_flag = 0;
     public int timer_start_flag = 0;
-    //final int N_waveblk=8;
+//    final int N_waveblk = 8;
     public static final int N_waveblk = 4;
     public int waveblk = 0;
     public int playingblk = 0, playingblk_next = 1;
@@ -326,12 +326,12 @@ public class Global {
     public static final int THREADMES_WAVEOUTDONE = WM_USER + 1;
     public static final int THREADMES_KILL = WM_USER + 2;
 
-    // マルチメディアタイマー
+    // Multimedia Timer
     public int procOpmTimer(short[] buffer, int offset, int sampleCount) {
 
         //if (timer_start_flag==0) return sampleCount;
 
-        //if (opm.PcmBufPtr/Blk_Samples == ((playingblk-1)&(N_waveblk-1))) return;
+        //if (opm.PcmBufPtr / Blk_Samples == ((playingblk - 1) & (N_waveblk - 1))) return;
         if (setPcmBufPtr != -1) {
             opm.pcmBufPtr = setPcmBufPtr;
             setPcmBufPtr = -1;
@@ -340,16 +340,15 @@ public class Global {
         opm.pushRegs();
 
         if (waveOutSamp == 44100 || waveOutSamp == 48000) {
-            //opm.pcmset62((int)nSamples);
+            //opm.pcmset62((int) nSamples);
             opm.pcmset62(buffer, offset, sampleCount, null);
         } else {
-            //opm.pcmset22((int)nSamples);
+            //opm.pcmset22((int) nSamples);
             opm.pcmset22(buffer, offset, sampleCount);
         }
 
-        //  opm.timer();
+        // opm.timer();
         opm.betwint();
-
 
         opm.popRegs();
 
@@ -436,70 +435,70 @@ public class Global {
                 (int) buf0[buf0Ptr + 62] * p[62] +
                 (int) buf0[buf0Ptr + 63] * p[63];
         result[0] >>= (16 - 1);
-        result[1] = (int) buf1[buf1Ptr + 0] * p[0] +
-                (int) buf1[buf1Ptr + 1] * p[1] +
-                (int) buf1[buf1Ptr + 2] * p[2] +
-                (int) buf1[buf1Ptr + 3] * p[3] +
-                (int) buf1[buf1Ptr + 4] * p[4] +
-                (int) buf1[buf1Ptr + 5] * p[5] +
-                (int) buf1[buf1Ptr + 6] * p[6] +
-                (int) buf1[buf1Ptr + 7] * p[7] +
-                (int) buf1[buf1Ptr + 8] * p[8] +
-                (int) buf1[buf1Ptr + 9] * p[9] +
-                (int) buf1[buf1Ptr + 10] * p[10] +
-                (int) buf1[buf1Ptr + 11] * p[11] +
-                (int) buf1[buf1Ptr + 12] * p[12] +
-                (int) buf1[buf1Ptr + 13] * p[13] +
-                (int) buf1[buf1Ptr + 14] * p[14] +
-                (int) buf1[buf1Ptr + 15] * p[15] +
-                (int) buf1[buf1Ptr + 16] * p[16] +
-                (int) buf1[buf1Ptr + 17] * p[17] +
-                (int) buf1[buf1Ptr + 18] * p[18] +
-                (int) buf1[buf1Ptr + 19] * p[19] +
-                (int) buf1[buf1Ptr + 20] * p[20] +
-                (int) buf1[buf1Ptr + 21] * p[21] +
-                (int) buf1[buf1Ptr + 22] * p[22] +
-                (int) buf1[buf1Ptr + 23] * p[23] +
-                (int) buf1[buf1Ptr + 24] * p[24] +
-                (int) buf1[buf1Ptr + 25] * p[25] +
-                (int) buf1[buf1Ptr + 26] * p[26] +
-                (int) buf1[buf1Ptr + 27] * p[27] +
-                (int) buf1[buf1Ptr + 28] * p[28] +
-                (int) buf1[buf1Ptr + 29] * p[29] +
-                (int) buf1[buf1Ptr + 30] * p[30] +
-                (int) buf1[buf1Ptr + 31] * p[31] +
-                (int) buf1[buf1Ptr + 32] * p[32] +
-                (int) buf1[buf1Ptr + 33] * p[33] +
-                (int) buf1[buf1Ptr + 34] * p[34] +
-                (int) buf1[buf1Ptr + 35] * p[35] +
-                (int) buf1[buf1Ptr + 36] * p[36] +
-                (int) buf1[buf1Ptr + 37] * p[37] +
-                (int) buf1[buf1Ptr + 38] * p[38] +
-                (int) buf1[buf1Ptr + 39] * p[39] +
-                (int) buf1[buf1Ptr + 40] * p[40] +
-                (int) buf1[buf1Ptr + 41] * p[41] +
-                (int) buf1[buf1Ptr + 42] * p[42] +
-                (int) buf1[buf1Ptr + 43] * p[43] +
-                (int) buf1[buf1Ptr + 44] * p[44] +
-                (int) buf1[buf1Ptr + 45] * p[45] +
-                (int) buf1[buf1Ptr + 46] * p[46] +
-                (int) buf1[buf1Ptr + 47] * p[47] +
-                (int) buf1[buf1Ptr + 48] * p[48] +
-                (int) buf1[buf1Ptr + 49] * p[49] +
-                (int) buf1[buf1Ptr + 50] * p[50] +
-                (int) buf1[buf1Ptr + 51] * p[51] +
-                (int) buf1[buf1Ptr + 52] * p[52] +
-                (int) buf1[buf1Ptr + 53] * p[53] +
-                (int) buf1[buf1Ptr + 54] * p[54] +
-                (int) buf1[buf1Ptr + 55] * p[55] +
-                (int) buf1[buf1Ptr + 56] * p[56] +
-                (int) buf1[buf1Ptr + 57] * p[57] +
-                (int) buf1[buf1Ptr + 58] * p[58] +
-                (int) buf1[buf1Ptr + 59] * p[59] +
-                (int) buf1[buf1Ptr + 60] * p[60] +
-                (int) buf1[buf1Ptr + 61] * p[61] +
-                (int) buf1[buf1Ptr + 62] * p[62] +
-                (int) buf1[buf1Ptr + 63] * p[63];
+        result[1] = (buf1[buf1Ptr + 0] & 0xffff) * p[0] +
+                (buf1[buf1Ptr + 1] & 0xffff) * p[1] +
+                (buf1[buf1Ptr + 2] & 0xffff) * p[2] +
+                (buf1[buf1Ptr + 3] & 0xffff) * p[3] +
+                (buf1[buf1Ptr + 4] & 0xffff) * p[4] +
+                (buf1[buf1Ptr + 5] & 0xffff) * p[5] +
+                (buf1[buf1Ptr + 6] & 0xffff) * p[6] +
+                (buf1[buf1Ptr + 7] & 0xffff) * p[7] +
+                (buf1[buf1Ptr + 8] & 0xffff) * p[8] +
+                (buf1[buf1Ptr + 9] & 0xffff) * p[9] +
+                (buf1[buf1Ptr + 10] & 0xffff) * p[10] +
+                (buf1[buf1Ptr + 11] & 0xffff) * p[11] +
+                (buf1[buf1Ptr + 12] & 0xffff) * p[12] +
+                (buf1[buf1Ptr + 13] & 0xffff) * p[13] +
+                (buf1[buf1Ptr + 14] & 0xffff) * p[14] +
+                (buf1[buf1Ptr + 15] & 0xffff) * p[15] +
+                (buf1[buf1Ptr + 16] & 0xffff) * p[16] +
+                (buf1[buf1Ptr + 17] & 0xffff) * p[17] +
+                (buf1[buf1Ptr + 18] & 0xffff) * p[18] +
+                (buf1[buf1Ptr + 19] & 0xffff) * p[19] +
+                (buf1[buf1Ptr + 20] & 0xffff) * p[20] +
+                (buf1[buf1Ptr + 21] & 0xffff) * p[21] +
+                (buf1[buf1Ptr + 22] & 0xffff) * p[22] +
+                (buf1[buf1Ptr + 23] & 0xffff) * p[23] +
+                (buf1[buf1Ptr + 24] & 0xffff) * p[24] +
+                (buf1[buf1Ptr + 25] & 0xffff) * p[25] +
+                (buf1[buf1Ptr + 26] & 0xffff) * p[26] +
+                (buf1[buf1Ptr + 27] & 0xffff) * p[27] +
+                (buf1[buf1Ptr + 28] & 0xffff) * p[28] +
+                (buf1[buf1Ptr + 29] & 0xffff) * p[29] +
+                (buf1[buf1Ptr + 30] & 0xffff) * p[30] +
+                (buf1[buf1Ptr + 31] & 0xffff) * p[31] +
+                (buf1[buf1Ptr + 32] & 0xffff) * p[32] +
+                (buf1[buf1Ptr + 33] & 0xffff) * p[33] +
+                (buf1[buf1Ptr + 34] & 0xffff) * p[34] +
+                (buf1[buf1Ptr + 35] & 0xffff) * p[35] +
+                (buf1[buf1Ptr + 36] & 0xffff) * p[36] +
+                (buf1[buf1Ptr + 37] & 0xffff) * p[37] +
+                (buf1[buf1Ptr + 38] & 0xffff) * p[38] +
+                (buf1[buf1Ptr + 39] & 0xffff) * p[39] +
+                (buf1[buf1Ptr + 40] & 0xffff) * p[40] +
+                (buf1[buf1Ptr + 41] & 0xffff) * p[41] +
+                (buf1[buf1Ptr + 42] & 0xffff) * p[42] +
+                (buf1[buf1Ptr + 43] & 0xffff) * p[43] +
+                (buf1[buf1Ptr + 44] & 0xffff) * p[44] +
+                (buf1[buf1Ptr + 45] & 0xffff) * p[45] +
+                (buf1[buf1Ptr + 46] & 0xffff) * p[46] +
+                (buf1[buf1Ptr + 47] & 0xffff) * p[47] +
+                (buf1[buf1Ptr + 48] & 0xffff) * p[48] +
+                (buf1[buf1Ptr + 49] & 0xffff) * p[49] +
+                (buf1[buf1Ptr + 50] & 0xffff) * p[50] +
+                (buf1[buf1Ptr + 51] & 0xffff) * p[51] +
+                (buf1[buf1Ptr + 52] & 0xffff) * p[52] +
+                (buf1[buf1Ptr + 53] & 0xffff) * p[53] +
+                (buf1[buf1Ptr + 54] & 0xffff) * p[54] +
+                (buf1[buf1Ptr + 55] & 0xffff) * p[55] +
+                (buf1[buf1Ptr + 56] & 0xffff) * p[56] +
+                (buf1[buf1Ptr + 57] & 0xffff) * p[57] +
+                (buf1[buf1Ptr + 58] & 0xffff) * p[58] +
+                (buf1[buf1Ptr + 59] & 0xffff) * p[59] +
+                (buf1[buf1Ptr + 60] & 0xffff) * p[60] +
+                (buf1[buf1Ptr + 61] & 0xffff) * p[61] +
+                (buf1[buf1Ptr + 62] & 0xffff) * p[62] +
+                (buf1[buf1Ptr + 63] & 0xffff) * p[63];
         result[1] >>= (16 - 1);
     }
 }

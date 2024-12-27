@@ -63,9 +63,9 @@ public class Ym3438 {
     private short pgFnum;
     private int pgBlock;
     private int pgKcode;
-    private int[] pgInc = new int[24];
-    private int[] pgPhase = new int[24];
-    private byte[] pgReset = new byte[24];
+    private final int[] pgInc = new int[24];
+    private final int[] pgPhase = new int[24];
+    private final byte[] pgReset = new byte[24];
     private int pgRead;
     // Envelope generator
     private int egCycle;
@@ -81,36 +81,36 @@ public class Ym3438 {
     private int egKsv;
     private int egInc;
     private int egRateMax;
-    private byte[] egSl = new byte[2];
+    private final byte[] egSl = new byte[2];
     private int egLfoAm;
-    private byte[] egTl = new byte[2];
+    private final byte[] egTl = new byte[2];
     private byte[] egState = new byte[24];
     private short[] egLevel = new short[24];
     private short[] egOut = new short[24];
-    private byte[] egKon = new byte[24];
-    private byte[] egKonCsm = new byte[24];
-    private byte[] egKonLatch = new byte[24];
-    private byte[] egCsmMode = new byte[24];
-    private byte[] egSsgEnable = new byte[24];
-    private byte[] egSsgPgrstLatch = new byte[24];
-    private byte[] egSsgRepeatLatch = new byte[24];
-    private byte[] egSsgHoldUpLatch = new byte[24];
-    private byte[] egSsgDir = new byte[24];
-    private byte[] egSsgInv = new byte[24];
-    private int[] egRead = new int[2];
+    private final byte[] egKon = new byte[24];
+    private final byte[] egKonCsm = new byte[24];
+    private final byte[] egKonLatch = new byte[24];
+    private final byte[] egCsmMode = new byte[24];
+    private final byte[] egSsgEnable = new byte[24];
+    private final byte[] egSsgPgrstLatch = new byte[24];
+    private final byte[] egSsgRepeatLatch = new byte[24];
+    private final byte[] egSsgHoldUpLatch = new byte[24];
+    private final byte[] egSsgDir = new byte[24];
+    private final byte[] egSsgInv = new byte[24];
+    private final int[] egRead = new int[2];
     private int egReadInc;
 
     // FM
 
-    private short[][] fmOp1 = new short[][] {new short[2], new short[2], new short[2], new short[2], new short[2], new short[2]};
-    private short[] fmOp2 = new short[6];
-    private short[] fmOut = new short[24];
-    private short[] fmMod = new short[24];
+    private final short[][] fmOp1 = new short[][] {new short[2], new short[2], new short[2], new short[2], new short[2], new short[2]};
+    private final short[] fmOp2 = new short[6];
+    private final short[] fmOut = new short[24];
+    private final short[] fmMod = new short[24];
 
     // Channel
 
-    private short[] chAcc = new short[6];
-    private short[] chOut = new short[6];
+    private final short[] chAcc = new short[6];
+    private final short[] chOut = new short[6];
     private int chLock;
     private int chLockL;
     private int chLockR;
@@ -141,54 +141,54 @@ public class Ym3438 {
 
     // Register set
 
-    private byte[] modeTest21 = new byte[8];
-    private byte[] modeTest2C = new byte[8];
+    private final byte[] modeTest21 = new byte[8];
+    private final byte[] modeTest2C = new byte[8];
     private int modeCh3;
     private int modeKonChannel;
-    private byte[] modeKonOperator = new byte[4];
-    private byte[] modeKon = new byte[24];
+    private final byte[] modeKonOperator = new byte[4];
+    private final byte[] modeKon = new byte[24];
     private int modeCsm;
     private int modeKonCsm;
     private int dacEn;
     private int dacData;
 
-    private byte[] ks = new byte[24];
-    private byte[] ar = new byte[24];
-    private byte[] sr = new byte[24];
-    private byte[] dt = new byte[24];
+    private final byte[] ks = new byte[24];
+    private final byte[] ar = new byte[24];
+    private final byte[] sr = new byte[24];
+    private final byte[] dt = new byte[24];
     private byte[] multi = new byte[24];
-    private byte[] sl = new byte[24];
-    private byte[] rr = new byte[24];
-    private byte[] dr = new byte[24];
-    private byte[] am = new byte[24];
-    private byte[] tl = new byte[24];
-    private byte[] ssgEg = new byte[24];
+    private final byte[] sl = new byte[24];
+    private final byte[] rr = new byte[24];
+    private final byte[] dr = new byte[24];
+    private final byte[] am = new byte[24];
+    private final byte[] tl = new byte[24];
+    private final byte[] ssgEg = new byte[24];
 
-    private short[] fnum = new short[6];
-    private byte[] block = new byte[6];
-    private byte[] kcode = new byte[6];
-    private short[] fnum3Ch = new short[6];
-    private byte[] block3Ch = new byte[6];
-    private byte[] kcode3Ch = new byte[6];
+    private final short[] fnum = new short[6];
+    private final byte[] block = new byte[6];
+    private final byte[] kcode = new byte[6];
+    private final short[] fnum3Ch = new short[6];
+    private final byte[] block3Ch = new byte[6];
+    private final byte[] kcode3Ch = new byte[6];
     private int regA4;
     private int regAc;
-    private byte[] connect = new byte[6];
-    private byte[] fb = new byte[6];
+    private final byte[] connect = new byte[6];
+    private final byte[] fb = new byte[6];
     private byte[] panL = new byte[6], panR = new byte[6];
-    private byte[] ams = new byte[6];
-    private byte[] pms = new byte[6];
+    private final byte[] ams = new byte[6];
+    private final byte[] pms = new byte[6];
 
-    private int[] mute = new int[7];
+    private final int[] mute = new int[7];
     private int rateRatio;
     private int sampleCnt;
-    private int[] oldSamples = new int[2];
-    private int[] samples = new int[2];
+    private final int[] oldSamples = new int[2];
+    private final int[] samples = new int[2];
 
     private long writeBufSampleCnt;
     private int writeBufCur;
     private int writeBufLast;
     private long writeBufLastTime;
-    private Opn2WriteBuf[] writeBuf = new Opn2WriteBuf[2048];
+    private final Opn2WriteBuf[] writeBuf = new Opn2WriteBuf[2048];
 
     public Ym3438() {
         for (int i = 0; i < writeBuf.length; i++) {
@@ -267,7 +267,7 @@ public class Ym3438 {
                 case 0xa4: // a4?
                     this.regA4 = this.data & 0xff;
                     break;
-                case 0xa8: // fnum, block, kcode 3ch
+                case 0xa8: // fNum, block, kcode 3ch
                     this.fnum3Ch[channel] = (short) ((this.data & 0xff) | ((this.regAc & 0x07) << 8));
                     this.block3Ch[channel] = (byte) ((this.regAc >> 3) & 0x07);
                     this.kcode3Ch[channel] = (byte) (((this.block3Ch[channel] & 0xff) << 2) | Ym3438Const.fnNote[this.fnum3Ch[channel] >> 7]);
@@ -417,7 +417,7 @@ public class Ym3438 {
         fnum &= 0xfff;
 
         basefreq = (fnum << this.pgBlock) >> 2;
-        //logger.log(Level.TRACE, "040   basefreq:%d fnum:%d this.pg_block:%d".formatted(basefreq, fnum, this.pg_block));
+        //logger.log(Level.TRACE, "040   basefreq:%d fNum:%d this.pg_block:%d".formatted(basefreq, fNum, this.pg_block));
 
         // Apply detune
         if (dt_l != 0) {
@@ -833,7 +833,7 @@ public class Ym3438 {
         if (Ym3438Const.chip_type == Ym3438Const.Type.ym2612) {
 
             out_en = (((cycles & 3) == 3) || test_dac != 0) ? 1 : 0;
-            // Ym2612Inst DAC emulation(not verified)
+            // Ym2612 DAC emulation(not verified)
             sign = out_ >> 8;
             if (out_ >= 0) {
                 out_++;
@@ -1132,7 +1132,7 @@ public class Ym3438 {
 
         //logger.log(Level.TRACE, "080 mol:%d mor:%d".formatted(this.mol, this.mor));
 
-        // Prepare fnum & block
+        // Prepare fNum & block
         if (this.modeCh3 != 0) {
             // Channel 3 special mode
             switch (this.slot) {
@@ -1237,9 +1237,9 @@ public class Ym3438 {
         return 0;
     }
 
-    private int[] dmyBuffer = new int[2];
-    private int[] grBuffer = new int[2];
-    private int[] buf = new int[2];
+    private final int[] dmyBuffer = new int[2];
+    private final int[] grBuffer = new int[2];
+    private final int[] buf = new int[2];
 
     public void setChipType(Ym3438Const.Type type) {
         switch (type) {

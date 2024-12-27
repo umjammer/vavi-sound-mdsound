@@ -46,24 +46,24 @@ public class Fmvgen extends Fmgen {
         typeM
     }
 
-    public static final int[][][] sineTable = new int[][][] {
-            new int[][] {new int[1024], new int[1024], new int[1024], new int[1024]},
-            new int[][] {new int[1024], new int[1024], new int[1024], new int[1024]},
-            new int[][] {new int[1024], new int[1024], new int[1024], new int[1024]},
-            new int[][] {new int[1024], new int[1024], new int[1024], new int[1024]},
-            new int[][] {new int[1024], new int[1024], new int[1024], new int[1024]},
-            new int[][] {new int[1024], new int[1024], new int[1024], new int[1024]},
-            new int[][] {new int[1024], new int[1024], new int[1024], new int[1024]},
-            new int[][] {new int[1024], new int[1024], new int[1024], new int[1024]},
-            new int[][] {new int[1024], new int[1024], new int[1024], new int[1024]},
-            new int[][] {new int[1024], new int[1024], new int[1024], new int[1024]},
-            new int[][] {new int[1024], new int[1024], new int[1024], new int[1024]},
-            new int[][] {new int[1024], new int[1024], new int[1024], new int[1024]}
+    public static final int[][][] sineTable = {
+            {new int[1024], new int[1024], new int[1024], new int[1024]},
+            {new int[1024], new int[1024], new int[1024], new int[1024]},
+            {new int[1024], new int[1024], new int[1024], new int[1024]},
+            {new int[1024], new int[1024], new int[1024], new int[1024]},
+            {new int[1024], new int[1024], new int[1024], new int[1024]},
+            {new int[1024], new int[1024], new int[1024], new int[1024]},
+            {new int[1024], new int[1024], new int[1024], new int[1024]},
+            {new int[1024], new int[1024], new int[1024], new int[1024]},
+            {new int[1024], new int[1024], new int[1024], new int[1024]},
+            {new int[1024], new int[1024], new int[1024], new int[1024]},
+            {new int[1024], new int[1024], new int[1024], new int[1024]},
+            {new int[1024], new int[1024], new int[1024], new int[1024]}
     };
 
     // Operator
     public static class Operator {
-        public static final byte[] notetable = new byte[] {
+        public static final byte[] notetable = {
                 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 3, 3, 3,
                 4, 4, 4, 4, 4, 4, 4, 5, 6, 7, 7, 7, 7, 7, 7, 7,
                 8, 8, 8, 8, 8, 8, 8, 9, 10, 11, 11, 11, 11, 11, 11, 11,
@@ -74,7 +74,7 @@ public class Fmvgen extends Fmgen {
                 28, 28, 28, 28, 28, 28, 28, 29, 30, 31, 31, 31, 31, 31, 31, 31,
         };
 
-        public static final byte[] dttable = new byte[] {
+        public static final byte[] dttable = {
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 4, 4, 4, 4,
@@ -93,187 +93,187 @@ public class Fmvgen extends Fmgen {
                 -16, -16, -18, -20, -22, -24, -26, -28, -32, -34, -38, -40, -44, -44, -44, -44,
         };
 
-        public static final byte[][] decaytable1 = new byte[][] {
-                new byte[] {0, 0, 0, 0, 0, 0, 0, 0}, new byte[] {0, 0, 0, 0, 0, 0, 0, 0},
-                new byte[] {1, 1, 1, 1, 1, 1, 1, 1}, new byte[] {1, 1, 1, 1, 1, 1, 1, 1},
-                new byte[] {1, 1, 1, 1, 1, 1, 1, 1}, new byte[] {1, 1, 1, 1, 1, 1, 1, 1},
-                new byte[] {1, 1, 1, 0, 1, 1, 1, 0}, new byte[] {1, 1, 1, 0, 1, 1, 1, 0},
-                new byte[] {1, 0, 1, 0, 1, 0, 1, 0}, new byte[] {1, 1, 1, 0, 1, 0, 1, 0},
-                new byte[] {1, 1, 1, 0, 1, 1, 1, 0}, new byte[] {1, 1, 1, 1, 1, 1, 1, 0},
-                new byte[] {1, 0, 1, 0, 1, 0, 1, 0}, new byte[] {1, 1, 1, 0, 1, 0, 1, 0},
-                new byte[] {1, 1, 1, 0, 1, 1, 1, 0}, new byte[] {1, 1, 1, 1, 1, 1, 1, 0},
-                new byte[] {1, 0, 1, 0, 1, 0, 1, 0}, new byte[] {1, 1, 1, 0, 1, 0, 1, 0},
-                new byte[] {1, 1, 1, 0, 1, 1, 1, 0}, new byte[] {1, 1, 1, 1, 1, 1, 1, 0},
-                new byte[] {1, 0, 1, 0, 1, 0, 1, 0}, new byte[] {1, 1, 1, 0, 1, 0, 1, 0},
-                new byte[] {1, 1, 1, 0, 1, 1, 1, 0}, new byte[] {1, 1, 1, 1, 1, 1, 1, 0},
-                new byte[] {1, 0, 1, 0, 1, 0, 1, 0}, new byte[] {1, 1, 1, 0, 1, 0, 1, 0},
-                new byte[] {1, 1, 1, 0, 1, 1, 1, 0}, new byte[] {1, 1, 1, 1, 1, 1, 1, 0},
-                new byte[] {1, 0, 1, 0, 1, 0, 1, 0}, new byte[] {1, 1, 1, 0, 1, 0, 1, 0},
-                new byte[] {1, 1, 1, 0, 1, 1, 1, 0}, new byte[] {1, 1, 1, 1, 1, 1, 1, 0},
-                new byte[] {1, 0, 1, 0, 1, 0, 1, 0}, new byte[] {1, 1, 1, 0, 1, 0, 1, 0},
-                new byte[] {1, 1, 1, 0, 1, 1, 1, 0}, new byte[] {1, 1, 1, 1, 1, 1, 1, 0},
-                new byte[] {1, 0, 1, 0, 1, 0, 1, 0}, new byte[] {1, 1, 1, 0, 1, 0, 1, 0},
-                new byte[] {1, 1, 1, 0, 1, 1, 1, 0}, new byte[] {1, 1, 1, 1, 1, 1, 1, 0},
-                new byte[] {1, 0, 1, 0, 1, 0, 1, 0}, new byte[] {1, 1, 1, 0, 1, 0, 1, 0},
-                new byte[] {1, 1, 1, 0, 1, 1, 1, 0}, new byte[] {1, 1, 1, 1, 1, 1, 1, 0},
-                new byte[] {1, 0, 1, 0, 1, 0, 1, 0}, new byte[] {1, 1, 1, 0, 1, 0, 1, 0},
-                new byte[] {1, 1, 1, 0, 1, 1, 1, 0}, new byte[] {1, 1, 1, 1, 1, 1, 1, 0},
-                new byte[] {1, 1, 1, 1, 1, 1, 1, 1}, new byte[] {2, 1, 1, 1, 2, 1, 1, 1},
-                new byte[] {2, 1, 2, 1, 2, 1, 2, 1}, new byte[] {2, 2, 2, 1, 2, 2, 2, 1},
-                new byte[] {2, 2, 2, 2, 2, 2, 2, 2}, new byte[] {4, 2, 2, 2, 4, 2, 2, 2},
-                new byte[] {4, 2, 4, 2, 4, 2, 4, 2}, new byte[] {4, 4, 4, 2, 4, 4, 4, 2},
-                new byte[] {4, 4, 4, 4, 4, 4, 4, 4}, new byte[] {8, 4, 4, 4, 8, 4, 4, 4},
-                new byte[] {8, 4, 8, 4, 8, 4, 8, 4}, new byte[] {8, 8, 8, 4, 8, 8, 8, 4},
-                new byte[] {16, 16, 16, 16, 16, 16, 16, 16}, new byte[] {16, 16, 16, 16, 16, 16, 16, 16},
-                new byte[] {16, 16, 16, 16, 16, 16, 16, 16}, new byte[] {16, 16, 16, 16, 16, 16, 16, 16}
+        public static final byte[][] decaytable1 = {
+                {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0},
+                {1, 1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 1, 1, 1},
+                {1, 1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 1, 1, 1},
+                {1, 1, 1, 0, 1, 1, 1, 0}, {1, 1, 1, 0, 1, 1, 1, 0},
+                {1, 0, 1, 0, 1, 0, 1, 0}, {1, 1, 1, 0, 1, 0, 1, 0},
+                {1, 1, 1, 0, 1, 1, 1, 0}, {1, 1, 1, 1, 1, 1, 1, 0},
+                {1, 0, 1, 0, 1, 0, 1, 0}, {1, 1, 1, 0, 1, 0, 1, 0},
+                {1, 1, 1, 0, 1, 1, 1, 0}, {1, 1, 1, 1, 1, 1, 1, 0},
+                {1, 0, 1, 0, 1, 0, 1, 0}, {1, 1, 1, 0, 1, 0, 1, 0},
+                {1, 1, 1, 0, 1, 1, 1, 0}, {1, 1, 1, 1, 1, 1, 1, 0},
+                {1, 0, 1, 0, 1, 0, 1, 0}, {1, 1, 1, 0, 1, 0, 1, 0},
+                {1, 1, 1, 0, 1, 1, 1, 0}, {1, 1, 1, 1, 1, 1, 1, 0},
+                {1, 0, 1, 0, 1, 0, 1, 0}, {1, 1, 1, 0, 1, 0, 1, 0},
+                {1, 1, 1, 0, 1, 1, 1, 0}, {1, 1, 1, 1, 1, 1, 1, 0},
+                {1, 0, 1, 0, 1, 0, 1, 0}, {1, 1, 1, 0, 1, 0, 1, 0},
+                {1, 1, 1, 0, 1, 1, 1, 0}, {1, 1, 1, 1, 1, 1, 1, 0},
+                {1, 0, 1, 0, 1, 0, 1, 0}, {1, 1, 1, 0, 1, 0, 1, 0},
+                {1, 1, 1, 0, 1, 1, 1, 0}, {1, 1, 1, 1, 1, 1, 1, 0},
+                {1, 0, 1, 0, 1, 0, 1, 0}, {1, 1, 1, 0, 1, 0, 1, 0},
+                {1, 1, 1, 0, 1, 1, 1, 0}, {1, 1, 1, 1, 1, 1, 1, 0},
+                {1, 0, 1, 0, 1, 0, 1, 0}, {1, 1, 1, 0, 1, 0, 1, 0},
+                {1, 1, 1, 0, 1, 1, 1, 0}, {1, 1, 1, 1, 1, 1, 1, 0},
+                {1, 0, 1, 0, 1, 0, 1, 0}, {1, 1, 1, 0, 1, 0, 1, 0},
+                {1, 1, 1, 0, 1, 1, 1, 0}, {1, 1, 1, 1, 1, 1, 1, 0},
+                {1, 1, 1, 1, 1, 1, 1, 1}, {2, 1, 1, 1, 2, 1, 1, 1},
+                {2, 1, 2, 1, 2, 1, 2, 1}, {2, 2, 2, 1, 2, 2, 2, 1},
+                {2, 2, 2, 2, 2, 2, 2, 2}, {4, 2, 2, 2, 4, 2, 2, 2},
+                {4, 2, 4, 2, 4, 2, 4, 2}, {4, 4, 4, 2, 4, 4, 4, 2},
+                {4, 4, 4, 4, 4, 4, 4, 4}, {8, 4, 4, 4, 8, 4, 4, 4},
+                {8, 4, 8, 4, 8, 4, 8, 4}, {8, 8, 8, 4, 8, 8, 8, 4},
+                {16, 16, 16, 16, 16, 16, 16, 16}, {16, 16, 16, 16, 16, 16, 16, 16},
+                {16, 16, 16, 16, 16, 16, 16, 16}, {16, 16, 16, 16, 16, 16, 16, 16}
         };
 
-        public static final int[] decaytable2 = new int[] {
+        public static final int[] decaytable2 = {
                 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2047, 2047, 2047, 2047, 2047
         };
 
-        public static final byte[][] attacktable = new byte[][] {
-                new byte[] {-1, -1, -1, -1, -1, -1, -1, -1}, new byte[] {-1, -1, -1, -1, -1, -1, -1, -1},
-                new byte[] {4, 4, 4, 4, 4, 4, 4, 4}, new byte[] {4, 4, 4, 4, 4, 4, 4, 4},
-                new byte[] {4, 4, 4, 4, 4, 4, 4, 4}, new byte[] {4, 4, 4, 4, 4, 4, 4, 4},
-                new byte[] {4, 4, 4, -1, 4, 4, 4, -1}, new byte[] {4, 4, 4, -1, 4, 4, 4, -1},
-                new byte[] {4, -1, 4, -1, 4, -1, 4, -1}, new byte[] {4, 4, 4, -1, 4, -1, 4, -1},
-                new byte[] {4, 4, 4, -1, 4, 4, 4, -1}, new byte[] {4, 4, 4, 4, 4, 4, 4, -1},
-                new byte[] {4, -1, 4, -1, 4, -1, 4, -1}, new byte[] {4, 4, 4, -1, 4, -1, 4, -1},
-                new byte[] {4, 4, 4, -1, 4, 4, 4, -1}, new byte[] {4, 4, 4, 4, 4, 4, 4, -1},
-                new byte[] {4, -1, 4, -1, 4, -1, 4, -1}, new byte[] {4, 4, 4, -1, 4, -1, 4, -1},
-                new byte[] {4, 4, 4, -1, 4, 4, 4, -1}, new byte[] {4, 4, 4, 4, 4, 4, 4, -1},
-                new byte[] {4, -1, 4, -1, 4, -1, 4, -1}, new byte[] {4, 4, 4, -1, 4, -1, 4, -1},
-                new byte[] {4, 4, 4, -1, 4, 4, 4, -1}, new byte[] {4, 4, 4, 4, 4, 4, 4, -1},
-                new byte[] {4, -1, 4, -1, 4, -1, 4, -1}, new byte[] {4, 4, 4, -1, 4, -1, 4, -1},
-                new byte[] {4, 4, 4, -1, 4, 4, 4, -1}, new byte[] {4, 4, 4, 4, 4, 4, 4, -1},
-                new byte[] {4, -1, 4, -1, 4, -1, 4, -1}, new byte[] {4, 4, 4, -1, 4, -1, 4, -1},
-                new byte[] {4, 4, 4, -1, 4, 4, 4, -1}, new byte[] {4, 4, 4, 4, 4, 4, 4, -1},
-                new byte[] {4, -1, 4, -1, 4, -1, 4, -1}, new byte[] {4, 4, 4, -1, 4, -1, 4, -1},
-                new byte[] {4, 4, 4, -1, 4, 4, 4, -1}, new byte[] {4, 4, 4, 4, 4, 4, 4, -1},
-                new byte[] {4, -1, 4, -1, 4, -1, 4, -1}, new byte[] {4, 4, 4, -1, 4, -1, 4, -1},
-                new byte[] {4, 4, 4, -1, 4, 4, 4, -1}, new byte[] {4, 4, 4, 4, 4, 4, 4, -1},
-                new byte[] {4, -1, 4, -1, 4, -1, 4, -1}, new byte[] {4, 4, 4, -1, 4, -1, 4, -1},
-                new byte[] {4, 4, 4, -1, 4, 4, 4, -1}, new byte[] {4, 4, 4, 4, 4, 4, 4, -1},
-                new byte[] {4, -1, 4, -1, 4, -1, 4, -1}, new byte[] {4, 4, 4, -1, 4, -1, 4, -1},
-                new byte[] {4, 4, 4, -1, 4, 4, 4, -1}, new byte[] {4, 4, 4, 4, 4, 4, 4, -1},
-                new byte[] {4, 4, 4, 4, 4, 4, 4, 4}, new byte[] {3, 4, 4, 4, 3, 4, 4, 4},
-                new byte[] {3, 4, 3, 4, 3, 4, 3, 4}, new byte[] {3, 3, 3, 4, 3, 3, 3, 4},
-                new byte[] {3, 3, 3, 3, 3, 3, 3, 3}, new byte[] {2, 3, 3, 3, 2, 3, 3, 3},
-                new byte[] {2, 3, 2, 3, 2, 3, 2, 3}, new byte[] {2, 2, 2, 3, 2, 2, 2, 3},
-                new byte[] {2, 2, 2, 2, 2, 2, 2, 2}, new byte[] {1, 2, 2, 2, 1, 2, 2, 2},
-                new byte[] {1, 2, 1, 2, 1, 2, 1, 2}, new byte[] {1, 1, 1, 2, 1, 1, 1, 2},
-                new byte[] {0, 0, 0, 0, 0, 0, 0, 0}, new byte[] {0, 0, 0, 0, 0, 0, 0, 0},
-                new byte[] {0, 0, 0, 0, 0, 0, 0, 0}, new byte[] {0, 0, 0, 0, 0, 0, 0, 0}
+        public static final byte[][] attacktable = {
+                {-1, -1, -1, -1, -1, -1, -1, -1}, {-1, -1, -1, -1, -1, -1, -1, -1},
+                {4, 4, 4, 4, 4, 4, 4, 4}, {4, 4, 4, 4, 4, 4, 4, 4},
+                {4, 4, 4, 4, 4, 4, 4, 4}, {4, 4, 4, 4, 4, 4, 4, 4},
+                {4, 4, 4, -1, 4, 4, 4, -1}, {4, 4, 4, -1, 4, 4, 4, -1},
+                {4, -1, 4, -1, 4, -1, 4, -1}, {4, 4, 4, -1, 4, -1, 4, -1},
+                {4, 4, 4, -1, 4, 4, 4, -1}, {4, 4, 4, 4, 4, 4, 4, -1},
+                {4, -1, 4, -1, 4, -1, 4, -1}, {4, 4, 4, -1, 4, -1, 4, -1},
+                {4, 4, 4, -1, 4, 4, 4, -1}, {4, 4, 4, 4, 4, 4, 4, -1},
+                {4, -1, 4, -1, 4, -1, 4, -1}, {4, 4, 4, -1, 4, -1, 4, -1},
+                {4, 4, 4, -1, 4, 4, 4, -1}, {4, 4, 4, 4, 4, 4, 4, -1},
+                {4, -1, 4, -1, 4, -1, 4, -1}, {4, 4, 4, -1, 4, -1, 4, -1},
+                {4, 4, 4, -1, 4, 4, 4, -1}, {4, 4, 4, 4, 4, 4, 4, -1},
+                {4, -1, 4, -1, 4, -1, 4, -1}, {4, 4, 4, -1, 4, -1, 4, -1},
+                {4, 4, 4, -1, 4, 4, 4, -1}, {4, 4, 4, 4, 4, 4, 4, -1},
+                {4, -1, 4, -1, 4, -1, 4, -1}, {4, 4, 4, -1, 4, -1, 4, -1},
+                {4, 4, 4, -1, 4, 4, 4, -1}, {4, 4, 4, 4, 4, 4, 4, -1},
+                {4, -1, 4, -1, 4, -1, 4, -1}, {4, 4, 4, -1, 4, -1, 4, -1},
+                {4, 4, 4, -1, 4, 4, 4, -1}, {4, 4, 4, 4, 4, 4, 4, -1},
+                {4, -1, 4, -1, 4, -1, 4, -1}, {4, 4, 4, -1, 4, -1, 4, -1},
+                {4, 4, 4, -1, 4, 4, 4, -1}, {4, 4, 4, 4, 4, 4, 4, -1},
+                {4, -1, 4, -1, 4, -1, 4, -1}, {4, 4, 4, -1, 4, -1, 4, -1},
+                {4, 4, 4, -1, 4, 4, 4, -1}, {4, 4, 4, 4, 4, 4, 4, -1},
+                {4, -1, 4, -1, 4, -1, 4, -1}, {4, 4, 4, -1, 4, -1, 4, -1},
+                {4, 4, 4, -1, 4, 4, 4, -1}, {4, 4, 4, 4, 4, 4, 4, -1},
+                {4, 4, 4, 4, 4, 4, 4, 4}, {3, 4, 4, 4, 3, 4, 4, 4},
+                {3, 4, 3, 4, 3, 4, 3, 4}, {3, 3, 3, 4, 3, 3, 3, 4},
+                {3, 3, 3, 3, 3, 3, 3, 3}, {2, 3, 3, 3, 2, 3, 3, 3},
+                {2, 3, 2, 3, 2, 3, 2, 3}, {2, 2, 2, 3, 2, 2, 2, 3},
+                {2, 2, 2, 2, 2, 2, 2, 2}, {1, 2, 2, 2, 1, 2, 2, 2},
+                {1, 2, 1, 2, 1, 2, 1, 2}, {1, 1, 1, 2, 1, 1, 1, 2},
+                {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0},
+                {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0}
         };
 
-        public static final int[][][][] ssgenvtable = new int[][][][] {
-                new int[][][] {
-                        new int[][] {new int[] {1, 1}, new int[] {1, 1}, new int[] {1, 1}},      // 08
-                        new int[][] {new int[] {0, 1}, new int[] {1, 1}, new int[] {1, 1}}      // 08 56~
+        public static final int[][][][] ssgenvtable = {
+                {
+                        {new int[] {1, 1}, new int[] {1, 1}, new int[] {1, 1}},      // 08
+                        {new int[] {0, 1}, new int[] {1, 1}, new int[] {1, 1}}      // 08 56~
                 },
-                new int[][][] {
-                        new int[][] {new int[] {0, 1}, new int[] {2, 0}, new int[] {2, 0}},      // 09
-                        new int[][] {new int[] {0, 1}, new int[] {2, 0}, new int[] {2, 0}}      // 09
+                {
+                        {new int[] {0, 1}, new int[] {2, 0}, new int[] {2, 0}},      // 09
+                        {new int[] {0, 1}, new int[] {2, 0}, new int[] {2, 0}}      // 09
                 },
-                new int[][][] {
-                        new int[][] {new int[] {1, -1}, new int[] {0, 1}, new int[] {1, -1}},      // 10
-                        new int[][] {new int[] {0, 1}, new int[] {1, -1}, new int[] {0, 1}}      // 10 60~
+                {
+                        {new int[] {1, -1}, new int[] {0, 1}, new int[] {1, -1}},      // 10
+                        {new int[] {0, 1}, new int[] {1, -1}, new int[] {0, 1}}      // 10 60~
                 },
-                new int[][][] {
-                        new int[][] {new int[] {1, -1}, new int[] {0, 0}, new int[] {0, 0}},      // 11
-                        new int[][] {new int[] {0, 1}, new int[] {0, 0}, new int[] {0, 0}}      // 11 60~
+                {
+                        {new int[] {1, -1}, new int[] {0, 0}, new int[] {0, 0}},      // 11
+                        {new int[] {0, 1}, new int[] {0, 0}, new int[] {0, 0}}      // 11 60~
                 },
-                new int[][][] {
-                        new int[][] {new int[] {2, -1}, new int[] {2, -1}, new int[] {2, -1}},      // 12
-                        new int[][] {new int[] {1, -1}, new int[] {2, -1}, new int[] {2, -1}}      // 12 56~
+                {
+                        {new int[] {2, -1}, new int[] {2, -1}, new int[] {2, -1}},      // 12
+                        {new int[] {1, -1}, new int[] {2, -1}, new int[] {2, -1}}      // 12 56~
                 },
-                new int[][][] {
-                        new int[][] {new int[] {1, -1}, new int[] {0, 0}, new int[] {0, 0}},      // 13
-                        new int[][] {new int[] {1, -1}, new int[] {0, 0}, new int[] {0, 0}}      // 13
+                {
+                        {new int[] {1, -1}, new int[] {0, 0}, new int[] {0, 0}},      // 13
+                        {new int[] {1, -1}, new int[] {0, 0}, new int[] {0, 0}}      // 13
                 },
-                new int[][][] {
-                        new int[][] {new int[] {0, 1}, new int[] {1, -1}, new int[] {0, 1}},      // 14
-                        new int[][] {new int[] {1, -1}, new int[] {0, 1}, new int[] {1, -1}}      // 14 60~
+                {
+                        {new int[] {0, 1}, new int[] {1, -1}, new int[] {0, 1}},      // 14
+                        {new int[] {1, -1}, new int[] {0, 1}, new int[] {1, -1}}      // 14 60~
                 },
-                new int[][][] {
-                        new int[][] {new int[] {0, 1}, new int[] {2, 0}, new int[] {2, 0}},      // 15
-                        new int[][] {new int[] {1, -1}, new int[] {2, 0}, new int[] {2, 0}}      // 15 60~
+                {
+                        {new int[] {0, 1}, new int[] {2, 0}, new int[] {2, 0}},      // 15
+                        {new int[] {1, -1}, new int[] {2, 0}, new int[] {2, 0}}      // 15 60~
                 }
         };
 
         //int[] sineTable = new int[1024];
         static int[] clTable = new int[FM_CLENTS];
 
-        // OP の種類 (MPcm, N...)
+        /** OP type (MPcm, N...) */
         public OpType type;
-        // Block/Note
+        /** Block/Note */
         private int bn;
-        // EG の出力値
+        /** EG output value */
         private int egLevel;
-        // 次の eg_phase_ に移る値
+        /** Value to move to next eg_phase_ */
         private int egLevelOnNextPhase;
-        // EG の次の変移までの時間
+        /** Time until next EG transition */
         private int egCount;
-        // eg_count_ の差分
+        /** eg_count_ difference */
         private int egCountDiff;
-        // EG+TL を合わせた出力値
+        /** EG+TL combined output value */
         private int egOut;
-        // TL 分の出力値
+        /** TL output value */
         private int tlOut;
-        // TL 分の出力値
-        //private boolean tl_out_;
-        // PM depth
-        //int pm_depth_;
-        // AM depth
-        //int am_depth_;
+//        /** TL output value */
+//        private boolean tl_out_;
+//        /** PM depth */
+//        int pm_depth_;
+//        /** AM depth */
+//        int am_depth_;
         private int egRate;
         private int egCurveCount;
         private int ssgOffset;
         private int ssgVector;
         private int ssgPhase;
 
-        // key scale rate
+        /** key scale rate */
         private int keyScaleRate;
         private EGPhase egPhase;
         private int[] ams;
         public int ms;
 
-        // Total Level  (0-127)
+        /** Total Level  (0-127) */
         private int tl;
-        // Total Level Latch (for CSM mode)
+        /** Total Level Latch (for CSM mode) */
         private int tlLatch;
-        // Attack Rate   (0-63)
+        /** Attack Rate   (0-63) */
         private int ar;
-        // Decay Rate    (0-63)
+        /** Decay Rate    (0-63) */
         private int dr;
-        // Sustain Rate  (0-63)
+        /** Sustain Rate  (0-63) */
         private int sr;
-        // Sustain Level (0-127)
+        /** Sustain Level (0-127) */
         private int sl;
-        // Release Rate  (0-63)
+        /** Release Rate  (0-63) */
         private int rr;
-        // Keyscale      (0-3)
+        /** Keyscale      (0-3) */
         private int ks;
-        // SSG-Type Envelop Controller
+        /** SSG-Type Envelop Controller */
         private int ssgType;
-        // phaseReset(0/1)
+        /** phaseReset(0/1) */
         private int phaseReset;
 
         public int fb;
-        public byte algLink;
-        public byte wt;
+        public int algLink;
+        public int wt;
 
         private boolean keyOn;
-        // enable Amplitude Modulation
+        /** enable Amplitude Modulation */
         public boolean amOn;
-        // パラメータが更新された
+        /** The parameters were updated */
         public boolean paramChanged;
         private boolean mute;
 
-        // １サンプル合成
+        // 1 Sample Synthesis
 
-        // ISample を envelop count (2π) に変換するシフト量
+        /** Shift amount to convert ISample to envelope count (2π) */
         public static final int IS2EC_SHIFT = ((20 + FM_PGBITS) - 13);
 
         private Fmgen.Channel4.Chip chip;
@@ -281,22 +281,22 @@ public class Fmvgen extends Fmgen {
         private int in2;
 
         // Phase Generator this.
-        // ΔP
+        /** ΔP */
         private int dp;
-        // Detune
+        /** Detune */
         private int detune;
-        // DT2
+        /** DT2 */
         private int detune2;
-        // Multiple
+        /** Multiple */
         private int multiple;
-        // Phase 現在値
+        /** Phase Current value */
         private int pgCount;
-        // Phase 差分値
+        /** Phase difference value */
         private int pgDiff;
-        // Phase 差分値 >> x
+        /** Phase difference value >> x */
         private int pgDiffLfo;
 
-        // Envelop Generator this.
+        /** Envelop Generator this. */
         public enum EGPhase {
             Next, Attack, Decay, Sustain, Release, Off;
 
@@ -306,13 +306,13 @@ public class Fmvgen extends Fmgen {
         }
 
         // Tables this.
-        private int[] rateTable = new int[16];
-        private int[][] mulTable = new int[][] {new int[16], new int[16], new int[16], new int[16]};
+        private final int[] rateTable = new int[16];
+        private final int[][] mulTable = {new int[16], new int[16], new int[16], new int[16]};
 
         public int dbgOpOut;
         public int dbgPgOut;
 
-        // 構築
+        /** construction */
         public Operator() {
             // EG Part
             ar = dr = sr = rr = keyScaleRate = 0;
@@ -334,7 +334,7 @@ public class Fmvgen extends Fmgen {
             // reset();
         }
 
-        // 初期化
+        /** Initialization */
         public void reset() {
             // EG part
             tl = tlLatch = 127;
@@ -353,7 +353,7 @@ public class Fmvgen extends Fmgen {
         }
 
         static {
-            // 対数テーブルの作成
+            // Creating a logarithm table
             //assert(FM_CLENTS >= 256);
 
             int p = 0;
@@ -373,7 +373,7 @@ public class Fmvgen extends Fmgen {
 //for (i = 0; i < 13 * 256; i++)
 // logger.log(Level.TRACE, "%4d, %d, %d".formatted(i, cltable[i*2], cltable[i*2+1]));
 
-            // サインテーブルの作成
+            // Creating a Sign Table
             //double log2 = Math.log(2.0);
             //for (i = 0; i < FM_OPSINENTS / 2; i++) {
             //double r = (i * 2 + 1) * FM_PI / FM_OPSINENTS;
@@ -402,7 +402,7 @@ public class Fmvgen extends Fmgen {
             paramChanged = true;
         }
 
-        // 準備
+        /** Preparation */
         public void prepare() {
             if (paramChanged) {
                 paramChanged = false;
@@ -448,7 +448,7 @@ public class Fmvgen extends Fmgen {
             }
         }
 
-        // envelop の eg_phase_ 変更
+        /** Change eg_phase_ of envelope */
         public void shiftPhase(EGPhase nextphase) {
             switch (nextphase) {
             case Attack: // Attack Phase
@@ -542,14 +542,14 @@ public class Fmvgen extends Fmgen {
             }
         }
 
-        // Block/F-Num
+        /** Block/F-Num */
         public void setFNum(int f) {
             dp = (f & 2047) << ((f >> 11) & 7);
             bn = notetable[(f >> 7) & 127];
             paramChanged = true;
         }
 
-        // 入力: s = 20+FM_PGBITS = 29
+        /** Input: s = 20+FM_PGBITS = 29 */
         public int sine(int c, int s) {
             return sineTable[c][wt][((s) >> (20 + FM_PGBITS - FM_OPSINBITS)) & (FM_OPSINENTS - 1)];
         }
@@ -575,9 +575,9 @@ public class Fmvgen extends Fmgen {
             egCountDiff = decaytable2[rate / 4] * chip.getRatio();
         }
 
-        // EG 計算
+        /** EG Calculation */
         public void egCalc() {
-            egCount = (2047 * 3) << FM_RATIOBITS; // この手抜きは再現性を低下させる
+            egCount = (2047 * 3) << FM_RATIOBITS; // This shortcut reduces reproducibility
 
             if (egPhase == EGPhase.Attack) {
                 int c = attacktable[egRate][egCurveCount & 7];
@@ -617,13 +617,15 @@ public class Fmvgen extends Fmgen {
         public void egStep() {
             egCount -= egCountDiff;
 
-            // EG の変化は全スロットで同期しているという噂もある
+            // It is rumored that the EG changes are synchronized across all slots.
             if (egCount <= 0)
                 egCalc();
         }
 
-        // PG 計算
-        // ret:2^(20+PGBITS) / cycle
+        /**
+         * PG calculation
+         * ret:2^(20+PGBITS) / cycle
+         */
         public int pgCalc() {
             int ret = pgCount;
             pgCount += pgDiff;
@@ -635,11 +637,13 @@ public class Fmvgen extends Fmgen {
             int ret = pgCount;
             pgCount += pgDiff + ((pgDiffLfo * chip.getPmV()) >> 5);
             dbgPgOut = ret;
-            return ret /* + pmv * pg_diff_;*/;
+            return ret; // + pmv * pg_diff_;
         }
 
-        // OP 計算
-        // in: ISample (最大 8π)
+        /**
+         * OP calculation
+         * in: ISample (max 8π)
+         */
         public int calc(int ch, int In) {
             egStep();
             int In2 = In + out + out2;
@@ -648,7 +652,7 @@ public class Fmvgen extends Fmgen {
             int pgin = pgCalc() >> (20 + FM_PGBITS - FM_OPSINBITS);
             if (fb < 31) {
                 pgin += ((In2 << (1 + IS2EC_SHIFT)) >> fb) >> (20 + FM_PGBITS - FM_OPSINBITS);
-                //System.err.logger.log(Level.DEBUG, "Calc:%d".formatted(pgin));
+                //logger.log(Level.DEBUG, "Calc:%d".formatted(pgin));
             } else {
                 pgin += In >> (20 + FM_PGBITS - FM_OPSINBITS - (2 + IS2EC_SHIFT));
             }
@@ -682,7 +686,7 @@ public class Fmvgen extends Fmgen {
 
             int lv = Math.max(0, 0x3ff - (tlOut + egLevel)) << 1;
 
-            // noise & 1 ? lv : -lv と等価
+            // equivalent to "noise & 1 ? lv : -lv"
             noise = (noise & 1) - 1;
             out = (lv + noise) ^ noise;
 
@@ -690,8 +694,10 @@ public class Fmvgen extends Fmgen {
             return out;
         }
 
-        // OP (FB) 計算
-        // Self Feedback の変調最大 = 4π
+        /**
+         * OP (FB) calculation
+         * Self Feedback Modulation Max = 4π
+         */
         public int calcFB(int ch, int fb) {
             egStep();
 
@@ -701,7 +707,7 @@ public class Fmvgen extends Fmgen {
             int pgin = pgCalc() >> (20 + FM_PGBITS - FM_OPSINBITS);
             if (fb < 31) {
                 pgin += ((In << (1 + IS2EC_SHIFT)) >> fb) >> (20 + FM_PGBITS - FM_OPSINBITS);
-                //System.err.logger.log(Level.DEBUG, "CalcFB:%d".formatted(pgin));
+                //logger.log(Level.DEBUG, "CalcFB:%d".formatted(pgin));
             }
             out = logToLin(egOut + SINE(ch, pgin));
             dbgOpOut = out2;
@@ -730,14 +736,14 @@ public class Fmvgen extends Fmgen {
             out = out2 = 0;
         }
 
-        // キーオン
+        /** key on */
         public void keyOn() {
             if (keyOn) return;
 
             keyOn = true;
 
             if (phaseReset != 0) {
-                //位相リセットスイッチ有効
+                // Phase reset switch enabled
 
                 shiftPhase(EGPhase.Off);
                 ssgPhase = -1;
@@ -750,7 +756,7 @@ public class Fmvgen extends Fmgen {
                 return;
             }
 
-            //位相リセットスイッチ無効
+            // Phase reset switch disabled
 
             if (egPhase == EGPhase.Off || egPhase == EGPhase.Release) {
                 ssgPhase = -1;
@@ -762,7 +768,7 @@ public class Fmvgen extends Fmgen {
             }
         }
 
-        // キーオフ
+        /** key off */
         public void keyOff() {
             if (keyOn) {
                 keyOn = false;
@@ -770,30 +776,30 @@ public class Fmvgen extends Fmgen {
             }
         }
 
-        // オペレータは稼働中か？
+        /** Is the operator up and running? */
         public boolean isOn() {
             return egPhase != EGPhase.Off;
         }
 
-        // Detune (0-7)
+        /** Detune (0-7) */
         public void setDT(int dt) {
             detune = dt * 0x20;
             paramChanged = true;
         }
 
-        // DT2 (0-3)
+        /** DT2 (0-3) */
         public void setDT2(int dt2) {
             detune2 = dt2 & 3;
             paramChanged = true;
         }
 
-        // Multiple (0-15)
+        /** Multiple (0-15) */
         public void setMULTI(int mul) {
             multiple = mul;
             paramChanged = true;
         }
 
-        // Total Level (0-127) (0.75dB step)
+        /** Total Level (0-127) (0.75dB step) */
         public void setTL(int tl, boolean csm) {
             if (!csm) {
                 this.tl = tl;
@@ -802,37 +808,37 @@ public class Fmvgen extends Fmgen {
             tlLatch = tl;
         }
 
-        // Attack Rate (0-63)
+        /** Attack Rate (0-63) */
         public void setAR(int ar) {
             this.ar = ar;
             paramChanged = true;
         }
 
-        // Decay Rate (0-63)
+        /** Decay Rate (0-63) */
         public void setDR(int dr) {
             this.dr = dr;
             paramChanged = true;
         }
 
-        // Sustain Rate (0-63)
+        /** Sustain Rate (0-63) */
         public void setSR(int sr) {
             this.sr = sr;
             paramChanged = true;
         }
 
-        // Sustain Level (0-127)
+        /** Sustain Level (0-127) */
         public void setSL(int sl) {
             this.sl = sl;
             paramChanged = true;
         }
 
-        // Release Rate (0-63)
+        /** Release Rate (0-63) */
         public void setRR(int rr) {
             this.rr = rr;
             paramChanged = true;
         }
 
-        // Keyscale (0-3)
+        /** Keyscale (0-3) */
         public void setKS(int ks) {
             this.ks = ks;
             paramChanged = true;
@@ -843,7 +849,7 @@ public class Fmvgen extends Fmgen {
             paramChanged = true;
         }
 
-        // SSG-type Envelop (0-15)
+        /** SSG-type Envelop (0-15) */
         public void setSSGEC(int ssgec) {
             if ((ssgec & 8) != 0)
                 ssgType = ssgec;
@@ -862,17 +868,17 @@ public class Fmvgen extends Fmgen {
         }
 
         public void setALGLink(int AlgLink) {
-            algLink = (byte) AlgLink;
+            algLink = AlgLink;
             paramChanged = true;
         }
 
-        public void setWaveTypeL(byte wt) {
-            this.wt = (byte) ((this.wt & 2) | (wt & 1));
+        public void setWaveTypeL(int wt) {
+            this.wt = (this.wt & 2) | (wt & 1);
             paramChanged = true;
         }
 
-        public void setWaveTypeH(byte wt) {
-            this.wt = (byte) ((this.wt & 1) | ((wt & 1) << 1));
+        public void setWaveTypeH(int wt) {
+            this.wt = (this.wt & 1) | ((wt & 1) << 1);
             paramChanged = true;
         }
 
@@ -939,26 +945,24 @@ public class Fmvgen extends Fmgen {
         }
     }
 
-    // this.
-    // 4-Op Channel
-    //
+    /** 4-Op Channel */
     public static class Channel4 {
-        public static final byte[] fbtable = new byte[] {31, 7, 6, 5, 4, 3, 2, 1};
+        public static final byte[] fbtable = {31, 7, 6, 5, 4, 3, 2, 1};
 
         private static final boolean tableHasMade = false;
         private static final int[] kftable = new int[64];
         private int fb;
-        private int[] buf = new int[4];
-        // 各 OP の入力ポインタ
-        private int[] in = new int[3];
-        // 各 OP の出力ポインタ
-        private int[] out = new int[3];
+        private final int[] buf = new int[4];
+        /** Input pointer for each OP */
+        private final int[] in = new int[3];
+        /** Output pointer for each OP */
+        private final int[] out = new int[3];
         private int[] pms;
         private int algo;
         private Fmgen.Channel4.Chip chip;
         private boolean ac = false;
         private byte carrier;
-        //オペレータの計算順序
+        /** Operator Calculation Order */
         private static final int[] oAlg = new int[] {2, 1, 3, 0};
         private int ch = 0;
 
@@ -982,7 +986,7 @@ public class Fmvgen extends Fmgen {
             }
         }
 
-        // リセット
+        /** Reset */
         public void reset() {
             op[0].reset();
             op[1].reset();
@@ -990,7 +994,7 @@ public class Fmvgen extends Fmgen {
             op[3].reset();
         }
 
-        // Calc の用意
+        /** Preparing Calc */
         public int prepare() {
             op[0].prepare();
             op[1].prepare();
@@ -1003,7 +1007,7 @@ public class Fmvgen extends Fmgen {
             return key | lfo;
         }
 
-        // F-Number/BLOCK を設定
+        /** Set F-Number/BLOCK */
         public void setFNum(int f) {
             for (int i = 0; i < 4; i++)
                 op[i].setFNum(f);
@@ -1014,7 +1018,7 @@ public class Fmvgen extends Fmgen {
                 7349, 7786, 8249, 8740, 8740, 9259, 9810, 10394,
         };
 
-        // KC/KF を設定
+        /** Set KC/KF */
         public void setKCKF(int kc, int kf) {
             int oct = 19 - ((kc >> 4) & 7);
 
@@ -1035,7 +1039,7 @@ public class Fmvgen extends Fmgen {
             //logger.log(Level.TRACE, " %.8x".formatted(dp));
         }
 
-        // キー制御
+        /** Key Control */
         public void keyControl(int key) {
             if ((key & 0x1) != 0) op[0].keyOn();
             else op[0].keyOff();
@@ -1047,18 +1051,18 @@ public class Fmvgen extends Fmgen {
             else op[3].keyOff();
         }
 
-        static final byte[][] table1 = new byte[][] {
-                new byte[] {0, 1, 1, 2, 2, 3},
-                new byte[] {1, 0, 0, 1, 1, 2},
-                new byte[] {1, 1, 1, 0, 0, 2},
-                new byte[] {0, 1, 2, 1, 1, 2},
-                new byte[] {0, 1, 2, 2, 2, 1},
-                new byte[] {0, 1, 0, 1, 0, 1},
-                new byte[] {0, 1, 2, 1, 2, 1},
-                new byte[] {1, 0, 1, 0, 1, 0}
+        static final byte[][] table1 = {
+                {0, 1, 1, 2, 2, 3},
+                {1, 0, 0, 1, 1, 2},
+                {1, 1, 1, 0, 0, 2},
+                {0, 1, 2, 1, 1, 2},
+                {0, 1, 2, 2, 2, 1},
+                {0, 1, 0, 1, 0, 1},
+                {0, 1, 2, 1, 2, 1},
+                {1, 0, 1, 0, 1, 0}
         };
 
-        // アルゴリズムを設定
+        /** Set the algorithm */
         public void setAlgorithm(int algo) {
             in[0] = table1[algo][0];
             out[0] = table1[algo][1];
@@ -1071,7 +1075,7 @@ public class Fmvgen extends Fmgen {
             this.algo = algo;
         }
 
-        //  合成
+        /** Synthesis */
         public int calc() {
             int r = 0;
 
@@ -1148,7 +1152,7 @@ public class Fmvgen extends Fmgen {
             return r;
         }
 
-        // 合成
+        /** Synthesis L */
         public int calcL() {
             chip.setPMV(pms[chip.getPmL()]);
 
@@ -1226,7 +1230,7 @@ public class Fmvgen extends Fmgen {
             return r;
         }
 
-        // 合成
+        /** Synthesis N */
         public int calcN(int noise) {
             buf[1] = buf[2] = buf[3] = 0;
 
@@ -1239,7 +1243,7 @@ public class Fmvgen extends Fmgen {
             return buf[out[2]] + o;
         }
 
-        // 合成
+        /** Synthesis LN */
         public int calcLN(int noise) {
             chip.setPMV(pms[chip.getPmL()]);
             buf[1] = buf[2] = buf[3] = 0;
@@ -1253,13 +1257,13 @@ public class Fmvgen extends Fmgen {
             return buf[out[2]] + o;
         }
 
-        // オペレータの種類 (LFO) を設定
+        /** Set the operator type (LFO) */
         public void setType(OpType type) {
             for (int i = 0; i < 4; i++)
                 op[i].type = type;
         }
 
-        // セルフ・フィードバックレートの設定 (0-7)
+        /** Self-feedback rate setting (0-7) */
         public void setFB(int feedback) {
             fb = fbtable[feedback];
         }
@@ -1270,7 +1274,7 @@ public class Fmvgen extends Fmgen {
             buildAlg();
         }
 
-        // OPNA 系 LFO の設定
+        /** OPNA LFO settings */
         public void setMS(int ms) {
             op[0].setMS(ms);
             op[1].setMS(ms);
@@ -1278,13 +1282,13 @@ public class Fmvgen extends Fmgen {
             op[3].setMS(ms);
         }
 
-        // チャンネル・マスク
+        /** Channel Mask */
         public void mute(boolean m) {
             for (int i = 0; i < 4; i++)
                 op[i].mute(m);
         }
 
-        // 内部パラメータを再計算
+        /** Recalculate internal parameters */
         public void refresh() {
             for (int i = 0; i < 4; i++)
                 op[i].paramChanged = true;

@@ -2,10 +2,12 @@ package mdsound.instrument;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiConsumer;
 
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
 import mdsound.MDSound;
+import mdsound.MDSound.Chip;
 import mdsound.chips.OkiM6295;
 
 
@@ -21,27 +23,38 @@ public class OkiM6295Inst extends Instrument.BaseInstrument {
 
     @Override
     public int start(int chipId, int clock) {
-        return device_start_okim6295(chipId, clock);
+        if (chipId >= MAX_CHIPS)
+            return 0;
+
+        OkiM6295 chip = chips[chipId];
+        return chip.start(clock);
     }
 
     @Override
-    public int start(int chipId, int samplingrate, int clockValue, Object... option) {
-        return device_start_okim6295(chipId, clockValue);
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        if (chipId >= MAX_CHIPS)
+            return 0;
+
+        OkiM6295 chip = chips[chipId];
+        return chip.start(clock);
     }
 
     @Override
     public void stop(int chipId) {
-        device_stop_okim6295(chipId);
+        OkiM6295 chip = chips[chipId];
+        chip.stop();
     }
 
     @Override
     public void reset(int chipId) {
-        device_reset_okim6295(chipId);
+        OkiM6295 chip = chips[chipId];
+        chip.reset();
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        okim6295_update(chipId, outputs, samples);
+        OkiM6295 chip = chips[chipId];
+        chip.update(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
@@ -61,48 +74,11 @@ public class OkiM6295Inst extends Instrument.BaseInstrument {
     }
 
     /**
-     * update the Sound chips so that it is in sync with CPU execution
-     */
-    private void okim6295_update(int chipId, int[][] outputs, int samples) {
-        OkiM6295 chip = chips[chipId];
-        chip.update(outputs, samples);
-    }
-
-    /**
-     * start emulation of an OKIM6295-compatible chips
-     */
-    private int device_start_okim6295(int chipId, int clock) {
-        if (chipId >= MAX_CHIPS)
-            return 0;
-
-        OkiM6295 info = chips[chipId];
-        return info.start(clock);
-    }
-
-    private void device_stop_okim6295(int chipId) {
-        OkiM6295 chip = chips[chipId];
-        chip.stop();
-    }
-
-    /**
-     * stop emulation of an OKIM6295-compatible chips
-     */
-    private void device_reset_okim6295(int chipId) {
-        OkiM6295 info = chips[chipId];
-        info.reset();
-    }
-
-    /**
      * read the status port of an OKIM6295-compatible chips
      */
     private int okim6295_r(int chipId, int offset) {
-        OkiM6295 info = chips[chipId];
-        return info.read(offset);
-    }
-
-    private void okim6295_w(int chipId, int offset, int data) {
         OkiM6295 chip = chips[chipId];
-        chip.write(offset, data);
+        return chip.read(offset);
     }
 
     public void okim6295_write_rom(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
@@ -120,26 +96,27 @@ public class OkiM6295Inst extends Instrument.BaseInstrument {
         chip.setMuteMask(muteMask);
     }
 
-    public void okim6295_set_srchg_cb(int chipId, OkiM6295.SamplingRateCallback CallbackFunc, MDSound.Chip dataPtr) {
-        OkiM6295 info = chips[chipId];
-        info.setCallback(CallbackFunc, dataPtr);
+    public void okim6295_set_srchg_cb(int chipId, BiConsumer<Chip, Integer> callbackFunc, MDSound.Chip dataPtr) {
+        OkiM6295 chip = chips[chipId];
+        chip.setCallback(samplingRate -> callbackFunc.accept(dataPtr, samplingRate));
     }
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        okim6295_w(chipId, adr, data);
+        OkiM6295 chip = chips[chipId];
+        chip.write(adr, data);
         return 0;
     }
 
     public OkiM6295.ChannelInfo readChInfo(int chipId) {
-        OkiM6295 info = chips[chipId];
-        return info.readChInfo();
+        OkiM6295 chip = chips[chipId];
+        return chip.readChInfo();
     }
 
 //    /**
 //     * Generic get_info
 //     */
-//    DEVICE_GET_INFO( OkiM6295Inst ) {
+//    DEVICE_GET_INFO( OkiM6295 ) {
 //       switch (state) {
 //        case DEVINFO_STR_NAME:      strcpy(info.s, "OKI6295");      break;
 //        case DEVINFO_STR_FAMILY:     strcpy(info.s, "OKI ADPCM");     break;

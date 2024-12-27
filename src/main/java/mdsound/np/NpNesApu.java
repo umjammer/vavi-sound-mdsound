@@ -190,7 +190,7 @@ public class NpNesApu {
         this.out[1] = calcSqr(1, clocks);
     }
 
-    private int[] m = new int[2];
+    private final int[] m = new int[2];
 
     // The amplitude of the generated waveform is 0-8191.
     public int render(int[] b) {
