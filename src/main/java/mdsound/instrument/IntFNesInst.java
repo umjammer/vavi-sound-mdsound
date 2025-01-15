@@ -39,16 +39,16 @@ public class IntFNesInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
+    public int start(int chipId, int samplingRate) {
         if (chipId >= MAX_CHIPS)
             return 0;
         Nes info = chips[chipId];
 
-        int rate = clock / 4;
+        int rate = samplingRate / 4;
         if ((BaseInstrument.CHIP_SAMPLING_MODE == 0x01 && rate < BaseInstrument.CHIP_SAMPLE_RATE) ||
                 BaseInstrument.CHIP_SAMPLING_MODE == 0x02)
             rate = BaseInstrument.CHIP_SAMPLE_RATE;
-        info.start(clock, rate);
+        info.start(samplingRate, rate);
         info.setListener(listenr);
         return rate;
     }

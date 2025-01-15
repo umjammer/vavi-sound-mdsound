@@ -1841,7 +1841,7 @@ logger.log(Level.TRACE, "Algo 1 LFO len = %d".formatted(length));
 
         this.clock = clock;
         this.rate = rate;
-logger.log(Level.INFO, "Ym2612 logging: clock: %d, rate: %d".formatted(clock, rate));
+logger.log(Level.INFO, "Ym2612: clock: %d, rate: %d".formatted(clock, rate));
 
         // 144 = 12 * (prescale * 2) = 12 * 6 * 2
         // prescale set to 6 by default

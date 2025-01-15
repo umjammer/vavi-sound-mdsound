@@ -25,8 +25,8 @@ public class Vrc6Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
-        return start(chipId, clock, 100);
+    public int start(int chipId, int samplingRate) {
+        return start(chipId, samplingRate, 100);
     }
 
     @Override

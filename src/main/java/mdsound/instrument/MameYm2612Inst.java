@@ -37,11 +37,11 @@ public class MameYm2612Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
+    public int start(int chipId, int samplingRate) {
         chips[chipId] = new Fm2612();
-        ym2612[chipId] = new Fm2612.Ym2612(DefaultFMClockValue, clock, null, null);
+        ym2612[chipId] = new Fm2612.Ym2612(DefaultFMClockValue, samplingRate, null, null);
 
-        return clock;
+        return samplingRate;
     }
 
     @Override

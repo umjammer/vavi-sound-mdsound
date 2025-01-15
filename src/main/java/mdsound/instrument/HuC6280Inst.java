@@ -33,10 +33,10 @@ public class HuC6280Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
-        start(chipId, clock, DefaultHuC6280ClockValue);
+    public int start(int chipId, int samplingRate) {
+        start(chipId, samplingRate, DefaultHuC6280ClockValue);
 
-        return clock;
+        return samplingRate;
     }
 
     @Override

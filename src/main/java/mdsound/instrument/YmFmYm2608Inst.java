@@ -78,7 +78,7 @@ logger.log(Level.TRACE, rom + " loaded");
 
     @Override
     public int start(int chipId, int samplingRate) {
-        chip[chipId] = new VgmChip(samplingRate, Ym2608.class);
+        chip[chipId] = new VgmChip(DefaultYM2608ClockValue, Ym2608.class);
         load(chipId);
 
         output_step = 0x1_0000_0000L / samplingRate;
@@ -91,7 +91,7 @@ logger.log(Level.TRACE, rom + " loaded");
      */
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        chip[chipId] = new VgmChip(samplingRate, Ym2608.class);
+        chip[chipId] = new VgmChip(clock, Ym2608.class);
         load(chipId);
 
         output_step = 0x1_0000_0000L / samplingRate;

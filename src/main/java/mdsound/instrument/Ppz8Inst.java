@@ -33,8 +33,8 @@ public class Ppz8Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
-        return start(chipId, clock, 0);
+    public int start(int chipId, int samplingRate) {
+        return start(chipId, samplingRate, 0);
     }
 
     @Override

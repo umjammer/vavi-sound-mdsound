@@ -10,43 +10,6 @@ import mdsound.chips.SegaPcm;
 
 public class SegaPcmInst extends Instrument.BaseInstrument {
 
-    public SegaPcmInst() {
-        // 0..Main
-        visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
-        };
-    }
-
-    @Override
-    public int start(int chipId, int clock) {
-        int intFBank = 0;
-        return device_start_segapcm(chipId, clock, intFBank);
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate, int clock, Object... option) {
-        return device_start_segapcm(chipId, clock, (int) option[0]);
-    }
-
-    @Override
-    public void stop(int chipId) {
-        device_stop_segapcm(chipId);
-    }
-
-    @Override
-    public void reset(int chipId) {
-        device_reset_segapcm(chipId);
-    }
-
-    @Override
-    public void update(int chipId, int[][] outputs, int samples) {
-        SEGAPCM_update(chipId, outputs, samples);
-
-        visVolume[chipId][0][0] = outputs[0][0];
-        visVolume[chipId][0][1] = outputs[1][0];
-    }
-
     private static final int MAX_CHIPS = 0x02;
     public SegaPcm[] SPCMData = new SegaPcm[] {new SegaPcm(), new SegaPcm()};
 
@@ -60,32 +23,52 @@ public class SegaPcmInst extends Instrument.BaseInstrument {
         return "SPCM";
     }
 
-    private void SEGAPCM_update(int chipId, int[][] outputs, int samples) {
-        SegaPcm spcm = SPCMData[chipId];
-        spcm.update(outputs, samples);
+    public SegaPcmInst() {
+        // 0..Main
+        visVolume = new int[][][] {
+                new int[][] {new int[] {0, 0}},
+                new int[][] {new int[] {0, 0}}
+        };
     }
 
-    private int device_start_segapcm(int chipId, int clock, int intf_bank) {
+    @Override
+    public int start(int chipId, int samplingRate) {
+        int intFBank = 0;
         if (chipId >= MAX_CHIPS)
             return 0;
 
         SegaPcm spcm = SPCMData[chipId];
-        return spcm.start(clock, intf_bank);
+        return spcm.start(samplingRate, intFBank);
     }
 
-    private void device_stop_segapcm(int chipId) {
+    @Override
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        if (chipId >= MAX_CHIPS)
+            return 0;
+
+        SegaPcm spcm = SPCMData[chipId];
+        return spcm.start(clock, (int) option[0]);
+    }
+
+    @Override
+    public void stop(int chipId) {
         SegaPcm spcm = SPCMData[chipId];
         spcm.stop();
     }
 
-    private void device_reset_segapcm(int chipId) {
+    @Override
+    public void reset(int chipId) {
         SegaPcm spcm = SPCMData[chipId];
         spcm.reset();
     }
 
-    private void sega_pcm_w(int chipId, int offset, int data) {
+    @Override
+    public void update(int chipId, int[][] outputs, int samples) {
         SegaPcm spcm = SPCMData[chipId];
-        spcm.write(offset, data);
+        spcm.update(outputs, samples);
+
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
     }
 
     public int sega_pcm_r(int chipId, int offset) {
@@ -110,7 +93,8 @@ public class SegaPcmInst extends Instrument.BaseInstrument {
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        sega_pcm_w(chipId, adr, data);
+        SegaPcm spcm = SPCMData[chipId];
+        spcm.write(adr, data);
         return 0;
     }
 

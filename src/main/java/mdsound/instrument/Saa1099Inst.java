@@ -33,7 +33,7 @@ public class Saa1099Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
+    public int start(int chipId, int samplingRate) {
         return device_start_saa1099(chipId, 8000000);
     }
 

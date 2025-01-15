@@ -23,7 +23,7 @@ public class PokeyInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
+    public int start(int chipId, int samplingRate) {
         return device_start_pokey(chipId, 1789772);
     }
 

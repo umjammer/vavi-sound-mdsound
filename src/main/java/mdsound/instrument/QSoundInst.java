@@ -22,7 +22,7 @@ public class QSoundInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
+    public int start(int chipId, int samplingRate) {
         if (chipId >= MAX_CHIPS)
             return 0;
 

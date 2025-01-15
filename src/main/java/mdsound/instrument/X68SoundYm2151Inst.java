@@ -22,8 +22,8 @@ public class X68SoundYm2151Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
-        return start(chipId, clock, DefaultYM2151ClockValue, (Object[]) null);
+    public int start(int chipId, int samplingRate) {
+        return start(chipId, samplingRate, DefaultYM2151ClockValue, (Object[]) null);
     }
 
     @Override

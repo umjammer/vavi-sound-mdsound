@@ -1,9 +1,5 @@
 package mdsound.fmgen;
 
-import vavi.util.Debug;
-import vavi.util.StringUtil;
-
-
 /**
  * A sound source unit that produces sounds similar to Psg.
  */

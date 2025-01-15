@@ -33,8 +33,8 @@ public class SinWaveInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
-        return start(chipId, clock, DefaultClockValue);
+    public int start(int chipId, int samplingRate) {
+        return start(chipId, samplingRate, DefaultClockValue);
     }
 
     @Override

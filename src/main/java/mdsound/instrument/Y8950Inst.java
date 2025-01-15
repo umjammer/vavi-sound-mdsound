@@ -34,7 +34,7 @@ public class Y8950Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
+    public int start(int chipId, int samplingRate) {
         return device_start_y8950(chipId, 3579545);
     }
 

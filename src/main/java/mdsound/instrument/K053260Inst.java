@@ -31,7 +31,7 @@ public class K053260Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
+    public int start(int chipId, int samplingRate) {
         return device_start_k053260(chipId, 3579545);
     }
 

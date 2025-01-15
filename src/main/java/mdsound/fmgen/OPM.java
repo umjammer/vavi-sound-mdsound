@@ -7,6 +7,8 @@ import static mdsound.fmgen.Fmgen.limit;
 
 /**
  * A sound source unit that produces a sound similar to OPM(?)
+ * <p>
+ * YM2151: works
  */
 public class OPM extends Timer {
 
@@ -168,10 +170,13 @@ public class OPM extends Timer {
     public void setLPFCutoff(int freq) {
     }
 
+//int CC = 0;
+
     /**
      * Write data to the sound source register reg
      */
     public void setReg(int addr, int data) {
+//System.out.printf("%d: %d, %d%n", CC++, addr, data);
         if (addr >= 0x100)
             return;
 

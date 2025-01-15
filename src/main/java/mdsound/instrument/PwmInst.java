@@ -69,7 +69,7 @@ public class PwmInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
+    public int start(int chipId, int samplingRate) {
         if (chipId >= MAX_CHIPS)
             return 0;
 
@@ -79,7 +79,7 @@ public class PwmInst extends Instrument.BaseInstrument {
         if ((Instrument.BaseInstrument.CHIP_SAMPLING_MODE == 0x01 && rate < Instrument.BaseInstrument.CHIP_SAMPLE_RATE) ||
                 Instrument.BaseInstrument.CHIP_SAMPLING_MODE == 0x02)
             rate = Instrument.BaseInstrument.CHIP_SAMPLE_RATE;
-        chip.start(clock, rate);
+        chip.start(samplingRate, rate);
         return rate;
     }
 
