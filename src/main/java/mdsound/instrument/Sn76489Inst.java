@@ -39,8 +39,8 @@ public class Sn76489Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
-        return start(chipId, DefaultPSGClockValue, clock);
+    public int start(int chipId, int samplingRate) {
+        return start(chipId, DefaultPSGClockValue, samplingRate);
     }
 
     @Override

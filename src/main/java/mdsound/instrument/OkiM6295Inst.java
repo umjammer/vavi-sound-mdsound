@@ -22,12 +22,12 @@ public class OkiM6295Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
+    public int start(int chipId, int samplingRate) {
         if (chipId >= MAX_CHIPS)
             return 0;
 
         OkiM6295 chip = chips[chipId];
-        return chip.start(clock);
+        return chip.start(samplingRate);
     }
 
     @Override

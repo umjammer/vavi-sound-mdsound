@@ -18,8 +18,8 @@ public class MameYm2151Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
-        return start(chipId, clock, Ym2151Inst.DefaultYM2151ClockValue);
+    public int start(int chipId, int samplingRate) {
+        return start(chipId, samplingRate, Ym2151Inst.DefaultYM2151ClockValue);
     }
 
     @Override

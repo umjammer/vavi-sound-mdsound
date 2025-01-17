@@ -74,18 +74,18 @@ public class ScdPcmInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
+    public int start(int chipId, int samplingRate) {
         if (chipId >= 0x02)
             return 0;
 
-        int rate = (clock & 0x7fff_ffff) / 384;
+        int rate = (samplingRate & 0x7fff_ffff) / 384;
         if (((CHIP_SAMPLING_MODE & 0x01) != 0 && rate < CHIP_SAMPLE_RATE) ||
                 CHIP_SAMPLING_MODE == 0x02)
             rate = CHIP_SAMPLE_RATE;
         PCM_Init(chipId, rate);
 
         PcmChip chip = PCM_Chip[chipId];
-        chip.start(clock);
+        chip.start(samplingRate);
         return rate;
     }
 

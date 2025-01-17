@@ -72,8 +72,8 @@ public class C140Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
-        return start(chipId, 44100, clock, C140.Type.SYSTEM2);
+    public int start(int chipId, int samplingRate) {
+        return start(chipId, 44100, samplingRate, C140.Type.SYSTEM2);
     }
 
     @Override

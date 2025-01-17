@@ -6,15 +6,17 @@ import java.util.Map;
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
 import mdsound.fmgen.OPM;
+import vavi.sound.ymfm.Opm.Ym2151;
+import vavi.sound.ymfm.YmFm.VgmChip;
 
 
-public class Ym2151Inst extends Instrument.BaseInstrument {
+public class YmFmYm2151Inst extends Instrument.BaseInstrument {
 
     public static final int DefaultYM2151ClockValue = 3579545;
 
-    private final OPM[] chip = new OPM[2];
+    private final VgmChip[] chip = new VgmChip[2];
 
-    public Ym2151Inst() {
+    public YmFmYm2151Inst() {
         visVolume = new int[][][] {
                 new int[][] {new int[] {0, 0}},
                 new int[][] {new int[] {0, 0}}
@@ -23,7 +25,7 @@ public class Ym2151Inst extends Instrument.BaseInstrument {
 
     @Override
     public String getName() {
-        return "YM2151";
+        return "YM2151ymfm";
     }
 
     @Override
@@ -31,24 +33,32 @@ public class Ym2151Inst extends Instrument.BaseInstrument {
         return "OPM";
     }
 
+    // TODO similar variables in VgmChip class, those can be eliminated?
+    long output_pos;
+    long output_step;
+
     @Override
     public void reset(int chipId) {
         if (chip[chipId] == null) return;
         chip[chipId].reset();
+
+        output_pos = 0;
     }
 
     @Override
     public int start(int chipId, int samplingRate) {
-        chip[chipId] = new OPM();
-        chip[chipId].init(DefaultYM2151ClockValue, samplingRate, false);
+        chip[chipId] = new VgmChip(DefaultYM2151ClockValue, Ym2151.class);
+
+        output_step = 0x1_0000_0000L / samplingRate;
 
         return samplingRate;
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        chip[chipId] = new OPM();
-        chip[chipId].init(clock, samplingRate, false);
+        chip[chipId] = new VgmChip(clock, Ym2151.class);
+
+        output_step = 0x1_0000_0000L / samplingRate;
 
         return samplingRate;
     }
@@ -65,12 +75,14 @@ public class Ym2151Inst extends Instrument.BaseInstrument {
         int[] buffer = new int[2];
         buffer[0] = 0;
         buffer[1] = 0;
-        chip[chipId].mix(buffer, 1);
+        chip[chipId].generate(output_pos, output_step, buffer);
         for (int i = 0; i < 1; i++) {
             outputs[0][i] = buffer[i * 2 + 0];
             outputs[1][i] = buffer[i * 2 + 1];
             //logger.log(Level.TRACE, "[%8d] : [%8d] [%d]".formatted(outputs[0][i], outputs[1][i],i));
         }
+
+        output_pos += output_step;
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
@@ -80,7 +92,7 @@ public class Ym2151Inst extends Instrument.BaseInstrument {
     public int write(int chipId, int port, int adr, int data) {
         if (chip[chipId] == null) return 0;
 
-        chip[chipId].setReg(adr, data);
+        chip[chipId].write(adr, data);
         return 0;
     }
 

@@ -4,17 +4,15 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.function.Function;
 
-import mdsound.Common;
-import mdsound.fmgen.Opna;
-import mdsound.fmgen.Opna.OPNA.Rhythm;
-import mdsound.fmgen.Opna.OPNA.Whdr;
-import mdsound.fmvgen.Fmvgen.Effects;
 import dotnet4j.io.File;
 import dotnet4j.io.FileAccess;
 import dotnet4j.io.FileMode;
 import dotnet4j.io.FileStream;
 import dotnet4j.io.Path;
 import dotnet4j.io.Stream;
+import mdsound.Common;
+import mdsound.fmgen.Opna;
+import mdsound.fmvgen.Fmvgen.Effects;
 import mdsound.fmvgen.effect.ReversePhase;
 
 import static mdsound.fmgen.Fmgen.limit;
@@ -22,6 +20,7 @@ import static mdsound.fmgen.Fmgen.limit;
 
 /** YM2609(OPNA2) */
 public class OPNA2 extends Opna.OPNABase {
+
     public static final float[] panTable = new float[] {1.0f, 0.7512f, 0.4512f, 0.0500f};
 
     /** Rhythm Sound Source */

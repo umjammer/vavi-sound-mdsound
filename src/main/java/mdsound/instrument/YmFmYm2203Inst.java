@@ -46,7 +46,7 @@ public class YmFmYm2203Inst extends Instrument.BaseInstrument {
 
     @Override
     public int start(int chipId, int samplingRate) {
-        chips[chipId] = new VgmChip(samplingRate, Ym2203.class);
+        chips[chipId] = new VgmChip(DefaultYM2203ClockValue, Ym2203.class);
 
         output_step = 0x1_0000_0000L / samplingRate;
 

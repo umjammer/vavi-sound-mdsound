@@ -28,10 +28,10 @@ public class Sn76496Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
+    public int start(int chipId, int samplingRate) {
         Sn76496 chip = new Sn76496();
         int i = chip.start(3579545, 0, 0, 0, 0, 0, 0);
-        chip.limitFreq(3579545 & 0x3fff_ffff, 0, clock);
+        chip.limitFreq(3579545 & 0x3fff_ffff, 0, samplingRate);
 
         while (chipId >= chips.size()) chips.add(null);
         chips.set(chipId, chip);

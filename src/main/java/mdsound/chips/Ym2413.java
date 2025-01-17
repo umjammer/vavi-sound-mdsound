@@ -409,8 +409,8 @@ public class Ym2413 {
         private int egOut;
     }
 
-    private byte vrc7Mode;
-    private byte adr;
+    private int vrc7Mode;
+    private int adr;
     private int out;
 
 //#ifndef EMU2413_COMPACTION
@@ -420,12 +420,14 @@ public class Ym2413 {
     private int prev, next;
     private final int[] sPrev = new int[2];
     private final int[] sNext = new int[2];
-    private final float[][] pan = new float[][] {new float[2], new float[2], new float[2], new float[2], new float[2], new float[2], new float[2],
-            new float[2], new float[2], new float[2], new float[2], new float[2], new float[2], new float[2]};
+    private final float[][] pan = {
+            new float[2], new float[2], new float[2], new float[2], new float[2], new float[2], new float[2],
+            new float[2], new float[2], new float[2], new float[2], new float[2], new float[2], new float[2]
+    };
 //#endif
 
     // Register
-    private final byte[] reg = new byte[0x40];
+    private final int[] reg = new int[0x40];
     private final int[] slotOnFlag = new int[18];
 
     // Pitch Modulator
@@ -449,12 +451,12 @@ public class Ym2413 {
     private final Slot[] slot = new Slot[18];
 
     /** Voice data */
-    private final Slot.Patch[][] patch = new Slot.Patch[][] {
-            new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2]
-            , new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2]
-            , new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2]
-            , new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2]
-            , new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2]
+    private final Slot.Patch[][] patch = {
+            new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2],
+            new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2],
+            new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2],
+            new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2],
+            new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2]
     };
     /** flag for check patch update */
     private final int[] patch_update = new int[2];
@@ -463,8 +465,8 @@ public class Ym2413 {
 
     /** Note: Dump size changed to 8 per instrument, since 9-15 were unused. -VB */
     private static final int OPLL_TONE_NUM = 1;
-    private static final byte[][] default_inst = new byte[][] {
-            new byte[] {
+    private static final byte[][] default_inst = {
+            {
                     // YM2413 tone by okazaki@angel.ne.jp
                     0x49, 0x4c, 0x4c, 0x32, 0x00, 0x00, 0x00, 0x00,
                     0x61, 0x61, 0x1e, 0x17, (byte) 0xf0, 0x7f, 0x00, 0x17,
@@ -531,15 +533,15 @@ public class Ym2413 {
         return (int) (DB_MUTE + DB_MUTE + x / DB_STEP);
     }
 
-    /* Bits for liner value */
+    // Bits for liner value
     private static final int DB2LIN_AMP_BITS = 8;
     private static final int SLOT_AMP_BITS = 8;
 
-    /* Bits for envelope phase incremental counter */
+    // Bits for envelope phase incremental counter
     private static final int EG_DP_BITS = 22;
     private static final int EG_DP_WIDTH = 1 << 22;
 
-    /* Bits for Pitch and Amp modulator */
+    // Bits for Pitch and Amp modulator
     private static final int PM_PG_BITS = 8;
     private static final int PM_PG_WIDTH = (1 << 8);
     private static final int PM_DP_BITS = 16;
@@ -639,13 +641,15 @@ public class Ym2413 {
             new int[16], new int[16], new int[16], new int[16],
             new int[16], new int[16], new int[16], new int[16],
             new int[16], new int[16], new int[16], new int[16],
-            new int[16], new int[16], new int[16], new int[16]};
+            new int[16], new int[16], new int[16], new int[16]
+    };
     /** Phase incr table for Decay and Release */
     private final int[][] dPhaseDrTable = new int[][] {
             new int[16], new int[16], new int[16], new int[16],
             new int[16], new int[16], new int[16], new int[16],
             new int[16], new int[16], new int[16], new int[16],
-            new int[16], new int[16], new int[16], new int[16]};
+            new int[16], new int[16], new int[16], new int[16]
+    };
 
     /** KSL + TL Table */
     private static final int[][][][] tllTable;
@@ -748,11 +752,11 @@ public class Ym2413 {
 
     static {
 
-        double[] klTable = new double[] {
-                2 * 0.000, 2 * 9.000, 2 * 12.000, 2 * 13.875
-                , 2 * 15.000, 2 * 16.125, 2 * 16.875, 2 * 17.625
-                , 2 * 18.000, 2 * 18.750, 2 * 19.125, 2 * 19.500
-                , 2 * 19.875, 2 * 20.250, 2 * 20.625, 2 * 21.000
+        double[] klTable = {
+                2 * 0.000, 2 * 9.000, 2 * 12.000, 2 * 13.875,
+                2 * 15.000, 2 * 16.125, 2 * 16.875, 2 * 17.625,
+                2 * 18.000, 2 * 18.750, 2 * 19.125, 2 * 19.500,
+                2 * 19.875, 2 * 20.250, 2 * 20.625, 2 * 21.000
         };
 
         tllTable = new int[16][][][];
@@ -778,51 +782,51 @@ public class Ym2413 {
         }
     }
 
-//# ifdef USE_SPEC_ENV_SPEED
-    private static final double[][] attackTime = new double[][] {
-            new double[] {0, 0, 0, 0},
-            new double[] {1730.15, 1400.60, 1153.43, 988.66},
-            new double[] {865.08, 700.30, 576.72, 494.33},
-            new double[] {432.54, 350.15, 288.36, 247.16},
-            new double[] {216.27, 175.07, 144.18, 123.58},
-            new double[] {108.13, 87.54, 72.09, 61.79},
-            new double[] {54.07, 43.77, 36.04, 30.90},
-            new double[] {27.03, 21.88, 18.02, 15.45},
-            new double[] {13.52, 10.94, 9.01, 7.72},
-            new double[] {6.76, 5.47, 4.51, 3.86},
-            new double[] {3.38, 2.74, 2.25, 1.93},
-            new double[] {1.69, 1.37, 1.13, 0.97},
-            new double[] {0.84, 0.70, 0.60, 0.54},
-            new double[] {0.50, 0.42, 0.34, 0.30},
-            new double[] {0.28, 0.22, 0.18, 0.14},
-            new double[] {0.00, 0.00, 0.00, 0.00}
+//#ifdef USE_SPEC_ENV_SPEED
+    private static final double[][] attackTime = {
+            {0, 0, 0, 0},
+            {1730.15, 1400.60, 1153.43, 988.66},
+            {865.08, 700.30, 576.72, 494.33},
+            {432.54, 350.15, 288.36, 247.16},
+            {216.27, 175.07, 144.18, 123.58},
+            {108.13, 87.54, 72.09, 61.79},
+            {54.07, 43.77, 36.04, 30.90},
+            {27.03, 21.88, 18.02, 15.45},
+            {13.52, 10.94, 9.01, 7.72},
+            {6.76, 5.47, 4.51, 3.86},
+            {3.38, 2.74, 2.25, 1.93},
+            {1.69, 1.37, 1.13, 0.97},
+            {0.84, 0.70, 0.60, 0.54},
+            {0.50, 0.42, 0.34, 0.30},
+            {0.28, 0.22, 0.18, 0.14},
+            {0.00, 0.00, 0.00, 0.00}
     };
 
     private static final double[][] decayTime = new double[][] {
-            new double[] {0, 0, 0, 0},
-            new double[] {20926.60, 16807.20, 14006.00, 12028.60},
-            new double[] {10463.30, 8403.58, 7002.98, 6014.32},
-            new double[] {5231.64, 4201.79, 3501.49, 3007.16},
-            new double[] {2615.82, 2100.89, 1750.75, 1503.58},
-            new double[] {1307.91, 1050.45, 875.37, 751.79},
-            new double[] {653.95, 525.22, 437.69, 375.90},
-            new double[] {326.98, 262.61, 218.84, 187.95},
-            new double[] {163.49, 131.31, 109.42, 93.97},
-            new double[] {81.74, 65.65, 54.71, 46.99},
-            new double[] {40.87, 32.83, 27.36, 23.49},
-            new double[] {20.44, 16.41, 13.68, 11.75},
-            new double[] {10.22, 8.21, 6.84, 5.87},
-            new double[] {5.11, 4.10, 3.42, 2.94},
-            new double[] {2.55, 2.05, 1.71, 1.47},
-            new double[] {1.27, 1.27, 1.27, 1.27}
+            {0, 0, 0, 0},
+            {20926.60, 16807.20, 14006.00, 12028.60},
+            {10463.30, 8403.58, 7002.98, 6014.32},
+            {5231.64, 4201.79, 3501.49, 3007.16},
+            {2615.82, 2100.89, 1750.75, 1503.58},
+            {1307.91, 1050.45, 875.37, 751.79},
+            {653.95, 525.22, 437.69, 375.90},
+            {326.98, 262.61, 218.84, 187.95},
+            {163.49, 131.31, 109.42, 93.97},
+            {81.74, 65.65, 54.71, 46.99},
+            {40.87, 32.83, 27.36, 23.49},
+            {20.44, 16.41, 13.68, 11.75},
+            {10.22, 8.21, 6.84, 5.87},
+            {5.11, 4.10, 3.42, 2.94},
+            {2.55, 2.05, 1.71, 1.47},
+            {1.27, 1.27, 1.27, 1.27}
     };
 //#endif
 
     /* Rate Table for Attack */
     private void makeDPhaseArTable() {
 
-//# ifdef USE_SPEC_ENV_SPEED
-        int[][] attackTable = new int[][] {
+//#ifdef USE_SPEC_ENV_SPEED
+        int[][] attackTable = {
                 new int[4], new int[4], new int[4], new int[4],
                 new int[4], new int[4], new int[4], new int[4],
                 new int[4], new int[4], new int[4], new int[4],
@@ -863,8 +867,8 @@ public class Ym2413 {
 
     /** Rate Table for Decay and Release */
     private void makeDPhaseDrTable() {
-//# ifdef USE_SPEC_ENV_SPEED
-        int[][] decaytable = new int[][] {
+//#ifdef USE_SPEC_ENV_SPEED
+        int[][] decayTable = {
                 new int[4], new int[4], new int[4], new int[4],
                 new int[4], new int[4], new int[4], new int[4],
                 new int[4], new int[4], new int[4], new int[4],
@@ -874,9 +878,9 @@ public class Ym2413 {
         for (int rm = 0; rm < 16; rm++)
             for (int rl = 0; rl < 4; rl++)
                 if (rm == 0)
-                    decaytable[rm][rl] = 0;
+                    decayTable[rm][rl] = 0;
                 else
-                    decaytable[rm][rl] = (int) ((double) (1 << EG_DP_BITS) / (decayTime[rm][rl] * 3579545 / 72000));
+                    decayTable[rm][rl] = (int) ((double) (1 << EG_DP_BITS) / (decayTime[rm][rl] * 3579545 / 72000));
 //#endif
 
         for (int dr = 0; dr < 16; dr++)
@@ -890,7 +894,7 @@ public class Ym2413 {
                     dPhaseDrTable[dr][rks] = 0;
                     break;
                 default:
-                    dPhaseDrTable[dr][rks] = (rate == 49716 ? decaytable[rm][rl] : (int) ((double) (decaytable[rm][rl]) * clock / 72 / rate + 0.5));
+                    dPhaseDrTable[dr][rks] = (rate == 49716 ? decayTable[rm][rl] : (int) ((double) (decayTable[rm][rl]) * clock / 72 / rate + 0.5));
                     break;
                 }
             }
@@ -1003,7 +1007,7 @@ public class Ym2413 {
         updateEg(slot);
     }
 
-    /** Slot key on without reseting the phase */
+    /** Slot key on without resetting the phase */
     private void slotOn2(Slot slot) {
         slot.egMode = EgState.ATTACK;
         slot.egPhase = 0;
@@ -1214,8 +1218,6 @@ public class Ym2413 {
     /** */
     public Ym2413(int clock, int samplingRate, byte[] patch) {
 
-        makeTables(clock, samplingRate);
-
         defaultPatch = new Slot.Patch[19][];
         for (int i = 0; i < 19; i++) {
             defaultPatch[i] = new Slot.Patch[2];
@@ -1223,6 +1225,8 @@ public class Ym2413 {
                 defaultPatch[i][j] = new Slot.Patch();
             }
         }
+
+        makeTables(clock, samplingRate);
 
         this.vrc7Mode = 0x00;
 
@@ -1244,7 +1248,7 @@ public class Ym2413 {
         }
     }
 
-    /** Reset patch datas by system default. */
+    /** Reset patch data by system default. */
     private void resetPatch(int type) {
         for (int i = 0; i < 19; i++) {
             copyPatch(i, defaultPatch[i]);
@@ -1275,7 +1279,7 @@ public class Ym2413 {
         for (int i = 0; i < 0x40; i++)
             writeReg(i, 0);
 
-//# ifndef EMU2413_COMPACTION
+//#ifndef EMU2413_COMPACTION
         this.realStep = (1 << 31) / rate;
         this.opllStep = (1 << 31) / (clock / 72);
         this.opllTime = 0;
@@ -1461,7 +1465,7 @@ public class Ym2413 {
         }
     }
 
-    private void setChipMode(byte Mode) {
+    private void setChipMode(int Mode) {
         // Enable/Disable VRC7 Mode (with only 6 instead of 9 channels and no rhythm part)
         this.vrc7Mode = Mode;
     }
@@ -1475,7 +1479,7 @@ public class Ym2413 {
 
         data = data & 0xff;
         reg = reg & 0x3f;
-        this.reg[reg] = (byte) data;
+        this.reg[reg] = data;
 
         switch (reg) {
         case 0x00:
@@ -1699,7 +1703,7 @@ public class Ym2413 {
         if ((adr & 1) != 0)
             writeReg(this.adr, val);
         else
-            this.adr = (byte) val;
+            this.adr = val;
     }
 
 //#ifndef EMU2413_COMPACTION

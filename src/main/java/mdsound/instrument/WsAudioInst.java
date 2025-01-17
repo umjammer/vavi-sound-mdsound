@@ -30,8 +30,8 @@ public class WsAudioInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
-        return start(chipId, clock, DefaultWSwanClockValue);
+    public int start(int chipId, int samplingRate) {
+        return start(chipId, samplingRate, DefaultWSwanClockValue);
     }
 
     @Override

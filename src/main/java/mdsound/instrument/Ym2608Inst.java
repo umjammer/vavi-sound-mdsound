@@ -5,6 +5,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 import dotnet4j.util.compat.Tuple;
+import mdsound.Common;
 import mdsound.Instrument;
 import mdsound.fmgen.Opna;
 
@@ -26,7 +27,7 @@ public class Ym2608Inst extends Instrument.BaseInstrument {
     }
 
     public Ym2608Inst() {
-        //0..Main 1..FM 2..SSG 3..Rhm 4..PCM
+        // 0..Main 1..FM 2..SSG 3..Rhm 4..PCM
         visVolume = new int[][][] {
                 new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}},
                 new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}}
@@ -40,26 +41,27 @@ public class Ym2608Inst extends Instrument.BaseInstrument {
 
     @Override
     public int start(int chipId, int samplingRate) {
-        chip[chipId] = new Opna.OPNA(chipId);
-        chip[chipId].init(DefaultYM2608ClockValue, samplingRate);
+        chip[chipId] = new Opna.OPNA();
+        chip[chipId].init(DefaultYM2608ClockValue, samplingRate, chipId);
 
         return samplingRate;
     }
 
     /**
-     * @param option String: Path of rhythm sound file or Function<String, Stream>:
+     * @param option {@code String}: Path of rhythm sound dir or
+     *               {@code Function<String, Stream>}: function returns full path with given filename
+     * @see "mdplayer.Common#getOPNARyhthmStream"
      */
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        chip[chipId] = new Opna.OPNA(chipId);
-        //chips[chipId] = new Fmgen.OPNA2();
+        chip[chipId] = new Opna.OPNA();
         if (option != null && option.length > 0) {
             if (option[0] instanceof Function function) // <String, Stream>
-                chip[chipId].init(clock, samplingRate, false, function);
+                chip[chipId].init(clock, samplingRate, false, chipId, function);
             else if (option[0] instanceof String string)
-                chip[chipId].init(clock, samplingRate, false, string);
+                chip[chipId].init(clock, samplingRate, false, chipId, string);
         } else {
-            chip[chipId].init(clock, samplingRate);
+            chip[chipId].init(clock, samplingRate, chipId);
         }
 
         return samplingRate;

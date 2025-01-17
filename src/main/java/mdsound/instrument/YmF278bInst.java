@@ -23,7 +23,7 @@ public class YmF278bInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
+    public int start(int chipId, int samplingRate) {
         return device_start_ymf278b(chipId, YmF278b.YMF278B_STD_CLOCK, null, null);
     }
 

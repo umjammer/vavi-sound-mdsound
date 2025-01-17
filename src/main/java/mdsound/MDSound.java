@@ -243,7 +243,7 @@ public class MDSound {
 
                 setupResampler(inst);
             }
-instruments.forEach((k, v) -> logger.log(Level.DEBUG, k + ": " + Arrays.toString(v)));
+instruments.forEach((k, v) -> logger.log(Level.DEBUG, "instrument: " + k.getSimpleName().replace("Inst", "") + ": chips: " + Arrays.stream(v).map(Instrument::getName).collect(Collectors.joining(", ", "[", "]"))));
 
             dacControl = new DacControl(samplingRate, this);
 
@@ -284,7 +284,7 @@ instruments.forEach((k, v) -> logger.log(Level.DEBUG, k + ": " + Arrays.toString
     // VSU, 0x100, 1
     // ES5503, 0x40, 8
     // ES5506, 0x20, 16
-    private int getRegulationVolume(Chip inst, double[] mul) {
+    private static int getRegulationVolume(Chip inst, double[] mul) {
         var r = inst.instrument.getRegulationVolume();
         mul[0] = r.getItem2();
         return r.getItem1();

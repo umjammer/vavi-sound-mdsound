@@ -39,8 +39,8 @@ public class C352Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
-        return start(chipId, 44100, clock);
+    public int start(int chipId, int samplingRate) {
+        return start(chipId, 44100, samplingRate);
     }
 
     @Override

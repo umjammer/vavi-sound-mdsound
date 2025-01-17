@@ -20,7 +20,7 @@ public class YmZ280bInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
+    public int start(int chipId, int samplingRate) {
         return device_start_ymz280b(chipId, 16934400);
     }
 

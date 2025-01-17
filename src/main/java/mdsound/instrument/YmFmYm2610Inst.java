@@ -48,7 +48,7 @@ public class YmFmYm2610Inst extends Instrument.BaseInstrument {
 
     @Override
     public int start(int chipId, int samplingRate) {
-        chip[chipId] = new VgmChip(samplingRate, Ym2610.class);
+        chip[chipId] = new VgmChip(DefaultYM2610ClockValue, Ym2610.class);
 
         output_step = 0x1_0000_0000L / samplingRate;
 
@@ -57,7 +57,7 @@ public class YmFmYm2610Inst extends Instrument.BaseInstrument {
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        chip[chipId] = new VgmChip(samplingRate, Ym2610.class);
+        chip[chipId] = new VgmChip(clock, Ym2610.class);
 
         output_step = 0x1_0000_0000L / samplingRate;
 

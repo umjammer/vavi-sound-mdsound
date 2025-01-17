@@ -23,7 +23,7 @@ import java.util.function.Supplier;
  */
 public class Ym3526 {
 
-    private static final byte CHIP_SAMPLING_MODE = 0;
+    private static final int CHIP_SAMPLING_MODE = 0;
 
     public Opl chip;
 
@@ -109,10 +109,10 @@ public class Ym3526 {
         public interface UpdateHandler extends Runnable {
         }
 
-        public interface OPL_PORTHANDLER_W extends Consumer<Byte> {
+        public interface OPL_PORTHANDLER_W extends Consumer<Integer> {
         }
 
-        public interface OPL_PORTHANDLER_R extends Supplier<Byte> {
+        public interface OPL_PORTHANDLER_R extends Supplier<Integer> {
         }
 
         // output final shift
@@ -180,7 +180,7 @@ public class Ym3526 {
         private static class Slot {
 
             /** mapping of register number (offset) to slot number used by the emulator */
-            private static final int[] slotArray = new int[] {
+            private static final int[] slotArray = {
                     0, 2, 4, 1, 3, 5, -1, -1,
                     6, 8, 10, 7, 9, 11, -1, -1,
                     12, 14, 16, 13, 15, 17, -1, -1,
@@ -193,7 +193,7 @@ public class Ym3526 {
              * 0.1875 is bit 0 weight of the envelope counter (volume) expressed in the 'decibel' scale
              */
             private static final double DV = 0.1875 / 2.0;
-            private static final int[] kslTab = new int[] {
+            private static final int[] kslTab = {
                     // OCT 0
                     (int) (0.000 / DV), (int) (0.000 / DV), (int) (0.000 / DV), (int) (0.000 / DV),
                     (int) (0.000 / DV), (int) (0.000 / DV), (int) (0.000 / DV), (int) (0.000 / DV),
@@ -247,44 +247,44 @@ public class Ym3526 {
                 return (int) (db * (2.0 / ENV_STEP));
             }
 
-            private static final int[] slTab = new int[] {
+            private static final int[] slTab = {
                     sc(0), sc(1), sc(2), sc(3), sc(4), sc(5), sc(6), sc(7),
                     sc(8), sc(9), sc(10), sc(11), sc(12), sc(13), sc(14), sc(31)
             };
 
             private static final int RATE_STEPS = 8;
-            private static final byte[] eg_inc = new byte[] {
-                    //cycle:0  1  2  3  4  5  6  7
+            private static final int[] eg_inc = {
+                    // cycle:0  1  2  3  4  5  6  7
 
-                    /* 0 */ 0, 1, 0, 1, 0, 1, 0, 1, // rates 00..12 0 (increment by 0 or 1)
-                    /* 1 */ 0, 1, 0, 1, 1, 1, 0, 1, // rates 00..12 1
-                    /* 2 */ 0, 1, 1, 1, 0, 1, 1, 1, // rates 00..12 2
-                    /* 3 */ 0, 1, 1, 1, 1, 1, 1, 1, // rates 00..12 3
+                    /*  0 */ 0, 1, 0, 1, 0, 1, 0, 1, // rates 00..12 0 (increment by 0 or 1)
+                    /*  1 */ 0, 1, 0, 1, 1, 1, 0, 1, // rates 00..12 1
+                    /*  2 */ 0, 1, 1, 1, 0, 1, 1, 1, // rates 00..12 2
+                    /*  3 */ 0, 1, 1, 1, 1, 1, 1, 1, // rates 00..12 3
 
-                    /* 4 */ 1, 1, 1, 1, 1, 1, 1, 1, // rate 13 0 (increment by 1)
-                    /* 5 */ 1, 1, 1, 2, 1, 1, 1, 2, // rate 13 1
-                    /* 6 */ 1, 2, 1, 2, 1, 2, 1, 2, // rate 13 2
-                    /* 7 */ 1, 2, 2, 2, 1, 2, 2, 2, // rate 13 3
+                    /*  4 */ 1, 1, 1, 1, 1, 1, 1, 1, // rate 13 0 (increment by 1)
+                    /*  5 */ 1, 1, 1, 2, 1, 1, 1, 2, // rate 13 1
+                    /*  6 */ 1, 2, 1, 2, 1, 2, 1, 2, // rate 13 2
+                    /*  7 */ 1, 2, 2, 2, 1, 2, 2, 2, // rate 13 3
 
-                    /* 8 */ 2, 2, 2, 2, 2, 2, 2, 2, // rate 14 0 (increment by 2)
-                    /* 9 */ 2, 2, 2, 4, 2, 2, 2, 4, // rate 14 1
-                    /*10 */ 2, 4, 2, 4, 2, 4, 2, 4, // rate 14 2
-                    /*11 */ 2, 4, 4, 4, 2, 4, 4, 4, // rate 14 3
+                    /*  8 */ 2, 2, 2, 2, 2, 2, 2, 2, // rate 14 0 (increment by 2)
+                    /*  9 */ 2, 2, 2, 4, 2, 2, 2, 4, // rate 14 1
+                    /* 10 */ 2, 4, 2, 4, 2, 4, 2, 4, // rate 14 2
+                    /* 11 */ 2, 4, 4, 4, 2, 4, 4, 4, // rate 14 3
 
-                    /*12 */ 4, 4, 4, 4, 4, 4, 4, 4, // rates 15 0, 15 1, 15 2, 15 3 (increment by 4)
-                    /*13 */ 8, 8, 8, 8, 8, 8, 8, 8, // rates 15 2, 15 3 for attack
-                    /*14 */ 0, 0, 0, 0, 0, 0, 0, 0, // infinity rates for attack and decay(s)
+                    /* 12 */ 4, 4, 4, 4, 4, 4, 4, 4, // rates 15 0, 15 1, 15 2, 15 3 (increment by 4)
+                    /* 13 */ 8, 8, 8, 8, 8, 8, 8, 8, // rates 15 2, 15 3 for attack
+                    /* 14 */ 0, 0, 0, 0, 0, 0, 0, 0, // infinity rates for attack and decay(s)
             };
 
 
-            private static byte o(int a) {
-                return (byte) (a * RATE_STEPS);
+            private static int o(int a) {
+                return a * RATE_STEPS;
             }
 
             // note that there is no O(13) in this table - it's directly in the code
 
             /** Envelope Generator rates (16 + 64 rates + 16 RKS) */
-            private static final byte[] egRateSelect = new byte[] {
+            private static final int[] egRateSelect = {
                     // 16 infinite time rates
                     o(14), o(14), o(14), o(14), o(14), o(14), o(14), o(14),
                     o(14), o(14), o(14), o(14), o(14), o(14), o(14), o(14),
@@ -319,16 +319,16 @@ public class Ym3526 {
 
             };
 
-            //rate  0,    1,    2,    3,   4,   5,   6,  7,  8,  9,  10, 11, 12, 13, 14, 15
-            //shift 12,   11,   10,   9,   8,   7,   6,  5,  4,  3,  2,  1,  0,  0,  0,  0
-            //mask  4095, 2047, 1023, 511, 255, 127, 63, 31, 15, 7,  3,  1,  0,  0,  0,  0
+            // rate  0,    1,    2,    3,   4,   5,   6,  7,  8,  9,  10, 11, 12, 13, 14, 15
+            // shift 12,   11,   10,   9,   8,   7,   6,  5,  4,  3,  2,  1,  0,  0,  0,  0
+            // mask  4095, 2047, 1023, 511, 255, 127, 63, 31, 15, 7,  3,  1,  0,  0,  0,  0
 
-            private static byte o2(int a) {
-                return (byte) (a * 1);
+            private static int o2(int a) {
+                return a * 1;
             }
 
             /** Envelope Generator counter shifts (16 + 64 rates + 16 RKS) */
-            private static final byte[] egRateShift = new byte[] {
+            private static final int[] egRateShift = {
                     // 16 infinite time rates
                     o2(0), o2(0), o2(0), o2(0), o2(0), o2(0), o2(0), o2(0),
                     o2(0), o2(0), o2(0), o2(0), o2(0), o2(0), o2(0), o2(0),
@@ -364,11 +364,11 @@ public class Ym3526 {
             };
 
             /* multiple table */
-            private static final byte ML = 2;
-            private static final byte[] mulTab = new byte[] {
+            private static final int ML = 2;
+            private static final int[] mulTab = {
                     // 1/2, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,10,12,12,15,15
-                    (byte) (0.50 * ML), (byte) (1.00 * ML), (byte) (2.00 * ML), (byte) (3.00 * ML), (byte) (4.00 * ML), (byte) (5.00 * ML), (byte) (6.00 * ML), (byte) (7.00 * ML),
-                    (byte) (8.00 * ML), (byte) (9.00 * ML), (byte) (10.00 * ML), (byte) (10.00 * ML), (byte) (12.00 * ML), (byte) (12.00 * ML), (byte) (15.00 * ML), (byte) (15.00 * ML)
+                    (int) (0.50 * ML), (int) (1.00 * ML), (int) (2.00 * ML), (int) (3.00 * ML), (int) (4.00 * ML), (int) (5.00 * ML), (int) (6.00 * ML), (int) (7.00 * ML),
+                    (int) (8.00 * ML), (int) (9.00 * ML), (int) (10.00 * ML), (int) (10.00 * ML), (int) (12.00 * ML), (int) (12.00 * ML), (int) (15.00 * ML), (int) (15.00 * ML)
             };
 
             private static final int LFO_AM_TAB_ELEMENTS = 210;
@@ -385,7 +385,7 @@ public class Ym3526 {
                 When AM = 1 data is used directly
                 When AM = 0 data is divided by 4 before being used (losing precision is important)
             */
-            private static final byte[] lfoAmTable = new byte[] {
+            private static final int[] lfoAmTable = {
                     0, 0, 0, 0, 0, 0, 0,
                     1, 1, 1, 1,
                     2, 2, 2, 2,
@@ -441,7 +441,7 @@ public class Ym3526 {
             };
 
             /* LFO Phase Modulation table (verified on real YM3812) */
-            private static final byte[] lfoPmTable = new byte[] {
+            private static final int[] lfoPmTable = {
                     // FNUM2/FNUM = 00 0xxxxxxx (0x0000)
                     0, 0, 0, 0, 0, 0, 0, 0, // LFO PM depth = 0
                     0, 0, 0, 0, 0, 0, 0, 0, // LFO PM depth = 1
@@ -485,13 +485,13 @@ public class Ym3526 {
             /* release rate:RR<<2 */
             private int rr;
             /* key scale rate */
-            private byte KSR;
+            private int KSR;
             /* keyscale level */
-            private byte ksl;
+            private int ksl;
             /* key scale rate: kcode>>KSR */
-            private byte ksr;
+            private int ksr;
             /* multiple: mul_tab[ML] */
-            private byte mul;
+            private int mul;
 
             // Phase Generator
 
@@ -500,7 +500,7 @@ public class Ym3526 {
             /* frequency counter step */
             private int incr;
             /* feedback shift value */
-            private byte fb;
+            private int fb;
             /* slot1 output pointer */
             //private int connect1;
             /* slot1 output pointer */
@@ -508,14 +508,14 @@ public class Ym3526 {
             /* slot1 output for feedback */
             private final int[] op1Out = new int[2];
             /* connection (algorithm) type  */
-            private byte CON;
+            private int CON;
 
             // Envelope Generator
 
             /* percussive/non-percussive mode */
-            private byte aByte;
+            private int aByte;
             /* phase type */
-            private byte state;
+            private int state;
             /* total level: TL << 2 */
             private int tl;
             /* adjusted now TL */
@@ -525,43 +525,43 @@ public class Ym3526 {
             /* sustain level: sl_tab[SL] */
             private int sl;
             /* (attack state) */
-            private byte egShAr;
+            private int egShAr;
             /* (attack state) */
-            private byte egSelAr;
+            private int egSelAr;
             /* (decay state) */
-            private byte egShDr;
+            private int egShDr;
             /* (decay state) */
-            private byte egSelDr;
+            private int egSelDr;
             /* (release state) */
-            private byte egShRr;
+            private int egShRr;
             /* (release state) */
-            private byte egSelRr;
+            private int egSelRr;
             /* 0 = KEY OFF, >0 = KEY ON */
             private int key;
 
             // LFO
 
             /* LFO Amplitude Modulation enable mask */
-            private int aMmask;
+            private int amMask;
             /* LFO Phase Modulation enable flag (active high) */
-            private byte vib;
+            private int vib;
 
             /* waveform select */
             private int waveTable;
 
             private int calcVolume(int lfoAm) {
-                return tll + volume + (lfoAm & aMmask);
+                return tll + volume + (lfoAm & amMask);
             }
 
             /** update phase increment counter of Operator (also update the EG rates if necessary) */
-            private void caclFcSlot(int fc, int kCode) {
+            private void calcFcSlot(int fc, int kCode) {
 
                 // (frequency) phase increment counter
                 incr = fc * mul;
                 int ksr = kCode >> KSR;
 
                 if (this.ksr != ksr) {
-                    this.ksr = (byte) ksr;
+                    this.ksr = ksr;
 
                     // calculate envelope generator rates
                     if ((ar + this.ksr) < 16 + 62) {
@@ -579,13 +579,13 @@ public class Ym3526 {
                 }
             }
 
-            private void setMul(int v, int fc, byte kCode) {
+            private void setMul(int v, int fc, int kCode) {
                 this.mul = mulTab[v & 0x0f];
-                this.KSR = (byte) ((v & 0x10) != 0 ? 0 : 2);
-                this.aByte = (byte) (v & 0x20);
-                this.vib = (byte) (v & 0x40);
-                this.aMmask = (v & 0x80) != 0 ? ~0 : 0;
-                this.caclFcSlot(fc, kCode);
+                this.KSR = (v & 0x10) != 0 ? 0 : 2;
+                this.aByte = v & 0x20;
+                this.vib = v & 0x40;
+                this.amMask = (v & 0x80) != 0 ? ~0 : 0;
+                this.calcFcSlot(fc, kCode);
             }
 
             private void setKslTl(int v, int kslBase) {
@@ -632,8 +632,8 @@ public class Ym3526 {
             /** KeyScaleLevel Base step */
             private int kslBase;
             /** key code (for key scaling) */
-            private byte kCode;
-            private byte muted;
+            private int kCode;
+            private int muted;
         }
 
         // TL_TAB_LEN is calculated as:
@@ -669,7 +669,7 @@ public class Ym3526 {
         private int egTimerOverflow;
 
         /** Rhythm mode */
-        private byte rhythm;
+        private int rhythm;
 
         /** fnumber.increment counter */
         private final int[] fnTab = new int[1024];
@@ -678,8 +678,8 @@ public class Ym3526 {
         private int lfoAm;
         private int lfoPm;
 
-        private byte lfoAmDepth;
-        private byte lfoPmDepthRange;
+        private int lfoAmDepth;
+        private int lfoPmDepthRange;
         private int lfoAmCnt;
         private int lfoAmInc;
         private int lfoPmCnt;
@@ -693,12 +693,12 @@ public class Ym3526 {
         private int noiseF;
 
         /** waveform select enable flag */
-        private byte waveSel;
+        private int waveSel;
 
         /** timer counters */
         private final int[] t = new int[2];
         /** timer enable */
-        private final byte[] st = new byte[2];
+        private final int[] st = new int[2];
 
         // external event Callback handlers
 
@@ -712,15 +712,15 @@ public class Ym3526 {
         private Ym3526 UpdateParam;
 
         /** chips type */
-        private byte type;
+        private int type;
         /** address register */
-        private byte address;
+        private int address;
         /** status flag */
-        private byte status;
+        private int status;
         /** status mask */
-        private byte statusMask;
+        private int statusMask;
         /** Reg.08 : CSM,notesel,etc. */
-        private byte mode;
+        private int mode;
 
         /** master clock  (Hz) */
         private int clock;
@@ -752,7 +752,7 @@ public class Ym3526 {
         /** status set and IRQ handling */
         private void setStatus(int flag) {
             // set status flag
-            this.status |= (byte) flag;
+            this.status |= flag;
             if ((this.status & 0x80) == 0) {
                 if ((this.status & this.statusMask) != 0) { // IRQ on
                     this.status |= 0x80;
@@ -765,7 +765,7 @@ public class Ym3526 {
         /** status reset and IRQ handling */
         private void resetStatus(int flag) {
             // reset status flag
-            this.status &= (byte) ~flag;
+            this.status &= ~flag;
             if ((this.status & 0x80) != 0) {
                 if ((this.status & this.statusMask) == 0) {
                     this.status &= 0x7f;
@@ -777,7 +777,7 @@ public class Ym3526 {
 
         /** IRQ mask set */
         private void setStatusMask(int flag) {
-            this.statusMask = (byte) flag;
+            this.statusMask = flag;
             // IRQ handling check
             setStatus(0);
             resetStatus(0);
@@ -791,7 +791,7 @@ public class Ym3526 {
             if (this.lfoAmCnt >= (Opl.Slot.LFO_AM_TAB_ELEMENTS << LFO_SH)) // lfo_am_table is 210 elements long
                 this.lfoAmCnt -= (Opl.Slot.LFO_AM_TAB_ELEMENTS << LFO_SH);
 
-            byte tmp = Opl.Slot.lfoAmTable[this.lfoAmCnt >> LFO_SH];
+            int tmp = Opl.Slot.lfoAmTable[this.lfoAmCnt >>> LFO_SH];
             //logger.log(Level.TRACE, "tmp %d".formatted(tmp));
 
             if (this.lfoAmDepth != 0)
@@ -937,7 +937,7 @@ public class Ym3526 {
 
                 // Phase Generator
                 if (op.vib != 0) {
-                    byte block;
+                    int block;
                     int blockFNum = ch.blockFNum;
 
                     int fNumLfo = (blockFNum & 0x0380) >> 7;
@@ -946,7 +946,7 @@ public class Ym3526 {
 
                     if (lfoFnTableIndexOffset != 0) { // LFO phase modulation active
                         blockFNum += lfoFnTableIndexOffset;
-                        block = (byte) ((blockFNum & 0x1c00) >> 10);
+                        block = (blockFNum & 0x1c00) >> 10;
                         op.cnt += (this.fnTab[blockFNum & 0x03ff] >> (7 - block)) * op.mul;
                     } else { // LFO phase modulation = zero
                         op.cnt += op.incr;
@@ -1017,7 +1017,7 @@ public class Ym3526 {
             // slot 1
             Opl.Slot slot = ch.slots[SLOT1];
             int env = slot.calcVolume(this.lfoAm);
-            //logger.log(Level.TRACE, "env1 %d %d %d %d %d".formatted(env, slot.TLL, slot.volume, this.LFO_AM, slot.aMmask));
+            //logger.log(Level.TRACE, "env1 %d %d %d %d %d".formatted(env, slot.TLL, slot.volume, this.LFO_AM, slot.amMask));
             int out = slot.op1Out[0] + slot.op1Out[1];
             slot.op1Out[0] = slot.op1Out[1];
             if (slot.ptrConnect1 == 0) this.output[0] += slot.op1Out[0];
@@ -1130,21 +1130,21 @@ public class Ym3526 {
                 //  phase = 34 or 2d0 (based on noise)
 
                 // base frequency derived from Operator 1 in channel 7
-                byte bit7 = (byte) (((slot7_1().cnt >> FREQ_SH) >> 7) & 1);
-                byte bit3 = (byte) (((slot7_1().cnt >> FREQ_SH) >> 3) & 1);
-                byte bit2 = (byte) (((slot7_1().cnt >> FREQ_SH) >> 2) & 1);
+                int bit7 = ((slot7_1().cnt >> FREQ_SH) >> 7) & 1;
+                int bit3 = ((slot7_1().cnt >> FREQ_SH) >> 3) & 1;
+                int bit2 = ((slot7_1().cnt >> FREQ_SH) >> 2) & 1;
 
-                byte res1 = (byte) ((bit2 ^ bit7) | bit3);
+                int res1 = (bit2 ^ bit7) | bit3;
 
                 // when res1 = 0 phase = 0x000 | 0xd0;
                 // when res1 = 1 phase = 0x200 | (0xd0>>2);
                 int phase = res1 != 0 ? (0x200 | (0xd0 >> 2)) : 0xd0;
 
                 // enable gate based on frequency of Operator 2 in channel 8
-                byte bit5e = (byte) (((slot8_2().cnt >> FREQ_SH) >> 5) & 1);
-                byte bit3e = (byte) (((slot8_2().cnt >> FREQ_SH) >> 3) & 1);
+                int bit5e = ((slot8_2().cnt >> FREQ_SH) >> 5) & 1;
+                int bit3e = ((slot8_2().cnt >> FREQ_SH) >> 3) & 1;
 
-                byte res2 = (byte) (bit3e ^ bit5e);
+                int res2 = (byte) (bit3e ^ bit5e);
 
                 // when res2 = 0 pass the phase from calculation above (res1);
                 // when res2 = 1 phase = 0x200 | (0xd0>>2);
@@ -1171,7 +1171,7 @@ public class Ym3526 {
             env = slot7_2().calcVolume(this.lfoAm);
             if (env < ENV_QUIET && this.muteSpc[1] == 0) {
                 // base frequency derived from Operator 1 in channel 7
-                byte bit8 = (byte) (((slot7_1().cnt >> FREQ_SH) >> 8) & 1);
+                int bit8 = ((slot7_1().cnt >> FREQ_SH) >> 8) & 1;
 
                 // when bit8 = 0 phase = 0x100;
                 // when bit8 = 1 phase = 0x200;
@@ -1196,21 +1196,21 @@ public class Ym3526 {
             env = slot8_2().calcVolume(this.lfoAm);
             if (env < ENV_QUIET && this.muteSpc[3] == 0) {
                 // base frequency derived from Operator 1 in channel 7
-                byte bit7 = (byte) (((slot7_1().cnt >> FREQ_SH) >> 7) & 1);
-                byte bit3 = (byte) (((slot7_1().cnt >> FREQ_SH) >> 3) & 1);
-                byte bit2 = (byte) (((slot7_1().cnt >> FREQ_SH) >> 2) & 1);
+                int bit7 = ((slot7_1().cnt >> FREQ_SH) >> 7) & 1;
+                int bit3 = ((slot7_1().cnt >> FREQ_SH) >> 3) & 1;
+                int bit2 = ((slot7_1().cnt >> FREQ_SH) >> 2) & 1;
 
-                byte res1 = (byte) ((bit2 ^ bit7) | bit3);
+                int res1 = (bit2 ^ bit7) | bit3;
 
                 // when res1 = 0 phase = 0x000 | 0x100;
                 // when res1 = 1 phase = 0x200 | 0x100;
                 int phase = res1 != 0 ? 0x300 : 0x100;
 
                 // enable gate based on frequency of Operator 2 in channel 8
-                byte bit5e = (byte) (((slot8_2().cnt >> FREQ_SH) >> 5) & 1);
-                byte bit3e = (byte) (((slot8_2().cnt >> FREQ_SH) >> 3) & 1);
+                int bit5e = ((slot8_2().cnt >> FREQ_SH) >> 5) & 1;
+                int bit3e = ((slot8_2().cnt >> FREQ_SH) >> 3) & 1;
 
-                byte res2 = (byte) (bit3e ^ bit5e);
+                int res2 = bit3e ^ bit5e;
                 // when res2 = 0 pass the phase from calculation above (res1);
                 // when res2 = 1 phase = 0x200 | 0x100;
                 if (res2 != 0)
@@ -1391,7 +1391,7 @@ public class Ym3526 {
         }
 
         /** write a value v to register r on opl chips */
-        private void writeReg(int r, int v) {
+        public void writeReg(int r, int v) {
             int slotNo;
 
             //logger.log(Level.TRACE, "writeReg:%d:%d".formatted(r, v));
@@ -1405,7 +1405,7 @@ public class Ym3526 {
                 switch (r & 0x1f) {
                 case 0x01: // waveform select enable
                     if ((this.type & OPL_TYPE_WAVESEL) != 0) {
-                        this.waveSel = (byte) (v & 0x20);
+                        this.waveSel = v & 0x20;
                         // do not change the waveform previously selected
                     }
                     break;
@@ -1419,8 +1419,8 @@ public class Ym3526 {
                     if ((v & 0x80) != 0) { // IRQ flag clear
                         resetStatus(0x7f - 0x08); // don't reset BFRDY flag or we will have to call DeltaT module to set the flag
                     } else { //  set IRQ mask ,timer enable
-                        byte st1 = (byte) (v & 1);
-                        byte st2 = (byte) ((v >> 1) & 1);
+                        int st1 = v & 1;
+                        int st2 = (v >> 1) & 1;
 
                         // IRQRST,T1MSK,t2MSK,EOSMSK,BRMSK,x,ST2,ST1
                         resetStatus(v & (0x78 - 0x08));
@@ -1441,7 +1441,7 @@ public class Ym3526 {
                     }
                     break;
                 case 0x08: // MODE,DELTA-T control 2 : CSM,NOTESEL,x,x,smpl,da/ad,64k,rom
-                    this.mode = (byte) v;
+                    this.mode = v;
 //#if BUILD_Y8950
                     //   if(this.type&OPL_TYPE_ADPCM)
                     //    YM_DELTAT_ADPCM_Write(this.DeltaT,r-0x07,v&0x0f); // mask 4 LSBs in register 08 for DELTA-T unit
@@ -1475,10 +1475,10 @@ public class Ym3526 {
                 break;
             case 0xa0:
                 if (r == 0xbd) { // am depth, vibrato depth, r,bd,sd,tom,tc,hh
-                    this.lfoAmDepth = (byte) (v & 0x80);
-                    this.lfoPmDepthRange = (byte) ((v & 0x40) != 0 ? 8 : 0);
+                    this.lfoAmDepth = v & 0x80;
+                    this.lfoPmDepthRange = (v & 0x40) != 0 ? 8 : 0;
 
-                    this.rhythm = (byte) (v & 0x3f);
+                    this.rhythm = v & 0x3f;
 
                     if ((this.rhythm & 0x20) != 0) {
                         // BD key on/off
@@ -1535,7 +1535,7 @@ public class Ym3526 {
                 }
                 // update
                 if (ch.blockFNum != blockFNum) {
-                    byte block = (byte) (blockFNum >> 10);
+                    int block = blockFNum >> 10;
 
                     ch.blockFNum = blockFNum;
 
@@ -1543,31 +1543,31 @@ public class Ym3526 {
                     ch.fc = this.fnTab[blockFNum & 0x03ff] >> (7 - block);
 
                     // BLK 2,1,0 bits . bits 3,2,1 of kcode
-                    ch.kCode = (byte) ((ch.blockFNum & 0x1c00) >> 9);
+                    ch.kCode = (ch.blockFNum & 0x1c00) >> 9;
 
                     // the info below is actually opposite to what is stated in the Manuals (verifed on real YM3812)
                     // if notesel == 0 . lsb of kcode is bit 10 (MSB) of fNum
                     // if notesel == 1 . lsb of kcode is bit 9 (MSB-1) of fNum
                     if ((this.mode & 0x40) != 0)
-                        ch.kCode |= (byte) ((ch.blockFNum & 0x100) >> 8); // notesel == 1
+                        ch.kCode |= (ch.blockFNum & 0x100) >> 8; // notesel == 1
                     else
-                        ch.kCode |= (byte) ((ch.blockFNum & 0x200) >> 9); // notesel == 0
+                        ch.kCode |= (ch.blockFNum & 0x200) >> 9; // notesel == 0
 
                     // refresh Total Level in both SLOTs of this channel
                     ch.slots[SLOT1].tll = ch.slots[SLOT1].tl + (ch.kslBase >> ch.slots[SLOT1].ksl);
                     ch.slots[SLOT2].tll = ch.slots[SLOT2].tl + (ch.kslBase >> ch.slots[SLOT2].ksl);
 
                     // refresh frequency counter in both SLOTs of this channel
-                    ch.slots[SLOT1].caclFcSlot(ch.fc, ch.kCode);
-                    ch.slots[SLOT2].caclFcSlot(ch.fc, ch.kCode);
+                    ch.slots[SLOT1].calcFcSlot(ch.fc, ch.kCode);
+                    ch.slots[SLOT2].calcFcSlot(ch.fc, ch.kCode);
                 }
                 break;
             case 0xc0:
                 // FB,C
                 if ((r & 0x0f) > 8) return;
                 ch = this.chs[r & 0x0f];
-                ch.slots[SLOT1].fb = (byte) (((v >> 1) & 7) != 0 ? ((v >> 1) & 7) + 7 : 0);
-                ch.slots[SLOT1].CON = (byte) (v & 1);
+                ch.slots[SLOT1].fb = ((v >> 1) & 7) != 0 ? ((v >> 1) & 7) + 7 : 0;
+                ch.slots[SLOT1].CON = v & 1;
                 //ch.SLOT[SLOT1].connect1 = (int)(ch.SLOT[SLOT1].CON != 0 ? this.output[0] : this.phase_modulation);
                 ch.slots[SLOT1].ptrConnect1 = ch.slots[SLOT1].CON != 0 ? 0 : 1;
                 break;
@@ -1584,7 +1584,7 @@ public class Ym3526 {
             }
         }
 
-        private void reset() {
+        public void reset() {
 
             this.egTimer = 0;
             this.egCnt = 0;
@@ -1618,9 +1618,9 @@ public class Ym3526 {
          * @param clock is chips clock in Hz
          * @param rate  is sampling rate
          */
-        private void create(int clock, int rate, int type) {
+        public void create(int clock, int rate, int type) {
 
-            this.type = (byte) type;
+            this.type = type;
             this.clock = clock;
             this.rate = rate;
 
@@ -1630,21 +1630,21 @@ public class Ym3526 {
 
         // Optional handlers
 
-        private void setTimerHandler(Opl.TimerHandler timerHandler) {
+        public void setTimerHandler(Opl.TimerHandler timerHandler) {
             this.timer_handler = timerHandler;
         }
 
-        private void setIRQHandler(Opl.IRQHandler irqHandler) {
+        public void setIRQHandler(Opl.IRQHandler irqHandler) {
             this.IRQHandler = irqHandler;
         }
 
-        private void setUpdateHandler(Opl.UpdateHandler updateHandler) {
+        public void setUpdateHandler(Opl.UpdateHandler updateHandler) {
             this.updateHandler = updateHandler;
         }
 
-        private int write(int a, int v) {
+        public int write(int a, int v) {
             if ((a & 1) == 0) { // address port
-                this.address = (byte) (v & 0xff);
+                this.address = v & 0xff;
             } else { // data port
                 if (this.updateHandler != null) this.updateHandler.run(/*,0*/);
                 writeReg(this.address, v);
@@ -1652,15 +1652,15 @@ public class Ym3526 {
             return this.status >> 7;
         }
 
-        private byte read(int a) {
+        public int read(int a) {
             if ((a & 1) == 0) {
                 // status port
 
                 // opl and OPL2
-                return (byte) (this.status & (this.statusMask | 0x80));
+                return this.status & (this.statusMask | 0x80);
             }
 
-            return (byte) 0xff;
+            return 0xff;
         }
 
         /** CSM Key Controller */
@@ -1703,6 +1703,7 @@ public class Ym3526 {
      */
     public Ym3526(int clock, int rate) {
         // emulator create
+        chip = new Opl();
         chip.create(clock, rate, Opl.OPL_TYPE_YM3526);
         reset();
     }
@@ -1719,9 +1720,9 @@ public class Ym3526 {
         return chip.write(a, v);
     }
 
-    public byte read(int a) {
+    public int read(int a) {
         // ym3526 always returns bit2 and bit1 in HIGH state
-        return (byte) (chip.read(a) | 0x06);
+        return chip.read(a) | 0x06;
     }
 
     private int timerOver(int c) {
@@ -1747,7 +1748,7 @@ public class Ym3526 {
      * @param length is the number of samples that should be generated
      */
     public void updateOne(int[][] buffer, int length) {
-        byte rhythm = (byte) (chip.rhythm & 0x20);
+        int rhythm = chip.rhythm & 0x20;
         int[] bufL = buffer[0];
         int[] bufR = buffer[1];
 

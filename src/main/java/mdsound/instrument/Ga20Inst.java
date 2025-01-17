@@ -22,7 +22,7 @@ public class Ga20Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
+    public int start(int chipId, int samplingRate) {
         return device_start_iremga20(chipId, 3579545);
     }
 

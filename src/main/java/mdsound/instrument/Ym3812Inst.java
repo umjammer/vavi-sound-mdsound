@@ -37,7 +37,7 @@ public class Ym3812Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
+    public int start(int chipId, int samplingRate) {
         return start(chipId, DefaultYM3812ClockValue, 44100);
     }
 

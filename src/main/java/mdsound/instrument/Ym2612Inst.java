@@ -40,12 +40,12 @@ public class Ym2612Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int rate) {
-        if (rate == 0) return 0;
-        chips[chipId] = new Ym2612(DefaultFMClockValue, rate, 0);
+    public int start(int chipId, int samplingRate) {
+        if (samplingRate == 0) return 0;
+        chips[chipId] = new Ym2612(DefaultFMClockValue, samplingRate, 0);
         chips[chipId].reset();
 
-        return rate;
+        return samplingRate;
     }
 
     @Override

@@ -37,8 +37,8 @@ public class MameAy8910Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
-        return start(chipId, clock, DefaultAY8910ClockValue);
+    public int start(int chipId, int samplingRate) {
+        return start(chipId, samplingRate, DefaultAY8910ClockValue);
     }
 
     @Override

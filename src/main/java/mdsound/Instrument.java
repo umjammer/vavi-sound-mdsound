@@ -8,6 +8,7 @@ import java.util.ServiceLoader;
 import dotnet4j.util.compat.Tuple;
 
 
+// TODO read
 public interface Instrument {
 
     /** for view */
@@ -26,7 +27,7 @@ public interface Instrument {
     /**
      * @return sampling rate
      */
-    int start(int chipId, int clock);
+    int start(int chipId, int samplingRate);
 
     /**
      * @return sampling rate

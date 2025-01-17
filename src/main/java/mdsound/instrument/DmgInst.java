@@ -24,7 +24,7 @@ public class DmgInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
+    public int start(int chipId, int samplingRate) {
         return startDevice(chipId, 4194304);
     }
 

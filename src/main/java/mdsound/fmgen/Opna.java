@@ -121,7 +121,7 @@ public class Opna {
 
         protected void setPreScaler(int p) {
             int[][] table = {{6, 4}, {3, 2}, {2, 1}};
-            int[] table2 = new int[] {108, 77, 71, 67, 62, 44, 8, 5};
+            int[] table2 = {108, 77, 71, 67, 62, 44, 8, 5};
             // 512
             if (preScale != p) {
                 preScale = p & 0xff;
@@ -1059,6 +1059,12 @@ stop:
         }
 
         /** Initializes. */
+        @Override
+        public boolean init(int c, int r) {
+            return init(c, r, false, "");
+        }
+
+        /** Initializes. */
         public boolean init(int c, int r, boolean ip /* = false */, String s /* = "" */) {
             if (!setRate(c, r, ip))
                 return false;
@@ -1116,6 +1122,7 @@ stop:
                     s = (limit(s, 0x7fff, -0x8000) * fmVolume) >> 14;
                     buffer[dest + 0] += s;
                     buffer[dest + 1] += s;
+//logger.log(Level.TRACE, "%04x, %04x".formatted(buffer[dest + 0], buffer[dest + 1]));
 
                     visVolume[0] = s;
                     visVolume[1] = s;
@@ -1125,7 +1132,7 @@ stop:
 
         /** Set data in the register array */
         public void setReg(int addr, int data) {
-logger.log(Level.TRACE, "reg[%2x] <- %2x".formatted(addr, data));
+//logger.log(Level.TRACE, "reg[%2x] <- %2x".formatted(addr, data));
             if (addr >= 0x100)
                 return;
 
@@ -1283,7 +1290,7 @@ logger.log(Level.INFO, Arrays.toString(ch));
         /**
          * Constructs.
          */
-        public OPNA(int chipId) {
+        public OPNA() {
             for (int i = 0; i < 6; i++) {
                 rhythm[i].sample = null;
                 rhythm[i].pos = 0;
@@ -1294,20 +1301,19 @@ logger.log(Level.INFO, Arrays.toString(ch));
             adpcmMask = 0x3_ffff;
             adpcmNotice = 4;
             csmCh = ch[2];
-            this.chipId = chipId;
         }
 
-        public boolean init(int c, int r) {
-            return init(c, r, false, "");
+        public boolean init(int c, int r, int chipId) {
+            return init(c, r, false, chipId, "");
         }
 
-        public boolean init(int c, int r, boolean ipFlag, String path) {
-            return init(c, r, ipFlag, fName -> createRhythmFileStream(path, fName));
+        public boolean init(int c, int r, boolean ipFlag, int chipId, String path) {
+            return init(c, r, ipFlag, chipId, fName -> createRhythmFileStream(path, fName));
         }
 
-        public boolean init(int c, int r, boolean ipFlag, Function<String, Stream> appendFileReaderCallback /* = null */) {
+        public boolean init(int c, int r, boolean ipFlag, int chipId, Function<String, Stream> appendFileReaderCallback /* = null */) {
             rate = 8000;
-            loadRhythmSample(appendFileReaderCallback);
+            loadRhythmSample(chipId, appendFileReaderCallback);
 
             if (adpcmBuf == null)
                 adpcmBuf = new byte[0x4_0000];
@@ -1343,14 +1349,14 @@ logger.log(Level.DEBUG, path + ", " + Files.exists(path));
             return Files.exists(path) ? new FileStream(path.toString(), FileMode.Open, FileAccess.Read) : null;
         }
 
-        public boolean loadRhythmSample(String path) {
-            return loadRhythmSample(fname -> createRhythmFileStream(path, fname));
+        public boolean loadRhythmSample(int chipId, String path) {
+            return loadRhythmSample(chipId, fname -> createRhythmFileStream(path, fname));
         }
 
         /**
          * Loading rhythm sounds.
          */
-        public boolean loadRhythmSample(Function<String, Stream> appendFileReaderCallback) {
+        public boolean loadRhythmSample(int chipId, Function<String, Stream> appendFileReaderCallback) {
             String[] rhythmNames = {
                     "bd", "sd", "top", "hh", "tom", "rim",
             };
@@ -1405,8 +1411,7 @@ logger.log(Level.DEBUG, path + ", " + Files.exists(path));
                     byte[] bufWhdr = new byte[4 + 2 + 2 + 4 + 4 + 2 + 2 + 2];
                     for (int j = 0; j < 4 + 2 + 2 + 4 + 4 + 2 + 2 + 2; j++) bufWhdr[j] = file[fInd++];
 
-                    int chunkSize = (bufWhdr[0] & 0xff) + (bufWhdr[1] & 0xff) * 0x100 + (bufWhdr[2] & 0xff) * 0x1_0000 + (bufWhdr[3] & 0xff) * 0x100_0000;
-                    whdr.chunkSize = chunkSize;
+                    whdr.chunkSize = (bufWhdr[0] & 0xff) + (bufWhdr[1] & 0xff) * 0x100 + (bufWhdr[2] & 0xff) * 0x1_0000 + (bufWhdr[3] & 0xff) * 0x100_0000;
                     whdr.tag = (bufWhdr[4] & 0xff) + (bufWhdr[5] & 0xff) * 0x100;
                     whdr.nch = (bufWhdr[6] & 0xff) + (bufWhdr[7] & 0xff) * 0x100;
                     whdr.rate = (bufWhdr[8] & 0xff) + (bufWhdr[9] & 0xff) * 0x100 + (bufWhdr[10] & 0xff) * 0x1_0000 + (bufWhdr[11] & 0xff) * 0x100_000;
@@ -1422,18 +1427,19 @@ logger.log(Level.DEBUG, path + ", " + Files.exists(path));
                         for (int j = 0; j < 4; j++) subChunkName[j] = file[fInd++];
                         for (int j = 0; j < 4; j++) bufWhdr[j] = file[fInd++];
 
-                        fSize = chunkSize;
-                    } while ('d' != subChunkName[0] || 'a' != subChunkName[1] || 't' != subChunkName[2] || 'a' != subChunkName[3]);
+                        fSize = (bufWhdr[0] & 0xff) + (bufWhdr[1] & 0xff) * 0x100 + (bufWhdr[2] & 0xff) * 0x1_0000 + (bufWhdr[3] & 0xff) * 0x100_0000;
+//logger.log(Level.DEBUG, "[%c%c%c%c]: %d".formatted(subChunkName[0], subChunkName[1], subChunkName[2], subChunkName[3], fSize));
+                    } while ('d' != (subChunkName[0] & 0xff) || 'a' != (subChunkName[1] & 0xff) || 't' != (subChunkName[2] & 0xff) || 'a' != (subChunkName[3] & 0xff));
 
                     fSize /= 2;
-                    if (fSize >= 0x10_0000 || whdr.tag != 1 || whdr.nch != 1)
+                    if (fSize >= 0x10_0000 || whdr.tag != 1 || whdr.nch != 1) {
+logger.log(Level.WARNING, "wrong format: " + buf2);
                         break;
+                    }
                     fSize = Math.min(fSize, (int) ((1L << 31) / 1024));
 
                     rhythm[i].sample = null;
                     rhythm[i].sample = new int[fSize];
-                    if (rhythm[i].sample == null)
-                        break;
                     byte[] bufSample = new byte[fSize * 2];
                     for (int j = 0; j < fSize * 2; j++) bufSample[j] = file[fInd++];
                     for (int si = 0; si < fSize; si++) {
@@ -1443,6 +1449,7 @@ logger.log(Level.DEBUG, path + ", " + Files.exists(path));
                     rhythm[i].rate = whdr.rate;
                     rhythm[i].step = rhythm[i].rate * 1024 / rate;
                     rhythm[i].pos = rhythm[i].size = fSize * 1024;
+logger.log(Level.DEBUG, buf2 + " loaded, " + fSize);
                 } catch (Exception e) {
 logger.log(Level.ERROR, e.getMessage(), e);
                     // ignore
@@ -1659,7 +1666,6 @@ logger.log(Level.ERROR, e.getMessage(), e);
         private int rhythmTVol;
         /** Rhythm Key */
         private int rhythmKey;
-        private final int chipId;
     }
 
     /** YM2610/B(OPNB) */

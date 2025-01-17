@@ -110,8 +110,8 @@ public class OkiM6258Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int clock) {
-        return start(chipId, 44100, clock, 0);
+    public int start(int chipId, int samplingRate) {
+        return start(chipId, 44100, samplingRate, 0);
     }
 
     /** @param option int[1] */
