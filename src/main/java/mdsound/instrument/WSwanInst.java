@@ -2,17 +2,17 @@ package mdsound.instrument;
 
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
-import mdsound.chips.WsAudio;
+import mdsound.chips.WSwan;
 
 
-public class WsAudioInst extends Instrument.BaseInstrument {
+public class WSwanInst extends Instrument.BaseInstrument {
 
     public static final int DefaultWSwanClockValue = 3072000;
 
     private int masterClock = DefaultWSwanClockValue;
     private int sampleRate = 44100;
 
-    private final WsAudio[] chip = new WsAudio[] {new WsAudio(DefaultWSwanClockValue), new WsAudio(DefaultWSwanClockValue)};
+    private final WSwan[] chip = new WSwan[] {new WSwan(DefaultWSwanClockValue), new WSwan(DefaultWSwanClockValue)};
 
     @Override
     public String getName() {

@@ -10,14 +10,15 @@ import mdsound.chips.Sn76489;
 public class Sn76489Inst extends Instrument.BaseInstrument {
 
     public static final int DefaultPSGClockValue = 3579545;
-
     private static final int MAX_CHIPS = 2;
-
     public Sn76489[] chips = new Sn76489[] {new Sn76489(), new Sn76489()};
 
-    public void writeGGStereo(int chipId, int data) {
-        Sn76489 chip = chips[chipId];
-        chip.writeGGStereo(data);
+    public Sn76489Inst() {
+        // 0..Main
+        visVolume = new int[][][] {
+                new int[][] {new int[] {0, 0}},
+                new int[][] {new int[] {0, 0}}
+        };
     }
 
     @Override
@@ -28,14 +29,6 @@ public class Sn76489Inst extends Instrument.BaseInstrument {
     @Override
     public String getShortName() {
         return "DCSG";
-    }
-
-    public Sn76489Inst() {
-        // 0..Main
-        visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
-        };
     }
 
     @Override
@@ -70,21 +63,22 @@ public class Sn76489Inst extends Instrument.BaseInstrument {
         visVolume[chipId][0][1] = volumes[0][1];
     }
 
-    private void writeSN76489(int chipId, int data) {
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
         Sn76489 chip = chips[chipId];
         chip.write(data);
+        return 0;
+    }
+
+    public void writeGGStereo(int chipId, int data) {
+        Sn76489 chip = chips[chipId];
+        chip.writeGGStereo(data);
     }
 
     /** @param val mask */
     public void setMute(int chipId, int val) {
         Sn76489 chip = chips[chipId];
         chip.setMute(val);
-    }
-
-    @Override
-    public int write(int chipId, int port, int adr, int data) {
-        writeSN76489(chipId, data);
-        return 0;
     }
 
     @Override

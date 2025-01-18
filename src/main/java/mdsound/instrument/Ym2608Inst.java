@@ -5,7 +5,6 @@ import java.util.Map;
 import java.util.function.Function;
 
 import dotnet4j.util.compat.Tuple;
-import mdsound.Common;
 import mdsound.Instrument;
 import mdsound.fmgen.Opna;
 
@@ -13,8 +12,15 @@ import mdsound.fmgen.Opna;
 public class Ym2608Inst extends Instrument.BaseInstrument {
 
     private static final int DefaultYM2608ClockValue = 8000000;
-
     private final Opna.OPNA[] chip = new Opna.OPNA[2];
+
+    public Ym2608Inst() {
+        // 0..Main 1..FM 2..SSG 3..Rhm 4..PCM
+        visVolume = new int[][][] {
+                new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}},
+                new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}}
+        };
+    }
 
     @Override
     public String getName() {
@@ -24,14 +30,6 @@ public class Ym2608Inst extends Instrument.BaseInstrument {
     @Override
     public String getShortName() {
         return "OPNA";
-    }
-
-    public Ym2608Inst() {
-        // 0..Main 1..FM 2..SSG 3..Rhm 4..PCM
-        visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}}
-        };
     }
 
     @Override
@@ -72,7 +70,7 @@ public class Ym2608Inst extends Instrument.BaseInstrument {
         chip[chipId] = null;
     }
 
-    int[] buffer = new int[2];
+    private final int[] buffer = new int[2];
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
@@ -102,26 +100,6 @@ public class Ym2608Inst extends Instrument.BaseInstrument {
         if (chip[chipId] == null) return 0;
         chip[chipId].setReg(port * 0x100 + adr, data);
         return 0;
-    }
-
-    private void setFMVolume(int chipId, int db) {
-        if (chip[chipId] == null) return;
-        chip[chipId].setVolumeFM(db);
-    }
-
-    private void setPSGVolume(int chipId, int db) {
-        if (chip[chipId] == null) return;
-        chip[chipId].setVolumePSG(db);
-    }
-
-    private void setRhythmVolume(int chipId, int db) {
-        if (chip[chipId] == null) return;
-        chip[chipId].setVolumeRhythmTotal(db);
-    }
-
-    private void setAdpcmVolume(int chipId, int db) {
-        if (chip[chipId] == null) return;
-        chip[chipId].setVolumeADPCM(db);
     }
 
     public byte[] getADPCMBuffer(int chipId) {
@@ -156,25 +134,25 @@ public class Ym2608Inst extends Instrument.BaseInstrument {
 
     // TODO automatic wired, use annotation?
     public void setFMVolume(int vol, double ignored) {
-        setFMVolume(0, vol);
-        setFMVolume(1, vol);
+        if (chip[0] != null) chip[0].setVolumeFM(vol);
+        if (chip[1] != null) chip[1].setVolumeFM(vol);
     }
 
     // TODO automatic wired, use annotation?
     public void setPSGVolume(int vol, double ignored) {
-        setPSGVolume(0, vol);
-        setPSGVolume(1, vol);
+        if (chip[0] != null) chip[0].setVolumePSG(vol);
+        if (chip[1] != null) chip[1].setVolumePSG(vol);
     }
 
     // TODO automatic wired, use annotation?
     public void setRhythmVolume(int vol, double ignored) {
-        setRhythmVolume(0, vol);
-        setRhythmVolume(1, vol);
+        if (chip[0] != null) chip[0].setVolumeRhythmTotal(vol);
+        if (chip[1] != null) chip[1].setVolumeRhythmTotal(vol);
     }
 
     // TODO automatic wired, use annotation?
     public void setAdpcmVolume(int vol, double ignored) {
-        setAdpcmVolume(0, vol);
-        setAdpcmVolume(1, vol);
+        if (chip[0] != null) chip[0].setVolumeADPCM(vol);
+        if (chip[1] != null) chip[1].setVolumeADPCM(vol);
     }
 }

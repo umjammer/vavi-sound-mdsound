@@ -1,13 +1,17 @@
 package mdsound.instrument;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import mdsound.Instrument;
 import mdsound.chips.Sn76496;
 
 
 public class Sn76496Inst extends Instrument.BaseInstrument {
+
+    private final List<Sn76496> chips = new ArrayList<>();
 
     @Override
     public String getName() {
@@ -18,8 +22,6 @@ public class Sn76496Inst extends Instrument.BaseInstrument {
     public String getShortName() {
         return "DCSGmame";
     }
-
-    private final List<Sn76496> chips = new ArrayList<>();
 
     @Override
     public void reset(int chipId) {
@@ -109,14 +111,17 @@ public class Sn76496Inst extends Instrument.BaseInstrument {
         return 0;
     }
 
-//    /*
-//     * Generic get_info
-//     */
-//    DEVICE_GET_INFO( sn76496 ) {
-//            case DEVINFO_STR_NAME: strcpy(info.s, "Sn76496Inst"); break;
-//            case DEVINFO_STR_FAMILY: strcpy(info.s, "TI Psg"); break;
-//            case DEVINFO_STR_VERSION: strcpy(info.s, "1.1"); break;
-//            case DEVINFO_STR_CREDITS: strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
-//        }
-//    }
+    // ----
+
+    @Override
+    public Map<String, Object> getView(String key, Map<String, Object> args) {
+        Map<String, Object> result = new HashMap<>();
+        switch (key) {
+            case "NAME" -> result.put(getName(), "Sn76496");
+            case "FAMILY" -> result.put(getName(), "TI Psg");
+            case "VERSION" -> result.put(getName(), "1.1");
+            case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
+        }
+        return result;
+    }
 }

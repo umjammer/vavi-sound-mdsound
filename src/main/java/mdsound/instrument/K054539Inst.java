@@ -129,16 +129,6 @@ public class K054539Inst extends Instrument.BaseInstrument {
         return 0;
     }
 
-//    /**
-//     * Generic get_info
-//     */
-//            case DEVINFO_STR_NAME:       strcpy(info.s, "K054539Inst");      break;
-//            case DEVINFO_STR_FAMILY:     strcpy(info.s, "Konami custom");    break;
-//            case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;
-//            case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
-//        }
-//    }
-
     //----
 
     @Override
@@ -152,6 +142,10 @@ public class K054539Inst extends Instrument.BaseInstrument {
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+            case "NAME" -> result.put(getName(), "K054539");
+            case "FAMILY" -> result.put(getName(), "Konami custom");
+            case "VERSION" -> result.put(getName(), "1.0");
+            case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
         }
         return result;
     }

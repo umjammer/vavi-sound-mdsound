@@ -13,12 +13,25 @@ import mdsound.chips.OkiM6295;
 
 public class OkiM6295Inst extends Instrument.BaseInstrument {
 
+    private static final int MAX_CHIPS = 0x02;
+    public OkiM6295[] chips = new OkiM6295[] {new OkiM6295(), new OkiM6295()};
+
     public OkiM6295Inst() {
         // 0..Main
         visVolume = new int[][][] {
                 new int[][] {new int[] {0, 0}},
                 new int[][] {new int[] {0, 0}}
         };
+    }
+
+    @Override
+    public String getName() {
+        return "OKIM6295";
+    }
+
+    @Override
+    public String getShortName() {
+        return "OKI9";
     }
 
     @Override
@@ -58,19 +71,6 @@ public class OkiM6295Inst extends Instrument.BaseInstrument {
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
-    }
-
-    private static final int MAX_CHIPS = 0x02;
-    public OkiM6295[] chips = new OkiM6295[] {new OkiM6295(), new OkiM6295()};
-
-    @Override
-    public String getName() {
-        return "OKIM6295";
-    }
-
-    @Override
-    public String getShortName() {
-        return "OKI9";
     }
 
     /**
@@ -113,18 +113,6 @@ public class OkiM6295Inst extends Instrument.BaseInstrument {
         return chip.readChInfo();
     }
 
-//    /**
-//     * Generic get_info
-//     */
-//    DEVICE_GET_INFO( OkiM6295 ) {
-//       switch (state) {
-//        case DEVINFO_STR_NAME:      strcpy(info.s, "OKI6295");      break;
-//        case DEVINFO_STR_FAMILY:     strcpy(info.s, "OKI ADPCM");     break;
-//        case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;
-//        case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
-//       }
-//    }
-
     //----
 
     @Override
@@ -138,6 +126,10 @@ public class OkiM6295Inst extends Instrument.BaseInstrument {
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+            case "NAME" -> result.put(getName(), "OKI6295");
+            case "FAMILY" -> result.put(getName(), "OKI ADPCM");
+            case "VERSION" -> result.put(getName(), "1.0");
+            case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
         }
         return result;
     }

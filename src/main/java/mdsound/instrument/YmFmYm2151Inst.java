@@ -13,8 +13,11 @@ import vavi.sound.ymfm.YmFm.VgmChip;
 public class YmFmYm2151Inst extends Instrument.BaseInstrument {
 
     public static final int DefaultYM2151ClockValue = 3579545;
-
     private final VgmChip[] chip = new VgmChip[2];
+
+    // TODO similar variables in VgmChip class, those can be eliminated?
+    long output_pos;
+    long output_step;
 
     public YmFmYm2151Inst() {
         visVolume = new int[][][] {
@@ -32,10 +35,6 @@ public class YmFmYm2151Inst extends Instrument.BaseInstrument {
     public String getShortName() {
         return "OPM";
     }
-
-    // TODO similar variables in VgmChip class, those can be eliminated?
-    long output_pos;
-    long output_step;
 
     @Override
     public void reset(int chipId) {

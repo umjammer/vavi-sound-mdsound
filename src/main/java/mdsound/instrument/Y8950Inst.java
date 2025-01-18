@@ -15,7 +15,8 @@ public class Y8950Inst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        device_reset_y8950(chipId);
+        Y8950 info = chips[chipId];
+        info.reset();
 
         visVolume = new int[][][] {
                 new int[][] {new int[] {0, 0}},
@@ -35,22 +36,24 @@ public class Y8950Inst extends Instrument.BaseInstrument {
 
     @Override
     public int start(int chipId, int samplingRate) {
-        return device_start_y8950(chipId, 3579545);
+        return startInternal(chipId, 3579545);
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        return device_start_y8950(chipId, clock);
+        return startInternal(chipId, clock);
     }
 
     @Override
     public void stop(int chipId) {
-        device_stop_y8950(chipId);
+        Y8950 info = chips[chipId];
+        info.stop();
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        y8950_stream_update(chipId, outputs, samples);
+        Y8950 info = chips[chipId];
+        info.update(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
@@ -58,18 +61,14 @@ public class Y8950Inst extends Instrument.BaseInstrument {
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        y8950_w(chipId, 0x00, adr);
-        y8950_w(chipId, 0x01, data);
+        Y8950 info1 = chips[chipId];
+        info1.write(0x00 & 1, adr);
+        Y8950 info = chips[chipId];
+        info.write(0x01 & 1, data);
         return 0;
     }
 
-    public void y8950_stream_update(int chipId, int[][] outputs, int samples) {
-        Y8950 info = chips[chipId];
-        info.update(outputs, samples);
-    }
-
-    //static DEVICE_START( Y8950Inst )
-    public int device_start_y8950(int chipId, int clock) {
+    private int startInternal(int chipId, int clock) {
         if (chipId >= MAX_CHIPS)
             return 0;
 
@@ -104,24 +103,9 @@ public class Y8950Inst extends Instrument.BaseInstrument {
         return rate;
     }
 
-    public void device_stop_y8950(int chipId) {
-        Y8950 info = chips[chipId];
-        info.stop();
-    }
-
-    public void device_reset_y8950(int chipId) {
-        Y8950 info = chips[chipId];
-        info.reset();
-    }
-
     public int y8950_r(int chipId, int offset) {
         Y8950 info = chips[chipId];
         return info.read(offset & 1);
-    }
-
-    public void y8950_w(int chipId, int offset, int data) {
-        Y8950 info = chips[chipId];
-        info.write(offset & 1, data);
     }
 
     public int y8950_status_port_r(int chipId, int offset) {
@@ -133,11 +117,13 @@ public class Y8950Inst extends Instrument.BaseInstrument {
     }
 
     public void y8950_control_port_w(int chipId, int offset, int data) {
-        y8950_w(chipId, 0, data);
+        Y8950 info = chips[chipId];
+        info.write(0 & 1, data);
     }
 
     public void y8950_write_port_w(int chipId, int offset, int data) {
-        y8950_w(chipId, 1, data);
+        Y8950 info = chips[chipId];
+        info.write(1 & 1, data);
     }
 
     public void y8950_write_data_pcmrom(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
@@ -198,17 +184,6 @@ public class Y8950Inst extends Instrument.BaseInstrument {
         chips[0].update(dummyBuf, 0);
     }
 
-//    /*
-//     * Generic get_info
-//     */
-//    DEVICE_GET_INFO( Y8950Inst ) {
-//            case DEVINFO_STR_NAME:       strcpy(info.s, "Y8950Inst");       break;
-//            case DEVINFO_STR_FAMILY:     strcpy(info.s, "Yamaha FM");      break;
-//            case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");        break;
-//            case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
-//        }
-//    }
-
     //----
 
     @Override
@@ -222,6 +197,10 @@ public class Y8950Inst extends Instrument.BaseInstrument {
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+            case "NAME" -> result.put(getName(), "Y8950");
+            case "FAMILY" -> result.put(getName(), "Yamaha FM");
+            case "VERSION" -> result.put(getName(), "1.0");
+            case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
         }
         return result;
     }

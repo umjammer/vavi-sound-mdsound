@@ -10,6 +10,19 @@ import mdsound.chips.QSound;
 
 public class QSoundInst extends Instrument.BaseInstrument {
 
+    private static final int MAX_CHIPS = 0x02;
+    private final QSound[] qSoundData = new QSound[] {new QSound(), new QSound()};
+
+    @Override
+    public String getName() {
+        return "QSoundInst";
+    }
+
+    @Override
+    public String getShortName() {
+        return "QSND";
+    }
+
     @Override
     public void reset(int chipId) {
         QSound chip = qSoundData[chipId];
@@ -54,24 +67,6 @@ public class QSoundInst extends Instrument.BaseInstrument {
         visVolume[chipId][0][1] = outputs[1][0];
     }
 
-    private static final int MAX_CHIPS = 0x02;
-    private final QSound[] qSoundData = new QSound[] {new QSound(), new QSound()};
-
-    @Override
-    public String getName() {
-        return "QSoundInst";
-    }
-
-    @Override
-    public String getShortName() {
-        return "QSND";
-    }
-
-    public void qsound_w(int chipId, int offset, int data) {
-        QSound chip = qSoundData[chipId];
-        chip.write(offset, data);
-    }
-
     public int qsound_r(int chipId, int offset) {
         QSound chip = qSoundData[chipId];
         return chip.read(offset);
@@ -94,20 +89,10 @@ public class QSoundInst extends Instrument.BaseInstrument {
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        qsound_w(chipId, adr, data);
+        QSound chip = qSoundData[chipId];
+        chip.write(adr, data);
         return 0;
     }
-
-//    /**
-//     * Generic get_info
-//     */
-//    DEVICE_GET_INFO( QSound ) {
-//            case DEVINFO_STR_NAME:       strcpy(info.s, "Q-Sound");      break;
-//            case DEVINFO_STR_FAMILY:     strcpy(info.s, "Capcom custom");    break;
-//            case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;
-//            case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
-//        }
-//    }
 
     //----
 
@@ -122,6 +107,10 @@ public class QSoundInst extends Instrument.BaseInstrument {
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+            case "NAME" -> result.put(getName(), "Q-Sound");
+            case "FAMILY" -> result.put(getName(), "Capcom custom");
+            case "VERSION" -> result.put(getName(), "1.0");
+            case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
         }
         return result;
     }

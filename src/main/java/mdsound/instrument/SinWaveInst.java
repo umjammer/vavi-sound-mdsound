@@ -6,6 +6,17 @@ import mdsound.chips.SinWaveGen;
 
 public class SinWaveInst extends Instrument.BaseInstrument {
 
+    private static final int DefaultClockValue = 0;
+    private final SinWaveGen[] chip = new SinWaveGen[2];
+
+    public SinWaveInst() {
+        // 0..Main
+        visVolume = new int[][][] {
+                new int[][] {new int[] {0, 0}},
+                new int[][] {new int[] {0, 0}}
+        };
+    }
+
     @Override
     public String getName() {
         return "SinWave";
@@ -14,14 +25,6 @@ public class SinWaveInst extends Instrument.BaseInstrument {
     @Override
     public String getShortName() {
         return "SIN";
-    }
-
-    public SinWaveInst() {
-        // 0..Main
-        visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
-        };
     }
 
     @Override
@@ -63,7 +66,4 @@ public class SinWaveInst extends Instrument.BaseInstrument {
         if (chip[chipId] == null) return 0;
         return chip[chipId].write(data);
     }
-
-    private static final int DefaultClockValue = 0;
-    private final SinWaveGen[] chip = new SinWaveGen[2];
 }

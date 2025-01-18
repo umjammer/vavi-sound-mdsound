@@ -376,7 +376,7 @@ public class YmF271 {
     private static final int ENV_VOLUME_SHIFT = 16;
     private static final double INF = -1.0;
 
-    private static final double[] ARTime = new double[] {
+    private static final double[] ARTime = {
             INF, INF, INF, INF, 6188.12, 4980.68, 4144.76, 3541.04,
             3094.06, 2490.34, 2072.38, 1770.52, 1547.03, 1245.17, 1036.19, 885.26,
             773.51, 622.59, 518.10, 441.63, 386.76, 311.29, 259.05, 221.32,
@@ -387,7 +387,7 @@ public class YmF271 {
             0.88, 0.70, 0.57, 0.48, 0.43, 0.43, 0.43, 0.07
     };
 
-    private static final double[] DCTime = new double[] {
+    private static final double[] DCTime = {
             INF, INF, INF, INF, 93599.64, 74837.91, 62392.02, 53475.56,
             46799.82, 37418.96, 31196.01, 26737.78, 23399.91, 18709.48, 15598.00, 13368.89,
             11699.95, 9354.74, 7799.00, 6684.44, 5849.98, 4677.37, 3899.50, 3342.22,
@@ -427,7 +427,7 @@ public class YmF271 {
      *
      *   <pre>
      */
-    private static final double[] LFO_frequency_table = new double[] {
+    private static final double[] LFO_frequency_table = {
             0.00066, 0.00068, 0.00070, 0.00073, 0.00075, 0.00078, 0.00081, 0.00084,
             0.00088, 0.00091, 0.00096, 0.00100, 0.00105, 0.00111, 0.00117, 0.00124,
             0.00131, 0.00136, 0.00140, 0.00145, 0.00150, 0.00156, 0.00162, 0.00168,
@@ -462,57 +462,57 @@ public class YmF271 {
             43.06641, 49.21875, 57.42188, 68.90625, 86.13281, 114.84375, 172.26562, 344.53125
     };
 
-    private static final int[][] RKS_Table = new int[][] {
-            new int[] {0, 0, 0, 0, 0, 2, 4, 8},
-            new int[] {0, 0, 0, 0, 1, 3, 5, 9},
-            new int[] {0, 0, 0, 1, 2, 4, 6, 10},
-            new int[] {0, 0, 0, 1, 3, 5, 7, 11},
-            new int[] {0, 0, 1, 2, 4, 6, 8, 12},
-            new int[] {0, 0, 1, 2, 5, 7, 9, 13},
-            new int[] {0, 0, 1, 3, 6, 8, 10, 14},
-            new int[] {0, 0, 1, 3, 7, 9, 11, 15},
-            new int[] {0, 1, 2, 4, 8, 10, 12, 16},
-            new int[] {0, 1, 2, 4, 9, 11, 13, 17},
-            new int[] {0, 1, 2, 5, 10, 12, 14, 18},
-            new int[] {0, 1, 2, 5, 11, 13, 15, 19},
-            new int[] {0, 1, 3, 6, 12, 14, 16, 20},
-            new int[] {0, 1, 3, 6, 13, 15, 17, 21},
-            new int[] {0, 1, 3, 7, 14, 16, 18, 22},
-            new int[] {0, 1, 3, 7, 15, 17, 19, 23},
-            new int[] {0, 2, 4, 8, 16, 18, 20, 24},
-            new int[] {0, 2, 4, 8, 17, 19, 21, 25},
-            new int[] {0, 2, 4, 9, 18, 20, 22, 26},
-            new int[] {0, 2, 4, 9, 19, 21, 23, 27},
-            new int[] {0, 2, 5, 10, 20, 22, 24, 28},
-            new int[] {0, 2, 5, 10, 21, 23, 25, 29},
-            new int[] {0, 2, 5, 11, 22, 24, 26, 30},
-            new int[] {0, 2, 5, 11, 23, 25, 27, 31},
-            new int[] {0, 3, 6, 12, 24, 26, 28, 31},
-            new int[] {0, 3, 6, 12, 25, 27, 29, 31},
-            new int[] {0, 3, 6, 13, 26, 28, 30, 31},
-            new int[] {0, 3, 6, 13, 27, 29, 31, 31},
-            new int[] {0, 3, 7, 14, 28, 30, 31, 31},
-            new int[] {0, 3, 7, 14, 29, 31, 31, 31},
-            new int[] {0, 3, 7, 15, 30, 31, 31, 31},
-            new int[] {0, 3, 7, 15, 31, 31, 31, 31}
+    private static final int[][] RKS_Table = {
+            {0, 0, 0, 0, 0, 2, 4, 8},
+            {0, 0, 0, 0, 1, 3, 5, 9},
+            {0, 0, 0, 1, 2, 4, 6, 10},
+            {0, 0, 0, 1, 3, 5, 7, 11},
+            {0, 0, 1, 2, 4, 6, 8, 12},
+            {0, 0, 1, 2, 5, 7, 9, 13},
+            {0, 0, 1, 3, 6, 8, 10, 14},
+            {0, 0, 1, 3, 7, 9, 11, 15},
+            {0, 1, 2, 4, 8, 10, 12, 16},
+            {0, 1, 2, 4, 9, 11, 13, 17},
+            {0, 1, 2, 5, 10, 12, 14, 18},
+            {0, 1, 2, 5, 11, 13, 15, 19},
+            {0, 1, 3, 6, 12, 14, 16, 20},
+            {0, 1, 3, 6, 13, 15, 17, 21},
+            {0, 1, 3, 7, 14, 16, 18, 22},
+            {0, 1, 3, 7, 15, 17, 19, 23},
+            {0, 2, 4, 8, 16, 18, 20, 24},
+            {0, 2, 4, 8, 17, 19, 21, 25},
+            {0, 2, 4, 9, 18, 20, 22, 26},
+            {0, 2, 4, 9, 19, 21, 23, 27},
+            {0, 2, 5, 10, 20, 22, 24, 28},
+            {0, 2, 5, 10, 21, 23, 25, 29},
+            {0, 2, 5, 11, 22, 24, 26, 30},
+            {0, 2, 5, 11, 23, 25, 27, 31},
+            {0, 3, 6, 12, 24, 26, 28, 31},
+            {0, 3, 6, 12, 25, 27, 29, 31},
+            {0, 3, 6, 13, 26, 28, 30, 31},
+            {0, 3, 6, 13, 27, 29, 31, 31},
+            {0, 3, 7, 14, 28, 30, 31, 31},
+            {0, 3, 7, 14, 29, 31, 31, 31},
+            {0, 3, 7, 15, 30, 31, 31, 31},
+            {0, 3, 7, 15, 31, 31, 31, 31}
     };
 
-    private static final double[] channelAttenuationTable = new double[] {
+    private static final double[] channelAttenuationTable = {
             0.0, 2.5, 6.0, 8.5, 12.0, 14.5, 18.1, 20.6, 24.1, 26.6, 30.1, 32.6, 36.1, 96.1, 96.1, 96.1
     };
 
-    private static final int[] modulationLevel = new int[] {16, 8, 4, 2, 1, 32, 64, 128};
+    private static final int[] modulationLevel = {16, 8, 4, 2, 1, 32, 64, 128};
 
     // feedback_level * 16
-    private static final int[] feedbackLevel = new int[] {0, 1, 2, 4, 8, 16, 32, 64};
+    private static final int[] feedbackLevel = {0, 1, 2, 4, 8, 16, 32, 64};
 
     // slot mapping assists
-    private static final int[] fmTab = new int[] {0, 1, 2, -1, 3, 4, 5, -1, 6, 7, 8, -1, 9, 10, 11, -1};
-    private static final int[] pcmTab = new int[] {0, 4, 8, -1, 12, 16, 20, -1, 24, 28, 32, -1, 36, 40, 44, -1};
+    private static final int[] fmTab = {0, 1, 2, -1, 3, 4, 5, -1, 6, 7, 8, -1, 9, 10, 11, -1};
+    private static final int[] pcmTab = {0, 4, 8, -1, 12, 16, 20, -1, 24, 28, 32, -1, 36, 40, 44, -1};
 
     // lookup tables
     private static final short[][] lutWaves = new short[8][];
-    private static final double[][][] lutPlfo = new double[][][] {new double[8][], new double[8][], new double[8][], new double[8][]};
+    private static final double[][][] lutPlfo = {new double[8][], new double[8][], new double[8][], new double[8][]};
     private static final int[][] lutALfo = new int[4][];
     private final double[] lutAr = new double[64];
     private final double[] lutDc = new double[64];
@@ -521,7 +521,7 @@ public class YmF271 {
     private static final int[] lutTotalLevel = new int[128];
     private static final int[] lutEnvVolume = new int[256];
 
-    private final Slot[] slots = new Slot[] {
+    private final Slot[] slots = {
             new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(),
             new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(),
             new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(),
@@ -529,7 +529,7 @@ public class YmF271 {
             new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(),
             new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot(), new Slot()
     };
-    private final Group[] groups = new Group[] {
+    private final Group[] groups = {
             new Group(), new Group(), new Group(), new Group(),
             new Group(), new Group(), new Group(), new Group(),
             new Group(), new Group(), new Group(), new Group()
@@ -601,7 +601,7 @@ public class YmF271 {
         slot.updatePcm(mixP, length, ptrMixP, this::readMemory);
     }
 
-    // calculates the output of one FM Operator
+    /** calculates the output of one FM Operator */
     private int calculateOp(int slotNum, int inp) {
         Slot slot = this.slots[slotNum];
         return slot.calculateOp(inp);
@@ -1136,7 +1136,7 @@ public class YmF271 {
         int syncMode;
 
         if (groupNum == -1) {
-            //logger.log(Level.TRACE, "ymf271_write_fm invalid group %02X %02X".formatted(address, data));
+//logger.log(Level.TRACE, "ymf271_write_fm invalid group %02X %02X".formatted(address, data));
             return;
         }
 
@@ -1222,7 +1222,7 @@ public class YmF271 {
         int slotnum = pcmTab[address & 0xf];
         Slot slot;
         if (slotnum == -1) {
-            //logger.log(Level.TRACE, "ymf271_write_pcm invalid slot %02X %02X".formatted(address, data));
+//logger.log(Level.TRACE, "ymf271_write_pcm invalid slot %02X %02X".formatted(address, data));
             return;
         }
         slot = this.slots[slotnum];
@@ -1242,8 +1242,8 @@ public class YmF271 {
             slot.startAddr &= 0xff00_ffff; // ~0xff0000;
             slot.startAddr |= (data & 0x7f) << 16;
             slot.altLoop = (data & 0x80) != 0 ? 1 : 0;
-            //if (slot.altloop)
-            // logger.log(Level.TRACE, "YmF271 A/L, contact MAMEdev");
+//if (slot.altloop)
+// logger.log(Level.TRACE, "YmF271 A/L, contact MAMEdev");
             break;
 
         case 0x3:
@@ -1296,12 +1296,11 @@ public class YmF271 {
             return 0;
     }
 
-    @edu.umd.cs.findbugs.annotations.SuppressFBWarnings("SF_SWITCH_NO_DEFAULT")
     private void writeTimer(int address, int data) {
         if ((address & 0xf0) == 0) {
             int groupNum = fmTab[address & 0xf];
             if (groupNum == -1) {
-                //logger.log(Level.TRACE, "ymf271_write_timer invalid group %2x %2x".formatted(address, data));
+//logger.log(Level.TRACE, "ymf271_write_timer invalid group %2x %2x".formatted(address, data));
                 return;
             }
             Group group = this.groups[groupNum];
@@ -1575,7 +1574,7 @@ public class YmF271 {
     public int start(int clock) {
         this.clock = clock;
 
-        //intf = (device.static_config != NULL) ? (final ymf271_interface *)device.static_config : &defintrf;
+        //intf = (device.static_config != null) ? (ymf271_interface) device.static_config : defintrf;
 
         this.memSize = 0x00;
         this.memBase = null;
@@ -1657,7 +1656,7 @@ public class YmF271 {
     }
 
     public void setMuteMask(int muteMask) {
-        for (byte curChn = 0; curChn < 12; curChn++)
+        for (int curChn = 0; curChn < 12; curChn++)
             this.groups[curChn].muted = (muteMask >> curChn) & 0x01;
     }
 

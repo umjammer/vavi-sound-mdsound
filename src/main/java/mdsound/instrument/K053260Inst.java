@@ -110,17 +110,6 @@ public class K053260Inst extends Instrument.BaseInstrument {
         chip.setMuteMask(muteMask);
     }
 
-    /**
-     * Generic get_info
-     */
-    /*DEVICE_GET_INFO( k053260 ) {
-            case DEVINFO_STR_NAME:       strcpy(info.s, "K053260Inst");      break;
-            case DEVINFO_STR_FAMILY:      strcpy(info.s, "Konami custom");    break;
-            case DEVINFO_STR_VERSION:      strcpy(info.s, "1.0");       break;
-            case DEVINFO_STR_CREDITS:      strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
-        }
-    }*/
-
     //----
 
     @Override
@@ -134,6 +123,10 @@ public class K053260Inst extends Instrument.BaseInstrument {
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+            case "NAME" -> result.put(getName(), "K053260");
+            case "FAMILY" -> result.put(getName(), "Konami custom");
+            case "VERSION" -> result.put(getName(), "1.0");
+            case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
         }
         return result;
     }

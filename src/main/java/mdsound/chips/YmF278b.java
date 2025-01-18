@@ -117,15 +117,15 @@ public class YmF278b {
     private static final int EG_DMP = 6;
 
     /** Pan values, units are -3dB, i.e. 8. */
-    private static final int[] panLeft = new int[] {
+    private static final int[] panLeft = {
             0, 8, 16, 24, 32, 40, 48, 256, 256, 0, 0, 0, 0, 0, 0, 0
     };
-    private static final int[] panRight = new int[] {
+    private static final int[] panRight = {
             0, 0, 0, 0, 0, 0, 0, 0, 256, 256, 48, 40, 32, 24, 16, 8
     };
 
     /** Mixing levels, units are -3dB, and add some marging to avoid clipping */
-    private static final int[] mix_level = new int[] {
+    private static final int[] mix_level = {
             8, 16, 24, 32, 40, 48, 56, 256 + 8
     };
 
@@ -137,13 +137,13 @@ public class YmF278b {
      * decay level table (3dB per step)
      * 0 - 15: 0,3,6,9,12,15,18,21,24,27,30,33,36,39,42,93 (dB)
      */
-    private static final int[] dl_tab = new int[] {
+    private static final int[] dl_tab = {
             sc(0), sc(3), sc(6), sc(9), sc(12), sc(15), sc(18), sc(21),
             sc(24), sc(27), sc(30), sc(33), sc(36), sc(39), sc(42), sc(93)
     };
 
     private static final int RATE_STEPS = 8;
-    private static final int[] egInc = new int[] {
+    private static final int[] egInc = {
             // cycle: 0  1  2  3  4  5  6  7
             0, 1, 0, 1, 0, 1, 0, 1, //  0  rates 00..12 0 (increment by 0 or 1)
             0, 1, 0, 1, 1, 1, 0, 1, //  1  rates 00..12 1
@@ -172,7 +172,7 @@ public class YmF278b {
     // rate  0,    1,    2,    3,   4,   5,   6,  7,  8,  9,  10, 11, 12, 13, 14, 15
     // shift 12,   11,   10,   9,   8,   7,   6,  5,  4,  3,  2,  1,  0,  0,  0,  0
     // mask  4095, 2047, 1023, 511, 255, 127, 63, 31, 15, 7,  3,  1,  0,  0,  0,  0
-    private static final int[] egRateSelect = new int[] {
+    private static final int[] egRateSelect = {
             o(0), o(1), o(2), o(3),
             o(0), o(1), o(2), o(3),
             o(0), o(1), o(2), o(3),
@@ -195,7 +195,7 @@ public class YmF278b {
         return a;
     }
 
-    private static final int[] egRateShift = new int[] {
+    private static final int[] egRateShift = {
             o2(12), o2(12), o2(12), o2(12),
             o2(11), o2(11), o2(11), o2(11),
             o2(10), o2(10), o2(10), o2(10),
@@ -222,7 +222,7 @@ public class YmF278b {
      * number of steps to take in quarter of Lfo frequency
      * TODO check if frequency matches real chips
      */
-    private static final int[] lfoPeriod = new int[] {
+    private static final int[] lfoPeriod = {
             o3(0.168), o3(2.019), o3(3.196), o3(4.206),
             o3(5.215), o3(5.888), o3(6.224), o3(7.066)
     };
@@ -231,7 +231,7 @@ public class YmF278b {
         return (int) (a * 65536);
     }
 
-    private static final int[] vibDepth = new int[] {
+    private static final int[] vibDepth = {
             o4(0), o4(3.378), o4(5.065), o4(6.750),
             o4(10.114), o4(20.170), o4(40.106), o4(79.307)
     };
@@ -240,7 +240,7 @@ public class YmF278b {
         return (int) (db * (2.0 / ENV_STEP));
     }
 
-    private static final int[] amDepth = new int[] {
+    private static final int[] amDepth = {
             sc2(0), sc2(1.781), sc2(2.906), sc2(3.656),
             sc2(4.406), sc2(5.906), sc2(7.406), sc2(11.91)
     };
@@ -701,13 +701,11 @@ public class YmF278b {
                 this.fmEnabled = 0x01;
             break;
         }
-//#ifdef _DEBUG
-// logger.log(Level.TRACE, "YMF278B:  Port B write %02x, %02x".formatted(reg, data));
-//#endif
+//logger.log(Level.TRACE, "YMF278B:  Port B write %02x, %02x".formatted(reg, data));
     }
 
     private void writeC(int reg, int data) {
-        //logger.log(Level.TRACE, "ymf278b_C_w reg:%02x dat:%02x".formatted(reg, data));
+//logger.log(Level.TRACE, "ymf278b_C_w reg:%02x dat:%02x".formatted(reg, data));
 
         // Handle slot registers specifically
         if (reg >= 0x08 && reg <= 0xF7) {
@@ -910,7 +908,7 @@ public class YmF278b {
         return result;
     }
 
-    private int peekReg(int reg) {
+    public int peekReg(int reg) {
         int result = switch (reg) {
             case 2 -> (this.regs[2] & 0x1f) | 0x20; // 3 upper bits are device ID
             case 6 -> this.readMem(this.memAdr); // Memory data Register
@@ -920,7 +918,7 @@ public class YmF278b {
         return result;
     }
 
-    private int readStatus() {
+    public int readStatus() {
         int result = 0;
 //        if (time < busyTime)
 //            result |= 0x01;

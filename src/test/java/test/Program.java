@@ -763,7 +763,7 @@ Debug.printf("version is after 1.50, %04x", version);
                     if (ByteUtil.readLeInt(vgmBuf, 0xc0) != 0 && 0xc0 < vgmDataOffset - 3) {
                         chip = new MDSound.Chip();
                         chip.id = 0;
-                        WsAudioInst wswan = Instrument.getInstrument(WsAudioInst.class);
+                        WSwanInst wswan = Instrument.getInstrument(WSwanInst.class);
                         chip.instrument = wswan;
                         chip.samplingRate = SamplingRate;
                         chip.clock = ByteUtil.readLeInt(vgmBuf, 0xc0);
@@ -1327,7 +1327,7 @@ Debug.println("eof: vgmAdr: " + vgmAdr + ", vgmBuf.length: " + vgmBuf.length + "
             rAdr = vgmBuf[vgmAdr + 1] & 0xff;
             rDat = vgmBuf[vgmAdr + 2] & 0xff;
             vgmAdr += 3;
-            mds.write(WsAudioInst.class, 0, 0, rAdr, rDat);
+            mds.write(WSwanInst.class, 0, 0, rAdr, rDat);
 
             break;
         case 0xc6: // WSwan write memory

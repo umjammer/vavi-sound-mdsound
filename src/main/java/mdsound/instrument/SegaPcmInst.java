@@ -98,16 +98,6 @@ public class SegaPcmInst extends Instrument.BaseInstrument {
         return 0;
     }
 
-//    /*
-//     * Generic get_info
-//     */
-//    DEVICE_GET_INFO( SegaPcmInst ) {
-//            case DEVINFO_STR_NAME:       strcpy(info.s, "Sega PCM");     break;
-//            case DEVINFO_STR_FAMILY:     strcpy(info.s, "Sega custom");     break;
-//            case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;
-//            case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
-//    }
-
     //----
 
     @Override
@@ -121,6 +111,10 @@ public class SegaPcmInst extends Instrument.BaseInstrument {
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+            case "NAME" -> result.put(getName(), "Sega PCM");
+            case "FAMILY" -> result.put(getName(), "Sega custom");
+            case "VERSION" -> result.put(getName(), "1.0");
+            case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
         }
         return result;
     }

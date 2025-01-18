@@ -32,18 +32,18 @@ import java.util.function.Consumer;
  */
 public class YmF262 {
 
-    private final boolean OPLTYPE_IS_OPL3 = true;
+//    private static final boolean OPLTYPE_IS_OPL3 = true;
 
     /** DosBox OPL (AdLibEmu) */
-    public static final byte EC_DBOPL = 0x00;
+    public static final int EC_DBOPL = 0x00;
     /** YMF262 core from MAME */
-    public static final byte EC_MAME = 0x01;
+    public static final int EC_MAME = 0x01;
 
     private interface Opl {
         void update(int[][] buffers, int length);
         void stop();
         void reset();
-        byte read(int a);
+        int read(int a);
         int write(int a, int v);
         void setMuteMask(int muteMask);
     }
@@ -69,7 +69,7 @@ public class YmF262 {
         opl.reset();
     }
 
-    public byte read(int offset) {
+    public int read(int offset) {
         return opl.read(offset & 0x03);
     }
 
@@ -151,12 +151,11 @@ public class YmF262 {
 
                 // Envelope Generator phases
 
-                private static final byte EG_ATT = 4;
-                private static final byte EG_DEC = 3;
-                private static final byte EG_SUS = 2;
-                private static final byte EG_REL = 1;
-                private static final byte EG_OFF = 0;
-
+                private static final int EG_ATT = 4;
+                private static final int EG_DEC = 3;
+                private static final int EG_SUS = 2;
+                private static final int EG_REL = 1;
+                private static final int EG_OFF = 0;
 
                 private static int sc(double db) {
                     return (int) (db * (2.0 / ENV_STEP));
@@ -166,7 +165,7 @@ public class YmF262 {
                  * sustain level table (3dB per step)
                  * 0 - 15: 0, 3, 6, 9,12,15,18,21,24,27,30,33,36,39,42,93 (dB)
                  */
-                private static final int[] slTab = new int[] {
+                private static final int[] slTab = {
                         sc(0), sc(1), sc(2), sc(3), sc(4), sc(5), sc(6), sc(7),
                         sc(8), sc(9), sc(10), sc(11), sc(12), sc(13), sc(14), sc(31)
                 };
@@ -174,39 +173,39 @@ public class YmF262 {
 
                 private static final int RATE_STEPS = 8;
 
-                private static final byte[] egInc = new byte[] {
-                        //cycle:0  1  2  3  4  5  6  7
-                        /* 0 */ 0, 1, 0, 1, 0, 1, 0, 1, // rates 00..12 0 (increment by 0 or 1)
-                        /* 1 */ 0, 1, 0, 1, 1, 1, 0, 1, // rates 00..12 1
-                        /* 2 */ 0, 1, 1, 1, 0, 1, 1, 1, // rates 00..12 2
-                        /* 3 */ 0, 1, 1, 1, 1, 1, 1, 1, // rates 00..12 3
+                private static final int[] egInc = {
+                        // cycle:0  1  2  3  4  5  6  7
+                        /*  0 */ 0, 1, 0, 1, 0, 1, 0, 1, // rates 00..12 0 (increment by 0 or 1)
+                        /*  1 */ 0, 1, 0, 1, 1, 1, 0, 1, // rates 00..12 1
+                        /*  2 */ 0, 1, 1, 1, 0, 1, 1, 1, // rates 00..12 2
+                        /*  3 */ 0, 1, 1, 1, 1, 1, 1, 1, // rates 00..12 3
 
-                        /* 4 */ 1, 1, 1, 1, 1, 1, 1, 1, // rate 13 0 (increment by 1)
-                        /* 5 */ 1, 1, 1, 2, 1, 1, 1, 2, // rate 13 1
-                        /* 6 */ 1, 2, 1, 2, 1, 2, 1, 2, // rate 13 2
-                        /* 7 */ 1, 2, 2, 2, 1, 2, 2, 2, // rate 13 3
+                        /*  4 */ 1, 1, 1, 1, 1, 1, 1, 1, // rate 13 0 (increment by 1)
+                        /*  5 */ 1, 1, 1, 2, 1, 1, 1, 2, // rate 13 1
+                        /*  6 */ 1, 2, 1, 2, 1, 2, 1, 2, // rate 13 2
+                        /*  7 */ 1, 2, 2, 2, 1, 2, 2, 2, // rate 13 3
 
-                        /* 8 */ 2, 2, 2, 2, 2, 2, 2, 2, // rate 14 0 (increment by 2)
-                        /* 9 */ 2, 2, 2, 4, 2, 2, 2, 4, // rate 14 1
-                        /*10 */ 2, 4, 2, 4, 2, 4, 2, 4, // rate 14 2
-                        /*11 */ 2, 4, 4, 4, 2, 4, 4, 4, // rate 14 3
+                        /*  8 */ 2, 2, 2, 2, 2, 2, 2, 2, // rate 14 0 (increment by 2)
+                        /*  9 */ 2, 2, 2, 4, 2, 2, 2, 4, // rate 14 1
+                        /* 10 */ 2, 4, 2, 4, 2, 4, 2, 4, // rate 14 2
+                        /* 11 */ 2, 4, 4, 4, 2, 4, 4, 4, // rate 14 3
 
-                        /*12 */ 4, 4, 4, 4, 4, 4, 4, 4, // rates 15 0, 15 1, 15 2, 15 3 for decay
-                        /*13 */ 8, 8, 8, 8, 8, 8, 8, 8, // rates 15 0, 15 1, 15 2, 15 3 for attack (zero time)
-                        /*14 */ 0, 0, 0, 0, 0, 0, 0, 0, // infinity rates for attack and decay(s)
+                        /* 12 */ 4, 4, 4, 4, 4, 4, 4, 4, // rates 15 0, 15 1, 15 2, 15 3 for decay
+                        /* 13 */ 8, 8, 8, 8, 8, 8, 8, 8, // rates 15 0, 15 1, 15 2, 15 3 for attack (zero time)
+                        /* 14 */ 0, 0, 0, 0, 0, 0, 0, 0, // infinity rates for attack and decay(s)
                 };
 
                 /**
                  * note that there is no O(13) in this table - it's directly in the code
                  */
-                private static byte o(int a) {
-                    return (byte) ((byte) a * RATE_STEPS);
+                private static int o(int a) {
+                    return a * RATE_STEPS;
                 }
 
                 /**
                  * Envelope Generator rates (16 + 64 rates + 16 RKS)
                  */
-                private static final byte[] egRateSelect = new byte[] {
+                private static final int[] egRateSelect = {
                         // 16 infinite time rates
                         o(14), o(14), o(14), o(14), o(14), o(14), o(14), o(14),
                         o(14), o(14), o(14), o(14), o(14), o(14), o(14), o(14),
@@ -235,8 +234,8 @@ public class YmF262 {
                         o(12), o(12), o(12), o(12), o(12), o(12), o(12), o(12),
                 };
 
-                private static byte o1(int a) {
-                    return (byte) ((byte) a * 1);
+                private static int o1(int a) {
+                    return a * 1;
                 }
 
                 /*
@@ -247,7 +246,7 @@ public class YmF262 {
                  * mask  4095, 2047, 1023, 511, 255, 127, 63, 31, 15, 7,  3,  1,  0,  0,  0,  0
                  * </pre>
                  */
-                private static final byte[] egRateShift = new byte[] {
+                private static final int[] egRateShift = {
                         // 16 infinite time rates
                         o1(0), o1(0), o1(0), o1(0), o1(0), o1(0), o1(0), o1(0),
                         o1(0), o1(0), o1(0), o1(0), o1(0), o1(0), o1(0), o1(0),
@@ -277,31 +276,31 @@ public class YmF262 {
                 };
 
                 /** attack rate: AR<<2 */
-                public int ar;
+                protected int ar;
                 /** decay rate:  DR<<2 */
-                public int dr;
+                protected int dr;
                 /** release rate:RR<<2 */
-                public int rr;
+                protected int rr;
                 /** key scale rate */
-                public byte KSR;
-                /** keyscale level */
-                public byte ksl;
+                protected int KSR;
+                /** keyScale level */
+                protected int ksl;
                 /** key scale rate: kcode>>KSR */
-                public byte ksr;
+                protected int ksr;
                 /** multiple: mul_tab[ML] */
-                public byte mul;
+                protected int mul;
 
                 // Phase Generator
 
                 /** frequency counter */
-                public int cnt;
+                protected int cnt;
                 /** frequency counter step */
-                public int incr;
+                protected int incR;
                 /** feedback shift value */
-                public byte fb;
+                protected int fb;
 
                 private int calcVolume(int lfoAm) {
-                    return tll + volume + (lfoAm & aMmask);
+                    return tll + volume + (lfoAm & amMask);
                 }
 
                 public void envGen(int egCnt) {
@@ -331,9 +330,9 @@ public class YmF262 {
 
                     case EG_SUS: // sustain phase
 
-                        /* this is important behaviour:
-                        one can change percusive/non-percussive modes on the fly and
-                        the chips will remain in sustain phase - verified on real YM3812 */
+                        // this is important behaviour:
+                        // one can change percusive/non-percussive modes on the fly and
+                        // the chips will remain in sustain phase - verified on real YM3812
 
                         if (this.egType != 0) { // non-percussive mode
                             // do nothing
@@ -427,13 +426,13 @@ public class YmF262 {
 
                         if (lfoFnTableIndexOffset != 0) { // LFO phase modulation active
                             blockFNum += lfoFnTableIndexOffset;
-                            byte block = (byte) ((blockFNum & 0x1c00) >> 10);
+                            int block = (blockFNum & 0x1c00) >> 10;
                             this.cnt += (fnTab[blockFNum & 0x03ff] >> (7 - block)) * this.mul;
                         } else { // LFO phase modulation  = zero
-                            this.cnt += this.incr;
+                            this.cnt += this.incR;
                         }
                     } else { // LFO phase modulation disabled for this Operator
-                        this.cnt += this.incr;
+                        this.cnt += this.incR;
                     }
                 }
 
@@ -467,14 +466,14 @@ public class YmF262 {
 
                 public void setMul(int v) {
                     this.mul = mulTab[v & 0x0f];
-                    this.KSR = (byte) ((v & 0x10) != 0 ? 0 : 2);
-                    this.egType = (byte) (v & 0x20);
-                    this.vib = (byte) (v & 0x40);
-                    this.aMmask = (byte) ((v & 0x80) != 0 ? ~0 : 0);
+                    this.KSR = (v & 0x10) != 0 ? 0 : 2;
+                    this.egType = (int) (v & 0x20);
+                    this.vib = (int) (v & 0x40);
+                    this.amMask = (v & 0x80) != 0 ? ~0 : 0;
                 }
 
                 public void setKslTl(int v) {
-                    this.ksl = (byte) Channel.kslShift[v >> 6];
+                    this.ksl = Channel.kslShift[v >> 6];
                     this.tl = (v & 0x3f) << (ENV_BITS - 1 - 7); // 7 bits TL (bit 6 = always 0)
                 }
 
@@ -504,66 +503,66 @@ public class YmF262 {
                 }
 
                 /** slot output pointer  */
-                public Connect connect = new Connect();
+                protected Connect connect = new Connect();
                 /** slot1 output for feedback  */
-                public int[] op1Out = new int[2];
+                protected int[] op1Out = new int[2];
                 /** connection (algorithm) type  */
-                public byte con;
+                protected int con;
 
                 // Envelope Generator
                 /** percussive/non-percussive mode  */
-                public byte egType;
+                protected int egType;
                 /** phase type  */
-                public byte state;
+                protected int state;
                 /** total level: TL << 2  */
-                public int tl;
+                protected int tl;
                 /** adjusted now TL  */
-                public int tll;
+                protected int tll;
                 /** envelope counter  */
-                public int volume;
+                protected int volume;
                 /** sustain level: sl_tab[SL]  */
-                public int sl;
+                protected int sl;
 
                 /** (attack state)  */
-                public int egMAr;
+                protected int egMAr;
                 /** (attack state)  */
-                public byte egShAr;
+                protected int egShAr;
                 /** (attack state)  */
-                public byte egSelAr;
+                protected int egSelAr;
                 /** (decay state)  */
-                public int egMDr;
+                protected int egMDr;
                 /** (decay state)  */
-                public byte egShDr;
+                protected int egShDr;
                 /** (decay state)  */
-                public byte egSelDr;
+                protected int egSelDr;
                 /** (release state)  */
-                public int egMRr;
+                protected int egMRr;
                 /** (release state)  */
-                public byte egShRr;
+                protected int egShRr;
                 /** (release state)  */
-                public byte egSelRr;
+                protected int egSelRr;
 
                 /** 0 = KEY OFF, >0 = KEY ON      */
-                public int key;
+                protected int key;
 
                 // LFO
                 /** LFO Amplitude Modulation enable mask  */
-                public int aMmask;
+                protected int amMask;
                 //  LFO Phase Modulation enable flag (active high)
-                public byte vib;
+                protected int vib;
 
                 /** waveform select  */
-                public byte waveformNumber;
-                public int waveTable;
+                protected int waveformNumber;
+                protected int waveTable;
 
                 // speedup: pump up the struct size to power of 2
-//                public byte[] reserved = new byte[128 - 100];
+//                public int[] reserved = new int[128 - 100];
 
                 private void keyOn(int keySet) {
                     if (this.key == 0) {
                         // restart Phase Generator
                         this.cnt = 0;
-                        // phase . Attack
+                        // phase -> Attack
                         this.state = EG_ATT;
                     }
                     this.key |= keySet;
@@ -574,7 +573,7 @@ public class YmF262 {
                         this.key &= keyClr;
 
                         if (this.key == 0) {
-                            // phase . Release
+                            // phase -> Release
                             if (this.state > EG_REL)
                                 this.state = EG_REL;
                         }
@@ -584,13 +583,13 @@ public class YmF262 {
                 /**
                  * update phase increment counter of Operator (also update the EG rates if necessary)
                  */
-                private void calcFc(int fc, byte kCode) {
+                private void calcFc(int fc, int kCode) {
                     // (frequency) phase increment counter
-                    this.incr = fc * this.mul;
+                    this.incR = fc * this.mul;
                     int ksr = kCode >> this.KSR;
 
                     if (this.ksr != ksr) {
-                        this.ksr = (byte) ksr;
+                        this.ksr = ksr;
 
                         // calculate envelope generator rates
                         if ((this.ar + this.ksr) < 16 + 60) {
@@ -664,24 +663,24 @@ public class YmF262 {
             /** 0 / 3.0 / 1.5 / 6.0 dB/OCT  */
             private static final int[] kslShift = new int[] {31, 1, 2, 0};
 
-            public Slot[] slots = new Slot[] {new Slot(), new Slot()};
+            protected Slot[] slots = new Slot[] {new Slot(), new Slot()};
 
             /**
              * block+fNum
              */
-            public int blockFNum;
+            protected int blockFNum;
             /**
              * Freq. Increment base
              */
-            public int fc;
+            protected int fc;
             /**
              * KeyScaleLevel Base step
              */
-            public int kslBase;
+            protected int kslBase;
             /**
              * key code (for key scaling)
              */
-            public byte kCode;
+            protected int kCode;
 
             // there are 12 2-Operator channels which can be combined in pairs
             // to form six 4-Operator channel, they are:
@@ -696,11 +695,11 @@ public class YmF262 {
              * set to 1 if this channel forms up a 4op channel
              * with another channel(only used by first of Pair of channels, ie 0,1,2 and 9,10,11)
              */
-            public byte extended;
-            public byte muted;
+            protected int extended;
+            protected int muted;
 
             //speedup:pump up the struct size to power of 2
-//            public byte[] reserved = new byte[512 - 272];
+//            public int[] reserved = new int[512 - 272];
 
             private void update() {
                 // update channel passed as a parameter and a channel at CH+=3;
@@ -741,7 +740,7 @@ public class YmF262 {
         private static final int SLOT2 = 1;
 
         /** mapping of register number (offset) to slot number used by the emulator  */
-        private static final int[] slotArray = new int[] {
+        private static final int[] slotArray = {
                 0, 2, 4, 1, 3, 5, -1, -1,
                 6, 8, 10, 7, 9, 11, -1, -1,
                 12, 14, 16, 13, 15, 17, -1, -1,
@@ -750,10 +749,10 @@ public class YmF262 {
 
         /** multiple table  */
         private static final int ML = 2;
-        private static final byte[] mulTab = new byte[] {
+        private static final int[] mulTab = {
                 // 1/2, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,10,12,12,15,15
-                (byte) (0.50 * ML), (byte) (1.00 * ML), (byte) (2.00 * ML), (byte) (3.00 * ML), (byte) (4.00 * ML), (byte) (5.00 * ML), (byte) (6.00 * ML), (byte) (7.00 * ML),
-                (byte) (8.00 * ML), (byte) (9.00 * ML), (byte) (10.00 * ML), (byte) (10.00 * ML), (byte) (12.00 * ML), (byte) (12.00 * ML), (byte) (15.00 * ML), (byte) (15.00 * ML)
+                (int) (0.50 * ML), (int) (1.00 * ML), (int) (2.00 * ML), (int) (3.00 * ML), (int) (4.00 * ML), (int) (5.00 * ML), (int) (6.00 * ML), (int) (7.00 * ML),
+                (int) (8.00 * ML), (int) (9.00 * ML), (int) (10.00 * ML), (int) (10.00 * ML), (int) (12.00 * ML), (int) (12.00 * ML), (int) (15.00 * ML), (int) (15.00 * ML)
         };
 
         /*
@@ -789,7 +788,7 @@ public class YmF262 {
         */
         private static final int LFO_AM_TAB_ELEMENTS = 210;
 
-        private static final byte[] lfoAmTable = new byte[] {
+        private static final int[] lfoAmTable = {
                 0, 0, 0, 0, 0, 0, 0,
                 1, 1, 1, 1,
                 2, 2, 2, 2,
@@ -847,7 +846,7 @@ public class YmF262 {
         /**
          * LFO Phase Modulation table (verified on real YM3812)
          */
-        private static final byte[] lfoPmTable = new byte[] {
+        private static final int[] lfoPmTable = {
                 // FNUM2/FNUM = 00 0xxxxxxx (0x0000)
                 0, 0, 0, 0, 0, 0, 0, 0, // LFO PM depth = 0
                 0, 0, 0, 0, 0, 0, 0, 0, // LFO PM depth = 1
@@ -882,7 +881,7 @@ public class YmF262 {
         /**
          * Opl3 chips have 18 channels
          */
-        public Channel[] channels = new Channel[] {
+        protected Channel[] channels = {
                 new Channel(), new Channel(), new Channel(), new Channel(),
                 new Channel(), new Channel(), new Channel(), new Channel(),
                 new Channel(), new Channel(), new Channel(), new Channel(),
@@ -893,142 +892,130 @@ public class YmF262 {
         /**
          * channels output masks (0xffffffff = enable); 4 masks per one channel
          */
-        public int[] pan = new int[18 * 4];
+        protected int[] pan = new int[18 * 4];
         /**
          * output control values 1 per one channel (1 value contains 4 masks)
          */
-        public int[] panCtrlValue = new int[18];
+        protected int[] panCtrlValue = new int[18];
         /**
          * for the 5 Rhythm Channels
          */
-        public byte[] muteSpc = new byte[5];
+        protected int[] muteSpc = new int[5];
 
         /**
          * 18 channels
          */
-        public int[] chanOut = new int[18];
+        protected int[] chanOut = new int[18];
         /**
          * phase modulation input (SLOT 2)
          */
-        public int phaseModulation;
+        protected int phaseModulation;
         /**
          * phase modulation input (SLOT 3 in 4 Operator channels)
          */
-        public int phaseModulation2;
+        protected int phaseModulation2;
 
         /**
          * Global envelope generator counter
          */
-        public int egCnt;
+        protected int egCnt;
         /**
          * Global envelope generator counter works at frequency = chipclock/288 (288=8*36)
          */
-        public int egTimer;
+        protected int egTimer;
         /**
          * step of eg_timer
          */
-        public int egTimerAdd;
+        protected int egTimerAdd;
         /**
          * envelope generator timer overlfows every 1 sample (on real chips)
          */
-        public int egTimerOverflow;
+        protected int egTimerOverflow;
 
         /**
-         * fnumber.increment counter
+         * fnumber->increment counter
          */
-        public int[] fnTab = new int[1024];
+        protected int[] fnTab = new int[1024];
 
         // LFO
-        public int lfoAm;
-        public int lfoPm;
-        public byte lfoAmDepth;
-        public byte lfoPmDepthRange;
-        public int lfoAmCnt;
-        public int lfoAmInc;
-        public int lfoPmCnt;
-        public int lfoPmInc;
+        protected int lfoAm;
+        protected int lfoPm;
+        protected int lfoAmDepth;
+        protected int lfoPmDepthRange;
+        protected int lfoAmCnt;
+        protected int lfoAmInc;
+        protected int lfoPmCnt;
+        protected int lfoPmInc;
 
         /**
          * 23 bit noise shift register
          */
-        public int noiseRng;
+        protected int noiseRng;
         /**
          * current noise 'phase'
          */
-        public int noiseP;
+        protected int noiseP;
         /**
          * current noise period
          */
-        public int noiseF;
+        protected int noiseF;
 
         /**
          * Opl3 extension enable flag
          */
-        public byte mode;
+        protected int mode;
 
         /**
          * Rhythm mode
          */
-        public byte rhythm;
+        protected int rhythm;
 
         /**
          * timer counters
          */
-        public int[] T = new int[2];
+        protected int[] T = new int[2];
         /**
          * timer enable
          */
-        public byte[] st = new byte[2];
+        protected int[] st = new int[2];
 
         /**
          * address register
          */
-        public int address;
+        protected int address;
         /**
          * status flag
          */
-        public byte status;
+        protected int status;
         /**
          * status mask
          */
-        public byte statusmask;
+        protected int statusMask;
 
         /**
          * NTS (note select)
          */
-        public byte nts;
+        protected int nts;
 
         // external event Callback handlers
 
         /**
          * TIMER handler
          */
-        public TimerHandler timerHandler;
-        /**
-         * TIMER parameter
-         */
-        public Object TimerParam;
+        protected TimerHandler timerHandler;
         /**
          * IRQ handler
          */
-        public IrqHandler irqHandler;
-        /**
-         * IRQ parameter
-         */
-        public YmF262 IRQParam;
+        protected IrqHandler irqHandler;
         /**
          * stream update handler
          */
-        public Opl3.UpdateHandler updateHandler;
-        /**
-         * stream update parameter
-         */
-        public YmF262 UpdateParam;
+        protected Opl3.UpdateHandler updateHandler;
 
         /**
          * chips type
          */
-        private final byte type;
+        private final int type;
         /**
          * master clock  (Hz)
          */
@@ -1073,7 +1060,7 @@ public class YmF262 {
          */
         private void setStatus(int flag) {
             // set status flag masking out disabled IRQs
-            this.status |= (byte) (flag & this.statusmask);
+            this.status |= flag & this.statusMask;
             if ((this.status & 0x80) == 0) {
                 if ((this.status & 0x7f) != 0) { // IRQ on
                     this.status |= 0x80;
@@ -1088,7 +1075,7 @@ public class YmF262 {
          */
         private void resetStatus(int flag) {
             // reset status flag
-            this.status &= (byte) ~flag;
+            this.status &= ~flag;
             if ((this.status & 0x80) != 0) {
                 if ((this.status & 0x7f) == 0) {
                     this.status &= 0x7f;
@@ -1102,7 +1089,7 @@ public class YmF262 {
          * IRQ mask set
          */
         private void setStatusMask(int flag) {
-            this.statusmask = (byte) flag;
+            this.statusMask = flag;
             // IRQ handling check
             setStatus(0);
             resetStatus(0);
@@ -1110,7 +1097,7 @@ public class YmF262 {
 
         /** advance LFO to next sample  */
         private void advanceLfo() {
-            byte tmp;
+            int tmp;
 
             // LFO
             this.lfoAmCnt += this.lfoAmInc;
@@ -1122,7 +1109,7 @@ public class YmF262 {
             if (this.lfoAmDepth != 0)
                 this.lfoAm = tmp;
             else
-                this.lfoAm = (byte) (tmp >> 2);
+                this.lfoAm = tmp >> 2;
 
             this.lfoPmCnt += this.lfoPmInc;
             this.lfoPm = ((this.lfoPmCnt >> LFO_SH) & 7) | this.lfoPmDepthRange;
@@ -1306,21 +1293,21 @@ public class YmF262 {
                 //  phase = 34 or 2d0 (based on noise)
 
                 // base frequency derived from Operator 1 in channel 7
-                byte bit7 = (byte) (((slot7_1().cnt >> FREQ_SH) >> 7) & 1);
-                byte bit3 = (byte) (((slot7_1().cnt >> FREQ_SH) >> 3) & 1);
-                byte bit2 = (byte) (((slot7_1().cnt >> FREQ_SH) >> 2) & 1);
+                int bit7 = ((slot7_1().cnt >> FREQ_SH) >> 7) & 1;
+                int bit3 = ((slot7_1().cnt >> FREQ_SH) >> 3) & 1;
+                int bit2 = ((slot7_1().cnt >> FREQ_SH) >> 2) & 1;
 
-                byte res1 = (byte) ((bit2 ^ bit7) | bit3);
+                int res1 = (bit2 ^ bit7) | bit3;
 
                 // when res1 = 0 phase = 0x000 | 0xd0;
                 // when res1 = 1 phase = 0x200 | (0xd0>>2);
                 int phase = res1 != 0 ? (0x200 | (0xd0 >> 2)) : 0xd0;
 
                 // enable gate based on frequency of Operator 2 in channel 8
-                byte bit5e = (byte) (((slot8_2().cnt >> FREQ_SH) >> 5) & 1);
-                byte bit3e = (byte) (((slot8_2().cnt >> FREQ_SH) >> 3) & 1);
+                int bit5e = ((slot8_2().cnt >> FREQ_SH) >> 5) & 1;
+                int bit3e = ((slot8_2().cnt >> FREQ_SH) >> 3) & 1;
 
-                byte res2 = (byte) (bit3e ^ bit5e);
+                int res2 = bit3e ^ bit5e;
 
                 // when res2 = 0 pass the phase from calculation above (res1);
                 // when res2 = 1 phase = 0x200 | (0xd0>>2);
@@ -1347,7 +1334,7 @@ public class YmF262 {
             env = slot7_2().calcVolume(this.lfoAm);
             if (env < ENV_QUIET && this.muteSpc[1] == 0) {
                 // base frequency derived from Operator 1 in channel 7
-                byte bit8 = (byte) (((slot7_1().cnt >> FREQ_SH) >> 8) & 1);
+                int bit8 = ((slot7_1().cnt >> FREQ_SH) >> 8) & 1;
 
                 // when bit8 = 0 phase = 0x100;
                 // when bit8 = 1 phase = 0x200;
@@ -1372,20 +1359,20 @@ public class YmF262 {
             env = slot8_2().calcVolume(this.lfoAm);
             if (env < ENV_QUIET && this.muteSpc[3] == 0) {
                 // base frequency derived from Operator 1 in channel 7
-                byte bit7 = (byte) (((slot7_1().cnt >> FREQ_SH) >> 7) & 1);
-                byte bit3 = (byte) (((slot7_1().cnt >> FREQ_SH) >> 3) & 1);
-                byte bit2 = (byte) (((slot7_1().cnt >> FREQ_SH) >> 2) & 1);
-                byte res1 = (byte) ((bit2 ^ bit7) | bit3);
+                int bit7 = ((slot7_1().cnt >> FREQ_SH) >> 7) & 1;
+                int bit3 = ((slot7_1().cnt >> FREQ_SH) >> 3) & 1;
+                int bit2 = ((slot7_1().cnt >> FREQ_SH) >> 2) & 1;
+                int res1 = (bit2 ^ bit7) | bit3;
 
                 // when res1 = 0 phase = 0x000 | 0x100;
                 // when res1 = 1 phase = 0x200 | 0x100;
                 int phase = res1 != 0 ? 0x300 : 0x100;
 
                 // enable gate based on frequency of Operator 2 in channel 8
-                byte bit5e = (byte) (((slot8_2().cnt >> FREQ_SH) >> 5) & 1);
-                byte bit3e = (byte) (((slot8_2().cnt >> FREQ_SH) >> 3) & 1);
+                int bit5e = ((slot8_2().cnt >> FREQ_SH) >> 5) & 1;
+                int bit3e = ((slot8_2().cnt >> FREQ_SH) >> 3) & 1;
 
-                byte res2 = (byte) (bit3e ^ bit5e);
+                int res2 = bit3e ^ bit5e;
                 // when res2 = 0 pass the phase from calculation above (res1);
                 // when res2 = 1 phase = 0x200 | 0x100;
                 if (res2 != 0)
@@ -1570,7 +1557,7 @@ public class YmF262 {
             this.noiseF = (int) ((1.0 / 1.0) * (1 << FREQ_SH) * this.freqbase);
 
             this.egTimerAdd = (int) ((1 << EG_SH) * this.freqbase);
-            this.egTimerOverflow = (1) * (1 << EG_SH);
+            this.egTimerOverflow = 1 * (1 << EG_SH);
 //logger.log(Level.TRACE, "YMF262init eg_timer_add=%8x eg_timer_overflow=%8x".formatted(this.eg_timer_add, this.eg_timer_overflow));
         }
 
@@ -1614,7 +1601,7 @@ public class YmF262 {
          * @param rate  is sampling rate
          */
         private Opl3(int clock, int rate, int type) {
-            this.type = (byte) type;
+            this.type = type;
             this.clock = clock;
             this.rate = rate;
 
@@ -1658,7 +1645,7 @@ public class YmF262 {
 
             case 1: // data port - ignore A1
             case 3: // data port - ignore A1
-                if (this.updateHandler != null) this.updateHandler.run(/*,0*/);
+                if (this.updateHandler != null) this.updateHandler.run(/* , 0 */);
                 writeReg(this.address, v);
                 break;
 
@@ -1689,7 +1676,7 @@ public class YmF262 {
             return this.status >> 7;
         }
 
-        public byte read(int a) {
+        public int read(int a) {
             // Note on status register:
             //
             // YM3526(OPL) and YM3812(OPL2) return bit2 and bit1 in HIGH state
@@ -1839,7 +1826,6 @@ public class YmF262 {
                 // in OPL2 mode
                 slot.tll = slot.tl + (ch.kslBase >> slot.ksl);
             }
-
         }
 
         /**
@@ -1880,42 +1866,42 @@ public class YmF262 {
                     return;
 
                 case 0x104: { // 6 channels enable
-                    byte prev;
+                    int prev;
 
                     ch = this.channels[0]; // channel 0
                     prev = ch.extended;
-                    ch.extended = (byte) ((v >> 0) & 1);
+                    ch.extended = (v >> 0) & 1;
                     if (prev != ch.extended)
                         ch.update();
                     // channel 1
                     ch = this.channels[1];
                     prev = ch.extended;
-                    ch.extended = (byte) ((v >> 1) & 1);
+                    ch.extended = (v >> 1) & 1;
                     if (prev != ch.extended)
                         ch.update();
                     // channel 2
                     ch = this.channels[2];
                     prev = ch.extended;
-                    ch.extended = (byte) ((v >> 2) & 1);
+                    ch.extended = (v >> 2) & 1;
                     if (prev != ch.extended)
                         ch.update();
 
 
                     ch = this.channels[9]; // channel 9
                     prev = ch.extended;
-                    ch.extended = (byte) ((v >> 3) & 1);
+                    ch.extended = (v >> 3) & 1;
                     if (prev != ch.extended)
                         ch.update();
                     // channel 10
                     ch = this.channels[10];
                     prev = ch.extended;
-                    ch.extended = (byte) ((v >> 4) & 1);
+                    ch.extended = (v >> 4) & 1;
                     if (prev != ch.extended)
                         ch.update();
                     // channel 11
                     ch = this.channels[11];
                     prev = ch.extended;
-                    ch.extended = (byte) ((v >> 5) & 1);
+                    ch.extended = (v >> 5) & 1;
                     if (prev != ch.extended)
                         ch.update();
                 }
@@ -1923,7 +1909,7 @@ public class YmF262 {
 
                 case 0x105: // Opl3 extensions enable register
 
-                    this.mode = (byte) (v & 0x01); // Opl3 mode when bit0=1 otherwise it is OPL2 mode
+                    this.mode = v & 0x01; // Opl3 mode when bit0=1 otherwise it is OPL2 mode
 
                     // following behaviour was tested on real YMF262,
                     // switching Opl3/OPL2 modes on the fly:
@@ -1962,8 +1948,8 @@ public class YmF262 {
                     if ((v & 0x80) != 0) { // IRQ flags clear
                         this.resetStatus(0x60);
                     } else { // set IRQ mask ,timer enable
-                        byte st1 = (byte) (v & 1);
-                        byte st2 = (byte) ((v >> 1) & 1);
+                        int st1 = v & 1;
+                        int st2 = (v >> 1) & 1;
 
                         // IRQRST,T1MSK,t2MSK,x,x,x,ST2,ST1
                         this.resetStatus(v & 0x60);
@@ -1984,7 +1970,7 @@ public class YmF262 {
                     }
                     break;
                 case 0x08: // x,NTS,x,x, x,x,x,x
-                    this.nts = (byte) v;
+                    this.nts = v;
                     break;
 
                 default:
@@ -2017,10 +2003,10 @@ public class YmF262 {
                     if (chOffset != 0) // 0xbd register is present in set //#1 only
                         return;
 
-                    this.lfoAmDepth = (byte) (v & 0x80);
-                    this.lfoPmDepthRange = (byte) ((v & 0x40) != 0 ? 8 : 0);
+                    this.lfoAmDepth = v & 0x80;
+                    this.lfoPmDepthRange = (v & 0x40) != 0 ? 8 : 0;
 
-                    this.rhythm = (byte) (v & 0x3f);
+                    this.rhythm = v & 0x3f;
 
                     if ((this.rhythm & 0x20) != 0) {
                         // BD key on/off
@@ -2028,33 +2014,33 @@ public class YmF262 {
                             this.channels[6].slots[SLOT1].keyOn(2);
                             this.channels[6].slots[SLOT2].keyOn(2);
                         } else {
-                            this.channels[6].slots[SLOT1].keyOff(~(int) 2);
-                            this.channels[6].slots[SLOT2].keyOff(~(int) 2);
+                            this.channels[6].slots[SLOT1].keyOff(~2);
+                            this.channels[6].slots[SLOT2].keyOff(~2);
                         }
                         // HH key on/off
                         if ((v & 0x01) != 0) this.channels[7].slots[SLOT1].keyOn(2);
-                        else this.channels[7].slots[SLOT1].keyOff(~(int) 2);
+                        else this.channels[7].slots[SLOT1].keyOff(~2);
                         // SD key on/off
                         if ((v & 0x08) != 0) this.channels[7].slots[SLOT2].keyOn(2);
-                        else this.channels[7].slots[SLOT2].keyOff(~(int) 2);
+                        else this.channels[7].slots[SLOT2].keyOff(~2);
                         // TOM key on/off
                         if ((v & 0x04) != 0) this.channels[8].slots[SLOT1].keyOn(2);
-                        else this.channels[8].slots[SLOT1].keyOff(~(int) 2);
+                        else this.channels[8].slots[SLOT1].keyOff(~2);
                         // TOP-CY key on/off
                         if ((v & 0x02) != 0) this.channels[8].slots[SLOT2].keyOn(2);
-                        else this.channels[8].slots[SLOT2].keyOff(~(int) 2);
+                        else this.channels[8].slots[SLOT2].keyOff(~2);
                     } else {
                         // BD key off
-                        this.channels[6].slots[SLOT1].keyOff(~(int) 2);
-                        this.channels[6].slots[SLOT2].keyOff(~(int) 2);
+                        this.channels[6].slots[SLOT1].keyOff(~2);
+                        this.channels[6].slots[SLOT2].keyOff(~2);
                         // HH key off
-                        this.channels[7].slots[SLOT1].keyOff(~(int) 2);
+                        this.channels[7].slots[SLOT1].keyOff(~2);
                         // SD key off
-                        this.channels[7].slots[SLOT2].keyOff(~(int) 2);
+                        this.channels[7].slots[SLOT2].keyOff(~2);
                         // TOM key off
-                        this.channels[8].slots[SLOT1].keyOff(~(int) 2);
+                        this.channels[8].slots[SLOT1].keyOff(~2);
                         // TOP-CY off
-                        this.channels[8].slots[SLOT2].keyOff(~(int) 2);
+                        this.channels[8].slots[SLOT2].keyOff(~2);
                     }
                     return;
                 }
@@ -2156,7 +2142,7 @@ public class YmF262 {
                 }
                 // update
                 if (ch.blockFNum != blockFNum) {
-                    byte block = (byte) (blockFNum >> 10);
+                    int block = blockFNum >> 10;
 
                     ch.blockFNum = blockFNum;
 
@@ -2164,15 +2150,15 @@ public class YmF262 {
                     ch.fc = this.fnTab[blockFNum & 0x03ff] >> (7 - block);
 
                     // BLK 2,1,0 bits . bits 3,2,1 of kcode
-                    ch.kCode = (byte) ((ch.blockFNum & 0x1c00) >> 9);
+                    ch.kCode = (ch.blockFNum & 0x1c00) >> 9;
 
                     // the info below is actually opposite to what is stated in the Manuals (verifed on real YMF262)
                     // if notesel == 0 . lsb of kcode is bit 10 (MSB) of fNum
                     // if notesel == 1 . lsb of kcode is bit 9 (MSB-1) of fNum
                     if ((this.nts & 0x40) != 0)
-                        ch.kCode |= (byte) ((ch.blockFNum & 0x100) >> 8); // notesel == 1
+                        ch.kCode |= (ch.blockFNum & 0x100) >> 8; // notesel == 1
                     else
-                        ch.kCode |= (byte) ((ch.blockFNum & 0x200) >> 9); // notesel == 0
+                        ch.kCode |= (ch.blockFNum & 0x200) >> 9; // notesel == 0
 
                     if ((this.mode & 1) != 0) {
                         int chan_no = (r & 0x0f) + chOffset;
@@ -2290,8 +2276,8 @@ public class YmF262 {
 
                 this.panCtrlValue[(r & 0xf) + chOffset] = v; // store control value for Opl3/OPL2 mode switching on the fly
 
-                ch.slots[SLOT1].fb = (byte) (((v >> 1) & 7) != 0 ? ((v >> 1) & 7) + 7 : 0);
-                ch.slots[SLOT1].con = (byte) (v & 1);
+                ch.slots[SLOT1].fb = ((v >> 1) & 7) != 0 ? ((v >> 1) & 7) + 7 : 0;
+                ch.slots[SLOT1].con = v & 1;
 
                 if ((this.mode & 1) != 0) {
                     int chanNo = (r & 0x0f) + chOffset;
@@ -2304,7 +2290,7 @@ public class YmF262 {
                     case 10:
                     case 11:
                         if (ch.extended != 0) {
-                            byte conn = (byte) ((ch.slots[SLOT1].con << 1) | (chP3.slots[SLOT1].con << 0));
+                            int conn = (ch.slots[SLOT1].con << 1) | (chP3.slots[SLOT1].con << 0);
                             switch (conn) {
                             case 0:
                                 // 1 . 2 . 3 . 4 - out
@@ -2353,7 +2339,7 @@ public class YmF262 {
                     case 13:
                     case 14:
                         if (chM3.extended != 0) {
-                            byte conn = (byte) ((chM3.slots[SLOT1].con << 1) | (ch.slots[SLOT1].con << 0));
+                            int conn = (chM3.slots[SLOT1].con << 1) | (ch.slots[SLOT1].con << 0);
                             switch (conn) {
                             case 0:
                                 // 1 . 2 . 3 . 4 - out
@@ -2418,7 +2404,7 @@ public class YmF262 {
 
                 // store 3-bit value written regardless of current OPL2 or Opl3 mode... (verified on real YMF262)
                 v &= 7;
-                ch.slots[slot & 1].waveformNumber = (byte) v;
+                ch.slots[slot & 1].waveformNumber = v;
 
                 // ... but select only waveforms 0-3 in OPL2 mode
                 if ((this.mode & 1) == 0) {
@@ -2430,10 +2416,10 @@ public class YmF262 {
         }
 
         public void setMuteMask(int muteMask) {
-            for (byte curChn = 0; curChn < 18; curChn++)
-                this.channels[curChn].muted = (byte) ((muteMask >> curChn) & 0x01);
-            for (byte curChn = 0; curChn < 5; curChn++)
-                this.muteSpc[curChn] = (byte) ((muteMask >> (curChn + 18)) & 0x01);
+            for (int curChn = 0; curChn < 18; curChn++)
+                this.channels[curChn].muted = (muteMask >> curChn) & 0x01;
+            for (int curChn = 0; curChn < 5; curChn++)
+                this.muteSpc[curChn] = (muteMask >> (curChn + 18)) & 0x01;
         }
 
         /**
@@ -2443,7 +2429,7 @@ public class YmF262 {
          * @param length  is the number of samples that should be generated
          */
         public void update(int[][] buffers, int length) {
-            byte rhythm = (byte) (this.rhythm & 0x20);
+            int rhythm = this.rhythm & 0x20;
 
             int[] ch_a = buffers[0];
             int[] ch_b = buffers[1];
@@ -2683,7 +2669,7 @@ public class YmF262 {
             private static final int WAVEPREC = 1024;
 
             /** start of the waveform */
-            private static final int[] waveform = new int[] {
+            private static final int[] waveform = {
                     WAVEPREC,
                     WAVEPREC >> 1,
                     WAVEPREC,
@@ -2695,7 +2681,7 @@ public class YmF262 {
             };
 
             /** length of the waveform as mask */
-            private static final int[] wavemask = new int[] {
+            private static final int[] waveMask = {
                     WAVEPREC - 1,
                     WAVEPREC - 1,
                     (WAVEPREC >> 1) - 1,
@@ -2707,7 +2693,7 @@ public class YmF262 {
             };
 
             /** where the first entry resides */
-            private static final int[] wavestart = new int[] {
+            private static final int[] waveStart = {
                     0,
                     WAVEPREC >> 1,
                     0,
@@ -2719,7 +2705,7 @@ public class YmF262 {
             };
 
             /** envelope generator function constants */
-            private static final double[] attackconst = new double[] {
+            private static final double[] attackConst = {
                     1 / 2.82624,
                     1 / 2.25280,
                     1 / 1.88416,
@@ -2729,18 +2715,18 @@ public class YmF262 {
             private static final Random rnd = new Random();
 
             /** wave form table */
-            private static final short[] wavtable = new short[WAVEPREC * 3];
+            private static final short[] wavTable = new short[WAVEPREC * 3];
 
             static {
                 // create waveform tables
                 for (int i = 0; i < (WAVEPREC >> 1); i++) {
-                    wavtable[(i << 1) + WAVEPREC] = (short) (16384 * Math.sin((i << 1) * Math.PI * 2 / WAVEPREC));
-                    wavtable[(i << 1) + 1 + WAVEPREC] = (short) (16384 * Math.sin(((i << 1) + 1) * Math.PI * 2 / WAVEPREC));
-                    wavtable[i] = wavtable[(i << 1) + WAVEPREC];
+                    wavTable[(i << 1) + WAVEPREC] = (short) (16384 * Math.sin((i << 1) * Math.PI * 2 / WAVEPREC));
+                    wavTable[(i << 1) + 1 + WAVEPREC] = (short) (16384 * Math.sin(((i << 1) + 1) * Math.PI * 2 / WAVEPREC));
+                    wavTable[i] = wavTable[(i << 1) + WAVEPREC];
                 }
                 for (int i = 0; i < (WAVEPREC >> 3); i++) {
-                    wavtable[i + (WAVEPREC << 1)] = (short) (wavtable[i + (WAVEPREC >> 3)] - 16384);
-                    wavtable[i + ((WAVEPREC * 17) >> 3)] = (short) (wavtable[i + (WAVEPREC >> 2)] + 16384);
+                    wavTable[i + (WAVEPREC << 1)] = (short) (wavTable[i + (WAVEPREC >> 3)] - 16384);
+                    wavTable[i + ((WAVEPREC * 17) >> 3)] = (short) (wavTable[i + (WAVEPREC >> 2)] + 16384);
                 }
             }
 
@@ -2750,48 +2736,48 @@ public class YmF262 {
             private int tcount, wfpos, tInc;
             /** and amplification (envelope) */
             private double amp, step_amp;
-            // volume */
+            /** volume */
             private double vol;
-            // sustain level */
+            /** sustain level */
             private double sustainLevel;
-            // feedback amount */
+            /** feedback amount */
             private int mfbi;
-            // attack rate function coefficients */
+            /** attack rate function coefficients */
             private double a0, a1, a2, a3;
-            // decay/release rate functions */
+            /** decay/release rate functions */
             private double decayMul, releaseMul;
-            // current state of Operator (attack/decay/sustain/release/off) */
+            /** current state of Operator (attack/decay/sustain/release/off) */
             private int opState;
             private int tOff;
-            // highest three bits of the frequency, used for vibrato calculations */
+            /** highest three bits of the frequency, used for vibrato calculations */
             private int freqHigh;
-            // start of selected waveform */
+            /** start of selected waveform */
             private int ptrCur_wform;
-            // mask for selected waveform */
+            /** mask for selected waveform */
             private int cur_wmask;
-            // activity state (regular, percussion) */
+            /** activity state (regular, percussion) */
             private int act_state;
-            // keep sustain level when decay finished */
+            /** keep sustain level when decay finished */
             private boolean sus_keep;
-            // vibrato/tremolo enable bits */
+            /** vibrato/tremolo enable bits */
             private boolean vibrato, tremolo;
 
-            // variables used to provide non-continuous envelopes
+            /** variables used to provide non-continuous envelopes
 
-            // for non-standard sample rates we need to determine how many samples have passed */
+            /** for non-standard sample rates we need to determine how many samples have passed */
             private int generator_pos;
-            // current (standardized) sample position */
+            /** current (standardized) sample position */
             private int cur_env_step;
-            // number of std samples of one step (for attack/decay/release mode) */
+            /** number of std samples of one step (for attack/decay/release mode) */
             private int envStepA, envStepD, envStepR;
-            // position of 8-cyclic step skipping (always 2^x to check against mask) */
-            private byte step_skip_pos_a;
-            // bitmask that determines if a step is skipped (respective bit is zero then) */
+            /** position of 8-cyclic step skipping (always 2^x to check against mask) */
+            private int step_skip_pos_a;
+            /** bitmask that determines if a step is skipped (respective bit is zero then) */
             private int envStepSkipA;
 
-            // base of a 4op channel/part of a 4op channel */
+            /** base of a 4op channel/part of a 4op channel */
             private boolean is4op, is4OpAttached;
-            // opl3 stereo panning amount */
+            /** opl3 stereo panning amount */
             private int leftPan, rightPan;
 
             private static void advanceDrums(Operator op_pt1, int vib1, Operator op_pt2, int vib2, Operator op_pt3, int vib3, int generatorAdd) {
@@ -2831,7 +2817,7 @@ public class YmF262 {
             private void disable(int act_type) {
                 // check if this is really an on-off transition
                 if (this.act_state != OP_ACT_OFF) {
-                    this.act_state &= (~act_type);
+                    this.act_state &= ~act_type;
                     if (this.act_state == OP_ACT_OFF) {
                         if (this.opState != OF_TYPE_OFF)
                             this.opState = OF_TYPE_REL;
@@ -2864,7 +2850,7 @@ public class YmF262 {
                     // step_amp: 0.0 to 1.0
                     // vol  : 1/2^14 to 1/2^29 (/0x4000; /1../0x8000)
 
-                    cVal = (int) (step_amp * vol * wavtable[ptrCur_wform + (i & cur_wmask)] * trem / 16.0);
+                    cVal = (int) (step_amp * vol * wavTable[ptrCur_wform + (i & cur_wmask)] * trem / 16.0);
                 }
             }
 
@@ -2971,25 +2957,25 @@ public class YmF262 {
                 generator_pos -= num_steps_add * FIXEDPT;
             }
 
-            private void changeWaveform(int regbase, byte[] wave_sel) {
-                //#if defined(OPLTYPE_IS_OPL3)
+            private void changeWaveform(int regbase, int[] wave_sel) {
+//#if defined(OPLTYPE_IS_OPL3)
                 if (regbase >= ARC_SECONDSET) regbase -= (ARC_SECONDSET - 22); // second set starts at 22
-                //#endif
+//#endif
                 // waveform selection
-                cur_wmask = wavemask[wave_sel[regbase]];
-                //op_pt.cur_wform = wavtable[waveform[this.wave_sel[regbase]]];
+                cur_wmask = waveMask[wave_sel[regbase]];
+                //op_pt.cur_wform = wavTable[waveform[this.wave_sel[regbase]]];
                 ptrCur_wform = waveform[wave_sel[regbase]];
                 // (might need to be adapted to waveform type here...)
             }
 
-            private void enable(int regbase, int act_type, byte[] wave_sel) {
+            private void enable(int regbase, int act_type, int[] wave_sel) {
                 // check if this is really an off-on transition
                 if (act_state == OP_ACT_OFF) {
                     int wselbase = regbase;
                     if (wselbase >= ARC_SECONDSET)
                         wselbase -= (ARC_SECONDSET - 22); // second set starts at 22
 
-                    tcount = wavestart[wave_sel[wselbase]] * FIXEDPT;
+                    tcount = waveStart[wave_sel[wselbase]] * FIXEDPT;
 
                     // start with attack mode
                     opState = OF_TYPE_ATT;
@@ -3009,12 +2995,12 @@ public class YmF262 {
 
             private void changeAttackRate(int attackRate, double recipSamp) {
                 if (attackRate != 0) {
-                    byte[] stepSkipMask = new byte[] {(byte) 0xff, (byte) 0xfe, (byte) 0xee, (byte) 0xba, (byte) 0xaa};
+                    int[] stepSkipMask = { 0xff,  0xfe,  0xee,  0xba,  0xaa};
                     int stepSkip;
                     int steps;
                     int stepNum;
 
-                    double f = Math.pow(FL2, (double) attackRate + (tOff >> 2) - 1) * attackconst[tOff & 3] * recipSamp;
+                    double f = Math.pow(FL2, (double) attackRate + (tOff >> 2) - 1) * attackConst[tOff & 3] * recipSamp;
                     // attack rate coefficients
                     a0 = 0.0377 * f;
                     a1 = 10.73 * f + 1;
@@ -3082,7 +3068,7 @@ public class YmF262 {
                 }
             }
 
-            private void changeKeepsuStain(boolean susKeep) {
+            private void changeKeepSustain(boolean susKeep) {
                 if (opState == OF_TYPE_SUS) {
                     if (!susKeep)
                         opState = OF_TYPE_SUS_NOKEEP;
@@ -3115,7 +3101,7 @@ public class YmF262 {
                 this.tcount = 0;
                 this.tInc = 0;
                 this.tOff = 0;
-                this.cur_wmask = Operator.wavemask[0];
+                this.cur_wmask = Operator.waveMask[0];
                 this.ptrCur_wform = Operator.waveform[0];
                 this.freqHigh = 0;
 
@@ -3149,39 +3135,41 @@ public class YmF262 {
         private static final int[] vibval_var2 = new int[BLOCKBUF_SIZE];
 
         // key scale level lookup table */
-        private static final double[] kslMul = new double[] {
+        private static final double[] kslMul = {
                 0.0, 0.5, 0.25, 1.0 // . 0, 3, 1.5, 6 dB/oct
         };
 
         // frequency multiplicator lookup table */
-        private static final double[] frqmul_tab = new double[] {
+        private static final double[] frqMul_tab = {
                 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 12, 12, 15, 15
         };
 
         // calculated frequency multiplication values (depend on sampling rate)
 
         // key scale levels */
-        private static final byte[][] ksLev = new byte[][] {new byte[16], new byte[16], new byte[16], new byte[16], new byte[16], new byte[16], new byte[16], new byte[16]};
+        private static final int[][] ksLev = {
+                new int[16], new int[16], new int[16], new int[16], new int[16], new int[16], new int[16], new int[16]
+        };
 
         // map a channel number to the register offset of the modulator (=register base) */
-        private static final byte[] modulatorbase = new byte[] {
+        private static final int[] modulatorBase = {
                 0, 1, 2,
                 8, 9, 10,
                 16, 17, 18
         };
 
         // map a register base to a modulator Operator number or Operator number */
-        private static final byte[] regbase2modop = new byte[] {
+        private static final int[] regbase2modop = {
                 0, 1, 2, 0, 1, 2, 0, 0, 3, 4, 5, 3, 4, 5, 0, 0, 6, 7, 8, 6, 7, 8, // first set
                 18, 19, 20, 18, 19, 20, 0, 0, 21, 22, 23, 21, 22, 23, 0, 0, 24, 25, 26, 24, 25, 26 // second set
         };
-        private static final byte[] regbase2op = new byte[] {
+        private static final int[] regBase2op = {
                 0, 1, 2, 9, 10, 11, 0, 0, 3, 4, 5, 12, 13, 14, 0, 0, 6, 7, 8, 15, 16, 17, // first set
                 18, 19, 20, 27, 28, 29, 0, 0, 21, 22, 23, 30, 31, 32, 0, 0, 24, 25, 26, 33, 34, 35 // second set
         };
 
 
-        private static final double[] decrelConst = new double[] {
+        private static final double[] decrelConst = {
                 1 / 39.28064,
                 1 / 31.41608,
                 1 / 26.17344,
@@ -3191,18 +3179,18 @@ public class YmF262 {
         // per-chips variables
 
         // adlib register set (including second set) */
-        private final byte[] adlibReg = new byte[512];
+        private final int[] adlibReg = new int[512];
 
         // waveform selection */
-        private final byte[] waveSel = new byte[44];
+        private final int[] waveSel = new int[44];
 
         private final Operator[] ops = new Operator[MAXOPERATORS];
-        private final byte[] muteChn = new byte[NUM_CHANNELS + 5];
+        private final int[] muteChn = new int[NUM_CHANNELS + 5];
         private final int chipClock;
 
         private final int intSamplerate;
 
-        private byte status;
+        private int status;
         private int oplIndex;
         private int oplAddr;
 
@@ -3221,8 +3209,6 @@ public class YmF262 {
 
         /** stream update handler */
         private final UpdateHandler updateHandler;
-        /** stream update parameter */
-//        private YmF262 updateParam;
 
         private interface Operators extends Consumer<Operator> {
         }
@@ -3247,7 +3233,7 @@ public class YmF262 {
             //
             int[] tremTableInt = new int[TREMTAB_SIZE];
 
-            for (int i = 0; i < BLOCKBUF_SIZE; i++) vibValConst[i] = 0;
+            Arrays.fill(vibValConst, 0);
 
             // create tremolo table
             for (int i = 0; i < 14; i++) tremTableInt[i] = i - 13; // upwards (13 to 26 . -0.5/6 to 0)
@@ -3264,7 +3250,7 @@ public class YmF262 {
             }
 
             //
-            for (int i = 0; i < BLOCKBUF_SIZE; i++) tremValConst[i] = FIXEDPT;
+            Arrays.fill(tremValConst, FIXEDPT);
 
             // key scale level table verified ([table in book]*8/3)
             ksLev[7][0] = 0;
@@ -3276,12 +3262,12 @@ public class YmF262 {
             ksLev[7][6] = 45;
             ksLev[7][7] = 47;
             ksLev[7][8] = 48;
-            for (int i = 9; i < 16; i++) ksLev[7][i] = (byte) (i + 41);
+            for (int i = 9; i < 16; i++) ksLev[7][i] = i + 41;
             for (int j = 6; j >= 0; j--) {
                 for (int i = 0; i < 16; i++) {
-                    int oct = (int) ksLev[j + 1][i] - 8;
+                    int oct = ksLev[j + 1][i] - 8;
                     if (oct < 0) oct = 0;
-                    ksLev[j][i] = (byte) oct;
+                    ksLev[j][i] = oct;
                 }
             }
         }
@@ -3297,7 +3283,7 @@ public class YmF262 {
 
             this.recLpSamp = 1.0 / (double) this.intSamplerate;
             for (int i = 15; i >= 0; i--) {
-                this.frqMul[i] = frqmul_tab[i] * this.intFreqU() / (double) Operator.WAVEPREC * (double) FIXEDPT * this.recLpSamp;
+                this.frqMul[i] = frqMul_tab[i] * this.intFreqU() / (double) Operator.WAVEPREC * (double) FIXEDPT * this.recLpSamp;
             }
 
             // vibrato at ~6.1 ?? (opl3 docs say 6.1, opl4 docs say 6.0, Y8950 docs say 6.4)
@@ -3332,14 +3318,14 @@ public class YmF262 {
         public int write(int addr, int val) {
             if ((addr & 1) != 0) {
                 //logger.log(Level.TRACE, "adr=%x  dat=%x".formatted(this.opl_addr, val));
-                writeInternal(this.oplAddr, (byte) (val & 0xff));
+                writeInternal(this.oplAddr, val & 0xff);
             } else
                 this.oplAddr = val | ((addr & 2) << 7);
             return 0;
         }
 
-        public void writeInternal(int idx, byte val) {
-            int sScondSet = idx & 0x100;
+        private void writeInternal(int idx, int val) {
+            int secondSet = idx & 0x100;
             this.adlibReg[idx] = val;
 
             switch (idx & 0xf0) {
@@ -3353,11 +3339,12 @@ public class YmF262 {
                     // IRQ reset, timer mask/start
                     if ((val & 0x80) != 0) {
                         // clear IRQ int in status register
-                        this.status &= 0x9f;// ~0x60;
+                        this.status &= 0x9f; // ~0x60;
                     } else {
                         this.status = 0;
                     }
                     break;
+//#if defined(OPLTYPE_IS_OPL3)
                 case 0x04 | ARC_SECONDSET:
                     // 4op enable/disable switches for each possible channel
                     this.ops[0].is4op = (val & 1) > 0;
@@ -3375,6 +3362,7 @@ public class YmF262 {
                     break;
                 case 0x05 | ARC_SECONDSET:
                     break;
+//#endif
                 case 0x08:
                     // CSW, note select
                     break;
@@ -3388,13 +3376,13 @@ public class YmF262 {
                 int num = idx & 7;
                 int base = (idx - ARC_TVS_KSR_MUL) & 0xff;
                 if ((num < 6) && (base < 22)) {
-                    int modOp = regbase2modop[sScondSet != 0 ? (base + 22) : base];
-                    int regBase = base + sScondSet;
-                    int chanBase = sScondSet != 0 ? (modOp - 18 + ARC_SECONDSET) : modOp;
+                    int modOp = regbase2modop[secondSet != 0 ? (base + 22) : base];
+                    int regBase = base + secondSet;
+                    int chanBase = secondSet != 0 ? (modOp - 18 + ARC_SECONDSET) : modOp;
 
                     // change tremolo/vibrato and sustain keeping of this Operator
                     Operator op = this.ops[modOp + ((num < 3) ? 0 : 9)];
-                    op.changeKeepsuStain((adlibReg[ARC_TVS_KSR_MUL + regBase] & 0x20) > 0);
+                    op.changeKeepSustain((adlibReg[ARC_TVS_KSR_MUL + regBase] & 0x20) > 0);
                     op.changeVibrato((adlibReg[ARC_TVS_KSR_MUL + regBase] & 0x40) != 0,
                             (adlibReg[ARC_TVS_KSR_MUL + regBase] & 0x80) != 0);
 
@@ -3415,13 +3403,13 @@ public class YmF262 {
                 int num = idx & 7;
                 int base = (idx - ARC_KSL_OUTLEV) & 0xff;
                 if ((num < 6) && (base < 22)) {
-                    int modOp = regbase2modop[sScondSet != 0 ? (base + 22) : base];
-                    int chanBase = sScondSet != 0 ? (modOp - 18 + ARC_SECONDSET) : modOp;
+                    int modOp = regbase2modop[secondSet != 0 ? (base + 22) : base];
+                    int chanBase = secondSet != 0 ? (modOp - 18 + ARC_SECONDSET) : modOp;
 
                     // change frequency calculations of this Operator as
                     // key scale level and output rate can be changed
                     Operator op = this.ops[modOp + ((num < 3) ? 0 : 9)];
-                    int regbase = base + sScondSet;
+                    int regbase = base + secondSet;
                     if ((this.adlibReg[0x105] & 1) != 0 && (this.ops[modOp].is4OpAttached)) {
                         // Operator uses frequency of channel
                         changeFrequency(chanBase - 3, regbase, op);
@@ -3437,10 +3425,10 @@ public class YmF262 {
                 int num = idx & 7;
                 int base = (idx - ARC_ATTR_DECR) & 0xff;
                 if ((num < 6) && (base < 22)) {
-                    int regbase = base + sScondSet;
+                    int regbase = base + secondSet;
 
                     // change attack rate and decay rate of this Operator
-                    Operator op = this.ops[regbase2op[sScondSet != 0 ? (base + 22) : base]];
+                    Operator op = this.ops[regBase2op[secondSet != 0 ? (base + 22) : base]];
                     op.changeAttackRate(adlibReg[ARC_ATTR_DECR + regbase] >> 4, this.recLpSamp);
                     op.changeDecayRate(adlibReg[ARC_ATTR_DECR + regbase] & 15, this.recLpSamp);
                 }
@@ -3452,10 +3440,10 @@ public class YmF262 {
                 int num = idx & 7;
                 int base = (idx - ARC_SUSL_RELR) & 0xff;
                 if ((num < 6) && (base < 22)) {
-                    int regbase = base + sScondSet;
+                    int regbase = base + secondSet;
 
                     // change sustain level and release rate of this Operator
-                    Operator op = this.ops[regbase2op[sScondSet != 0 ? (base + 22) : base]];
+                    Operator op = this.ops[regBase2op[secondSet != 0 ? (base + 22) : base]];
                     op.changeReleaseRate(adlibReg[ARC_SUSL_RELR + regbase] & 15, this.recLpSamp);
                     op.changeSustainLevel(adlibReg[ARC_SUSL_RELR + regbase] >> 4);
                 }
@@ -3465,17 +3453,17 @@ public class YmF262 {
                 // 0xa0-0xa8 low8 frequency
                 int base = (idx - ARC_FREQ_NUM) & 0xff;
                 if (base < 9) {
-                    int opBase = sScondSet != 0 ? (base + 18) : base;
+                    int opBase = secondSet != 0 ? (base + 18) : base;
                     if ((this.adlibReg[0x105] & 1) != 0 && this.ops[opBase].is4OpAttached) break;
                     // regbase of modulator:
-                    int modBase = modulatorbase[base] + sScondSet;
+                    int modBase = modulatorBase[base] + secondSet;
 
-                    int chanBase = base + sScondSet;
+                    int chanBase = base + secondSet;
 
                     changeFrequency(chanBase, modBase, this.ops[opBase]);
                     changeFrequency(chanBase, modBase + 3, this.ops[opBase + 9]);
                     // for 4op channels all four operators are modified to the frequency of the channel
-                    if ((this.adlibReg[0x105] & 1) != 0 && this.ops[sScondSet != 0 ? (base + 18) : base].is4op) {
+                    if ((this.adlibReg[0x105] & 1) != 0 && this.ops[secondSet != 0 ? (base + 18) : base].is4op) {
                         changeFrequency(chanBase, modBase + 8, this.ops[opBase + 3]);
                         changeFrequency(chanBase, modBase + 3 + 8, this.ops[opBase + 3 + 9]);
                     }
@@ -3486,7 +3474,7 @@ public class YmF262 {
                 if (this.updateHandler != null) // hack for DOSBox logs
                     this.updateHandler.run();
                 if (idx == ARC_PERC_MODE) {
-                    if (sScondSet != 0) return;
+                    if (secondSet != 0) return;
 
                     if ((val & 0x30) == 0x30) { // BassDrum active
                         this.ops[6].enable(16, OP_ACT_PERC, this.waveSel);
@@ -3527,9 +3515,9 @@ public class YmF262 {
                 // regular 0xb0-0xb8
                 int base = (idx - ARC_KON_BNUM) & 0xff;
                 if (base < 9) {
-                    int opBase = sScondSet != 0 ? (base + 18) : base;
+                    int opBase = secondSet != 0 ? (base + 18) : base;
                     // regbase of modulator:
-                    int modBase = modulatorbase[base] + sScondSet;
+                    int modBase = modulatorBase[base] + secondSet;
 
                     if ((this.adlibReg[0x105] & 1) != 0 && this.ops[opBase].is4OpAttached) break;
                     if ((val & 32) != 0) {
@@ -3554,14 +3542,14 @@ public class YmF262 {
                         }
                     }
 
-                    int chanBase = base + sScondSet;
+                    int chanBase = base + secondSet;
 
                     // change frequency calculations of modulator and carrier (2op) as
                     // the frequency of the channel has changed
                     changeFrequency(chanBase, modBase, this.ops[opBase]);
                     changeFrequency(chanBase, modBase + 3, this.ops[opBase + 9]);
                     // for 4op channels all four operators are modified to the frequency of the channel
-                    if ((this.adlibReg[0x105] & 1) != 0 && this.ops[sScondSet != 0 ? (base + 18) : base].is4op) {
+                    if ((this.adlibReg[0x105] & 1) != 0 && this.ops[secondSet != 0 ? (base + 18) : base].is4op) {
                         // change frequency calculations of chan+3 operators as well
                         changeFrequency(chanBase, modBase + 8, this.ops[opBase + 3]);
                         changeFrequency(chanBase, modBase + 3 + 8, this.ops[opBase + 3 + 9]);
@@ -3573,8 +3561,8 @@ public class YmF262 {
                 // 0xc0-0xc8 feedback/modulation type (AM/FM)
                 int base = (idx - ARC_FEEDBACK) & 0xff;
                 if (base < 9) {
-                    int opBase = sScondSet != 0 ? (base + 18) : base;
-                    int chanbase = base + sScondSet;
+                    int opBase = secondSet != 0 ? (base + 18) : base;
+                    int chanbase = base + secondSet;
                     this.ops[opBase].changeFeedback(adlibReg[ARC_FEEDBACK + chanbase] & 14);
                     // Opl3 panning
                     this.ops[opBase].leftPan = ((val & 0x10) >> 4);
@@ -3589,20 +3577,21 @@ public class YmF262 {
                 int num = idx & 7;
                 int base = (idx - ARC_WAVE_SEL) & 0xff;
                 if ((num < 6) && (base < 22)) {
-                    int wselBase = sScondSet != 0 ? (base + 22) : base; // for easier mapping onto wave_sel[]
+//#if defined(OPLTYPE_IS_OPL3)
+                    int wselBase = secondSet != 0 ? (base + 22) : base; // for easier mapping onto wave_sel[]
                     // change waveform
                     if ((this.adlibReg[0x105] & 1) != 0)
-                        this.waveSel[wselBase] = (byte) (val & 7); // opl3 mode enabled, all waveforms accessible
-                    else this.waveSel[wselBase] = (byte) (val & 3);
+                        this.waveSel[wselBase] = val & 7; // opl3 mode enabled, all waveforms accessible
+                    else this.waveSel[wselBase] = val & 3;
                     Operator op = this.ops[regbase2modop[wselBase] + ((num < 3) ? 0 : 9)];
                     op.changeWaveform(wselBase, this.waveSel);
-
-                    // wave selection enabled, change waveform
-                    //this.wave_sel[base] = val & 3;
-                    //op = &this.Op[regbase2modop[base] + ((num < 3) ? 0 : 9)];
-                    //change_waveform(base, op);
-                    //}
-                    //#endif
+//#else
+//                    // wave selection enabled, change waveform
+//                    this.wave_sel[base] = val & 3;
+//                    op = this.Op[regbase2modop[base] + ((num < 3) ? 0 : 9)];
+//                    change_waveform(base, op);
+//                }
+//#endif
                 }
             }
             break;
@@ -3639,20 +3628,30 @@ public class YmF262 {
             op.changeReleaseRate(this.adlibReg[ARC_SUSL_RELR + regBase] & 15, this.recLpSamp);
         }
 
-        public byte read(int port) {
+        public int read(int port) {
             // opl3-detection routines require ret&6 to be zero
+//#if defined(OPLTYPE_IS_OPL3)
             if ((port & 1) == 0) {
                 return this.status;
             }
             return 0x00;
+//#else
+//            // opl2 - detection routines require ret & 6 to be 6
+//            if ((port & 1) == 0) {
+//                return this.status | 6;
+//            }
+//            return 0xff;
+//#endif
         }
 
-        private void writeIndex(int port, byte val) {
+        private void writeIndex(int port, int val) {
             this.oplIndex = val;
+//#if defined(OPLTYPE_IS_OPL3)
             if ((port & 3) != 0) {
                 // possibly second set
                 if (((this.adlibReg[0x105] & 1) != 0) || (this.oplIndex == 5)) this.oplIndex |= ARC_SECONDSET;
             }
+//#endif
         }
 
         // be careful with this
@@ -3683,7 +3682,9 @@ public class YmF262 {
 
             int ccPtr;
 
+//#if defined(OPLTYPE_IS_OPL3)
             if ((this.adlibReg[0x105] & 1) == 0) maxChannel = NUM_CHANNELS / 2;
+//#endif
 
             if (numSamples == 0) {
                 for (int curCh = 0; curCh < maxChannel; curCh++) {
@@ -4394,8 +4395,8 @@ public class YmF262 {
         }
 
         public void setMuteMask(int muteMask) {
-            for (byte curChn = 0; curChn < NUM_CHANNELS + 5; curChn++)
-                this.muteChn[curChn] = (byte) ((muteMask >> curChn) & 0x01);
+            for (int curChn = 0; curChn < NUM_CHANNELS + 5; curChn++)
+                this.muteChn[curChn] = (muteMask >> curChn) & 0x01;
         }
     }
 }

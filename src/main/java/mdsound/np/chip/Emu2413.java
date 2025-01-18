@@ -684,7 +684,7 @@ public class Emu2413 {
             for (int i = 0; i < 0x40; i++)
                 writeReg(i, 0);
 
-            //# ifndef EMU2413_COMPACTION
+//# ifndef EMU2413_COMPACTION
             this.realStep = (1 << 31) / rate;
             this.opllStep = (1 << 31) / (clk / 72);
             this.opllTime = 0;
@@ -693,7 +693,7 @@ public class Emu2413 {
             }
             this.sprev[0] = this.sprev[1] = 0;
             this.snext[0] = this.snext[1] = 0;
-            //#endif
+//#endif
         }
 
         /* Force Refresh (When external program changes some parameters). */
@@ -1601,13 +1601,13 @@ public class Emu2413 {
             }
         }
 
-        /* Phase incr table for Attack */
+        /* Phase incR table for Attack */
         private static final int[][] dPhaseARTable = new int[][] {
                 new int[16], new int[16], new int[16], new int[16], new int[16], new int[16], new int[16], new int[16],
                 new int[16], new int[16], new int[16], new int[16], new int[16], new int[16], new int[16], new int[16]
         };
 
-        /* Phase incr table for Decay and Release */
+        /* Phase incR table for Decay and Release */
         private static final int[][] dPhaseDRTable = new int[][] {
                 new int[16], new int[16], new int[16], new int[16], new int[16], new int[16], new int[16], new int[16],
                 new int[16], new int[16], new int[16], new int[16], new int[16], new int[16], new int[16], new int[16]
@@ -1618,7 +1618,7 @@ public class Emu2413 {
 
         private static int[][][] rksTable;
 
-        /* Phase incr table for PG */
+        /* Phase incR table for PG */
         private static int[][][] dphaseTable;
 
         /*
@@ -1694,7 +1694,7 @@ public class Emu2413 {
         }
 
         private static void makeTllTable() {
-            //#define dB2(x) ((x)*2)
+//#define dB2(x) ((x)*2)
 
             double[] klTable = new double[] {
                     0.000 * 2, 9.000 * 2, 12.000 * 2, 13.875 * 2, 15.000 * 2, 16.125 * 2, 16.875 * 2, 17.625 * 2,
@@ -1717,7 +1717,7 @@ public class Emu2413 {
                         }
         }
 
-        //# ifdef USE_SPEC_ENV_SPEED
+//# ifdef USE_SPEC_ENV_SPEED
         //        static double attacktime[16][4] = {
         //  {0, 0, 0, 0},
         //  {1730.15, 1400.60, 1153.43, 988.66},
@@ -1755,7 +1755,7 @@ public class Emu2413 {
         //  {2.55, 2.05, 1.71, 1.47},
         //  {1.27, 1.27, 1.27, 1.27}
         //};
-        //#endif
+//#endif
 
         /* Rate Table for Attack */
         private void makeDphaseARTable() {

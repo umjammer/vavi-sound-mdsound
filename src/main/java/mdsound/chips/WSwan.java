@@ -4,12 +4,12 @@ import java.util.Arrays;
 
 
 /**
- * WsAudio.
+ * WSwan.
  *
  * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
  * @version 0.00 2022-07-08 nsano initial version <br>
  */
-public class WsAudio {
+public class WSwan {
 
     /**
      * Initial I/O values
@@ -383,7 +383,7 @@ public class WsAudio {
     private int sampleRate;
     private float ratEmul;
 
-    public WsAudio(int masterClock) {
+    public WSwan(int masterClock) {
         clock = masterClock;
         sampleRate = clock / 128;
     }

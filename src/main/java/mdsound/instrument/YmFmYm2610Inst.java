@@ -16,6 +16,10 @@ public class YmFmYm2610Inst extends Instrument.BaseInstrument {
     private static final int DefaultYM2610ClockValue = 8000000;
     private final VgmChip[] chip = new VgmChip[2];
 
+    // TODO similar variables in VgmChip class, those can be eliminated?
+    long output_pos;
+    long output_step;
+
     @Override
     public String getName() {
         return "YM2610ymfm";
@@ -33,10 +37,6 @@ public class YmFmYm2610Inst extends Instrument.BaseInstrument {
                 new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}}
         };
     }
-
-    // TODO similar variables in VgmChip class, those can be eliminated?
-    long output_pos;
-    long output_step;
 
     @Override
     public void reset(int chipId) {
@@ -113,26 +113,6 @@ public class YmFmYm2610Inst extends Instrument.BaseInstrument {
 //        chip[chipId].setAdpcmB(_adpcmb, _adpcmb_size);
     }
 
-    private void setFMVolume(int chipId, int db) {
-        if (chip[chipId] == null) return;
-//        chip[chipId].setVolumeFM(db);
-    }
-
-    private void setPSGVolume(int chipId, int db) {
-        if (chip[chipId] == null) return;
-//        chip[chipId].setVolumePSG(db);
-    }
-
-    private void setAdpcmAVolume(int chipId, int db) {
-        if (chip[chipId] == null) return;
-//        chip[chipId].setVolumeADPCMATotal(db);
-    }
-
-    private void setAdpcmBVolume(int chipId, int db) {
-        if (chip[chipId] == null) return;
-//        chip[chipId].setVolumeADPCMB(db);
-    }
-
     // ----
 
     @Override
@@ -158,26 +138,26 @@ public class YmFmYm2610Inst extends Instrument.BaseInstrument {
 
     // TODO automatic wired, use annotation?
     public void setFMVolume(int vol, double ignored) {
-        setFMVolume(0, vol);
-        setFMVolume(1, vol);
+        if (chip[0] == null) return; // chip[0].setFMVolume(vol);
+        if (chip[1] == null) return; // chip[1].setFMVolume(vol);
     }
 
     // TODO automatic wired, use annotation?
     public void setPSGVolume(int vol, double ignored) {
-        setPSGVolume(0, vol);
-        setPSGVolume(1, vol);
+        if (chip[0] == null) return; // chip[0].setPSGVolume(vol);
+        if (chip[1] == null) return; // chip[1].setPSGVolume(vol);
     }
 
     // TODO automatic wired, use annotation?
     public void setAdpcmAVolume(int vol, double ignored) {
-        setAdpcmAVolume(0, vol);
-        setAdpcmAVolume(1, vol);
+        if (chip[0] == null) return; // chip[0].setAdpcmAVolume(vol);
+        if (chip[1] == null) return; // chip[1].setAdpcmAVolume(vol);
     }
 
     // TODO automatic wired, use annotation?
     public void setAdpcmBVolume(int vol, double ignored) {
-        setAdpcmBVolume(0, vol);
-        setAdpcmBVolume(1, vol);
+        if (chip[0] == null) return; // chip[0].setAdpcmBVolume(vol);
+        if (chip[1] == null) return; // chip[1].setAdpcmBVolume(vol);
     }
 }
 

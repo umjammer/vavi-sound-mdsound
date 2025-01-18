@@ -23,8 +23,19 @@ public class YmFmYm2608Inst extends Instrument.BaseInstrument {
     private static final Logger logger = getLogger(Ym2608Inst.class.getName());
 
     private static final int DefaultYM2608ClockValue = 8000000;
-
     private final VgmChip[] chip = new VgmChip[2];
+
+    // TODO similar variables in VgmChip class, those can be eliminated?
+    long output_pos;
+    long output_step;
+
+    public YmFmYm2608Inst() {
+        //0..Main 1..FM 2..SSG 3..Rhm 4..PCM
+        visVolume = new int[][][] {
+                new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}},
+                new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}}
+        };
+    }
 
     @Override
     public String getName() {
@@ -34,14 +45,6 @@ public class YmFmYm2608Inst extends Instrument.BaseInstrument {
     @Override
     public String getShortName() {
         return "OPNA";
-    }
-
-    public YmFmYm2608Inst() {
-        //0..Main 1..FM 2..SSG 3..Rhm 4..PCM
-        visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}}
-        };
     }
 
     private void load(int chipId) {
@@ -64,10 +67,6 @@ logger.log(Level.TRACE, rom + " loaded");
  throw t;
 }
     }
-
-    // TODO similar variables in VgmChip class, those can be eliminated?
-    long output_pos;
-    long output_step;
 
     @Override
     public void reset(int chipId) {
@@ -138,26 +137,6 @@ logger.log(Level.TRACE, rom + " loaded");
         return 0;
     }
 
-    private void setFMVolume(int chipId, int db) {
-        if (chip[chipId] == null) return;
-//        chip[chipId].setVolumeFM(db);
-    }
-
-    private void setPSGVolume(int chipId, int db) {
-        if (chip[chipId] == null) return;
-//        chip[chipId].setVolumePSG(db);
-    }
-
-    private void setRhythmVolume(int chipId, int db) {
-        if (chip[chipId] == null) return;
-//        chip[chipId].setVolumeRhythmTotal(db);
-    }
-
-    private void setAdpcmVolume(int chipId, int db) {
-        if (chip[chipId] == null) return;
-//        chip[chipId].setVolumeADPCM(db);
-    }
-
     public byte[] getADPCMBuffer(int chipId) {
 //        return chip[chipId].getADPCMBuffer();
         return null;
@@ -192,25 +171,25 @@ logger.log(Level.TRACE, rom + " loaded");
 
     // TODO automatic wired, use annotation?
     public void setFMVolume(int vol, double ignored) {
-        setFMVolume((byte) 0, vol);
-        setFMVolume((byte) 1, vol);
+        if (chip[0] == null) return; // chip[0].setFMVolume(vol);
+        if (chip[1] == null) return; // chip[1].setFMVolume(vol);
     }
 
     // TODO automatic wired, use annotation?
     public void setPSGVolume(int vol, double ignored) {
-        setPSGVolume((byte) 0, vol);
-        setPSGVolume((byte) 1, vol);
+        if (chip[0] == null) return; // chip[0].setPSGVolume(vol);
+        if (chip[1] == null) return; // chip[1].setPSGVolume(vol);
     }
 
     // TODO automatic wired, use annotation?
     public void setRhythmVolume(int vol, double ignored) {
-        setRhythmVolume((byte) 0, vol);
-        setRhythmVolume((byte) 1, vol);
+        if (chip[0] == null) return; // chip[0].setRhythmVolume(vol);
+        if (chip[1] == null) return; // chip[1].setRhythmVolume(vol);
     }
 
     // TODO automatic wired, use annotation?
     public void setAdpcmVolume(int vol, double ignored) {
-        setAdpcmVolume((byte) 0, vol);
-        setAdpcmVolume((byte) 1, vol);
+        if (chip[0] == null) return; // chip[0].setAdpcmVolume(vol);
+        if (chip[1] == null) return; // chip[1].setAdpcmVolume(vol);
     }
 }

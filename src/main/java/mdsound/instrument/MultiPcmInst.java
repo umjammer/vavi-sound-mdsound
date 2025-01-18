@@ -11,6 +11,19 @@ import mdsound.chips.MultiPCM;
 // TODO check SHIFT in all classes
 public class MultiPcmInst extends Instrument.BaseInstrument {
 
+    private static final int MAX_CHIPS = 0x02;
+    private final MultiPCM[] chips = new MultiPCM[MAX_CHIPS];
+
+    @Override
+    public String getName() {
+        return "Multi PCM";
+    }
+
+    @Override
+    public String getShortName() {
+        return "mPCM";
+    }
+
     @Override
     public void reset(int chipId) {
         device_reset_multipcm(chipId);
@@ -42,19 +55,6 @@ public class MultiPcmInst extends Instrument.BaseInstrument {
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
-    }
-
-    private static final int MAX_CHIPS = 0x02;
-    private final MultiPCM[] chips = new MultiPCM[MAX_CHIPS];
-
-    @Override
-    public String getName() {
-        return "Multi PCM";
-    }
-
-    @Override
-    public String getShortName() {
-        return "mPCM";
     }
 
     public void MultiPCM_update(int chipId, int[][] outputs, int samples) {
@@ -121,17 +121,6 @@ public class MultiPcmInst extends Instrument.BaseInstrument {
         return 0;
     }
 
-//    /**
-//     * Generic get_info
-//     */
-//    DEVICE_GET_INFO( MultiPcm ) {
-//            case DEVINFO_STR_NAME:       strcpy(info.s, "Sega/Yamaha 315-5560");  break;
-//            case DEVINFO_STR_FAMILY:     strcpy(info.s, "Sega custom");     break;
-//            case DEVINFO_STR_VERSION:     strcpy(info.s, "2.0");       break;
-//            case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
-//        }
-//    }
-
     //----
 
     @Override
@@ -145,6 +134,10 @@ public class MultiPcmInst extends Instrument.BaseInstrument {
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+            case "NAME" -> result.put(getName(), "Sega/Yamaha 315-5560");
+            case "FAMILY" -> result.put(getName(), "Sega custom");
+            case "VERSION" -> result.put(getName(), "2.0");
+            case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
         }
         return result;
     }

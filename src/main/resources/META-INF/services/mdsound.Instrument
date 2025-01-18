@@ -44,7 +44,7 @@ mdsound.instrument.SinWaveInst
 mdsound.instrument.Sn76489Inst
 mdsound.instrument.Sn76496Inst
 mdsound.instrument.Vrc6Inst
-mdsound.instrument.WsAudioInst
+mdsound.instrument.WSwanInst
 mdsound.instrument.X1_010Inst
 mdsound.instrument.X68kMPcmInst
 mdsound.instrument.X68SoundYm2151Inst

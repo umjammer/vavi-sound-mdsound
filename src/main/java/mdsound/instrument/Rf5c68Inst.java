@@ -10,6 +10,9 @@ import mdsound.chips.Rf5c68;
 
 public class Rf5c68Inst extends Instrument.BaseInstrument {
 
+    private static final int MAX_CHIPS = 0x02;
+    public Rf5c68[] rf5C68Data = new Rf5c68[] {new Rf5c68(), new Rf5c68()};
+
     @Override
     public String getName() {
         return "RF5C68";
@@ -35,37 +38,6 @@ public class Rf5c68Inst extends Instrument.BaseInstrument {
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        return device_start_rf5c68(chipId, clock);
-    }
-
-    @Override
-    public void stop(int chipId) {
-        device_stop_rf5c68(chipId);
-    }
-
-    @Override
-    public void update(int chipId, int[][] outputs, int samples) {
-        rf5c68_update(chipId, outputs, samples);
-
-        visVolume[chipId][0][0] = outputs[0][0];
-        visVolume[chipId][0][1] = outputs[1][0];
-    }
-
-    @Override
-    public int write(int chipId, int port, int adr, int data) {
-        rf5c68_w(chipId, adr, data);
-        return 0;
-    }
-
-    private static final int MAX_CHIPS = 0x02;
-    public Rf5c68[] rf5C68Data = new Rf5c68[] {new Rf5c68(), new Rf5c68()};
-
-    private void rf5c68_update(int chipId, int[][] outputs, int samples) {
-        Rf5c68 chip = rf5C68Data[chipId];
-        chip.update(outputs, samples);
-    }
-
-    private int device_start_rf5c68(int chipId, int clock) {
         if (chipId >= MAX_CHIPS)
             return 0;
 
@@ -73,19 +45,31 @@ public class Rf5c68Inst extends Instrument.BaseInstrument {
         return chip.start(clock);
     }
 
-    private void device_stop_rf5c68(int chipId) {
+    @Override
+    public void stop(int chipId) {
         Rf5c68 chip = rf5C68Data[chipId];
         chip.stop();
+    }
+
+    @Override
+    public void update(int chipId, int[][] outputs, int samples) {
+        Rf5c68 chip = rf5C68Data[chipId];
+        chip.update(outputs, samples);
+
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        Rf5c68 chip = rf5C68Data[chipId];
+        chip.write(adr, data);
+        return 0;
     }
 
     private void device_reset_rf5c68(int chipId) {
         Rf5c68 chip = rf5C68Data[chipId];
         chip.reset();
-    }
-
-    public void rf5c68_w(int chipId, int offset, int data) {
-        Rf5c68 chip = rf5C68Data[chipId];
-        chip.write(offset, data);
     }
 
     private int rf5c68_mem_r(int chipId, int offset) {
@@ -113,17 +97,6 @@ public class Rf5c68Inst extends Instrument.BaseInstrument {
         chip.setMuteMask(muteMask);
     }
 
-//    /**
-//     * Generic get_info
-//     */
-//    DEVICE_GET_INFO( Rf5c68 ) {
-//            case DEVINFO_STR_NAME:       strcpy(info.s, "RF5C68");      break;
-//            case DEVINFO_STR_FAMILY:     strcpy(info.s, "Ricoh PCM");     break;
-//            case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;
-//            case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
-//        }
-//    }
-
     //----
 
     @Override
@@ -137,6 +110,10 @@ public class Rf5c68Inst extends Instrument.BaseInstrument {
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+            case "NAME" -> result.put(getName(), "RF5C68");
+            case "FAMILY" -> result.put(getName(), "Ricoh PCM");
+            case "VERSION" -> result.put(getName(), "1.0");
+            case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
         }
         return result;
     }

@@ -14,15 +14,9 @@ public class YmFmYm2203Inst extends Instrument.BaseInstrument {
     private static final int DefaultYM2203ClockValue = 3000000;
     private final VgmChip[] chips = new VgmChip[2];
 
-    @Override
-    public String getName() {
-        return "YM2203ymfm";
-    }
-
-    @Override
-    public String getShortName() {
-        return "OPN";
-    }
+    // TODO similar variables in VgmChip class, those can be eliminated?
+    long output_pos;
+    long output_step;
 
     public YmFmYm2203Inst() {
         // 0..Main 1..FM 2..SSG
@@ -32,9 +26,15 @@ public class YmFmYm2203Inst extends Instrument.BaseInstrument {
         };
     }
 
-    // TODO similar variables in VgmChip class, those can be eliminated?
-    long output_pos;
-    long output_step;
+    @Override
+    public String getName() {
+        return "YM2203ymfm";
+    }
+
+    @Override
+    public String getShortName() {
+        return "OPN";
+    }
 
     @Override
     public void reset(int chipId) {
@@ -103,16 +103,6 @@ public class YmFmYm2203Inst extends Instrument.BaseInstrument {
 //        chip.setChannelMask(val);
     }
 
-    private void setFMVolume(int chipId, int db) {
-        if (chips[chipId] == null) return;
-//        chips[chipId].setVolumeFM(db);
-    }
-
-    private void setPSGVolume(int chipId, int db) {
-        if (chips[chipId] == null) return;
-//        chips[chipId].setVolumePSG(db);
-    }
-
     // ----
 
     @Override
@@ -136,13 +126,13 @@ public class YmFmYm2203Inst extends Instrument.BaseInstrument {
 
     // TODO automatic wired, use annotation?
     public void setFMVolume(int vol, double ignored) {
-        setFMVolume(0, vol);
-        setFMVolume(1, vol);
+        if (chips[0] != null) return; // chips[0].setFMVolume(vol);
+        if (chips[1] != null) return; // chips[1].setFMVolume(vol);
     }
 
     // TODO automatic wired, use annotation?
     public void setPSGVolume(int vol, double ignored) {
-        setPSGVolume(0, vol);
-        setPSGVolume(1, vol);
+        if (chips[0] != null) return; // chips[0].setPSGVolume(vol);
+        if (chips[1] != null) return; // chips[1].setPSGVolume(vol);
     }
 }

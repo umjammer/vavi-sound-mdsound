@@ -636,14 +636,14 @@ public class Ym2413 {
         READY, ATTACK, DECAY, SUSHOLD, SUSTAIN, RELEASE, SETTLE, FINISH
     }
 
-    /** Phase incr table for Attack */
+    /** Phase incR table for Attack */
     private final int[][] dPhaseArTable = new int[][] {
             new int[16], new int[16], new int[16], new int[16],
             new int[16], new int[16], new int[16], new int[16],
             new int[16], new int[16], new int[16], new int[16],
             new int[16], new int[16], new int[16], new int[16]
     };
-    /** Phase incr table for Decay and Release */
+    /** Phase incR table for Decay and Release */
     private final int[][] dPhaseDrTable = new int[][] {
             new int[16], new int[16], new int[16], new int[16],
             new int[16], new int[16], new int[16], new int[16],
@@ -655,7 +655,7 @@ public class Ym2413 {
     private static final int[][][][] tllTable;
     private static final int[][][] rksTable;
 
-    /** Phase incr table for PG */
+    /** Phase incR table for PG */
     private int[][][] dPhaseTable;
 
     /* Table for AR to LogCurve. */

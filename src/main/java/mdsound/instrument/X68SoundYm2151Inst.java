@@ -11,6 +11,14 @@ public class X68SoundYm2151Inst extends Instrument.BaseInstrument {
 
     private static final int DefaultYM2151ClockValue = 4000000; // X68000 clock
 
+    public X68Sound[] x68sound = new X68Sound[] {null, null};
+    public SoundIocs[] sound_Iocs = new SoundIocs[] {null, null};
+    private final short[][] buf = new short[][] {new short[2], new short[2]};
+
+    private int opmflag = 1;
+    private int adpcmflag = 0;
+    private int pcmbuf = 5;
+
     @Override
     public String getName() {
         return "YM2151x68sound";
@@ -98,22 +106,4 @@ public class X68SoundYm2151Inst extends Instrument.BaseInstrument {
         sound_Iocs[chipId].opmSet(adr, data);
         return 0;
     }
-
-    public X68Sound[] x68sound = new X68Sound[] {
-        null, null
-    };
-
-    public SoundIocs[] sound_Iocs = new SoundIocs[] {
-        null, null
-    };
-
-    private final short[][] buf = new short[][] {
-        new short[2], new short[2]
-    };
-
-    private int opmflag = 1;
-
-    private int adpcmflag = 0;
-
-    private int pcmbuf = 5;
 }

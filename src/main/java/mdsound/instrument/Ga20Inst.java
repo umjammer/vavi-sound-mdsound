@@ -11,39 +11,6 @@ import mdsound.chips.IremGa20;
 // GA20
 public class Ga20Inst extends Instrument.BaseInstrument {
 
-    @Override
-    public void reset(int chipId) {
-        device_reset_iremga20(chipId);
-
-        visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
-        };
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate) {
-        return device_start_iremga20(chipId, 3579545);
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate, int clock, Object... option) {
-        return device_start_iremga20(chipId, clock);
-    }
-
-    @Override
-    public void stop(int chipId) {
-        device_stop_iremga20(chipId);
-    }
-
-    @Override
-    public void update(int chipId, int[][] outputs, int samples) {
-        IremGA20_update(chipId, outputs, samples);
-
-        visVolume[chipId][0][0] = outputs[0][0];
-        visVolume[chipId][0][1] = outputs[1][0];
-    }
-
     private static final int MAX_CHIPS = 0x02;
     private final IremGa20[] ga20Data = new IremGa20[] {new IremGa20(), new IremGa20()};
 
@@ -57,27 +24,28 @@ public class Ga20Inst extends Instrument.BaseInstrument {
         return "GA20";
     }
 
-    private void IremGA20_update(int chipId, int[][] outputs, int samples) {
-        IremGa20 chip = ga20Data[chipId];
-        chip.update(outputs, samples);
-    }
-
-    private void irem_ga20_w(int chipId, int offset, byte data) {
-        IremGa20 chip = ga20Data[chipId];
-        chip.write(offset, data);
-    }
-
-    public byte irem_ga20_r(int chipId, int offset) {
-        IremGa20 chip = ga20Data[chipId];
-        return chip.read(offset);
-    }
-
-    private void device_reset_iremga20(int chipId) {
+    @Override
+    public void reset(int chipId) {
         IremGa20 chip = ga20Data[chipId];
         chip.reset();
+
+        visVolume = new int[][][] {
+                new int[][] {new int[] {0, 0}},
+                new int[][] {new int[] {0, 0}}
+        };
     }
 
-    private int device_start_iremga20(int chipId, int clock) {
+    @Override
+    public int start(int chipId, int samplingRate) {
+        if (chipId >= MAX_CHIPS)
+            return 0;
+
+        IremGa20 chip = ga20Data[chipId];
+        return chip.start(3579545);
+    }
+
+    @Override
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
         if (chipId >= MAX_CHIPS)
             return 0;
 
@@ -85,9 +53,24 @@ public class Ga20Inst extends Instrument.BaseInstrument {
         return chip.start(clock);
     }
 
-    public void device_stop_iremga20(int chipId) {
+    @Override
+    public void stop(int chipId) {
         IremGa20 chip = ga20Data[chipId];
         chip.stop();
+    }
+
+    @Override
+    public void update(int chipId, int[][] outputs, int samples) {
+        IremGa20 chip = ga20Data[chipId];
+        chip.update(outputs, samples);
+
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
+    }
+
+    public int irem_ga20_r(int chipId, int offset) {
+        IremGa20 chip = ga20Data[chipId];
+        return chip.read(offset);
     }
 
     public void iremga20_write_rom(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
@@ -107,7 +90,8 @@ public class Ga20Inst extends Instrument.BaseInstrument {
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        irem_ga20_w(chipId, adr, (byte) data);
+        IremGa20 chip = ga20Data[chipId];
+        chip.write(adr, data);
         return 0;
     }
 

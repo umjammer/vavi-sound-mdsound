@@ -8,6 +8,9 @@ import mdsound.chips.MPcm;
 
 public class X68kMPcmInst extends Instrument.BaseInstrument {
 
+    private static final int MAX_CHIPS = 0x02;
+    public MPcm[] chips = new MPcm[] {new MPcm(), new MPcm()};
+
     @Override
     public String getName() {
         return "X68kMPcm";
@@ -20,7 +23,8 @@ public class X68kMPcmInst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        reset_(chipId);
+        MPcm chip = chips[chipId];
+        chip.reset();
     }
 
     @Override
@@ -30,47 +34,28 @@ public class X68kMPcmInst extends Instrument.BaseInstrument {
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        mountMpcmX68K(chipId);
-        initialize(chipId, clock, samplingRate);
+        MPcm chip = chips[chipId];
+        chip.mount();
+        MPcm chip1 = chips[chipId];
+        chip1.init(clock, (float) samplingRate);
         return samplingRate;
     }
 
     @Override
     public void stop(int chipId) {
-        unmountMpcmX68K(chipId);
+        MPcm chip = chips[chipId];
+        chip.unmount();
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        update_(chipId, outputs, samples);
+        MPcm chip = chips[chipId];
+        chip.update(outputs, samples);
     }
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
         return 0;
-    }
-
-    private static final int MAX_CHIPS = 0x02;
-    public MPcm[] chips = new MPcm[] {new MPcm(), new MPcm()};
-
-    public void mountMpcmX68K(int chipId) {
-        MPcm chip = chips[chipId];
-        chip.mount();
-    }
-
-    public void unmountMpcmX68K(int chipId) {
-        MPcm chip = chips[chipId];
-        chip.unmount();
-    }
-
-    public boolean initialize(int chipId, int base, float samplingRate) {
-        MPcm chip = chips[chipId];
-        return chip.init(base, samplingRate);
-    }
-
-    public void reset_(int chipId) {
-        MPcm chip = chips[chipId];
-        chip.reset();
     }
 
     public void keyOn(int chipId, int ch) {
@@ -111,10 +96,5 @@ public class X68kMPcmInst extends Instrument.BaseInstrument {
     private int decode(int chipId, int ch, byte[] buffer, int bufferP, int pos) {
         MPcm chip = chips[chipId];
         return chip.decode(ch, buffer, bufferP, pos);
-    }
-
-    public void update_(int chipId, int[][] buffer, int count) {
-        MPcm chip = chips[chipId];
-        chip.update(buffer, count);
     }
 }

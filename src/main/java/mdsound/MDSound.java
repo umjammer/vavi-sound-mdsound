@@ -83,7 +83,6 @@ public class MDSound {
     private static final int FIXPNT_FACT = (1 << FIXPNT_BITS);
     private static final int FIXPNT_MASK = (FIXPNT_FACT - 1);
 
-
     public VisWaveBuffer visWaveBuffer = new VisWaveBuffer();
 
 //#if DEBUG
@@ -208,7 +207,7 @@ public class MDSound {
 
             instruments.clear();
 
-            // ボリューム値から実際の倍数を求める
+            // Calculate the actual multiple from the volume value
             int total = 0;
             double[] mul = new double[1];
             for (Chip inst : insts) {
@@ -217,9 +216,9 @@ public class MDSound {
                 //16384 = 0x4000 = short.MAXValue + 1
                 total += (int) ((((int) (16384.0 * Math.pow(10.0, 0 / 40.0)) * balance) >> 8) * mul[0]) / insts.length;
             }
-            // 総ボリューム値から最大ボリュームまでの倍数を求める
+            // Calculate the multiple from the total volume value to the maximum volume
             volumeMul = 16384.0 / total;
-            // ボリューム値から実際の倍数を求める
+            // Calculate the actual multiple from the volume value
             for (Chip inst : insts) {
                 if ((inst.volumeBalance & 0x8000) != 0)
                     inst.tVolumeBalance = (getRegulationVolume(inst, mul) * (inst.volumeBalance & 0x7fff) + 0x80) >> 8;
@@ -912,28 +911,28 @@ CC++;
 
     public void writeWsAudioMem(int chipId, int adr, int data) {
         synchronized (lockobj) {
-            if (!instruments.containsKey(WsAudioInst.class)) return;
-            if (instruments.get(WsAudioInst.class)[0] == null) return;
+            if (!instruments.containsKey(WSwanInst.class)) return;
+            if (instruments.get(WSwanInst.class)[0] == null) return;
 
-            ((WsAudioInst) (instruments.get(WsAudioInst.class)[0])).writeMem(chipId, adr, data);
+            ((WSwanInst) (instruments.get(WSwanInst.class)[0])).writeMem(chipId, adr, data);
         }
     }
 
     public void writeWsAudioMem(int chipIndex, int chipId, int adr, int data) {
         synchronized (lockobj) {
-            if (!instruments.containsKey(WsAudioInst.class)) return;
-            if (instruments.get(WsAudioInst.class)[0] == null) return;
+            if (!instruments.containsKey(WSwanInst.class)) return;
+            if (instruments.get(WSwanInst.class)[0] == null) return;
 
-            ((WsAudioInst) (instruments.get(WsAudioInst.class)[chipIndex])).writeMem(chipId, adr, data);
+            ((WSwanInst) (instruments.get(WSwanInst.class)[chipIndex])).writeMem(chipId, adr, data);
         }
     }
 
     public void setVolumeWsAudio(int vol) {
-        if (!instruments.containsKey(WsAudioInst.class)) return;
-        if (instruments.get(WsAudioInst.class)[0] == null) return;
+        if (!instruments.containsKey(WSwanInst.class)) return;
+        if (instruments.get(WSwanInst.class)[0] == null) return;
 
         for (Chip c : chips) {
-            if (!(c.instrument instanceof WsAudioInst)) continue;
+            if (!(c.instrument instanceof WSwanInst)) continue;
             c.volume = Math.max(Math.min(vol, 20), -192);
             //int n = (((int)(16384.0 * Math.pow(10.0, c.Volume / 40.0)) * c.tVolumeBalance) >> 8) / chips.length;
             int n = (((int) (16384.0 * Math.pow(10.0, c.volume / 40.0)) * c.tVolumeBalance) >> 8);
@@ -945,36 +944,36 @@ CC++;
     public void setWsAudioMask(int chipId, int ch) {
         synchronized (lockobj) {
             ay8910Mask.get(0)[chipId] |= ch;
-            if (!instruments.containsKey(WsAudioInst.class)) return;
-            if (instruments.get(WsAudioInst.class)[0] == null) return;
-            ((WsAudioInst) (instruments.get(WsAudioInst.class)[0])).setMute(chipId, WsAudioMask.get(0)[chipId]);
+            if (!instruments.containsKey(WSwanInst.class)) return;
+            if (instruments.get(WSwanInst.class)[0] == null) return;
+            ((WSwanInst) (instruments.get(WSwanInst.class)[0])).setMute(chipId, WsAudioMask.get(0)[chipId]);
         }
     }
 
     public void setWsAudioMask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
             WsAudioMask.get(chipIndex)[chipId] |= ch;
-            if (!instruments.containsKey(WsAudioInst.class)) return;
-            if (instruments.get(WsAudioInst.class)[chipIndex] == null) return;
-            ((WsAudioInst) (instruments.get(WsAudioInst.class)[chipIndex])).setMute(chipId, WsAudioMask.get(chipIndex)[chipId]);
+            if (!instruments.containsKey(WSwanInst.class)) return;
+            if (instruments.get(WSwanInst.class)[chipIndex] == null) return;
+            ((WSwanInst) (instruments.get(WSwanInst.class)[chipIndex])).setMute(chipId, WsAudioMask.get(chipIndex)[chipId]);
         }
     }
 
     public void resetWsAudioMask(int chipId, int ch) {
         synchronized (lockobj) {
             WsAudioMask.get(0)[chipId] &= ~ch;
-            if (!instruments.containsKey(WsAudioInst.class)) return;
-            if (instruments.get(WsAudioInst.class)[0] == null) return;
-            ((WsAudioInst) (instruments.get(WsAudioInst.class)[0])).setMute(chipId, WsAudioMask.get(0)[chipId]);
+            if (!instruments.containsKey(WSwanInst.class)) return;
+            if (instruments.get(WSwanInst.class)[0] == null) return;
+            ((WSwanInst) (instruments.get(WSwanInst.class)[0])).setMute(chipId, WsAudioMask.get(0)[chipId]);
         }
     }
 
     public void resetWsAudioMask(int chipIndex, int chipId, int ch) {
         synchronized (lockobj) {
             WsAudioMask.get(chipIndex)[chipId] &= ~ch;
-            if (!instruments.containsKey(WsAudioInst.class)) return;
-            if (instruments.get(WsAudioInst.class)[chipIndex] == null) return;
-            ((WsAudioInst) (instruments.get(WsAudioInst.class)[chipIndex])).setMute(chipId, WsAudioMask.get(chipIndex)[chipId]);
+            if (!instruments.containsKey(WSwanInst.class)) return;
+            if (instruments.get(WSwanInst.class)[chipIndex] == null) return;
+            ((WSwanInst) (instruments.get(WSwanInst.class)[chipIndex])).setMute(chipId, WsAudioMask.get(chipIndex)[chipId]);
         }
     }
 
@@ -1763,22 +1762,6 @@ CC++;
 
 //#region Ym2608Inst
 
-//    public void writeYm2608(int chipId, byte Port, byte adr, byte data) {
-//        synchronized (lockobj) {
-//            if (!instruments.containsKey(Ym2608Inst.class)) return;
-//
-//            instruments.get(Ym2608Inst.class)[0].write(chipId, 0, (Port * 0x100 + adr), data);
-//        }
-//    }
-//
-//    public void writeYm2608(int chipIndex, int chipId, byte Port, byte adr, byte data) {
-//        synchronized (lockobj) {
-//            if (!instruments.containsKey(Ym2608Inst.class)) return;
-//
-//            instruments.get(Ym2608Inst.class)[chipIndex].write(chipId, 0, (Port * 0x100 + adr), data);
-//        }
-//    }
-
     public byte[] GetADPCMBufferYm2608(int chipId) {
         synchronized (lockobj) {
             if (!instruments.containsKey(Ym2608Inst.class)) return null;
@@ -1901,64 +1884,6 @@ CC++;
 
 //#endregion
 
-//#region YmF262Inst
-
-//    public void writeYmF262(int chipId, byte Port, byte adr, byte data) {
-//        synchronized (lockobj) {
-//            if (!instruments.containsKey(YmF262Inst.class)) return;
-//
-//            instruments.get(YmF262Inst.class)[0].write(chipId, 0, (Port * 0x100 + adr), data);
-//        }
-//    }
-//
-//    public void writeYmF262(int chipIndex, int chipId, byte Port, byte adr, byte data) {
-//        synchronized (lockobj) {
-//            if (!instruments.containsKey(YmF262Inst.class)) return;
-//
-//            instruments.get(YmF262Inst.class)[chipIndex].write(chipId, 0, (Port * 0x100 + adr), data);
-//        }
-//    }
-
-//#endregion
-
-//#region YmF271Inst
-
-//    public void writeYmf271(int chipId, byte Port, byte adr, byte data) {
-//        synchronized (lockobj) {
-//            if (!instruments.containsKey(YmF271Inst.class)) return;
-//
-//            instruments.get(YmF271Inst.class)[0].write(chipId, Port, adr, data);
-//        }
-//    }
-//
-//    public void writeYmf271(int chipIndex, int chipId, byte Port, byte adr, byte data) {
-//        synchronized (lockobj) {
-//            if (!instruments.containsKey(YmF271Inst.class)) return;
-//
-//            instruments.get(YmF271Inst.class)[chipIndex].write(chipId, Port, adr, data);
-//        }
-//    }
-
-//#endregion
-
-//#region YmF278bInst
-
-//    public void writeYmF278b(int chipId, byte Port, byte adr, byte data) {
-//        synchronized (lockobj) {
-//            if (!instruments.containsKey(YmF278bInst.class)) return;
-//            instruments.get(YmF278bInst.class)[0].write(chipId, Port, adr, data);
-//        }
-//    }
-//
-//    public void writeYmF278b(int chipIndex, int chipId, byte Port, byte adr, byte data) {
-//        synchronized (lockobj) {
-//            if (!instruments.containsKey(YmF278bInst.class)) return;
-//            instruments.get(YmF278bInst.class)[chipIndex].write(chipId, Port, adr, data);
-//        }
-//    }
-
-//#endregion
-
 //#region Ym3526Inst
 
 //    public void writeYm3526(int chipId, byte adr, byte data) {
@@ -1994,26 +1919,6 @@ CC++;
 //            if (!instruments.containsKey(Y8950Inst.class)) return;
 //
 //            instruments.get(Y8950Inst.class)[chipIndex].write(chipId, 0, adr, data);
-//        }
-//    }
-
-//#endregion
-
-//#region YmZ280bInst
-
-//    public void writeYmZ280b(int chipId, byte adr, byte data) {
-//        synchronized (lockobj) {
-//            if (!instruments.containsKey(YmZ280bInst.class)) return;
-//
-//            instruments.get(YmZ280bInst.class)[0].write(chipId, 0, adr, data);
-//        }
-//    }
-//
-//    public void writeYmZ280b(int chipIndex, int chipId, byte adr, byte data) {
-//        synchronized (lockobj) {
-//            if (!instruments.containsKey(YmZ280bInst.class)) return;
-//
-//            instruments.get(YmZ280bInst.class)[chipIndex].write(chipId, 0, adr, data);
 //        }
 //    }
 

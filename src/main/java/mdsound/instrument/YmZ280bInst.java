@@ -10,44 +10,6 @@ import mdsound.chips.YmZ280b;
 
 public class YmZ280bInst extends Instrument.BaseInstrument {
 
-    @Override
-    public void reset(int chipId) {
-        device_reset_ymz280b(chipId);
-        visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
-        };
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate) {
-        return device_start_ymz280b(chipId, 16934400);
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate, int clock, Object... option) {
-        return device_start_ymz280b(chipId, clock);
-    }
-
-    @Override
-    public void stop(int chipId) {
-        device_stop_ymz280b(chipId);
-    }
-
-    @Override
-    public void update(int chipId, int[][] outputs, int samples) {
-        ymz280b_update(chipId, outputs, samples);
-
-        visVolume[chipId][0][0] = outputs[0][0];
-        visVolume[chipId][0][1] = outputs[1][0];
-    }
-
-    private int write(int chipId, int offset, int data) {
-        ymz280b_w(chipId, 0x00, offset);
-        ymz280b_w(chipId, 0x01, data);
-        return 0;
-    }
-
     private static final int MAX_CHIPS = 0x10;
     private final YmZ280b[] chips = new YmZ280b[] {new YmZ280b(), new YmZ280b()};
 
@@ -61,18 +23,27 @@ public class YmZ280bInst extends Instrument.BaseInstrument {
         return "YMZ";
     }
 
-    /**
-     * update the Sound chips so that it is in sync with CPU execution
-     */
-    public void ymz280b_update(int chipId, int[][] outputs, int samples) {
+    @Override
+    public void reset(int chipId) {
         YmZ280b chip = chips[chipId];
-        chip.update(outputs, samples);
+        chip.reset();
+        visVolume = new int[][][] {
+                new int[][] {new int[] {0, 0}},
+                new int[][] {new int[] {0, 0}}
+        };
     }
 
-    /**
-     * start emulation of the YMZ280B
-     */
-    public int device_start_ymz280b(int chipId, int clock) {
+    @Override
+    public int start(int chipId, int samplingRate) {
+        if (chipId >= MAX_CHIPS)
+            return 0;
+
+        YmZ280b chip = chips[chipId];
+        return chip.start(16934400);
+    }
+
+    @Override
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
         if (chipId >= MAX_CHIPS)
             return 0;
 
@@ -80,14 +51,20 @@ public class YmZ280bInst extends Instrument.BaseInstrument {
         return chip.start(clock);
     }
 
-    public void device_stop_ymz280b(int chipId) {
+    @Override
+    public void stop(int chipId) {
         YmZ280b chip = chips[chipId];
         chip.stop();
     }
 
-    public void device_reset_ymz280b(int chipId) {
+    @Override
+    public void update(int chipId, int[][] outputs, int samples) {
         YmZ280b chip = chips[chipId];
-        chip.reset();    }
+        chip.update(outputs, samples);
+
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
+    }
 
     /**
      * handle external accesses
@@ -95,11 +72,6 @@ public class YmZ280bInst extends Instrument.BaseInstrument {
     public int ymz280b_r(int chipId, int offset) {
         YmZ280b chip = chips[chipId];
         return chip.read(offset);
-    }
-
-    public void ymz280b_w(int chipId, int offset, int data) {
-        YmZ280b chip = chips[chipId];
-        chip.write(offset, data);
     }
 
     public void ymz280b_write_rom(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
@@ -120,21 +92,14 @@ public class YmZ280bInst extends Instrument.BaseInstrument {
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        return write(chipId, adr, data);
+        YmZ280b chip = chips[chipId];
+        chip.write(0x00, adr);
+        chip.write(0x01, data);
+        return 0;
     }
 
     private void updateIrqStateTimerCommon(Object param, int voiceNum) {
     }
-
-//    /**
-//     * Generic get_info
-//     */
-//    DEVICE_GET_INFO( YmZ280b ) {
-//            case DEVINFO_STR_NAME:       strcpy(info.s, "YMZ280B");      break;
-//            case DEVINFO_STR_FAMILY:     strcpy(info.s, "Yamaha Wavetable");   break;
-//            case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;
-//            case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
-//    }
 
     //----
 
@@ -149,6 +114,10 @@ public class YmZ280bInst extends Instrument.BaseInstrument {
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+            case "NAME" -> result.put(getName(), "YMZ280B");
+            case "FAMILY" -> result.put(getName(), "Yamaha Wavetable");
+            case "VERSION" -> result.put(getName(), "1.0");
+            case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
         }
         return result;
     }

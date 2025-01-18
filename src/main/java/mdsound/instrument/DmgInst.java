@@ -13,9 +13,23 @@ import mdsound.chips.GbSound;
 // DMG
 public class DmgInst extends Instrument.BaseInstrument {
 
+    private static final int MAX_CHIPS = 0x02;
+    private final GbSound[] gbSoundData = new GbSound[] {new GbSound(), new GbSound()};
+
+    @Override
+    public String getName() {
+        return "Gameboy DMG";
+    }
+
+    @Override
+    public String getShortName() {
+        return "DMG";
+    }
+
     @Override
     public void reset(int chipId) {
-        resetDevice(chipId);
+        GbSound gb = gbSoundData[chipId];
+        gb.reset();
 
         visVolume = new int[][][] {
                 new int[][] {new int[] {0, 0}},
@@ -25,29 +39,47 @@ public class DmgInst extends Instrument.BaseInstrument {
 
     @Override
     public int start(int chipId, int samplingRate) {
-        return startDevice(chipId, 4194304);
+        return startInternal(chipId, 4194304);
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        return startDevice(chipId, clock);
+        return startInternal(chipId, clock);
     }
 
     @Override
     public void stop(int chipId) {
-        stopDevice(chipId);
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        updateDevice(chipId, outputs, samples);
+        GbSound gb = gbSoundData[chipId];
+        gb.update(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
     }
 
-    private static final int MAX_CHIPS = 0x02;
-    private final GbSound[] gbSoundData = new GbSound[] {new GbSound(), new GbSound()};
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        GbSound gb = gbSoundData[chipId];
+        gb.writeSound(adr, data);
+        return 0;
+    }
+
+    private int startInternal(int chipId, int clock) {
+        if (chipId >= MAX_CHIPS)
+            return 0;
+
+        GbSound gb = gbSoundData[chipId];
+
+        int rate = (clock & 0x7fff_ffff) / 64;
+        if (((Instrument.BaseInstrument.CHIP_SAMPLING_MODE & 0x01) != 0 && rate < Instrument.BaseInstrument.CHIP_SAMPLE_RATE) ||
+                Instrument.BaseInstrument.CHIP_SAMPLING_MODE == 0x02)
+            rate = Instrument.BaseInstrument.CHIP_SAMPLE_RATE;
+        gb.start(clock, rate);
+        return rate;
+    }
 
     public int readWave(int chipId, int offset) {
         GbSound gb = gbSoundData[chipId];
@@ -64,48 +96,6 @@ public class DmgInst extends Instrument.BaseInstrument {
         return gb.readSound(offset);
     }
 
-    private void writeSound(int chipId, int offset, int data) {
-        GbSound gb = gbSoundData[chipId];
-        gb.writeSound(offset, data);
-    }
-
-    @Override
-    public String getName() {
-        return "Gameboy DMG";
-    }
-
-    @Override
-    public String getShortName() {
-        return "DMG";
-    }
-
-    public void updateDevice(int chipId, int[][] outputs, int samples) {
-        GbSound gb = gbSoundData[chipId];
-        gb.update(outputs, samples);
-    }
-
-    public int startDevice(int chipId, int clock) {
-        if (chipId >= MAX_CHIPS)
-            return 0;
-
-        GbSound gb = gbSoundData[chipId];
-
-        int rate = (clock & 0x7fff_ffff) / 64;
-        if (((Instrument.BaseInstrument.CHIP_SAMPLING_MODE & 0x01) != 0 && rate < Instrument.BaseInstrument.CHIP_SAMPLE_RATE) ||
-                Instrument.BaseInstrument.CHIP_SAMPLING_MODE == 0x02)
-            rate = Instrument.BaseInstrument.CHIP_SAMPLE_RATE;
-        gb.start(clock, rate);
-        return rate;
-    }
-
-    public void stopDevice(int chipId) {
-    }
-
-    public void resetDevice(int chipId) {
-        GbSound gb = gbSoundData[chipId];
-        gb.reset();
-    }
-
     public void setMuteMask(int chipId, int muteMask) {
         GbSound gb = gbSoundData[chipId];
         gb.setMuteMask(muteMask);
@@ -114,12 +104,6 @@ public class DmgInst extends Instrument.BaseInstrument {
     public int getMuteMask(int chipId) {
         GbSound gb = gbSoundData[chipId];
         return gb.getMuteMask();
-    }
-
-    @Override
-    public int write(int chipId, int port, int adr, int data) {
-        writeSound(chipId, adr, data);
-        return 0;
     }
 
     public GbSound getSoundData(int chipId) {

@@ -13,6 +13,14 @@ public class Ym2203Inst extends Instrument.BaseInstrument {
     private static final int DefaultYM2203ClockValue = 3000000;
     private final Opna.OPN[] chips = new Opna.OPN[2];
 
+    public Ym2203Inst() {
+        // 0..Main 1..FM 2..SSG
+        visVolume = new int[][][] {
+                new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}},
+                new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}}
+        };
+    }
+
     @Override
     public String getName() {
         return "YM2203";
@@ -21,14 +29,6 @@ public class Ym2203Inst extends Instrument.BaseInstrument {
     @Override
     public String getShortName() {
         return "OPN";
-    }
-
-    public Ym2203Inst() {
-        // 0..Main 1..FM 2..SSG
-        visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}}
-        };
     }
 
     @Override
@@ -92,16 +92,6 @@ public class Ym2203Inst extends Instrument.BaseInstrument {
         chip.setChannelMask(val);
     }
 
-    private void setFMVolume(int chipId, int db) {
-        if (chips[chipId] == null) return;
-        chips[chipId].setVolumeFM(db);
-    }
-
-    private void setPSGVolume(int chipId, int db) {
-        if (chips[chipId] == null) return;
-        chips[chipId].setVolumePSG(db);
-    }
-
     // ----
 
     @Override
@@ -125,13 +115,13 @@ public class Ym2203Inst extends Instrument.BaseInstrument {
 
     // TODO automatic wired, use annotation?
     public void setFMVolume(int vol, double ignored) {
-        setFMVolume(0, vol);
-        setFMVolume(1, vol);
+        if (chips[0] != null) chips[0].setVolumeFM(vol);
+        if (chips[1] != null) chips[1].setVolumeFM(vol);
     }
 
     // TODO automatic wired, use annotation?
     public void setPSGVolume(int vol, double ignored) {
-        setPSGVolume(0, vol);
-        setPSGVolume(1, vol);
+        if (chips[0] != null) chips[0].setVolumePSG(vol);
+        if (chips[1] != null) chips[1].setVolumePSG(vol);
     }
 }

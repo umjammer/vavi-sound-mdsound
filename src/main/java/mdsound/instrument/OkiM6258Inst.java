@@ -16,6 +16,24 @@ public class OkiM6258Inst extends Instrument.BaseInstrument {
     private static final int MAX_CHIPS = 0x02;
     public OkiM6258[] okiM6258Data = new OkiM6258[MAX_CHIPS];
 
+    public OkiM6258Inst() {
+        // 0..Main
+        visVolume = new int[][][] {
+                new int[][] {new int[] {0, 0}},
+                new int[][] {new int[] {0, 0}}
+        };
+    }
+
+    @Override
+    public String getName() {
+        return "OKIM6258";
+    }
+
+    @Override
+    public String getShortName() {
+        return "OKI5";
+    }
+
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
         OkiM6258 chip = okiM6258Data[chipId];
@@ -23,26 +41,6 @@ public class OkiM6258Inst extends Instrument.BaseInstrument {
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
-    }
-
-    private int device_start_okim6258(int chipId, int clock, int divider, int adpcm_type, int output_12bits) {
-        if (chipId >= MAX_CHIPS)
-            return 0;
-
-        OkiM6258 info = okiM6258Data[chipId];
-        return info.start(clock, divider, adpcm_type, output_12bits);
-    }
-
-    /**
-     * stop emulation of an OKIM6258-compatible chips
-     */
-    private void device_stop_okim6258(int chipId) {
-        okiM6258Data[chipId] = null;
-    }
-
-    private void device_reset_okim6258(int chipId) {
-        OkiM6258 info = okiM6258Data[chipId];
-        info.reset();
     }
 
     private void okim6258_set_divider(int chipId, int val) {
@@ -89,26 +87,6 @@ public class OkiM6258Inst extends Instrument.BaseInstrument {
         info.writePan(data);
     }
 
-//    /**
-//     * Generic get_info
-//     */
-//        DEVICE_GET_INFO( OkiM6258 ) {
-//            switch (state) {
-//                case DEVINFO_STR_NAME:       strcpy(info.s, "OKI6258");     break;
-//                case DEVINFO_STR_FAMILY:     strcpy(info.s, "OKI ADPCM");    break;
-//                case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");      break;
-//                case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
-//            }
-//        }
-
-    public OkiM6258Inst() {
-        // 0..Main
-        visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
-        };
-    }
-
     @Override
     public int start(int chipId, int samplingRate) {
         return start(chipId, 44100, samplingRate, 0);
@@ -120,27 +98,22 @@ public class OkiM6258Inst extends Instrument.BaseInstrument {
         int divider = ((int) option[0] & 0x03) >> 0;
         int adpcmType = ((int) option[0] & 0x04) >> 2;
         int output12Bits = ((int) option[0] & 0x08) >> 3;
-        return device_start_okim6258(chipId, clock, divider, adpcmType, output12Bits);
-    }
+        if (chipId >= MAX_CHIPS)
+            return 0;
 
-    @Override
-    public String getName() {
-        return "OKIM6258";
-    }
-
-    @Override
-    public String getShortName() {
-        return "OKI5";
+        OkiM6258 info = okiM6258Data[chipId];
+        return info.start(clock, divider, adpcmType, output12Bits);
     }
 
     @Override
     public void stop(int chipId) {
-        device_stop_okim6258(chipId);
+        okiM6258Data[chipId] = null;
     }
 
     @Override
     public void reset(int chipId) {
-        device_reset_okim6258(chipId);
+        OkiM6258 info = okiM6258Data[chipId];
+        info.reset();
     }
 
     private void okim6258_write(int chipId, int port, int data) {
@@ -176,6 +149,10 @@ public class OkiM6258Inst extends Instrument.BaseInstrument {
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+            case "NAME" -> result.put(getName(), "OKI6258");
+            case "FAMILY" -> result.put(getName(), "OKI ADPCM");
+            case "VERSION" -> result.put(getName(), "1.0");
+            case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
         }
         return result;
     }

@@ -35,6 +35,14 @@ public class PwmInst extends Instrument.BaseInstrument {
     private static final int MAX_CHIPS = 0x02;
     private final PwmChip[] chips = new PwmChip[] {new PwmChip(), new PwmChip()};
 
+    public PwmInst() {
+        // 0..Main
+        visVolume = new int[][][] {
+                new int[][] {new int[] {0, 0}},
+                new int[][] {new int[] {0, 0}}
+        };
+    }
+
     @Override
     public String getName() {
         return "PWM";
@@ -43,14 +51,6 @@ public class PwmInst extends Instrument.BaseInstrument {
     @Override
     public String getShortName() {
         return "PWM";
-    }
-
-    public PwmInst() {
-        // 0..Main
-        visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
-        };
     }
 
     @Override

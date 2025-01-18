@@ -2398,10 +2398,10 @@ public class Opl {
                 this.mode = v;
                 if ((this.type & SUB_TYPE_ADPCM) != 0)
                     this.deltaT.write(r - 0x07, v & 0x0f); // mask 4 LSBs in register 08 for DELTA-T unit
-                //#endif
+//#endif
                 break;
 
-            //#if BUILD_Y8950
+//#if BUILD_Y8950
             case 0x09: // START ADD
             case 0x0a:
             case 0x0b: // STOP ADD

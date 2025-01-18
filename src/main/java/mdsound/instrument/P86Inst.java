@@ -6,7 +6,7 @@ import mdsound.chips.P86;
 
 public class P86Inst extends Instrument.BaseInstrument {
 
-    P86 info = new P86();
+    private P86 info = new P86();
 
     @Override
     public String getName() {

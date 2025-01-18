@@ -12,9 +12,23 @@ import mdsound.chips.YmF278b;
 
 public class YmF278bInst extends Instrument.BaseInstrument {
 
+    private static final int MAX_CHIPS = 0x10;
+    private final YmF278b[] ymF278BData = new YmF278b[] {new YmF278b(), new YmF278b()};
+
+    @Override
+    public String getName() {
+        return "YMF278B";
+    }
+
+    @Override
+    public String getShortName() {
+        return "OPL4";
+    }
+
     @Override
     public void reset(int chipId) {
-        device_reset_ymf278b(chipId);
+        YmF278b chip = ymF278BData[chipId];
+        chip.reset();
 
         visVolume = new int[][][] {
                 new int[][] {new int[] {0, 0}},
@@ -24,9 +38,12 @@ public class YmF278bInst extends Instrument.BaseInstrument {
 
     @Override
     public int start(int chipId, int samplingRate) {
-        return device_start_ymf278b(chipId, YmF278b.YMF278B_STD_CLOCK, null, null);
+        return startInternal(chipId, YmF278b.YMF278B_STD_CLOCK, null, null);
     }
 
+    /**
+     * @param option String:, Function<String, Stream>:. TODO
+     */
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
         String romPath = null;
@@ -42,61 +59,30 @@ public class YmF278bInst extends Instrument.BaseInstrument {
                 romStream = (Function<String, Stream>) option[0];
             }
         }
-        return device_start_ymf278b(chipId, clock, romPath, romStream);
+        return startInternal(chipId, clock, romPath, romStream);
     }
 
     @Override
     public void stop(int chipId) {
-        device_stop_ymf278b(chipId);
+        YmF278b chip = ymF278BData[chipId];
+        chip.stop();
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        ymf278b_pcm_update(chipId, outputs, samples);
+        YmF278b chip = ymF278BData[chipId];
+        chip.updatePcm(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
     }
 
-    private static final int MAX_CHIPS = 0x10;
-    private final YmF278b[] ymF278BData = new YmF278b[] {new YmF278b(), new YmF278b()};
-
-    @Override
-    public String getName() {
-        return "YMF278B";
-    }
-
-    @Override
-    public String getShortName() {
-        return "OPL4";
-    }
-
-    public void ymf278b_pcm_update(int chipId, int[][] outputs, int samples) {
-        YmF278b chip = ymF278BData[chipId];
-        chip.updatePcm(outputs, samples);
-    }
-
-    public void ymf278b_w(int chipId, int offset, int data) {
-        YmF278b chip = ymF278BData[chipId];
-        chip.write(offset, data);
-    }
-
-    public int device_start_ymf278b(int chipId, int clock, String romPath, Function<String, Stream> romStream) {
+    private int startInternal(int chipId, int clock, String romPath, Function<String, Stream> romStream) {
         if (chipId >= MAX_CHIPS)
             return 0;
 
         YmF278b chip = ymF278BData[chipId];
         return chip.start(clock, romPath, romStream);
-    }
-
-    public void device_stop_ymf278b(int chipId) {
-        YmF278b chip = ymF278BData[chipId];
-        chip.stop();
-    }
-
-    public void device_reset_ymf278b(int chipId) {
-        YmF278b chip = ymF278BData[chipId];
-        chip.reset();
     }
 
     public void ymf278b_write_rom(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
@@ -121,8 +107,9 @@ public class YmF278bInst extends Instrument.BaseInstrument {
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        ymf278b_w(chipId, (port << 1) | 0x00, adr);
-        ymf278b_w(chipId, (port << 1) | 0x01, data);
+        YmF278b chip = ymF278BData[chipId];
+        chip.write((port << 1) | 0x00, adr);
+        chip.write((port << 1) | 0x01, data);
         return 0;
     }
 

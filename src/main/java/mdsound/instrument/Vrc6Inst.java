@@ -7,6 +7,23 @@ import dotnet4j.util.compat.Tuple;
 
 public class Vrc6Inst extends Instrument.BaseInstrument {
 
+    private double apu_clock_rest = 0;
+
+    private final NesVrc6[] vrc6;
+    private final int[] b = new int[2];
+    private int volume = 0;
+
+    private static final int[] vrc6AddressTable = {
+            0x9000, 0x9001, 0x9002, 0x9003,
+            0xa000, 0xa001, 0xa002, 0xa003,
+            0xb000, 0xb001, 0xb002, 0xb003
+    };
+
+    public Vrc6Inst() {
+        vrc6 = new NesVrc6[] {new NesVrc6(), new NesVrc6()};
+        setVolumeVRC6(0);
+    }
+
     @Override
     public String getName() {
         return "Vrc6Inst";
@@ -16,8 +33,6 @@ public class Vrc6Inst extends Instrument.BaseInstrument {
     public String getShortName() {
         return "Vrc6Inst";
     }
-
-    private double apu_clock_rest = 0;
 
     @Override
     public void reset(int chipId) {
@@ -66,33 +81,14 @@ public class Vrc6Inst extends Instrument.BaseInstrument {
         vrc6[chipId].tick(apu_clocks);
         vrc6[chipId].render(b);
 
-        outputs[0][0] += (short) ((limit(b[0], 0x7fff, -0x8000) * volume) >> 12); // 12 以下だと音割れる
-        outputs[1][0] += (short) ((limit(b[1], 0x7fff, -0x8000) * volume) >> 12); // 12 以下だと音割れる
+        outputs[0][0] += (short) ((limit(b[0], 0x7fff, -0x8000) * volume) >> 12); // If it's below 12, the sound will distort.
+        outputs[1][0] += (short) ((limit(b[1], 0x7fff, -0x8000) * volume) >> 12); // If it's below 12, the sound will distort.
     }
-
-    private static final int[] vrc6AddressTable = {
-            0x9000, 0x9001, 0x9002, 0x9003,
-            0xa000, 0xa001, 0xa002, 0xa003,
-            0xb000, 0xb001, 0xb002, 0xb003
-    };
 
     @Override
     public synchronized int write(int chipIndex, int chipId, int adr, int data) {
-        writeInternal(chipId, 0, vrc6AddressTable[adr], data);
+        vrc6[chipId].write(vrc6AddressTable[adr], data);
         return 0;
-    }
-
-    public void writeInternal(int chipId, int port, int adr, int data) {
-        vrc6[chipId].write(adr, data);
-    }
-
-    private final NesVrc6[] vrc6;
-    private final int[] b = new int[2];
-    private int volume = 0;
-
-    public Vrc6Inst() {
-        vrc6 = new NesVrc6[] {new NesVrc6(), new NesVrc6()};
-        setVolumeVRC6(0);
     }
 
     public void setVolumeVRC6(int db) {
@@ -103,7 +99,7 @@ public class Vrc6Inst extends Instrument.BaseInstrument {
             volume = 0;
     }
 
-    public static int limit(int v, int max, int min) {
+    private static int limit(int v, int max, int min) {
         return v > max ? max : Math.max(v, min);
     }
 }

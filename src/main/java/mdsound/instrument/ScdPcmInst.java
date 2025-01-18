@@ -14,29 +14,12 @@ public class ScdPcmInst extends Instrument.BaseInstrument {
 //    private static final int MAX_CHIPS = 0x02;
     public PcmChip[] PCM_Chip = new PcmChip[] {new PcmChip(), new PcmChip()};
 
-    private int PCM_Init(int chipId, int rate) {
-        PcmChip chip = PCM_Chip[chipId];
-        return chip.init(rate);
-    }
-
-    private void PCM_Reset(int chipId) {
-        PcmChip chip = PCM_Chip[chipId];
-        chip.reset();
-    }
-
-    private void PCM_Set_Rate(int chipId, int rate) {
-        PcmChip chip = PCM_Chip[chipId];
-        chip.setRate(rate);
-    }
-
-    private void PCM_Write_Reg(int chipId, int reg, int data) {
-        PcmChip chip = PCM_Chip[chipId];
-        chip.writeReg(reg, data);
-    }
-
-    private int PCM_Update(int chipId, int[][] buf, int length) {
-        PcmChip chip = PCM_Chip[chipId];
-        return chip.update(buf, length);
+    public ScdPcmInst() {
+        // 0..Main
+        visVolume = new int[][][] {
+                new int[][] {new int[] {0, 0}},
+                new int[][] {new int[] {0, 0}}
+        };
     }
 
     @Override
@@ -49,19 +32,12 @@ public class ScdPcmInst extends Instrument.BaseInstrument {
         return "RF5C";
     }
 
-    public ScdPcmInst() {
-        // 0..Main
-        visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
-        };
-    }
-
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
         PcmChip chip = PCM_Chip[chipId];
 
-        PCM_Update(chipId, outputs, samples);
+        PcmChip chip1 = PCM_Chip[chipId];
+        chip1.update(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
@@ -82,7 +58,8 @@ public class ScdPcmInst extends Instrument.BaseInstrument {
         if (((CHIP_SAMPLING_MODE & 0x01) != 0 && rate < CHIP_SAMPLE_RATE) ||
                 CHIP_SAMPLING_MODE == 0x02)
             rate = CHIP_SAMPLE_RATE;
-        PCM_Init(chipId, rate);
+        PcmChip chip1 = PCM_Chip[chipId];
+        chip1.init(rate);
 
         PcmChip chip = PCM_Chip[chipId];
         chip.start(samplingRate);
@@ -96,11 +73,20 @@ public class ScdPcmInst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        PCM_Reset(chipId);
+        PcmChip chip = PCM_Chip[chipId];
+        chip.reset();
     }
 
-    private void rf5c164_w(int chipId, int offset, int data) {
-        PCM_Write_Reg(chipId, offset, data);
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        PcmChip chip = PCM_Chip[chipId];
+        chip.writeReg(adr, data);
+        return 0;
+    }
+
+    private void PCM_Set_Rate(int chipId, int rate) {
+        PcmChip chip = PCM_Chip[chipId];
+        chip.setRate(rate);
     }
 
     public void rf5c164_mem_w(int chipId, int offset, int data) {
@@ -126,12 +112,6 @@ public class ScdPcmInst extends Instrument.BaseInstrument {
     public void rf5c164_set_mute_Ch(int chipId, int ch, int mute) {
         PcmChip chip = PCM_Chip[chipId];
         chip.setMuteCh(ch, mute);
-    }
-
-    @Override
-    public int write(int chipId, int port, int adr, int data) {
-        rf5c164_w(chipId, adr, data);
-        return 0;
     }
 
     //----
