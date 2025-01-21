@@ -51,8 +51,8 @@ public class NesDmc implements SoundChip {
     }
 
     @Override
-    public void setStereoMix(int trk, short mixl, short mixr) {
-        dmc.setStereoMix(trk, mixl, mixr);
+    public void setStereoMix(int trk, int mixL, int mixR) {
+        dmc.setStereoMix(trk, mixL, mixR);
     }
 
     @Override

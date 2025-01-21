@@ -73,11 +73,11 @@ public class NesN106 implements SoundChip {
     }
 
     @Override
-    public void setStereoMix(int trk, short mixl, short mixr) {
+    public void setStereoMix(int trk, int mixL, int mixR) {
         if (trk < 0 || trk >= 8) return;
         trk = 7 - trk; // displayed channels are inverted
-        sm[0][trk] = mixl;
-        sm[1][trk] = mixr;
+        sm[0][trk] = mixL;
+        sm[1][trk] = mixR;
     }
 
     public DeviceInfo.TrackInfo getTrackInfo(int trk) {

@@ -2,6 +2,7 @@ package mdsound.np;
 
 
 public class LoopDetector implements Device {
+
     @Override
     public void reset() {
         throw new UnsupportedOperationException();
@@ -148,7 +149,7 @@ public class LoopDetector implements Device {
             super(bufbits);
         }
 
-        public static final byte[] maskAPU = new byte[] {
+        private static final byte[] maskAPU = {
                 (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff,
                 (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff,
                 (byte) 0xff, 0x00, (byte) 0xff, (byte) 0xff,
@@ -181,8 +182,8 @@ public class LoopDetector implements Device {
         }
     }
 
-    public static class NESDetectorEx extends LoopDetector {
-        public static final byte[] maskAPU = new byte[] {
+    private static class NESDetectorEx extends LoopDetector {
+        public static final byte[] maskAPU = {
                 (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff,
                 (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff,
                 (byte) 0xff, 0x00, (byte) 0xff, (byte) 0xff,

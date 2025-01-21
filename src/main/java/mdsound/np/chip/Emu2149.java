@@ -5,15 +5,11 @@ public class Emu2149 {
     private static final int VOL_YM2149 = 0;
     private static final int VOL_AY_3_8910 = 1;
 
-    private static final int[][] VolTbl = new int[][] {
-            new int[] {
-                    0x00, 0x01, 0x01, 0x02, 0x02, 0x03, 0x03, 0x04, 0x05, 0x06, 0x07, 0x09, 0x0B, 0x0D, 0x0F, 0x12,
-                    0x16, 0x1A, 0x1F, 0x25, 0x2D, 0x35, 0x3F, 0x4C, 0x5A, 0x6A, 0x7F, 0x97, 0xB4, 0xD6, 0xEB, 0xff
-            },
-            new int[] {
-                    0x00, 0x00, 0x01, 0x01, 0x02, 0x02, 0x03, 0x03, 0x05, 0x05, 0x07, 0x07, 0x0B, 0x0B, 0x0F, 0x0F,
-                    0x16, 0x16, 0x1F, 0x1F, 0x2D, 0x2D, 0x3F, 0x3F, 0x5A, 0x5A, 0x7F, 0x7F, 0xB4, 0xB4, 0xff, 0xff
-            }
+    private static final int[][] VolTbl = {
+            {0x00, 0x01, 0x01, 0x02, 0x02, 0x03, 0x03, 0x04, 0x05, 0x06, 0x07, 0x09, 0x0B, 0x0D, 0x0F, 0x12,
+                    0x16, 0x1A, 0x1F, 0x25, 0x2D, 0x35, 0x3F, 0x4C, 0x5A, 0x6A, 0x7F, 0x97, 0xB4, 0xD6, 0xEB, 0xff},
+            {0x00, 0x00, 0x01, 0x01, 0x02, 0x02, 0x03, 0x03, 0x05, 0x05, 0x07, 0x07, 0x0B, 0x0B, 0x0F, 0x0F,
+                    0x16, 0x16, 0x1F, 0x1F, 0x2D, 0x2D, 0x3F, 0x3F, 0x5A, 0x5A, 0x7F, 0x7F, 0xB4, 0xB4, 0xff, 0xff}
     };
 
     static class Psg {
@@ -22,49 +18,52 @@ public class Emu2149 {
         }
 
         /* Volume Table */
-        public int[] volTbl;
+        int[] volTbl;
 
-        public byte[] reg = new byte[0x20];
-        public int _out;
-        public int[] cout = new int[3];
+        private final int[] reg = new int[0x20];
+        private int _out;
+        final int[] cout = new int[3];
 
-        public int clk, rate, baseIncr, quality;
+        int clk;
+        private int rate;
+        private int baseIncr;
+        private int quality;
 
-        public int[] count = new int[3];
-        public int[] volume = new int[3];
-        public int[] freq = new int[3];
-        public int[] edge = new int[3];
-        public int[] tMask = new int[3];
-        public int[] nMask = new int[3];
-        public int mask;
+        private final int[] count = new int[3];
+        final int[] volume = new int[3];
+        final int[] freq = new int[3];
+        private final int[] edge = new int[3];
+        final int[] tMask = new int[3];
+        final int[] nMask = new int[3];
+        private int mask;
 
-        public int baseCount;
+        private int baseCount;
 
-        public int envVolume;
-        public int envPtr;
-        public int envFace;
+        private int envVolume;
+        int envPtr;
+        private int envFace;
 
-        public int envContinue;
-        public int envAttack;
-        public int envAlternate;
-        public int envHold;
-        public int envPause;
-        public int envReset;
+        int envContinue;
+        int envAttack;
+        int envAlternate;
+        int envHold;
+        private int envPause;
+        private int envReset;
 
-        public int envFreq;
-        public int envCount;
+        int envFreq;
+        private int envCount;
 
-        public int noiseSeed;
-        public int noiseCount;
-        public int noiseFreq;
+        int noiseSeed;
+        private int noiseCount;
+        int noiseFreq;
 
-        /* rate converter */
-        public int realStep;
-        public int psgTime;
-        public int psgStep;
+        // rate converter
+        private int realStep;
+        private int psgTime;
+        private int psgStep;
 
-        /* I/O Ctrl */
-        public int adr;
+        // I/O Ctrl
+        private int adr;
 
         private static final int GETA_BITS = 24;
 
@@ -133,11 +132,11 @@ public class Emu2149 {
             this._out = 0;
         }
 
-        public byte readIO() {
+        public int readIO() {
             return this.reg[this.adr];
         }
 
-        public byte readReg(int reg) {
+        public int readReg(int reg) {
             return this.reg[reg & 0x1f];
 
         }
@@ -149,7 +148,7 @@ public class Emu2149 {
                 this.adr = val & 0x1f;
         }
 
-        public short calc() {
+        public int calc() {
 
             int i, noise;
             int incr;
@@ -220,12 +219,12 @@ public class Emu2149 {
                 }
             }
 
-            return (short) mix;
+            return mix;
         }
 
-        public short calcPsg() {
+        public int calcPsg() {
             if (this.quality == 0)
-                return (short) (this.calc() << 4);
+                return this.calc() << 4;
 
             // Simple rate converter
             while (this.realStep > this.psgTime) {
@@ -236,7 +235,7 @@ public class Emu2149 {
 
             this.psgTime = this.psgTime - this.realStep;
 
-            return (short) (this._out << 4);
+            return this._out << 4;
         }
 
         public void writeReg(int reg, int val) {
@@ -244,7 +243,7 @@ public class Emu2149 {
 
             if (reg > 15) return;
 
-            this.reg[reg] = (byte) (val & 0xff);
+            this.reg[reg] = (int) (val & 0xff);
             switch (reg) {
             case 0:
             case 1:

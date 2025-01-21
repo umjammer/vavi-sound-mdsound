@@ -7,8 +7,8 @@ import java.util.Arrays;
 // by Valley Bell on 26 September 2013
 public class NpNesFds {
 
-    private static final double DEFAULT_CLOCK = 1789772.0;
-    private static final int DEFAULT_RATE = 44100;
+    public static final double DEFAULT_CLOCK = 1789772.0;
+    public static final int DEFAULT_RATE = 44100;
 
     private enum OPT {
         CUTOFF,
@@ -35,63 +35,63 @@ public class NpNesFds {
     private static final double MASTER_VOL = 2.4 * 1223.0;
     // value that should map to master vol
     private static final double MAX_OUT = 32.0 * 63.0;
-    private static final int[] MASTER = new int[] {
+    private static final int[] MASTER = {
             (int) ((MASTER_VOL / MAX_OUT) * 256.0 * 2.0f / 2.0f),
             (int) ((MASTER_VOL / MAX_OUT) * 256.0 * 2.0f / 3.0f),
             (int) ((MASTER_VOL / MAX_OUT) * 256.0 * 2.0f / 4.0f),
             (int) ((MASTER_VOL / MAX_OUT) * 256.0 * 2.0f / 5.0f)};
 
-    public double rate, clock;
-    public int mask;
+    private double rate, clock;
+    private int mask;
     // stereo mix
-    public int[] sm = new int[2];
+    private final int[] sm = new int[2];
     // current output
-    public int fout;
-    public int[] option = new int[(int) OPT.END.ordinal()];
+    private int fout;
+    private final int[] option = new int[OPT.END.ordinal()];
 
-    public boolean masterIo;
-    public byte masterVol;
+    private boolean masterIo;
+    public int masterVol;
     // for trackinfo
     public int lastFreq;
     // for trackinfo
     public int lastVol;
 
     // two wavetables
-    public int[][] wave = new int[][] {new int[64], new int[64]};
+    public int[][] wave = {new int[64], new int[64]};
     public int[] freq = new int[2];
-    public int[] phase = new int[2];
+    private int[] phase = new int[2];
     public boolean wavWrite;
     public boolean wavHalt;
     public boolean envHalt;
     public boolean modHalt;
     public int modPos;
-    public int modWritePos;
+    private int modWritePos;
 
     // two ramp envelopes
-    public boolean[] envMode = new boolean[2];
-    public boolean[] envDisable = new boolean[2];
-    public int[] envTimer = new int[2];
-    public int[] envSpeed = new int[2];
-    public int[] envOut = new int[2];
+    public final boolean[] envMode = new boolean[2];
+    public final boolean[] envDisable = new boolean[2];
+    private final int[] envTimer = new int[2];
+    public final int[] envSpeed = new int[2];
+    public final int[] envOut = new int[2];
     public int masterEnvSpeed;
 
     // 1-pole RC lowpass filter
-    public int rcAccum;
-    public int rcK;
-    public int rcL;
+    private int rcAccum;
+    private int rcK;
+    private int rcL;
 
-    public Counter tickCount = new Counter();
-    public int tickLast;
+    private final Counter tickCount = new Counter();
+    private int tickLast;
 
     public void setMask(int m) {
         this.mask = m & 1;
     }
 
-    public void setStereoMix(int trk, short mixl, short mixr) {
+    public void setStereoMix(int trk, int mixL, int mixR) {
         if (trk < 0) return;
         if (trk > 1) return;
-        this.sm[0] = mixl;
-        this.sm[1] = mixr;
+        this.sm[0] = mixL;
+        this.sm[1] = mixR;
     }
 
     public void setClock(double c) {
@@ -404,7 +404,7 @@ public class NpNesFds {
             return true;
         case 0x89: // $4089 wave write enable, master volume
             this.wavWrite = (val & 0x80) != 0;
-            this.masterVol = (byte) (val & 0x03);
+            this.masterVol = val & 0x03;
             return true;
         case 0x8A: // $408A envelope speed
             this.masterEnvSpeed = val;

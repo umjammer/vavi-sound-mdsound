@@ -128,12 +128,12 @@ public class NesInst extends Instrument.BaseInstrument {
         chip.writeRam(dataStart, dataLength, ramData, ramDataStartAdr);
     }
 
-    public synchronized byte[] readApu(int chipId) {
+    public synchronized int[] readApu(int chipId) {
         Nes chip = chips[chipId];
         return chip.readApu();
     }
 
-    public synchronized byte[] readDmc(int chipId) {
+    public synchronized int[] readDmc(int chipId) {
         Nes chip = chips[chipId];
         return chip.readDmc();
     }

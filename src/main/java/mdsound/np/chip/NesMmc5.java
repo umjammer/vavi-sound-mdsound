@@ -392,7 +392,7 @@ public class NesMmc5 implements SoundChip {
     }
 
     @Override
-    public void setStereoMix(int trk, short mixL, short mixR) {
+    public void setStereoMix(int trk, int mixL, int mixR) {
         if (trk < 0) return;
         if (trk > 2) return;
         sm[0][trk] = mixL;

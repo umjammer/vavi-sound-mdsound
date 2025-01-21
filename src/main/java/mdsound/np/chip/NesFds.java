@@ -50,8 +50,8 @@ public class NesFds implements SoundChip {
     }
 
     @Override
-    public void setStereoMix(int trk, short mixl, short mixr) {
-        fds.setStereoMix(trk, mixl, mixr);
+    public void setStereoMix(int trk, int mixL, int mixR) {
+        fds.setStereoMix(trk, mixL, mixR);
     }
 
     @Override

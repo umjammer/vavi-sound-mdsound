@@ -23,9 +23,6 @@ public class DCFilter {
         reset();
     }
 
-    protected void finalinze() {
-    }
-
     public void updateFactor() {
         if (c == 0.0 || r == 0.0) {
             a = 2.0; // disable

@@ -61,11 +61,11 @@ public class NesVrc6 implements SoundChip {
     }
 
     @Override
-    public void setStereoMix(int trk, short mixl, short mixr) {
+    public void setStereoMix(int trk, int mixL, int mixR) {
         if (trk < 0) return;
         if (trk > 2) return;
-        sm[0][trk] = mixl;
-        sm[1][trk] = mixr;
+        sm[0][trk] = mixL;
+        sm[1][trk] = mixR;
     }
 
     public DeviceInfo.TrackInfo getTrackInfo(int trk) {

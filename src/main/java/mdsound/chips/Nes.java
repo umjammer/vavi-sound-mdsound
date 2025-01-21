@@ -191,12 +191,12 @@ public class Nes {
         }
     }
 
-    public byte[] readApu() {
+    public int[] readApu() {
         if (this.chipApu == null) return null;
         return this.chipApu.reg;
     }
 
-    public byte[] readDmc() {
+    public int[] readDmc() {
         if (this.chipDmc == null) return null;
 
         return this.chipDmc.reg;

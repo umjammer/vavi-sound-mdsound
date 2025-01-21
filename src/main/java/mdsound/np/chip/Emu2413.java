@@ -83,52 +83,53 @@ public class Emu2413 {
                 return e << (2 + PG_BITS - SLOT_AMP_BITS);
             }
 
-            /* Voice data */
-            static class Patch {
-                public int tl, fb, eg, ml, ar, dr, sl, rr, kr, kl, am, pm, wf;
+            /** Voice data */
+            private static class Patch {
+                private int tl, fb, eg, ml, ar, dr, sl, rr, kr, kl, am, pm, wf;
             }
 
-            Patch patch;
+            private Patch patch;
 
-            int type; // 0 : modulator 1 : carrier */
+            /** 0 : modulator 1 : carrier */
+            private int type;
 
-            /* OUTPUT */
-            int feedback;
+            // OUTPUT
+            private int feedback;
             int[] output = new int[2]; // Output value of slot */
 
-            /* for Phase Generator (PG) */
+            // for Phase Generator (PG)
 
-            /* Wavetable */
-            int[] sinTbl;
-            /* Phase */
-            public int phase;
-            /* Phase increment amount */
-            public int dPhase;
-            /* output */
-            public int pgOut;
+            /** Wavetable */
+            private int[] sinTbl;
+            /** Phase */
+            private int phase;
+            /** Phase increment amount */
+            private int dPhase;
+            /** output */
+            private int pgOut;
 
-            /* for Envelope Generator (EG) */
+            // for Envelope Generator (EG)
 
-            /* F-Number */
-            public int fnum;
-            /* Bsynchronized */
-            public int block;
-            /* Current volume */
-            public int volume;
-            /* Sustine 1 = ON, 0 = OFF */
-            public int sustine;
-            /* Total Level + Key scale level*/
-            public int tll;
-            /* Key scale offset (Rks) */
-            public int rks;
-            /* Current state */
-            public int egMode;
-            /* Phase */
-            public int egPhase;
-            /* Phase increment amount */
-            public int egDPhase;
-            /* output */
-            public int egOut;
+            /** F-Number */
+            private int fnum;
+            /** Bsynchronized */
+            private int block;
+            /** Current volume */
+            private int volume;
+            /** Sustine 1 = ON, 0 = OFF */
+            private int sustine;
+            /** Total Level + Key scale level*/
+            private int tll;
+            /** Key scale offset (Rks) */
+            private int rks;
+            /** Current state */
+            private int egMode;
+            /** Phase */
+            private int egPhase;
+            /** Phase increment amount */
+            private int egDPhase;
+            /** output */
+            private int egOut;
 
             /**
              * Calc Parameters
@@ -140,12 +141,12 @@ public class Emu2413 {
             /**
              * Opll internal interfaces
              */
-            static final int SLOT_BD1 = 12;
-            static final int SLOT_BD2 = 13;
-            static final int SLOT_HH = 14;
-            static final int SLOT_SD = 15;
-            static final int SLOT_TOM = 16;
-            static final int SLOT_CYM = 17;
+            private static final int SLOT_BD1 = 12;
+            private static final int SLOT_BD2 = 13;
+            private static final int SLOT_HH = 14;
+            private static final int SLOT_SD = 15;
+            private static final int SLOT_TOM = 16;
+            private static final int SLOT_CYM = 17;
 
             private void updatePg() {
                 this.dPhase = dphaseTable[this.fnum][this.block][this.patch.ml];
@@ -285,9 +286,7 @@ public class Emu2413 {
                     return db2linTable[(noise != 0 ? DB_NEG(0.0) : DB_NEG(15.0)) + this.egOut];
             }
 
-            /**
-             TOP-CYM
-             */
+            /** TOP-CYM */
             private int calcCym(int pgout_hh) {
                 int dbout;
 
@@ -306,9 +305,7 @@ public class Emu2413 {
                 return db2linTable[dbout + this.egOut];
             }
 
-            /**
-             HI-HAT
-             */
+            /** HI-HAT */
             private int calcHat(int pgout_cym, int noise) {
                 int dbout;
 
@@ -347,14 +344,14 @@ public class Emu2413 {
             }
 
             /* dB to Liner table */
-            private static final short[] db2linTable = new short[(DB_MUTE + DB_MUTE) * 2];
+            private static final int[] db2linTable = new int[(DB_MUTE + DB_MUTE) * 2];
 
             /* Table for dB(0 -- (1<<DB_BITS)-1) to Liner(0 -- DB2LIN_AMP_WIDTH) */
             static {
                 for (int i = 0; i < DB_MUTE + DB_MUTE; i++) {
-                    db2linTable[i] = (short) ((double) ((1 << DB2LIN_AMP_BITS) - 1) * Math.pow(10, -(double) i * DB_STEP / 20));
+                    db2linTable[i] = (int) ((double) ((1 << DB2LIN_AMP_BITS) - 1) * Math.pow(10, -(double) i * DB_STEP / 20));
                     if (i >= DB_MUTE) db2linTable[i] = 0;
-                    db2linTable[i + DB_MUTE + DB_MUTE] = (short) (-db2linTable[i]);
+                    db2linTable[i + DB_MUTE + DB_MUTE] = -db2linTable[i];
                 }
             }
         }
@@ -364,64 +361,66 @@ public class Emu2413 {
             return 1 << x;
         }
 
-        public static final int MASK_HH = 1 << 9;
-        public static final int MASK_CYM = 1 << 10;
-        public static final int MASK_TOM = 1 << 11;
-        public static final int MASK_SD = 1 << 12;
-        public static final int MASK_BD = 1 << 13;
-        public static final int MASK_RHYTHM = MASK_HH | MASK_CYM | MASK_TOM | MASK_SD | MASK_BD;
+        private static final int MASK_HH = 1 << 9;
+        private static final int MASK_CYM = 1 << 10;
+        private static final int MASK_TOM = 1 << 11;
+        private static final int MASK_SD = 1 << 12;
+        private static final int MASK_BD = 1 << 13;
+        private static final int MASK_RHYTHM = MASK_HH | MASK_CYM | MASK_TOM | MASK_SD | MASK_BD;
 
-        public int adr;
-        public int _out;
+        int adr;
+        private int _out;
 
-        public int realStep;
-        public int opllTime;
-        public int opllStep;
-        public int prev, next;
-        public int[] sprev = new int[2], snext = new int[2];
-        public int[] pan = new int[16];
+        private int realStep;
+        private int opllTime;
+        private int opllStep;
+        private int prev, next;
+        private final int[] sprev = new int[2];
+        private final int[] snext = new int[2];
+        private final int[] pan = new int[16];
 
-        /* Register */
-        public byte[] reg = new byte[0x40];
-        public int[] slotOnFlag = new int[18];
+        /** Register */
+        final int[] reg = new int[0x40];
+        private final int[] slotOnFlag = new int[18];
 
-        /* Pitch Modulator */
-        public int pmPhase;
-        public int lfo_pm;
+        // Pitch Modulator
+        private int pmPhase;
+        private int lfo_pm;
 
-        /* Amp Modulator */
-        public int amPhase;
-        public int lfo_am;
+        // Amp Modulator
+        private int amPhase;
+        private int lfo_am;
 
-        public int quality;
+        private int quality;
 
-        /* Noise Generator */
-        public int noiseSeed;
+        /** Noise Generator */
+        private int noiseSeed;
 
-        /* Channel data */
-        public int[] patchNumber = new int[9];
-        public int[] keyStatus = new int[9];
+        // Channel data
+        private final int[] patchNumber = new int[9];
+        private final int[] keyStatus = new int[9];
 
         /* Slot */
-        public Slot[] slot = new Slot[18];
+        final Slot[] slot = new Slot[18];
 
         /* Voice data */
-        public Slot.Patch[][] patch = new Slot.Patch[][] {
+        private final Slot.Patch[][] patch = {
                 new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2]
                 , new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2]
                 , new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2]
                 , new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2]
                 , new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2]
         };
-        public int[] patchUpdate = new int[2]; /* flag for check patch update */
+        /** flag for check patch update */
+        private final int[] patchUpdate = new int[2];
 
-        public int mask;
+        private int mask;
 
-        Slot mod(int x) {
+        private Slot mod(int x) {
             return this.slot[x << 1];
         }
 
-        Slot car(int x) {
+        private Slot car(int x) {
             return this.slot[(x << 1) | 1];
         }
 
@@ -465,7 +464,7 @@ public class Emu2413 {
                 this.car(8).slotOn2();
         }
 
-        /* Drum key off */
+        // Drum key off
         private void keyOff_BD() {
             this.keyOff(6);
         }
@@ -490,38 +489,38 @@ public class Emu2413 {
                 this.car(8).slotOff();
         }
 
-        /* Change a Voice */
+        /** Change a Voice */
         private void setPatch(int i, int num) {
             this.patchNumber[i] = num;
             this.mod(i).patch = this.patch[num][0];
             this.car(i).patch = this.patch[num][1];
         }
 
-        /* Set sustine parameter */
+        /** Set sustine parameter */
         private void setSustine(int c, int sustine) {
             this.car(c).sustine = sustine;
             if (this.mod(c).type != 0)
                 this.mod(c).sustine = sustine;
         }
 
-        /* Volume : 6bit ( Volume register << 2 ) */
+        /** Volume : 6bit ( Volume register << 2 ) */
         private void setVolume(int c, int volume) {
             this.car(c).volume = volume;
         }
 
-        /* Set F-Number ( fNum : 9bit ) */
-        private void setFnumber(int c, int fnum) {
+        /** Set F-Number ( fNum : 9bit ) */
+        private void setFNumber(int c, int fnum) {
             this.car(c).fnum = fnum;
             this.mod(c).fnum = fnum;
         }
 
-        /* Set Bsynchronized data (block : 3bit ) */
+        /** Set Bsynchronized data (block : 3bit ) */
         private void setBlock(int c, int block) {
             this.car(c).block = block;
             this.mod(c).block = block;
         }
 
-        /* Change Rhythm Mode */
+        /** Change Rhythm Mode */
         private void updateRhythmMode() {
             if ((this.patchNumber[6] & 0x10) != 0) {
                 if ((this.slotOnFlag[Slot.SLOT_BD2] | (this.reg[0x0e] & 0x20)) == 0) {
@@ -614,7 +613,7 @@ public class Emu2413 {
             this.patch[num][1].wf = patch[1].wf;
         }
 
-        static final int[] sl = new int[] {
+        private static final int[] sl = {
                 s2e(0.0), s2e(3.0), s2e(6.0), s2e(9.0), s2e(12.0), s2e(15.0), s2e(18.0), s2e(21.0),
                 s2e(24.0), s2e(27.0), s2e(30.0), s2e(33.0), s2e(36.0), s2e(39.0), s2e(42.0), s2e(48.0)
         };
@@ -650,7 +649,7 @@ public class Emu2413 {
             resetPatch(0);
         }
 
-        private void delete() {
+        public void delete() {
         }
 
         /* Reset patch datas by system default. */
@@ -697,7 +696,7 @@ public class Emu2413 {
         }
 
         /* Force Refresh (When external program changes some parameters). */
-        private void forceRefresh() {
+        public void forceRefresh() {
             for (int i = 0; i < 9; i++)
                 this.setPatch(i, this.patchNumber[i]);
 
@@ -827,7 +826,7 @@ public class Emu2413 {
                 egout = EG2DB(egout + slot.tll) + lfo;
             else {
                 egout = EG2DB(egout + slot.tll);
-                //logger.log(Level.TRACE, "egout %d slot.tll %d (e_int32)(EG_STEP/DB_STEP) %d".formatted(egout, slot.tll, (short)(EG_STEP / DB_STEP)));
+                //logger.log(Level.TRACE, "egout %d slot.tll %d (e_int32)(EG_STEP/DB_STEP) %d".formatted(egout, slot.tll, (int)(EG_STEP / DB_STEP)));
             }
 
             if (egout >= DB_MUTE)
@@ -836,7 +835,7 @@ public class Emu2413 {
             slot.egOut = egout | 3;
         }
 
-        private short calc() {
+        private int calc() {
             int inst = 0, perc = 0, _out = 0;
             int i;
 
@@ -885,10 +884,10 @@ public class Emu2413 {
             // end if (! this.vrc7_mode)
 
             _out = inst + (perc << 1);
-            return (short) (_out << 3);
+            return _out << 3;
         }
 
-        public short _calc() {
+        public int _calc() {
             if (this.quality == 0)
                 return calc();
 
@@ -899,10 +898,10 @@ public class Emu2413 {
             }
 
             this.opllTime -= this.realStep;
-            this._out = (short) (((double) this.next * (this.opllStep - this.opllTime)
+            this._out = (int) (((double) this.next * (this.opllStep - this.opllTime)
                     + (double) this.prev * this.opllTime) / this.opllStep);
 
-            return (short) this._out;
+            return (int) this._out;
         }
 
         public int setMask(int mask) {
@@ -927,7 +926,7 @@ public class Emu2413 {
 
             data = data & 0xff;
             reg = reg & 0x3f;
-            this.reg[reg] = (byte) data;
+            this.reg[reg] = (int) data;
 
             switch (reg) {
             case 0x00:
@@ -1071,7 +1070,7 @@ public class Emu2413 {
             case 0x17:
             case 0x18:
                 ch = reg - 0x10;
-                this.setFnumber(ch, data + ((this.reg[0x20 + ch] & 1) << 8));
+                this.setFNumber(ch, data + ((this.reg[0x20 + ch] & 1) << 8));
                 this.mod(ch).updateAll();
                 this.car(ch).updateAll();
                 break;
@@ -1086,7 +1085,7 @@ public class Emu2413 {
             case 0x27:
             case 0x28:
                 ch = reg - 0x20;
-                this.setFnumber(ch, ((data & 1) << 8) + this.reg[0x10 + ch]);
+                this.setFNumber(ch, ((data & 1) << 8) + this.reg[0x10 + ch]);
                 this.setBlock(ch, (data >> 1) & 7);
                 this.setSustine(ch, (data >> 5) & 1);
                 if ((data & 0x10) != 0)
@@ -1138,7 +1137,7 @@ public class Emu2413 {
             if ((adr & 1) != 0)
                 writeReg(this.adr, val);
             else
-                this.adr = (byte) val;
+                this.adr = val;
         }
 
         /* STEREO MODE (OPT) */
@@ -1147,8 +1146,8 @@ public class Emu2413 {
         }
 
         private void calcStereo(int[] out) {
-            int[] b = new int[] {0, 0, 0, 0}; // Ignore, Right, Left, Center */
-            int[] r = new int[] {0, 0, 0, 0}; // Ignore, Right, Left, Center */
+            int[] b = {0, 0, 0, 0}; // Ignore, Right, Left, Center */
+            int[] r = {0, 0, 0, 0}; // Ignore, Right, Left, Center */
 
             updateAmpm();
             updateNoise();
@@ -1208,17 +1207,17 @@ public class Emu2413 {
             }
 
             this.opllTime -= this.realStep;
-            out[0] = (short) (((double) this.snext[0] * (this.opllStep - this.opllTime)
+            out[0] = (int) (((double) this.snext[0] * (this.opllStep - this.opllTime)
                     + (double) this.sprev[0] * this.opllTime) / this.opllStep);
-            out[1] = (short) (((double) this.snext[1] * (this.opllStep - this.opllTime)
+            out[1] = (int) (((double) this.snext[1] * (this.opllStep - this.opllTime)
                     + (double) this.sprev[1] * this.opllTime) / this.opllStep);
         }
 
         private static final int OPLL_TONE_NUM = 8;
-        private static final byte[][] default_inst = new byte[][] {
+        private static final byte[][] default_inst = {
                 // patch set by rainwarrior (8/01/2012)
                 // http://forumthis.nesdev.com/viewtopic.php?f=6&t=9141
-                new byte[] {
+                {
                         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                         0x03, 0x21, 0x05, 0x06, (byte) 0xB8, (byte) 0x82, 0x42, 0x27, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                         0x13, 0x41, 0x13, 0x0D, (byte) 0xD8, (byte) 0xD6, 0x23, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -1247,7 +1246,7 @@ public class Emu2413 {
 
                 // patch set by quietust (1/18/2004), used in FamiTracker 0.3.6
                 // Source: http://nesdev.com/cgi-bin/wwwthreads/showpost.pl?Board=NESemdev&Number=1440
-                new byte[] {
+                {
                         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                         0x03, 0x21, 0x04, 0x06, (byte) 0x8D, (byte) 0xF2, 0x42, 0x17, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                         0x13, 0x41, 0x05, 0x0E, (byte) 0x99, (byte) 0x96, 0x63, 0x12, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -1275,7 +1274,7 @@ public class Emu2413 {
                 },
 
                 // patch set by Mitsutaka Okazaki used in FamiTracker 0.3.5 and prior (6/24/2001)
-                new byte[] {
+                {
                         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                         0x33, 0x01, 0x09, 0x0e, (byte) 0x94, (byte) 0x90, 0x40, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                         0x13, 0x41, 0x0f, 0x0d, (byte) 0xce, (byte) 0xd3, 0x43, 0x13, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -1302,7 +1301,7 @@ public class Emu2413 {
                 },
 
                 /* VRC7 TONES by okazaki@angel.ne.jp (4/10/2004) */
-                new byte[] {
+                {
                         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                         0x33, 0x01, 0x09, 0x0e, (byte) 0x94, (byte) 0x90, 0x40, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                         0x13, 0x41, 0x0f, 0x0d, (byte) 0xce, (byte) 0xd3, 0x43, 0x13, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -1326,7 +1325,7 @@ public class Emu2413 {
 
                 // patch set 2 by kevtris (11/15/1999)
                 // http://kevtris.org/nes/vrcvii.txt
-                new byte[] {
+                {
                         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                         0x31, 0x22, 0x23, 0x07, (byte) 0xF0, (byte) 0xF0, (byte) 0xE8, (byte) 0xF7, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                         0x03, 0x31, 0x68, 0x05, (byte) 0xF2, 0x74, 0x79, (byte) 0x9C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -1355,7 +1354,7 @@ public class Emu2413 {
 
                 // patch set 1 by kevtris (11/14/1999)
                 // http://kevtris.org/nes/vrcvii.txt
-                new byte[] {
+                {
                         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                         0x05, 0x03, 0x10, 0x06, 0x74, (byte) 0xA1, 0x13, (byte) 0xF4, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                         0x05, 0x01, 0x16, 0x00, (byte) 0xF9, (byte) 0xA2, 0x15, (byte) 0xF5, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -1380,7 +1379,7 @@ public class Emu2413 {
                 },
 
                 /* YM2413 tone by okazaki@angel.ne.jp (4/10/2004) */
-                new byte[] {
+                {
                         0x49, 0x4c, 0x4c, 0x32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                         0x61, 0x61, 0x1e, 0x17, (byte) 0xf0, 0x7f, 0x00, 0x17, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                         0x13, 0x41, 0x16, 0x0e, (byte) 0xfd, (byte) 0xf4, 0x23, 0x23, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -1403,7 +1402,7 @@ public class Emu2413 {
                 },
 
                 /* YMF281B tone by Chabin (4/10/2004) */
-                new byte[] {
+                {
                         0x49, 0x4c, 0x4c, 0x32, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                         0x62, 0x21, 0x1a, 0x07, (byte) 0xf0, 0x6f, 0x00, 0x16, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
                         0x00, 0x10, 0x44, 0x02, (byte) 0xf6, (byte) 0xf4, 0x54, 0x23, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -1456,26 +1455,26 @@ public class Emu2413 {
         private static final int SL_MUTE = (1 << SL_BITS);
 
         private static int EG2DB(int d) {
-            return ((d) * (int) (EG_STEP / DB_STEP));
+            return (d * (int) (EG_STEP / DB_STEP));
         }
 
         private static int TL2EG(int d) {
-            return ((d) * (int) (TL_STEP / EG_STEP));
+            return (d * (int) (TL_STEP / EG_STEP));
         }
 
         private static int sl2eg(int d) {
-            return ((d) * (int) (SL_STEP / EG_STEP));
+            return (d * (int) (SL_STEP / EG_STEP));
         }
 
-        /* Bits for liner value */
+        // Bits for liner value
         private static final int DB2LIN_AMP_BITS = 8;
         private static final int SLOT_AMP_BITS = DB2LIN_AMP_BITS;
 
-        /* Bits for envelope phase incremental counter */
+        // Bits for envelope phase incremental counter
         private static final int EG_DP_BITS = 22;
         private static final int EG_DP_WIDTH = 1 << EG_DP_BITS;
 
-        /* Bits for Pitch and Amp modulator */
+        // Bits for Pitch and Amp modulator
         private static final int PM_PG_BITS = 8;
         private static final int PM_PG_WIDTH = 1 << PM_PG_BITS;
         private static final int PM_DP_BITS = 16;
@@ -1485,76 +1484,76 @@ public class Emu2413 {
         private static final int AM_DP_BITS = 16;
         private static final int AM_DP_WIDTH = 1 << AM_DP_BITS;
 
-        /* PM table is calcurated by PM_AMP * pow(2,PM_DEPTH*sin(x)/1200) */
+        // PM table is calcurated by PM_AMP * pow(2, PM_DEPTH * sin(x) / 1200)
         private static final int PM_AMP_BITS = 8;
         private static final int PM_AMP = (1 << PM_AMP_BITS);
 
-        /* PM speed(Hz) and depth(cent) */
+        // PM speed(Hz) and depth(cent)
         private static final double PM_SPEED = 6.4;
         private static final double PM_DEPTH = 13.75;
 
-        /* AM speed(Hz) and depth(dB) */
+        // AM speed(Hz) and depth(dB)
         private static final double AM_SPEED = 3.6413;
         private static final double AM_DEPTH = 4.875;
 
-        /* Cut the lower b bit(s) off. */
+        /** Cut the lower b bit(s) off. */
         private static int highBits(int c, int b) {
             return c >> b;
         }
 
-        /* Leave the lower b bit(s). */
+        /** Leave the lower b bit(s). */
         private static int lowBits(int c, int b) {
-            return ((c) & ((1 << (b)) - 1));
+            return (c & ((1 << b) - 1));
         }
 
-        /* Expand x which is s bits to d bits. */
+        /** Expand x which is s bits to d bits. */
         private static int expandBits(int x, int s, int d) {
-            return ((x) << ((d) - (s)));
+            return (x << (d - s));
         }
 
-        /* Expand x which is s bits to d bits and fill expanded bits '1' */
+        /** Expand x which is s bits to d bits and fill expanded bits '1' */
         private static int expandBitsX(int x, int s, int d) {
-            return (((x) << ((d) - (s))) | ((1 << ((d) - (s))) - 1));
+            return ((x << (d - s)) | ((1 << (d - s)) - 1));
         }
 
-        /* Adjust envelope speed which depends on sampling rate. */
+        /** Adjust envelope speed which depends on sampling rate. */
         private int adjustRate(int x) {
-            return (rate == 49716 ? x : (int) ((double) (x) * clk / 72 / rate + 0.5));
+            return (rate == 49716 ? x : (int) ((double) x * clk / 72 / rate + 0.5));
         }        /* added 0.5 to round the value*/
 
         private static int bit(int s, int b) {
             return (s >> b) & 1;
         }
 
-        /* Input clock */
+        /** Input clock */
         private int clk = 844451141;
-        /* Sampling rate */
+        /** Sampling rate */
         private int rate = 3354932;
 
-        /* WaveTable for each envelope amp */
+        // WaveTable for each envelope amp
         private static final int[] fullSinTable = new int[PG_WIDTH];
         private static final int[] halfSinTable = new int[PG_WIDTH];
 
-        private static final int[][] waveForm = new int[2][];//{ fullsintable, halfsintable };
+        private static final int[][] waveForm = new int[2][]; // { fullsintable, halfsintable };
 
-        /* LFO Table */
+        // LFO Table
         private final int[] pmTable = new int[PM_PG_WIDTH];
         private final int[] amTable = new int[AM_PG_WIDTH];
 
-        /* Phase delta for LFO */
+        // Phase delta for LFO
         private int pmDPhase;
         private int amDPhase;
 
-        /* Liner to Log curve conversion table (for Attack rate). */
+        /** Liner to Log curve conversion table (for Attack rate). */
         private static final int[] AR_ADJUST_TABLE = new int[1 << EG_BITS];
 
-        /* Empty Voice data */
+        /** Empty Voice data */
         private static final Slot.Patch null_patch = new Slot.Patch();
 
-        /* Basic Voice data */
+        /** Basic Voice data */
         private Slot.Patch[][][] defaultPatch = null;
 
-        /* Definition of envelope mode */
+        /** Definition of envelope mode */
         public enum EgState {
             READY {
                 int calcEgDPhase(Slot slot) {
@@ -1601,38 +1600,38 @@ public class Emu2413 {
             }
         }
 
-        /* Phase incR table for Attack */
-        private static final int[][] dPhaseARTable = new int[][] {
+        /** Phase incR table for Attack */
+        private static final int[][] dPhaseARTable = {
                 new int[16], new int[16], new int[16], new int[16], new int[16], new int[16], new int[16], new int[16],
                 new int[16], new int[16], new int[16], new int[16], new int[16], new int[16], new int[16], new int[16]
         };
 
-        /* Phase incR table for Decay and Release */
-        private static final int[][] dPhaseDRTable = new int[][] {
+        /** Phase incR table for Decay and Release */
+        private static final int[][] dPhaseDRTable = {
                 new int[16], new int[16], new int[16], new int[16], new int[16], new int[16], new int[16], new int[16],
                 new int[16], new int[16], new int[16], new int[16], new int[16], new int[16], new int[16], new int[16]
         };
 
-        /* KSL + TL Table */
+        // KSL + TL Table
         private static int[][][][] tllTable;
 
         private static int[][][] rksTable;
 
-        /* Phase incR table for PG */
+        /** Phase incR table for PG */
         private static int[][][] dphaseTable;
 
-        /*
-         Create tables
-         */
+        //
+        // Create tables
+        //
 
-        /* Table for AR to LogCurve. */
+        /** Table for AR to LogCurve. */
         private static void makeAdjustTable() {
             AR_ADJUST_TABLE[0] = (1 << EG_BITS) - 1;
             for (int i = 1; i < (1 << EG_BITS); i++)
                 AR_ADJUST_TABLE[i] = (int) ((double) (1 << EG_BITS) - 1 - ((1 << EG_BITS) - 1) * Math.log(i) / Math.log(127));
         }
 
-        /* Liner(+0.0 - +1.0) to dB((1<<DB_BITS) - 1 -- 0) */
+        /** Liner(+0.0 - +1.0) to dB((1<<DB_BITS) - 1 -- 0) */
         private static int lin2db(double d) {
             if (d == 0)
                 return (DB_MUTE - 1);
@@ -1640,7 +1639,7 @@ public class Emu2413 {
                 return Math.min(-(int) (20.0 * Math.log10(d) / DB_STEP), DB_MUTE - 1); // 0 -- 127 */
         }
 
-        /* Sin Table */
+        /** Sin Table */
         private static void makeSinTable() {
             for (int i = 0; i < PG_WIDTH / 4; i++) {
                 fullSinTable[i] = lin2db(Math.sin(2.0 * Math.PI * i / PG_WIDTH));
@@ -1668,24 +1667,25 @@ public class Emu2413 {
                 return -4.0 + phase * 2 / Math.PI;
         }
 
-        /* Table for Pitch Modulator */
+        /** Table for Pitch Modulator */
         private void makePmTable() {
             for (int i = 0; i < PM_PG_WIDTH; i++)
-                /* pmtable[i] = (e_int32) ((double) PM_AMP * pow (2, (double) PM_DEPTH * sin (2.0 * PI * i / PM_PG_WIDTH) / 1200)); */
+//                pmtable[i] = (e_int32) ((double) PM_AMP * pow (2, (double) PM_DEPTH * sin (2.0 * PI * i / PM_PG_WIDTH) / 1200));
                 pmTable[i] = (int) ((double) PM_AMP * Math.pow(2, PM_DEPTH * saw(2.0 * Math.PI * i / PM_PG_WIDTH) / 1200));
         }
 
-        /* Table for Amp Modulator */
+        /** Table for Amp Modulator */
         private void makeAmTable() {
             for (int i = 0; i < AM_PG_WIDTH; i++)
-                /* amtable[i] = (e_int32) ((double) AM_DEPTH / 2 / DB_STEP * (1.0 + sin (2.0 * PI * i / PM_PG_WIDTH))); */
+//                amtable[i] = (e_int32) ((double) AM_DEPTH / 2 / DB_STEP * (1.0 + sin (2.0 * PI * i / PM_PG_WIDTH)));
                 amTable[i] = (int) (AM_DEPTH / 2 / DB_STEP * (1.0 + saw(2.0 * Math.PI * i / PM_PG_WIDTH)));
         }
 
-        /* Phase increment counter table */
+        /** Phase increment counter table */
         private void makeDphaseTable() {
-            int[] mlTable = new int[]
-                    {1, 1 * 2, 2 * 2, 3 * 2, 4 * 2, 5 * 2, 6 * 2, 7 * 2, 8 * 2, 9 * 2, 10 * 2, 10 * 2, 12 * 2, 12 * 2, 15 * 2, 15 * 2};
+            int[] mlTable = {
+                    1, 1 * 2, 2 * 2, 3 * 2, 4 * 2, 5 * 2, 6 * 2, 7 * 2, 8 * 2, 9 * 2, 10 * 2, 10 * 2, 12 * 2, 12 * 2, 15 * 2, 15 * 2
+            };
 
             for (int fnum = 0; fnum < 512; fnum++)
                 for (int block = 0; block < 8; block++)
@@ -1696,7 +1696,7 @@ public class Emu2413 {
         private static void makeTllTable() {
 //#define dB2(x) ((x)*2)
 
-            double[] klTable = new double[] {
+            double[] klTable = {
                     0.000 * 2, 9.000 * 2, 12.000 * 2, 13.875 * 2, 15.000 * 2, 16.125 * 2, 16.875 * 2, 17.625 * 2,
                     18.000 * 2, 18.750 * 2, 19.125 * 2, 19.500 * 2, 19.875 * 2, 20.250 * 2, 20.625 * 2, 21.000 * 2
             };
@@ -1717,47 +1717,47 @@ public class Emu2413 {
                         }
         }
 
-//# ifdef USE_SPEC_ENV_SPEED
-        //        static double attacktime[16][4] = {
-        //  {0, 0, 0, 0},
-        //  {1730.15, 1400.60, 1153.43, 988.66},
-        //  {865.08, 700.30, 576.72, 494.33},
-        //  {432.54, 350.15, 288.36, 247.16},
-        //  {216.27, 175.07, 144.18, 123.58},
-        //  {108.13, 87.54, 72.09, 61.79},
-        //  {54.07, 43.77, 36.04, 30.90},
-        //  {27.03, 21.88, 18.02, 15.45},
-        //  {13.52, 10.94, 9.01, 7.72},
-        //  {6.76, 5.47, 4.51, 3.86},
-        //  {3.38, 2.74, 2.25, 1.93},
-        //  {1.69, 1.37, 1.13, 0.97},
-        //  {0.84, 0.70, 0.60, 0.54},
-        //  {0.50, 0.42, 0.34, 0.30},
-        //  {0.28, 0.22, 0.18, 0.14},
-        //  {0.00, 0.00, 0.00, 0.00}
-        //};
-
-        //static double decaytime[16][4] = {
-        //  {0, 0, 0, 0},
-        //  {20926.60, 16807.20, 14006.00, 12028.60},
-        //  {10463.30, 8403.58, 7002.98, 6014.32},
-        //  {5231.64, 4201.79, 3501.49, 3007.16},
-        //  {2615.82, 2100.89, 1750.75, 1503.58},
-        //  {1307.91, 1050.45, 875.37, 751.79},
-        //  {653.95, 525.22, 437.69, 375.90},
-        //  {326.98, 262.61, 218.84, 187.95},
-        //  {163.49, 131.31, 109.42, 93.97},
-        //  {81.74, 65.65, 54.71, 46.99},
-        //  {40.87, 32.83, 27.36, 23.49},
-        //  {20.44, 16.41, 13.68, 11.75},
-        //  {10.22, 8.21, 6.84, 5.87},
-        //  {5.11, 4.10, 3.42, 2.94},
-        //  {2.55, 2.05, 1.71, 1.47},
-        //  {1.27, 1.27, 1.27, 1.27}
-        //};
+//#ifdef USE_SPEC_ENV_SPEED
+//        static final double[][] attacktime = {
+//          {0, 0, 0, 0},
+//          {1730.15, 1400.60, 1153.43, 988.66},
+//          {865.08, 700.30, 576.72, 494.33},
+//          {432.54, 350.15, 288.36, 247.16},
+//          {216.27, 175.07, 144.18, 123.58},
+//          {108.13, 87.54, 72.09, 61.79},
+//          {54.07, 43.77, 36.04, 30.90},
+//          {27.03, 21.88, 18.02, 15.45},
+//          {13.52, 10.94, 9.01, 7.72},
+//          {6.76, 5.47, 4.51, 3.86},
+//          {3.38, 2.74, 2.25, 1.93},
+//          {1.69, 1.37, 1.13, 0.97},
+//          {0.84, 0.70, 0.60, 0.54},
+//          {0.50, 0.42, 0.34, 0.30},
+//          {0.28, 0.22, 0.18, 0.14},
+//          {0.00, 0.00, 0.00, 0.00}
+//        };
+//
+//        static final double[][] decaytime = {
+//          {0, 0, 0, 0},
+//          {20926.60, 16807.20, 14006.00, 12028.60},
+//          {10463.30, 8403.58, 7002.98, 6014.32},
+//          {5231.64, 4201.79, 3501.49, 3007.16},
+//          {2615.82, 2100.89, 1750.75, 1503.58},
+//          {1307.91, 1050.45, 875.37, 751.79},
+//          {653.95, 525.22, 437.69, 375.90},
+//          {326.98, 262.61, 218.84, 187.95},
+//          {163.49, 131.31, 109.42, 93.97},
+//          {81.74, 65.65, 54.71, 46.99},
+//          {40.87, 32.83, 27.36, 23.49},
+//          {20.44, 16.41, 13.68, 11.75},
+//          {10.22, 8.21, 6.84, 5.87},
+//          {5.11, 4.10, 3.42, 2.94},
+//          {2.55, 2.05, 1.71, 1.47},
+//          {1.27, 1.27, 1.27, 1.27}
+//        };
 //#endif
 
-        /* Rate Table for Attack */
+        /** Rate Table for Attack */
         private void makeDphaseARTable() {
 
             for (int ar = 0; ar < 16; ar++)
@@ -1771,7 +1771,7 @@ public class Emu2413 {
                         dPhaseARTable[ar][rks] = 0;
                         break;
                     case 15:
-                        dPhaseARTable[ar][rks] = 0;/*EG_DP_WIDTH;*/
+                        dPhaseARTable[ar][rks] = 0; // EG_DP_WIDTH
                         break;
                     default:
                         dPhaseARTable[ar][rks] = adjustRate(3 * (rl + 4) << (rm + 1));
@@ -1780,8 +1780,8 @@ public class Emu2413 {
                 }
         }
 
-        /* Rate Table for Decay and Release */
-        private void makeDphaseDRTable() {
+        /** Rate Table for Decay and Release */
+        private void makeDPhaseDRTable() {
             for (int dr = 0; dr < 16; dr++)
                 for (int rks = 0; rks < 16; rks++) {
                     int rm = dr + (rks >> 2);
@@ -1880,7 +1880,7 @@ public class Emu2413 {
         private void internalRefresh() {
             makeDphaseTable();
             makeDphaseARTable();
-            makeDphaseDRTable();
+            makeDPhaseDRTable();
             pmDPhase = adjustRate((int) (PM_SPEED * PM_DP_WIDTH / (clk / 72d)));
             amDPhase = adjustRate((int) (AM_SPEED * AM_DP_WIDTH / (clk / 72d)));
         }
