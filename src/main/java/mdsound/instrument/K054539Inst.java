@@ -10,49 +10,17 @@ import mdsound.chips.K054539;
 
 public class K054539Inst extends Instrument.BaseInstrument {
 
+    public static final int MAX_CHIPS = 0x02;
+
+    private final K054539[] chips = {new K054539(), new K054539()};
+
     public K054539Inst() {
         //0..Main
         visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
+                {{0, 0}},
+                {{0, 0}}
         };
     }
-
-    @Override
-    public void reset(int chipId) {
-        device_reset_k054539(chipId);
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate) {
-        return device_start_k054539(chipId, samplingRate);
-    }
-
-    @Override
-    public void stop(int chipId) {
-        device_stop_k054539(chipId);
-    }
-
-    @Override
-    public void update(int chipId, int[][] outputs, int samples) {
-        k054539_update(chipId, outputs, samples);
-
-        visVolume[chipId][0][0] = outputs[0][0];
-        visVolume[chipId][0][1] = outputs[1][0];
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate, int clock, Object... Option) {
-        int sampRate = device_start_k054539(chipId, clock);
-        int flags = 1;
-        if (Option != null && Option.length > 0) flags = (int) (byte) Option[0];
-        k054539_init_flags(chipId, flags);
-
-        return sampRate;
-    }
-
-    private static final int MAX_CHIPS = 0x02;
-    private static final K054539[] chips = new K054539[] {new K054539(), new K054539()};
 
     @Override
     public String getName() {
@@ -64,69 +32,77 @@ public class K054539Inst extends Instrument.BaseInstrument {
         return "K054";
     }
 
-    public void k054539_init_flags(int chipId, int flags) {
-        K054539 info = chips[chipId];
-        info.intFlags(flags);
-    }
-
-    public void k054539_set_gain(int chipId, int channel, double gain) {
-        K054539 info = chips[chipId];
-        if (gain >= 0) info.setGain(channel, gain);
-    }
-
-    private void k054539_update(int chipId, int[][] outputs, int samples) {
-        K054539 info = chips[chipId];
-        info.update(outputs, samples);
-    }
-
-    private void k054539_w(int chipId, int offset, int data) {
-        K054539 info = chips[chipId];
-        info.write(offset, data);
-    }
-
-    public byte k054539_r(int chipId, int offset) {
-        K054539 info = chips[chipId];
-        return info.write(offset);
-    }
-
-    private int device_start_k054539(int chipId, int clock) {
-        if (chipId >= MAX_CHIPS)
-            return 0;
-
-        K054539 info = chips[chipId];
-        return info.start(clock);
-    }
-
-    private void device_stop_k054539(int chipId) {
-        K054539 info = chips[chipId];
-        info.stop();
-    }
-
-    private void device_reset_k054539(int chipId) {
+    @Override
+    public void reset(int chipId) {
         K054539 chip = chips[chipId];
         chip.reset();
     }
 
-    private void k054539_write_rom(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
+    /**
+     * @param Option 0: [Byte] ?
+     */
+    @Override
+    public int start(int chipId, int samplingRate, int clock, Object... Option) {
+        if (chipId >= MAX_CHIPS) return 0;
+
         K054539 chip = chips[chipId];
-        chip.writeRom(romSize, dataStart, dataLength, romData);
+        int rate = chip.start(clock);
+
+        int flags = 1;
+        if (Option != null && Option.length > 0) flags = (int) (byte) Option[0];
+        K054539 info = chips[chipId];
+        info.intFlags(flags);
+
+        return rate;
     }
 
-    public void k054539_write_rom2(int chipId, int romSize, int dataStart, int dataLength,
-                                   byte[] romData, int startAdr) {
+    @Override
+    public int read(int chipId, int adr) {
         K054539 chip = chips[chipId];
-        chip.writeRom2(romSize, dataStart, dataLength, romData, startAdr);
-    }
-
-    public void k054539_set_mute_mask(int chipId, int muteMask) {
-        K054539 chip = chips[chipId];
-        chip.setMuteMask(muteMask);
+        return chip.write(adr);
     }
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        k054539_w(chipId, adr, data);
+        K054539 chip = chips[chipId];
+        chip.write(adr, data);
         return 0;
+    }
+
+    @Override
+    public void update(int chipId, int[][] outputs, int samples) {
+        K054539 chip = chips[chipId];
+        chip.update(outputs, samples);
+
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
+    }
+
+    @Override
+    public void stop(int chipId) {
+        K054539 chip = chips[chipId];
+        chip.stop();
+    }
+
+    public void setGain(int chipId, int channel, double gain) {
+        K054539 chip = chips[chipId];
+        if (gain >= 0) chip.setGain(channel, gain);
+    }
+
+    private void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
+        writePcm(chipId, romSize, dataStart, dataLength, romData, 0);
+    }
+
+    public void setMuteMask(int chipId, int muteMask) {
+        K054539 chip = chips[chipId];
+        chip.setMuteMask(muteMask);
+    }
+
+    //----
+
+    public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
+        K054539 chip = chips[chipId];
+        chip.writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
     }
 
     //----

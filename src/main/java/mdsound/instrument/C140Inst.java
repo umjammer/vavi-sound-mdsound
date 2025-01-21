@@ -10,46 +10,18 @@ import mdsound.chips.C140;
 
 public class C140Inst extends Instrument.BaseInstrument {
 
-    private static final int MAX_CHIPS = 0x02;
+    public static final int MAX_CHIPS = 0x02;
 
-    public C140[] c140Data = new C140[MAX_CHIPS];
+    private final C140[] chips = new C140[MAX_CHIPS];
+
+    private final int[] mask = {0, 0};
 
     public C140Inst() {
         // 0..Main
         visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
+                {{0, 0}},
+                {{0, 0}}
         };
-    }
-
-    public byte c140_r(int chipId, int offset) {
-        C140 info = c140Data[chipId];
-        return info.read(offset);
-    }
-
-    private void c140_w(int chipId, int offset, int data) {
-        C140 info = c140Data[chipId];
-        info.write(offset, data);
-    }
-
-    public void c140_set_base(int chipId, byte[] base) {
-        C140 info = c140Data[chipId];
-        info.setBase(base);
-    }
-
-    public void c140_write_rom(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
-        C140 info = c140Data[chipId];
-        info.writeRom(romSize, dataStart, dataLength, romData);
-    }
-
-    public void c140_write_rom2(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
-        C140 info = c140Data[chipId];
-        info.writeRom2(romSize, dataStart, dataLength, romData, srcStartAdr);
-    }
-
-    public void c140_set_mute_mask(int chipId, int muteMask) {
-        C140 info = c140Data[chipId];
-        info.setMuteMask(muteMask);
     }
 
     @Override
@@ -63,49 +35,96 @@ public class C140Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void update(int chipId, int[][] outputs, int samples) {
-        C140 info = c140Data[chipId];
-        info.update(outputs, samples);
-
-        visVolume[chipId][0][0] = outputs[0][0];
-        visVolume[chipId][0][1] = outputs[1][0];
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate) {
-        return start(chipId, 44100, samplingRate, C140.Type.SYSTEM2);
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate, int clock, Object... option) {
-        if (chipId >= MAX_CHIPS)
-            return 0;
-
-        C140 info = c140Data[chipId];
-        int sampleRate = clock;
-        if ((Instrument.BaseInstrument.CHIP_SAMPLING_MODE == 0x01 && sampleRate < Instrument.BaseInstrument.CHIP_SAMPLE_RATE) ||
-                Instrument.BaseInstrument.CHIP_SAMPLING_MODE == 0x02)
-            sampleRate = Instrument.BaseInstrument.CHIP_SAMPLE_RATE;
-        if (sampleRate >= 0x100_0000) // limit to 16 MHz sample rate (32 MB buffer)
-            return 0;
-        info.start(clock, sampleRate, (C140.Type) option[0]);
-        return sampleRate;
-    }
-
-    @Override
-    public void stop(int chipId) {
-        C140 info = c140Data[chipId];
-        info.stop();
+    public void init() {
+        mask[0] = 0;
+        mask[1] = 0;
     }
 
     @Override
     public void reset(int chipId) {
     }
 
+    /**
+     * @param option 0: C140.Type
+     */
+    @Override
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        if (chipId >= MAX_CHIPS) return 0;
+
+        int sampleRate = clock;
+        if ((Instrument.BaseInstrument.CHIP_SAMPLING_MODE == 0x01 && sampleRate < Instrument.BaseInstrument.CHIP_SAMPLE_RATE) ||
+                Instrument.BaseInstrument.CHIP_SAMPLING_MODE == 0x02)
+            sampleRate = Instrument.BaseInstrument.CHIP_SAMPLE_RATE;
+        if (sampleRate >= 0x100_0000) // limit to 16 MHz sample rate (32 MB buffer)
+            return 0;
+
+        C140 chip = chips[chipId];
+        chip.start(clock, sampleRate, (C140.Type) option[0]);
+
+        return sampleRate;
+    }
+
+    @Override
+    public int read(int chipId, int adr) {
+        C140 chip = chips[chipId];
+        return chip.read(adr);
+    }
+
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        c140_w(chipId, adr, data);
+        C140 chip = chips[chipId];
+        chip.write(adr, data);
         return 0;
+    }
+
+    @Override
+    public void update(int chipId, int[][] outputs, int samples) {
+        C140 chip = chips[chipId];
+        chip.update(outputs, samples);
+
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
+    }
+
+    @Override
+    public void stop(int chipId) {
+        C140 chip = chips[chipId];
+        chip.stop();
+    }
+
+    //----
+
+    public void setBase(int chipId, byte[] base) {
+        C140 chip = chips[chipId];
+        chip.setBase(base);
+    }
+
+    public void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
+        writePcm(chipId, romSize, dataStart, dataLength, romData, 0);
+    }
+
+    private void setMuteMask(int chipId, int muteMask) {
+        C140 chip = chips[chipId];
+        chip.setMuteMask(muteMask);
+    }
+
+    public synchronized C140 getRegister(int cur) {
+        return chips[cur];
+    }
+
+    public synchronized void setMask(int chipId, int ch) {
+        mask[chipId] |= ch;
+        setMuteMask(chipId, mask[chipId]);
+    }
+
+    public synchronized void resetMask(int chipId, int ch) {
+        mask[chipId] &= ~(int) ch;
+        setMuteMask(chipId, mask[chipId]);
+    }
+
+    public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
+        C140 chip = chips[chipId];
+        chip.writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
     }
 
     //----

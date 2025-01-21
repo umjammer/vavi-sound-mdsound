@@ -5,7 +5,7 @@ public class VisWaveBuffer {
 
     private final short[][] buf;
 
-    private int crntPos;
+    private int curPos;
 
     private final int size;
 
@@ -18,19 +18,19 @@ public class VisWaveBuffer {
         for (int i = 0; i < 2; i++) {
             buf[i] = new short[size];
         }
-        crntPos = 0;
+        curPos = 0;
         this.size = size;
     }
 
     public void enq(short l, short r) {
-        buf[0][crntPos] = l;
-        buf[1][crntPos] = r;
-        crntPos++;
-        crntPos %= size;
+        buf[0][curPos] = l;
+        buf[1][curPos] = r;
+        curPos++;
+        curPos %= size;
     }
 
     public void copy(short[][] dest) {
-        int pos = crntPos;
+        int pos = curPos;
         for (int i = 0; i < 2; i++)
             for (int j = 0; j < size; j++)
                 dest[i][j] = buf[i][(pos + j) % size];

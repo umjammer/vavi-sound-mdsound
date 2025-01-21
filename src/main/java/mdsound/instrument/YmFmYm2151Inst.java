@@ -5,14 +5,14 @@ import java.util.Map;
 
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
-import mdsound.fmgen.OPM;
 import vavi.sound.ymfm.Opm.Ym2151;
 import vavi.sound.ymfm.YmFm.VgmChip;
 
 
 public class YmFmYm2151Inst extends Instrument.BaseInstrument {
 
-    public static final int DefaultYM2151ClockValue = 3579545;
+    public static final int DefaultClockValue = 3579545;
+
     private final VgmChip[] chip = new VgmChip[2];
 
     // TODO similar variables in VgmChip class, those can be eliminated?
@@ -21,8 +21,8 @@ public class YmFmYm2151Inst extends Instrument.BaseInstrument {
 
     public YmFmYm2151Inst() {
         visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
+                {{0, 0}},
+                {{0, 0}}
         };
     }
 
@@ -45,15 +45,6 @@ public class YmFmYm2151Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int samplingRate) {
-        chip[chipId] = new VgmChip(DefaultYM2151ClockValue, Ym2151.class);
-
-        output_step = 0x1_0000_0000L / samplingRate;
-
-        return samplingRate;
-    }
-
-    @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
         chip[chipId] = new VgmChip(clock, Ym2151.class);
 
@@ -63,8 +54,16 @@ public class YmFmYm2151Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void stop(int chipId) {
-        chip[chipId] = null;
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        if (chip[chipId] == null) return 0;
+
+        chip[chipId].write(adr, data);
+        return 0;
     }
 
     @Override
@@ -88,11 +87,8 @@ public class YmFmYm2151Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int write(int chipId, int port, int adr, int data) {
-        if (chip[chipId] == null) return 0;
-
-        chip[chipId].write(adr, data);
-        return 0;
+    public void stop(int chipId) {
+        chip[chipId] = null;
     }
 
     //----

@@ -10,15 +10,18 @@ import mdsound.chips.Nes;
 import mdsound.np.NpNesFds;
 
 
-public class IntFNesInst extends Instrument.BaseInstrument {
+public class NesInst extends Instrument.BaseInstrument {
 
-    private static final byte MAX_CHIPS = 0x02;
-    protected Nes[] chips = new Nes[] {new Nes(), new Nes()};
+    public static final byte MAX_CHIPS = 0x02;
 
-    public IntFNesInst() {
+    protected final Nes[] chips = {new Nes(), new Nes()};
+
+    private final int[] mask = new int[] {0, 0};
+
+    public NesInst() {
         visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
+                {{0, 0}},
+                {{0, 0}}
         };
     }
 
@@ -39,23 +42,40 @@ public class IntFNesInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int samplingRate) {
-        if (chipId >= MAX_CHIPS)
-            return 0;
-        Nes info = chips[chipId];
+    public int start(int chipId, int samplingRate, int clock, Object... Option) {
+        if (chipId >= MAX_CHIPS) return 0;
+        Nes chip = chips[chipId];
 
-        int rate = samplingRate / 4;
+        int rate = clock / 4;
         if ((BaseInstrument.CHIP_SAMPLING_MODE == 0x01 && rate < BaseInstrument.CHIP_SAMPLE_RATE) ||
                 BaseInstrument.CHIP_SAMPLING_MODE == 0x02)
             rate = BaseInstrument.CHIP_SAMPLE_RATE;
-        info.start(samplingRate, rate);
-        info.setListener(listenr);
+
+        chip.start(clock, rate);
+        chip.setListener(listener);
+
         return rate;
     }
 
     @Override
-    public int start(int chipId, int samplingRate, int clock, Object... Option) {
-        return start(chipId, clock);
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        Nes chip = chips[chipId];
+        chip.write(adr, data);
+        return 0;
+    }
+
+    @Override
+    public void update(int chipId, int[][] outputs, int samples) {
+        Nes info = chips[chipId];
+        info.update(outputs, samples);
+
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
     }
 
     @Override
@@ -64,70 +84,73 @@ public class IntFNesInst extends Instrument.BaseInstrument {
         info.stop();
     }
 
-    @Override
-    public void update(int chipId, int[][] outputs, int samples) {
-        nes_stream_update(chipId, outputs, samples);
-
-        visVolume[chipId][0][0] = outputs[0][0];
-        visVolume[chipId][0][1] = outputs[1][0];
+    public void writeRam(int chipId, int dataStart, int dataLength, byte[] ramData) {
+        writeRam(chipId, dataStart, dataLength, ramData, 0);
     }
 
-    @Override
-    public int write(int chipId, int port, int adr, int data) {
-        Nes chip = chips[chipId];
-        chip.write(adr, (byte) data);
-        return 0;
+    public void setEmuCore(int emulator) {
     }
 
-    public void nes_stream_update(int chipId, int[][] outputs, int samples) {
-        Nes info = chips[chipId];
-        info.update(outputs, samples);
-    }
-
-    public void nes_write_ram(int chipId, int dataStart, int dataLength, byte[] ramData) {
-        nes_write_ram(chipId, dataStart, dataLength, ramData, 0);
-    }
-
-    public void nes_write_ram(int chipId, int dataStart, int dataLength, byte[] ramData, int ramdataStartAdr) {
-        Nes chip = chips[chipId];
-        chip.writeRam(dataStart, dataLength, ramData, ramdataStartAdr);
-    }
-
-    public byte[] nes_r_apu(int chipId) {
-        Nes chip = chips[chipId];
-        return chip.readApu();
-    }
-
-    public byte[] nes_r_dmc(int chipId) {
-        Nes chip = chips[chipId];
-        return chip.readDmc();
-    }
-
-    public NpNesFds nes_r_fds(int chipId) {
-        Nes chip = chips[chipId];
-        return chip.readDds();
-    }
-
-    private void nes_set_emu_core(byte emulator) {
-    }
-
-    private void nes_set_chip_option(int chipId) {
+    public void setChipOption(int chipId) {
         Nes chip = chips[chipId];
         chip.setChipOption();
     }
 
-    public void nes_set_mute_mask(int chipId, int muteMask) {
+    private void setMuteMask(int chipId, int muteMask) {
         Nes chip = chips[chipId];
         chip.setMuteMask(muteMask);
     }
 
-    private void setAPUVolume(int db) {
-        for (Nes info : chips) info.setVolumeAPU(db);
+    // ----
+
+    public synchronized void setNESMask(int chipId, int ch) {
+        mask[chipId] |= 0x1 << ch;
+        setMuteMask(chipId, mask[chipId]);
     }
 
-    //----
+    public synchronized void setFDSMask(int chipId) {
+        mask[chipId] |= 0x20;
+        setMuteMask(chipId, mask[chipId]);
+    }
 
-    private final Consumer<int[]> listenr = ds -> {
+    public synchronized void resetMask(int chipId, int ch) {
+        mask[chipId] &= ~(0x1 << ch);
+        setMuteMask(chipId, mask[chipId]);
+    }
+
+    public synchronized void resetFDSMask(int chipId) {
+        mask[chipId] &= ~0x20;
+        setMuteMask(chipId, mask[chipId]);
+    }
+
+    public synchronized void writeRam(int chipId, int dataStart, int dataLength, byte[] ramData, int ramDataStartAdr) {
+        Nes chip = chips[chipId];
+        chip.writeRam(dataStart, dataLength, ramData, ramDataStartAdr);
+    }
+
+    public synchronized byte[] readApu(int chipId) {
+        Nes chip = chips[chipId];
+        return chip.readApu();
+    }
+
+    public synchronized byte[] readDmc(int chipId) {
+        Nes chip = chips[chipId];
+        return chip.readDmc();
+    }
+
+    public synchronized NpNesFds readFds(int chipId) {
+        Nes chip = chips[chipId];
+        return chip.readDds();
+    }
+
+    // TODO automatic wired, use annotation?
+    public void setVolume(int vol, double ignored) {
+        for (Nes info : chips) info.setVolumeAPU(vol);
+    }
+
+    // ----
+
+    private final Consumer<int[]> listener = ds -> {
         if (ds[0] != -1) np_nes_apu_volume = ds[0];
         if (ds[1] != -1) np_nes_dmc_volume = ds[1];
         if (ds[2] != -1) np_nes_fds_volume = ds[2];
@@ -147,7 +170,7 @@ public class IntFNesInst extends Instrument.BaseInstrument {
     public static int np_nes_vrc6_volume;
     public static int np_nes_vrc7_volume;
 
-    public static class DMC extends IntFNesInst {
+    public static class DMC extends NesInst {
         @Override
         public Map<String, Object> getView(String key, Map<String, Object> args) {
             Map<String, Object> result = new HashMap<>();
@@ -164,7 +187,8 @@ public class IntFNesInst extends Instrument.BaseInstrument {
             setDMCVolume(vol);
         }
     }
-    public static class FDS extends IntFNesInst {
+
+    public static class FDS extends NesInst {
         @Override
         public Map<String, Object> getView(String key, Map<String, Object> args) {
             Map<String, Object> result = new HashMap<>();
@@ -181,7 +205,8 @@ public class IntFNesInst extends Instrument.BaseInstrument {
             setFDSVolume(vol);
         }
     }
-    public static class MMC5 extends IntFNesInst {
+
+    public static class MMC5 extends NesInst {
         @Override
         public Map<String, Object> getView(String key, Map<String, Object> args) {
             Map<String, Object> result = new HashMap<>();
@@ -190,7 +215,8 @@ public class IntFNesInst extends Instrument.BaseInstrument {
             return result;
         }
     }
-    public static class N160 extends IntFNesInst {
+
+    public static class N160 extends NesInst {
         @Override
         public Map<String, Object> getView(String key, Map<String, Object> args) {
             Map<String, Object> result = new HashMap<>();
@@ -199,7 +225,8 @@ public class IntFNesInst extends Instrument.BaseInstrument {
             return result;
         }
     }
-    public static class VRC6 extends IntFNesInst {
+
+    public static class VRC6 extends NesInst {
         @Override
         public Map<String, Object> getView(String key, Map<String, Object> args) {
             Map<String, Object> result = new HashMap<>();
@@ -208,7 +235,8 @@ public class IntFNesInst extends Instrument.BaseInstrument {
             return result;
         }
     }
-    public static class VRC7 extends IntFNesInst {
+
+    public static class VRC7 extends NesInst {
         @Override
         public Map<String, Object> getView(String key, Map<String, Object> args) {
             Map<String, Object> result = new HashMap<>();
@@ -217,7 +245,8 @@ public class IntFNesInst extends Instrument.BaseInstrument {
             return result;
         }
     }
-    public static class FME7 extends IntFNesInst {
+
+    public static class FME7 extends NesInst {
         @Override
         public Map<String, Object> getView(String key, Map<String, Object> args) {
             Map<String, Object> result = new HashMap<>();
@@ -242,10 +271,5 @@ public class IntFNesInst extends Instrument.BaseInstrument {
             }
         }
         return result;
-    }
-
-    // TODO automatic wired, use annotation?
-    public void setVolume(int vol, double ignored) {
-        setAPUVolume(vol);
     }
 }

@@ -10,10 +10,11 @@ import mdsound.Instrument;
 import mdsound.chips.YmF278b;
 
 
-public class YmF278bInst extends Instrument.BaseInstrument {
+public class YmF278BInst extends Instrument.BaseInstrument {
 
-    private static final int MAX_CHIPS = 0x10;
-    private final YmF278b[] ymF278BData = new YmF278b[] {new YmF278b(), new YmF278b()};
+    public static final int MAX_CHIPS = 0x10;
+
+    private final YmF278b[] chips = {new YmF278b(), new YmF278b()};
 
     @Override
     public String getName() {
@@ -27,18 +28,13 @@ public class YmF278bInst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        YmF278b chip = ymF278BData[chipId];
+        YmF278b chip = chips[chipId];
         chip.reset();
 
         visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
+                {{0, 0}},
+                {{0, 0}}
         };
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate) {
-        return startInternal(chipId, YmF278b.YMF278B_STD_CLOCK, null, null);
     }
 
     /**
@@ -63,54 +59,60 @@ public class YmF278bInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void stop(int chipId) {
-        YmF278b chip = ymF278BData[chipId];
-        chip.stop();
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        YmF278b chip = chips[chipId];
+        chip.write((port << 1) | 0x00, adr);
+        chip.write((port << 1) | 0x01, data);
+        return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        YmF278b chip = ymF278BData[chipId];
+        YmF278b chip = chips[chipId];
         chip.updatePcm(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
     }
 
+    @Override
+    public void stop(int chipId) {
+        YmF278b chip = chips[chipId];
+        chip.stop();
+    }
+
     private int startInternal(int chipId, int clock, String romPath, Function<String, Stream> romStream) {
         if (chipId >= MAX_CHIPS)
             return 0;
 
-        YmF278b chip = ymF278BData[chipId];
+        YmF278b chip = chips[chipId];
         return chip.start(clock, romPath, romStream);
     }
 
-    public void ymf278b_write_rom(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
-        YmF278b chip = ymF278BData[chipId];
-        chip.writeRom(romSize, dataStart, dataLength, romData);
+    public void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
+        writePcm(chipId, romSize, dataStart, dataLength, romData, 0);
     }
 
-    public void ymf278b_write_rom(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddress) {
-        YmF278b chip = ymF278BData[chipId];
-        chip.writeRom(romSize, dataStart, dataLength, romData, srcStartAddress);
-    }
-
-    public void ymf278b_write_ram(int chipId, int dataStart, int dataLength, byte[] ramData, int srcStartAddress) {
-        YmF278b chip = ymF278BData[chipId];
-        chip.writeRam(dataStart, dataLength, ramData, srcStartAddress);
-    }
-
-    public void ymf278b_set_mute_mask(int chipId, int muteMaskFM, int muteMaskWT) {
-        YmF278b chip = ymF278BData[chipId];
+    public void setMuteMask(int chipId, int muteMaskFM, int muteMaskWT) {
+        YmF278b chip = chips[chipId];
         chip.setMuteMask(muteMaskFM, muteMaskWT);
     }
 
-    @Override
-    public int write(int chipId, int port, int adr, int data) {
-        YmF278b chip = ymF278BData[chipId];
-        chip.write((port << 1) | 0x00, adr);
-        chip.write((port << 1) | 0x01, data);
-        return 0;
+    //----
+
+    public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
+        YmF278b chip = chips[chipId];
+        chip.writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
+    }
+
+    public synchronized void writeRam(int chipId, int RAMSize, int dataStart, int dataLength, byte[] ramData, int srcStartAdr) {
+        YmF278b chip = chips[chipId];
+        chip.writeRam(dataStart, dataLength, ramData, srcStartAdr);
     }
 
     //----

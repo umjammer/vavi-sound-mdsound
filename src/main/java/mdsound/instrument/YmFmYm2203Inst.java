@@ -11,7 +11,8 @@ import vavi.sound.ymfm.YmFm.VgmChip;
 
 public class YmFmYm2203Inst extends Instrument.BaseInstrument {
 
-    private static final int DefaultYM2203ClockValue = 3000000;
+    public static final int DefaultClockValue = 3000000;
+
     private final VgmChip[] chips = new VgmChip[2];
 
     // TODO similar variables in VgmChip class, those can be eliminated?
@@ -21,8 +22,8 @@ public class YmFmYm2203Inst extends Instrument.BaseInstrument {
     public YmFmYm2203Inst() {
         // 0..Main 1..FM 2..SSG
         visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}}
+                {{0, 0}, {0, 0}, {0, 0}},
+                {{0, 0}, {0, 0}, {0, 0}}
         };
     }
 
@@ -45,15 +46,6 @@ public class YmFmYm2203Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int samplingRate) {
-        chips[chipId] = new VgmChip(DefaultYM2203ClockValue, Ym2203.class);
-
-        output_step = 0x1_0000_0000L / samplingRate;
-
-        return samplingRate;
-    }
-
-    @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
         chips[chipId] = new VgmChip(clock, Ym2203.class);
 
@@ -63,8 +55,15 @@ public class YmFmYm2203Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void stop(int chipId) {
-        chips[chipId] = null;
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        if (chips[chipId] == null) return 0;
+        chips[chipId].write(adr, data);
+        return 0;
     }
 
     @Override
@@ -90,17 +89,29 @@ public class YmFmYm2203Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int write(int chipId, int port, int adr, int data) {
-        if (chips[chipId] == null) return 0;
-        chips[chipId].write(adr, data);
-        return 0;
+    public void stop(int chipId) {
+        chips[chipId] = null;
     }
 
-    public void setMute(int chipId, int val) {
+    private void setMute(int chipId, int val) {
         VgmChip chip = chips[chipId];
         if (chip == null) return;
 
 //        chip.setChannelMask(val);
+    }
+
+    // ----
+
+    // TODO automatic wired, use annotation?
+    public void setFMVolume(int vol, double ignored) {
+        if (chips[0] != null) return; // chips[0].setFMVolume(vol);
+        if (chips[1] != null) return; // chips[1].setFMVolume(vol);
+    }
+
+    // TODO automatic wired, use annotation?
+    public void setPSGVolume(int vol, double ignored) {
+        if (chips[0] != null) return; // chips[0].setPSGVolume(vol);
+        if (chips[1] != null) return; // chips[1].setPSGVolume(vol);
     }
 
     // ----
@@ -122,17 +133,5 @@ public class YmFmYm2203Inst extends Instrument.BaseInstrument {
             }
         }
         return result;
-    }
-
-    // TODO automatic wired, use annotation?
-    public void setFMVolume(int vol, double ignored) {
-        if (chips[0] != null) return; // chips[0].setFMVolume(vol);
-        if (chips[1] != null) return; // chips[1].setFMVolume(vol);
-    }
-
-    // TODO automatic wired, use annotation?
-    public void setPSGVolume(int vol, double ignored) {
-        if (chips[0] != null) return; // chips[0].setPSGVolume(vol);
-        if (chips[1] != null) return; // chips[1].setPSGVolume(vol);
     }
 }

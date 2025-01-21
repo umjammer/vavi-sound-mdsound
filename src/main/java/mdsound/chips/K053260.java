@@ -287,7 +287,7 @@ public class K053260 {
         this.rom = null;
     }
 
-    public void write(int offset, byte data) {
+    public void write(int offset, int data) {
 
         if (offset > 0x2f) {
             //logger.log(Level.TRACE, "K053260: Writing past registers\n");
@@ -298,11 +298,11 @@ public class K053260 {
 
         // before we update the regs, we need to check for a latched reg
         if (offset == 0x28) {
-            int t = this.regs[offset] ^ (int) data;
+            int t = this.regs[offset] ^ data;
 
             for (int c = 0; c < 4; c++) {
                 if ((t & (1 << c)) != 0) {
-                    if (((int) data & (1 << c)) != 0) {
+                    if ((data & (1 << c)) != 0) {
                         this.channels[c].play = 1;
                         this.channels[c].pos = 0;
                         this.channels[c].ppcmData = 0;
@@ -334,24 +334,24 @@ public class K053260 {
         switch (offset) {
         case 0x2a: // loop, ppcm
             for (int c = 0; c < 4; c++)
-                this.channels[c].loop = ((int) data & (1 << c)) != 0 ? 1 : 0;
+                this.channels[c].loop = (data & (1 << c)) != 0 ? 1 : 0;
 
             for (int c = 4; c < 8; c++)
-                this.channels[c - 4].ppcm = ((int) data & (1 << c)) != 0 ? 1 : 0;
+                this.channels[c - 4].ppcm = (data & (1 << c)) != 0 ? 1 : 0;
             break;
 
         case 0x2c: // pan
-            this.channels[0].pan = (int) data & 7;
-            this.channels[1].pan = ((int) data >> 3) & 7;
+            this.channels[0].pan = data & 7;
+            this.channels[1].pan = (data >> 3) & 7;
             break;
 
         case 0x2d: // more pan
-            this.channels[2].pan = (int) data & 7;
-            this.channels[3].pan = ((int) data >> 3) & 7;
+            this.channels[2].pan = data & 7;
+            this.channels[3].pan = (data >> 3) & 7;
             break;
 
         case 0x2f: // control
-            this.mode = (int) data & 7;
+            this.mode = data & 7;
             // bit 0 = read ROM
             // bit 1 = enable Sound output
             // bit 2 = unknown
@@ -359,7 +359,7 @@ public class K053260 {
         }
     }
 
-    public byte read(int offset) {
+    public int read(int offset) {
         switch (offset) {
         case 0x29: { // channel status
             int status = 0;
@@ -367,7 +367,7 @@ public class K053260 {
             for (int c = 0; c < 4; c++)
                 status |= this.channels[c].play << c;
 
-            return (byte) status;
+            return status;
         }
         //break;
 
@@ -389,7 +389,7 @@ public class K053260 {
             break;
         }
 
-        return (byte) this.regs[offset];
+        return this.regs[offset];
     }
 
     public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData) {

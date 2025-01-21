@@ -8,7 +8,7 @@ import mdsound.chips.PPS;
 
 public class PpsDrvInst extends Instrument.BaseInstrument {
 
-    private final PPS[] chips = new PPS[] {new PPS(), new PPS()};
+    private final PPS[] chips = {new PPS(), new PPS()};
 
     @Override
     public String getName() {
@@ -26,11 +26,6 @@ public class PpsDrvInst extends Instrument.BaseInstrument {
         chip.reset();
     }
 
-    @Override
-    public int start(int chipId, int samplingRate) {
-        return start(chipId, samplingRate, 0);
-    }
-
     /** @param option BiConsumer&lt;Integer, Integer&gt; */
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
@@ -39,9 +34,8 @@ public class PpsDrvInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void stop(int chipId) {
-        PPS chip = chips[chipId];
-        chip.stop();
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -50,36 +44,39 @@ public class PpsDrvInst extends Instrument.BaseInstrument {
         return chip.write(port, adr, data);
     }
 
-    // 音量設定
-    private void setVolume(int chipId, int vol) {
-        PPS chip = chips[chipId];
-        chip.setVolume(vol);
-    }
-
-    private void play(int chipId, int al, int bh, int bl) {
-        PPS chip = chips[chipId];
-        chip.play(al, bh, bl);
-    }
-
-    private void stop_(int chipId) {
-        PPS chip = chips[chipId];
-        chip.stop();
-    }
-
-    private boolean setParam(int chipId, int paramno, int data) {
-        PPS chip = chips[chipId];
-        return chip.setParam(paramno, data);
-    }
-
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
         PPS chip = chips[chipId];
         chip.update(outputs, samples);
     }
 
-    public int load(int chipId, byte[] pcmData) {
+    @Override
+    public void stop(int chipId) {
         PPS chip = chips[chipId];
-        return chip.load(pcmData);
+        chip.stop();
+    }
+
+    /** Sets volume. */
+    public void setVolume(int chipId, int vol) {
+        PPS chip = chips[chipId];
+        chip.setVolume(vol);
+    }
+
+    public void play(int chipId, int al, int bh, int bl) {
+        PPS chip = chips[chipId];
+        chip.play(al, bh, bl);
+    }
+
+    public boolean setParam(int chipId, int paramno, int data) {
+        PPS chip = chips[chipId];
+        return chip.setParam(paramno, data);
+    }
+
+    // ----
+
+    public synchronized void writePcm(int chipId, byte[] pcmData) {
+        PPS chip = chips[chipId];
+        chip.load(pcmData);
     }
 }
 

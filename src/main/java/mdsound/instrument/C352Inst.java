@@ -11,8 +11,17 @@ import mdsound.chips.C352;
 
 public class C352Inst extends Instrument.BaseInstrument {
 
-    private static final int MAX_CHIPS = 0x02;
-    private static final C352[] chips = new C352[MAX_CHIPS];
+    public static final int MAX_CHIPS = 0x02;
+
+    private final C352[] chips = new C352[MAX_CHIPS];
+
+    public C352Inst() {
+        visVolume = new int[][][] {
+                // 0..Main
+                {{0, 0}},
+                {{0, 0}}
+        };
+    }
 
     @Override
     public String getName() {
@@ -24,38 +33,10 @@ public class C352Inst extends Instrument.BaseInstrument {
         return "C352";
     }
 
-    public C352Inst() {
-        visVolume = new int[][][] {
-                // 0..Main
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
-        };
-    }
-
     @Override
     public void reset(int chipId) {
         C352 chip = chips[chipId];
         chip.reset();
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate) {
-        return start(chipId, 44100, samplingRate);
-    }
-
-    @Override
-    public void stop(int chipId) {
-        C352 chip = chips[chipId];
-        chip.stop();
-    }
-
-    @Override
-    public void update(int chipId, int[][] outputs, int samples) {
-        C352 chip = chips[chipId];
-        chip.update(outputs, samples);
-
-        visVolume[chipId][0][0] = outputs[0][0];
-        visVolume[chipId][0][1] = outputs[1][0];
     }
 
     @Override
@@ -72,50 +53,61 @@ public class C352Inst extends Instrument.BaseInstrument {
     }
 
     @Override
+    public int read(int chipId, int adr) {
+        C352 chip = chips[chipId];
+        return chip.read(adr);
+    }
+
+    @Override
     public int write(int chipId, int port, int adr, int data) {
         C352 chip = chips[chipId];
         chip.write(adr, data);
         return 0;
     }
 
-    private int read(int chipId, int address) {
+    @Override
+    public void update(int chipId, int[][] outputs, int samples) {
         C352 chip = chips[chipId];
-        return chip.read(address);
+        chip.update(outputs, samples);
+
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
     }
 
-    public void c352_write_rom(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
+    @Override
+    public void stop(int chipId) {
         C352 chip = chips[chipId];
-        chip.writeRom(romSize, dataStart, dataLength, romData);
+        chip.stop();
     }
 
-    public void c352_write_rom2(int chipId, int romSize, int dataStart, int dataLength,
-                                byte[] romData, int srcStartAdr) {
-        C352 c = chips[chipId];
-        c.writeRom2(romSize, dataStart, dataLength, romData, srcStartAdr);
+    public void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
+        writePcm(chipId, romSize, dataStart, dataLength, romData, 0);
     }
 
-    private static void c352_set_mute_mask(int chipId, int muteMask) {
-        C352 c = chips[chipId];
-        c.setMuteMask(muteMask);
+    public void setMuteMask(int chipId, int muteMask) {
+        C352 chip = chips[chipId];
+        chip.setMuteMask(muteMask);
     }
 
-    private static int c352_get_mute_mask(int chipId) {
-        C352 c = chips[chipId];
-        return c.getMuteMask();
+    public int getMuteMask(int chipId) {
+        C352 chip = chips[chipId];
+        return chip.getMuteMask();
     }
 
-    public void c352_set_options(byte flags) {
+    public static void setOptions(byte flags) {
         C352.setOptions(flags);
     }
 
-    private static int get_mute_mask(int chipId) {
-        C352 c = chips[chipId];
-        return c.getMuteMask();
+    //----
+
+    public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
+        C352 chip = chips[chipId];
+        chip.writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
     }
 
-    public int[] getFlags(int chipId) {
-        C352 c = chips[chipId];
-        return c.getFlags();
+    public synchronized int[] readFlags(int chipId) {
+        C352 chip = chips[chipId];
+        return chip.getFlags();
     }
 
     //----
@@ -137,6 +129,6 @@ public class C352Inst extends Instrument.BaseInstrument {
 
     // TODO
     public void setRearMute(int vol, double ignored) {
-        c352_set_options((byte) (vol & 0xff));
+        setOptions((byte) (vol & 0xff));
     }
 }

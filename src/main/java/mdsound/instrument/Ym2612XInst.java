@@ -6,9 +6,15 @@ import mdsound.chips.Xgm;
 
 public class Ym2612XInst extends Ym2612Inst {
 
-    public Xgm xgmFunction = new Xgm();
+    private final Xgm chip = new Xgm();
 
     private int sampleRate = 0;
+
+    @Override
+    public void reset(int chipId) {
+        chip.reset(chipId, sampleRate);
+        super.reset(chipId);
+    }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
@@ -17,26 +23,29 @@ public class Ym2612XInst extends Ym2612Inst {
     }
 
     @Override
-    public void reset(int chipId) {
-        xgmFunction.reset(chipId, sampleRate);
-        super.reset(chipId);
-    }
-
-    @Override
-    public void stop(int chipId) {
-        xgmFunction.stop(chipId);
-        super.stop(chipId);
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        xgmFunction.write(chipId, port, adr, data);
+        chip.write(chipId, port, adr, data);
         return super.write(chipId, port, adr, data);
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        xgmFunction.update(chipId, samples, this::write);
+        chip.update(chipId, samples, this::write);
         super.update(chipId, outputs, samples);
+    }
+
+    @Override
+    public void stop(int chipId) {
+        chip.stop(chipId);
+        super.stop(chipId);
+    }
+
+    public synchronized void playPcm(int chipId, int port, int adr, int data) {
+        chip.playPCM(chipId, adr, data);
     }
 }

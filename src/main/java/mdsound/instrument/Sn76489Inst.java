@@ -9,15 +9,18 @@ import mdsound.chips.Sn76489;
 
 public class Sn76489Inst extends Instrument.BaseInstrument {
 
-    public static final int DefaultPSGClockValue = 3579545;
-    private static final int MAX_CHIPS = 2;
-    public Sn76489[] chips = new Sn76489[] {new Sn76489(), new Sn76489()};
+    public static final int DefaultClockValue = 3579545;
+    public static final int MAX_CHIPS = 2;
+
+    private final Sn76489[] chips = {new Sn76489(), new Sn76489()};
+
+    private final int[] mask = {15, 15}; // Since psg is based on mute, the bits are reversed.
 
     public Sn76489Inst() {
         // 0..Main
         visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
+                {{0, 0}},
+                {{0, 0}}
         };
     }
 
@@ -32,8 +35,15 @@ public class Sn76489Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int samplingRate) {
-        return start(chipId, DefaultPSGClockValue, samplingRate);
+    public void init() {
+        mask[0] = 15;
+        mask[1] = 15;
+    }
+
+    @Override
+    public void reset(int chipId) {
+        Sn76489 chip = chips[chipId];
+        chip.reset();
     }
 
     @Override
@@ -44,14 +54,15 @@ public class Sn76489Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void reset(int chipId) {
-        Sn76489 chip = chips[chipId];
-        chip.reset();
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
-    public void stop(int chipId) {
-        chips[chipId] = null;
+    public int write(int chipId, int port, int adr, int data) {
+        Sn76489 chip = chips[chipId];
+        chip.write(data);
+        return 0;
     }
 
     @Override
@@ -64,22 +75,39 @@ public class Sn76489Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int write(int chipId, int port, int adr, int data) {
-        Sn76489 chip = chips[chipId];
-        chip.write(data);
-        return 0;
+    public void stop(int chipId) {
+        chips[chipId] = null;
     }
 
-    public void writeGGStereo(int chipId, int data) {
+    /** @param val mask */
+    private void setMute(int chipId, int val) {
+        Sn76489 chip = chips[chipId];
+        chip.setMute(val);
+    }
+
+    // ----
+
+    public synchronized int[] readRegister() {
+//        return chips[0].registers;
+        return new int[4];
+    }
+
+    public synchronized void setMask(int chipId, int ch) {
+        mask[chipId] &= ~ch;
+        setMute(chipId, mask[chipId]);
+    }
+
+    public synchronized void resetMask(int chipId, int ch) {
+        mask[chipId] |= ch;
+        setMute(chipId, mask[chipId]);
+    }
+
+    public synchronized void setPan(int chipId, int data) {
         Sn76489 chip = chips[chipId];
         chip.writeGGStereo(data);
     }
 
-    /** @param val mask */
-    public void setMute(int chipId, int val) {
-        Sn76489 chip = chips[chipId];
-        chip.setMute(val);
-    }
+    // ----
 
     @Override
     public Map<String, Object> getView(String key, Map<String, Object> args) {

@@ -9,6 +9,15 @@ import mdsound.chips.PPZ8;
 
 public class Ppz8Inst extends Instrument.BaseInstrument {
 
+    private final PPZ8[] chips = { new PPZ8(), new PPZ8() };
+
+    public Ppz8Inst() {
+        visVolume = new int[][][] {
+                {{0, 0}},
+                {{0, 0}}
+        };
+    }
+
     @Override
     public String getName() {
         return "Ppz8";
@@ -19,22 +28,10 @@ public class Ppz8Inst extends Instrument.BaseInstrument {
         return "Ppz8";
     }
 
-    public Ppz8Inst() {
-        visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
-        };
-    }
-
     @Override
     public void reset(int chipId) {
         PPZ8 chip = chips[chipId];
         chip.reset();
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate) {
-        return start(chipId, samplingRate, 0);
     }
 
     @Override
@@ -46,8 +43,8 @@ public class Ppz8Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void stop(int chipId) {
-        //none
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -56,87 +53,6 @@ public class Ppz8Inst extends Instrument.BaseInstrument {
         return chip.write(port, adr, data);
     }
 
-    private final PPZ8[] chips = new PPZ8[] { new PPZ8(), new PPZ8() };
-
-    private void initialize(int chipId) {
-        PPZ8 chip = chips[chipId];
-        chip.init();
-    }
-
-    private void makeVolumeTable(int chipId, int vol) {
-        PPZ8 chip = chips[chipId];
-        chip.makeVolumeTable(vol);
-    }
-
-    private void playPCM(int chipId, int al, int dx) {
-        PPZ8 chip = chips[chipId];
-        chip.playPCM(al, dx);
-    }
-
-    private void stopPCM(int chipId, int al) {
-        PPZ8 chip = chips[chipId];
-        chip.stopPCM(al);
-    }
-
-    public int loadPcm(int chipId, int bank, int mode, byte[][] pcmData) {
-        PPZ8 chip = chips[chipId];
-        return chip.loadPcm(bank, mode, pcmData);
-    }
-
-    private void readStatus(int chipId, int al) {
-        PPZ8 chip = chips[chipId];
-        chip.readStatus(al);
-    }
-
-    private void setVolume(int chipId, int al, int dx) {
-        PPZ8 chip = chips[chipId];
-        chip.setVolume(al, dx);
-    }
-
-    private void setFrequency(int chipId, int al, int dx, int cx) {
-        PPZ8 chip = chips[chipId];
-        chip.setFrequency(al, dx, cx);
-    }
-
-    private void setLoopPoint(int chipId, int al, int lpStOfsDX, int lpStOfsCX, int lpEdOfsDI, int lpEdOfsSI) {
-        PPZ8 chip = chips[chipId];
-        chip.setLoopPoint(al, lpStOfsDX, lpStOfsCX, lpEdOfsDI, lpEdOfsSI);
-    }
-
-    private void stopInterrupt(int chipId) {
-        PPZ8 chip = chips[chipId];
-        chip.stopInterrupt();
-    }
-
-    private void setPan(int chipId, int al, int dx) {
-        PPZ8 chip = chips[chipId];
-        chip.setPan(al, dx);
-    }
-
-    private void setSrcFrequency(int chipId, int al, int dx) {
-        PPZ8 chip = chips[chipId];
-        chip.setSrcFrequency(al, dx);
-    }
-
-    private void setAllVolume(int chipId, int vol) {
-        PPZ8 chip = chips[chipId];
-        chip.setAllVolume(vol);
-    }
-
-    private void setVolume(int chipId, int vol) {
-        PPZ8 chip = chips[chipId];
-        chip.setVolume(vol);
-    }
-
-    private void setAdpcmEmu(int chipId, int al) {
-        PPZ8 chip = chips[chipId];
-        chip.setAdpcmEmu(al);
-    }
-
-    private void setReleaseFlag(int chipId, int v) {
-        PPZ8 chip = chips[chipId];
-        chip.setReleaseFlag(v);
-    }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
@@ -147,15 +63,104 @@ public class Ppz8Inst extends Instrument.BaseInstrument {
         visVolume[chipId][0][1] = outputs[1][0];
     }
 
-    private int convertPviAdpcmToPziPcm(int chipId, byte bank) {
+    @Override
+    public void stop(int chipId) {
+        // none
+    }
+
+    public void initialize(int chipId) {
+        PPZ8 chip = chips[chipId];
+        chip.init();
+    }
+
+    public void makeVolumeTable(int chipId, int vol) {
+        PPZ8 chip = chips[chipId];
+        chip.makeVolumeTable(vol);
+    }
+
+    public void playPCM(int chipId, int al, int dx) {
+        PPZ8 chip = chips[chipId];
+        chip.playPCM(al, dx);
+    }
+
+    public void stopPCM(int chipId, int al) {
+        PPZ8 chip = chips[chipId];
+        chip.stopPCM(al);
+    }
+
+    public void readStatus(int chipId, int al) {
+        PPZ8 chip = chips[chipId];
+        chip.readStatus(al);
+    }
+
+    public void setVolume(int chipId, int al, int dx) {
+        PPZ8 chip = chips[chipId];
+        chip.setVolume(al, dx);
+    }
+
+    public void setFrequency(int chipId, int al, int dx, int cx) {
+        PPZ8 chip = chips[chipId];
+        chip.setFrequency(al, dx, cx);
+    }
+
+    public void setLoopPoint(int chipId, int al, int lpStOfsDX, int lpStOfsCX, int lpEdOfsDI, int lpEdOfsSI) {
+        PPZ8 chip = chips[chipId];
+        chip.setLoopPoint(al, lpStOfsDX, lpStOfsCX, lpEdOfsDI, lpEdOfsSI);
+    }
+
+    public void stopInterrupt(int chipId) {
+        PPZ8 chip = chips[chipId];
+        chip.stopInterrupt();
+    }
+
+    public void setPan(int chipId, int al, int dx) {
+        PPZ8 chip = chips[chipId];
+        chip.setPan(al, dx);
+    }
+
+    public void setSrcFrequency(int chipId, int al, int dx) {
+        PPZ8 chip = chips[chipId];
+        chip.setSrcFrequency(al, dx);
+    }
+
+    public void setAllVolume(int chipId, int vol) {
+        PPZ8 chip = chips[chipId];
+        chip.setAllVolume(vol);
+    }
+
+    public void setVolume(int chipId, int vol) {
+        PPZ8 chip = chips[chipId];
+        chip.setVolume(vol);
+    }
+
+    public void setAdpcmEmu(int chipId, int al) {
+        PPZ8 chip = chips[chipId];
+        chip.setAdpcmEmu(al);
+    }
+
+    public void setReleaseFlag(int chipId, int v) {
+        PPZ8 chip = chips[chipId];
+        chip.setReleaseFlag(v);
+    }
+
+    public int convertAdpcmToPcm(int chipId, byte bank) {
         PPZ8 chip = chips[chipId];
         return chip.convertPviAdpcmToPziPcm(bank);
     }
 
-    public PPZ8.Channel[] getPPZ8State(int chipId) {
+    // ----
+
+    public synchronized void writePcm(int chipId, int address, int data, byte[][] pcmData) {
+        PPZ8 chip = chips[chipId];
+        chip.loadPcm(address, data, pcmData);
+    }
+
+    public synchronized PPZ8.Channel[] readStatus(int chipId) {
         PPZ8 chip = chips[chipId];
         return chip.getChannels();
     }
+
+    // ----
 
     @Override
     public Map<String, Object> getView(String key, Map<String, Object> args) {

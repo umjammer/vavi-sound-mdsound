@@ -6,7 +6,7 @@ import java.util.List;
 import mdsound.instrument.Ay8910Inst;
 import mdsound.instrument.DmgInst;
 import mdsound.instrument.HuC6280Inst;
-import mdsound.instrument.IntFNesInst;
+import mdsound.instrument.NesInst;
 import mdsound.instrument.MameYm2612Inst;
 import mdsound.instrument.OkiM6258Inst;
 import mdsound.instrument.PwmInst;
@@ -25,8 +25,8 @@ import mdsound.instrument.Ym3526Inst;
 import mdsound.instrument.Ym3812Inst;
 import mdsound.instrument.YmF262Inst;
 import mdsound.instrument.YmF271Inst;
-import mdsound.instrument.YmF278bInst;
-import mdsound.instrument.YmZ280bInst;
+import mdsound.instrument.YmF278BInst;
+import mdsound.instrument.YmZ280BInst;
 import vavi.util.ByteUtil;
 
 
@@ -684,7 +684,7 @@ public class DacControl {
                 else if (chip.dstChipType == 0x05) {
                 }   // TODO
                 else if (chip.dstChipType == 0x1B)
-                    prevChn = mds.readOotakePsg(chip.dstChipIndex, chip.dstchipId, 0x00);
+                    prevChn = mds.inst(HuC6280Inst.class, chip.dstChipIndex).read(chip.dstchipId, 0x00);
 
                 // Send Channel Select
                 chipRegWrite(chip.dstChipType
@@ -1016,13 +1016,13 @@ public class DacControl {
             mds.write(YmF262Inst.class, chipIndex, chipId, port, offset, data);
             break;
         case 0x0D: // YMF278B+
-            mds.write(YmF278bInst.class, chipIndex, chipId, port, offset, data);
+            mds.write(YmF278BInst.class, chipIndex, chipId, port, offset, data);
             break;
         case 0x0E: // YMF271+
             mds.write(YmF271Inst.class, chipIndex, chipId, port, offset, data);
             break;
         case 0x0F: // YMZ280B+
-            mds.write(YmZ280bInst.class, chipIndex, chipId, port, offset, data);
+            mds.write(YmZ280BInst.class, chipIndex, chipId, port, offset, data);
             break;
         case 0x10: // Rf5c164
             mds.write(ScdPcmInst.class, chipIndex, chipId, port, offset, data);
@@ -1037,7 +1037,7 @@ public class DacControl {
             mds.write(DmgInst.class, chipIndex, chipId, port, offset, data);
             break;
         case 0x14: // NES+
-            mds.write(IntFNesInst.class, chipIndex, chipId, port, offset, data);
+            mds.write(NesInst.class, chipIndex, chipId, port, offset, data);
             break;
         case 0x17: // OKIM6258
             //logger.log(Level.TRACE, "[DAC]");

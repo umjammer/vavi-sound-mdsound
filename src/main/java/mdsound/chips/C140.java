@@ -217,7 +217,7 @@ public class C140 {
         if (dataLength >= 0) System.arraycopy(romData, 0, this.pRom, dataStart, dataLength);
     }
 
-    public void writeRom2(int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
+    public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
         if (this.pRomSize != romSize) {
             this.pRom = new byte[romSize];
             this.pRomSize = romSize;

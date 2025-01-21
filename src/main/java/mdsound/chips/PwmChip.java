@@ -246,7 +246,7 @@ public class PwmChip {
         }
     }
 
-    public void start(int clock, int rate) {
+    public void start(int clock) {
         this.clock = clock;
 
         this.init();

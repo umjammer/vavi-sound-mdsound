@@ -10,8 +10,19 @@ import mdsound.chips.Saa1099;
 
 public class Saa1099Inst extends Instrument.BaseInstrument {
 
-    private static final int MAX_CHIPS = 0x02;
-    private final Saa1099[] saa1099Data = new Saa1099[] {new Saa1099(), new Saa1099()};
+    public static final int MAX_CHIPS = 0x02;
+    public static final int DefaultClockValue = 8000000;
+
+    private final Saa1099[] chips = {new Saa1099(), new Saa1099()};
+
+    private final int[] mask = {0, 0};
+
+    public Saa1099Inst() {
+        visVolume = new int[][][] {
+                {{0, 0}},
+                {{0, 0}}
+        };
+    }
 
     @Override
     public String getName() {
@@ -23,76 +34,63 @@ public class Saa1099Inst extends Instrument.BaseInstrument {
         return "SAA";
     }
 
-    public Saa1099Inst() {
-        visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
-        };
-    }
-
     @Override
     public void reset(int chipId) {
-        Saa1099 saa = saa1099Data[chipId];
-        saa.reset();
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate) {
-        return startInternal(chipId, 8000000);
+        Saa1099 chip = chips[chipId];
+        chip.reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        return startInternal(chipId, clock);
+        if (chipId >= MAX_CHIPS) return 0;
+
+        Saa1099 chip = chips[chipId];
+        return chip.start(clock);
     }
 
     @Override
-    public void stop(int chipId) {
-        Saa1099 saa = saa1099Data[chipId];
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        Saa1099 chip = chips[chipId];
+        chip.writeControl(0, adr);
+        chip.write(0, data);
+        return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        Saa1099 saa = saa1099Data[chipId];
+        Saa1099 chip = chips[chipId];
 
-        saa.update(outputs, samples);
+        chip.update(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
     }
 
     @Override
-    public int write(int chipId, int port, int adr, int data) {
-        saa1099_control_w(chipId, 0, adr);
-        saa1099_data_w(chipId, 0, data);
-        return 0;
+    public void stop(int chipId) {
+        Saa1099 saa = chips[chipId];
     }
 
-    public void setMute(int chipId, int v) {
-        saa1099_set_mute_mask(chipId, v);
+    private void setMute(int chipId, int v) {
+        Saa1099 chip = chips[chipId];
+        chip.setMuteMask(v);
     }
 
-    private int startInternal(int chipId, int clock) {
-        if (chipId >= MAX_CHIPS)
-            return 0;
+    // ----
 
-        Saa1099 saa = saa1099Data[chipId];
-        return saa.start(clock);
+    public synchronized void setMask(int chipId, int ch) {
+        mask[chipId] |= ch;
+        setMute(chipId, mask[chipId]);
     }
 
-    public void saa1099_control_w(int chipId, int offset, int data) {
-        Saa1099 saa = saa1099Data[chipId];
-        saa.writeControl(offset, data);
-    }
-
-    public void saa1099_data_w(int chipId, int offset, int data) {
-        Saa1099 saa = saa1099Data[chipId];
-        saa.write(offset, data);
-    }
-
-    public void saa1099_set_mute_mask(int chipId, int muteMask) {
-        Saa1099 saa = saa1099Data[chipId];
-        saa.setMuteMask(muteMask);
+    public synchronized void resetMask(int chipId, int ch) {
+        mask[chipId] &= ~ch;
+        setMute(chipId, mask[chipId]);
     }
 
     //----

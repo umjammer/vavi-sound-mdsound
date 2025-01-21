@@ -22,18 +22,19 @@ public class YmFmYm2608Inst extends Instrument.BaseInstrument {
 
     private static final Logger logger = getLogger(Ym2608Inst.class.getName());
 
-    private static final int DefaultYM2608ClockValue = 8000000;
-    private final VgmChip[] chip = new VgmChip[2];
+    public static final int DefaultYM2608ClockValue = 8000000;
+
+    private final VgmChip[] chips = new VgmChip[2];
 
     // TODO similar variables in VgmChip class, those can be eliminated?
     long output_pos;
     long output_step;
 
     public YmFmYm2608Inst() {
-        //0..Main 1..FM 2..SSG 3..Rhm 4..PCM
+        // 0..Main 1..FM 2..SSG 3..Rhm 4..PCM
         visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}}
+                {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}},
+                {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}}
         };
     }
 
@@ -47,42 +48,11 @@ public class YmFmYm2608Inst extends Instrument.BaseInstrument {
         return "OPNA";
     }
 
-    private void load(int chipId) {
-try {
-        Path rom = Path.of(System.getProperty("mdsound.pcm.path", ""), "ym2608_adpcm_rom.bin");
-        if (!Files.exists(rom))
-            logger.log(Level.WARNING, "YM2608 enabled but ym2608_adpcm_rom.bin not found: " + rom);
-        else {
-            byte[] temp;
-            try {
-                temp = Files.readAllBytes(rom);
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-            chip[chipId].write_data(ADPCM_A, 0, temp.length, temp, 0);
-logger.log(Level.TRACE, rom + " loaded");
-        }
-} catch (Throwable t) {
- logger.log(Level.ERROR, t.getMessage(), t);
- throw t;
-}
-    }
-
     @Override
     public void reset(int chipId) {
-        chip[chipId].reset();
+        chips[chipId].reset();
 
         output_pos = 0;
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate) {
-        chip[chipId] = new VgmChip(DefaultYM2608ClockValue, Ym2608.class);
-        load(chipId);
-
-        output_step = 0x1_0000_0000L / samplingRate;
-
-        return samplingRate;
     }
 
     /**
@@ -90,7 +60,7 @@ logger.log(Level.TRACE, rom + " loaded");
      */
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        chip[chipId] = new VgmChip(clock, Ym2608.class);
+        chips[chipId] = new VgmChip(clock, Ym2608.class);
         load(chipId);
 
         output_step = 0x1_0000_0000L / samplingRate;
@@ -99,8 +69,15 @@ logger.log(Level.TRACE, rom + " loaded");
     }
 
     @Override
-    public void stop(int chipId) {
-        chip[chipId] = null;
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        if (chips[chipId] == null) return 0;
+        chips[chipId].write(port * 0x100 + adr, data);
+        return 0;
     }
 
     int[] buffer = new int[2];
@@ -109,7 +86,7 @@ logger.log(Level.TRACE, rom + " loaded");
     public void update(int chipId, int[][] outputs, int samples) {
         buffer[0] = 0;
         buffer[1] = 0;
-        chip[chipId].generate(output_pos, output_step, buffer);
+        chips[chipId].generate(output_pos, output_step, buffer);
         for (int i = 0; i < 1; i++) {
             outputs[0][i] = buffer[i * 2 + 0];
             outputs[1][i] = buffer[i * 2 + 1];
@@ -120,31 +97,76 @@ logger.log(Level.TRACE, rom + " loaded");
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
-//        visVolume[chipId][1][0] = chip[chipId].visVolume[0];
-//        visVolume[chipId][1][1] = chip[chipId].visVolume[1];
-//        visVolume[chipId][2][0] = chip[chipId].psg.visVolume;
-//        visVolume[chipId][2][1] = chip[chipId].psg.visVolume;
-//        visVolume[chipId][3][0] = chip[chipId].visRtmVolume[0];
-//        visVolume[chipId][3][1] = chip[chipId].visRtmVolume[1];
-//        visVolume[chipId][4][0] = chip[chipId].visAPCMVolume[0];
-//        visVolume[chipId][4][1] = chip[chipId].visAPCMVolume[1];
+//        visVolume[chipId][1][0] = chips[chipId].visVolume[0];
+//        visVolume[chipId][1][1] = chips[chipId].visVolume[1];
+//        visVolume[chipId][2][0] = chips[chipId].psg.visVolume;
+//        visVolume[chipId][2][1] = chips[chipId].psg.visVolume;
+//        visVolume[chipId][3][0] = chips[chipId].visRtmVolume[0];
+//        visVolume[chipId][3][1] = chips[chipId].visRtmVolume[1];
+//        visVolume[chipId][4][0] = chips[chipId].visAPCMVolume[0];
+//        visVolume[chipId][4][1] = chips[chipId].visAPCMVolume[1];
     }
 
     @Override
-    public int write(int chipId, int port, int adr, int data) {
-        if (chip[chipId] == null) return 0;
-        chip[chipId].write(port * 0x100 + adr, data);
-        return 0;
+    public void stop(int chipId) {
+        chips[chipId] = null;
     }
 
-    public byte[] getADPCMBuffer(int chipId) {
-//        return chip[chipId].getADPCMBuffer();
+    private void load(int chipId) {
+        try {
+            Path rom = Path.of(System.getProperty("mdsound.pcm.path", ""), "ym2608_adpcm_rom.bin");
+            if (!Files.exists(rom))
+                logger.log(Level.WARNING, "YM2608 enabled but ym2608_adpcm_rom.bin not found: " + rom);
+            else {
+                byte[] temp;
+                try {
+                    temp = Files.readAllBytes(rom);
+                } catch (IOException e) {
+                    throw new UncheckedIOException(e);
+                }
+                chips[chipId].write_data(ADPCM_A, 0, temp.length, temp, 0);
+                logger.log(Level.TRACE, rom + " loaded");
+            }
+        } catch (Throwable t) {
+            logger.log(Level.ERROR, t.getMessage(), t);
+            throw t;
+        }
+    }
+
+    public byte[] getAdpcm(int chipId) {
+//        return chips[chipId].getADPCMBuffer();
         return null;
     }
 
     public int readStatusEx(int chipId) {
-//        return chip[chipId].readStatusEx();
+//        return chips[chipId].readStatusEx();
         return 0;
+    }
+
+    //----
+
+    // TODO automatic wired, use annotation?
+    public void setFMVolume(int vol, double ignored) {
+        if (chips[0] == null) return; // chips[0].setFMVolume(vol);
+        if (chips[1] == null) return; // chips[1].setFMVolume(vol);
+    }
+
+    // TODO automatic wired, use annotation?
+    public void setPSGVolume(int vol, double ignored) {
+        if (chips[0] == null) return; // chips[0].setPSGVolume(vol);
+        if (chips[1] == null) return; // chips[1].setPSGVolume(vol);
+    }
+
+    // TODO automatic wired, use annotation?
+    public void setRhythmVolume(int vol, double ignored) {
+        if (chips[0] == null) return; // chips[0].setRhythmVolume(vol);
+        if (chips[1] == null) return; // chips[1].setRhythmVolume(vol);
+    }
+
+    // TODO automatic wired, use annotation?
+    public void setAdpcmVolume(int vol, double ignored) {
+        if (chips[0] == null) return; // chips[0].setAdpcmVolume(vol);
+        if (chips[1] == null) return; // chips[1].setAdpcmVolume(vol);
     }
 
     //----
@@ -167,29 +189,5 @@ logger.log(Level.TRACE, rom + " loaded");
             }
         }
         return result;
-    }
-
-    // TODO automatic wired, use annotation?
-    public void setFMVolume(int vol, double ignored) {
-        if (chip[0] == null) return; // chip[0].setFMVolume(vol);
-        if (chip[1] == null) return; // chip[1].setFMVolume(vol);
-    }
-
-    // TODO automatic wired, use annotation?
-    public void setPSGVolume(int vol, double ignored) {
-        if (chip[0] == null) return; // chip[0].setPSGVolume(vol);
-        if (chip[1] == null) return; // chip[1].setPSGVolume(vol);
-    }
-
-    // TODO automatic wired, use annotation?
-    public void setRhythmVolume(int vol, double ignored) {
-        if (chip[0] == null) return; // chip[0].setRhythmVolume(vol);
-        if (chip[1] == null) return; // chip[1].setRhythmVolume(vol);
-    }
-
-    // TODO automatic wired, use annotation?
-    public void setAdpcmVolume(int vol, double ignored) {
-        if (chip[0] == null) return; // chip[0].setAdpcmVolume(vol);
-        if (chip[1] == null) return; // chip[1].setAdpcmVolume(vol);
     }
 }

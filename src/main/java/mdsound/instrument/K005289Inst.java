@@ -22,17 +22,17 @@ public class K005289Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int samplingRate) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public void stop(int chipId) {
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
         throw new UnsupportedOperationException();
     }
 
@@ -42,7 +42,7 @@ public class K005289Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int write(int chipId, int port, int adr, int data) {
+    public void stop(int chipId) {
         throw new UnsupportedOperationException();
     }
 }

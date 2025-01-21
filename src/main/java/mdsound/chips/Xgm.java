@@ -20,17 +20,17 @@ public class Xgm {
         private final int size = 0;
     }
 
-    /** 各チャンネルの情報 */
-    private final Pcm[][] xgmPcm = new Pcm[][] {new Pcm[4], new Pcm[4]};
-    /** PCMデータ群 */
-    private final byte[][] pcmBuf = new byte[][] {null, null};
-    /** PCMテーブル */
-    private final SampleID[][] sampleID = new SampleID[][] {new SampleID[63], new SampleID[63]};
+    /** Information on each channel */
+    private final Pcm[][] xgmPcm = {new Pcm[4], new Pcm[4]};
+    /** PCM data set */
+    private final byte[][] pcmBuf = {null, null};
+    /** PCM Table */
+    private final SampleID[][] sampleID = {new SampleID[63], new SampleID[63]};
 
     private final double[] pcmStep = new double[2];
     private final double[] pcmExecDelta = new double[2];
-    private final byte[] dacEnable = new byte[] {0, 0};
-    private final Object[] lockobj = new Object[] {new Object(), new Object()};
+    private final byte[] dacEnable = {0, 0};
+    private final Object[] lockobj = {new Object(), new Object()};
     private boolean ox2b = false;
 
     public void reset(int chipId, int sampleRate) {
@@ -52,18 +52,18 @@ public class Xgm {
 
     public void write(int chipId, int port, int adr, int data) {
         //
-        // OPN2はアドレスとデータが二回に分けて送信されるタイプ
-        // 一回目 アドレス (adr = 0)
-        // 一回目 データ   (adr = 1)
+        // OPN2 is a type in which the address and data are sent in two separate transmissions.
+        // First address (adr = 0)
+        // Second data (adr = 1)
         //
 
         if (port + adr == 0) {
-            // 0x2b : DACのスイッチが含まれるアドレス
+            // 0x2b : Address containing the DAC switch
             if (data == 0x2b) ox2b = true;
             else ox2b = false;
         }
         if (ox2b && port == 0 && adr == 1) {
-            // 0x80 : DACのスイッチを意味するbit7(1:ON 0:OFF)
+            // 0x80 : Bit 7 (1: ON, 0: OFF) indicates the DAC switch
             dacEnable[chipId] = (byte) (data & 0x80);
             ox2b = false;
         }
@@ -85,17 +85,17 @@ public class Xgm {
         int channel = X & 0x3;
 
         synchronized (lockobj[chipId]) {
-            // 優先度が高い場合または消音中の場合のみ発音できる
+            // Can only be played if it has high priority or is muted
             if (xgmPcm[chipId][channel].priority > priority && xgmPcm[chipId][channel].isPlaying) return;
 
             if (id == 0 || id > sampleID[chipId].length || sampleID[chipId][id - 1].size == 0) {
-                // IDが0の場合や、定義されていないIDが指定された場合は発音を停止する
+                // If the ID is 0 or an undefined ID is specified, the sound will stop.
                 xgmPcm[chipId][channel].priority = 0;
                 xgmPcm[chipId][channel].isPlaying = false;
                 return;
             }
 
-            // 発音開始指示
+            // Sound start instruction
             xgmPcm[chipId][channel].priority = priority;
             xgmPcm[chipId][channel].startAddr = sampleID[chipId][id - 1].addr;
             xgmPcm[chipId][channel].endAddr = sampleID[chipId][id - 1].addr + sampleID[chipId][id - 1].size;
@@ -106,9 +106,9 @@ public class Xgm {
     }
 
     private short oneFramePCM(int chipId) {
-        if (dacEnable[chipId] == 0) return 0x80; //0x80 : 無音状態(...というよりも波形の中心となる場所?)
+        if (dacEnable[chipId] == 0) return 0x80; // 0x80: Silence (or rather the center of the waveform?)
 
-        // 波形合成
+        // Waveform Synthesis
         int o = 0;
         synchronized (lockobj[chipId]) {
             for (int i = 0; i < 4; i++) {
@@ -123,8 +123,8 @@ public class Xgm {
             }
         }
 
-        o = (short) Math.min(Math.max(o, Byte.MIN_VALUE + 1), Byte.MAX_VALUE); //クリッピング
-        o += 0x80; // OPN2での中心の位置に移動する
+        o = (short) Math.min(Math.max(o, Byte.MIN_VALUE + 1), Byte.MAX_VALUE); // clipping
+        o += 0x80; // Move to the center position in OPN2
 
         return (short) o;
     }

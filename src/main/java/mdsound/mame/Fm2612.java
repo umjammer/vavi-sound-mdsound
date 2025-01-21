@@ -131,7 +131,7 @@ import mdsound.mame.Fm.BaseChip;
  *  YM2610  : Psg:3ch FM:4ch ADPCM(18.5KHz):6ch DeltaT ADPCM:1ch
  *  YM2610B : Psg:3ch FM:6ch ADPCM(18.5KHz):6ch DeltaT ADPCM:1ch
  */
-public class Fm2612 {
+public abstract class Fm2612 {
 
     /**
      * here's the virtual Ym2612Inst
@@ -232,7 +232,7 @@ public class Fm2612 {
         private static final int[] sinTab = new int[SIN_LEN];
 
         private static final int RATE_STEPS = 8;
-        private static final byte[] egInc = new byte[] {
+        private static final int[] egInc = {
                 /* cycle: 0 1  2 3  4 5  6 7 */
 
                 /*  0 */ 0, 1, 0, 1, 0, 1, 0, 1, // rates 00..11 0 (increment by 0 or 1)
@@ -263,7 +263,7 @@ public class Fm2612 {
         /**
          * this is YM2151 and Ym2612 phase increment data (in 10.10 fixed point format)
          */
-        private static final byte[] dtTab = new byte[] {
+        private static final int[] dtTab = {
                 // FD=0
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -333,76 +333,76 @@ public class Fm2612 {
          *
          * 7 bits meaningful (of F-NUMBER), 8 LFO output levels per one depth (of 32), 8 LFO depths
          */
-        private static final byte[][] lfo_pm_output = new byte[][] {
+        private static final int[][] lfo_pm_output = {
                 // FNUM BIT 4: 000 0001xxxx
-                /* DEPTH 0 */ new byte[] {0, 0, 0, 0, 0, 0, 0, 0},
-                /* DEPTH 1 */ new byte[] {0, 0, 0, 0, 0, 0, 0, 0},
-                /* DEPTH 2 */ new byte[] {0, 0, 0, 0, 0, 0, 0, 0},
-                /* DEPTH 3 */ new byte[] {0, 0, 0, 0, 0, 0, 0, 0},
-                /* DEPTH 4 */ new byte[] {0, 0, 0, 0, 0, 0, 0, 0},
-                /* DEPTH 5 */ new byte[] {0, 0, 0, 0, 0, 0, 0, 0},
-                /* DEPTH 6 */ new byte[] {0, 0, 0, 0, 0, 0, 0, 0},
-                /* DEPTH 7 */ new byte[] {0, 0, 0, 0, 1, 1, 1, 1},
+                /* DEPTH 0 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 1 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 2 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 3 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 4 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 5 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 6 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 7 */ {0, 0, 0, 0, 1, 1, 1, 1},
 
                 // FNUM BIT 5: 000 0010xxxx
-                /* DEPTH 0 */ new byte[] {0, 0, 0, 0, 0, 0, 0, 0},
-                /* DEPTH 1 */ new byte[] {0, 0, 0, 0, 0, 0, 0, 0},
-                /* DEPTH 2 */ new byte[] {0, 0, 0, 0, 0, 0, 0, 0},
-                /* DEPTH 3 */ new byte[] {0, 0, 0, 0, 0, 0, 0, 0},
-                /* DEPTH 4 */ new byte[] {0, 0, 0, 0, 0, 0, 0, 0},
-                /* DEPTH 5 */ new byte[] {0, 0, 0, 0, 0, 0, 0, 0},
-                /* DEPTH 6 */ new byte[] {0, 0, 0, 0, 1, 1, 1, 1},
-                /* DEPTH 7 */ new byte[] {0, 0, 1, 1, 2, 2, 2, 3},
+                /* DEPTH 0 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 1 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 2 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 3 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 4 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 5 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 6 */ {0, 0, 0, 0, 1, 1, 1, 1},
+                /* DEPTH 7 */ {0, 0, 1, 1, 2, 2, 2, 3},
 
                 // FNUM BIT 6: 000 0100xxxx
-                /* DEPTH 0 */ new byte[] {0, 0, 0, 0, 0, 0, 0, 0},
-                /* DEPTH 1 */ new byte[] {0, 0, 0, 0, 0, 0, 0, 0},
-                /* DEPTH 2 */ new byte[] {0, 0, 0, 0, 0, 0, 0, 0},
-                /* DEPTH 3 */ new byte[] {0, 0, 0, 0, 0, 0, 0, 0},
-                /* DEPTH 4 */ new byte[] {0, 0, 0, 0, 0, 0, 0, 1},
-                /* DEPTH 5 */ new byte[] {0, 0, 0, 0, 1, 1, 1, 1},
-                /* DEPTH 6 */ new byte[] {0, 0, 1, 1, 2, 2, 2, 3},
-                /* DEPTH 7 */ new byte[] {0, 0, 2, 3, 4, 4, 5, 6},
+                /* DEPTH 0 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 1 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 2 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 3 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 4 */ {0, 0, 0, 0, 0, 0, 0, 1},
+                /* DEPTH 5 */ {0, 0, 0, 0, 1, 1, 1, 1},
+                /* DEPTH 6 */ {0, 0, 1, 1, 2, 2, 2, 3},
+                /* DEPTH 7 */ {0, 0, 2, 3, 4, 4, 5, 6},
 
                 // FNUM BIT 7: 000 1000xxxx
-                /* DEPTH 0 */ new byte[] {0, 0, 0, 0, 0, 0, 0, 0},
-                /* DEPTH 1 */ new byte[] {0, 0, 0, 0, 0, 0, 0, 0},
-                /* DEPTH 2 */ new byte[] {0, 0, 0, 0, 0, 0, 1, 1},
-                /* DEPTH 3 */ new byte[] {0, 0, 0, 0, 1, 1, 1, 1},
-                /* DEPTH 4 */ new byte[] {0, 0, 0, 1, 1, 1, 1, 2},
-                /* DEPTH 5 */ new byte[] {0, 0, 1, 1, 2, 2, 2, 3},
-                /* DEPTH 6 */ new byte[] {0, 0, 2, 3, 4, 4, 5, 6},
-                /* DEPTH 7 */ new byte[] {0, 0, 4, 6, 8, 8, 0xa, 0xc},
+                /* DEPTH 0 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 1 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 2 */ {0, 0, 0, 0, 0, 0, 1, 1},
+                /* DEPTH 3 */ {0, 0, 0, 0, 1, 1, 1, 1},
+                /* DEPTH 4 */ {0, 0, 0, 1, 1, 1, 1, 2},
+                /* DEPTH 5 */ {0, 0, 1, 1, 2, 2, 2, 3},
+                /* DEPTH 6 */ {0, 0, 2, 3, 4, 4, 5, 6},
+                /* DEPTH 7 */ {0, 0, 4, 6, 8, 8, 0xa, 0xc},
 
                 // FNUM BIT 8: 001 0000xxxx
-                /* DEPTH 0 */ new byte[] {0, 0, 0, 0, 0, 0, 0, 0},
-                /* DEPTH 1 */ new byte[] {0, 0, 0, 0, 1, 1, 1, 1},
-                /* DEPTH 2 */ new byte[] {0, 0, 0, 1, 1, 1, 2, 2},
-                /* DEPTH 3 */ new byte[] {0, 0, 1, 1, 2, 2, 3, 3},
-                /* DEPTH 4 */ new byte[] {0, 0, 1, 2, 2, 2, 3, 4},
-                /* DEPTH 5 */ new byte[] {0, 0, 2, 3, 4, 4, 5, 6},
-                /* DEPTH 6 */ new byte[] {0, 0, 4, 6, 8, 8, 0xa, 0xc},
-                /* DEPTH 7 */ new byte[] {0, 0, 8, 0xc, 0x10, 0x10, 0x14, 0x18},
+                /* DEPTH 0 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 1 */ {0, 0, 0, 0, 1, 1, 1, 1},
+                /* DEPTH 2 */ {0, 0, 0, 1, 1, 1, 2, 2},
+                /* DEPTH 3 */ {0, 0, 1, 1, 2, 2, 3, 3},
+                /* DEPTH 4 */ {0, 0, 1, 2, 2, 2, 3, 4},
+                /* DEPTH 5 */ {0, 0, 2, 3, 4, 4, 5, 6},
+                /* DEPTH 6 */ {0, 0, 4, 6, 8, 8, 0xa, 0xc},
+                /* DEPTH 7 */ {0, 0, 8, 0xc, 0x10, 0x10, 0x14, 0x18},
 
                 // FNUM BIT 9: 010 0000xxxx
-                /* DEPTH 0 */ new byte[] {0, 0, 0, 0, 0, 0, 0, 0},
-                /* DEPTH 1 */ new byte[] {0, 0, 0, 0, 2, 2, 2, 2},
-                /* DEPTH 2 */ new byte[] {0, 0, 0, 2, 2, 2, 4, 4},
-                /* DEPTH 3 */ new byte[] {0, 0, 2, 2, 4, 4, 6, 6},
-                /* DEPTH 4 */ new byte[] {0, 0, 2, 4, 4, 4, 6, 8},
-                /* DEPTH 5 */ new byte[] {0, 0, 4, 6, 8, 8, 0xa, 0xc},
-                /* DEPTH 6 */ new byte[] {0, 0, 8, 0xc, 0x10, 0x10, 0x14, 0x18},
-                /* DEPTH 7 */ new byte[] {0, 0, 0x10, 0x18, 0x20, 0x20, 0x28, 0x30},
+                /* DEPTH 0 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 1 */ {0, 0, 0, 0, 2, 2, 2, 2},
+                /* DEPTH 2 */ {0, 0, 0, 2, 2, 2, 4, 4},
+                /* DEPTH 3 */ {0, 0, 2, 2, 4, 4, 6, 6},
+                /* DEPTH 4 */ {0, 0, 2, 4, 4, 4, 6, 8},
+                /* DEPTH 5 */ {0, 0, 4, 6, 8, 8, 0xa, 0xc},
+                /* DEPTH 6 */ {0, 0, 8, 0xc, 0x10, 0x10, 0x14, 0x18},
+                /* DEPTH 7 */ {0, 0, 0x10, 0x18, 0x20, 0x20, 0x28, 0x30},
 
                 // FNUM BIT10: 100 0000xxxx
-                /* DEPTH 0 */ new byte[] {0, 0, 0, 0, 0, 0, 0, 0},
-                /* DEPTH 1 */ new byte[] {0, 0, 0, 0, 4, 4, 4, 4},
-                /* DEPTH 2 */ new byte[] {0, 0, 0, 4, 4, 4, 8, 8},
-                /* DEPTH 3 */ new byte[] {0, 0, 4, 4, 8, 8, 0xc, 0xc},
-                /* DEPTH 4 */ new byte[] {0, 0, 4, 8, 8, 8, 0xc, 0x10},
-                /* DEPTH 5 */ new byte[] {0, 0, 8, 0xc, 0x10, 0x10, 0x14, 0x18},
-                /* DEPTH 6 */ new byte[] {0, 0, 0x10, 0x18, 0x20, 0x20, 0x28, 0x30},
-                /* DEPTH 7 */ new byte[] {0, 0, 0x20, 0x30, 0x40, 0x40, 0x50, 0x60},
+                /* DEPTH 0 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 1 */ {0, 0, 0, 0, 4, 4, 4, 4},
+                /* DEPTH 2 */ {0, 0, 0, 4, 4, 4, 8, 8},
+                /* DEPTH 3 */ {0, 0, 4, 4, 8, 8, 0xc, 0xc},
+                /* DEPTH 4 */ {0, 0, 4, 8, 8, 8, 0xc, 0x10},
+                /* DEPTH 5 */ {0, 0, 8, 0xc, 0x10, 0x10, 0x14, 0x18},
+                /* DEPTH 6 */ {0, 0, 0x10, 0x18, 0x20, 0x20, 0x28, 0x30},
+                /* DEPTH 7 */ {0, 0, 0x20, 0x30, 0x40, 0x40, 0x50, 0x60},
         };
 
         /**
@@ -445,9 +445,9 @@ public class Fm2612 {
         }
 
         public void setMuteMask(int muteMask) {
-            for (byte curChn = 0; curChn < 6; curChn++)
+            for (int curChn = 0; curChn < 6; curChn++)
                 this.ch[curChn].muted = (byte) ((muteMask >> curChn) & 0x01);
-            this.muteDAC = (byte) ((muteMask >> 6) & 0x01);
+            this.muteDAC = (muteMask >> 6) & 0x01;
         }
 
         public void updateReq() {
@@ -457,7 +457,7 @@ public class Fm2612 {
         /**
          * OPN/A/B common state
          */
-        static class Opn {
+        public static class Opn {
 
             public void reset() {
                 this.setPreS(6 * 24, 6 * 24, 0);
@@ -499,7 +499,7 @@ public class Fm2612 {
                 }
             }
 
-            public static class Channel {
+            private static class Channel {
 
                 static class Op {
                     public int val = 0;
@@ -524,133 +524,127 @@ public class Fm2612 {
                 /**
                  * struct describing a single Operator (SLOT)
                  */
-                public static class Slot {
+                private static class Slot {
 
-                    private byte isVGMInit;
+                    private int isVGMInit;
 
-                    /**
-                     * detune: dt_tab[DT]
-                     */
-                    public int[] dt;
-                    /**
-                     * key scale rate: 3-KSR
-                     */
-                    public int KSR;
-                    /**
-                     * attack rate
-                     */
-                    public int ar;
+                    /** detune: dt_tab[DT] */
+                    private int[] dt;
+                    /** key scale rate: 3-KSR */
+                    private int KSR;
+                    /** attack rate */
+                    private int ar;
                     /**
                      * decay rate
                      */
-                    public int d1r;
+                    private int d1r;
                     /**
                      * sustain rate
                      */
-                    public int d2r;
+                    private int d2r;
                     /**
                      * release rate
                      */
-                    public int rr;
+                    private int rr;
                     /**
                      * key scale rate: kcode>>(3-KSR)
                      */
-                    public int ksr;
+                    private int ksr;
                     /**
                      * multiple: ML_TABLE[ML]
                      */
-                    public int mul;
+                    private int mul;
 
                     // Phase Generator
 
                     /**
                      * phase counter
                      */
-                    public int phase;
+                    private int phase;
                     /**
                      * phase step
                      */
-                    public int incr;
+                    private int incr;
 
                     // Envelope Generator
 
                     /**
                      * phase type
                      */
-                    public int state;
+                    private int state;
                     /**
                      * total level: TL << 3
                      */
-                    public int tl;
+                    private int tl;
                     /**
                      * envelope counter
                      */
-                    public int volume;
+                    private int volume;
                     /**
                      * sustain level:sl_table[SL]
                      */
-                    public int sl;
+                    private int sl;
                     /**
                      * current output from EG circuit (without AM from LFO)
                      */
-                    public int volOut;
+                    private int volOut;
 
                     /**
                      * attack state
                      */
-                    public int egShAr;
+                    private int egShAr;
                     /**
                      * attack state
                      */
-                    public int egSelAr;
+                    private int egSelAr;
                     /**
                      * decay state
                      */
-                    public int egShD1R;
+                    private int egShD1R;
                     /**
                      * decay state
                      */
-                    public int egSelD1R;
+                    private int egSelD1R;
                     /**
                      * sustain state
                      */
-                    public int egShD2R;
+                    private int egShD2R;
                     /**
                      * sustain state
                      */
-                    public int egSelD2R;
+                    private int egSelD2R;
                     /**
                      * release state
                      */
-                    public int egShRr;
+                    private int egShRr;
                     /**
                      * release state
                      */
-                    public int egSelRr;
+                    private int egSelRr;
 
                     /**
                      * SSG-EG waveform
                      */
-                    public int ssg;
+                    private int ssg;
                     /**
                      * SSG-EG negated output
                      */
-                    public int ssgn;
+                    private int ssgn;
 
                     /**
                      * 0=last key was KEY OFF, 1=KEY ON
                      */
-                    public int key;
+                    private int key;
 
                     // LFO
 
                     /**
                      * AM enable flag
                      */
-                    public int aMmask;
+                    private int amMask;
 
                     private int calcVolume(int am) {
-                        return (this.volOut + (am & this.aMmask));
+                        return (this.volOut + (am & this.amMask));
                     }
 
                     /**
@@ -874,7 +868,7 @@ public class Fm2612 {
                         this.volOut = MAX_ATT_INDEX;
                     }
 
-                    public void attack(int egCnt) {
+                    private void attack(int egCnt) {
                         if ((egCnt & ((1 << this.egShAr) - 1)) == 0) {
                             // update attenuation level
                             this.volume += (~this.volume * (egInc[this.egSelAr + ((egCnt >> this.egShAr) & 7)] & 0xff)) >> 4;
@@ -894,7 +888,7 @@ public class Fm2612 {
 //logger.log(Level.TRACE, "this.state:%d this.volOut:%d".formatted(this.state, this.vol_out));
                     }
 
-                    public void decay(int egCnt) {
+                    private void decay(int egCnt) {
                         if ((egCnt & ((1 << this.egShD1R) - 1)) == 0) {
                             // SSG EG type
                             if ((this.ssg & 0x08) != 0) {
@@ -924,7 +918,7 @@ public class Fm2612 {
 //logger.log(Level.TRACE, "this.state:%d this.volOut:%d".formatted(this.state, this.volOut));
                     }
 
-                    public void sustain(int egCnt) {
+                    private void sustain(int egCnt) {
                         if ((egCnt & ((1 << this.egShD2R) - 1)) == 0) {
                             // SSG EG type
                             if ((this.ssg & 0x08) != 0) {
@@ -954,7 +948,7 @@ public class Fm2612 {
 //logger.log(Level.TRACE, "this.state:%d this.volOut:%d".formatted(this.state, this.volOut));
                     }
 
-                    public void release(int egCnt) {
+                    private void release(int egCnt) {
                         if ((egCnt & ((1 << this.egShRr) - 1)) == 0) {
                             // SSG EG type
                             if ((this.ssg & 0x08) != 0) {
@@ -1050,7 +1044,7 @@ public class Fm2612 {
                         }
                     }
 
-                    public void advanceEg(int egCnt) {
+                    private void advanceEg(int egCnt) {
                         switch (this.state) {
                         case EG_ATT: // attack phase
                             this.attack(egCnt);
@@ -1084,7 +1078,7 @@ public class Fm2612 {
 //                        this.vol_out = out + this.tl;
                     }
 
-                    public void updateSsgEg() {
+                    private void updateSsgEg() {
                         // detect SSG-EG transition
                         // this is not required during release phase as the attenuation has been forced to MAX and output invert flag is not used
                         // if an Attack Phase is programmed, inversion can occur on each sample
@@ -1128,71 +1122,71 @@ public class Fm2612 {
                 /**
                  * four SLOTs (operators)
                  */
-                public Slot[] slots = new Slot[] {
+                private final Slot[] slots = {
                         new Slot(), new Slot(), new Slot(), new Slot()
                 };
 
                 /**
                  * algorithm
                  */
-                public int algo;
+                private int algo;
                 /**
                  * feedback shift
                  */
-                public int fb;
+                private int fb;
                 /**
                  * op1 output for feedback
                  */
-                public int[] op1Out = new int[2];
+                private int[] op1Out = new int[2];
 
                 /**
                  * SLOT1 output pointer
                  */
-                public Op connect1;
+                private Op connect1;
                 /**
                  * SLOT3 output pointer
                  */
-                public Op connect3;
+                private Op connect3;
                 /**
                  * SLOT2 output pointer
                  */
-                public Op connect2;
+                private Op connect2;
                 /**
                  * SLOT4 output pointer
                  */
-                public Op connect4;
+                private Op connect4;
                 /**
                  * where to put the delayed sample (MEM)
                  */
-                public Op memConnect;
+                private Op memConnect;
 
                 /**
                  * delayed sample (MEM) value
                  */
-                public int memValue;
+                private int memValue;
 
                 /**
                  * channel PMS
                  */
-                public int pms;
+                private int pms;
                 /**
                  * channel AMS
                  */
-                public int ams;
+                private int ams;
 
                 /**
                  * fNum,blk:adjusted to sample rate
                  */
-                public int fc;
+                private int fc;
                 /**
                  * key code:
                  */
-                public int kCode;
+                private int kCode;
                 /**
                  * current blk/fNum value for this slot (can be different betweeen slots of one channel in 3slot mode)
                  */
-                public int blockFnum;
-                public int muted;
+                private int blockFnum;
+                private int muted;
 
                 private void keyOn(int s, boolean b) {
                     Channel.Slot slot = this.slots[s];
@@ -1416,81 +1410,81 @@ public class Fm2612 {
                 }
             }
 
-            static class State {
+            private static class State {
                 /**
                  * this chips parameter
                  */
-                public Ym2612 param;
+                private Ym2612 param;
                 /**
                  * frequency base
                  */
-                public double freqbase;
+                private double freqbase;
                 /**
                  * timer prescaler
                  */
-                public int timer_prescaler;
+                private int timer_prescaler;
                 /**
                  * interrupt level
                  */
-                public int irq;
+                private int irq;
                 /**
                  * irq mask
                  */
-                public int irqmask;
+                private int irqmask;
 //#if FM_BUSY_FLAG_SUPPORT
                 // TIME_TYPE busy_expiry_time; // expiry time of the busy status
 //#endif
                 /**
                  * master clock  (Hz)
                  */
-                public int clock;
+                private int clock;
                 /**
                  * sampling rate (Hz)
                  */
-                public int rate;
+                private int rate;
                 /**
                  * address register
                  */
-                public int address;
+                private int address;
                 /**
                  * status flag
                  */
-                public int status;
+                private int status;
                 /**
                  * mode  CSM / 3SLOT
                  */
-                public int mode;
+                private int mode;
                 /**
                  * freq latch
                  */
-                public int fn_h;
+                private int fn_h;
                 /**
                  * prescaler selector
                  */
-                public int prescalerSel;
+                private int prescalerSel;
                 /**
                  * timer a
                  */
-                public int ta;
+                private int ta;
                 /**
                  * timer a counter
                  */
-                public int tac;
+                private int tac;
                 /**
                  * timer b
                  */
-                public int tb;
+                private int tb;
                 /**
                  * timer b counter
                  */
-                public int tbc;
+                private int tbc;
 
                 // local timetables
 
                 /**
                  * DeTune table
                  */
-                public int[][] dt_tab = new int[][] {
+                private int[][] dt_tab = {
                         new int[32], new int[32], new int[32], new int[32],
                         new int[32], new int[32], new int[32], new int[32]
                 };
@@ -1501,13 +1495,13 @@ public class Fm2612 {
                 public interface TimerHandler extends QuadConsumer<Object, Integer, Integer, Integer> {
                 }
 
-                public TimerHandler timerHandler;
+                private TimerHandler timerHandler;
 
                 public interface IrqHandler extends BiConsumer<BaseChip, Integer> {
                 }
 
-                public IrqHandler irqHandler;
-                public Fm.Callbacks ssg;
+                private IrqHandler irqHandler;
+                private Fm.Callbacks ssg;
 
                 /**
                  * status set and IRQ handling
@@ -1634,27 +1628,27 @@ public class Fm2612 {
             /**
              * OPN 3slot struct
              */
-            static class _3SLOT {
+            private static class _3SLOT {
                 /**
                  * fNum3,blk3: calculated
                  */
-                public int[] fc = new int[3];
+                private int[] fc = new int[3];
                 /**
                  * freq3 latch
                  */
-                public int fnH;
+                private int fnH;
                 /**
                  * key code
                  */
-                public byte[] kCode = new byte[3];
+                private byte[] kCode = new byte[3];
                 /**
                  * current fNum value for this slot (can be different betweeen slots of one channel in 3slot mode)
                  */
-                public int[] blockFnum = new int[3];
+                private int[] blockFnum = new int[3];
                 /**
                  * CSM mode Key-ON flag
                  */
-                public int keyCsm;
+                private int keyCsm;
             }
 
             private int isVGMInit;
@@ -1672,40 +1666,40 @@ public class Fm2612 {
             /**
              * chips type
              */
-            public int type;
+            private int type;
             /**
              * general state
              */
-            public State st = new State();
+            private State st = new State();
             /**
              * 3 slot mode state
              */
-            public _3SLOT sl3 = new _3SLOT();
+            private _3SLOT sl3 = new _3SLOT();
             /**
              * pointer of CH
              */
-            public Channel[] channels;
+            private Channel[] channels;
             /**
              * Fm channels output masks (0xffff_ffff = enable)
              */
-            public int[] pan = new int[6 * 2];
+            private int[] pan = new int[6 * 2];
 
             /**
              * Global envelope generator counter
              */
-            public int egCnt;
+            private int egCnt;
             /**
              * Global envelope generator counter works at frequency = chipclock/64/3
              */
-            public int egTimer;
+            private int egTimer;
             /**
              * step of eg_timer
              */
-            public int egTimerAdd;
+            private int egTimerAdd;
             /**
              * envelope generator timer overlfows every 3 samples (on real chips)
              */
-            public int egTimerOverflow;
+            private int egTimerOverflow;
 
             // there are 2048 FNUMs that can be generated using FNUM/BLK registers
             // but LFO works with one more bit of a precision so we really need 4096 elements
@@ -1713,53 +1707,53 @@ public class Fm2612 {
             /**
              * F-number increment counter
              */
-            public int[] fnTable = new int[4096];
+            private int[] fnTable = new int[4096];
             /**
              * maximal phase increment (used for phase overflow)
              */
-            public int fnMax;
+            private int fnMax;
 
             // LFO
 
             /**
              * current LFO phase (of 128)
              */
-            public int lfoCnt;
+            private int lfoCnt;
             /**
              * current LFO phase runs at LFO frequency
              */
-            public int lfoTimer;
+            private int lfoTimer;
             /**
              * step of lfo_timer
              */
-            public int lfoTimerAdd;
+            private int lfoTimerAdd;
             /**
              * LFO timer overflows every N samples (depends on LFO frequency)
              */
-            public int lfoTimerOverflow;
+            private int lfoTimerOverflow;
             /**
              * current LFO AM step
              */
-            public int lfoAm;
+            private int lfoAm;
             /**
              * current LFO PM step
              */
-            public int lfoPm;
+            private int lfoPm;
 
             /**
              * Phase Modulation input for operators 2,3,4
              */
-            public Channel.Op m2 = new Channel.Op(),
-                    c1 = new Channel.Op(),
-                    c2 = new Channel.Op();
+            private final Channel.Op m2 = new Channel.Op();
+            private final Channel.Op c1 = new Channel.Op();
+            private final Channel.Op c2 = new Channel.Op();
             /**
              * one sample delay memory
              */
-            public Channel.Op mem = new Channel.Op();
+            private Channel.Op mem = new Channel.Op();
             /**
              * outputs of working channels
              */
-            public Channel.Op[] outFm = new Channel.Op[] {
+            private final Channel.Op[] outFm = {
                     new Channel.Op(), new Channel.Op(), new Channel.Op(), new Channel.Op(),
                     new Channel.Op(), new Channel.Op()
             };
@@ -1909,8 +1903,8 @@ public class Fm2612 {
                 }
             }
 
-            private static byte o2(int a) {
-                return (byte) (a * 1);
+            private static int o2(int a) {
+                return a * 1;
             }
 
             /**
@@ -1920,7 +1914,7 @@ public class Fm2612 {
              * shift 11,   10,   9,   8,   7,   6,  5,  4,  3,  2, 1,  0,  0,  0,  0,  0
              * mask  2047, 1023, 511, 255, 127, 63, 31, 15, 7,  3, 1,  0,  0,  0,  0,  0
              */
-            private static final byte[] egRateShift = new byte[] {
+            private static final int[] egRateShift = {
                     // 32 infinite time rates
                     // O(0),O(0),O(0),O(0),O(0),O(0),O(0),O(0),
                     // O(0),O(0),O(0),O(0),O(0),O(0),O(0),O(0),
@@ -1966,15 +1960,15 @@ public class Fm2612 {
                     o2(0), o2(0), o2(0), o2(0), o2(0), o2(0), o2(0), o2(0)
             };
 
-            private static byte o(int a) {
-                return (byte) (a * RATE_STEPS);
+            private static int o(int a) {
+                return a * RATE_STEPS;
             }
 
             /**
              * Envelope Generator rates (32 + 64 rates + 32 RKS)
              * note that there is no O(17) in this table - it's directly in the code
              */
-            private static final byte[] egRateSelect2612 = new byte[] {
+            private static final int[] egRateSelect2612 = {
                     // 32 infinite time rates (same as Rate 0)
                     o(18), o(18), o(18), o(18), o(18), o(18), o(18), o(18),
                     o(18), o(18), o(18), o(18), o(18), o(18), o(18), o(18),
@@ -2122,7 +2116,7 @@ public class Fm2612 {
                     slot.setDr(this.type, v);
 
                     if ((this.type & TYPE_LFOPAN) != 0) { // YM2608/2610/2610B/2612
-                        slot.aMmask = (v & 0x80) != 0 ? 0xffff_ffff : 0;
+                        slot.amMask = (v & 0x80) != 0 ? 0xffff_ffff : 0;
                     }
                     break;
 
@@ -2456,48 +2450,41 @@ public class Fm2612 {
 
         // Ym2612 local section
 
-        Opn.Channel[] cch = new Opn.Channel[6];
+        private final Opn.Channel[] cch = new Opn.Channel[6];
 
         private int pseudoSt = 0x00;
 
-        private void ym2612_setoptions(int flags) {
+        public void setOptions(int flags) {
             pseudoSt = (flags >> 2) & 0x01;
         }
 
-        // registers
-        public byte[] regs = new byte[512];
-        /**
-         * OPN state
-         */
-        public Opn opn;
-        /**
-         * channel state
-         */
-        public Opn.Channel[] ch = new Opn.Channel[] {
+        /** registers */
+        private final byte[] regs = new byte[512];
+        /** OPN state */
+        private Opn opn;
+        /** channel state */
+        private final Opn.Channel[] ch = {
                 new Opn.Channel(), new Opn.Channel(), new Opn.Channel(),
                 new Opn.Channel(), new Opn.Channel(), new Opn.Channel()
         };
 
-        /**
-         * address line A1
-         */
-        public int addr_A1;
+        /** address line A1 */
+        private int addr_A1;
 
         // dac output (Ym2612Inst)
-        //int   dacen;
-        public int dacen;
-        public int dac_test;
-        public int dacOut;
-        public int muteDAC;
+        private int dacen;
+        private int dac_test;
+        private int dacOut;
+        private int muteDAC;
 
-        public int waveOutMode;
-        public int waveL;
-        public int waveR;
+        private int waveOutMode;
+        private int waveL;
+        private int waveR;
 
         /**
          * initialize Ym2612 emulator(s)
          */
-        public Ym2612(int clock, int rate,
+        public void init(int clock, int rate,
                       Opn.State.TimerHandler timer_handler, Opn.State.IrqHandler irqHandler) {
 
             this.opn = new Opn();
@@ -2831,76 +2818,76 @@ public class Fm2612 {
         /**
          * limiter
          */
-        private static int limit(/* ref */ int val, int max, int min) {
+        private static int limit(int val, int max, int min) {
             if (val > max) return max;
             else if (val < min) return min;
             return val;
         }
     }
 
-    /**
-     * Generate samples for one of the YM2612s
-     */
-    public void ym2612_update_one(BaseChip chip, int[][] buffer, int length) {
-        Ym2612 f2612 = (Ym2612) chip;
-        f2612.updateOne(buffer, length);
-    }
-
-    private static void postLoad(BaseChip chip) {
-        if (chip != null) {
-            Ym2612 f2612 = (Ym2612) chip;
-            f2612.postLoad();
-        }
-    }
-
-    /**
-     * shut down emulator
-     */
-    private static void ym2612_shutdown(BaseChip chip) {
-        Ym2612 f2612 = (Ym2612) chip;
-    }
-
-    /**
-     * reset one of chips
-     */
-    public void ym2612_reset_chip(BaseChip chip) {
-        Ym2612 f2612 = (Ym2612) chip;
-        f2612.reset();
-    }
-
-    /**
-     * Ym2612 write
-     *
-     * @param chip number
-     * @param a    address
-     * @param v    value
-     */
-    public int ym2612_write(int chipId, BaseChip chip, int a, int v) {
-//logger.log(Level.TRACE, "a:%x v:%x".formatted(a, v));
-
-        Ym2612 f2612 = (Ym2612) chip;
-        return f2612.write(a, v);
-    }
-
-    private static int ym2612_read(BaseChip chip, int a) {
-        Ym2612 f2612 = (Ym2612) chip;
-        return f2612.read(a);
-    }
-
-    private static int ym2612_timer_over(int chipId, BaseChip chip, int c) {
-        Ym2612 f2612 = (Ym2612) chip;
-        return f2612.timerOver(c);
-    }
-
-    public void ym2612_set_mutemask(int chipId, BaseChip chip, int muteMask) {
-        Ym2612 f2612 = (Ym2612) chip;
-        f2612.setMuteMask(muteMask);
-    }
-
-    private static void ym2612_update_req(int chipId, Ym2612 chip) {
-        Ym2612 f2612 = chip;
-        f2612.updateReq();
-    }
+//    /**
+//     * Generate samples for one of the YM2612s
+//     */
+//    public void ym2612_update_one(BaseChip chip, int[][] buffer, int length) {
+//        Ym2612 f2612 = (Ym2612) chip;
+//        f2612.updateOne(buffer, length);
+//    }
+//
+//    private static void postLoad(BaseChip chip) {
+//        if (chip != null) {
+//            Ym2612 f2612 = (Ym2612) chip;
+//            f2612.postLoad();
+//        }
+//    }
+//
+//    /**
+//     * shut down emulator
+//     */
+//    private static void ym2612_shutdown(BaseChip chip) {
+//        Ym2612 f2612 = (Ym2612) chip;
+//    }
+//
+//    /**
+//     * reset one of chips
+//     */
+//    public void ym2612_reset_chip(BaseChip chip) {
+//        Ym2612 f2612 = (Ym2612) chip;
+//        f2612.reset();
+//    }
+//
+//    /**
+//     * Ym2612 write
+//     *
+//     * @param chip number
+//     * @param a    address
+//     * @param v    value
+//     */
+//    public int ym2612_write(int chipId, BaseChip chip, int a, int v) {
+////logger.log(Level.TRACE, "a:%x v:%x".formatted(a, v));
+//
+//        Ym2612 f2612 = (Ym2612) chip;
+//        return f2612.write(a, v);
+//    }
+//
+//    private static int ym2612_read(BaseChip chip, int a) {
+//        Ym2612 f2612 = (Ym2612) chip;
+//        return f2612.read(a);
+//    }
+//
+//    private static int ym2612_timer_over(int chipId, BaseChip chip, int c) {
+//        Ym2612 f2612 = (Ym2612) chip;
+//        return f2612.timerOver(c);
+//    }
+//
+//    public void ym2612_set_mutemask(int chipId, BaseChip chip, int muteMask) {
+//        Ym2612 f2612 = (Ym2612) chip;
+//        f2612.setMuteMask(muteMask);
+//    }
+//
+//    private static void ym2612_update_req(int chipId, Ym2612 chip) {
+//        Ym2612 f2612 = chip;
+//        f2612.updateReq();
+//    }
 
     static class RunningDevice {
         private void saveState(Ym2612 f2612) {
@@ -2915,9 +2902,9 @@ public class Fm2612 {
             RunningDevice.state_save_register_device_item(0, f2612.addr_A1);
         }
 
-        private static void state_save_register_device_item(int v, byte fn_h) {
-            throw new UnsupportedOperationException();
-        }
+//        private static void state_save_register_device_item(int v, int fn_h) {
+//            throw new UnsupportedOperationException();
+//        }
 
         private static void state_save_register_device_item_array(int v, byte[] rEGS) {
             throw new UnsupportedOperationException();

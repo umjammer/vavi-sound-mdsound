@@ -10,6 +10,11 @@ import mdsound.chips.K053260;
 
 public class K053260Inst extends Instrument.BaseInstrument {
 
+    public static final int MAX_CHIPS = 0x02;
+    public static final int DefaultClockValue = 3579545;
+
+    private final K053260[] chips = {new K053260(), new K053260()};
+
     @Override
     public String getName() {
         return "K053260";
@@ -22,57 +27,17 @@ public class K053260Inst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        device_reset_k053260(chipId);
+        K053260 chip = chips[chipId];
+        chip.reset();
 
         visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
+                {{0, 0}},
+                {{0, 0}}
         };
     }
 
     @Override
-    public int start(int chipId, int samplingRate) {
-        return device_start_k053260(chipId, 3579545);
-    }
-
-    @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        return device_start_k053260(chipId, clock);
-    }
-
-    @Override
-    public void stop(int chipId) {
-        device_stop_k053260(chipId);
-    }
-
-    @Override
-    public void update(int chipId, int[][] outputs, int samples) {
-        k053260_update(chipId, outputs, samples);
-
-        visVolume[chipId][0][0] = outputs[0][0];
-        visVolume[chipId][0][1] = outputs[1][0];
-    }
-
-    @Override
-    public int write(int chipId, int port, int adr, int data) {
-        k053260_w(chipId, adr, (byte) data);
-        return 0;
-    }
-
-    private static final int MAX_CHIPS = 0x02;
-    private final K053260[] chips = new K053260[] {new K053260(), new K053260()};
-
-    public void device_reset_k053260(int chipId) {
-        K053260 chip = chips[chipId];
-        chip.reset();
-    }
-
-    public void k053260_update(int chipId, int[][] outputs, int samples) {
-        K053260 chip = chips[chipId];
-        chip.update(outputs, samples);
-    }
-
-    public int device_start_k053260(int chipId, int clock) {
         if (chipId >= MAX_CHIPS)
             return 0;
 
@@ -80,37 +45,51 @@ public class K053260Inst extends Instrument.BaseInstrument {
         return chip.start(clock);
     }
 
-    public void device_stop_k053260(int chipId) {
+    @Override
+    public int read(int chipId, int adr) {
+        K053260 chip = chips[chipId];
+        return chip.read(adr);
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        K053260 chip = chips[chipId];
+        chip.write(adr, data);
+        return 0;
+    }
+
+    @Override
+    public void update(int chipId, int[][] outputs, int samples) {
+        K053260 chip = chips[chipId];
+        chip.update(outputs, samples);
+
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
+    }
+
+    @Override
+    public void stop(int chipId) {
         K053260 chip = chips[chipId];
         chip.stop();
     }
 
-    public void k053260_w(int chipId, int offset, byte data) {
-        K053260 chip = chips[chipId];
-        chip.write(offset, data);
+    public void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
+        writePcm(chipId, romSize, dataStart, dataLength, romData, 0);
     }
 
-    public byte k053260_r(int chipId, int offset) {
-        K053260 chip = chips[chipId];
-        return chip.read(offset);
-    }
-
-    public void k053260_write_rom(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
-        K053260 chip = chips[chipId];
-        chip.writeRom(romSize, dataStart, dataLength, romData);
-    }
-
-    public void k053260_write_rom(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
-        K053260 chip = chips[chipId];
-        chip.writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
-    }
-
-    public void k053260_set_mute_mask(int chipId, int muteMask) {
+    public void setMuteMask(int chipId, int muteMask) {
         K053260 chip = chips[chipId];
         chip.setMuteMask(muteMask);
     }
 
     //----
+
+    public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
+        K053260 chip = chips[chipId];
+        chip.writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
+    }
+
+    // ----
 
     @Override
     public Tuple<Integer, Double> getRegulationVolume() {

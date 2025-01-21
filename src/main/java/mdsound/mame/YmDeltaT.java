@@ -4,11 +4,8 @@ import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
 import java.util.function.Consumer;
 
-import mdsound.instrument.Y8950Inst;
-import vavi.util.win32.WAVE.data;
-
 import static java.lang.System.getLogger;
-import static mdsound.mame.Fm.OUTD_CENTER;
+import static mdsound.mame.Fm.BaseChip.OUTD_CENTER;
 
 
 /**
@@ -99,91 +96,91 @@ public class YmDeltaT {
     }
 
     /** AT: rearranged and tightened structure */
-    public byte[] memory;
+    byte[] memory;
     /** pointer of output pointers */
-    public int[] outputPointer;
+    private int[] outputPointer;
     /** pan : &output_pointer[pan] */
-    public int[] pan;
-    public int panPtr;
-    public double freqBase;
-    public int memorySize;
-    public int memoryMask;
-    public int outputRange;
+    private int[] pan;
+    private int panPtr;
+    double freqBase;
+    int memorySize;
+    int memoryMask;
+    private int outputRange;
     /** current address */
-    public int nowAddr;
+    private int nowAddr;
     /** current step */
-    public int nowStep;
+    private int nowStep;
     /** step */
-    public int step;
+    private int step;
     /** start address */
-    public int start;
+    private int start;
     /** limit address */
-    public int limit;
+    private int limit;
     /** end address */
-    public int end;
+    private int end;
     /** delta scale */
-    public int delta;
+    private int delta;
     /** current volume */
-    public int volume;
+    private int volume;
     /** shift Measurement value */
-    public int acc;
+    private int acc;
     /*+ next Forecast        */
-    public int adpCmd;
+    private int adpCmd;
     /** current value */
-    public int adpCml;
+    private int adpCml;
     /** leveling value */
-    public int prevAcc;
+    private int prevAcc;
     /** current rom data */
-    public int nowData;
+    private int nowData;
     /** current data from reg 08 */
-    public int cpuData;
+    private int cpuData;
     /** port status */
-    public int portState;
+    int portState;
     /** control reg: SAMPLE, DA/AD, RAM TYPE (x8bit / x1bit), ROM/RAM */
-    public int control2;
+    private int control2;
     /**
      * address bits shift-left:
      * 8 for YM2610,
      * 5 for Y8950 and YM2608
      */
-    public int portShift;
+    private int portShift;
 
     /**
      * address bits shift-right:
      * 0 for ROM and x8bit DRAMs,
      * 3 for x1 DRAMs
      */
-    public int dromPortShift;
+    private int dromPortShift;
 
     /** needed for reading/writing external memory */
-    public int memRead;
+    private int memRead;
 
     // handlers and parameters for the status flags support
-    public StatusChangeHandler statusSetHandler;
-    public StatusChangeHandler statusResetHandler;
+    StatusChangeHandler statusSetHandler;
+    StatusChangeHandler statusResetHandler;
 
     // note that different chips have these flags on different
     // bits of the status register
     /** this chips id */
-    public Fm.BaseChip statusChangeWhichChip;
+    Fm.BaseChip statusChangeWhichChip;
     /** 1 on End Of Sample (record/playback/cycle time of AD/DA converting has passed)*/
-    public int statusChangeEOSBit;
+    int statusChangeEOSBit;
     /** 1 after recording 2 datas (2x4bits) or after reading/writing 1 data */
-    public int statusChangeBRDYBit;
+    int statusChangeBRDYBit;
     /** 1 if silence lasts for more than 290 miliseconds on ADPCM recording */
-    public int statusChangeZEROBit;
+    int statusChangeZEROBit;
 
     // neither Y8950Inst nor YM2608 can generate IRQ when PCMBSY bit changes, so instead of above,
     // the statusflag gets ORed with PCM_BSY (below) (on each read of statusflag of Y8950 and YM2608)
 
     /** 1 when ADPCM is playing; Y8950Inst/YM2608 only */
-    public int pcmBsy;
+    int pcmBsy;
 
     /** adpcm registers */
-    public int[] reg = new int[16];
-    public int regPtr = 0;
+    private int[] reg = new int[16];
+    private int regPtr = 0;
     /** which chips we're emulating */
-    public int emulationMode;
+    private int emulationMode;
 
     private static final int DELTA_MAX = 24576;
     private static final int DELTA_MIN = 127;

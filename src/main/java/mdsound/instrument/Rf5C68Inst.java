@@ -8,10 +8,11 @@ import mdsound.Instrument;
 import mdsound.chips.Rf5c68;
 
 
-public class Rf5c68Inst extends Instrument.BaseInstrument {
+public class Rf5C68Inst extends Instrument.BaseInstrument {
 
-    private static final int MAX_CHIPS = 0x02;
-    public Rf5c68[] rf5C68Data = new Rf5c68[] {new Rf5c68(), new Rf5c68()};
+    public static final int MAX_CHIPS = 0x02;
+
+    private final Rf5c68[] chips = {new Rf5c68(), new Rf5c68()};
 
     @Override
     public String getName() {
@@ -23,8 +24,7 @@ public class Rf5c68Inst extends Instrument.BaseInstrument {
         return "RF68";
     }
 
-    @Override
-    public void reset(int chipId) {
+    public Rf5C68Inst() {
         visVolume = new int[][][] {
                 {new int[] {0, 0}},
                 {new int[] {0, 0}}
@@ -32,8 +32,9 @@ public class Rf5c68Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int samplingRate) {
-        return start(chipId, samplingRate, 0);
+    public void reset(int chipId) {
+        Rf5c68 chip = chips[chipId];
+        chip.reset();
     }
 
     @Override
@@ -41,19 +42,26 @@ public class Rf5c68Inst extends Instrument.BaseInstrument {
         if (chipId >= MAX_CHIPS)
             return 0;
 
-        Rf5c68 chip = rf5C68Data[chipId];
+        Rf5c68 chip = chips[chipId];
         return chip.start(clock);
     }
 
     @Override
-    public void stop(int chipId) {
-        Rf5c68 chip = rf5C68Data[chipId];
-        chip.stop();
+    public int read(int chipId, int adr) {
+        Rf5c68 chip = chips[chipId];
+        return chip.readMemory(adr);
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        Rf5c68 chip = chips[chipId];
+        chip.write(adr, data);
+        return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        Rf5c68 chip = rf5C68Data[chipId];
+        Rf5c68 chip = chips[chipId];
         chip.update(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
@@ -61,40 +69,43 @@ public class Rf5c68Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int write(int chipId, int port, int adr, int data) {
-        Rf5c68 chip = rf5C68Data[chipId];
-        chip.write(adr, data);
-        return 0;
+    public void stop(int chipId) {
+        Rf5c68 chip = chips[chipId];
+        chip.stop();
     }
 
-    private void device_reset_rf5c68(int chipId) {
-        Rf5c68 chip = rf5C68Data[chipId];
-        chip.reset();
-    }
-
-    private int rf5c68_mem_r(int chipId, int offset) {
-        Rf5c68 chip = rf5C68Data[chipId];
-        return chip.readMemory(offset);
-    }
-
-    public void rf5c68_mem_w(int chipId, int offset, int data) {
-        Rf5c68 chip = rf5C68Data[chipId];
-        chip.writeMemory(offset, data);
-    }
-
-    private void rf5c68_write_ram(int chipId, int dataStart, int dataLength, byte[] ramData) {
-        Rf5c68 chip = rf5C68Data[chipId];
+    public void writeRam(int chipId, int dataStart, int dataLength, byte[] ramData) {
+        Rf5c68 chip = chips[chipId];
         chip.writeRam(dataStart, dataLength, ramData);
     }
 
-    public void rf5c68_write_ram2(int chipId, int dataStart, int dataLength, byte[] ramData, int srcStartAdr) {
-        Rf5c68 chip = rf5C68Data[chipId];
-        chip.writeRam2(dataStart, dataLength, ramData, srcStartAdr);
+    private void setMuteMask(int chipId, int muteMask) {
+        Rf5c68 chip = chips[chipId];
+        chip.setMuteMask(muteMask);
     }
 
-    private void rf5c68_set_mute_mask(int chipId, int muteMask) {
-        Rf5c68 chip = rf5C68Data[chipId];
-        chip.setMuteMask(muteMask);
+    //----
+
+    public synchronized void writePcm(int chipId, int ramStartAdr, int ramDataLength, byte[] srcData, int srcStartAdr) {
+        Rf5c68 chip = chips[chipId];
+        chip.writeRam2(ramStartAdr, ramDataLength, srcData, srcStartAdr);
+    }
+
+    public synchronized void writeMemory(int chipId, int adr, int data) {
+        Rf5c68 chip = chips[chipId];
+        chip.writeMemory(adr, data);
+    }
+
+    public synchronized Rf5c68 getChip(int chipId) {
+        return chips[chipId];
+    }
+
+    public synchronized void setMask(int chipId, int ch) {
+        setMuteMask(chipId, 1);
+    }
+
+    public synchronized void resetMask(int chipId, int ch) {
+        setMuteMask(chipId, 0);
     }
 
     //----

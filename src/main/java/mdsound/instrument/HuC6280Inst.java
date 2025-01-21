@@ -11,8 +11,19 @@ import mdsound.chips.OotakeHuC6280;
 // OotakeHuC6280
 public class HuC6280Inst extends Instrument.BaseInstrument {
 
-    private final OotakeHuC6280[] chips = new OotakeHuC6280[2];
-    private static final int DefaultHuC6280ClockValue = 3579545;
+    public static final int DefaultHuC6280ClockValue = 3579545;
+
+    private final OotakeHuC6280[] chips = {new OotakeHuC6280(), new OotakeHuC6280()};
+
+    private final int[] mask = {0, 0};
+
+    public HuC6280Inst() {
+        // 0..Main
+        visVolume = new int[][][] {
+                {{0, 0}},
+                {{0, 0}}
+        };
+    }
 
     @Override
     public String getName() {
@@ -24,78 +35,71 @@ public class HuC6280Inst extends Instrument.BaseInstrument {
         return "HuC8";
     }
 
-    public HuC6280Inst() {
-        // 0..Main
-        visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
-        };
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate) {
-        start(chipId, samplingRate, DefaultHuC6280ClockValue);
-
-        return samplingRate;
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate, int clock, Object... option) {
-        chips[chipId] = new OotakeHuC6280(clock, samplingRate);
-
-        return samplingRate;
-    }
-
-    @Override
-    public void stop(int chipId) {
-        if (chips[chipId] == null) return;
-        chips[chipId] = null;
-    }
-
     @Override
     public void reset(int chipId) {
-        if (chips[chipId] == null) return;
+        assert chipId < chips.length;
         chips[chipId].reset();
     }
 
     @Override
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        assert chipId < chips.length;
+        chips[chipId].init(clock, samplingRate);
+
+        return samplingRate;
+    }
+
+    @Override
+    public int read(int chipId, int adr) {
+        assert chipId < chips.length;
+        return chips[chipId].read(adr);
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        assert chipId < chips.length;
+        chips[chipId].writeReg(adr, data);
+        return 0;
+    }
+
+    @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        if (chips[chipId] == null) return;
+        assert chipId < chips.length;
         chips[chipId].mix(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
     }
 
-    private int HuC6280_Write(int chipId, int adr, int data) {
-        if (chips[chipId] == null) return 0;
-        chips[chipId].writeReg(adr, data);
-        return 0;
+    @Override
+    public void stop(int chipId) {
+        assert chipId < chips.length;
+        chips[chipId] = null;
     }
 
-    public int read(int chipId, int adr) {
-        if (chips[chipId] == null) return 0;
-        return chips[chipId].read(adr);
-    }
-
-    public void setMute(int chipId, int val) {
-        if (chips[chipId] == null) return;
-
+    private void setMute(int chipId, int val) {
+        assert chipId < chips.length;
         chips[chipId].setMuteMask(val);
     }
 
-    public void SetVolume(int chipId, int db) {
-        if (chips[chipId] == null) {
-        }
+    public void setVolume(int chipId, int db) {
+        assert chipId < chips.length;
     }
 
-    public OotakeHuC6280 GetState(int chipId) {
+    //----
+
+    public synchronized void setMask(int chipId, int ch) {
+        mask[chipId] |= ch;
+        setMute(chipId, mask[chipId]);
+    }
+
+    public synchronized void resetMask(int chipId, int ch) {
+        mask[chipId] &= ~ch;
+        setMute(chipId, mask[chipId]);
+    }
+
+    public synchronized OotakeHuC6280 getChip(int chipId) {
         return chips[chipId];
-    }
-
-    @Override
-    public int write(int chipId, int port, int adr, int data) {
-        return HuC6280_Write(chipId, adr, data);
     }
 
     //----

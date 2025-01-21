@@ -6,7 +6,7 @@ import mdsound.chips.P86;
 
 public class P86Inst extends Instrument.BaseInstrument {
 
-    private P86 info = new P86();
+    private final P86 chip = new P86();
 
     @Override
     public String getName() {
@@ -20,19 +20,28 @@ public class P86Inst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        info.init();
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate) {
-        return start(chipId, samplingRate, 0);
+        chip.init();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        info.samplingRate = samplingRate;
-        reset(chipId);
+        chip.start(samplingRate);
         return samplingRate;
+    }
+
+    @Override
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        return chip.write(port, adr, data);
+    }
+
+    @Override
+    public void update(int chipId, int[][] outputs, int samples) {
+        chip.update(outputs, samples);
     }
 
     @Override
@@ -40,17 +49,9 @@ public class P86Inst extends Instrument.BaseInstrument {
         // none
     }
 
-    @Override
-    public void update(int chipId, int[][] outputs, int samples) {
-        info.update(outputs, samples);
-    }
+    // ----
 
-    @Override
-    public int write(int chipId, int port, int adr, int data) {
-        return info.write(port, adr, data);
-    }
-
-    public int loadPcm(int chipId, int address, int data, byte[] pcmData) {
-        return info.loadPcm(0, address, data, pcmData);
+    public synchronized void writePcm(int chipId, int address, int data, byte[] pcmData) {
+        chip.loadPcm(0, address, data, pcmData);
     }
 }

@@ -7,12 +7,14 @@ import mdsound.chips.WSwan;
 
 public class WSwanInst extends Instrument.BaseInstrument {
 
-    public static final int DefaultWSwanClockValue = 3072000;
+    public static final int DefaultClockValue = 3072000;
 
-    private int masterClock = DefaultWSwanClockValue;
+    private int masterClock = DefaultClockValue;
     private int sampleRate = 44100;
 
-    private final WSwan[] chip = new WSwan[] {new WSwan(DefaultWSwanClockValue), new WSwan(DefaultWSwanClockValue)};
+    private final WSwan[] chips = {new WSwan(DefaultClockValue), new WSwan(DefaultClockValue)};
+
+    final int[] mask = {0, 0};
 
     @Override
     public String getName() {
@@ -26,17 +28,12 @@ public class WSwanInst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        chip[chipId].ws_audio_reset();
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate) {
-        return start(chipId, samplingRate, DefaultWSwanClockValue);
+        chips[chipId].ws_audio_reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        chip[chipId].init(samplingRate, clock);
+        chips[chipId].init(samplingRate, clock);
         sampleRate = samplingRate;
         masterClock = clock;
 
@@ -52,13 +49,19 @@ public class WSwanInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void stop(int chipId) {
-        chip[chipId].stop();
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        chips[chipId].writeAudioPort(adr + 0x80, data);
+        return 0;
     }
 
     private double sampleCounter = 0;
-    private final int[][] frm = new int[][] {new int[1], new int[1]};
-    private final int[][] before = new int[][] {new int[1], new int[1]};
+    private final int[][] frm = {new int[1], new int[1]};
+    private final int[][] before = {new int[1], new int[1]};
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
@@ -69,7 +72,7 @@ public class WSwanInst extends Instrument.BaseInstrument {
             sampleCounter += (masterClock / 128.0) / sampleRate;
             int upc = (int) sampleCounter;
             while (sampleCounter >= 1) {
-                chip[chipId].update(1, frm);
+                chips[chipId].update(1, frm);
 
                 outputs[0][i] += frm[0][0];
                 outputs[1][i] += frm[1][0];
@@ -96,17 +99,36 @@ public class WSwanInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int write(int chipId, int port, int adr, int data) {
-        chip[chipId].writeAudioPort(adr + 0x80, data);
-        return 0;
+    public void stop(int chipId) {
+        chips[chipId].stop();
     }
 
-    public int writeMem(int chipId, int adr, int data) {
-        chip[chipId].writeRamByte(adr, data);
-        return 0;
+    private void setMute(int chipId, int v) {
     }
 
-    public void setMute(int chipId, int v) {
+    // ----
+
+    public synchronized void setMask(int chipId, int ch) {
+        mask[chipId] |= ch;
+        setMute(chipId, mask[chipId]);
+    }
+
+    public synchronized void resetMask(int chipId, int ch) {
+        mask[chipId] &= ~ch;
+        setMute(chipId, mask[chipId]);
+    }
+
+    public synchronized void writeMemory(int chipId, int adr, int data) {
+        chips[chipId].writeRamByte(adr, data);
+    }
+
+    public void setVolume(int vol) {
+        // TODO
+//        c.volume = Math.max(Math.min(vol, 20), -192);
+//        //int n = (((int)(16384.0 * Math.pow(10.0, c.Volume / 40.0)) * c.tVolumeBalance) >> 8) / chips.length;
+//        int n = (((int) (16384.0 * Math.pow(10.0, c.volume / 40.0)) * c.tVolumeBalance) >> 8);
+//        //16384 = 0x4000 = short.MAXValue + 1
+//        c.tVolume = Math.max(Math.min((int) (n * volumeMul), Short.MAX_VALUE), Short.MIN_VALUE);
     }
 
     //----

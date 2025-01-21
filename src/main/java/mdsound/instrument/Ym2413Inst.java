@@ -10,15 +10,15 @@ import mdsound.chips.Ym2413;
 
 public class Ym2413Inst extends Instrument.BaseInstrument {
 
-    private static final int DefaultYM2413ClockValue = 3579545;
+    public static final int DefaultYM2413ClockValue = 3579545;
 
     private final Ym2413[] chips = new Ym2413[2];
 
     public Ym2413Inst() {
         // 0..Main
         visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
+                {{0, 0}},
+                {{0, 0}}
         };
     }
 
@@ -38,13 +38,6 @@ public class Ym2413Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int samplingRate) {
-        chips[chipId] = new Ym2413(DefaultYM2413ClockValue, samplingRate, null);
-        chips[chipId].setQuality(0);
-        return samplingRate;
-    }
-
-    @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
         if (option != null && option.length > 0 && option[0] instanceof byte[] ary) {
             chips[chipId] = new Ym2413(clock, samplingRate, ary);
@@ -56,8 +49,16 @@ public class Ym2413Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void stop(int chipId) {
-        chips[chipId] = null;
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        if (chips[chipId] != null) {
+            chips[chipId].writeReg(adr, data);
+        }
+        return 0;
     }
 
     @Override
@@ -69,11 +70,8 @@ public class Ym2413Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int write(int chipId, int port, int adr, int data) {
-        if (chips[chipId] != null) {
-            chips[chipId].writeReg(adr, data);
-        }
-        return 0;
+    public void stop(int chipId) {
+        chips[chipId] = null;
     }
 
     //----

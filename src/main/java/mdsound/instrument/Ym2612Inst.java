@@ -16,17 +16,26 @@ public class Ym2612Inst extends Instrument.BaseInstrument {
 
     private static final Logger logger = getLogger(Ym2612Inst.class.getName());
 
-    private static final int DefaultFMClockValue = 7670454;
+    public static final int DefaultFMClockValue = 7670454;
+    public static final int MAX_CHIPS = 2;
 
-    private static final int MAX_CHIPS = 2;
-    public Ym2612[] chips = new Ym2612[MAX_CHIPS];
+    private final Ym2612[] chips = {new Ym2612(), new Ym2612()};
+
+    private final int[] mask = {0, 0};
+    private final int[][] keyOn = {new int[6], new int[6]};
 
     public Ym2612Inst() {
         //0..Main
         visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
+                {{0, 0}},
+                {{0, 0}}
         };
+    }
+
+    @Override
+    public void init() {
+        mask[0] = 0;
+        mask[1] = 0;
     }
 
     @Override
@@ -40,23 +49,22 @@ public class Ym2612Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int samplingRate) {
-        if (samplingRate == 0) return 0;
-        chips[chipId] = new Ym2612(DefaultFMClockValue, samplingRate, 0);
-        chips[chipId].reset();
+    public void reset(int chipId) {
+        assert chipId < MAX_CHIPS;
 
-        return samplingRate;
+        Ym2612 chip = chips[chipId];
+        chip.reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        if (samplingRate == 0) return 0;
-        if (clock == 0) {
-            clock = DefaultFMClockValue;
-        }
+        assert chipId < MAX_CHIPS;
 
-        chips[chipId] = new Ym2612(clock, samplingRate, clock);
-        chips[chipId].reset();
+        if (clock == 0) clock = DefaultFMClockValue;
+
+        Ym2612 chip = chips[chipId];
+        chip.init(clock, samplingRate, clock);
+        chip.reset();
 
         // 動作オプション設定
         if (option != null && option.length > 0 && option[0] instanceof Integer optFlags) {
@@ -68,23 +76,22 @@ logger.log(Level.DEBUG, "option: " + optFlags);
     }
 
     @Override
-    public void stop(int chipId) {
-        chips[chipId] = null;
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
-    public void reset(int chipId) {
-        Ym2612 chip = chips[chipId];
-        if (chip == null) return;
-
-        chip.reset();
+    public synchronized int write(int chipId, int port, int adr, int data) {
+        writeInternal(chipId, 0 + (port & 1) * 2, adr);
+        writeInternal(chipId, 1 + (port & 1) * 2, data);
+        return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        Ym2612 chip = chips[chipId];
-        if (chip == null) return;
+        assert chipId < MAX_CHIPS;
 
+        Ym2612 chip = chips[chipId];
         chip.update(outputs, samples);
         chip.updateDacAndTimers(outputs, samples);
 
@@ -93,28 +100,45 @@ logger.log(Level.DEBUG, "option: " + optFlags);
     }
 
     @Override
-    public synchronized int write(int chipId, int port, int adr, int data) {
-        int r = 0;
-        r += writeInternal(chipId, 0, 0 + (port & 1) * 2, adr);
-        r += writeInternal(chipId, 0, 1 + (port & 1) * 2, data);
-        return r;
+    public void stop(int chipId) {
     }
 
-    private int writeInternal(int chipId, int port, int adr, int data) {
-        Ym2612 chip = chips[chipId];
-        if (chip == null) return 0;
+    private void writeInternal(int chipId, int adr, int data) {
+        assert chipId < MAX_CHIPS;
 
-        return chip.write(adr, data);
+        Ym2612 chip = chips[chipId];
+        chip.write(adr, data);
+    }
+
+    private void setMute(int chipId, int v) {
+        assert chipId < MAX_CHIPS;
+
+        Ym2612 chip = chips[chipId];
+        chip.setMute(v);
     }
 
     //----
 
-    public void setMute(int chipId, int v) {
-        Ym2612 chip = chips[chipId];
-        if (chip == null) return;
-
-        chip.setMute(v);
+    public synchronized int[][] readRegister(int chipId) {
+        return chips[chipId].getRegisters();
     }
+
+    public synchronized int[] readKeyOn(int chipId) {
+        return chips[chipId].keyStatuses();
+    }
+
+    // TODO 2612
+    public synchronized void setMask(int chipId, int ch) {
+        mask[chipId] |= 1 << ch;
+        setMute(chipId, mask[chipId]);
+    }
+
+    public synchronized void resetMask(int chipId, int ch) {
+        mask[chipId] &= ~(1 << ch);
+        setMute(chipId, mask[chipId]);
+    }
+
+    //----
 
     @Override
     public Tuple<Integer, Double> getRegulationVolume() {

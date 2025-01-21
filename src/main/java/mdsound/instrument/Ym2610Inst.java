@@ -10,8 +10,11 @@ import mdsound.fmgen.Opna.OPNB;
 
 public class Ym2610Inst extends Instrument.BaseInstrument {
 
-    private static final int DefaultYM2610ClockValue = 8000000;
-    private final OPNB[] chip = new OPNB[2];
+    public static final int DefaultClockValue = 8000000;
+
+    private final OPNB[] chips = new OPNB[2];
+
+    private final int[][] keyOn = {new int[11], new int[11]};
 
     @Override
     public String getName() {
@@ -26,45 +29,44 @@ public class Ym2610Inst extends Instrument.BaseInstrument {
     public Ym2610Inst() {
         //0..Main 1..FM 2..SSG 3..PCMa 4..PCMb
         visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}}
+                {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}},
+                {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}}
         };
     }
 
     @Override
     public void reset(int chipId) {
-        if (chip[chipId] == null) return;
-        chip[chipId].reset();
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate) {
-        chip[chipId] = new OPNB();
-        chip[chipId].init(DefaultYM2610ClockValue, samplingRate);
-
-        return samplingRate;
+        if (chips[chipId] == null) return;
+        chips[chipId].reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        chip[chipId] = new OPNB();
-        chip[chipId].init(clock, samplingRate, false, new byte[0x20_ffff], 0x20_ffff, new byte[0x20_ffff], 0x20_ffff);
+        chips[chipId] = new OPNB();
+        chips[chipId].init(clock, samplingRate, false, new byte[0x20_ffff], 0x20_ffff, new byte[0x20_ffff], 0x20_ffff);
 
         return samplingRate;
     }
 
     @Override
-    public void stop(int chipId) {
-        chip[chipId] = null;
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        if (chips[chipId] == null) return 0;
+        chips[chipId].setReg(port * 0x100 + adr, data);
+        return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        if (chip[chipId] == null) return;
+        if (chips[chipId] == null) return;
         int[] buffer = new int[2];
         buffer[0] = 0;
         buffer[1] = 0;
-        chip[chipId].mix(buffer, 1);
+        chips[chipId].mix(buffer, 1);
         for (int i = 0; i < 1; i++) {
             outputs[0][i] = buffer[i * 2 + 0];
             outputs[1][i] = buffer[i * 2 + 1];
@@ -73,74 +75,58 @@ public class Ym2610Inst extends Instrument.BaseInstrument {
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
-        visVolume[chipId][1][0] = chip[chipId].visVolume[0];
-        visVolume[chipId][1][1] = chip[chipId].visVolume[1];
-        visVolume[chipId][2][0] = chip[chipId].psg.visVolume;
-        visVolume[chipId][2][1] = chip[chipId].psg.visVolume;
-        visVolume[chipId][3][0] = chip[chipId].visRtmVolume[0];
-        visVolume[chipId][3][1] = chip[chipId].visRtmVolume[1];
-        visVolume[chipId][4][0] = chip[chipId].visAPCMVolume[0];
-        visVolume[chipId][4][1] = chip[chipId].visAPCMVolume[1];
+        visVolume[chipId][1][0] = chips[chipId].visVolume[0];
+        visVolume[chipId][1][1] = chips[chipId].visVolume[1];
+        visVolume[chipId][2][0] = chips[chipId].psg.visVolume;
+        visVolume[chipId][2][1] = chips[chipId].psg.visVolume;
+        visVolume[chipId][3][0] = chips[chipId].visRtmVolume[0];
+        visVolume[chipId][3][1] = chips[chipId].visRtmVolume[1];
+        visVolume[chipId][4][0] = chips[chipId].visAPCMVolume[0];
+        visVolume[chipId][4][1] = chips[chipId].visAPCMVolume[1];
     }
 
     @Override
-    public int write(int chipId, int port, int adr, int data) {
-        if (chip[chipId] == null) return 0;
-        chip[chipId].setReg(port * 0x100 + adr, data);
-        return 0;
-    }
-
-    public void setAdpcmA(int chipId, byte[] _adpcma, int _adpcma_size) {
-        if (chip[chipId] == null) return;
-        chip[chipId].setAdpcmA(_adpcma, _adpcma_size);
-    }
-
-    public void setAdpcmB(int chipId, byte[] _adpcmb, int _adpcmb_size) {
-        if (chip[chipId] == null) return;
-        chip[chipId].setAdpcmB(_adpcmb, _adpcmb_size);
+    public void stop(int chipId) {
+        chips[chipId] = null;
     }
 
     private void setFMVolume(int chipId, int db) {
-        if (chip[chipId] == null) return;
-        chip[chipId].setVolumeFM(db);
+        if (chips[chipId] == null) return;
+        chips[chipId].setVolumeFM(db);
     }
 
     private void setPSGVolume(int chipId, int db) {
-        if (chip[chipId] == null) return;
-        chip[chipId].setVolumePSG(db);
+        if (chips[chipId] == null) return;
+        chips[chipId].setVolumePSG(db);
     }
 
     private void setAdpcmAVolume(int chipId, int db) {
-        if (chip[chipId] == null) return;
-        chip[chipId].setVolumeADPCMATotal(db);
+        if (chips[chipId] == null) return;
+        chips[chipId].setVolumeADPCMATotal(db);
     }
 
     private void setAdpcmBVolume(int chipId, int db) {
-        if (chip[chipId] == null) return;
-        chip[chipId].setVolumeADPCMB(db);
+        if (chips[chipId] == null) return;
+        chips[chipId].setVolumeADPCMB(db);
     }
 
     // ----
 
-    @Override
-    public Tuple<Integer, Double> getRegulationVolume() {
-        return new Tuple<>(0x80, 1d);
+    public synchronized int[] readKeyOn(int chipId) {
+        for (int i = 0; i < 11; i++) {
+            //keyOn[chipId][i] = chips[chipId].CHANNEL[i].KeyOn;
+        }
+        return keyOn[chipId];
     }
 
-    @Override
-    public Map<String, Object> getView(String key, Map<String, Object> args) {
-        // TODO tag commonize
-        Map<String, Object> result = new HashMap<>();
-        switch (key) {
-            case "volume" -> {
-                result.put("ym2610", getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
-                result.put("ym2610FM", getMonoVolume(visVolume[0][1][0], visVolume[0][1][1], visVolume[1][1][0], visVolume[1][1][1]));
-                result.put("ym2610SSG", getMonoVolume(visVolume[0][2][0], visVolume[0][2][1], visVolume[1][2][0], visVolume[1][2][1]));
-                result.put("ym2610APCMA", getMonoVolume(visVolume[0][3][0], visVolume[0][3][1], visVolume[1][3][0], visVolume[1][3][1]));
-                result.put("ym2610APCMB", getMonoVolume(visVolume[0][4][0], visVolume[0][4][1], visVolume[1][4][0], visVolume[1][4][1]));
-            }
-        }
-        return result;
+    public synchronized void writeAdpcmA(int chipId, byte[] Buf) {
+        if (chips[chipId] == null) return;
+        chips[chipId].setAdpcmA(Buf, Buf.length);
+    }
+
+    public synchronized void writeAdpcmB(int chipId, byte[] Buf) {
+        if (chips[chipId] == null) return;
+        chips[chipId].setAdpcmB(Buf, Buf.length);
     }
 
     // TODO automatic wired, use annotation?
@@ -165,6 +151,29 @@ public class Ym2610Inst extends Instrument.BaseInstrument {
     public void setAdpcmBVolume(int vol, double ignored) {
         setAdpcmBVolume(0, vol);
         setAdpcmBVolume(1, vol);
+    }
+
+    // ----
+
+    @Override
+    public Tuple<Integer, Double> getRegulationVolume() {
+        return new Tuple<>(0x80, 1d);
+    }
+
+    @Override
+    public Map<String, Object> getView(String key, Map<String, Object> args) {
+        // TODO tag commonize
+        Map<String, Object> result = new HashMap<>();
+        switch (key) {
+            case "volume" -> {
+                result.put("ym2610", getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+                result.put("ym2610FM", getMonoVolume(visVolume[0][1][0], visVolume[0][1][1], visVolume[1][1][0], visVolume[1][1][1]));
+                result.put("ym2610SSG", getMonoVolume(visVolume[0][2][0], visVolume[0][2][1], visVolume[1][2][0], visVolume[1][2][1]));
+                result.put("ym2610APCMA", getMonoVolume(visVolume[0][3][0], visVolume[0][3][1], visVolume[1][3][0], visVolume[1][3][1]));
+                result.put("ym2610APCMB", getMonoVolume(visVolume[0][4][0], visVolume[0][4][1], visVolume[1][4][0], visVolume[1][4][1]));
+            }
+        }
+        return result;
     }
 }
 

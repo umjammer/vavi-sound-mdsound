@@ -11,14 +11,17 @@ import mdsound.fmgen.Opna;
 
 public class Ym2608Inst extends Instrument.BaseInstrument {
 
-    private static final int DefaultYM2608ClockValue = 8000000;
+    public static final int DefaultClockValue = 8000000;
+
     private final Opna.OPNA[] chip = new Opna.OPNA[2];
+
+    private final int[][] keyOn = {new int[11], new int[11]};
 
     public Ym2608Inst() {
         // 0..Main 1..FM 2..SSG 3..Rhm 4..PCM
         visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}}
+                {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}},
+                {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}}
         };
     }
 
@@ -35,14 +38,6 @@ public class Ym2608Inst extends Instrument.BaseInstrument {
     @Override
     public void reset(int chipId) {
         chip[chipId].reset();
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate) {
-        chip[chipId] = new Opna.OPNA();
-        chip[chipId].init(DefaultYM2608ClockValue, samplingRate, chipId);
-
-        return samplingRate;
     }
 
     /**
@@ -66,8 +61,15 @@ public class Ym2608Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void stop(int chipId) {
-        chip[chipId] = null;
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        if (chip[chipId] == null) return 0;
+        chip[chipId].setReg(port * 0x100 + adr, data);
+        return 0;
     }
 
     private final int[] buffer = new int[2];
@@ -96,21 +98,28 @@ public class Ym2608Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int write(int chipId, int port, int adr, int data) {
-        if (chip[chipId] == null) return 0;
-        chip[chipId].setReg(port * 0x100 + adr, data);
-        return 0;
-    }
-
-    public byte[] getADPCMBuffer(int chipId) {
-        return chip[chipId].getADPCMBuffer();
-    }
-
-    public int readStatusEx(int chipId) {
-        return chip[chipId].readStatusEx();
+    public void stop(int chipId) {
+        chip[chipId] = null;
     }
 
     //----
+
+    public synchronized int[] readKeyOn(int chipId) {
+//        for (int i = 0; i < 11; i++) {
+//            keyOn[chipId][i] = chips[chipId].CHANNEL[i].KeyOn;
+//        }
+        return keyOn[chipId];
+    }
+
+    public synchronized byte[] getAdpcm(int chipId) {
+        return chip[chipId].getADPCMBuffer();
+    }
+
+    public synchronized int readStatusEx(int chipId) {
+        return chip[chipId].readStatusEx();
+    }
+
+    // ----
 
     @Override
     public Tuple<Integer, Double> getRegulationVolume() {

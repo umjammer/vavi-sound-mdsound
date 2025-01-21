@@ -10,14 +10,16 @@ import mdsound.fmgen.OPM;
 
 public class Ym2151Inst extends Instrument.BaseInstrument {
 
-    public static final int DefaultYM2151ClockValue = 3579545;
+    public static final int DefaultClockValue = 3579545;
 
-    private final OPM[] chip = new OPM[2];
+    private final OPM[] chips = new OPM[2];
+
+    private final int[][] keyOn = {new int[8], new int[8]};
 
     public Ym2151Inst() {
         visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
+                {{0, 0}},
+                {{0, 0}}
         };
     }
 
@@ -33,43 +35,43 @@ public class Ym2151Inst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        if (chip[chipId] == null) return;
-        chip[chipId].reset();
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate) {
-        chip[chipId] = new OPM();
-        chip[chipId].init(DefaultYM2151ClockValue, samplingRate, false);
-
-        return samplingRate;
+        if (chips[chipId] == null) return;
+        chips[chipId].reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        chip[chipId] = new OPM();
-        chip[chipId].init(clock, samplingRate, false);
+        chips[chipId] = new OPM();
+        chips[chipId].init(clock, samplingRate, false);
 
         return samplingRate;
     }
 
     @Override
-    public void stop(int chipId) {
-        chip[chipId] = null;
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        if (chips[chipId] == null) return 0;
+
+        chips[chipId].setReg(adr, data);
+        return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        if (chip[chipId] == null) return;
+        if (chips[chipId] == null) return;
 
         int[] buffer = new int[2];
         buffer[0] = 0;
         buffer[1] = 0;
-        chip[chipId].mix(buffer, 1);
+        chips[chipId].mix(buffer, 1);
         for (int i = 0; i < 1; i++) {
             outputs[0][i] = buffer[i * 2 + 0];
             outputs[1][i] = buffer[i * 2 + 1];
-            //logger.log(Level.TRACE, "[%8d] : [%8d] [%d]".formatted(outputs[0][i], outputs[1][i],i));
+//logger.log(Level.TRACE, "[%8d] : [%8d] [%d]".formatted(outputs[0][i], outputs[1][i],i));
         }
 
         visVolume[chipId][0][0] = outputs[0][0];
@@ -77,14 +79,20 @@ public class Ym2151Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int write(int chipId, int port, int adr, int data) {
-        if (chip[chipId] == null) return 0;
-
-        chip[chipId].setReg(adr, data);
-        return 0;
+    public void stop(int chipId) {
+        chips[chipId] = null;
     }
 
-    //----
+    // ----
+
+    public synchronized int[] readKeyOn(int chipId) {
+        for (int i = 0; i < 8; i++) {
+//            keyOn[chipId][i] = chips[chipId].CHANNEL[i].KeyOn;
+        }
+        return keyOn[chipId];
+    }
+
+    // ----
 
     @Override
     public Tuple<Integer, Double> getRegulationVolume() {

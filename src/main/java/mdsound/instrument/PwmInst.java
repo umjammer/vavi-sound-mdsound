@@ -32,14 +32,15 @@ import mdsound.chips.PwmChip;
 
 public class PwmInst extends Instrument.BaseInstrument {
 
-    private static final int MAX_CHIPS = 0x02;
-    private final PwmChip[] chips = new PwmChip[] {new PwmChip(), new PwmChip()};
+    public static final int MAX_CHIPS = 0x02;
+
+    private final PwmChip[] chips = {new PwmChip(), new PwmChip()};
 
     public PwmInst() {
         // 0..Main
         visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
+                {{0, 0}},
+                {{0, 0}}
         };
     }
 
@@ -54,6 +55,39 @@ public class PwmInst extends Instrument.BaseInstrument {
     }
 
     @Override
+    public void reset(int chipId) {
+        PwmChip chip = chips[chipId];
+        chip.init();
+    }
+
+    @Override
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        if (chipId >= MAX_CHIPS) return 0;
+
+        int rate = 22020; // that's the rate the PWM is mostly used
+        if ((Instrument.BaseInstrument.CHIP_SAMPLING_MODE == 0x01 && rate < Instrument.BaseInstrument.CHIP_SAMPLE_RATE) ||
+                Instrument.BaseInstrument.CHIP_SAMPLING_MODE == 0x02)
+            rate = Instrument.BaseInstrument.CHIP_SAMPLE_RATE;
+
+        PwmChip chip = chips[chipId];
+        chip.start(clock);
+
+        return rate;
+    }
+
+    @Override
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        PwmChip chip = chips[chipId];
+        chip.writeChannel(adr, data);
+        return 0;
+    }
+
+    @Override
     public void update(int chipId, int[][] outputs, int samples) {
         PwmChip chip = chips[chipId];
 
@@ -64,40 +98,7 @@ public class PwmInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int samplingRate, int clock, Object... option) {
-        return start(chipId, clock);
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate) {
-        if (chipId >= MAX_CHIPS)
-            return 0;
-
-        PwmChip chip = chips[chipId];
-
-        int rate = 22020; // that's the rate the PWM is mostly used
-        if ((Instrument.BaseInstrument.CHIP_SAMPLING_MODE == 0x01 && rate < Instrument.BaseInstrument.CHIP_SAMPLE_RATE) ||
-                Instrument.BaseInstrument.CHIP_SAMPLING_MODE == 0x02)
-            rate = Instrument.BaseInstrument.CHIP_SAMPLE_RATE;
-        chip.start(samplingRate, rate);
-        return rate;
-    }
-
-    @Override
     public void stop(int chipId) {
-    }
-
-    @Override
-    public void reset(int chipId) {
-        PwmChip chip = chips[chipId];
-        chip.init();
-    }
-
-    @Override
-    public int write(int chipId, int port, int adr, int data) {
-        PwmChip chip = chips[chipId];
-        chip.writeChannel(adr, data);
-        return 0;
     }
 
     //----

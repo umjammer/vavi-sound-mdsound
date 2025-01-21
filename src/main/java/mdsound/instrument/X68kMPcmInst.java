@@ -8,8 +8,9 @@ import mdsound.chips.MPcm;
 
 public class X68kMPcmInst extends Instrument.BaseInstrument {
 
-    private static final int MAX_CHIPS = 0x02;
-    public MPcm[] chips = new MPcm[] {new MPcm(), new MPcm()};
+    public static final int MAX_CHIPS = 0x02;
+
+    private final MPcm[] chips = {new MPcm(), new MPcm()};
 
     @Override
     public String getName() {
@@ -28,11 +29,6 @@ public class X68kMPcmInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int samplingRate) {
-        return start(chipId, 44100, samplingRate);
-    }
-
-    @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
         MPcm chip = chips[chipId];
         chip.mount();
@@ -42,9 +38,13 @@ public class X68kMPcmInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void stop(int chipId) {
-        MPcm chip = chips[chipId];
-        chip.unmount();
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        return 0;
     }
 
     @Override
@@ -54,8 +54,9 @@ public class X68kMPcmInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int write(int chipId, int port, int adr, int data) {
-        return 0;
+    public void stop(int chipId) {
+        MPcm chip = chips[chipId];
+        chip.unmount();
     }
 
     public void keyOn(int chipId, int ch) {
@@ -68,7 +69,7 @@ public class X68kMPcmInst extends Instrument.BaseInstrument {
         chip.keyOff(ch);
     }
 
-    public boolean setPcm(int chipId, int ch, MPcm.PCM ptr) {
+    public boolean writePcm(int chipId, int ch, MPcm.PCM ptr) {
         MPcm chip = chips[chipId];
         return chip.setPcm(ch, ptr);
     }

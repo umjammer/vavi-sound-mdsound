@@ -620,7 +620,7 @@ public class MultiPCM {
         }
     }
 
-    public void writeRom2(int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddress) {
+    public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddress) {
         if (this.romSize != romSize) {
             this.rom = new byte[romSize];
             this.romSize = romSize;

@@ -417,7 +417,7 @@ public class C352 {
         System.arraycopy(romData, 0, this.wave, dataStart, dataLength);
     }
 
-    public void writeRom2(int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
+    public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
 //logger.log(Level.TRACE, "romSize=%x , dataStart=%x , dataLength=%x".formatted(romSize, dataStart, dataLength));
         if (this.waveSize != romSize) {
             this.wave = new byte[romSize];

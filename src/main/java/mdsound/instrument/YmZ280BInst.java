@@ -8,10 +8,12 @@ import mdsound.Instrument;
 import mdsound.chips.YmZ280b;
 
 
-public class YmZ280bInst extends Instrument.BaseInstrument {
+public class YmZ280BInst extends Instrument.BaseInstrument {
 
-    private static final int MAX_CHIPS = 0x10;
-    private final YmZ280b[] chips = new YmZ280b[] {new YmZ280b(), new YmZ280b()};
+    public static final int DefaultClockValue = 16934400;
+    public static final int MAX_CHIPS = 0x10;
+
+    private final YmZ280b[] chips = {new YmZ280b(), new YmZ280b()};
 
     @Override
     public String getName() {
@@ -28,18 +30,9 @@ public class YmZ280bInst extends Instrument.BaseInstrument {
         YmZ280b chip = chips[chipId];
         chip.reset();
         visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
+                {{0, 0}},
+                {{0, 0}}
         };
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate) {
-        if (chipId >= MAX_CHIPS)
-            return 0;
-
-        YmZ280b chip = chips[chipId];
-        return chip.start(16934400);
     }
 
     @Override
@@ -52,9 +45,17 @@ public class YmZ280bInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void stop(int chipId) {
+    public int read(int chipId, int adr) {
         YmZ280b chip = chips[chipId];
-        chip.stop();
+        return chip.read(adr);
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        YmZ280b chip = chips[chipId];
+        chip.write(0x00, adr);
+        chip.write(0x01, data);
+        return 0;
     }
 
     @Override
@@ -66,39 +67,31 @@ public class YmZ280bInst extends Instrument.BaseInstrument {
         visVolume[chipId][0][1] = outputs[1][0];
     }
 
-    /**
-     * handle external accesses
-     */
-    public int ymz280b_r(int chipId, int offset) {
+    @Override
+    public void stop(int chipId) {
         YmZ280b chip = chips[chipId];
-        return chip.read(offset);
+        chip.stop();
     }
 
-    public void ymz280b_write_rom(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
-        YmZ280b chip = chips[chipId];
-        chip.writeRom(romSize, dataStart, dataLength, romData);
+    // handle external accesses
+
+    public void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
+        writePcm(chipId, romSize, dataStart, dataLength, romData, 0);
     }
 
-    public void ymz280b_write_rom(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddress) {
-        YmZ280b chip = chips[chipId];
-        chip.writeRom(romSize, dataStart, dataLength, romData, srcStartAddress);
-    }
-
-
-    public void ymz280b_set_mute_mask(int chipId, int muteMask) {
+    public void setMuteMask(int chipId, int muteMask) {
         YmZ280b chip = chips[chipId];
         chip.setMuteMask(muteMask);
     }
 
-    @Override
-    public int write(int chipId, int port, int adr, int data) {
-        YmZ280b chip = chips[chipId];
-        chip.write(0x00, adr);
-        chip.write(0x01, data);
-        return 0;
+    private void updateIrqStateTimerCommon(Object param, int voiceNum) {
     }
 
-    private void updateIrqStateTimerCommon(Object param, int voiceNum) {
+    //----
+
+    public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
+        YmZ280b chip = chips[chipId];
+        chip.writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
     }
 
     //----

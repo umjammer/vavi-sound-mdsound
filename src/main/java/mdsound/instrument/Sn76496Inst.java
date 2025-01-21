@@ -11,6 +11,8 @@ import mdsound.chips.Sn76496;
 
 public class Sn76496Inst extends Instrument.BaseInstrument {
 
+    public static final int DefaultClockValue = 3579545;
+
     private final List<Sn76496> chips = new ArrayList<>();
 
     @Override
@@ -27,18 +29,6 @@ public class Sn76496Inst extends Instrument.BaseInstrument {
     public void reset(int chipId) {
         if (chips.get(chipId) == null) return;
         chips.get(chipId).reset();
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate) {
-        Sn76496 chip = new Sn76496();
-        int i = chip.start(3579545, 0, 0, 0, 0, 0, 0);
-        chip.limitFreq(3579545 & 0x3fff_ffff, 0, samplingRate);
-
-        while (chipId >= chips.size()) chips.add(null);
-        chips.set(chipId, chip);
-
-        return i;
     }
 
     /**
@@ -81,19 +71,12 @@ public class Sn76496Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void stop(int chipId) {
-        if (chips.get(chipId) == null) return;
-        chips.get(chipId).stop();
-    }
-
-    @Override
-    public void update(int chipId, int[][] outputs, int samples) {
-        if (chips.get(chipId) == null) return;
-        chips.get(chipId).update(outputs, samples);
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
     }
 
     /**
-     * @param adr 未使用
+     * @param port unused
      */
     @Override
     public int write(int chipId, int port, int adr, int data) {
@@ -102,13 +85,23 @@ public class Sn76496Inst extends Instrument.BaseInstrument {
         return 0;
     }
 
-    /**
-     * @param adr 未使用
-     */
-    public int writeGGStereo(int chipId, int port, int adr, int data) {
-        if (chips.get(chipId) == null) return 0;
-        chips.get(chipId).writeStereo(adr, data);
-        return 0;
+    @Override
+    public void update(int chipId, int[][] outputs, int samples) {
+        if (chips.get(chipId) == null) return;
+        chips.get(chipId).update(outputs, samples);
+    }
+
+    @Override
+    public void stop(int chipId) {
+        if (chips.get(chipId) == null) return;
+        chips.get(chipId).stop();
+    }
+
+    // ----
+
+    public synchronized void setPan(int chipId, int data) {
+        if (chips.get(chipId) == null) return;
+        chips.get(chipId).writeStereo(0, data);
     }
 
     // ----

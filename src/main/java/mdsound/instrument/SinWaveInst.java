@@ -6,14 +6,15 @@ import mdsound.chips.SinWaveGen;
 
 public class SinWaveInst extends Instrument.BaseInstrument {
 
-    private static final int DefaultClockValue = 0;
-    private final SinWaveGen[] chip = new SinWaveGen[2];
+    public static final int DefaultClockValue = 0;
+
+    private final SinWaveGen[] chips = new SinWaveGen[2];
 
     public SinWaveInst() {
         // 0..Main
         visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
+                {{0, 0}},
+                {{0, 0}}
         };
     }
 
@@ -29,41 +30,41 @@ public class SinWaveInst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        if (chip[chipId] == null) {
-            chip[chipId] = new SinWaveGen();
+        if (chips[chipId] == null) {
+            chips[chipId] = new SinWaveGen();
         }
-        // chips[chipId].render = false;
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate) {
-        return start(chipId, samplingRate, DefaultClockValue);
+//        chips[chipId].render = false;
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
         reset(chipId);
-        chip[chipId].clock = samplingRate;
-        chip[chipId].render = true;
+        chips[chipId].clock = samplingRate;
+        chips[chipId].render = true;
 
         return samplingRate; // samplingRate
     }
 
     @Override
-    public void stop(int chipId) {
-        if (chip[chipId] == null) return;
-        chip[chipId].render = false;
-    }
-
-    @Override
-    public void update(int chipId, int[][] outputs, int samples) {
-        if (chip[chipId] == null) return;
-        chip[chipId].update(outputs, samples);
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        if (chip[chipId] == null) return 0;
-        return chip[chipId].write(data);
+        if (chips[chipId] == null) return 0;
+        return chips[chipId].write(data);
+    }
+
+    @Override
+    public void update(int chipId, int[][] outputs, int samples) {
+        if (chips[chipId] == null) return;
+        chips[chipId].update(outputs, samples);
+    }
+
+    @Override
+    public void stop(int chipId) {
+        if (chips[chipId] == null) return;
+        chips[chipId].render = false;
     }
 }

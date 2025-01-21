@@ -331,7 +331,7 @@ public class K054539 {
         System.arraycopy(romData, 0, this.rom, dataStart, dataLength);
     }
 
-    public void writeRom2(int romSize, int dataStart, int dataLength, byte[] romData, int startAdr) {
+    public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData, int startAdr) {
         if (this.romSize != romSize) {
             this.rom = new byte[romSize];
             this.romSize = romSize;

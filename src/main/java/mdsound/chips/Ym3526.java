@@ -1701,7 +1701,7 @@ public class Ym3526 {
      * @param clock is the chips clock in Hz
      * @param rate  is sampling rate
      */
-    public Ym3526(int clock, int rate) {
+    public void init(int clock, int rate) {
         // emulator create
         chip = new Opl();
         chip.create(clock, rate, Opl.OPL_TYPE_YM3526);

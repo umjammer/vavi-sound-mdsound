@@ -10,7 +10,9 @@ import mdsound.chips.Pokey;
 
 public class PokeyInst extends Instrument.BaseInstrument {
 
-    private static final int MAX_CHIPS = 0x02;
+    public static final int DefaultClockValue = 1789772;
+    public static final int MAX_CHIPS = 0x02;
+
     private final Pokey[] chips = new Pokey[MAX_CHIPS];
 
     @Override
@@ -30,36 +32,8 @@ public class PokeyInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int samplingRate) {
-        return startInternal(chipId, 1789772);
-    }
-
-    @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        return startInternal(chipId, clock);
-    }
-
-    @Override
-    public void stop(int chipId) {
-        Pokey chip = chips[chipId];
-    }
-
-    @Override
-    public void update(int chipId, int[][] outputs, int samples) {
-        Pokey chip = chips[chipId];
-        chip.update(outputs, samples);
-    }
-
-    @Override
-    public int write(int chipId, int port, int adr, int data) {
-        Pokey chip = chips[chipId];
-        chip.write(adr, data);
-        return 0;
-    }
-
-    private int startInternal(int chipId, int clock) {
-        if (chipId >= MAX_CHIPS)
-            return 0;
+        if (chipId >= MAX_CHIPS) return 0;
 
         if (chips[chipId] == null) {
             chips[chipId] = new Pokey();
@@ -69,12 +43,31 @@ public class PokeyInst extends Instrument.BaseInstrument {
         return chip.start(clock);
     }
 
-    private int pokey_r(int chipId, int offset) {
+    @Override
+    public int read(int chipId, int adr) {
         Pokey chip = chips[chipId];
-        return chip.read(offset);
+        return chip.read(adr);
     }
 
-    private void pokey_set_mute_mask(int chipId, int muteMask) {
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        Pokey chip = chips[chipId];
+        chip.write(adr, data);
+        return 0;
+    }
+
+    @Override
+    public void update(int chipId, int[][] outputs, int samples) {
+        Pokey chip = chips[chipId];
+        chip.update(outputs, samples);
+    }
+
+    @Override
+    public void stop(int chipId) {
+        Pokey chip = chips[chipId];
+    }
+
+    public void setMuteMask(int chipId, int muteMask) {
         Pokey chip = chips[chipId];
         chip.setMuteMask(muteMask);
     }

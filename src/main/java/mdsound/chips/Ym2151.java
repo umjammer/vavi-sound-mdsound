@@ -196,16 +196,16 @@ public class Ym2151 {
     /** Global envelope generator counter works at frequency = chipclock / 64 / 3 */
     private int eg_timer;
     /** step of eg_timer */
-    private final int eg_timer_add;
+    private int eg_timer_add;
     /** envelope generator timer overlfows every 3 samples (on real chips) */
-    private final int eg_timer_overflow;
+    private int eg_timer_overflow;
 
     /** accumulated LFO phase (0 to 255) */
     private int lfo_phase;
     /** LFO timer */
     private int lfo_timer;
     /** step of lfo_timer */
-    private final int lfo_timer_add;
+    private int lfo_timer_add;
     /** LFO generates new output when lfo_timer reaches this value */
     private int lfo_overflow;
     /** LFO phase increment counter */
@@ -300,9 +300,9 @@ public class Ym2151 {
     private final int[] noise_tab = new int[32];
 
     /** chips clock in Hz (passed from 2151intf.c) */
-    private final int clock;
+    private int clock;
     /** sampling frequency in Hz (passed from 2151intf.c) */
-    private final int sampfreq;
+    private int sampfreq;
 
     /** 16.16 fixed point (frequency calculations) */
     private static final int FREQ_SH = 16;
@@ -1236,7 +1236,7 @@ public class Ym2151 {
      * @param clock is the chips clock in Hz
      * @param rate  is sampling rate
      */
-    public Ym2151(int clock, int rate) {
+    public void init(int clock, int rate) {
         int chn;
 
         this.clock = clock;

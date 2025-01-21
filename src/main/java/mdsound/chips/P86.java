@@ -87,6 +87,12 @@ public class P86 {
         return 0;
     }
 
+    /** */
+    public void start(double samplingRate) {
+        this.samplingRate = samplingRate;
+        init();
+    }
+
     /**
      * Initialization (internal processing)
      */
