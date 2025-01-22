@@ -12,7 +12,7 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
 
     public static final int DefaultClockValue = 1789750;
 
-    private final PSG[] chips = new PSG[2];
+    private final PSG[] chips = {new PSG(), new PSG()};
 
     private final int[] mask = {0, 0};
 
@@ -42,14 +42,14 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        if (chips[chipId] == null) return;
+        assert chipId < chips.length;
         chips[chipId].reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        chips[chipId] = new PSG();
-        chips[chipId].setClock(clock, samplingRate);
+        PSG chip = chips[chipId];
+        chip.setClock(clock, samplingRate);
 
         return samplingRate;
     }
@@ -61,22 +61,26 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        if (chips[chipId] == null) return 0;
-        chips[chipId].setReg(adr, data);
+        assert chipId < chips.length;
+
+        PSG chip = chips[chipId];
+        chip.setReg(adr, data);
         return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        if (chips[chipId] == null) return;
+        assert chipId < chips.length;
+
         int[] buffer = new int[2];
         buffer[0] = 0;
         buffer[1] = 0;
-        chips[chipId].mix(buffer, 1);
+        PSG chip = chips[chipId];
+        chip.mix(buffer, 1);
         for (int i = 0; i < 1; i++) {
             outputs[0][i] = buffer[i * 2 + 0];
             outputs[1][i] = buffer[i * 2 + 1];
-            //logger.log(Level.TRACE, "[%8d] : [%8d] [%d]".formatted(outputs[0][i], outputs[1][i], i));
+//logger.log(Level.TRACE, "[%8d] : [%8d] [%d]".formatted(outputs[0][i], outputs[1][i], i));
         }
 
         visVolume[chipId][0][0] = outputs[0][0];
@@ -89,17 +93,17 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
     }
 
     public void setVolume(int chipId, int db) {
-        if (chips[chipId] == null) return;
+        assert chipId < chips.length;
 
-        chips[chipId].setVolume(db);
+        PSG chip = chips[chipId];
+        chip.setVolume(db);
     }
 
     private void setMute(int chipId, int val) {
-        PSG psg = chips[chipId];
-        if (psg == null) return;
+        assert chipId < chips.length;
 
-
-        psg.setChannelMask(val);
+        PSG chip = chips[chipId];
+        chip.setChannelMask(val);
     }
 
     //----
