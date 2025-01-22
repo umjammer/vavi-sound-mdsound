@@ -1,3 +1,20 @@
+/*
+ * Ym2612 emulator
+ *
+ * Almost constants are taken from the MAME core
+ *
+ * This source is a part of Gens project
+ * Written by Stéphane Dallongeville (gens@consolemul.com)
+ * Copyright (c) 2002 by Stéphane Dallongeville
+ *
+ * Modified by Maxim, Blargg
+ * - removed non-Sound-related functionality
+ * - added high-pass PCM filter
+ * - added per-channel muting control
+ * - made it use a context struct to allow multiple
+ * instances
+ */
+
 package mdsound.chips;
 
 import java.lang.System.Logger;
@@ -9,22 +26,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import static java.lang.System.getLogger;
 
 
-/**
- * Ym2612.C : Ym2612 emulator
- * <p>
- * Almost constants are taken from the MAME core
- * <p>
- * This source is a part of Gens project
- * Written by Stéphane Dallongeville (gens@consolemul.com)
- * Copyright (c) 2002 by Stéphane Dallongeville
- * <p>
- * Modified by Maxim, Blargg
- * - removed non-Sound-related functionality
- * - added high-pass PCM filter
- * - added per-channel muting control
- * - made it use a context struct to allow multiple
- * instances
- */
 public class Ym2612 {
 
     private static final Logger logger = getLogger(Ym2612.class.getName());

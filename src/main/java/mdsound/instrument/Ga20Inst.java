@@ -16,6 +16,10 @@ public class Ga20Inst extends Instrument.BaseInstrument {
 
     private final IremGa20[] chips = {new IremGa20(), new IremGa20()};
 
+    public Ga20Inst() {
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
+    }
+
     @Override
     public String getName() {
         return "Irem GA20";
@@ -28,41 +32,29 @@ public class Ga20Inst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        IremGa20 chip = chips[chipId];
-        chip.reset();
-
-        visVolume = new int[][][] {
-                {{0, 0}},
-                {{0, 0}}
-        };
+        chips[chipId].reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        if (chipId >= MAX_CHIPS)
-            return 0;
-
-        IremGa20 chip = chips[chipId];
-        return chip.start(clock);
+        assert chipId < MAX_CHIPS;
+        return chips[chipId].start(clock);
     }
 
     @Override
     public int read(int chipId, int adr) {
-        IremGa20 chip = chips[chipId];
-        return chip.read(adr);
+        return chips[chipId].read(adr);
     }
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        IremGa20 chip = chips[chipId];
-        chip.write(adr, data);
+        chips[chipId].write(adr, data);
         return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        IremGa20 chip = chips[chipId];
-        chip.update(outputs, samples);
+        chips[chipId].update(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
@@ -70,8 +62,7 @@ public class Ga20Inst extends Instrument.BaseInstrument {
 
     @Override
     public void stop(int chipId) {
-        IremGa20 chip = chips[chipId];
-        chip.stop();
+        chips[chipId].stop();
     }
 
     public void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
@@ -79,15 +70,13 @@ public class Ga20Inst extends Instrument.BaseInstrument {
     }
 
     public void setMuteMask(int chipId, int muteMask) {
-        IremGa20 chip = chips[chipId];
-        chip.setMuteMask(muteMask);
+        chips[chipId].setMuteMask(muteMask);
     }
 
     //----
 
     public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
-        IremGa20 chip = chips[chipId];
-        chip.writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
+        chips[chipId].writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
     }
 
     //----

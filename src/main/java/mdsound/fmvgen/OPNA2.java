@@ -24,7 +24,7 @@ public class OPNA2 extends Opna.OPNABase {
     public static final float[] panTable = new float[] {1.0f, 0.7512f, 0.4512f, 0.0500f};
 
     /** Rhythm Sound Source */
-    private final Rhythm[] rhythm;
+    private Rhythm[] rhythm;
 
     /** Overall rhythm volume */
     private byte rhythmTl;
@@ -41,23 +41,23 @@ public class OPNA2 extends Opna.OPNABase {
 
     public Effects effects;
 
-    public static class Rhythm {
+    private static class Rhythm {
         /** pan */
-        public byte pan;
+        private byte pan;
         /** level */
-        public byte level;
+        private byte level;
         /** volume */
-        public int volume;
+        private int volume;
         /** sample */
-        public int[] sample;
+        private int[] sample;
         /** size */
-        public int size;
+        private int size;
         /** position */
-        public int pos;
+        private int pos;
         /** step */
-        public int step;
+        private int step;
         /** sampling rate */
-        public int rate;
+        private int rate;
         public int efcCh;
         public int num;
         public Effects effects;
@@ -83,7 +83,7 @@ public class OPNA2 extends Opna.OPNABase {
     /**
      * construction
      */
-    public OPNA2(int clock) {
+    public void init(int clock) {
         this.effects = new Effects(clock);
 
         fm6 = new FM6[] {

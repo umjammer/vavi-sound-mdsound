@@ -38,10 +38,7 @@ public class PwmInst extends Instrument.BaseInstrument {
 
     public PwmInst() {
         // 0..Main
-        visVolume = new int[][][] {
-                {{0, 0}},
-                {{0, 0}}
-        };
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
 
     @Override
@@ -56,22 +53,18 @@ public class PwmInst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        PwmChip chip = chips[chipId];
-        chip.init();
+        chips[chipId].init();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        if (chipId >= MAX_CHIPS) return 0;
+        assert chipId < MAX_CHIPS;
 
         int rate = 22020; // that's the rate the PWM is mostly used
-        if ((Instrument.BaseInstrument.CHIP_SAMPLING_MODE == 0x01 && rate < Instrument.BaseInstrument.CHIP_SAMPLE_RATE) ||
-                Instrument.BaseInstrument.CHIP_SAMPLING_MODE == 0x02)
-            rate = Instrument.BaseInstrument.CHIP_SAMPLE_RATE;
+        if ((CHIP_SAMPLING_MODE == 0x01 && rate < CHIP_SAMPLE_RATE) || CHIP_SAMPLING_MODE == 0x02)
+            rate = CHIP_SAMPLE_RATE;
 
-        PwmChip chip = chips[chipId];
-        chip.start(clock);
-
+        chips[chipId].start(clock);
         return rate;
     }
 
@@ -82,16 +75,13 @@ public class PwmInst extends Instrument.BaseInstrument {
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        PwmChip chip = chips[chipId];
-        chip.writeChannel(adr, data);
+        chips[chipId].writeChannel(adr, data);
         return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        PwmChip chip = chips[chipId];
-
-        chip.update(outputs, samples);
+        chips[chipId].update(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];

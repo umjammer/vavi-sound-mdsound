@@ -131,7 +131,7 @@ public class PPZ8 {
      * @param al PCM Channel (0-7)
      * @param dx PCM tone number
      */
-    public void playPCM(int al, int dx) {
+    public void playPcm(int al, int dx) {
         logger.log(Level.TRACE, "ppz8em: PlayPCM: ch:%d @:%d".formatted(al, dx));
 
         int bank = (dx & 0x8000) != 0 ? 1 : 0;
@@ -570,7 +570,7 @@ public class PPZ8 {
             init();
             break;
         case 0x01:
-            playPCM(adr, data);
+            playPcm(adr, data);
             break;
         case 0x02:
             stopPCM(adr);

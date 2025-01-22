@@ -222,7 +222,7 @@ public class Sn76489 {
         this.clock = 0;
     }
 
-    public int[][] update(int[][] buffer, int length) {
+    public void update(int[][] buffer, int length) {
 //logger.log(Level.TRACE, "PSGStereo:1: %d".formatted(this.psgStereo));
 
         Sn76489 chip2;
@@ -409,7 +409,6 @@ logger.log(Level.DEBUG, "N:ch[%d]: muted".formatted(i));
         }
 
 //logger.log(Level.TRACE, "psg: " + Arrays.toString(buffer[0]) + ", " + Arrays.toString(buffer[1]) + ", " + chipT.mute + ", " + chipN.mute); // mute ok, TODO data always 0
-        return this.volume;
     }
 
     public void write(int data) {
@@ -448,5 +447,9 @@ logger.log(Level.TRACE, "psg: %02x, mute: %02x".formatted(data & 0xff, mute)); /
     /** @param val mask */
     public void setMute(int val) {
         this.mute = val;
+    }
+
+    public int[][] getVolume() {
+        return this.volume;
     }
 }

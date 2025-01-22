@@ -16,16 +16,13 @@ public class ScdPcmInst extends Instrument.BaseInstrument {
     private final ScdPcm[] chips = {new ScdPcm(), new ScdPcm()};
 
     private final int[][][] volumes = {
-            {new int[2], new int[2], new int[2], new int[2], new int[2], new int[2], new int[2], new int[2]},
-            {new int[2], new int[2], new int[2], new int[2], new int[2], new int[2], new int[2], new int[2]}
+            {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}},
+            {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}}
     };
 
     public ScdPcmInst() {
         // 0..Main
-        visVolume = new int[][][] {
-                {{0, 0}},
-                {{0, 0}}
-        };
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
 
     @Override
@@ -40,24 +37,20 @@ public class ScdPcmInst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        ScdPcm chip = chips[chipId];
-        chip.reset();
+        chips[chipId].reset();
     }
 
     // samplingRate unused
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        if (chipId >= 0x02) return 0;
+        assert chipId < MAX_CHIPS;
 
         int rate = (clock & 0x7fff_ffff) / 384;
-        if (((CHIP_SAMPLING_MODE & 0x01) != 0 && rate < CHIP_SAMPLE_RATE) ||
-                CHIP_SAMPLING_MODE == 0x02)
+        if (((CHIP_SAMPLING_MODE & 0x01) != 0 && rate < CHIP_SAMPLE_RATE) || CHIP_SAMPLING_MODE == 0x02)
             rate = CHIP_SAMPLE_RATE;
 
-        ScdPcm chip = chips[chipId];
-        chip.init(rate);
-        chip.start(clock);
-
+        chips[chipId].init(rate);
+        chips[chipId].start(clock);
         return rate;
     }
 
@@ -68,17 +61,13 @@ public class ScdPcmInst extends Instrument.BaseInstrument {
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        ScdPcm chip = chips[chipId];
-        chip.writeReg(adr, data);
+        chips[chipId].writeReg(adr, data);
         return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        ScdPcm chip = chips[chipId];
-
-        ScdPcm chip1 = chips[chipId];
-        chip1.update(outputs, samples);
+        chips[chipId].update(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
@@ -86,12 +75,10 @@ public class ScdPcmInst extends Instrument.BaseInstrument {
 
     @Override
     public void stop(int chipId) {
-        ScdPcm chip = chips[chipId];
     }
 
     public void setRate(int chipId, int rate) {
-        ScdPcm chip = chips[chipId];
-        chip.setRate(rate);
+        chips[chipId].setRate(rate);
     }
 
     public void writePcm(int chipId, int dataStart, int dataLength, byte[] ramData) {
@@ -99,25 +86,21 @@ public class ScdPcmInst extends Instrument.BaseInstrument {
     }
 
     private void setMuteMask(int chipId, int muteMask) {
-        ScdPcm chip = chips[chipId];
-        chip.setMuteMask(muteMask);
+        chips[chipId].setMuteMask(muteMask);
     }
 
     public void setMuteCh(int chipId, int ch, int mute) {
-        ScdPcm chip = chips[chipId];
-        chip.setMuteCh(ch, mute);
+        chips[chipId].setMuteCh(ch, mute);
     }
 
     // ----
 
     public synchronized void writePcm(int chipId, int ramStartAdr, int ramDataLength, byte[] srcData, int srcStartAdr) {
-        ScdPcm chip = chips[chipId];
-        chip.writeRam2(ramStartAdr, ramDataLength, srcData, srcStartAdr);
+        chips[chipId].writeRam2(ramStartAdr, ramDataLength, srcData, srcStartAdr);
     }
 
     public synchronized void writeMemory(int chipId, int adr, int data) {
-        ScdPcm chip = chips[chipId];
-        chip.writeMem(adr, data);
+        chips[chipId].writeMem(adr, data);
     }
 
     public synchronized int[][] readVolumes(int chipId) {

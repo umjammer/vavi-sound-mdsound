@@ -19,10 +19,7 @@ public class NesInst extends Instrument.BaseInstrument {
     private final int[] mask = new int[] {0, 0};
 
     public NesInst() {
-        visVolume = new int[][][] {
-                {{0, 0}},
-                {{0, 0}}
-        };
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
 
     @Override
@@ -37,22 +34,19 @@ public class NesInst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        Nes chip = chips[chipId];
-        chip.reset();
+        chips[chipId].reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... Option) {
-        if (chipId >= MAX_CHIPS) return 0;
-        Nes chip = chips[chipId];
+        assert chipId < MAX_CHIPS;
 
         int rate = clock / 4;
-        if ((BaseInstrument.CHIP_SAMPLING_MODE == 0x01 && rate < BaseInstrument.CHIP_SAMPLE_RATE) ||
-                BaseInstrument.CHIP_SAMPLING_MODE == 0x02)
-            rate = BaseInstrument.CHIP_SAMPLE_RATE;
+        if ((CHIP_SAMPLING_MODE == 0x01 && rate < CHIP_SAMPLE_RATE) || CHIP_SAMPLING_MODE == 0x02)
+            rate = CHIP_SAMPLE_RATE;
 
-        chip.start(clock, rate);
-        chip.setListener(listener);
+        chips[chipId].start(clock, rate);
+        chips[chipId].setListener(listener);
 
         return rate;
     }
@@ -64,15 +58,13 @@ public class NesInst extends Instrument.BaseInstrument {
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        Nes chip = chips[chipId];
-        chip.write(adr, data);
+        chips[chipId].write(adr, data);
         return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        Nes info = chips[chipId];
-        info.update(outputs, samples);
+        chips[chipId].update(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
@@ -80,8 +72,7 @@ public class NesInst extends Instrument.BaseInstrument {
 
     @Override
     public void stop(int chipId) {
-        Nes info = chips[chipId];
-        info.stop();
+        chips[chipId].stop();
     }
 
     public void writeRam(int chipId, int dataStart, int dataLength, byte[] ramData) {
@@ -92,13 +83,11 @@ public class NesInst extends Instrument.BaseInstrument {
     }
 
     public void setChipOption(int chipId) {
-        Nes chip = chips[chipId];
-        chip.setChipOption();
+        chips[chipId].setChipOption();
     }
 
     private void setMuteMask(int chipId, int muteMask) {
-        Nes chip = chips[chipId];
-        chip.setMuteMask(muteMask);
+        chips[chipId].setMuteMask(muteMask);
     }
 
     // ----
@@ -124,23 +113,19 @@ public class NesInst extends Instrument.BaseInstrument {
     }
 
     public synchronized void writeRam(int chipId, int dataStart, int dataLength, byte[] ramData, int ramDataStartAdr) {
-        Nes chip = chips[chipId];
-        chip.writeRam(dataStart, dataLength, ramData, ramDataStartAdr);
+        chips[chipId].writeRam(dataStart, dataLength, ramData, ramDataStartAdr);
     }
 
     public synchronized int[] readApu(int chipId) {
-        Nes chip = chips[chipId];
-        return chip.readApu();
+        return chips[chipId].readApu();
     }
 
     public synchronized int[] readDmc(int chipId) {
-        Nes chip = chips[chipId];
-        return chip.readDmc();
+        return chips[chipId].readDmc();
     }
 
     public synchronized NpNesFds readFds(int chipId) {
-        Nes chip = chips[chipId];
-        return chip.readDds();
+        return chips[chipId].readDds();
     }
 
     // TODO automatic wired, use annotation?

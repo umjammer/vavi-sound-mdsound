@@ -21,10 +21,7 @@ public class YmFmYm2203Inst extends Instrument.BaseInstrument {
 
     public YmFmYm2203Inst() {
         // 0..Main 1..FM 2..SSG
-        visVolume = new int[][][] {
-                {{0, 0}, {0, 0}, {0, 0}},
-                {{0, 0}, {0, 0}, {0, 0}}
-        };
+        visVolume = new int[][][] {{{0, 0}, {0, 0}, {0, 0}}, {{0, 0}, {0, 0}, {0, 0}}};
     }
 
     @Override
@@ -39,7 +36,7 @@ public class YmFmYm2203Inst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        if (chips[chipId] == null) return;
+        assert chipId < chips.length;
         chips[chipId].reset();
 
         output_pos = 0;
@@ -61,14 +58,15 @@ public class YmFmYm2203Inst extends Instrument.BaseInstrument {
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        if (chips[chipId] == null) return 0;
+        assert chipId < chips.length;
         chips[chipId].write(adr, data);
         return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        if (chips[chipId] == null) return;
+        assert chipId < chips.length;
+
         int[] buffer = new int[2];
         buffer[0] = 0;
         buffer[1] = 0;
@@ -94,10 +92,8 @@ public class YmFmYm2203Inst extends Instrument.BaseInstrument {
     }
 
     private void setMute(int chipId, int val) {
-        VgmChip chip = chips[chipId];
-        if (chip == null) return;
-
-//        chip.setChannelMask(val);
+        assert chipId < chips.length;
+//        chips[chipId].setChannelMask(val);
     }
 
     // ----

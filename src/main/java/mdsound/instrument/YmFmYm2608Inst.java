@@ -75,7 +75,7 @@ public class YmFmYm2608Inst extends Instrument.BaseInstrument {
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        if (chips[chipId] == null) return 0;
+        assert chipId < chips.length;
         chips[chipId].write(port * 0x100 + adr, data);
         return 0;
     }
@@ -90,7 +90,7 @@ public class YmFmYm2608Inst extends Instrument.BaseInstrument {
         for (int i = 0; i < 1; i++) {
             outputs[0][i] = buffer[i * 2 + 0];
             outputs[1][i] = buffer[i * 2 + 1];
-//            logger.log(Level.TRACE, "[%8d] : [%8d] [%d]\r".formatted(outputs[0][i], outputs[1][i],i));
+//logger.log(Level.TRACE, "[%8d] : [%8d] [%d]\r".formatted(outputs[0][i], outputs[1][i],i));
         }
 
         output_pos += output_step;

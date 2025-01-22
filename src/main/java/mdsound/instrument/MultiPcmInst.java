@@ -15,6 +15,10 @@ public class MultiPcmInst extends Instrument.BaseInstrument {
 
     private final MultiPCM[] chips = new MultiPCM[MAX_CHIPS];
 
+    public MultiPcmInst() {
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
+    }
+
     @Override
     public String getName() {
         return "Multi PCM";
@@ -27,21 +31,13 @@ public class MultiPcmInst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        MultiPCM chip = chips[chipId];
-        chip.reset();
-
-        visVolume = new int[][][] {
-                {{0, 0}},
-                {{0, 0}}
-        };
+        chips[chipId].reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        if (chipId >= MAX_CHIPS) return 0;
-
-        MultiPCM chip = chips[chipId];
-        return chip.start(clock);
+        assert chipId < MAX_CHIPS;
+        return chips[chipId].start(clock);
     }
 
     @Override
@@ -51,15 +47,13 @@ public class MultiPcmInst extends Instrument.BaseInstrument {
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        MultiPCM chip = chips[chipId];
-        chip.write(adr, data);
+        chips[chipId].write(adr, data);
         return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        MultiPCM chip = chips[chipId];
-        chip.update(outputs, samples);
+        chips[chipId].update(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
@@ -67,14 +61,12 @@ public class MultiPcmInst extends Instrument.BaseInstrument {
 
     @Override
     public void stop(int chipId) {
-        MultiPCM chip = chips[chipId];
-        chip.stop();
+        chips[chipId].stop();
     }
 
     /* MAME/M1 access functions */
     public void setBank(int chipId, int leftOffs, int rightOffs) {
-        MultiPCM chip = chips[chipId];
-        chip.setBank(leftOffs, rightOffs);
+        chips[chipId].setBank(leftOffs, rightOffs);
     }
 
     public void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
@@ -82,20 +74,17 @@ public class MultiPcmInst extends Instrument.BaseInstrument {
     }
 
     public void setMuteMask(int chipId, int muteMask) {
-        MultiPCM chip = chips[chipId];
-        chip.setMuteMask(muteMask);
+        chips[chipId].setMuteMask(muteMask);
     }
 
     // ----
 
     public synchronized void writeBank(int chipId, int Ch, int adr) {
-        MultiPCM chip = chips[chipId];
-        chip.writeBank(Ch, adr);
+        chips[chipId].writeBank(Ch, adr);
     }
 
     public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
-        MultiPCM chip = chips[chipId];
-        chip.writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
+        chips[chipId].writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
     }
 
     public synchronized MultiPCM getChip(int chipId) {

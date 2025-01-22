@@ -13,7 +13,7 @@ public class PokeyInst extends Instrument.BaseInstrument {
     public static final int DefaultClockValue = 1789772;
     public static final int MAX_CHIPS = 0x02;
 
-    private final Pokey[] chips = new Pokey[MAX_CHIPS];
+    private final Pokey[] chips = {new Pokey(), new Pokey()};
 
     @Override
     public String getName() {
@@ -27,49 +27,37 @@ public class PokeyInst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        Pokey chip = chips[chipId];
-        chip.reset();
+        chips[chipId].reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        if (chipId >= MAX_CHIPS) return 0;
-
-        if (chips[chipId] == null) {
-            chips[chipId] = new Pokey();
-        }
-
-        Pokey chip = chips[chipId];
-        return chip.start(clock);
+        assert chipId < MAX_CHIPS;
+        return chips[chipId].start(clock);
     }
 
     @Override
     public int read(int chipId, int adr) {
-        Pokey chip = chips[chipId];
-        return chip.read(adr);
+        return chips[chipId].read(adr);
     }
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        Pokey chip = chips[chipId];
-        chip.write(adr, data);
+        chips[chipId].write(adr, data);
         return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        Pokey chip = chips[chipId];
-        chip.update(outputs, samples);
+        chips[chipId].update(outputs, samples);
     }
 
     @Override
     public void stop(int chipId) {
-        Pokey chip = chips[chipId];
     }
 
     public void setMuteMask(int chipId, int muteMask) {
-        Pokey chip = chips[chipId];
-        chip.setMuteMask(muteMask);
+        chips[chipId].setMuteMask(muteMask);
     }
 
     //----

@@ -12,7 +12,7 @@ public class Ym2610Inst extends Instrument.BaseInstrument {
 
     public static final int DefaultClockValue = 8000000;
 
-    private final OPNB[] chips = new OPNB[2];
+    private final OPNB[] chips = {new OPNB(), new OPNB()};
 
     private final int[][] keyOn = {new int[11], new int[11]};
 
@@ -27,7 +27,7 @@ public class Ym2610Inst extends Instrument.BaseInstrument {
     }
 
     public Ym2610Inst() {
-        //0..Main 1..FM 2..SSG 3..PCMa 4..PCMb
+        // 0..Main 1..FM 2..SSG 3..PCMa 4..PCMb
         visVolume = new int[][][] {
                 {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}},
                 {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}}
@@ -36,15 +36,13 @@ public class Ym2610Inst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        if (chips[chipId] == null) return;
+        assert chipId < chips.length;
         chips[chipId].reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        chips[chipId] = new OPNB();
         chips[chipId].init(clock, samplingRate, false, new byte[0x20_ffff], 0x20_ffff, new byte[0x20_ffff], 0x20_ffff);
-
         return samplingRate;
     }
 
@@ -55,14 +53,15 @@ public class Ym2610Inst extends Instrument.BaseInstrument {
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        if (chips[chipId] == null) return 0;
+        assert chipId < chips.length;
         chips[chipId].setReg(port * 0x100 + adr, data);
         return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        if (chips[chipId] == null) return;
+        assert chipId < chips.length;
+
         int[] buffer = new int[2];
         buffer[0] = 0;
         buffer[1] = 0;
@@ -70,7 +69,7 @@ public class Ym2610Inst extends Instrument.BaseInstrument {
         for (int i = 0; i < 1; i++) {
             outputs[0][i] = buffer[i * 2 + 0];
             outputs[1][i] = buffer[i * 2 + 1];
-            //logger.log(Level.TRACE, "[%8d] : [%8d] [%d]\r".formatted(outputs[0][i], outputs[1][i],i));
+//logger.log(Level.TRACE, "[%8d] : [%8d] [%d]\r".formatted(outputs[0][i], outputs[1][i],i));
         }
 
         visVolume[chipId][0][0] = outputs[0][0];
@@ -87,26 +86,25 @@ public class Ym2610Inst extends Instrument.BaseInstrument {
 
     @Override
     public void stop(int chipId) {
-        chips[chipId] = null;
     }
 
     private void setFMVolume(int chipId, int db) {
-        if (chips[chipId] == null) return;
+        assert chipId < chips.length;
         chips[chipId].setVolumeFM(db);
     }
 
     private void setPSGVolume(int chipId, int db) {
-        if (chips[chipId] == null) return;
+        assert chipId < chips.length;
         chips[chipId].setVolumePSG(db);
     }
 
     private void setAdpcmAVolume(int chipId, int db) {
-        if (chips[chipId] == null) return;
+        assert chipId < chips.length;
         chips[chipId].setVolumeADPCMATotal(db);
     }
 
     private void setAdpcmBVolume(int chipId, int db) {
-        if (chips[chipId] == null) return;
+        assert chipId < chips.length;
         chips[chipId].setVolumeADPCMB(db);
     }
 
@@ -120,12 +118,12 @@ public class Ym2610Inst extends Instrument.BaseInstrument {
     }
 
     public synchronized void writeAdpcmA(int chipId, byte[] Buf) {
-        if (chips[chipId] == null) return;
+        assert chipId < chips.length;
         chips[chipId].setAdpcmA(Buf, Buf.length);
     }
 
     public synchronized void writeAdpcmB(int chipId, byte[] Buf) {
-        if (chips[chipId] == null) return;
+        assert chipId < chips.length;
         chips[chipId].setAdpcmB(Buf, Buf.length);
     }
 

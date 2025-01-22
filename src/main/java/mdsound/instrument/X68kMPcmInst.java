@@ -24,16 +24,13 @@ public class X68kMPcmInst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        MPcm chip = chips[chipId];
-        chip.reset();
+        chips[chipId].reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        MPcm chip = chips[chipId];
-        chip.mount();
-        MPcm chip1 = chips[chipId];
-        chip1.init(clock, (float) samplingRate);
+        chips[chipId].mount();
+        chips[chipId].init(clock, (float) samplingRate);
         return samplingRate;
     }
 
@@ -49,53 +46,43 @@ public class X68kMPcmInst extends Instrument.BaseInstrument {
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        MPcm chip = chips[chipId];
-        chip.update(outputs, samples);
+        chips[chipId].update(outputs, samples);
     }
 
     @Override
     public void stop(int chipId) {
-        MPcm chip = chips[chipId];
-        chip.unmount();
+        chips[chipId].unmount();
     }
 
     public void keyOn(int chipId, int ch) {
-        MPcm chip = chips[chipId];
-        chip.keyOn(ch);
+        chips[chipId].keyOn(ch);
     }
 
     public void keyOff(int chipId, int ch) {
-        MPcm chip = chips[chipId];
-        chip.keyOff(ch);
+        chips[chipId].keyOff(ch);
     }
 
     public boolean writePcm(int chipId, int ch, MPcm.PCM ptr) {
-        MPcm chip = chips[chipId];
-        return chip.setPcm(ch, ptr);
+        return chips[chipId].setPcm(ch, ptr);
     }
 
     public void setPitch(int chipId, int ch, int note) {
-        MPcm chip = chips[chipId];
-        chip.setPitch(ch, note);
+        chips[chipId].setPitch(ch, note);
     }
 
     public void setVol(int chipId, int ch, int vol) {
-        MPcm chip = chips[chipId];
-        chip.setVol(ch, vol);
+        chips[chipId].setVol(ch, vol);
     }
 
     public void setPan(int chipId, int ch, int pan) {
-        MPcm chip = chips[chipId];
-        chip.setPan(ch, pan);
+        chips[chipId].setPan(ch, pan);
     }
 
     public void setVolTable(int chipId, int sel, ByteBuffer tbl) {
-        MPcm chip = chips[chipId];
-        chip.setVolTable(sel, tbl);
+        chips[chipId].setVolTable(sel, tbl);
     }
 
     private int decode(int chipId, int ch, byte[] buffer, int bufferP, int pos) {
-        MPcm chip = chips[chipId];
-        return chip.decode(ch, buffer, bufferP, pos);
+        return chips[chipId].decode(ch, buffer, bufferP, pos);
     }
 }

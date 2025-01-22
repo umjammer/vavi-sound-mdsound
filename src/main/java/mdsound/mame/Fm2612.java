@@ -1,5 +1,4 @@
 /*
- *
  * software implementation of Yamaha Ym2612 FM Sound generator
  * Split from Fm.c to keep 2612 fixes from infecting other OPN chips
  *

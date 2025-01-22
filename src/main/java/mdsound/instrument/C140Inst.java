@@ -18,10 +18,7 @@ public class C140Inst extends Instrument.BaseInstrument {
 
     public C140Inst() {
         // 0..Main
-        visVolume = new int[][][] {
-                {{0, 0}},
-                {{0, 0}}
-        };
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
 
     @Override
@@ -52,35 +49,30 @@ public class C140Inst extends Instrument.BaseInstrument {
         assert chipId < MAX_CHIPS;
 
         int sampleRate = clock;
-        if ((Instrument.BaseInstrument.CHIP_SAMPLING_MODE == 0x01 && sampleRate < Instrument.BaseInstrument.CHIP_SAMPLE_RATE) ||
-                Instrument.BaseInstrument.CHIP_SAMPLING_MODE == 0x02)
-            sampleRate = Instrument.BaseInstrument.CHIP_SAMPLE_RATE;
+        if ((CHIP_SAMPLING_MODE == 0x01 && sampleRate < CHIP_SAMPLE_RATE) || CHIP_SAMPLING_MODE == 0x02)
+            sampleRate = CHIP_SAMPLE_RATE;
         if (sampleRate >= 0x100_0000) // limit to 16 MHz sample rate (32 MB buffer)
             return 0;
 
-        C140 chip = chips[chipId];
-        chip.start(clock, sampleRate, (C140.Type) option[0]);
+        chips[chipId].start(clock, sampleRate, (C140.Type) option[0]);
 
         return sampleRate;
     }
 
     @Override
     public int read(int chipId, int adr) {
-        C140 chip = chips[chipId];
-        return chip.read(adr);
+        return chips[chipId].read(adr);
     }
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        C140 chip = chips[chipId];
-        chip.write(adr, data);
+        chips[chipId].write(adr, data);
         return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        C140 chip = chips[chipId];
-        chip.update(outputs, samples);
+        chips[chipId].update(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
@@ -88,15 +80,13 @@ public class C140Inst extends Instrument.BaseInstrument {
 
     @Override
     public void stop(int chipId) {
-        C140 chip = chips[chipId];
-        chip.stop();
+        chips[chipId].stop();
     }
 
     //----
 
     public void setBase(int chipId, byte[] base) {
-        C140 chip = chips[chipId];
-        chip.setBase(base);
+        chips[chipId].setBase(base);
     }
 
     public void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
@@ -104,8 +94,7 @@ public class C140Inst extends Instrument.BaseInstrument {
     }
 
     private void setMuteMask(int chipId, int muteMask) {
-        C140 chip = chips[chipId];
-        chip.setMuteMask(muteMask);
+        chips[chipId].setMuteMask(muteMask);
     }
 
     public synchronized C140 getRegister(int cur) {
@@ -123,8 +112,7 @@ public class C140Inst extends Instrument.BaseInstrument {
     }
 
     public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
-        C140 chip = chips[chipId];
-        chip.writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
+        chips[chipId].writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
     }
 
     //----

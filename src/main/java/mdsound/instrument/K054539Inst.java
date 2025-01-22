@@ -15,11 +15,8 @@ public class K054539Inst extends Instrument.BaseInstrument {
     private final K054539[] chips = {new K054539(), new K054539()};
 
     public K054539Inst() {
-        //0..Main
-        visVolume = new int[][][] {
-                {{0, 0}},
-                {{0, 0}}
-        };
+        // 0..Main
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
 
     @Override
@@ -34,8 +31,7 @@ public class K054539Inst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        K054539 chip = chips[chipId];
-        chip.reset();
+        chips[chipId].reset();
     }
 
     /**
@@ -43,36 +39,31 @@ public class K054539Inst extends Instrument.BaseInstrument {
      */
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... Option) {
-        if (chipId >= MAX_CHIPS) return 0;
+        assert chipId < MAX_CHIPS;
 
-        K054539 chip = chips[chipId];
-        int rate = chip.start(clock);
+        int rate = chips[chipId].start(clock);
 
         int flags = 1;
         if (Option != null && Option.length > 0) flags = (int) (byte) Option[0];
-        K054539 info = chips[chipId];
-        info.intFlags(flags);
+        chips[chipId].intFlags(flags);
 
         return rate;
     }
 
     @Override
     public int read(int chipId, int adr) {
-        K054539 chip = chips[chipId];
-        return chip.write(adr);
+        return chips[chipId].write(adr);
     }
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        K054539 chip = chips[chipId];
-        chip.write(adr, data);
+        chips[chipId].write(adr, data);
         return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        K054539 chip = chips[chipId];
-        chip.update(outputs, samples);
+        chips[chipId].update(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
@@ -80,13 +71,11 @@ public class K054539Inst extends Instrument.BaseInstrument {
 
     @Override
     public void stop(int chipId) {
-        K054539 chip = chips[chipId];
-        chip.stop();
+        chips[chipId].stop();
     }
 
     public void setGain(int chipId, int channel, double gain) {
-        K054539 chip = chips[chipId];
-        if (gain >= 0) chip.setGain(channel, gain);
+        if (gain >= 0) chips[chipId].setGain(channel, gain);
     }
 
     private void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
@@ -94,15 +83,13 @@ public class K054539Inst extends Instrument.BaseInstrument {
     }
 
     public void setMuteMask(int chipId, int muteMask) {
-        K054539 chip = chips[chipId];
-        chip.setMuteMask(muteMask);
+        chips[chipId].setMuteMask(muteMask);
     }
 
     //----
 
     public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
-        K054539 chip = chips[chipId];
-        chip.writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
+        chips[chipId].writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
     }
 
     //----

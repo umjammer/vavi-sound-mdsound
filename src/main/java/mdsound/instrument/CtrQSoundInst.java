@@ -24,6 +24,10 @@ public class CtrQSoundInst extends Instrument.BaseInstrument {
         return "QSNDc";
     }
 
+    public CtrQSoundInst() {
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
+    }
+
     @Override
     public void init() {
         mask[0] = 0;
@@ -32,48 +36,38 @@ public class CtrQSoundInst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        CtrQsound chip = chips[chipId];
-        chip.reset();
+        chips[chipId].reset();
         // need to wait until the chips is ready before we start writing to it ...
         // we do this by time travel.
-        waitBusy(chipId);
-
-        visVolume = new int[][][] {
-                {{0, 0}},
-                {{0, 0}}
-        };
+        chips[chipId].waitBusy();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        CtrQsound chip = chips[chipId];
-        return chip.start2(clock);
+        return chips[chipId].start2(clock);
     }
 
     @Override
-    public void stop(int chipId) {
+    public int read(int chipId, int adr) {
+        return chips[chipId].read(adr);
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        chips[chipId].write2(adr, data);
+        return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        CtrQsound chip = chips[chipId];
-        chip.update(outputs, samples);
+        chips[chipId].update(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
     }
 
     @Override
-    public int read(int chipId, int adr) {
-        CtrQsound chip = chips[chipId];
-        return chip.read(adr);
-    }
-
-    @Override
-    public int write(int chipId, int port, int adr, int data) {
-        CtrQsound chip = chips[chipId];
-        chip.write2(adr, data);
-        return 0;
+    public void stop(int chipId) {
     }
 
     public void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
@@ -81,19 +75,12 @@ public class CtrQSoundInst extends Instrument.BaseInstrument {
     }
 
     private void setMuteMask(int chipId, int muteMask) {
-        CtrQsound chip = chips[chipId];
-        if (chip == null) return;
-        chip.setMuteMask(muteMask);
+        assert chipId < MAX_CHIPS;
+        chips[chipId].setMuteMask(muteMask);
     }
 
     private void writeData(int chipId, byte address, int data) {
-        CtrQsound chip = chips[chipId];
-        chip.writeData(address, data);
-    }
-
-    private void waitBusy(int chipId) {
-        CtrQsound chip = chips[chipId];
-        chip.waitBusy();
+        chips[chipId].writeData(address, data);
     }
 
     //----
@@ -106,13 +93,12 @@ public class CtrQSoundInst extends Instrument.BaseInstrument {
 
     public synchronized void resetMask(int chipId, int ch) {
         ch = (1 << ch);
-        mask[chipId] &= ~(int) ch;
+        mask[chipId] &= ~ch;
         setMuteMask(chipId, mask[chipId]);
     }
 
     public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddress) {
-        CtrQsound chip = chips[chipId];
-        chip.writeRom(romSize, dataStart, dataLength, romData, srcStartAddress);
+        chips[chipId].writeRom(romSize, dataStart, dataLength, romData, srcStartAddress);
     }
 
     //----

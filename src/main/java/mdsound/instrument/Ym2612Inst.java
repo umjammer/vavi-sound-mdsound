@@ -51,7 +51,6 @@ public class Ym2612Inst extends Instrument.BaseInstrument {
     @Override
     public void reset(int chipId) {
         assert chipId < MAX_CHIPS;
-
         Ym2612 chip = chips[chipId];
         chip.reset();
     }
@@ -62,14 +61,13 @@ public class Ym2612Inst extends Instrument.BaseInstrument {
 
         if (clock == 0) clock = DefaultFMClockValue;
 
-        Ym2612 chip = chips[chipId];
-        chip.init(clock, samplingRate, clock);
-        chip.reset();
+        chips[chipId].init(clock, samplingRate, clock);
+        chips[chipId].reset();
 
         // 動作オプション設定
-        if (option != null && option.length > 0 && option[0] instanceof Integer optFlags) {
-logger.log(Level.DEBUG, "option: " + optFlags);
-            chips[chipId].setOptions(optFlags & 0x3);
+        if (option != null && option.length > 0 && option[0] instanceof Integer flags) {
+logger.log(Level.DEBUG, "option: " + flags);
+            chips[chipId].setOptions(flags & 0x3);
         }
 
         return samplingRate;
@@ -91,9 +89,8 @@ logger.log(Level.DEBUG, "option: " + optFlags);
     public void update(int chipId, int[][] outputs, int samples) {
         assert chipId < MAX_CHIPS;
 
-        Ym2612 chip = chips[chipId];
-        chip.update(outputs, samples);
-        chip.updateDacAndTimers(outputs, samples);
+        chips[chipId].update(outputs, samples);
+        chips[chipId].updateDacAndTimers(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
@@ -105,16 +102,12 @@ logger.log(Level.DEBUG, "option: " + optFlags);
 
     private void writeInternal(int chipId, int adr, int data) {
         assert chipId < MAX_CHIPS;
-
-        Ym2612 chip = chips[chipId];
-        chip.write(adr, data);
+        chips[chipId].write(adr, data);
     }
 
     private void setMute(int chipId, int v) {
         assert chipId < MAX_CHIPS;
-
-        Ym2612 chip = chips[chipId];
-        chip.setMute(v);
+        chips[chipId].setMute(v);
     }
 
     //----

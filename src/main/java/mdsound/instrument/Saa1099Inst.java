@@ -18,10 +18,7 @@ public class Saa1099Inst extends Instrument.BaseInstrument {
     private final int[] mask = {0, 0};
 
     public Saa1099Inst() {
-        visVolume = new int[][][] {
-                {{0, 0}},
-                {{0, 0}}
-        };
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
 
     @Override
@@ -36,16 +33,13 @@ public class Saa1099Inst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        Saa1099 chip = chips[chipId];
-        chip.reset();
+        chips[chipId].reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        if (chipId >= MAX_CHIPS) return 0;
-
-        Saa1099 chip = chips[chipId];
-        return chip.start(clock);
+        assert chipId < MAX_CHIPS;
+        return chips[chipId].start(clock);
     }
 
     @Override
@@ -55,17 +49,14 @@ public class Saa1099Inst extends Instrument.BaseInstrument {
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        Saa1099 chip = chips[chipId];
-        chip.writeControl(0, adr);
-        chip.write(0, data);
+        chips[chipId].writeControl(0, adr);
+        chips[chipId].write(0, data);
         return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        Saa1099 chip = chips[chipId];
-
-        chip.update(outputs, samples);
+        chips[chipId].update(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
@@ -73,12 +64,10 @@ public class Saa1099Inst extends Instrument.BaseInstrument {
 
     @Override
     public void stop(int chipId) {
-        Saa1099 saa = chips[chipId];
     }
 
     private void setMute(int chipId, int v) {
-        Saa1099 chip = chips[chipId];
-        chip.setMuteMask(v);
+        chips[chipId].setMuteMask(v);
     }
 
     // ----

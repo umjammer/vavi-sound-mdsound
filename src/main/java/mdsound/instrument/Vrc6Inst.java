@@ -12,7 +12,6 @@ public class Vrc6Inst extends Instrument.BaseInstrument {
     private double apu_clock_rest = 0;
 
     private final NesVrc6[] chips;
-    private final int[] b = new int[2];
     private int volume = 0;
 
     private static final int[] vrc6AddressTable = {
@@ -72,14 +71,14 @@ public class Vrc6Inst extends Instrument.BaseInstrument {
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        b[0] = 0;
-        b[1] = 0;
 
         double apu_clock_per_sample = 0;
         apu_clock_per_sample = chips[chipId].clock / chips[chipId].rate;
         apu_clock_rest += apu_clock_per_sample;
         int apu_clocks = (int) (apu_clock_rest);
         if (apu_clocks > 0) apu_clock_rest -= apu_clocks;
+
+        int[] b = new int[2];
 
         chips[chipId].tick(apu_clocks);
         chips[chipId].render(b);

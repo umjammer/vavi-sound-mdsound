@@ -19,10 +19,7 @@ public class HuC6280Inst extends Instrument.BaseInstrument {
 
     public HuC6280Inst() {
         // 0..Main
-        visVolume = new int[][][] {
-                {{0, 0}},
-                {{0, 0}}
-        };
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
 
     @Override
@@ -45,7 +42,6 @@ public class HuC6280Inst extends Instrument.BaseInstrument {
     public int start(int chipId, int samplingRate, int clock, Object... option) {
         assert chipId < chips.length;
         chips[chipId].init(clock, samplingRate);
-
         return samplingRate;
     }
 

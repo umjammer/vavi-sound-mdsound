@@ -1,6 +1,4 @@
-
 package mdsound.instrument;
-
 
 import java.util.HashMap;
 import java.util.Map;
@@ -18,6 +16,10 @@ public class DmgInst extends Instrument.BaseInstrument {
 
     private final GbSound[] chips = {new GbSound(), new GbSound()};
 
+    public DmgInst() {
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
+    }
+
     @Override
     public String getName() {
         return "Gameboy DMG";
@@ -30,46 +32,35 @@ public class DmgInst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        GbSound gb = chips[chipId];
-        gb.reset();
-
-        visVolume = new int[][][] {
-                {{0, 0}},
-                {{0, 0}}
-        };
+        chips[chipId].reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        if (chipId >= MAX_CHIPS) return 0;
-
-        GbSound chip = chips[chipId];
+        assert  chipId < MAX_CHIPS;
 
         int rate = (clock & 0x7fff_ffff) / 64;
-        if (((BaseInstrument.CHIP_SAMPLING_MODE & 0x01) != 0 && rate < BaseInstrument.CHIP_SAMPLE_RATE) ||
-                BaseInstrument.CHIP_SAMPLING_MODE == 0x02)
-            rate = BaseInstrument.CHIP_SAMPLE_RATE;
-        chip.start(clock, rate);
+        if (((CHIP_SAMPLING_MODE & 0x01) != 0 && rate < CHIP_SAMPLE_RATE) || CHIP_SAMPLING_MODE == 0x02)
+            rate = CHIP_SAMPLE_RATE;
+
+        chips[chipId].start(clock, rate);
         return rate;
     }
 
     @Override
     public int read(int chipId, int adr) {
-        GbSound chip = chips[chipId];
-        return chip.readSound(adr);
+        return chips[chipId].readSound(adr);
     }
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        GbSound gb = chips[chipId];
-        gb.writeSound(adr, data);
+        chips[chipId].writeSound(adr, data);
         return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        GbSound gb = chips[chipId];
-        gb.update(outputs, samples);
+        chips[chipId].update(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
@@ -79,38 +70,20 @@ public class DmgInst extends Instrument.BaseInstrument {
     public void stop(int chipId) {
     }
 
-    private int startInternal(int chipId, int clock) {
-        if (chipId >= MAX_CHIPS)
-            return 0;
-
-        GbSound gb = chips[chipId];
-
-        int rate = (clock & 0x7fff_ffff) / 64;
-        if (((Instrument.BaseInstrument.CHIP_SAMPLING_MODE & 0x01) != 0 && rate < Instrument.BaseInstrument.CHIP_SAMPLE_RATE) ||
-                Instrument.BaseInstrument.CHIP_SAMPLING_MODE == 0x02)
-            rate = Instrument.BaseInstrument.CHIP_SAMPLE_RATE;
-        gb.start(clock, rate);
-        return rate;
-    }
-
     public int readPcm(int chipId, int offset) {
-        GbSound chip = chips[chipId];
-        return chip.readWave(offset);
+        return chips[chipId].readWave(offset);
     }
 
     public void writePcm(int chipId, int offset, byte data) {
-        GbSound chip = chips[chipId];
-        chip.writeWave(offset, data);
+        chips[chipId].writeWave(offset, data);
     }
 
     private void setMuteMask(int chipId, int muteMask) {
-        GbSound chip = chips[chipId];
-        chip.setMuteMask(muteMask);
+        chips[chipId].setMuteMask(muteMask);
     }
 
     public int getMuteMask(int chipId) {
-        GbSound chip = chips[chipId];
-        return chip.getMuteMask();
+        return chips[chipId].getMuteMask();
     }
 
     //----

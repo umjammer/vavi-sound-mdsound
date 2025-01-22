@@ -39,7 +39,7 @@ public class YmFmYm2610Inst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        if (chips[chipId] == null) return;
+        assert chipId < chips.length;
         chips[chipId].reset();
 
         output_pos = 0;
@@ -61,14 +61,15 @@ public class YmFmYm2610Inst extends Instrument.BaseInstrument {
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        if (chips[chipId] == null) return 0;
+        assert chipId < chips.length;
         chips[chipId].write(port * 0x100 + adr, data);
         return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        if (chips[chipId] == null) return;
+        assert chipId < chips.length;
+
         int[] buffer = new int[2];
         buffer[0] = 0;
         buffer[1] = 0;
@@ -99,12 +100,12 @@ public class YmFmYm2610Inst extends Instrument.BaseInstrument {
     }
 
     private void setAdpcmA(int chipId, byte[] _adpcma, int _adpcma_size) {
-        if (chips[chipId] == null) return;
+        assert chipId < chips.length;
 //        chips[chipId].setAdpcmA(_adpcma, _adpcma_size);
     }
 
     private void setAdpcmB(int chipId, byte[] _adpcmb, int _adpcmb_size) {
-        if (chips[chipId] == null) return;
+        assert chipId < chips.length;
 //        chips[chipId].setAdpcmB(_adpcmb, _adpcmb_size);
     }
 

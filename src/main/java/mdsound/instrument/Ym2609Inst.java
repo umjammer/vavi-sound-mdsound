@@ -11,7 +11,7 @@ public class Ym2609Inst extends Instrument.BaseInstrument {
 
     public static final int DefaultClockValue = 8000000;
 
-    private final OPNA2[] chip = new OPNA2[2];
+    private final OPNA2[] chips = {new OPNA2(), new OPNA2()};
 
     // TODO
     private boolean visVol;
@@ -19,8 +19,8 @@ public class Ym2609Inst extends Instrument.BaseInstrument {
     private final int[][] keyOn = {new int[12 + 12 + 3 + 1], new int[28]};
 
     public Ym2609Inst() {
+        // 0..Main 1..FM 2..SSG 3..Rhm 4..PCM
         visVolume = new int[][][] {
-                // 0..Main 1..FM 2..SSG 3..Rhm 4..PCM
                 {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}},
                 {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}}
         };
@@ -38,20 +38,20 @@ public class Ym2609Inst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        chip[chipId].reset();
+        chips[chipId].reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        chip[chipId] = new OPNA2(samplingRate);
+        chips[chipId].init(samplingRate);
 
         if (option != null && option.length > 0 && option[0] instanceof Function) { //<String, Stream>
             if (option[0] instanceof Function) // <String, Stream>
-                chip[chipId].init(clock, samplingRate, false, (Function<String, Stream>) option[0], null, 0);
+                chips[chipId].init(clock, samplingRate, false, (Function<String, Stream>) option[0], null, 0);
             else if (option[0] instanceof String)
-                chip[chipId].init(clock, samplingRate, false, (String) option[0]);
+                chips[chipId].init(clock, samplingRate, false, (String) option[0]);
         } else {
-            chip[chipId].init(clock, samplingRate);
+            chips[chipId].init(clock, samplingRate);
         }
 
         return samplingRate;
@@ -64,15 +64,14 @@ public class Ym2609Inst extends Instrument.BaseInstrument {
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        if (chip[chipId] == null) return 0;
-
-        chip[chipId].setReg(port * 0x100 + adr, data);
+        assert chipId < chips.length;
+        chips[chipId].setReg(port * 0x100 + adr, data);
         return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        int[] updateBuffer = chip[chipId].update();
+        int[] updateBuffer = chips[chipId].update();
 //        for (int i = 0; i < 1; i++) {
 //            outputs[0][i] = updateBuffer[i * 2 + 0];
 //            outputs[1][i] = updateBuffer[i * 2 + 1];
@@ -86,39 +85,38 @@ public class Ym2609Inst extends Instrument.BaseInstrument {
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
-        visVolume[chipId][1][0] = chip[chipId].visVolume[0];
-        visVolume[chipId][1][1] = chip[chipId].visVolume[1];
-        visVolume[chipId][2][0] = chip[chipId].psg.visVolume;
-        visVolume[chipId][2][1] = chip[chipId].psg.visVolume;
-        visVolume[chipId][3][0] = chip[chipId].visRtmVolume[0];
-        visVolume[chipId][3][1] = chip[chipId].visRtmVolume[1];
-        visVolume[chipId][4][0] = chip[chipId].visAPCMVolume[0];
-        visVolume[chipId][4][1] = chip[chipId].visAPCMVolume[1];
+        visVolume[chipId][1][0] = chips[chipId].visVolume[0];
+        visVolume[chipId][1][1] = chips[chipId].visVolume[1];
+        visVolume[chipId][2][0] = chips[chipId].psg.visVolume;
+        visVolume[chipId][2][1] = chips[chipId].psg.visVolume;
+        visVolume[chipId][3][0] = chips[chipId].visRtmVolume[0];
+        visVolume[chipId][3][1] = chips[chipId].visRtmVolume[1];
+        visVolume[chipId][4][0] = chips[chipId].visAPCMVolume[0];
+        visVolume[chipId][4][1] = chips[chipId].visAPCMVolume[1];
     }
 
     @Override
     public void stop(int chipId) {
-        chip[chipId] = null;
     }
 
     private void setFMVolume(int chipId, int db) {
-        if (chip[chipId] == null) return;
-        chip[chipId].setVolumeFM(db);
+        assert chipId < chips.length;
+        chips[chipId].setVolumeFM(db);
     }
 
     private void setPSGVolume(int chipId, int db) {
-        if (chip[chipId] == null) return;
-        chip[chipId].setVolumePSG(db);
+        assert chipId < chips.length;
+        chips[chipId].setVolumePSG(db);
     }
 
     private void setRhythmVolume(int chipId, int db) {
-        if (chip[chipId] == null) return;
-        chip[chipId].setVolumeRhythmTotal(db);
+        assert chipId < chips.length;
+        chips[chipId].setVolumeRhythmTotal(db);
     }
 
     private void setAdpcmVolume(int chipId, int db) {
-        if (chip[chipId] == null) return;
-        chip[chipId].setVolumeADPCM(db);
+        assert chipId < chips.length;
+        chips[chipId].setVolumeADPCM(db);
     }
 
     //----
@@ -131,8 +129,8 @@ public class Ym2609Inst extends Instrument.BaseInstrument {
     }
 
     public synchronized void writeAdpcmA(int chipId, byte[] Buf) {
-        if (chip[chipId] == null) return;
-        chip[chipId].setAdpcmA(Buf, Buf.length);
+        assert chipId < chips.length;
+        chips[chipId].setAdpcmA(Buf, Buf.length);
     }
 
     // TODO automatic wired, use annotation?

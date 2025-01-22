@@ -6,6 +6,7 @@ import java.util.Map;
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
 import mdsound.chips.DosboxYm3812;
+import vavi.sound.ymfm.Opl.Ym3812;
 
 
 public class Ym3812Inst extends Instrument.BaseInstrument {
@@ -13,18 +14,17 @@ public class Ym3812Inst extends Instrument.BaseInstrument {
     public static final int MAX_CHIPS = 0x02;
     public static final int DefaultClockValue = 3579545;
 
-    private final DosboxYm3812[] chips = new DosboxYm3812[] {new DosboxYm3812(), new DosboxYm3812()};
+    private final DosboxYm3812[] chips = {new DosboxYm3812(), new DosboxYm3812()};
 
-    private byte emuCore;
+    private int emuCore;
+
+    public Ym3812Inst() {
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
+    }
 
     @Override
     public void reset(int chipId) {
-        DosboxYm3812 info = chips[chipId];
-        info.reset();
-        visVolume = new int[][][] {
-                {{0, 0}},
-                {{0, 0}}
-        };
+        chips[chipId].reset();
     }
 
     @Override
@@ -39,29 +39,33 @@ public class Ym3812Inst extends Instrument.BaseInstrument {
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        return startInternal(chipId, clock);
+        assert chipId < MAX_CHIPS;
+
+        int rate = (clock & 0x7fff_ffff) / 72;
+        if ((CHIP_SAMPLING_MODE == 0x01 && rate < CHIP_SAMPLE_RATE) || CHIP_SAMPLING_MODE == 0x02)
+            rate = CHIP_SAMPLE_RATE;
+
+        chips[chipId].start(emuCore, clock, rate, this::updateStream);
+
+        return rate;
     }
 
     @Override
     public int read(int chipId, int adr) {
-        DosboxYm3812 chip = chips[chipId];
-        return chip.read(adr);
+        return chips[chipId].read(adr);
     }
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        DosboxYm3812 chip = chips[chipId];
-        if (chip == null) return 0;
-
-        chip.write(0, adr);
-        chip.write(1, data);
+        assert chipId < MAX_CHIPS;
+        chips[chipId].write(0, adr);
+        chips[chipId].write(1, data);
         return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        DosboxYm3812 chip = chips[chipId];
-        chip.updateStream(outputs, samples);
+        chips[chipId].updateStream(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
@@ -69,26 +73,7 @@ public class Ym3812Inst extends Instrument.BaseInstrument {
 
     @Override
     public void stop(int chipId) {
-        DosboxYm3812 chip = chips[chipId];
-        chip.stop();
-    }
-
-    private int startInternal(int chipId, int clock) {
-        if (chipId >= MAX_CHIPS)
-            return 0;
-
-        DosboxYm3812 info = chips[chipId];
-        int rate = (clock & 0x7fff_ffff) / 72;
-        if ((CHIP_SAMPLING_MODE == 0x01 && rate < CHIP_SAMPLE_RATE) ||
-                CHIP_SAMPLING_MODE == 0x02)
-            rate = CHIP_SAMPLE_RATE;
-        //info.intf = device.static_config ? (ym3812_interface) device.static_config : dummy;
-        //info.intf = dummy;
-        //info.device = device;
-
-        info.start(emuCore, clock, rate, this::updateStream);
-
-        return rate;
+        chips[chipId].stop();
     }
 
     private final int[][] dummyBuf = {null, null};
@@ -105,13 +90,12 @@ public class Ym3812Inst extends Instrument.BaseInstrument {
         return read(chipId, 1);
     }
 
-    public void setEmuCore(byte Emulator) {
-        emuCore = (byte) ((Emulator < 0x02) ? Emulator : 0x00);
+    public void setEmuCore(int Emulator) {
+        emuCore = (Emulator < 0x02) ? Emulator : 0x00;
     }
 
     public void setMuteMask(int chipId, int muteMask) {
-        DosboxYm3812 info = chips[chipId];
-        info.setMuteMask(muteMask);
+        chips[chipId].setMuteMask(muteMask);
     }
 
     //----

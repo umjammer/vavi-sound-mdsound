@@ -779,7 +779,7 @@ public class Ym2151 {
             j = 32 - j;
             j = (int) (65536.0 / (j * 32.0)); // number of samples per one shift of the shift register
             this.noise_tab[i] = (int) (j * 64 * scaler);
-            //logger.log(Level.TRACE, "noise_tab[%02x]=%08x".formatted(i, this.noise_tab[i]));
+//logger.log(Level.TRACE, "noise_tab[%02x]=%08x".formatted(i, this.noise_tab[i]));
         }
     }
 
@@ -792,7 +792,7 @@ public class Ym2151 {
 
         // MEM is simply one sample delay
 
-        //logger.log(Level.TRACE, "v:%d c1:%d mem:%d c2:%d m2:%d chanout[cha]:%d".formatted(v, c1.v, mem.v, c2.v, m2.v, chanout[cha]));
+//logger.log(Level.TRACE, "v:%d c1:%d mem:%d c2:%d m2:%d chanout[cha]:%d".formatted(v, c1.v, mem.v, c2.v, m2.v, chanout[cha]));
 
         switch (v & 7) {
         case 0:
@@ -979,7 +979,7 @@ public class Ym2151 {
     }
 
     /** write a register on YM2151 chips number 'n' */
-    public void ym2151_write_reg(int r, int v) {
+    public void write_reg(int r, int v) {
         int i = (r & 0x07) * 4 + ((r & 0x18) >> 3);
         Operator op = this.oper[i];
         Operator[] opBuf;
@@ -1226,7 +1226,7 @@ public class Ym2151 {
         }
     }
 
-    private int ym2151_read_status() {
+    public int read_status() {
         return this.status;
     }
 
@@ -1305,10 +1305,10 @@ public class Ym2151 {
         this.csm_req = 0;
         this.status = 0;
 
-        ym2151_write_reg(0x1b, 0); // only because of CT1, CT2 output pins */
-        ym2151_write_reg(0x18, 0); // set LFO frequency */
+        write_reg(0x1b, 0); // only because of CT1, CT2 output pins */
+        write_reg(0x18, 0); // set LFO frequency */
         for (i = 0x20; i < 0x100; i++) { // set the operators */
-            ym2151_write_reg(i, 0);
+            write_reg(i, 0);
         }
     }
 

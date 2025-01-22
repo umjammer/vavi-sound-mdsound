@@ -25,44 +25,34 @@ public class Rf5C68Inst extends Instrument.BaseInstrument {
     }
 
     public Rf5C68Inst() {
-        visVolume = new int[][][] {
-                {new int[] {0, 0}},
-                {new int[] {0, 0}}
-        };
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
 
     @Override
     public void reset(int chipId) {
-        Rf5c68 chip = chips[chipId];
-        chip.reset();
+        chips[chipId].reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        if (chipId >= MAX_CHIPS)
-            return 0;
-
-        Rf5c68 chip = chips[chipId];
-        return chip.start(clock);
+        assert chipId < MAX_CHIPS;
+        return chips[chipId].start(clock);
     }
 
     @Override
     public int read(int chipId, int adr) {
-        Rf5c68 chip = chips[chipId];
-        return chip.readMemory(adr);
+        return chips[chipId].readMemory(adr);
     }
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        Rf5c68 chip = chips[chipId];
-        chip.write(adr, data);
+        chips[chipId].write(adr, data);
         return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        Rf5c68 chip = chips[chipId];
-        chip.update(outputs, samples);
+        chips[chipId].update(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
@@ -70,30 +60,25 @@ public class Rf5C68Inst extends Instrument.BaseInstrument {
 
     @Override
     public void stop(int chipId) {
-        Rf5c68 chip = chips[chipId];
-        chip.stop();
+        chips[chipId].stop();
     }
 
     public void writeRam(int chipId, int dataStart, int dataLength, byte[] ramData) {
-        Rf5c68 chip = chips[chipId];
-        chip.writeRam(dataStart, dataLength, ramData);
+        chips[chipId].writeRam(dataStart, dataLength, ramData);
     }
 
     private void setMuteMask(int chipId, int muteMask) {
-        Rf5c68 chip = chips[chipId];
-        chip.setMuteMask(muteMask);
+        chips[chipId].setMuteMask(muteMask);
     }
 
     //----
 
     public synchronized void writePcm(int chipId, int ramStartAdr, int ramDataLength, byte[] srcData, int srcStartAdr) {
-        Rf5c68 chip = chips[chipId];
-        chip.writeRam2(ramStartAdr, ramDataLength, srcData, srcStartAdr);
+        chips[chipId].writeRam2(ramStartAdr, ramDataLength, srcData, srcStartAdr);
     }
 
     public synchronized void writeMemory(int chipId, int adr, int data) {
-        Rf5c68 chip = chips[chipId];
-        chip.writeMemory(adr, data);
+        chips[chipId].writeMemory(adr, data);
     }
 
     public synchronized Rf5c68 getChip(int chipId) {

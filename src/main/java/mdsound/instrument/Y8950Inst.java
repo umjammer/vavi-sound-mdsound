@@ -15,6 +15,10 @@ public class Y8950Inst extends Instrument.BaseInstrument {
 
     private final Y8950[] chips = {new Y8950(), new Y8950()};
 
+    public Y8950Inst() {
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
+    }
+
     @Override
     public String getName() {
         return "Y8950";
@@ -27,43 +31,28 @@ public class Y8950Inst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        Y8950 info = chips[chipId];
-        info.reset();
-
-        visVolume = new int[][][] {
-                {{0, 0}},
-                {{0, 0}}
-        };
+        chips[chipId].reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        if (chipId >= MAX_CHIPS) return 0;
-
-        Y8950 chip = chips[chipId];
+        assert chipId < MAX_CHIPS;
 
         int rate = clock / 72;
-        if ((CHIP_SAMPLING_MODE == 0x01 && rate < BaseInstrument.CHIP_SAMPLE_RATE) ||
-                CHIP_SAMPLING_MODE == 0x02)
-            rate = BaseInstrument.CHIP_SAMPLE_RATE;
-        //this.intf = device.static_config ? (final y8950_interface *)device.static_config : &dummy;
-        //this.intf = &dummy;
-        //this.device = device;
+        if ((CHIP_SAMPLING_MODE == 0x01 && rate < CHIP_SAMPLE_RATE) || CHIP_SAMPLING_MODE == 0x02)
+            rate = CHIP_SAMPLE_RATE;
 
         // stream system initialize
-        chip.start(clock, rate);
-        //assert_always(this.chips != NULL, "Error creating Y8950 chips");
-
-        //this.stream = stream_create(device,0,1,rate,info,y8950_stream_update);
+        chips[chipId].start(clock, rate);
 
         // port and keyboard handler
-        chip.setPortHandler(this::writePort, this::readPort);
-        chip.setKeyboardHandler(this::writeKeyboard, this::readKeyboard);
+        chips[chipId].setPortHandler(this::writePort, this::readPort);
+        chips[chipId].setKeyboardHandler(this::writeKeyboard, this::readKeyboard);
 
         // Y8950 setup
-        chip.setTimerHandler(this::doTimer);
-        chip.setIrqHandler(this::doIrq);
-        chip.setUpdateHandler(this::updateStream);
+        chips[chipId].setTimerHandler(this::doTimer);
+        chips[chipId].setIrqHandler(this::doIrq);
+        chips[chipId].setUpdateHandler(this::updateStream);
 
         //this.timer[0] = timer_alloc(device.machine, timer_callback_0, info);
         //this.timer[1] = timer_alloc(device.machine, timer_callback_1, info);
@@ -73,22 +62,19 @@ public class Y8950Inst extends Instrument.BaseInstrument {
 
     @Override
     public int read(int chipId, int adr) {
-        Y8950 chip = chips[chipId];
-        return chip.read(adr & 1);
+        return chips[chipId].read(adr & 1);
     }
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        Y8950 chip = chips[chipId];
-        chip.write(0x00 & 1, adr);
-        chip.write(0x01 & 1, data);
+        chips[chipId].write(0x00 & 1, adr);
+        chips[chipId].write(0x01 & 1, data);
         return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        Y8950 info = chips[chipId];
-        info.update(outputs, samples);
+        chips[chipId].update(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
@@ -96,8 +82,7 @@ public class Y8950Inst extends Instrument.BaseInstrument {
 
     @Override
     public void stop(int chipId) {
-        Y8950 info = chips[chipId];
-        info.stop();
+        chips[chipId].stop();
     }
 
     public int readStatusPort(int chipId, int offset) {
@@ -109,13 +94,11 @@ public class Y8950Inst extends Instrument.BaseInstrument {
     }
 
     public void writeControlPort(int chipId, int offset, int data) {
-        Y8950 info = chips[chipId];
-        info.write(0 & 1, data);
+        chips[chipId].write(0 & 1, data);
     }
 
     public void writePort(int chipId, int offset, int data) {
-        Y8950 info = chips[chipId];
-        info.write(1 & 1, data);
+        chips[chipId].write(1 & 1, data);
     }
 
     public void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
@@ -123,8 +106,7 @@ public class Y8950Inst extends Instrument.BaseInstrument {
     }
 
     public void setMuteMask(int chipId, int muteMask) {
-        Y8950 info = chips[chipId];
-        info.setMuteMask(muteMask);
+        chips[chipId].setMuteMask(muteMask);
     }
 
     private void doIrq(int irq) {
@@ -173,8 +155,7 @@ public class Y8950Inst extends Instrument.BaseInstrument {
     //----
 
     public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
-        Y8950 chip = chips[chipId];
-        chip.writePcmRom(romSize, dataStart, dataLength, romData, srcStartAdr);
+        chips[chipId].writePcmRom(romSize, dataStart, dataLength, romData, srcStartAdr);
     }
 
     //----

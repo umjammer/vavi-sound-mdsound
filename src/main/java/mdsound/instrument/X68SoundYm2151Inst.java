@@ -12,10 +12,8 @@ public class X68SoundYm2151Inst extends Instrument.BaseInstrument {
     /** X68000 clock */
     public static final int DefaultClockValue = 4000000;
 
-    public final X68Sound[] chips = new X68Sound[] {null, null};
-    public final SoundIocs[] soundIocs = new SoundIocs[] {null, null};
-
-    private final short[][] buf = {new short[2], new short[2]};
+    public final X68Sound[] chips = {new X68Sound(), new X68Sound()};
+    public final SoundIocs[] soundIocs = {null, null};
 
     private int opmFlag = 1;
     private int adpcmFlag = 0;
@@ -23,9 +21,7 @@ public class X68SoundYm2151Inst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        if (chips[chipId] == null)
-            return;
-
+        assert chipId < chips.length;
         chips[chipId].reset();
     }
 
@@ -41,10 +37,8 @@ public class X68SoundYm2151Inst extends Instrument.BaseInstrument {
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        if (chipId > 1)
-            return 0;
+        assert chipId < chips.length;
 
-        chips[chipId] = new X68Sound();
         soundIocs[chipId] = new SoundIocs(chips[chipId]);
 
         if (option != null) {
@@ -69,17 +63,17 @@ public class X68SoundYm2151Inst extends Instrument.BaseInstrument {
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        if (chips[chipId] == null)
-            return 0;
+        assert chipId < chips.length;
         soundIocs[chipId].opmSet(adr, data);
         return 0;
     }
 
+    // TODO is thread safe?
+    private final short[][] buf = {new short[2], new short[2]};
+
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        if (chips[chipId] == null)
-            return;
-
+        assert chipId < chips.length;
         for (int i = 0; i < samples; i++) {
             chips[chipId].getPcm(buf[chipId], 0, samples * 2);
             outputs[0][i] = buf[chipId][0];
@@ -89,19 +83,13 @@ public class X68SoundYm2151Inst extends Instrument.BaseInstrument {
 
     @Override
     public void stop(int chipId) {
-        if (chips[chipId] == null)
-            return;
-
+        assert chipId < chips.length;
         chips[chipId].free();
-
-        chips[chipId] = null;
         soundIocs[chipId] = null;
     }
 
-    private void update(int chipId, int[][] outputs, int samples, BiConsumer<Runnable, Boolean> oneFrameProc) {
-        if (chips[chipId] == null)
-            return;
-
+    public void update(int chipId, int[][] outputs, int samples, BiConsumer<Runnable, Boolean> oneFrameProc) {
+        assert chipId < chips.length;
         for (int i = 0; i < samples; i++) {
             chips[chipId].getPcm(buf[chipId], 0, samples * 2, oneFrameProc);
             outputs[0][i] = buf[chipId][0];

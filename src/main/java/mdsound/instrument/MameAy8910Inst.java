@@ -43,10 +43,9 @@ public class MameAy8910Inst extends Instrument.BaseInstrument {
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        Ay8910 chip = chips[chipId];
         sampleRate = samplingRate;
         masterClock = clock / 4;
-        chip.init(clock, 0, 0);
+        chips[chipId].init(clock, 0, 0);
 
         visVolume = new int[2][][];
         visVolume[0] = new int[2][];

@@ -13,7 +13,7 @@ public class YmF271Inst extends Instrument.BaseInstrument {
     public static final int DefaultClockValue = 16934400;
     public static final int MAX_CHIPS = 0x10;
 
-    private final YmF271[] chips = {new YmF271(), new YmF271(),};
+    private final YmF271[] chips = {new YmF271(), new YmF271()};
 
     @Override
     public String getName() {
@@ -25,21 +25,18 @@ public class YmF271Inst extends Instrument.BaseInstrument {
         return "OPX";
     }
 
+    public YmF271Inst() {
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
+    }
+
     @Override
     public void reset(int chipId) {
-        YmF271 chip = chips[chipId];
-        chip.reset();
-
-        visVolume = new int[][][] {
-                {{0, 0}},
-                {{0, 0}}
-        };
+        chips[chipId].reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        if (chipId >= MAX_CHIPS) return 0;
-
+        assert chipId < MAX_CHIPS;
         YmF271 chip = chips[chipId];
         return chip.start(clock);
     }

@@ -3602,9 +3602,9 @@ public class YmF262 {
 
         public void changeFrequency(int chanBase, int regBase, Operator op) {
             // frequency
-            int frn = ((((int) this.adlibReg[ARC_KON_BNUM + chanBase]) & 3) << 8) + (int) this.adlibReg[ARC_FREQ_NUM + chanBase];
+            int frn = ((this.adlibReg[ARC_KON_BNUM + chanBase] & 3) << 8) + this.adlibReg[ARC_FREQ_NUM + chanBase];
             // block number/octave
-            int oct = ((((int) this.adlibReg[ARC_KON_BNUM + chanBase]) >> 2) & 7);
+            int oct = ((this.adlibReg[ARC_KON_BNUM + chanBase] >> 2) & 7);
             op.freqHigh = (frn >> 7) & 7;
 
             // keysplit

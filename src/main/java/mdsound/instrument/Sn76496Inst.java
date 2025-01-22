@@ -27,7 +27,7 @@ public class Sn76496Inst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        if (chips.get(chipId) == null) return;
+        assert chipId < chips.size();
         chips.get(chipId).reset();
     }
 
@@ -61,13 +61,13 @@ public class Sn76496Inst extends Instrument.BaseInstrument {
         }
 
         Sn76496 chip = new Sn76496();
-        int i = chip.start(clock, shiftreg, noisetaps, negate, stereo, divider, freq0);
+        int rate = chip.start(clock, shiftreg, noisetaps, negate, stereo, divider, freq0);
         chip.limitFreq(clock & 0x3fff_ffff, 0, samplingRate);
 
         while (chipId >= chips.size()) chips.add(null);
         chips.set(chipId, chip);
 
-        return i;
+        return rate;
     }
 
     @Override
@@ -80,27 +80,27 @@ public class Sn76496Inst extends Instrument.BaseInstrument {
      */
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        if (chips.get(chipId) == null) return 0;
+        assert chipId < chips.size();
         chips.get(chipId).writeReg(adr, data);
         return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        if (chips.get(chipId) == null) return;
+        assert chipId < chips.size();
         chips.get(chipId).update(outputs, samples);
     }
 
     @Override
     public void stop(int chipId) {
-        if (chips.get(chipId) == null) return;
+        assert chipId < chips.size();
         chips.get(chipId).stop();
     }
 
     // ----
 
     public synchronized void setPan(int chipId, int data) {
-        if (chips.get(chipId) == null) return;
+        assert chipId < chips.size();
         chips.get(chipId).writeStereo(0, data);
     }
 

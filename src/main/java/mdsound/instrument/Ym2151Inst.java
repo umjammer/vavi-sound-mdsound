@@ -12,15 +12,12 @@ public class Ym2151Inst extends Instrument.BaseInstrument {
 
     public static final int DefaultClockValue = 3579545;
 
-    private final OPM[] chips = new OPM[2];
+    private final OPM[] chips = {new OPM(), new OPM()};
 
     private final int[][] keyOn = {new int[8], new int[8]};
 
     public Ym2151Inst() {
-        visVolume = new int[][][] {
-                {{0, 0}},
-                {{0, 0}}
-        };
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
 
     @Override
@@ -35,15 +32,13 @@ public class Ym2151Inst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        if (chips[chipId] == null) return;
+        assert chipId < chips.length;
         chips[chipId].reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        chips[chipId] = new OPM();
         chips[chipId].init(clock, samplingRate, false);
-
         return samplingRate;
     }
 
@@ -54,15 +49,14 @@ public class Ym2151Inst extends Instrument.BaseInstrument {
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        if (chips[chipId] == null) return 0;
-
+        assert chipId < chips.length;
         chips[chipId].setReg(adr, data);
         return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        if (chips[chipId] == null) return;
+        assert chipId < chips.length;
 
         int[] buffer = new int[2];
         buffer[0] = 0;
@@ -80,7 +74,6 @@ public class Ym2151Inst extends Instrument.BaseInstrument {
 
     @Override
     public void stop(int chipId) {
-        chips[chipId] = null;
     }
 
     // ----

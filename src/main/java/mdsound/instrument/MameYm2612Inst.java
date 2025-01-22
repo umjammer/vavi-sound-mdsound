@@ -15,10 +15,7 @@ public class MameYm2612Inst extends Instrument.BaseInstrument {
 
     public MameYm2612Inst() {
         // 0..Main
-        visVolume = new int[][][] {
-                {{0, 0}},
-                {{0, 0}}
-        };
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
 
     @Override
@@ -34,17 +31,15 @@ public class MameYm2612Inst extends Instrument.BaseInstrument {
     @Override
     public void reset(int chipId) {
         assert chipId < MAX_CHIPS;
-        Ym2612 chip = chips[chipId];
-        chip.reset();
+        chips[chipId].reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
         assert chipId < MAX_CHIPS;
 
-        Ym2612 chip = chips[chipId];
-        chip.init(clock, samplingRate, null, null);
-        chip.updateRequest = () -> chip.updateOne(new int[2][], 0);
+        chips[chipId].init(clock, samplingRate, null, null);
+        chips[chipId].updateRequest = () -> chips[chipId].updateOne(new int[2][], 0);
 
         return samplingRate;
     }
@@ -65,8 +60,7 @@ public class MameYm2612Inst extends Instrument.BaseInstrument {
     public void update(int chipId, int[][] outputs, int samples) {
         assert chipId < MAX_CHIPS;
 
-        Ym2612 chip = chips[chipId];
-        chip.updateOne(outputs, samples);
+        chips[chipId].updateOne(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
@@ -79,16 +73,12 @@ public class MameYm2612Inst extends Instrument.BaseInstrument {
 
     private void setMute(int chipId, int mask) {
         assert chipId < MAX_CHIPS;
-
-        Ym2612 chip = chips[chipId];
-        chip.setMuteMask(mask);
+        chips[chipId].setMuteMask(mask);
     }
 
     private void writeInternal(int chipId, int adr, int data) {
         assert chipId < MAX_CHIPS;
-
-        Ym2612 chip = chips[chipId];
-        chip.write(adr, data);
+        chips[chipId].write(adr, data);
     }
 
     // ----

@@ -15,6 +15,10 @@ public class K053260Inst extends Instrument.BaseInstrument {
 
     private final K053260[] chips = {new K053260(), new K053260()};
 
+    public K053260Inst() {
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
+    }
+
     @Override
     public String getName() {
         return "K053260";
@@ -27,41 +31,29 @@ public class K053260Inst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        K053260 chip = chips[chipId];
-        chip.reset();
-
-        visVolume = new int[][][] {
-                {{0, 0}},
-                {{0, 0}}
-        };
+        chips[chipId].reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        if (chipId >= MAX_CHIPS)
-            return 0;
-
-        K053260 chip = chips[chipId];
-        return chip.start(clock);
+        assert chipId < MAX_CHIPS;
+        return chips[chipId].start(clock);
     }
 
     @Override
     public int read(int chipId, int adr) {
-        K053260 chip = chips[chipId];
-        return chip.read(adr);
+        return chips[chipId].read(adr);
     }
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        K053260 chip = chips[chipId];
-        chip.write(adr, data);
+        chips[chipId].write(adr, data);
         return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        K053260 chip = chips[chipId];
-        chip.update(outputs, samples);
+        chips[chipId].update(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
@@ -69,8 +61,7 @@ public class K053260Inst extends Instrument.BaseInstrument {
 
     @Override
     public void stop(int chipId) {
-        K053260 chip = chips[chipId];
-        chip.stop();
+        chips[chipId].stop();
     }
 
     public void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
@@ -78,15 +69,13 @@ public class K053260Inst extends Instrument.BaseInstrument {
     }
 
     public void setMuteMask(int chipId, int muteMask) {
-        K053260 chip = chips[chipId];
-        chip.setMuteMask(muteMask);
+        chips[chipId].setMuteMask(muteMask);
     }
 
     //----
 
     public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
-        K053260 chip = chips[chipId];
-        chip.writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
+        chips[chipId].writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
     }
 
     // ----

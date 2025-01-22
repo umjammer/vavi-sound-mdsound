@@ -60,6 +60,7 @@ public class WSwanInst extends Instrument.BaseInstrument {
     }
 
     private double sampleCounter = 0;
+    // TODO is thread safe?
     private final int[][] frm = {new int[1], new int[1]};
     private final int[][] before = {new int[1], new int[1]};
 

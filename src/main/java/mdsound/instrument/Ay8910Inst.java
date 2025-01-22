@@ -18,10 +18,7 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
 
     public Ay8910Inst() {
         // 0..Main
-        visVolume = new int[][][] {
-                {{0, 0}},
-                {{0, 0}}
-        };
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
 
     @Override
@@ -50,7 +47,6 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
     public int start(int chipId, int samplingRate, int clock, Object... option) {
         PSG chip = chips[chipId];
         chip.setClock(clock, samplingRate);
-
         return samplingRate;
     }
 
@@ -62,9 +58,7 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
     @Override
     public int write(int chipId, int port, int adr, int data) {
         assert chipId < chips.length;
-
-        PSG chip = chips[chipId];
-        chip.setReg(adr, data);
+        chips[chipId].setReg(adr, data);
         return 0;
     }
 
@@ -75,8 +69,7 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
         int[] buffer = new int[2];
         buffer[0] = 0;
         buffer[1] = 0;
-        PSG chip = chips[chipId];
-        chip.mix(buffer, 1);
+        chips[chipId].mix(buffer, 1);
         for (int i = 0; i < 1; i++) {
             outputs[0][i] = buffer[i * 2 + 0];
             outputs[1][i] = buffer[i * 2 + 1];
@@ -94,16 +87,12 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
 
     public void setVolume(int chipId, int db) {
         assert chipId < chips.length;
-
-        PSG chip = chips[chipId];
-        chip.setVolume(db);
+        chips[chipId].setVolume(db);
     }
 
     private void setMute(int chipId, int val) {
         assert chipId < chips.length;
-
-        PSG chip = chips[chipId];
-        chip.setChannelMask(val);
+        chips[chipId].setChannelMask(val);
     }
 
     //----

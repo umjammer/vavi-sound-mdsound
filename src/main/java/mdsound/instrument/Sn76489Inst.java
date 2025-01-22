@@ -18,10 +18,7 @@ public class Sn76489Inst extends Instrument.BaseInstrument {
 
     public Sn76489Inst() {
         // 0..Main
-        visVolume = new int[][][] {
-                {{0, 0}},
-                {{0, 0}}
-        };
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
 
     @Override
@@ -42,15 +39,12 @@ public class Sn76489Inst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        Sn76489 chip = chips[chipId];
-        chip.reset();
+        chips[chipId].reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        chips[chipId] = new Sn76489();
-        Sn76489 chip = chips[chipId];
-        return chip.start(samplingRate, clock);
+        return chips[chipId].start(samplingRate, clock);
     }
 
     @Override
@@ -60,29 +54,25 @@ public class Sn76489Inst extends Instrument.BaseInstrument {
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        Sn76489 chip = chips[chipId];
-        chip.write(data);
+        chips[chipId].write(data);
         return 0;
     }
 
     @Override
     public void update(int chipId, int[][] buffer, int length) {
-        Sn76489 chip = chips[chipId];
-        int[][] volumes = chip.update(buffer, length);
+        chips[chipId].update(buffer, length);
 
-        visVolume[chipId][0][0] = volumes[0][0];
-        visVolume[chipId][0][1] = volumes[0][1];
+        visVolume[chipId][0][0] = chips[chipId].getVolume()[0][0];
+        visVolume[chipId][0][1] = chips[chipId].getVolume()[0][1];
     }
 
     @Override
     public void stop(int chipId) {
-        chips[chipId] = null;
     }
 
     /** @param val mask */
     private void setMute(int chipId, int val) {
-        Sn76489 chip = chips[chipId];
-        chip.setMute(val);
+        chips[chipId].setMute(val);
     }
 
     // ----
@@ -103,8 +93,7 @@ public class Sn76489Inst extends Instrument.BaseInstrument {
     }
 
     public synchronized void setPan(int chipId, int data) {
-        Sn76489 chip = chips[chipId];
-        chip.writeGGStereo(data);
+        chips[chipId].writeGGStereo(data);
     }
 
     // ----

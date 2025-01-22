@@ -8,14 +8,11 @@ public class SinWaveInst extends Instrument.BaseInstrument {
 
     public static final int DefaultClockValue = 0;
 
-    private final SinWaveGen[] chips = new SinWaveGen[2];
+    private final SinWaveGen[] chips = {new SinWaveGen(), new SinWaveGen()};
 
     public SinWaveInst() {
         // 0..Main
-        visVolume = new int[][][] {
-                {{0, 0}},
-                {{0, 0}}
-        };
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
 
     @Override
@@ -30,18 +27,15 @@ public class SinWaveInst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        if (chips[chipId] == null) {
-            chips[chipId] = new SinWaveGen();
-        }
+        assert chipId < chips.length;
 //        chips[chipId].render = false;
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        reset(chipId);
+        assert chipId < chips.length;
         chips[chipId].clock = samplingRate;
         chips[chipId].render = true;
-
         return samplingRate; // samplingRate
     }
 
@@ -52,19 +46,19 @@ public class SinWaveInst extends Instrument.BaseInstrument {
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        if (chips[chipId] == null) return 0;
+        assert chipId < chips.length;
         return chips[chipId].write(data);
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        if (chips[chipId] == null) return;
+        assert chipId < chips.length;
         chips[chipId].update(outputs, samples);
     }
 
     @Override
     public void stop(int chipId) {
-        if (chips[chipId] == null) return;
+        assert chipId < chips.length;
         chips[chipId].render = false;
     }
 }

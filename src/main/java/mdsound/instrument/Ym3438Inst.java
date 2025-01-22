@@ -18,15 +18,12 @@ public class Ym3438Inst extends Instrument.BaseInstrument {
     }
 
     public Ym3438Inst() {
-        visVolume = new int[][][] {
-                {{0, 0}},
-                {{0, 0}}
-        };
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
 
     @Override
     public String getName() {
-        return "YM3438";
+        return "YM3438" + type.name();
     }
 
     @Override
@@ -58,17 +55,13 @@ public class Ym3438Inst extends Instrument.BaseInstrument {
         return 0;
     }
 
-    private final int[] gsBuffer = new int[2];
-
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
+        int[] buffer = new int[2];
         for (int i = 0; i < samples; i++) {
-            Ym3438 chip = chips[chipId];
-            chip.update(gsBuffer);
-            //smpl[i] = gsBuffer[0];
-            //smpr[i] = gsBuffer[1];
-            outputs[0][i] = gsBuffer[0];
-            outputs[1][i] = gsBuffer[1];
+            chips[chipId].update(buffer);
+            outputs[0][i] = buffer[0];
+            outputs[1][i] = buffer[1];
         }
 
         visVolume[chipId][0][0] = outputs[0][0];
@@ -82,9 +75,7 @@ public class Ym3438Inst extends Instrument.BaseInstrument {
 
     private void writeInternal(int chipId, int adr, int data) {
         assert chipId < chips.length;
-
-        Ym3438 chip = chips[chipId];
-        chip.write(adr, data);
+        chips[chipId].write(adr, data);
     }
 
     public void setMute(int chipId, int mute) {
@@ -98,7 +89,7 @@ public class Ym3438Inst extends Instrument.BaseInstrument {
     // ----
 
     // TODO 2612
-    public synchronized void setYm2612Mask(int chipId, int ch) {
+    public synchronized void setMask(int chipId, int ch) {
         mask[chipId] |= 1 << ch;
         int mask = this.mask[chipId];
         if ((mask & 0b0010_0000) == 0) mask &= 0b1011_1111;

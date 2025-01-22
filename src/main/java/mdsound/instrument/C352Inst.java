@@ -16,11 +16,8 @@ public class C352Inst extends Instrument.BaseInstrument {
     private final C352[] chips = {new C352(), new C352()};
 
     public C352Inst() {
-        visVolume = new int[][][] {
-                // 0..Main
-                {{0, 0}},
-                {{0, 0}}
-        };
+        // 0..Main
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
 
     @Override
@@ -35,8 +32,7 @@ public class C352Inst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        C352 chip = chips[chipId];
-        chip.reset();
+        chips[chipId].reset();
     }
 
     @Override
@@ -47,27 +43,23 @@ public class C352Inst extends Instrument.BaseInstrument {
         if (Option == null || Option.length < 1) clockDivider = 0;
         else clockDivider = (int) Option[0];
 
-        C352 chip = chips[chipId];
-        return chip.start(clock, clockDivider * 4);
+        return chips[chipId].start(clock, clockDivider * 4);
     }
 
     @Override
     public int read(int chipId, int adr) {
-        C352 chip = chips[chipId];
-        return chip.read(adr);
+        return chips[chipId].read(adr);
     }
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        C352 chip = chips[chipId];
-        chip.write(adr, data);
+        chips[chipId].write(adr, data);
         return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        C352 chip = chips[chipId];
-        chip.update(outputs, samples);
+        chips[chipId].update(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
@@ -75,8 +67,7 @@ public class C352Inst extends Instrument.BaseInstrument {
 
     @Override
     public void stop(int chipId) {
-        C352 chip = chips[chipId];
-        chip.stop();
+        chips[chipId].stop();
     }
 
     public void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
@@ -84,13 +75,11 @@ public class C352Inst extends Instrument.BaseInstrument {
     }
 
     public void setMuteMask(int chipId, int muteMask) {
-        C352 chip = chips[chipId];
-        chip.setMuteMask(muteMask);
+        chips[chipId].setMuteMask(muteMask);
     }
 
     public int getMuteMask(int chipId) {
-        C352 chip = chips[chipId];
-        return chip.getMuteMask();
+        return chips[chipId].getMuteMask();
     }
 
     //----
