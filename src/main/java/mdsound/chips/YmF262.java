@@ -1104,7 +1104,7 @@ public class YmF262 {
             if (this.lfoAmCnt >= (LFO_AM_TAB_ELEMENTS << LFO_SH)) // lfo_am_table is 210 elements long
                 this.lfoAmCnt -= (LFO_AM_TAB_ELEMENTS << LFO_SH);
 
-            tmp = lfoAmTable[this.lfoAmCnt >> LFO_SH];
+            tmp = lfoAmTable[this.lfoAmCnt >>> LFO_SH];
 
             if (this.lfoAmDepth != 0)
                 this.lfoAm = tmp;
