@@ -12,7 +12,7 @@ public class C140Inst extends Instrument.BaseInstrument {
 
     public static final int MAX_CHIPS = 0x02;
 
-    private final C140[] chips = new C140[MAX_CHIPS];
+    private final C140[] chips = {new C140(), new C140()};
 
     private final int[] mask = {0, 0};
 
@@ -49,7 +49,7 @@ public class C140Inst extends Instrument.BaseInstrument {
      */
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        if (chipId >= MAX_CHIPS) return 0;
+        assert chipId < MAX_CHIPS;
 
         int sampleRate = clock;
         if ((Instrument.BaseInstrument.CHIP_SAMPLING_MODE == 0x01 && sampleRate < Instrument.BaseInstrument.CHIP_SAMPLE_RATE) ||
