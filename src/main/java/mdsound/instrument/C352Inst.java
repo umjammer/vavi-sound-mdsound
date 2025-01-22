@@ -13,7 +13,7 @@ public class C352Inst extends Instrument.BaseInstrument {
 
     public static final int MAX_CHIPS = 0x02;
 
-    private final C352[] chips = new C352[MAX_CHIPS];
+    private final C352[] chips = {new C352(), new C352()};
 
     public C352Inst() {
         visVolume = new int[][][] {
@@ -41,12 +41,11 @@ public class C352Inst extends Instrument.BaseInstrument {
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... Option) {
-        byte clockDivider;
-        if (Option == null || Option.length < 1) clockDivider = 0;
-        else clockDivider = (byte) Option[0];
+        assert chipId < MAX_CHIPS;
 
-        if (chipId >= MAX_CHIPS)
-            return 0;
+        int clockDivider;
+        if (Option == null || Option.length < 1) clockDivider = 0;
+        else clockDivider = (int) Option[0];
 
         C352 chip = chips[chipId];
         return chip.start(clock, clockDivider * 4);
@@ -94,10 +93,6 @@ public class C352Inst extends Instrument.BaseInstrument {
         return chip.getMuteMask();
     }
 
-    public static void setOptions(byte flags) {
-        C352.setOptions(flags);
-    }
-
     //----
 
     public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
@@ -108,6 +103,14 @@ public class C352Inst extends Instrument.BaseInstrument {
     public synchronized int[] readFlags(int chipId) {
         C352 chip = chips[chipId];
         return chip.getFlags();
+    }
+
+    /**
+     * used for volume also
+     * @see mdsound.MDSound.Chip.SetVolume
+     */
+    public void setRearMute(int vol, double ignored) {
+        C352.setOptions(vol & 0xff); // TODO ugly
     }
 
     //----
@@ -125,10 +128,5 @@ public class C352Inst extends Instrument.BaseInstrument {
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
         }
         return result;
-    }
-
-    // TODO
-    public void setRearMute(int vol, double ignored) {
-        setOptions((byte) (vol & 0xff));
     }
 }
