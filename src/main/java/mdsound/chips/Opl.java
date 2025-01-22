@@ -699,7 +699,7 @@ public class Opl {
 
                     if ((this.now_addr & 1) != 0) data = this.nowData & 0x0f;
                     else {
-                        this.nowData = this.memory[this.now_addr >> 1];
+                        this.nowData = this.memory[this.now_addr >> 1] & 0xff;
                         data = this.nowData >> 4;
                     }
 
@@ -1676,7 +1676,7 @@ public class Opl {
         if (this.lfoAmCnt >= (LFO_AM_TAB_ELEMENTS << LFO_SH)) // lfo_am_table is 210 elements long
             this.lfoAmCnt -= (LFO_AM_TAB_ELEMENTS << LFO_SH);
 
-        int tmp = lfoAmTable[this.lfoAmCnt >> LFO_SH];
+        int tmp = lfoAmTable[this.lfoAmCnt >>> LFO_SH];
 
         if (this.lfoAmDepth != 0)
             this.lfoAm = tmp;
