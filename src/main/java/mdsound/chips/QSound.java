@@ -104,7 +104,7 @@ public class QSound {
                     }
 
                     int offset = (this.bank | this.address) % sampleRomLength;
-                    int sample = sampleRom[offset] & 0xff;
+                    int sample = sampleRom[offset];
 
                     pOutL[ptr] += ((sample * this.lVol * this.vol) >> 14);
                     pOutR[ptr] += ((sample * this.rVol * this.vol) >> 14);
