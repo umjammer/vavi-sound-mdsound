@@ -536,7 +536,7 @@ if ((CC % INTERVAL) == 0) { logger.log(Level.DEBUG, "%s[%d] D: %+04d, %+04d".for
                 InPosNext = inBase;
                 for (outPos = 0x00; outPos < length; outPos++) {
                     inPos = InPosNext;
-                    InPosNext = inBase + (FIXPNT_FACT * (outPos + 1) * chipSmpRate / samplingRate);
+                    InPosNext = inBase + (int) (((long) FIXPNT_FACT * (outPos + 1) * chipSmpRate) / samplingRate);
 
                     // first frictional Sample
                     smpFrc = getnfriction(inPos);
