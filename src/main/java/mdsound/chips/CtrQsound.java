@@ -13,11 +13,11 @@ import java.util.Arrays;
 public class CtrQsound {
 
     private static class Adpcm {
-        //private int start_addr = 0;
-        //private int end_addr = 0;
-        //private int bank = 0;
-        //private short volume = 0;
-        //private int flag = 0;
+//        private int start_addr = 0;
+//        private int end_addr = 0;
+//        private int bank = 0;
+//        private short volume = 0;
+//        private int flag = 0;
         private short cur_vol = 0;
         private short step_size = 0;
         private int cur_addr = 0;
@@ -27,7 +27,7 @@ public class CtrQsound {
     private static class Fir {
         private int tapCount = 0; // usually 95
         private int delayPos = 0;
-        //private short table_pos = 0;
+//        private short table_pos = 0;
         private final short[] taps = new short[95];
         private final short[] delay_line = new short[95];
 
@@ -54,17 +54,17 @@ public class CtrQsound {
 
     // Delay line
     private static class Delay {
-        //private short delay;
-        //private short volume;
+//        private short delay;
+//        private short volume;
         private short writePos;
         private short readPos;
         private final short[] delayLine = new short[51];
     }
 
     private static class Echo {
-        //private int end_pos;
+//        private int end_pos;
 
-        //private short feedback;
+//        private short feedback;
         private short length;
         private short last_sample;
         private final short[] delayLine = new short[1024];
@@ -221,7 +221,8 @@ public class CtrQsound {
         REFRESH1(0x039),
         REFRESH2(0x04f),
         NORMAL1(0x314),
-        NORMAL2(0x6b2);
+        NORMAL2(0x6b2),
+        UNKNOWN(-1);
         final int v;
 
         State(int v) {
@@ -229,7 +230,7 @@ public class CtrQsound {
         }
 
         static State valueOf(int v) {
-            return Arrays.stream(values()).filter(e -> e.v == v).findFirst().get();
+            return Arrays.stream(values()).filter(e -> e.v == v).findFirst().orElse(UNKNOWN);
         }
     }
 
@@ -279,49 +280,49 @@ public class CtrQsound {
 
         // PCM registers
         for (int i = 0; i < 16; i++) { // PCM voices
-            //register_map[(i << 3) + 0] = (int)this.Voice[(i + 1) % 16].bank; // Bank applies to the next channel
-            //register_map[(i << 3) + 1] = (int)this.Voice[i].addr; // Current sample position and start position.
-            //register_map[(i << 3) + 2] = (int)this.Voice[i].rate; // 4.12 fixed point decimal.
-            //register_map[(i << 3) + 3] = (int)this.Voice[i].phase;
-            //register_map[(i << 3) + 4] = (int)this.Voice[i].loop_len;
-            //register_map[(i << 3) + 5] = (int)this.Voice[i].end_addr;
-            //register_map[(i << 3) + 6] = (int)this.Voice[i].volume;
-            registerMap[(i << 3) + 7] = 0;// null; // unused
-            //register_map[i + 0x80] = (int)this.voice_pan[i];
-            //register_map[i + 0xba] = (int)this.Voice[i].echo;
+//            register_map[(i << 3) + 0] = (int) this.Voice[(i + 1) % 16].bank; // Bank applies to the next channel
+//            register_map[(i << 3) + 1] = (int) this.Voice[i].addr; // Current sample position and start position.
+//            register_map[(i << 3) + 2] = (int) this.Voice[i].rate; // 4.12 fixed point decimal.
+//            register_map[(i << 3) + 3] = (int) this.Voice[i].phase;
+//            register_map[(i << 3) + 4] = (int) this.Voice[i].loop_len;
+//            register_map[(i << 3) + 5] = (int) this.Voice[i].end_addr;
+//            register_map[(i << 3) + 6] = (int) this.Voice[i].volume;
+            registerMap[(i << 3) + 7] = 0; // null; // unused
+//            register_map[i + 0x80] = (int) this.voice_pan[i];
+//            register_map[i + 0xba] = (int) this.Voice[i].echo;
         }
 
         // ADPCM registers
-        //for (i = 0; i < 3; i++) { // ADPCM voices
-        // ADPCM sample rate is fixed to 8khz. (one channel is updated every third sample)
-        //register_map[(i << 2) + 0xca] = (int)this.adpcm[i].start_addr;
-        //register_map[(i << 2) + 0xcb] = (int)this.adpcm[i].end_addr;
-        //register_map[(i << 2) + 0xcc] = (int)this.adpcm[i].bank;
-        //register_map[(i << 2) + 0xcd] = (int)this.adpcm[i].volume;
-        //register_map[i + 0xd6] = (int)this.adpcm[i].flag; // non-zero to start ADPCM playback
-        //register_map[i + 0x90] = (int)this.voice_pan[16 + i];
-        //}
+//        for (i = 0; i < 3; i++) { // ADPCM voices
+//            ADPCM sample rate is fixed to 8 khz. (one channel is updated every third sample)
+//            register_map[(i << 2) + 0xca] = (int) this.adpcm[i].start_addr;
+//            register_map[(i << 2) + 0xcb] = (int) this.adpcm[i].end_addr;
+//            register_map[(i << 2) + 0xcc] = (int) this.adpcm[i].bank;
+//            register_map[(i << 2) + 0xcd] = (int) this.adpcm[i].volume;
+//            register_map[i + 0xd6] = (int) this.adpcm[i].flag; // non-zero to start ADPCM playback
+//            register_map[i + 0x90] = (int) this.voice_pan[16 + i];
+//        }
 
         // QSound registers
-        //register_map[0x93] = (int)this.echo.feedback;
-        //register_map[0xd9] = (int)this.echo.end_pos;
-        //register_map[0xe2] = (int)this.delay_update; // non-zero to update delays
-        //register_map[0xe3] = (int)this.next_state;
-        //for (i = 0; i < 2; i++) { // left, right
-        // Wet
-        //register_map[(i << 1) + 0xda] = (int)this.filter[i].table_pos;
-        //register_map[(i << 1) + 0xde] = (int)this.wet[i].delay;
-        //register_map[(i << 1) + 0xe4] = (int)this.wet[i].volume;
-        // Dry
-        //register_map[(i << 1) + 0xdb] = (int)this.alt_filter[i].table_pos;
-        //register_map[(i << 1) + 0xdf] = (int)this.dry[i].delay;
-        //register_map[(i << 1) + 0xe5] = (int)this.dry[i].volume;
-        //}
+//        register_map[0x93] = (int) this.echo.feedback;
+//        register_map[0xd9] = (int) this.echo.end_pos;
+//        register_map[0xe2] = (int) this.delay_update; // non-zero to update delays
+//        register_map[0xe3] = (int) this.next_state;
+//        for (i = 0; i < 2; i++) { // left, right
+//            Wet
+//            register_map[(i << 1) + 0xda] = (int) this.filter[i].table_pos;
+//            register_map[(i << 1) + 0xde] = (int) this.wet[i].delay;
+//            register_map[(i << 1) + 0xe4] = (int) this.wet[i].volume;
+//            Dry
+//            register_map[(i << 1) + 0xdb] = (int) this.alt_filter[i].table_pos;
+//            register_map[(i << 1) + 0xdf] = (int) this.dry[i].delay;
+//            register_map[(i << 1) + 0xe5] = (int) this.dry[i].volume;
+//        }
     }
 
     private short get_sample(int bank, int address) {
         int rom_addr;
-        byte sample_data;
+        int sample_data;
 
         if (this.romMask == 0) return 0; // no ROM loaded
         if ((bank & 0x8000) == 0) return 0; // ignore attempts to read from DSP program ROM
@@ -329,24 +330,24 @@ public class CtrQsound {
         bank &= 0x7FFF;
         rom_addr = (bank << 16) | (address << 0);
 
-        sample_data = rom_addr < this.romData.length ? this.romData[rom_addr] : (byte) 0;
-        //logger.log(Level.TRACE, "adr:%10x dat:%02x".formatted(rom_addr, sample_data));
+        sample_data = rom_addr < this.romData.length ? this.romData[rom_addr] & 0xff : 0;
+//logger.log(Level.TRACE, "adr:%10x dat:%02x".formatted(rom_addr, sample_data));
 
         return (short) ((sample_data << 8) | (sample_data << 0)); // MAME currently expands the 8 bit ROM data to 16 bits this way.
     }
 
-    //private short[] get_filter_table(, int offset) {
-    // int index;
+//    private short[] get_filter_table(, int offset) {
+//        int index;
 
-    // if (offset >= 0xf2e && offset < 0xfff)
-    //  return qsound_filter_data2[offset - 0xf2e]; // overlapping filter data
+//        if (offset >= 0xf2e && offset < 0xfff)
+//            return qsound_filter_data2[offset - 0xf2e]; // overlapping filter data
 
-    // index = (offset - 0xd53) / 95;
-    // if (index >= 0 && index < 5)
-    //  return qsound_filter_data[index]; // normal tables
+//        index = (offset - 0xd53) / 95;
+//        if (index >= 0 && index < 5)
+//            return qsound_filter_data[index]; // normal tables
 
-    // return null; // no filter found.
-    //}
+//        return null; // no filter found.
+//    }
 
     private static Short getFilterTable(int offset) {
         if (offset >= 0xf2e && offset < 0xfff)
@@ -362,7 +363,7 @@ public class CtrQsound {
     // updates one DSP sample
     private void update_sample() {
         switch (State.valueOf(this.state)) {
-        default:
+        case UNKNOWN:
         case INIT1:
         case INIT2:
             state_init();
@@ -529,12 +530,12 @@ public class CtrQsound {
         //output = (short)((v.volume * get_sample(chips, v.bank, v.addr)) >> 14);
         output = (short) ((registerMap[(voiceNo << 3) + 6]
                 * get_sample(registerMap[(((voiceNo - 1 + 16) % 16) << 3) + 0], registerMap[(voiceNo << 3) + 1])) >> 14);
-        //logger.log(Level.TRACE, "output:%d vadr:%d".formatted(output, register_map[(voiceNo << 3) + 1]));
+//logger.log(Level.TRACE, "output:%d vadr:%d".formatted(output, register_map[(voiceNo << 3) + 1]));
 
-        //if (voiceNo == 2) {
-        // MDSound.debugMsg = "%d:%d:%d:%d".formatted(
-        //  register_map[(voiceNo << 3) + 6], register_map[(voiceNo << 3) + 0], register_map[(voiceNo << 3) + 1], register_map[(voiceNo << 3) + 5]);
-        //}
+//if (voiceNo == 2) {
+// MDSound.debugMsg = "%d:%d:%d:%d".formatted(
+//  register_map[(voiceNo << 3) + 6], register_map[(voiceNo << 3) + 0], register_map[(voiceNo << 3) + 1], register_map[(voiceNo << 3) + 5]);
+//}
 
         //echoOut += (output * v.echo) << 2;
         echoOut[0] += (output * registerMap[voiceNo + 0xba]) << 2;
@@ -553,17 +554,17 @@ public class CtrQsound {
             new_phase -= a; // (register_map[(voiceNo << 3) + 4] << 12);
         }
 
-        //if (voiceNo == 0) {
-        //logger.log(Level.TRACE, "Bf:%d".formatted(new_phase));
-        //}
+//if (voiceNo == 0) {
+// logger.log(Level.TRACE, "Bf:%d".formatted(new_phase));
+//}
 
         new_phase = clamp(new_phase, -0x800_0000, 0x7FF_FFFF);
 
-        //if (voiceNo == 0) {
-        //logger.log(Level.TRACE, "Af:%d".formatted(new_phase));
-        //}
+//if (voiceNo == 0) {
+// logger.log(Level.TRACE, "Af:%d".formatted(new_phase));
+//}
         //v.addr = (int)(new_phase >> 12);
-        registerMap[(voiceNo << 3) + 1] = new_phase >> 12;
+        registerMap[(voiceNo << 3) + 1] = (new_phase >> 12) & 0xffff;
         //v.phase = (int)((new_phase << 4) & 0xffff);
         registerMap[(voiceNo << 3) + 3] = (new_phase << 4) & 0xffff;
 
@@ -608,11 +609,11 @@ public class CtrQsound {
 
             // get top nibble
             //step = (byte)(get_sample(chips, v.bank, v.cur_addr) >> 8);
-            step = (byte) (get_sample(registerMap[(voice_no << 2) + 0xcc], v.cur_addr) >> 8);
+            step = (byte) ((get_sample(registerMap[(voice_no << 2) + 0xcc], v.cur_addr) & 0xff00) >> 8);
         } else {
             // get bottom nibble
             //step = (byte)(get_sample(chips, v.bank, v.cur_addr++) >> 4);
-            step = (byte) (get_sample(registerMap[(voice_no << 2) + 0xcc], v.cur_addr++) >> 4);
+            step = (byte) ((get_sample(registerMap[(voice_no << 2) + 0xcc], v.cur_addr++) & 0xff) >> 4);
         }
 
         // shift with sign extend
