@@ -90,8 +90,8 @@ public class K054539 {
 
     private final double[] gain = new double[8];
     private final byte[][] posRegLatch = new byte[][] {
-            new byte[3], new byte[3], new byte[3], new byte[3],
-            new byte[3], new byte[3], new byte[3], new byte[3]};
+            new byte [3], new byte [3], new byte [3], new byte[3],
+            new byte [3], new byte [3], new byte [3], new byte[3]};
     private int flags;
 
     private final byte[] regs = new byte[0x230];
@@ -101,7 +101,7 @@ public class K054539 {
 
     private int curPtr;
     private int curLimit;
-    private byte[] curZone;
+    private byte [] curZone;
     private int ptrCurZone;
     private byte[] rom;
     private final int ptrRom = 0;
@@ -120,7 +120,7 @@ public class K054539 {
             new Channel()
     };
 
-    private final byte[] muted = new byte[8];
+    private final int[] muted = new int[8];
 
     private int clock;
 
@@ -258,11 +258,11 @@ public class K054539 {
         regBase[offset] = (byte) data;
     }
 
-    public byte write(int offset) {
+    public int write(int offset) {
         switch (offset) {
         case 0x22d:
             if ((this.regs[0x22f] & 0x10) != 0) {
-                byte res = this.curZone[this.ptrCurZone + this.curPtr];
+                int res = this.curZone[this.ptrCurZone + this.curPtr];
                 this.curPtr++;
                 if (this.curPtr == this.curLimit)
                     this.curPtr = 0;
@@ -272,7 +272,7 @@ public class K054539 {
         case 0x22c:
             break;
         default:
-            //logger.log(Level.TRACE, "K054539 read %03x".formatted(offset));
+//logger.log(Level.TRACE, "K054539 read %03x".formatted(offset));
             break;
         }
         return this.regs[offset];
@@ -308,27 +308,7 @@ public class K054539 {
     }
 
     public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData) {
-        if (this.romSize != romSize) {
-            this.rom = new byte[romSize];
-            this.romSize = romSize;
-            for (byte i = 0; i < romSize; i++) {
-                this.rom[i] = (byte) 0xff;
-            }
-
-            this.romMask = 0xffff_ffff;
-            for (byte i = 0; i < 32; i++) {
-                if ((1 << i) >= this.romSize) {
-                    this.romMask = (1 << i) - 1;
-                    break;
-                }
-            }
-        }
-        if (dataStart > romSize)
-            return;
-        if (dataStart + dataLength > romSize)
-            dataLength = romSize - dataStart;
-
-        System.arraycopy(romData, 0, this.rom, dataStart, dataLength);
+        writeRom(romSize, dataStart, dataLength, romData, 0);
     }
 
     public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData, int startAdr) {
@@ -340,7 +320,7 @@ public class K054539 {
             }
 
             this.romMask = 0xffff_ffff;
-            for (byte i = 0; i < 32; i++) {
+            for (int i = 0; i < 32; i++) {
                 if ((1 << i) >= this.romSize) {
                     this.romMask = (1 << i) - 1;
                     break;
@@ -372,7 +352,7 @@ public class K054539 {
             return;
 
         for (int i = 0; i != samples; i++) {
-            // リバーブ
+            // Reverb
             double lVal, rVal;
             if ((this.flags & DISABLE_REVERB) == 0) {
                 //lVal = rVal = rbase[this.reverb_pos];
@@ -459,10 +439,10 @@ public class K054539 {
                             curPos += pDelta;
 
                             curPval = curVal;
-                            curVal = (this.rom[curPos] & 0xff) << 8;
+                            curVal = (short) ((this.rom[curPos] & 0xff) << 8);
                             if ((this.rom[curPos] & 0xff) == 0x80 && (this.regs[regP2 + 1] & 1) != 0) {
                                 curPos = ((this.regs[regP1 + 0x08] & 0xff) | ((this.regs[regP1 + 0x09] & 0xff) << 8) | ((this.regs[regP1 + 0x0a] & 0xff) << 16)) & this.romMask;
-                                curVal = (this.rom[curPos] & 0xff) << 8;
+                                curVal = (short) ((this.rom[curPos] & 0xff) << 8);
                             }
                             if ((this.rom[curPos] & 0xff) == 0x80) {
                                 this.keyOff(ch);
@@ -484,12 +464,12 @@ public class K054539 {
                             curPos += pDelta;
 
                             curPval = curVal;
-                            curVal = (this.rom[curPos] & 0xff) | (this.rom[curPos + 1] & 0xff) << 8;
-                            if (curVal == ((0x8000 - 0x10000) & 0xffff) && (this.regs[regP2 + 1] & 1) != 0) {
+                            curVal = (short) ((this.rom[curPos] & 0xff) | (this.rom[curPos + 1] & 0xff) << 8);
+                            if (curVal == (short) ((0x8000 - 0x10000) & 0xffff) && (this.regs[regP2 + 1] & 1) != 0) {
                                 curPos = ((this.regs[regP1 + 0x08] & 0xff) | ((this.regs[regP1 + 0x09] & 0xff) << 8) | (this.regs[regP1 + 0x0a] << 16)) & this.romMask;
-                                curVal = (this.rom[curPos] & 0xff) | (this.rom[curPos + 1] & 0xff) << 8;
+                                curVal = (short) ((this.rom[curPos] & 0xff) | (this.rom[curPos + 1] & 0xff) << 8);
                             }
-                            if (curVal == ((0x8000 - 0x10000) & 0xffff)) {
+                            if (curVal == (short) ((0x8000 - 0x10000) & 0xffff)) {
                                 this.keyOff(ch);
                                 curVal = 0;
                                 break;
@@ -513,10 +493,10 @@ public class K054539 {
                             curPos += pDelta;
 
                             curPval = curVal;
-                            curVal = this.rom[curPos >> 1];
+                            curVal = this.rom[curPos >> 1] & 0xff;
                             if ((curVal & 0xff) == 0x88 && (this.regs[regP2 + 1] & 1) != 0) {
                                 curPos = (((this.regs[regP1 + 0x08] & 0xff) | ((this.regs[regP1 + 0x09] & 0xff) << 8) | ((this.regs[regP1 + 0x0a] & 0xff) << 16)) & this.romMask) << 1;
-                                curVal = this.rom[curPos >> 1];
+                                curVal = this.rom[curPos >> 1] & 0xff;
                             }
                             if ((curVal & 0xff) == 0x88) {
                                 this.keyOff(ch);
