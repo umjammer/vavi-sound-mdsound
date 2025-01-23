@@ -15,6 +15,10 @@ public class PokeyInst extends Instrument.BaseInstrument {
 
     private final Pokey[] chips = {new Pokey(), new Pokey()};
 
+    public PokeyInst() {
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
+    }
+
     @Override
     public String getName() {
         return "POKEY";
