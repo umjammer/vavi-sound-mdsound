@@ -4,6 +4,7 @@ package mdsound.instrument;
 import mdsound.Instrument;
 
 
+// not implemented yet? but there is chip implementation. K005289
 public class K005289Inst extends Instrument.BaseInstrument {
 
     @Override

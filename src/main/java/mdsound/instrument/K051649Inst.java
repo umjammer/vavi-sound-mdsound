@@ -26,7 +26,7 @@ public class K051649Inst extends Instrument.BaseInstrument {
     @Override
     public String getShortName() {
         return "K051";
-    }
+    } // TODO SCC1
 
     @Override
     public void reset(int chipId) {

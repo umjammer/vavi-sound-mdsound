@@ -33,6 +33,9 @@ package mdsound.chips;
  If anybody has some information about this hardware, please send it to me
  to mahorna@teleline.es or 432937@cepsz.unizar.es.
  http://teleline.terra.es/personal/mahorna
+ *
+ * @author Paul Leaman
+ * @author Angel Horna
  */
 public class QSound {
 
@@ -179,7 +182,7 @@ public class QSound {
 // logger.log(Level.TRACE, "QSound Ch %u: KeyOn = %04x".formatted(ch, data));
             // key on (does the value matter? it always writes 0x8000)
             //this.channel[ch].enabled = 1;
-            this.channel[ch].enabled = (byte) ((data & 0x8000) >> 15);
+            this.channel[ch].enabled = (data & 0x8000) >> 15;
             this.channel[ch].stepPtr = 0;
             break;
         case 4: // loop address
@@ -258,8 +261,8 @@ public class QSound {
             break;
 
         default:
-            //logger.log(Level.TRACE, "%s: unexpected QSound write to offset %d == %02X".formatted(device.machine().describe_context(), offset, data));
-            //logger.log(Level.TRACE, "QSound: unexpected QSound write to offset %d == %02X".formatted(offset, data));
+//logger.log(Level.TRACE, "%s: unexpected QSound write to offset %d == %02X".formatted(device.machine().describe_context(), offset, data));
+//logger.log(Level.TRACE, "QSound: unexpected QSound write to offset %d == %02X".formatted(offset, data));
             break;
         }
     }
@@ -270,12 +273,13 @@ public class QSound {
     }
 
     public void update(int[][] outputs, int samples) {
+        if (this.sampleRomLength == 0)
+            return;
+
         for (int i = 0; i < samples; i++) {
             outputs[0][i] = 0x00;
             outputs[1][i] = 0x00;
         }
-        if (this.sampleRomLength == 0)
-            return;
 
         for (int i = 0; i < CHANNELS; i++) {
             this.channel[i].update(outputs, samples, sampleRom, sampleRomLength);
@@ -283,18 +287,7 @@ public class QSound {
     }
 
     public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData) {
-        if (this.sampleRomLength != romSize) {
-            this.sampleRom = new byte[romSize];
-            this.sampleRomLength = romSize;
-            for (int i = 0; i < romSize; i++) this.sampleRom[i] = (byte) 0xff;
-        }
-        if (dataStart > romSize)
-            return;
-        if (dataStart + dataLength > romSize)
-            dataLength = romSize - dataStart;
-
-        if (dataLength >= 0)
-            System.arraycopy(romData, 0, this.sampleRom, 0 + dataStart, dataLength);
+        writeRom(romSize, dataStart, dataLength, romData, 0);
     }
 
     public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddress) {
@@ -308,8 +301,7 @@ public class QSound {
         if (dataStart + dataLength > romSize)
             dataLength = romSize - dataStart;
 
-        if (dataLength >= 0)
-            System.arraycopy(romData, 0 + srcStartAddress, this.sampleRom, 0 + dataStart, dataLength);
+        System.arraycopy(romData, 0 + srcStartAddress, this.sampleRom, 0 + dataStart, dataLength);
     }
 
     public void setMuteMask(int muteMask) {

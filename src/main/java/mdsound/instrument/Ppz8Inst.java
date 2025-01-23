@@ -17,12 +17,12 @@ public class Ppz8Inst extends Instrument.BaseInstrument {
 
     @Override
     public String getName() {
-        return "Ppz8";
+        return "PPZ8";
     }
 
     @Override
     public String getShortName() {
-        return "Ppz8";
+        return "PPZ8";
     }
 
     @Override

@@ -6,18 +6,18 @@ import mdsound.Instrument;
 import mdsound.chips.PPS;
 
 
-public class PpsDrvInst extends Instrument.BaseInstrument {
+public class PpsInst extends Instrument.BaseInstrument {
 
     private final PPS[] chips = {new PPS(), new PPS()};
 
     @Override
     public String getName() {
-        return "PpsDrvInst";
+        return "PPS";
     }
 
     @Override
     public String getShortName() {
-        return "PpsDrvInst";
+        return "PPS";
     }
 
     @Override

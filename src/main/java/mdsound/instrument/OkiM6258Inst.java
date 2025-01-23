@@ -15,7 +15,7 @@ public class OkiM6258Inst extends Instrument.BaseInstrument {
 
     public static final int MAX_CHIPS = 0x02;
 
-    private final OkiM6258[] chips = new OkiM6258[MAX_CHIPS];
+    private final OkiM6258[] chips = {new OkiM6258(), new OkiM6258()};
 
     public OkiM6258Inst() {
         // 0..Main

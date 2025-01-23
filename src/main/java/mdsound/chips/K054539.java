@@ -4,49 +4,53 @@ import java.util.Arrays;
 
 
 /**
- Konami 054539 (TOP) PCM Sound Chip
-
- A lot of information comes from Amuse.
- Big thanks to them.
-
-   Registers:
-   00..ff: 20 bytes/channel, 8 channels
-     00..02: pitch (lsb, mid, msb)
-         03: volume (0=max, 0x40=-36dB)
-         04: Reverb volume (idem)
-     05: pan (1-f right, 10 middle, 11-1f left)
-     06..07: Reverb delay (0=max, current computation non-trusted)
-     08..0a: loop (lsb, mid, msb)
-     0c..0e: start (lsb, mid, msb) (and current position ?)
-
-   100.1ff: effects?
-     13f: pan of the analog input (1-1f)
-
-   200..20f: 2 bytes/channel, 8 channels
-     00: type (b2-3), reverse (b5)
-     01: loop (b0)
-
-   214: Key on (b0-7 = channel 0-7)
-   215: Key off          ""
-   225: ?
-   227: Timer frequency
-   228: ?
-   229: ?
-   22a: ?
-   22b: ?
-   22c: Channel active? (b0-7 = channel 0-7)
-   22d: data read/write port
-   22e: ROM/RAM select (00..7f == ROM banks, 80 = Reverb RAM)
-   22f: Global control:
-        .......x - Enable PCM
-        ......x. - Timer related?
-        ...x.... - Enable ROM/RAM readback from 0x22d
-        ..x..... - Timer output enable?
-        x....... - Disable register RAM updates
-
-    The chips has an optional 0x8000 byte Reverb buffer.
-    The Reverb delay is actually an offset in this buffer.
-*/
+ * Konami 054539 (TOP) PCM Sound Chip
+ * <p>
+ * A lot of information comes from Amuse.
+ * Big thanks to them.
+ *
+ * <pre>
+ *   Registers:
+ *   00..ff: 20 bytes/channel, 8 channels
+ *     00..02: pitch (lsb, mid, msb)
+ *         03: volume (0=max, 0x40=-36dB)
+ *         04: Reverb volume (idem)
+ *     05: pan (1-f right, 10 middle, 11-1f left)
+ *     06..07: Reverb delay (0=max, current computation non-trusted)
+ *     08..0a: loop (lsb, mid, msb)
+ *     0c..0e: start (lsb, mid, msb) (and current position ?)
+ *
+ *   100.1ff: effects?
+ *     13f: pan of the analog input (1-1f)
+ *
+ *   200..20f: 2 bytes/channel, 8 channels
+ *     00: type (b2-3), reverse (b5)
+ *     01: loop (b0)
+ *
+ *   214: Key on (b0-7 = channel 0-7)
+ *   215: Key off          ""
+ *   225: ?
+ *   227: Timer frequency
+ *   228: ?
+ *   229: ?
+ *   22a: ?
+ *   22b: ?
+ *   22c: Channel active? (b0-7 = channel 0-7)
+ *   22d: data read/write port
+ *   22e: ROM/RAM select (00..7f == ROM banks, 80 = Reverb RAM)
+ *   22f: Global control:
+ *        .......x - Enable PCM
+ *        ......x. - Timer related?
+ *        ...x.... - Enable ROM/RAM readback from 0x22d
+ *        ..x..... - Timer output enable?
+ *        x....... - Disable register RAM updates
+ *
+ *    The chips has an optional 0x8000 byte Reverb buffer.
+ *    The Reverb delay is actually an offset in this buffer.
+ * </pre>
+ *
+ * @author Aaron Giles (MAME)
+ */
 public class K054539 {
 
     private static final int RESET_FLAGS = 0;
@@ -65,16 +69,15 @@ public class K054539 {
     private static final double[] panTab = new double[0xf];
 
     static {
-        /*
-            I've tried various equations on volume control but none worked consistently.
-            The upper four channels in most MW/GX games simply need a significant boost
-            to Sound right. For example, the bass and smash Sound volumes in Violent Storm
-            have roughly the same values and the voices in Tokimeki Puzzledama are given
-            values smaller than those of the hihats. Needless to say the two K054539 chips
-            in Mystic Warriors are completely out of balance. Rather than forcing a
-            "one size fits all" function to the voltab the current invert exponential
-            appraoch seems most appropriate.
-        */
+        // I've tried various equations on volume control but none worked consistently.
+        // The upper four channels in most MW/GX games simply need a significant boost
+        // to Sound right. For example, the bass and smash Sound volumes in Violent Storm
+        // have roughly the same values and the voices in Tokimeki Puzzledama are given
+        // values smaller than those of the hihats. Needless to say the two K054539 chips
+        // in Mystic Warriors are completely out of balance. Rather than forcing a
+        // "one size fits all" function to the voltab the current invert exponential
+        // appraoch seems most appropriate.
+
         // Factor the 1/4 for the number of channels in the volume (1/8 is too harsh, 1/2 gives clipping)
         // vol=0 . no attenuation, vol=0x40 . -36dB
         for (int i = 0; i < 256; i++)
@@ -89,7 +92,7 @@ public class K054539 {
     }
 
     private final double[] gain = new double[8];
-    private final byte[][] posRegLatch = new byte[][] {
+    private final byte[][] posRegLatch = {
             new byte [3], new byte [3], new byte [3], new byte[3],
             new byte [3], new byte [3], new byte [3], new byte[3]};
     private int flags;

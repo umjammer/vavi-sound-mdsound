@@ -74,7 +74,7 @@ public class Rf5C68Inst extends Instrument.BaseInstrument {
     //----
 
     public synchronized void writePcm(int chipId, int ramStartAdr, int ramDataLength, byte[] srcData, int srcStartAdr) {
-        chips[chipId].writeRam2(ramStartAdr, ramDataLength, srcData, srcStartAdr);
+        chips[chipId].writeRam(ramStartAdr, ramDataLength, srcData, srcStartAdr);
     }
 
     public synchronized void writeMemory(int chipId, int adr, int data) {

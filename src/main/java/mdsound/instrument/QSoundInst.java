@@ -29,7 +29,7 @@ public class QSoundInst extends Instrument.BaseInstrument {
 
     @Override
     public String getName() {
-        return "QSoundInst";
+        return "QSound";
     }
 
     @Override
