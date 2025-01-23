@@ -571,7 +571,7 @@ Debug.printf("version is after 1.50, %04x", version);
         if (ByteUtil.readLeInt(vgmBuf, 0x60) != 0 && 0x60 < vgmDataOffset - 3) {
             chip = new MDSound.Chip();
             chip.id = 0;
-            YmF278bInst ymf278b = Instrument.getInstrument(YmF278bInst.class);
+            YmF278BInst ymf278b = Instrument.getInstrument(YmF278BInst.class);
             chip.instrument = ymf278b;
             chip.samplingRate = SamplingRate;
             chip.clock = ByteUtil.readLeInt(vgmBuf, 0x60) & 0x7fff_ffff;
@@ -595,7 +595,7 @@ Debug.printf("version is after 1.50, %04x", version);
         if (ByteUtil.readLeInt(vgmBuf, 0x68) != 0 && 0x68 < vgmDataOffset - 3) {
             chip = new MDSound.Chip();
             chip.id = 0;
-            YmZ280bInst ymz280b = Instrument.getInstrument(YmZ280bInst.class);
+            YmZ280BInst ymz280b = Instrument.getInstrument(YmZ280BInst.class);
             chip.instrument = ymz280b;
             chip.samplingRate = SamplingRate;
             chip.clock = ByteUtil.readLeInt(vgmBuf, 0x68) & 0x7fff_ffff;
@@ -635,7 +635,7 @@ Debug.printf("version is after 1.50, %04x", version);
             if (ByteUtil.readLeInt(vgmBuf, 0x84) != 0 && 0x84 < vgmDataOffset - 3) {
                 chip = new MDSound.Chip();
                 chip.id = 0;
-                IntFNesInst nes_intf = Instrument.getInstrument(IntFNesInst.class);
+                NesInst nes_intf = Instrument.getInstrument(NesInst.class);
                 chip.instrument = nes_intf;
                 chip.samplingRate = SamplingRate;
                 chip.clock = ByteUtil.readLeInt(vgmBuf, 0x84);
@@ -665,7 +665,7 @@ Debug.printf("version is after 1.50, %04x", version);
                 chip.clock = ByteUtil.readLeInt(vgmBuf, 0x90) & 0xbfff_ffff;
                 chip.volume = 0;
                 chip.option = new Object[] {vgmBuf[0x94] & 0xff};
-                okim6258.okim6258_set_srchg_cb((byte) 0, Program::changeChipSampleRate, chip);
+                okim6258.setCallback((byte) 0, Program::changeChipSampleRate, chip);
                 lstChip.add(chip);
             }
 
@@ -678,7 +678,7 @@ Debug.printf("version is after 1.50, %04x", version);
                 chip.clock = ByteUtil.readLeInt(vgmBuf, 0x98) & 0xbfff_ffff;
                 chip.volume = 0;
                 chip.option = null;
-                okim6295.okim6295_set_srchg_cb((byte) 0, Program::changeChipSampleRate, chip);
+                okim6295.setCallback((byte) 0, Program::changeChipSampleRate, chip);
                 lstChip.add(chip);
             }
 
@@ -763,7 +763,7 @@ Debug.printf("version is after 1.50, %04x", version);
                     if (ByteUtil.readLeInt(vgmBuf, 0xc0) != 0 && 0xc0 < vgmDataOffset - 3) {
                         chip = new MDSound.Chip();
                         chip.id = 0;
-                        WsAudioInst wswan = Instrument.getInstrument(WsAudioInst.class);
+                        WSwanInst wswan = Instrument.getInstrument(WSwanInst.class);
                         chip.instrument = wswan;
                         chip.samplingRate = SamplingRate;
                         chip.clock = ByteUtil.readLeInt(vgmBuf, 0xc0);
@@ -1144,7 +1144,7 @@ Debug.println("eof: vgmAdr: " + vgmAdr + ", vgmBuf.length: " + vgmBuf.length + "
                     break;
 
                 case 0x8f:
-                    mds.writeQSoundPCMData((byte) 0, romSize, startAddress, bLen - 8, vgmBuf, vgmAdr + 15);
+                    mds.inst(QSoundInst.class).writePcm((byte) 0, romSize, startAddress, bLen - 8, vgmBuf, vgmAdr + 15);
                     break;
 
                 case 0x92:
@@ -1327,14 +1327,14 @@ Debug.println("eof: vgmAdr: " + vgmAdr + ", vgmBuf.length: " + vgmBuf.length + "
             rAdr = vgmBuf[vgmAdr + 1] & 0xff;
             rDat = vgmBuf[vgmAdr + 2] & 0xff;
             vgmAdr += 3;
-            mds.write(WsAudioInst.class, 0, 0, rAdr, rDat);
+            mds.write(WSwanInst.class, 0, 0, rAdr, rDat);
 
             break;
         case 0xc6: // WSwan write memory
             int wsOfs = (vgmBuf[vgmAdr + 1] & 0xff) * 0x100 + (vgmBuf[vgmAdr + 2] & 0xff);
             rDat = vgmBuf[vgmAdr + 3] & 0xff;
             vgmAdr += 4;
-            mds.writeWsAudioMem(0, wsOfs, rDat & 0xff);
+            mds.inst(WSwanInst.class).writeMemory(0, wsOfs, rDat & 0xff);
 
             break;
         case 0xbf: // GA20

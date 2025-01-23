@@ -1,4 +1,3 @@
-
 package mdsound.np.chip;
 
 public class DeviceInfo {

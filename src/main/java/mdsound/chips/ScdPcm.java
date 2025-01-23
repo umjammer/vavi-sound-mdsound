@@ -9,7 +9,7 @@ import mdsound.MDSound;
  * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
  * @version 0.00 2022-07-08 nsano initial version <br>
  */
-public class PcmChip {
+public class ScdPcm {
 
     private static final int STEP_SHIFT = 11;
 

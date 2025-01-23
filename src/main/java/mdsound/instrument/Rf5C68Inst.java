@@ -5,28 +5,27 @@ import java.util.Map;
 
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
-import mdsound.chips.Pokey;
+import mdsound.chips.Rf5c68;
 
 
-public class PokeyInst extends Instrument.BaseInstrument {
+public class Rf5C68Inst extends Instrument.BaseInstrument {
 
-    public static final int DefaultClockValue = 1789772;
     public static final int MAX_CHIPS = 0x02;
 
-    private final Pokey[] chips = {new Pokey(), new Pokey()};
-
-    public PokeyInst() {
-        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
-    }
+    private final Rf5c68[] chips = {new Rf5c68(), new Rf5c68()};
 
     @Override
     public String getName() {
-        return "POKEY";
+        return "RF5C68";
     }
 
     @Override
     public String getShortName() {
-        return "POKEY";
+        return "RF68";
+    }
+
+    public Rf5C68Inst() {
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
 
     @Override
@@ -42,7 +41,7 @@ public class PokeyInst extends Instrument.BaseInstrument {
 
     @Override
     public int read(int chipId, int adr) {
-        return chips[chipId].read(adr);
+        return chips[chipId].readMemory(adr);
     }
 
     @Override
@@ -54,21 +53,51 @@ public class PokeyInst extends Instrument.BaseInstrument {
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
         chips[chipId].update(outputs, samples);
+
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
     }
 
     @Override
     public void stop(int chipId) {
+        chips[chipId].stop();
     }
 
-    public void setMuteMask(int chipId, int muteMask) {
+    public void writeRam(int chipId, int dataStart, int dataLength, byte[] ramData) {
+        chips[chipId].writeRam(dataStart, dataLength, ramData);
+    }
+
+    private void setMuteMask(int chipId, int muteMask) {
         chips[chipId].setMuteMask(muteMask);
+    }
+
+    //----
+
+    public synchronized void writePcm(int chipId, int ramStartAdr, int ramDataLength, byte[] srcData, int srcStartAdr) {
+        chips[chipId].writeRam(ramStartAdr, ramDataLength, srcData, srcStartAdr);
+    }
+
+    public synchronized void writeMemory(int chipId, int adr, int data) {
+        chips[chipId].writeMemory(adr, data);
+    }
+
+    public synchronized Rf5c68 getChip(int chipId) {
+        return chips[chipId];
+    }
+
+    public synchronized void setMask(int chipId, int ch) {
+        setMuteMask(chipId, 1);
+    }
+
+    public synchronized void resetMask(int chipId, int ch) {
+        setMuteMask(chipId, 0);
     }
 
     //----
 
     @Override
     public Tuple<Integer, Double> getRegulationVolume() {
-        return new Tuple<>(0x100, 1d);
+        return new Tuple<>(0xB0, 1d);
     }
 
     @Override
@@ -77,9 +106,9 @@ public class PokeyInst extends Instrument.BaseInstrument {
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
-            case "NAME" -> result.put(getName(), "POKEY");
-            case "FAMILY" -> result.put(getName(), "Atari custom");
-            case "VERSION" -> result.put(getName(), "4.51");
+            case "NAME" -> result.put(getName(), "RF5C68");
+            case "FAMILY" -> result.put(getName(), "Ricoh PCM");
+            case "VERSION" -> result.put(getName(), "1.0");
             case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
         }
         return result;

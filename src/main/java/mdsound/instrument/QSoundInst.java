@@ -10,56 +10,26 @@ import mdsound.chips.QSound;
 
 public class QSoundInst extends Instrument.BaseInstrument {
 
-    @Override
-    public void reset(int chipId) {
-        QSound chip = qSoundData[chipId];
-        chip.reset();
+    public static final int DefaultClockValue = QSound.CLOCK;
+    public static final int MAX_CHIPS = 0x02;
 
-        visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
-        };
+    private final QSound[] chips = {new QSound(), new QSound()};
+
+    private final int[] mask = {0, 0};
+
+    public QSoundInst() {
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
 
     @Override
-    public int start(int chipId, int samplingRate) {
-        if (chipId >= MAX_CHIPS)
-            return 0;
-
-        QSound chip = qSoundData[chipId];
-        return chip.start(QSound.CLOCK);
+    public void init() {
+        mask[0] = 0;
+        mask[1] = 0;
     }
-
-    @Override
-    public int start(int chipId, int samplingRate, int clock, Object... option) {
-        if (chipId >= MAX_CHIPS)
-            return 0;
-
-        QSound chip = qSoundData[chipId];
-        return chip.start(clock);
-    }
-
-    @Override
-    public void stop(int chipId) {
-        QSound chip = qSoundData[chipId];
-        chip.stop();
-    }
-
-    @Override
-    public void update(int chipId, int[][] outputs, int samples) {
-        QSound chip = qSoundData[chipId];
-        chip.update(outputs, samples);
-
-        visVolume[chipId][0][0] = outputs[0][0];
-        visVolume[chipId][0][1] = outputs[1][0];
-    }
-
-    private static final int MAX_CHIPS = 0x02;
-    private final QSound[] qSoundData = new QSound[] {new QSound(), new QSound()};
 
     @Override
     public String getName() {
-        return "QSoundInst";
+        return "QSound";
     }
 
     @Override
@@ -67,49 +37,68 @@ public class QSoundInst extends Instrument.BaseInstrument {
         return "QSND";
     }
 
-    public void qsound_w(int chipId, int offset, int data) {
-        QSound chip = qSoundData[chipId];
-        chip.write(offset, data);
+    @Override
+    public void reset(int chipId) {
+        chips[chipId].reset();
     }
 
-    public int qsound_r(int chipId, int offset) {
-        QSound chip = qSoundData[chipId];
-        return chip.read(offset);
+    @Override
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        assert chipId < MAX_CHIPS;
+        return chips[chipId].start(clock);
     }
 
-    public void qsound_write_rom(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
-        QSound info = qSoundData[chipId];
-        info.writeRom(romSize, dataStart, dataLength, romData);
-    }
-
-    public void qsound_write_rom(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddress) {
-        QSound info = qSoundData[chipId];
-        info.writeRom(romSize, dataStart, dataLength, romData, srcStartAddress);
-    }
-
-    public void qsound_set_mute_mask(int chipId, int muteMask) {
-        QSound info = qSoundData[chipId];
-        info.setMuteMask(muteMask);
+    @Override
+    public int read(int chipId, int adr) {
+        return chips[chipId].read(adr);
     }
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        qsound_w(chipId, adr, data);
+        chips[chipId].write(adr, data);
         return 0;
     }
 
-//    /**
-//     * Generic get_info
-//     */
-//    DEVICE_GET_INFO( QSound ) {
-//            case DEVINFO_STR_NAME:       strcpy(info.s, "Q-Sound");      break;
-//            case DEVINFO_STR_FAMILY:     strcpy(info.s, "Capcom custom");    break;
-//            case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;
-//            case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
-//        }
-//    }
+    @Override
+    public void update(int chipId, int[][] outputs, int samples) {
+        chips[chipId].update(outputs, samples);
+
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
+    }
+
+    @Override
+    public void stop(int chipId) {
+        chips[chipId].stop();
+    }
+
+    public void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
+        writePcm(chipId, romSize, dataStart, dataLength, romData, 0);
+    }
+
+    private void setMuteMask(int chipId, int muteMask) {
+        chips[chipId].setMuteMask(muteMask);
+    }
 
     //----
+
+    public synchronized void setMask(int chipId, int ch) {
+        ch = (1 << ch);
+        mask[chipId] |= ch;
+        setMuteMask(chipId, mask[chipId]);
+    }
+
+    public synchronized void resetMask(int chipId, int ch) {
+        ch = (1 << ch);
+        mask[chipId] &= ~(int) ch;
+        setMuteMask(chipId, mask[chipId]);
+    }
+
+    public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
+        chips[chipId].writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
+    }
+
+    // ----
 
     @Override
     public Tuple<Integer, Double> getRegulationVolume() {
@@ -122,6 +111,10 @@ public class QSoundInst extends Instrument.BaseInstrument {
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+            case "NAME" -> result.put(getName(), "Q-Sound");
+            case "FAMILY" -> result.put(getName(), "Capcom custom");
+            case "VERSION" -> result.put(getName(), "1.0");
+            case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
         }
         return result;
     }

@@ -18,15 +18,15 @@ public class NpNesDmc {
 
     // Master Clock: 21477272 (NTSC)
     // APU Clock = Master Clock / 12
-    private static final double DEFAULT_CLOCK = 1789772.0;
-    private static final int DEFAULT_CLK_PAL = 1662607;
-    private static final int DEFAULT_RATE = 44100;
+    public static final double DEFAULT_CLOCK = 1789772.0;
+    public static final int DEFAULT_CLK_PAL = 1662607;
+    public static final int DEFAULT_RATE = 44100;
 
     /**
      * Bottom Half of APU
      */
     public enum OPT {
-        ENABLE_4011 /*= 0*/,
+        ENABLE_4011 /* = 0 */,
         ENABLE_PNOISE,
         UNMUTE_ON_RESET,
         DPCM_ANTI_CLICK,
@@ -38,138 +38,131 @@ public class NpNesDmc {
         END
     }
 
-    public Counter counter_ = new Counter();
+    private final Counter counter_ = new Counter();
 
     private final Random rnd = new Random();
 
-    public int[][][][] tndTable; //[2][16][16][128];
+    private final int[][][][] tndTable; // [2][16][16][128];
 
-    public int[] option = new int[10];// OPT_END];
-    public int mask;
-    public int[][] sm = new int[][] {new int[3], new int[3]};
-    public byte[] reg = new byte[0x20];
-    public int lenReg;
-    public int adrReg;
-    public Device orgMemory;
-    public byte[] memory;
-    public int ptrMemory;
-    public int[] out = new int[3];
-    public int daddress;
-    public int dLength;
-    public int[] data = new int[1];
-    public boolean empty;
-    public short damp;
-    public int dacLsb;
-    public boolean dmcPop;
-    public int dmcPopOffset;
-    public int dmcPopFollow;
-    public double clock;
-    public int rate;
-    public int pal;
-    public int mode;
-    public boolean irq;
+    private final int[] option = new int[10]; // OPT_END];
+    private int mask;
+    private int[][] sm = {new int[3], new int[3]};
+    public final int[] reg = new int[0x20];
+    private int lenReg;
+    private int adrReg;
+    private Device orgMemory;
+    private byte[] memory;
+    private int ptrMemory;
+    private final int[] out = new int[3];
+    private int daddress;
+    private int dLength;
+    private final int[] data = new int[1];
+    private boolean empty;
+    private short damp;
+    private int dacLsb;
+    private boolean dmcPop;
+    private int dmcPopOffset;
+    private int dmcPopFollow;
+    private double clock;
+    private int rate;
+    private int pal;
+    private int mode;
+    private boolean irq;
 
-    // frequency dividers
-    public int[] counter = new int[3];
-    // triangle phase
-    public int tPhase;
-    // noise frequency
-    public int nFreq;
-    // DPCM frequency
-    public int dFreq;
+    /** frequency dividers */
+    private final int[] counter = new int[3];
+    /** triangle phase */
+    private int tPhase;
+    /** noise frequency */
+    private int nFreq;
+    /** DPCM frequency */
+    private int dFreq;
 
-    public int triFreq;
-    public int linearCounter;
-    public int linearCounterReload;
-    public boolean linearCounterHalt;
-    public boolean linearCounterControl;
+    private int triFreq;
+    private int linearCounter;
+    private int linearCounterReload;
+    private boolean linearCounterHalt;
+    private boolean linearCounterControl;
 
-    public int noiseVolume;
-    public int noise, noiseTap;
+    private int noiseVolume;
+    private int noise, noiseTap;
 
     // noise envelope
-    public boolean envelopeLoop;
-    public boolean envelopeDisable;
-    public boolean envelopeWrite;
-    public int envelopeDivPeriod;
-    public int envelopeDiv;
-    public int envelopeCounter;
+    private boolean envelopeLoop;
+    private boolean envelopeDisable;
+    private boolean envelopeWrite;
+    private int envelopeDivPeriod;
+    private int envelopeDiv;
+    private int envelopeCounter;
 
-    public boolean[] enable = new boolean[2];
+    private final boolean[] enable = new boolean[2];
     // 0=tri, 1=noise
-    public int[] lengthCounter = new int[2];
+    private final int[] lengthCounter = new int[2];
 
     // frame sequencer
 
     // apu is clocked by DMC's frame sequencer
-    public NpNesApu apu;
+    private NpNesApu apu;
     // current cycle count
-    public int frameSequenceCount;
+    private int frameSequenceCount;
     // CPU cycles per FrameSequence
-    public int frameSequenceLength;
+    private int frameSequenceLength;
     // current step of frame sequence
-    public int frameSequenceStep;
+    private int frameSequenceStep;
     // 4/5 steps per frame
-    public int frameSequenceSteps;
-    public boolean frameIrq;
-    public boolean frameIrqEnable;
+    private int frameSequenceSteps;
+    private boolean frameIrq;
+    private boolean frameIrqEnable;
 
-    //public NES_CPU cpu; // IRQ needs CPU access
+//    /** IRQ needs CPU access */
+//    public NES_CPU cpu;
 
-    public Counter tickCount = new Counter();
-    public int tickLast;
+    private final Counter tickCount = new Counter();
+    private int tickLast;
 
     private int getDamp() {
         return (this.damp << 1) | this.dacLsb;
     }
 
     private static final int GETA_BITS = 20;
-    private static final int[][] wavLenTable = new int[][] {
-            new int[] { // NTSC
-                    4, 8, 16, 32, 64, 96, 128, 160, 202, 254, 380, 508, 762, 1016, 2034, 4068
-            },
-            new int[] { // PAL
-                    4, 8, 14, 30, 60, 88, 118, 148, 188, 236, 354, 472, 708, 944, 1890, 3778
-            }
+    private static final int[][] wavLenTable = {
+            {4, 8, 16, 32, 64, 96, 128, 160, 202, 254, 380, 508, 762, 1016, 2034, 4068}, // NTSC
+            {4, 8, 14, 30, 60, 88, 118, 148, 188, 236, 354, 472, 708, 944, 1890, 3778} // PAL
     };
 
-    private static final int[][] freqTable = new int[][] {
-            new int[] { // NTSC
-                    428, 380, 340, 320, 286, 254, 226, 214, 190, 160, 142, 128, 106, 84, 72, 54
-            },
-            new int[] { // PAL
-                    398, 354, 316, 298, 276, 236, 210, 198, 176, 148, 132, 118, 98, 78, 66, 50
-            }
+    private static final int[][] freqTable = {
+            {428, 380, 340, 320, 286, 254, 226, 214, 190, 160, 142, 128, 106, 84, 72, 54}, // NTSC
+            {398, 354, 316, 298, 276, 236, 210, 198, 176, 148, 132, 118, 98, 78, 66, 50} // PAL
     };
 
-    private static final int[] BitReverse = new int[] {
-            0x00, 0x80, 0x40, 0xC0, 0x20, 0xA0, 0x60, 0xE0, 0x10, 0x90, 0x50, 0xD0, 0x30, 0xB0, 0x70, 0xF0,
-            0x08, 0x88, 0x48, 0xC8, 0x28, 0xA8, 0x68, 0xE8, 0x18, 0x98, 0x58, 0xD8, 0x38, 0xB8, 0x78, 0xF8,
-            0x04, 0x84, 0x44, 0xC4, 0x24, 0xA4, 0x64, 0xE4, 0x14, 0x94, 0x54, 0xD4, 0x34, 0xB4, 0x74, 0xF4,
-            0x0C, 0x8C, 0x4C, 0xCC, 0x2C, 0xAC, 0x6C, 0xEC, 0x1C, 0x9C, 0x5C, 0xDC, 0x3C, 0xBC, 0x7C, 0xFC,
-            0x02, 0x82, 0x42, 0xC2, 0x22, 0xA2, 0x62, 0xE2, 0x12, 0x92, 0x52, 0xD2, 0x32, 0xB2, 0x72, 0xF2,
-            0x0A, 0x8A, 0x4A, 0xCA, 0x2A, 0xAA, 0x6A, 0xEA, 0x1A, 0x9A, 0x5A, 0xDA, 0x3A, 0xBA, 0x7A, 0xFA,
-            0x06, 0x86, 0x46, 0xC6, 0x26, 0xA6, 0x66, 0xE6, 0x16, 0x96, 0x56, 0xD6, 0x36, 0xB6, 0x76, 0xF6,
-            0x0E, 0x8E, 0x4E, 0xCE, 0x2E, 0xAE, 0x6E, 0xEE, 0x1E, 0x9E, 0x5E, 0xDE, 0x3E, 0xBE, 0x7E, 0xFE,
-            0x01, 0x81, 0x41, 0xC1, 0x21, 0xA1, 0x61, 0xE1, 0x11, 0x91, 0x51, 0xD1, 0x31, 0xB1, 0x71, 0xF1,
-            0x09, 0x89, 0x49, 0xC9, 0x29, 0xA9, 0x69, 0xE9, 0x19, 0x99, 0x59, 0xD9, 0x39, 0xB9, 0x79, 0xF9,
-            0x05, 0x85, 0x45, 0xC5, 0x25, 0xA5, 0x65, 0xE5, 0x15, 0x95, 0x55, 0xD5, 0x35, 0xB5, 0x75, 0xF5,
-            0x0D, 0x8D, 0x4D, 0xCD, 0x2D, 0xAD, 0x6D, 0xED, 0x1D, 0x9D, 0x5D, 0xDD, 0x3D, 0xBD, 0x7D, 0xFD,
-            0x03, 0x83, 0x43, 0xC3, 0x23, 0xA3, 0x63, 0xE3, 0x13, 0x93, 0x53, 0xD3, 0x33, 0xB3, 0x73, 0xF3,
-            0x0B, 0x8B, 0x4B, 0xCB, 0x2B, 0xAB, 0x6B, 0xEB, 0x1B, 0x9B, 0x5B, 0xDB, 0x3B, 0xBB, 0x7B, 0xFB,
-            0x07, 0x87, 0x47, 0xC7, 0x27, 0xA7, 0x67, 0xE7, 0x17, 0x97, 0x57, 0xD7, 0x37, 0xB7, 0x77, 0xF7,
-            0x0F, 0x8F, 0x4F, 0xCF, 0x2F, 0xAF, 0x6F, 0xEF, 0x1F, 0x9F, 0x5F, 0xDF, 0x3F, 0xBF, 0x7F, 0xff,
+    private static final int[] BitReverse = {
+            0x00, 0x80, 0x40, 0xc0, 0x20, 0xa0, 0x60, 0xe0, 0x10, 0x90, 0x50, 0xd0, 0x30, 0xb0, 0x70, 0xf0,
+            0x08, 0x88, 0x48, 0xc8, 0x28, 0xa8, 0x68, 0xe8, 0x18, 0x98, 0x58, 0xd8, 0x38, 0xb8, 0x78, 0xf8,
+            0x04, 0x84, 0x44, 0xc4, 0x24, 0xa4, 0x64, 0xe4, 0x14, 0x94, 0x54, 0xd4, 0x34, 0xb4, 0x74, 0xf4,
+            0x0c, 0x8c, 0x4c, 0xcc, 0x2c, 0xac, 0x6c, 0xec, 0x1c, 0x9c, 0x5c, 0xdc, 0x3c, 0xbc, 0x7c, 0xfc,
+            0x02, 0x82, 0x42, 0xc2, 0x22, 0xa2, 0x62, 0xe2, 0x12, 0x92, 0x52, 0xd2, 0x32, 0xb2, 0x72, 0xf2,
+            0x0a, 0x8a, 0x4a, 0xca, 0x2a, 0xaa, 0x6a, 0xea, 0x1a, 0x9a, 0x5a, 0xda, 0x3a, 0xba, 0x7a, 0xfa,
+            0x06, 0x86, 0x46, 0xc6, 0x26, 0xa6, 0x66, 0xe6, 0x16, 0x96, 0x56, 0xd6, 0x36, 0xb6, 0x76, 0xf6,
+            0x0e, 0x8e, 0x4e, 0xce, 0x2e, 0xae, 0x6e, 0xee, 0x1e, 0x9e, 0x5e, 0xde, 0x3e, 0xbe, 0x7e, 0xfe,
+            0x01, 0x81, 0x41, 0xc1, 0x21, 0xa1, 0x61, 0xe1, 0x11, 0x91, 0x51, 0xd1, 0x31, 0xb1, 0x71, 0xf1,
+            0x09, 0x89, 0x49, 0xc9, 0x29, 0xa9, 0x69, 0xe9, 0x19, 0x99, 0x59, 0xd9, 0x39, 0xb9, 0x79, 0xf9,
+            0x05, 0x85, 0x45, 0xc5, 0x25, 0xa5, 0x65, 0xe5, 0x15, 0x95, 0x55, 0xd5, 0x35, 0xb5, 0x75, 0xf5,
+            0x0d, 0x8d, 0x4d, 0xcd, 0x2d, 0xad, 0x6d, 0xed, 0x1d, 0x9d, 0x5d, 0xdd, 0x3d, 0xbd, 0x7d, 0xfd,
+            0x03, 0x83, 0x43, 0xc3, 0x23, 0xa3, 0x63, 0xe3, 0x13, 0x93, 0x53, 0xd3, 0x33, 0xb3, 0x73, 0xf3,
+            0x0b, 0x8b, 0x4b, 0xcb, 0x2b, 0xab, 0x6b, 0xeb, 0x1b, 0x9b, 0x5b, 0xdb, 0x3b, 0xbb, 0x7b, 0xfb,
+            0x07, 0x87, 0x47, 0xc7, 0x27, 0xa7, 0x67, 0xe7, 0x17, 0x97, 0x57, 0xd7, 0x37, 0xb7, 0x77, 0xf7,
+            0x0f, 0x8f, 0x4f, 0xcf, 0x2f, 0xaf, 0x6f, 0xef, 0x1f, 0x9f, 0x5f, 0xdf, 0x3f, 0xbf, 0x7f, 0xff,
     };
 
     public void setMask(int m) {
         this.mask = m;
     }
 
-    public void setStereoMix(int trk, short mixl, short mixr) {
+    public void setStereoMix(int trk, int mixL, int mixR) {
         if (trk < 0) return;
         if (trk > 2) return;
-        this.sm[0][trk] = mixl;
-        this.sm[1][trk] = mixr;
+        this.sm[0][trk] = mixL;
+        this.sm[1][trk] = mixR;
     }
 
 //    TrackInfo getTrackInfo(int trk) {
@@ -237,7 +230,7 @@ public class NpNesDmc {
         }
 
         // $4009 unuse address
-        //this.reg[1] = (byte)(
+        //this.reg[1] = (int)(
         //    (this.linear_counter != 0 ? 4 : 0) //triangle
         //    | (this.length_counter[1]!=0 ? 8:0) //noise
         //    | (this.active ? 0x10 : 0) //dmc
@@ -275,7 +268,7 @@ public class NpNesDmc {
         }
     }
 
-    private static final int[] triTbl = new int[] {
+    private static final int[] triTbl = {
             15, 14, 13, 12, 11, 10, 9, 8,
             7, 6, 5, 4, 3, 2, 1, 0,
             0, 1, 2, 3, 4, 5, 6, 7,
@@ -284,7 +277,7 @@ public class NpNesDmc {
 
     /** Calculates triangle wave channel. Returns 0-15. */
     private int calcTri(int clocks) {
-        byte tri = 0;
+        int tri = 0;
         if (this.linearCounter > 0 && this.lengthCounter[0] > 0
                 && (this.option[OPT.TRI_MUTE.ordinal()] == 0 || this.triFreq > 0)) {
             tri = 1;
@@ -317,7 +310,7 @@ public class NpNesDmc {
      * and simple sampling rate conversion is performed.
      */
     private int calcNoise(int clocks) {
-        byte noi = 1;
+        int noi = 1;
 
         int env, last, count, accum, clocksAccum;
 
@@ -393,7 +386,7 @@ public class NpNesDmc {
 
             if (this.data[0] <= 0x100) { // shift register is empty
                 if (this.dLength > 0) {
-                    this.data[0] = this.memory[this.daddress + this.ptrMemory];
+                    this.data[0] = this.memory[this.daddress + this.ptrMemory] & 0xff;
                     //cpu.StealCycles(4); // DMC read takes 3 or 4 CPU cycles, usually 4
                     // (checking for the 3-cycle case would require sub-instruction emulation)
                     this.data[0] &= 0xff; // read 8 bits
@@ -418,7 +411,7 @@ public class NpNesDmc {
             }
         }
 
-        this.reg[0x12] = (byte) (this.empty ? 0 : 1);// dpc;
+        this.reg[0x12] = this.empty ? 0 : 1;// dpc;
         return (this.damp << 1) + this.dacLsb;
     }
 
@@ -466,7 +459,7 @@ public class NpNesDmc {
             }
         }
 
-        this.reg[0x12] = (byte) (this.empty ? 0 : 1);// dpc;
+        this.reg[0x12] = this.empty ? 0 : 1;// dpc;
         return (this.damp << 1) + this.dacLsb;
     }
 
@@ -620,7 +613,7 @@ public class NpNesDmc {
     }
 
     public void setClock(double c) {
-        this.clock = (int) (c);
+        this.clock = (int) c;
 
         if (Math.abs(this.clock - DEFAULT_CLK_PAL) <= 1000) // check for approximately DEFAULT_CLK_PAL
             setPal(true);
@@ -762,23 +755,23 @@ public class NpNesDmc {
         }
     }
 
-    private static final byte[] lengthTable = new byte[] {
-            0x0A, (byte) 0xFE,
+    private static final int[] lengthTable = {
+            0x0a, 0xfe,
             0x14, 0x02,
             0x28, 0x04,
             0x50, 0x06,
-            (byte) 0xA0, 0x08,
-            0x3C, 0x0A,
-            0x0E, 0x0C,
-            0x1A, 0x0E,
-            0x0C, 0x10,
+            0xa0, 0x08,
+            0x3c, 0x0a,
+            0x0e, 0x0c,
+            0x1a, 0x0e,
+            0x0c, 0x10,
             0x18, 0x12,
             0x30, 0x14,
             0x60, 0x16,
-            (byte) 0xC0, 0x18,
-            0x48, 0x1A,
-            0x10, 0x1C,
-            0x20, 0x1E
+            0xc0, 0x18,
+            0x48, 0x1a,
+            0x10, 0x1c,
+            0x20, 0x1e
     };
 
     public boolean write(int adr, int val) {
@@ -807,7 +800,7 @@ public class NpNesDmc {
             this.irq = false;
             //cpu.updateIRQ(NES_CPU::IRQD_DMC, false);
 
-            this.reg[adr - 0x4008] = (byte) val;
+            this.reg[adr - 0x4008] = (int) val;
             return true;
         }
 
@@ -832,7 +825,7 @@ public class NpNesDmc {
         if (adr < 0x4008 || 0x4013 < adr)
             return false;
 
-        this.reg[adr - 0x4008] = (byte) (val & 0xff);
+        this.reg[adr - 0x4008] = val & 0xff;
 
         //logger.log(Level.TRACE, "$%04X %02X".formatted(adr, val));
 
@@ -944,9 +937,9 @@ public class NpNesDmc {
 
     public NpNesDmc(int clock, int rate) {
 
-        // this.setClock(DEFAULT_CLOCK);
-        // this.setRate(DEFAULT_RATE);
-        // this.setPal(false);
+//        this.setClock(DEFAULT_CLOCK);
+//        this.setRate(DEFAULT_RATE);
+//        this.setPal(false);
         this.setClock(clock); // does setPal, too
         this.setRate(rate);
         this.option[OPT.ENABLE_4011.ordinal()] = 1;

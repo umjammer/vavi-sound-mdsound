@@ -6,24 +6,25 @@ import java.util.Map;
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
 import mdsound.chips.DosboxYm3812;
+import vavi.sound.ymfm.Opl.Ym3812;
 
 
 public class Ym3812Inst extends Instrument.BaseInstrument {
 
-    private static final int DefaultYM3812ClockValue = 3579545;
+    public static final int MAX_CHIPS = 0x02;
+    public static final int DefaultClockValue = 3579545;
 
-    private static final int MAX_CHIPS = 0x02;
-    private final DosboxYm3812[] chips = new DosboxYm3812[] {new DosboxYm3812(), new DosboxYm3812()};
+    private final DosboxYm3812[] chips = {new DosboxYm3812(), new DosboxYm3812()};
 
-    private byte emuCore;
+    private int emuCore;
+
+    public Ym3812Inst() {
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
+    }
 
     @Override
     public void reset(int chipId) {
-        device_reset_ym3812(chipId);
-        visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
-        };
+        chips[chipId].reset();
     }
 
     @Override
@@ -37,124 +38,65 @@ public class Ym3812Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int samplingRate) {
-        return start(chipId, DefaultYM3812ClockValue, 44100);
-    }
-
-    @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        return device_start_ym3812(chipId, clock);
+        assert chipId < MAX_CHIPS;
+
+        int rate = (clock & 0x7fff_ffff) / 72;
+        if ((CHIP_SAMPLING_MODE == 0x01 && rate < CHIP_SAMPLE_RATE) || CHIP_SAMPLING_MODE == 0x02)
+            rate = CHIP_SAMPLE_RATE;
+
+        chips[chipId].start(emuCore, clock, rate, this::updateStream);
+
+        return rate;
     }
 
     @Override
-    public void stop(int chipId) {
-        device_stop_ym3812(chipId);
+    public int read(int chipId, int adr) {
+        return chips[chipId].read(adr);
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        assert chipId < MAX_CHIPS;
+        chips[chipId].write(0, adr);
+        chips[chipId].write(1, data);
+        return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        ym3812_stream_update(chipId, outputs, samples);
+        chips[chipId].updateStream(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
     }
 
     @Override
-    public int write(int chipId, int port, int adr, int data) {
-        ym3812_control_port_w(chipId, 0, adr);
-        ym3812_write_port_w(chipId, 0, data);
-        return 0;
+    public void stop(int chipId) {
+        chips[chipId].stop();
     }
 
-    private void ym3812_stream_update(int chipId, int[][] outputs, int samples) {
-        DosboxYm3812 info = chips[chipId];
-        info.updateStream(outputs, samples);
-    }
+    private final int[][] dummyBuf = {null, null};
 
-    private final int[][] dummyBuf = new int[][] {null, null};
-
-    private void _stream_update(/*, int interval*/) {
+    private void updateStream(/*, int interval*/) {
         chips[0].updateStream(dummyBuf, 0); // TODO
     }
 
-    private int device_start_ym3812(int chipId, int clock) {
-        DosboxYm3812 info;
-        int rate;
-
-        if (chipId >= MAX_CHIPS)
-            return 0;
-
-        info = chips[chipId];
-        rate = (clock & 0x7FFFFFFF) / 72;
-        if ((CHIP_SAMPLING_MODE == 0x01 && rate < CHIP_SAMPLE_RATE) ||
-                CHIP_SAMPLING_MODE == 0x02)
-            rate = CHIP_SAMPLE_RATE;
-        //info.intf = device.static_config ? (final ym3812_interface *)device.static_config : &dummy;
-        //info.intf = &dummy;
-        //info.device = device;
-
-        info.start(emuCore, clock, rate, this::_stream_update);
-
-        return rate;
+    public int readStatusPort(int chipId, int offset) {
+        return read(chipId, 0);
     }
 
-    private void device_stop_ym3812(int chipId) {
-        DosboxYm3812 info = chips[chipId];
-        info.stop();
+    public int readPort(int chipId, int offset) {
+        return read(chipId, 1);
     }
 
-    private void device_reset_ym3812(int chipId) {
-        DosboxYm3812 info = chips[chipId];
-        info.reset();
+    public void setEmuCore(int Emulator) {
+        emuCore = (Emulator < 0x02) ? Emulator : 0x00;
     }
 
-    private byte ym3812_r(int chipId, int offset) {
-        DosboxYm3812 info = chips[chipId];
-        return info.read(offset);
+    public void setMuteMask(int chipId, int muteMask) {
+        chips[chipId].setMuteMask(muteMask);
     }
-
-    private void ym3812_w(int chipId, int offset, int data) {
-        DosboxYm3812 info = chips[chipId];
-        if (info == null) return;
-        info.write(offset, data);
-    }
-
-    private byte ym3812_status_port_r(int chipId, int offset) {
-        return ym3812_r(chipId, 0);
-    }
-
-    private byte ym3812_read_port_r(int chipId, int offset) {
-        return ym3812_r(chipId, 1);
-    }
-
-    private void ym3812_control_port_w(int chipId, int offset, int data) {
-        ym3812_w(chipId, 0, data);
-    }
-
-    private void ym3812_write_port_w(int chipId, int offset, int data) {
-        ym3812_w(chipId, 1, data);
-    }
-
-    public void ym3812_set_emu_core(byte Emulator) {
-        emuCore = (byte) ((Emulator < 0x02) ? Emulator : 0x00);
-    }
-
-    private void ym3812_set_mute_mask(int chipId, int muteMask) {
-        DosboxYm3812 info = chips[chipId];
-        info.setMuteMask(muteMask);
-    }
-
-//    /**
-//     * Generic get_info
-//     */
-//    DEVICE_GET_INFO( Ym3812Inst ) {
-//        switch (state) {
-//            case DEVINFO_STR_NAME:       strcpy(info.s, "YM3812");       break;
-//            case DEVINFO_STR_FAMILY:     strcpy(info.s, "Yamaha FM");      break;
-//            case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");        break;
-//            case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
-//        }
-//    }
 
     //----
 
@@ -169,6 +111,10 @@ public class Ym3812Inst extends Instrument.BaseInstrument {
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+            case "NAME" -> result.put(getName(), "YM3812");
+            case "FAMILY" -> result.put(getName(), "Yamaha FM");
+            case "VERSION" -> result.put(getName(), "1.0");
+            case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
         }
         return result;
     }

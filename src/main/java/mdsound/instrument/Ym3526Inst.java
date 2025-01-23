@@ -10,10 +10,10 @@ import mdsound.chips.Ym3526;
 
 public class Ym3526Inst extends Instrument.BaseInstrument {
 
-    private static final int DefaultYM3526ClockValue = 3579545;
+    public static final int DefaultClockValue = 3579545;
+    public static final int MAX_CHIPS = 0x02;
 
-    private static final int MAX_CHIPS = 0x02;
-    static Ym3526[] chips = new Ym3526[2];
+    private final Ym3526[] chips = {new Ym3526(), new Ym3526()};
 
     @Override
     public String getName() {
@@ -25,124 +25,95 @@ public class Ym3526Inst extends Instrument.BaseInstrument {
         return "OPL";
     }
 
-    @Override
-    public void reset(int chipId) {
-        visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
-        };
-
-        Ym3526 info = chips[chipId];
-        info.reset();
+    public Ym3526Inst() {
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
 
     @Override
-    public int start(int chipId, int samplingRate) {
-        if (chipId >= MAX_CHIPS) return 0;
-
-        int rate = (DefaultYM3526ClockValue & 0x7fff_ffff) / 72;
-        if ((CHIP_SAMPLING_MODE == 0x01 && rate < CHIP_SAMPLE_RATE) ||
-                CHIP_SAMPLING_MODE == 0x02)
-            rate = CHIP_SAMPLE_RATE;
-
-        // stream system initialize
-        Ym3526 info = chips[chipId] = new Ym3526(DefaultYM3526ClockValue, rate);
-
-        // YM3526 setup
-        info.setTimerHandler(Ym3526Inst::TimerHandler);
-        info.setIrqHandler(Ym3526Inst::IRQHandler);
-        info.setUpdateHandler(this::_stream_update);
-
-        return rate;
+    public void reset(int chipId) {
+        chips[chipId].reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        if (chipId >= MAX_CHIPS) return 0;
+        assert chipId < MAX_CHIPS;
 
         int rate = (clock & 0x7fff_ffff) / 72;
-        if ((CHIP_SAMPLING_MODE == 0x01 && rate < CHIP_SAMPLE_RATE) ||
-                CHIP_SAMPLING_MODE == 0x02)
+        if ((CHIP_SAMPLING_MODE == 0x01 && rate < CHIP_SAMPLE_RATE) || CHIP_SAMPLING_MODE == 0x02)
             rate = CHIP_SAMPLE_RATE;
 
         // stream system initialize
-        Ym3526 info = chips[chipId] = new Ym3526(clock, rate);
+        chips[chipId].init(clock, rate);
 
         // YM3526 setup
-        info.setTimerHandler(Ym3526Inst::TimerHandler);
-        info.setIrqHandler(Ym3526Inst::IRQHandler);
-        info.setUpdateHandler(this::_stream_update);
+        chips[chipId].setTimerHandler(Ym3526Inst::handlerTimer);
+        chips[chipId].setIrqHandler(Ym3526Inst::handlerIRQ);
+        chips[chipId].setUpdateHandler(this::updateStream);
 
         return rate;
     }
 
     @Override
-    public void stop(int chipId) {
-        Ym3526 info = chips[chipId];
-        info.shutdown();
+    public int read(int chipId, int adr) {
+        return chips[chipId].read(adr & 1);
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        assert chipId < MAX_CHIPS;
+        chips[chipId].write(0x00, adr);
+        chips[chipId].write(0x01, data);
+        return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        Ym3526 chip = chips[chipId];
-        chip.updateOne(outputs, samples);
+        chips[chipId].updateOne(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
     }
 
     @Override
-    public int write(int chipId, int port, int adr, int data) {
-        Ym3526 chip = chips[chipId];
-        if (chip == null || chip.chip == null) return 0;
-        chip.write(0x00, adr);
-        chip.write(0x01, data);
-        return 0;
+    public void stop(int chipId) {
+        chips[chipId].shutdown();
     }
 
-    private final int[][] dummyBuf = new int[][] {null, null};
+    private final int[][] dummyBuf = {null, null};
 
-    private void _stream_update(/*, int interval */) {
+    private void updateStream(/*, int interval */) {
         chips[0].updateOne(dummyBuf, 0);
     }
 
     /** IRQ Handler */
-    private static void IRQHandler(int irq) {
+    private static void handlerIRQ(int irq) {
     }
 
     /** TimerHandler from Fm.c */
-    private static void TimerHandler(int c, int period) {
+    private static void handlerTimer(int c, int period) {
         if (period == 0) { // Reset FM Timer
         } else { // Start FM Timer
         }
     }
 
-    public int ym3526_r(int chipId, int offset) {
-        Ym3526 info = chips[chipId];
-        return info.read(offset & 1);
+    public int readStatusPort(int chipId, int offset) {
+        return read(chipId, 0);
     }
 
-    public int ym3526_status_port_r(int chipId, int offset) {
-        return ym3526_r(chipId, 0);
+    public int readPort(int chipId, int offset) {
+        return read(chipId, 1);
     }
 
-    public int ym3526_read_port_r(int chipId, int offset) {
-        return ym3526_r(chipId, 1);
+    public void writeControlPort(int chipId, int offset, byte data) {
+        chips[chipId].write(0, data);
     }
 
-    public void ym3526_control_port_w(int chipId, int offset, byte data) {
-        Ym3526 chip = chips[chipId];
-        chip.write(0, data);
+    public void writePort(int chipId, int offset, byte data) {
+        chips[chipId].write(1, data);
     }
 
-    public void ym3526_write_port_w(int chipId, int offset, byte data) {
-        Ym3526 chip = chips[chipId];
-        chip.write(1, data);
-    }
-
-    public void ym3526_set_mute_mask(int chipId, int muteMask) {
-        Ym3526 chip = chips[chipId];
-        chip.setMuteMask(muteMask);
+    public void setMuteMask(int chipId, int muteMask) {
+        chips[chipId].setMuteMask(muteMask);
     }
 
     //----

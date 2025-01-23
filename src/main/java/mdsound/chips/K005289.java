@@ -1,7 +1,7 @@
 /*
  * license:BSD-3-Clause
  *
- * copyright-holders:Bryan McPhail
+ * copyright-holders: Bryan McPhail
  */
 
 package mdsound.chips;
@@ -31,8 +31,11 @@ package mdsound.chips;
  * conversion, volume control and mixing of the channels is all done
  * externally via resistor networks and 4066 switches and is only implemented
  * here for convenience.
+ *
+ * @author Bryan McPhail (MAME)
  */
 public class K005289 {
+
     private final byte[] soundPRom = null;
     private int rate;
 
@@ -75,7 +78,7 @@ public class K005289 {
         }
     }
 
-    private int clock() {
+    public int clock() {
         throw new UnsupportedOperationException();
     }
 

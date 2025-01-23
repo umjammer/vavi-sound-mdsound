@@ -1,28 +1,51 @@
+/*
+ * Gens: PWM audio emulator.
+ *
+ * Copyright (c) 1999-2002 by Stéphane Dallongeville
+ * Copyright (c) 2003-2004 by Stéphane Akhoun
+ * Copyright (c) 2008-2009 by David Korth
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the
+ * Free Software Foundation; either version 2 of the License, or (at your
+ * option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, write to the Free Software Foundation, Inc.,
+ * 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
+
 package mdsound.chips;
 
 
 /**
- * PwmChip.
+ * Gens: PWM audio emulator.
  *
- * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
- * @version 0.00 2022-07-08 nsano initial version <br>
+ * @author Stéphane Dallongeville
+ * @author Stéphane Akhoun
+ * @author David Korth
  */
-public class PwmChip {
+public class Pwm {
 
     private static final int BUF_SIZE = 4;
 
 //#define CHILLY_WILLY_SCALE = 1;
 
-    private static final byte[] FULL_TAB = new byte[] {
-            0x40, 0x00, 0x00, (byte) 0x80,
-            (byte) 0x80, 0x40, 0x00, 0x00,
-            0x00, (byte) 0x80, 0x40, 0x00,
-            0x00, 0x00, (byte) 0x80, 0x40,
+    private static final int[] FULL_TAB = {
+            0x40, 0x00, 0x00, 0x80,
+            0x80, 0x40, 0x00, 0x00,
+            0x00, 0x80, 0x40, 0x00,
+            0x00, 0x00, 0x80, 0x40,
     };
 
 //#if CHILLY_WILLY_SCALE
     // TODO: Fix Chilly Willy's new scaling algorithm.
-    private static final int PWM_Loudness = 0;
+    private static final int loudness = 0;
 //#endif
 
     private final int[] fifoR = new int[8];
@@ -78,32 +101,32 @@ public class PwmChip {
         this.fifoLTmp = 0;
         this.fifoRTmp = 0;
 
-        //PWM_Loudness = 0;
+        //loudness = 0;
         setCycle(0);
         setInt(0);
     }
 
 //#if CHILLY_WILLY_SCALE
-    // TODO: Fix Chilly Willy's new scaling algorithm.
+    // TODO Fix Chilly Willy's new scaling algorithm.
     private void recalcScale() {
         this.offset = (this.cycle / 2) + 1;
-        this.scale = (0x7FFF00 / this.offset);
+        this.scale = (0x7f_ff00 / this.offset);
     }
 //#endif
 
     private void setCycle(int cycle) {
         cycle--;
-        this.cycle = (cycle & 0xffF);
+        this.cycle = (cycle & 0xfff);
         this.cycleCnt = this.cycles;
 
 //#if CHILLY_WILLY_SCALE
-        // TODO: Fix Chilly Willy's new scaling algorithm.
+        // TODO Fix Chilly Willy's new scaling algorithm.
         recalcScale();
 //#endif
     }
 
     private void setInt(int int_time) {
-        int_time &= 0x0F;
+        int_time &= 0x0f;
         if (int_time != 0)
             this.int_ = this.intCnt = int_time;
         else
@@ -220,10 +243,10 @@ public class PwmChip {
 //#ifdef CHILLY_WILLY_SCALE
         // Knuckles' Chaotix: Tachy Touch uses the values 0xF?? for negative values
         // This small modification fixes the terrible pops.
-        in &= 0xffF;
+        in &= 0xfff;
         if ((in & 0x800) != 0)
-            in |= ~0xffF;
-        return ((in - this.offset) * this.scale) >> (8 - PWM_Loudness);
+            in |= ~0xfff;
+        return ((in - this.offset) * this.scale) >> (8 - loudness);
 //#else
     }
 
@@ -246,7 +269,7 @@ public class PwmChip {
         }
     }
 
-    public void start(int clock, int rate) {
+    public void start(int clock) {
         this.clock = clock;
 
         this.init();

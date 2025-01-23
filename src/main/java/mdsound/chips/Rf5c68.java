@@ -1,8 +1,19 @@
+/*
+ * license:BSD-3-Clause
+ *
+ * copyright-holders: Olivier Galibert, Aaron Giles
+ */
+
 package mdsound.chips;
 
 
 /**
- * ricoh RF5C68(or clone) PCM controller
+ * Ricoh RF5C68(or clone) PCM controller
+ * <p>
+ * TODO Verify RF5C105,164 (Sega CD/Mega CD) differences
+ *
+ * @author Olivier Galibert
+ * @author Aaron Giles
  */
 public class Rf5c68 {
 
@@ -19,8 +30,8 @@ public class Rf5c68 {
         private int loopst;
         private int muted;
 
-        public boolean key = false; // 発音中ならtrue
-        public boolean keyOn = false; // キーオンしたときにtrue(falseは受け取り側が行う)
+        public boolean key = false; // True if sound is in progress
+        public boolean keyOn = false; // True when key is turned on (false is done by the receiving side)
 
         private void reset() {
             this.enable = 0;
@@ -44,7 +55,7 @@ public class Rf5c68 {
             if (this.curAddr >= this.endAddr)
                 return;
 
-            System.arraycopy(this.memPnt, (this.curAddr - this.baseAddr), data, this.curAddr, this.endAddr - this.curAddr);
+            System.arraycopy(this.memPnt, this.curAddr - this.baseAddr, data, this.curAddr, this.endAddr - this.curAddr);
             this.curAddr = this.endAddr;
         }
 
@@ -99,16 +110,16 @@ public class Rf5c68 {
         }
     }
 
-    private final Channel[] channels = new Channel[] {
+    private final Channel[] channels = {
             new Channel(), new Channel(), new Channel(), new Channel(),
             new Channel(), new Channel(), new Channel(), new Channel()
     };
-    private int cbank;
-    private int wbank;
+    private int cBank;
+    private int wBank;
     private int enable;
-    private int datasize;
+    private int dataSize;
     private byte[] data;
-    private final MemStream memstrm = new MemStream();
+    private final Rf5c68.MemStream memStream = new MemStream();
 
     public void update(int[][] outputs, int samples) {
         int[] left = outputs[0];
@@ -143,7 +154,7 @@ public class Rf5c68 {
 //                            this.sample_callback(this.device, ((channels.addr >> 11) / 0x2000));
 //                    }
 
-                    this.memstrm.checkSample((chan.addr >> 11) & 0xffff, chan.step, this.data);
+                    this.memStream.checkSample((chan.addr >> 11) & 0xffff, chan.step, this.data);
                     // fetch the sample and handle looping
                     sample = this.data[(chan.addr >> 11) & 0xffff] & 0xff;
                     if (sample == 0xff) {
@@ -176,15 +187,15 @@ public class Rf5c68 {
             }
         }
 
-        this.memstrm.drain(samples, this.data);
+        this.memStream.drain(samples, this.data);
     }
 
     /**
      * start
      */
     public int start(int clock) {
-        this.datasize = 0x1_0000;
-        this.data = new byte[this.datasize];
+        this.dataSize = 0x1_0000;
+        this.data = new byte[this.dataSize];
 
         for (int chn = 0; chn < NUM_CHANNELS; chn++)
             this.channels[chn].muted = 0x00;
@@ -198,25 +209,25 @@ public class Rf5c68 {
 
     public void reset() {
         // Clear the PCM memory.
-        //memset(this.data, 0x00, this.datasize);
-        for (int ind = 0; ind < this.datasize; ind++) this.data[ind] = 0;
+        //memset(this.data, 0x00, this.dataSize);
+        for (int ind = 0; ind < this.dataSize; ind++) this.data[ind] = 0;
         this.enable = 0;
-        this.cbank = 0;
-        this.wbank = 0;
+        this.cBank = 0;
+        this.wBank = 0;
 
         // clear channel registers
         for (int i = 0; i < NUM_CHANNELS; i++) {
             this.channels[i].reset();
         }
 
-        this.memstrm.reset();
+        this.memStream.reset();
     }
 
     /**
      * write register
      */
     public void write(int offset, int data) {
-        Channel chan = this.channels[this.cbank];
+        Channel chan = this.channels[this.cBank];
         int i;
 
         // force the stream to update first
@@ -257,9 +268,9 @@ public class Rf5c68 {
         case 0x07: // control reg
             this.enable = (data >> 7) & 1;
             if ((data & 0x40) != 0)
-                this.cbank = data & 7;
+                this.cBank = data & 7;
             else
-                this.wbank = data & 15;
+                this.wBank = data & 15;
             break;
 
         case 0x08: // channel on/off reg
@@ -281,54 +292,32 @@ public class Rf5c68 {
      * read memory
      */
     public int readMemory(int offset) {
-        return this.data[this.wbank * 0x1000 + offset] & 0xff;
+        return this.data[this.wBank * 0x1000 + offset] & 0xff;
     }
 
     /**
      * write memory
      */
     public void writeMemory(int offset, int data) {
-        this.memstrm.flush(this.data);
-        this.data[this.wbank * 0x1000 | offset] = (byte) data;
+        this.memStream.flush(this.data);
+        this.data[this.wBank * 0x1000 | offset] = (byte) data;
     }
 
     public void writeRam(int dataStart, int dataLength, byte[] ramData) {
-        MemStream ms = this.memstrm;
-        int bytCnt;
-
-        dataStart |= this.wbank * 0x1000;
-        if (dataStart >= this.datasize)
-            return;
-        if (dataStart + dataLength > this.datasize)
-            dataLength = this.datasize - dataStart;
-
-        this.memstrm.flush(this.data);
-
-        ms.baseAddr = dataStart;
-        ms.curAddr = ms.baseAddr;
-        ms.endAddr = ms.baseAddr + dataLength;
-        ms.curStep = 0x0000;
-        ms.memPnt = ramData;
-
-        bytCnt = 0x40; // SegaSonic Arcade: Run! Run! Run! needs such a high value
-        if (ms.curAddr + bytCnt > ms.endAddr)
-            bytCnt = ms.endAddr - ms.curAddr;
-
-        System.arraycopy(ms.memPnt, (ms.curAddr - ms.baseAddr), this.data, ms.curAddr, bytCnt);
-        ms.curAddr += bytCnt;
+        writeRam(dataStart, dataLength, ramData, 0);
     }
 
-    public void writeRam2(int dataStart, int dataLength, byte[] ramData, int srcStartAdr) {
-        MemStream ms = this.memstrm;
+    public void writeRam(int dataStart, int dataLength, byte[] ramData, int srcStartAdr) {
+        MemStream ms = this.memStream;
         int bytCnt;
 
-        dataStart |= this.wbank * 0x1000;
-        if (dataStart >= this.datasize)
+        dataStart |= this.wBank * 0x1000;
+        if (dataStart >= this.dataSize)
             return;
-        if (dataStart + dataLength > this.datasize)
-            dataLength = this.datasize - dataStart;
+        if (dataStart + dataLength > this.dataSize)
+            dataLength = this.dataSize - dataStart;
 
-        this.memstrm.flush(this.data);
+        this.memStream.flush(this.data);
 
         ms.baseAddr = dataStart;
         ms.curAddr = ms.baseAddr;

@@ -41,7 +41,7 @@ public class DosboxYm3812 {
     private static final int EC_DBOPL = 0x00; // DosBox OPL (AdLibEmu)
     private static final int EC_MAME = 0x01; // YM3826 core from MAME
 
-    private byte EMU_CORE = 0x00;
+    private int EMU_CORE = 0x00;
 
     public interface UpdateHandler extends Runnable {
     }
@@ -1392,14 +1392,14 @@ public class DosboxYm3812 {
         }
     }
 
-    public void start(byte EMU_CORE, int clock, int rate, UpdateHandler updatehandler) {
+    public void start(int EMU_CORE, int clock, int rate, UpdateHandler updatehandler) {
         this.EMU_CORE = EMU_CORE;
         // stream system initialize
         switch (EMU_CORE) {
         case EC_MAME:
             break;
         case EC_DBOPL:
-            chip = new Opl(clock & 0x7FFFFFFF, rate, updatehandler, this);
+            chip = new Opl(clock & 0x7fff_ffff, rate, updatehandler, this);
             break;
         }
     }
@@ -1434,11 +1434,11 @@ public class DosboxYm3812 {
         }
     }
 
-    public byte read(int offset) {
+    public int read(int offset) {
         switch (EMU_CORE) {
         case EC_MAME:
         case EC_DBOPL:
-            return (byte) chip.readReg(offset & 0x01);
+            return chip.readReg(offset & 0x01);
         default:
             return 0x00;
         }

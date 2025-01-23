@@ -107,7 +107,7 @@ public class NesFme7 implements SoundChip {
     }
 
     @Override
-    public void setStereoMix(int track, short mixL, short mixR) {
+    public void setStereoMix(int track, int mixL, int mixR) {
         if (track < 0) return;
         if (track > 2) return;
         sm[0][track] = mixL;

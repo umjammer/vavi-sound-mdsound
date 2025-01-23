@@ -6,8 +6,6 @@ import java.util.Arrays;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import vavi.util.StringUtil;
-
 import static java.lang.System.getLogger;
 
 
@@ -547,7 +545,7 @@ public class OkiM6295 {
         System.arraycopy(romData, 0, this.rom, dataStart, dataLength);
     }
 
-    public void writeRom2(int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddr) {
+    public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddr) {
         if (this.romSize != romSize) {
             this.rom = new byte[romSize];
             this.romSize = romSize;

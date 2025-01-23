@@ -15,8 +15,6 @@ package mdsound.chips;
  */
 class Ym3812 {
 
-    private static final int MAX_OPL_CHIPS = 2;
-
     private Opl opl;
 
     /**

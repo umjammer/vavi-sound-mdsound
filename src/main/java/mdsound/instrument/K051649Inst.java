@@ -10,49 +10,13 @@ import mdsound.chips.K051649;
 
 public class K051649Inst extends Instrument.BaseInstrument {
 
-    @Override
-    public void reset(int chipId) {
-        device_reset_k051649(chipId);
-        visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
-        };
+    public static final int MAX_CHIPS = 0x02;
+
+    private final K051649[] chips = {new K051649(), new K051649()};
+
+    public K051649Inst() {
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
-
-    @Override
-    public int start(int chipId, int samplingRate) {
-        return device_start_k051649(chipId, samplingRate);
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate, int clock, Object... Option) {
-        if (scc1Data[chipId] == null) {
-            scc1Data[chipId] = new K051649();
-        }
-
-        int sampRate = device_start_k051649(chipId, clock);
-        //int flags = 1;
-        //if (Option != null && Option.length > 0) flags = (int)(byte)Option[0];
-        //k054539_init_flags(chipId, flags);
-
-        return sampRate;
-    }
-
-    @Override
-    public void stop(int chipId) {
-        device_stop_k051649(chipId);
-    }
-
-    @Override
-    public void update(int chipId, int[][] outputs, int samples) {
-        k051649_update(chipId, outputs, samples);
-
-        visVolume[chipId][0][0] = outputs[0][0];
-        visVolume[chipId][0][1] = outputs[1][0];
-    }
-
-    private static final int MAX_CHIPS = 0x02;
-    private final K051649[] scc1Data = new K051649[MAX_CHIPS];
 
     @Override
     public String getName() {
@@ -62,109 +26,98 @@ public class K051649Inst extends Instrument.BaseInstrument {
     @Override
     public String getShortName() {
         return "K051";
+    } // TODO SCC1
+
+    @Override
+    public void reset(int chipId) {
+        chips[chipId].reset();
     }
 
-    /* generate Sound to the mix buffer */
-    private void k051649_update(int chipId, int[][] outputs, int samples) {
-        K051649 info = scc1Data[chipId];
-        info.update(outputs, samples);
+    @Override
+    public int start(int chipId, int samplingRate, int clock, Object... Option) {
+        assert chipId < MAX_CHIPS;
+        int rate = chips[chipId].start(clock);
+
+//        int flags = 1;
+//        if (Option != null && Option.length > 0) flags = (int)(byte)Option[0];
+//        k054539_init_flags(chipId, flags);
+
+        return rate;
     }
 
-    private int device_start_k051649(int chipId, int clock) {
-        if (chipId >= MAX_CHIPS)
-            return 0;
-
-        K051649 info = scc1Data[chipId];
-        return info.start(clock);
-    }
-
-    private void device_stop_k051649(int chipId) {
-        K051649 info = scc1Data[chipId];
-    }
-
-    private void device_reset_k051649(int chipId) {
-        K051649 info = scc1Data[chipId];
-        info.reset();
-    }
-
-    //
-    private void k051649_waveform_w(int chipId, int offset, int data) {
-        K051649 info = scc1Data[chipId];
-        info.writeWaveForm(offset, data);
-    }
-
-    private int k051649_waveform_r(int chipId, int offset) {
-        K051649 info = scc1Data[chipId];
-        return info.readWaveForm(offset);
-    }
-
-    /* SY 20001114: Channel 5 doesn't share the waveform with channel 4 on this chips */
-    private void k052539_waveform_w(int chipId, int offset, byte data) {
-        K051649 info = scc1Data[chipId];
-        info.writeWaveFormK05239(offset, data);
-    }
-
-    private int k052539_waveform_r(int chipId, int offset) {
-        K051649 info = scc1Data[chipId];
-        return info.readWaveFormK05239(offset);
-    }
-
-    private void k051649_volume_w(int chipId, int offset, byte data) {
-        K051649 info = scc1Data[chipId];
-        info.writeVolume(offset, data);
-    }
-
-    private void k051649_frequency_w(int chipId, int offset, byte data) {
-        K051649 info = scc1Data[chipId];
-        info.writeFrequency(offset, data);
-    }
-
-    private void k051649_keyonoff_w(int chipId, int offset, byte data) {
-        K051649 info = scc1Data[chipId];
-        info.writeKeyOnOff(offset, data);
-    }
-
-    private void k051649_test_w(int chipId, int offset, byte data) {
-        K051649 info = scc1Data[chipId];
-        info.writeTest(offset, data);
-    }
-
-    private byte k051649_test_r(int chipId, int offset) {
-        // reading the test register sets it to $ff!
-        k051649_test_w(chipId, offset, (byte) 0xff);
-        return (byte) 0xff;
-    }
-
-    private void k051649_w(int chipId, int offset, byte data) {
-        K051649 info = scc1Data[chipId];
-        info.write(offset, data);
-    }
-
-    private void k051649_set_mute_mask(int chipId, int muteMask) {
-        K051649 info = scc1Data[chipId];
-        info.setMuteMask(muteMask);
+    @Override
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        k051649_w(chipId, adr, (byte) data);
+        chips[chipId].write(adr, data);
         return 0;
     }
 
-    public K051649 GetK051649_State(int chipId) {
-        return scc1Data[chipId];
+    /** generate Sound to the mix buffer */
+    @Override
+    public void update(int chipId, int[][] outputs, int samples) {
+        chips[chipId].update(outputs, samples);
+
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
     }
 
-    /**
-     * Generic get_info
-     */
-    /*DEVICE_GET_INFO( k051649 ) {
-            case DEVINFO_STR_NAME:       strcpy(info.s, "K051649Inst");      break;
-            case DEVINFO_STR_FAMILY:     strcpy(info.s, "Konami custom");    break;
-            case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;
-            case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
-        }
-    }*/
+    @Override
+    public void stop(int chipId) {
+    }
+
+    //
+    public void writeWaveform(int chipId, int offset, int data) {
+        chips[chipId].writeWaveForm(offset, data);
+    }
+
+    public int readWaveform(int chipId, int offset) {
+        return chips[chipId].readWaveForm(offset);
+    }
+
+    /* SY 20001114: Channel 5 doesn't share the waveform with channel 4 on this chips */
+    public void writeK052539Waveform(int chipId, int offset, byte data) {
+        chips[chipId].writeWaveFormK05239(offset, data);
+    }
+
+    public int readK052539Waveform(int chipId, int offset) {
+        return chips[chipId].readWaveFormK05239(offset);
+    }
+
+    public void setVolume(int chipId, int offset, byte data) {
+        chips[chipId].writeVolume(offset, data);
+    }
+
+    public void setFrequency(int chipId, int offset, byte data) {
+        chips[chipId].writeFrequency(offset, data);
+    }
+
+    public void setKeyOnOff(int chipId, int offset, byte data) {
+        chips[chipId].writeKeyOnOff(offset, data);
+    }
+
+    public void setTest(int chipId, int offset, int data) {
+        chips[chipId].writeTest(offset, data);
+    }
+
+    public int readTest(int chipId, int offset) {
+        // reading the test register sets it to $ff!
+        setTest(chipId, offset, 0xff);
+        return 0xff;
+    }
+
+    public void setMuteMask(int chipId, int muteMask) {
+        chips[chipId].setMuteMask(muteMask);
+    }
+
+    //----
+
+    public synchronized K051649 getChip(int chipId) {
+        return chips[chipId];
+    }
 
     //----
 
@@ -179,6 +132,10 @@ public class K051649Inst extends Instrument.BaseInstrument {
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+            case "NAME" -> result.put(getName(), "K051649");
+            case "FAMILY" -> result.put(getName(), "Konami custom");
+            case "VERSION" -> result.put(getName(), "1.0");
+            case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
         }
         return result;
     }

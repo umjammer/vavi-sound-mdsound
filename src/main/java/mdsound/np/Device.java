@@ -69,14 +69,14 @@ public interface Device {
 
         /**
          * Stereo mix.
-         * mixl = 0-256
-         * mixr = 0-256
+         * mixL = 0-256
+         * mixR = 0-256
          * 128 = neutral
          * 256 = double
          * 0 = nil
          * <0 = inverted
          */
-        void setStereoMix(int trk, short mixl, short mixr);
+        void setStereoMix(int trk, int mixL, int mixR);
 
         /**
          * Track info for keyboard view.

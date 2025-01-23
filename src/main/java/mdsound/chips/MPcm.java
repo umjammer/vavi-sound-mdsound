@@ -390,13 +390,13 @@ public class MPcm {
         this.mask = 0;
     }
 
-    // テーブル作成 (floor で丸めた方が panic 等で良い結果が得られる)
+    // Create a table (rounding by floor gives better results with panic etc.)
     static {
         int p = 0;
         for (int i = 0; i < 49; i++) {
             int base = (int) Math.floor(16.0 * Math.pow(1.1, i));
 
-            // 演算もすべて int で行う
+            // All calculations are performed in int.
             for (int j = 0; j < 16; j++) {
                 int diff = 0;
                 if ((j & 4) != 0) {
@@ -491,7 +491,7 @@ public class MPcm {
         }
 
         if (prev == -1) {
-            // 初回だぜ．
+            // It's the first time.
             cnt = pos;
             prev = 0;
             offset = 0;
@@ -509,23 +509,23 @@ public class MPcm {
                 data &= 0x0f;
             }
 
-            // 差分テーブルから得る
+            // Get from the difference table
             index = offset << 4;
             index |= data;
             diff = diffTable[index];
 
-            // ストアデータを演算
+            // Calculate the stored data
             sample += diff;
             if (sample > 2047) sample = 2047;
             if (sample < -2048) sample = -2048;
 
-            // 偶数番値の場合はループ位置判定をする
+            // If the value is an even number, the loop position is determined.
             if (((prev + c) & 1) == 0 && (this.channels[ch].lpStart == pos)) {
                 this.channels[ch].lpSample = sample;
                 this.channels[ch].lpOffset = offset;
             }
 
-            // 次のオフセットを求めておく
+            // Find the next offset
             offset += NextTable[data & 7];
             offset = OffsetTable[offset + 1];
         }

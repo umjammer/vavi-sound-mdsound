@@ -1,3 +1,20 @@
+/*
+ * Ym2612 emulator
+ *
+ * Almost constants are taken from the MAME core
+ *
+ * This source is a part of Gens project
+ * Written by Stéphane Dallongeville (gens@consolemul.com)
+ * Copyright (c) 2002 by Stéphane Dallongeville
+ *
+ * Modified by Maxim, Blargg
+ * - removed non-Sound-related functionality
+ * - added high-pass PCM filter
+ * - added per-channel muting control
+ * - made it use a context struct to allow multiple
+ * instances
+ */
+
 package mdsound.chips;
 
 import java.lang.System.Logger;
@@ -9,22 +26,6 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import static java.lang.System.getLogger;
 
 
-/**
- * Ym2612.C : Ym2612 emulator
- * <p>
- * Almost constants are taken from the MAME core
- * <p>
- * This source is a part of Gens project
- * Written by Stéphane Dallongeville (gens@consolemul.com)
- * Copyright (c) 2002 by Stéphane Dallongeville
- * <p>
- * Modified by Maxim, Blargg
- * - removed non-Sound-related functionality
- * - added high-pass PCM filter
- * - added per-channel muting control
- * - made it use a context struct to allow multiple
- * instances
- */
 public class Ym2612 {
 
     private static final Logger logger = getLogger(Ym2612.class.getName());
@@ -622,11 +623,11 @@ logger.log(Level.TRACE, "keyOff:eCnt: " + eCnt);
     }
 
     /** Ym2612 clock */
-    private final int clock;
+    private int clock;
     /** Sample Rate (11025/22050/44100) */
     private int rate;
     /** TimerBase calculation */
-    private final int timerBase;
+    private int timerBase;
     /** Ym2612 Status (timer overflow) */
     private int status;
     /** address for writing to OPN A (emulator specific) */
@@ -660,7 +661,7 @@ logger.log(Level.TRACE, "keyOff:eCnt: " + eCnt);
     /** Interpolation Counter */
     private long interCnt;
     /** Interpolation Step */
-    private final long interStep;
+    private long interStep;
     /** The 6 channels of the Ym2612 */
     private final Channel[] channels = new Channel[] {new Channel(), new Channel(), new Channel(), new Channel(), new Channel(), new Channel()};
     /** Saving the values of all registers is optional */
@@ -1837,7 +1838,7 @@ logger.log(Level.TRACE, "Algo 1 LFO len = %d".formatted(length));
 //boolean INIT;
 
     /** Initializing the Ym2612 emulator */
-    public Ym2612(int clock, int rate, int interpolation) {
+    public void init(int clock, int rate, int interpolation) {
 
         this.clock = clock;
         this.rate = rate;

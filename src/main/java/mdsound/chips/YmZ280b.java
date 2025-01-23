@@ -73,7 +73,7 @@ public class YmZ280b {
         }
 
         /** step size index shift table */
-        private static final int[] indexScale = new int[] {0x0e6, 0x0e6, 0x0e6, 0x0e6, 0x133, 0x199, 0x200, 0x266};
+        private static final int[] indexScale = {0x0e6, 0x0e6, 0x0e6, 0x0e6, 0x133, 0x199, 0x200, 0x266};
 
         /*+ 1 if we are actively playing */
         private int playing;
@@ -398,7 +398,7 @@ public class YmZ280b {
     /** IRQ Callback */
     private Callback irqCallback;
     /** the 8 voices */
-    private final Voice[] voices = new Voice[] {
+    private final Voice[] voices = {
             new Voice(), new Voice(), new Voice(), new Voice(),
             new Voice(), new Voice(), new Voice(), new Voice()
     };
@@ -497,47 +497,47 @@ public class YmZ280b {
                 break;
 
             case 0x21: // loop start address high
-                voice.loopStart = (voice.loopStart & (0x00ffff << 1)) | (data << 17);
+                voice.loopStart = (voice.loopStart & (0x00_ffff << 1)) | (data << 17);
                 break;
 
             case 0x22: // loop end address high
-                voice.loopEnd = (voice.loopEnd & (0x00ffff << 1)) | (data << 17);
+                voice.loopEnd = (voice.loopEnd & (0x00_ffff << 1)) | (data << 17);
                 break;
 
             case 0x23: // stop address high
-                voice.stop = (voice.stop & (0x00ffff << 1)) | (data << 17);
+                voice.stop = (voice.stop & (0x00_ffff << 1)) | (data << 17);
                 break;
 
             case 0x40: // start address middle
-                voice.start = (voice.start & (0xff00ff << 1)) | (data << 9);
+                voice.start = (voice.start & (0xff_00ff << 1)) | (data << 9);
                 break;
 
             case 0x41: // loop start address middle
-                voice.loopStart = (voice.loopStart & (0xff00ff << 1)) | (data << 9);
+                voice.loopStart = (voice.loopStart & (0xff_00ff << 1)) | (data << 9);
                 break;
 
             case 0x42: // loop end address middle
-                voice.loopEnd = (voice.loopEnd & (0xff00ff << 1)) | (data << 9);
+                voice.loopEnd = (voice.loopEnd & (0xff_00ff << 1)) | (data << 9);
                 break;
 
             case 0x43: // stop address middle
-                voice.stop = (voice.stop & (0xff00ff << 1)) | (data << 9);
+                voice.stop = (voice.stop & (0xff_00ff << 1)) | (data << 9);
                 break;
 
             case 0x60: // start address low
-                voice.start = (voice.start & (0xffff00 << 1)) | (data << 1);
+                voice.start = (voice.start & (0xff_ff00 << 1)) | (data << 1);
                 break;
 
             case 0x61: // loop start address low
-                voice.loopStart = (voice.loopStart & (0xffff00 << 1)) | (data << 1);
+                voice.loopStart = (voice.loopStart & (0xff_ff00 << 1)) | (data << 1);
                 break;
 
             case 0x62: // loop end address low
-                voice.loopEnd = (voice.loopEnd & (0xffff00 << 1)) | (data << 1);
+                voice.loopEnd = (voice.loopEnd & (0xff_ff00 << 1)) | (data << 1);
                 break;
 
             case 0x63: // stop address low
-                voice.stop = (voice.stop & (0xffff00 << 1)) | (data << 1);
+                voice.stop = (voice.stop & (0xff_ff00 << 1)) | (data << 1);
                 break;
 
             default:

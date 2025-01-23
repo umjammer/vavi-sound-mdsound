@@ -11,8 +11,14 @@ import mdsound.chips.C352;
 
 public class C352Inst extends Instrument.BaseInstrument {
 
-    private static final int MAX_CHIPS = 0x02;
-    private static final C352[] chips = new C352[MAX_CHIPS];
+    public static final int MAX_CHIPS = 0x02;
+
+    private final C352[] chips = {new C352(), new C352()};
+
+    public C352Inst() {
+        // 0..Main
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
+    }
 
     @Override
     public String getName() {
@@ -24,98 +30,76 @@ public class C352Inst extends Instrument.BaseInstrument {
         return "C352";
     }
 
-    public C352Inst() {
-        visVolume = new int[][][] {
-                // 0..Main
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
-        };
-    }
-
     @Override
     public void reset(int chipId) {
-        C352 chip = chips[chipId];
-        chip.reset();
+        chips[chipId].reset();
     }
 
     @Override
-    public int start(int chipId, int samplingRate) {
-        return start(chipId, 44100, samplingRate);
+    public int start(int chipId, int samplingRate, int clock, Object... Option) {
+        assert chipId < MAX_CHIPS;
+
+        int clockDivider;
+        if (Option == null || Option.length < 1) clockDivider = 0;
+        else clockDivider = (int) Option[0];
+
+        return chips[chipId].start(clock, clockDivider * 4);
     }
 
     @Override
-    public void stop(int chipId) {
-        C352 chip = chips[chipId];
-        chip.stop();
+    public int read(int chipId, int adr) {
+        return chips[chipId].read(adr);
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        chips[chipId].write(adr, data);
+        return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        C352 chip = chips[chipId];
-        chip.update(outputs, samples);
+        chips[chipId].update(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
     }
 
     @Override
-    public int start(int chipId, int samplingRate, int clock, Object... Option) {
-        byte clockDivider;
-        if (Option == null || Option.length < 1) clockDivider = 0;
-        else clockDivider = (byte) Option[0];
+    public void stop(int chipId) {
+        chips[chipId].stop();
+    }
 
-        if (chipId >= MAX_CHIPS)
-            return 0;
+    public void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
+        writePcm(chipId, romSize, dataStart, dataLength, romData, 0);
+    }
 
+    public void setMuteMask(int chipId, int muteMask) {
+        chips[chipId].setMuteMask(muteMask);
+    }
+
+    public int getMuteMask(int chipId) {
+        return chips[chipId].getMuteMask();
+    }
+
+    //----
+
+    public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
         C352 chip = chips[chipId];
-        return chip.start(clock, clockDivider * 4);
+        chip.writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
     }
 
-    @Override
-    public int write(int chipId, int port, int adr, int data) {
+    public synchronized int[] readFlags(int chipId) {
         C352 chip = chips[chipId];
-        chip.write(adr, data);
-        return 0;
+        return chip.getFlags();
     }
 
-    private int read(int chipId, int address) {
-        C352 chip = chips[chipId];
-        return chip.read(address);
-    }
-
-    public void c352_write_rom(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
-        C352 chip = chips[chipId];
-        chip.writeRom(romSize, dataStart, dataLength, romData);
-    }
-
-    public void c352_write_rom2(int chipId, int romSize, int dataStart, int dataLength,
-                                byte[] romData, int srcStartAdr) {
-        C352 c = chips[chipId];
-        c.writeRom2(romSize, dataStart, dataLength, romData, srcStartAdr);
-    }
-
-    private static void c352_set_mute_mask(int chipId, int muteMask) {
-        C352 c = chips[chipId];
-        c.setMuteMask(muteMask);
-    }
-
-    private static int c352_get_mute_mask(int chipId) {
-        C352 c = chips[chipId];
-        return c.getMuteMask();
-    }
-
-    public void c352_set_options(byte flags) {
-        C352.setOptions(flags);
-    }
-
-    private static int get_mute_mask(int chipId) {
-        C352 c = chips[chipId];
-        return c.getMuteMask();
-    }
-
-    public int[] getFlags(int chipId) {
-        C352 c = chips[chipId];
-        return c.getFlags();
+    /**
+     * used for volume also
+     * @see mdsound.MDSound.Chip.SetVolume
+     */
+    public void setRearMute(int vol, double ignored) {
+        C352.setOptions(vol & 0xff); // TODO ugly
     }
 
     //----
@@ -133,10 +117,5 @@ public class C352Inst extends Instrument.BaseInstrument {
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
         }
         return result;
-    }
-
-    // TODO
-    public void setRearMute(int vol, double ignored) {
-        c352_set_options((byte) (vol & 0xff));
     }
 }

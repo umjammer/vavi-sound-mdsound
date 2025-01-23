@@ -1,9 +1,48 @@
+/*
+ * Copyright (C) 2017-2018 Alexey Khokholov (Nuke.YKT)
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
+ */
+
 package mdsound.chips;
 
-import java.util.Arrays;
+import mdsound.chips.Ym3438Const.Type;
+
+import static mdsound.chips.Ym3438Const.chOffset;
+import static mdsound.chips.Ym3438Const.chip_type;
+import static mdsound.chips.Ym3438Const.egAmShift;
+import static mdsound.chips.Ym3438Const.egStephi;
+import static mdsound.chips.Ym3438Const.expRom;
+import static mdsound.chips.Ym3438Const.fmAlgorithm;
+import static mdsound.chips.Ym3438Const.fnNote;
+import static mdsound.chips.Ym3438Const.lfoCycles;
+import static mdsound.chips.Ym3438Const.logSinRom;
+import static mdsound.chips.Ym3438Const.opOffset;
+import static mdsound.chips.Ym3438Const.pgDetune;
+import static mdsound.chips.Ym3438Const.pgLfoSh1;
+import static mdsound.chips.Ym3438Const.pgLfoSh2;
 
 
 /**
+ * Nuked OPN2(Yamaha YM3438) emulator.
+ *
+ * @author Alexey Khokholov (Nuke.YKT)
+ * @version 1.0.12
+ * @see "Silicon Pr0n: Yamaha YM3438 decap and die shot(digshadow)."
+ * @see "OPLx decapsulated(Matthew Gambrell, Olli Niemitalo): OPL2 ROMs."
+ * @see "https://github.com/nukeykt/Nuked-OPN2/blob/master/ym3438.c"
  * @see "https://github.com/abbruzze/sega-md/blob/3c8f24d62d6f533b65525b98e74d81530ef5393d/src/ucesoft/smd/audio/Ym3438.java"
  */
 public class Ym3438 {
@@ -13,10 +52,6 @@ public class Ym3438 {
         Decay,
         Sustain,
         Release;
-
-        static Eg valueOf(int v) {
-            return Arrays.stream(values()).filter(e -> e.ordinal() == v).findFirst().get();
-        }
     }
 
     private static class Opn2WriteBuf {
@@ -60,12 +95,12 @@ public class Ym3438 {
 
     // Phase generator
 
-    private short pgFnum;
+    private int pgFNum;
     private int pgBlock;
-    private int pgKcode;
+    private int pgKCode;
     private final int[] pgInc = new int[24];
     private final int[] pgPhase = new int[24];
-    private final byte[] pgReset = new byte[24];
+    private final int[] pgReset = new int[24];
     private int pgRead;
     // Envelope generator
     private int egCycle;
@@ -81,36 +116,36 @@ public class Ym3438 {
     private int egKsv;
     private int egInc;
     private int egRateMax;
-    private final byte[] egSl = new byte[2];
+    private final int[] egSl = new int[2];
     private int egLfoAm;
-    private final byte[] egTl = new byte[2];
-    private byte[] egState = new byte[24];
-    private short[] egLevel = new short[24];
-    private short[] egOut = new short[24];
-    private final byte[] egKon = new byte[24];
-    private final byte[] egKonCsm = new byte[24];
-    private final byte[] egKonLatch = new byte[24];
-    private final byte[] egCsmMode = new byte[24];
-    private final byte[] egSsgEnable = new byte[24];
-    private final byte[] egSsgPgrstLatch = new byte[24];
-    private final byte[] egSsgRepeatLatch = new byte[24];
-    private final byte[] egSsgHoldUpLatch = new byte[24];
-    private final byte[] egSsgDir = new byte[24];
-    private final byte[] egSsgInv = new byte[24];
+    private final int[] egTl = new int[2];
+    private int[] egState = new int[24];
+    private int[] egLevel = new int[24];
+    private int[] egOut = new int[24];
+    private final int[] egKon = new int[24];
+    private final int[] egKonCsm = new int[24];
+    private final int[] egKonLatch = new int[24];
+    private final int[] egCsmMode = new int[24];
+    private final int[] egSsgEnable = new int[24];
+    private final int[] egSsgPgrstLatch = new int[24];
+    private final int[] egSsgRepeatLatch = new int[24];
+    private final int[] egSsgHoldUpLatch = new int[24];
+    private final int[] egSsgDir = new int[24];
+    private final int[] egSsgInv = new int[24];
     private final int[] egRead = new int[2];
     private int egReadInc;
 
     // FM
 
-    private final short[][] fmOp1 = new short[][] {new short[2], new short[2], new short[2], new short[2], new short[2], new short[2]};
-    private final short[] fmOp2 = new short[6];
-    private final short[] fmOut = new short[24];
-    private final short[] fmMod = new short[24];
+    private final int[][] fmOp1 = {new int[2], new int[2], new int[2], new int[2], new int[2], new int[2]};
+    private final int[] fmOp2 = new int[6];
+    private final int[] fmOut = new int[24];
+    private final int[] fmMod = new int[24];
 
     // Channel
 
-    private final short[] chAcc = new short[6];
-    private final short[] chOut = new short[6];
+    private final int[] chAcc = new int[6];
+    private final int[] chOut = new int[6];
     private int chLock;
     private int chLockL;
     private int chLockR;
@@ -141,42 +176,42 @@ public class Ym3438 {
 
     // Register set
 
-    private final byte[] modeTest21 = new byte[8];
-    private final byte[] modeTest2C = new byte[8];
+    private final int[] modeTest21 = new int[8];
+    private final int[] modeTest2C = new int[8];
     private int modeCh3;
     private int modeKonChannel;
-    private final byte[] modeKonOperator = new byte[4];
-    private final byte[] modeKon = new byte[24];
+    private final int[] modeKonOperator = new int[4];
+    private final int[] modeKon = new int[24];
     private int modeCsm;
     private int modeKonCsm;
     private int dacEn;
     private int dacData;
 
-    private final byte[] ks = new byte[24];
-    private final byte[] ar = new byte[24];
-    private final byte[] sr = new byte[24];
-    private final byte[] dt = new byte[24];
-    private byte[] multi = new byte[24];
-    private final byte[] sl = new byte[24];
-    private final byte[] rr = new byte[24];
-    private final byte[] dr = new byte[24];
-    private final byte[] am = new byte[24];
-    private final byte[] tl = new byte[24];
-    private final byte[] ssgEg = new byte[24];
+    private final int[] ks = new int[24];
+    private final int[] ar = new int[24];
+    private final int[] sr = new int[24];
+    private final int[] dt = new int[24];
+    private int[] multi = new int[24];
+    private final int[] sl = new int[24];
+    private final int[] rr = new int[24];
+    private final int[] dr = new int[24];
+    private final int[] am = new int[24];
+    private final int[] tl = new int[24];
+    private final int[] ssgEg = new int[24];
 
-    private final short[] fnum = new short[6];
-    private final byte[] block = new byte[6];
-    private final byte[] kcode = new byte[6];
-    private final short[] fnum3Ch = new short[6];
-    private final byte[] block3Ch = new byte[6];
-    private final byte[] kcode3Ch = new byte[6];
+    private final int[] fNum = new int[6];
+    private final int[] block = new int[6];
+    private final int[] kCode = new int[6];
+    private final int[] fNum3Ch = new int[6];
+    private final int[] block3Ch = new int[6];
+    private final int[] kCode3Ch = new int[6];
     private int regA4;
     private int regAc;
-    private final byte[] connect = new byte[6];
-    private final byte[] fb = new byte[6];
-    private byte[] panL = new byte[6], panR = new byte[6];
-    private final byte[] ams = new byte[6];
-    private final byte[] pms = new byte[6];
+    private final int[] connect = new int[6];
+    private final int[] fb = new int[6];
+    private int[] panL = new int[6], panR = new int[6];
+    private final int[] ams = new int[6];
+    private final int[] pms = new int[6];
 
     private final int[] mute = new int[7];
     private int rateRatio;
@@ -192,7 +227,7 @@ public class Ym3438 {
 
     public Ym3438() {
         for (int i = 0; i < writeBuf.length; i++) {
-            writeBuf[i] = new Ym3438.Opn2WriteBuf();
+            writeBuf[i] = new Opn2WriteBuf();
         }
     }
 
@@ -200,8 +235,8 @@ public class Ym3438 {
         this.writeAEn = (this.writeA & 0x03) == 0x01 ? 1 : 0;
         this.writeDEn = (this.writeD & 0x03) == 0x01 ? 1 : 0;
         //logger.log(Level.TRACE, "aen:%d den:%d".formatted(this.write_a_en, this.write_d_en));
-        this.writeA <<= 1;
-        this.writeD <<= 1;
+        this.writeA = (this.writeA << 1) & 0xff;
+        this.writeD = (this.writeD << 1) & 0xff;
         // BUSY Counter
         this.busy = this.writeBusy;
         this.writeBusyCnt += this.writeBusy;
@@ -214,76 +249,76 @@ public class Ym3438 {
         int address;
         int channel = this.channel;
         if (this.writeFmData != 0) {
-            if (Ym3438Const.opOffset[slot] == (this.address & 0x107)) {
+            if (opOffset[slot] == (this.address & 0x107)) {
                 if ((this.address & 0x08) != 0) {
                     slot += 12; // OP2? OP4?
                 }
                 address = this.address & 0xf0;
                 switch (address) {
-                case 0x30: //DT MULTI
-                    this.multi[slot] = (byte) (this.data & 0x0f);
+                case 0x30: // DT MULTI
+                    this.multi[slot] = this.data & 0x0f;
                     if (this.multi[slot] == 0) {
                         this.multi[slot] = 1;
                     } else {
                         this.multi[slot] <<= 1;
                     }
-                    this.dt[slot] = (byte) ((this.data >> 4) & 0x07);
+                    this.dt[slot] = (this.data >> 4) & 0x07;
                     break;
-                case 0x40: //TL
-                    this.tl[slot] = (byte) (this.data & 0x7f);
+                case 0x40: // TL
+                    this.tl[slot] = this.data & 0x7f;
                     break;
                 case 0x50: // KS AR
-                    this.ar[slot] = (byte) (this.data & 0x1f);
-                    this.ks[slot] = (byte) ((this.data >> 6) & 0x03);
+                    this.ar[slot] = this.data & 0x1f;
+                    this.ks[slot] = (this.data >> 6) & 0x03;
                     break;
                 case 0x60: // AM DR
-                    this.dr[slot] = (byte) (this.data & 0x1f);
-                    this.am[slot] = (byte) ((this.data >> 7) & 0x01);
+                    this.dr[slot] = this.data & 0x1f;
+                    this.am[slot] = (this.data >> 7) & 0x01;
                     break;
                 case 0x70: //SR
-                    this.sr[slot] = (byte) (this.data & 0x1f);
+                    this.sr[slot] = this.data & 0x1f;
                     break;
                 case 0x80: //SL RR
-                    this.rr[slot] = (byte) (this.data & 0x0f);
-                    this.sl[slot] = (byte) ((this.data >> 4) & 0x0f);
-                    this.sl[slot] |= (byte) ((this.sl[slot] + 1) & 0x10);
+                    this.rr[slot] = this.data & 0x0f;
+                    this.sl[slot] = (this.data >> 4) & 0x0f;
+                    this.sl[slot] |= (this.sl[slot] + 1) & 0x10;
                     break;
                 case 0x90:
-                    this.ssgEg[slot] = (byte) (this.data & 0x0f);
+                    this.ssgEg[slot] = this.data & 0x0f;
                     break;
                 default:
                     break;
                 }
             }
 
-            if (Ym3438Const.chOffset[channel] == (this.address & 0x103)) {
+            if (chOffset[channel] == (this.address & 0x103)) {
                 address = this.address & 0xfc;
                 switch (address) {
-                case 0xa0: //Fnum, Block, kcode
-                    this.fnum[channel] = (short) ((this.data & 0xff) | ((this.regA4 & 0x07) << 8));
-                    this.block[channel] = (byte) ((this.regA4 >> 3) & 0x07);
-                    this.kcode[channel] = (byte) (((this.block[channel] & 0xff) << 2) | Ym3438Const.fnNote[this.fnum[channel] >> 7]);
+                case 0xa0: // Fnum, Block, kCode
+                    this.fNum[channel] = (this.data & 0xff) | ((this.regA4 & 0x07) << 8);
+                    this.block[channel] = (this.regA4 >> 3) & 0x07;
+                    this.kCode[channel] = ((this.block[channel] & 0xff) << 2) | fnNote[this.fNum[channel] >> 7];
                     break;
                 case 0xa4: // a4?
                     this.regA4 = this.data & 0xff;
                     break;
-                case 0xa8: // fNum, block, kcode 3ch
-                    this.fnum3Ch[channel] = (short) ((this.data & 0xff) | ((this.regAc & 0x07) << 8));
-                    this.block3Ch[channel] = (byte) ((this.regAc >> 3) & 0x07);
-                    this.kcode3Ch[channel] = (byte) (((this.block3Ch[channel] & 0xff) << 2) | Ym3438Const.fnNote[this.fnum3Ch[channel] >> 7]);
+                case 0xa8: // fNum, block, kCode 3ch
+                    this.fNum3Ch[channel] = (this.data & 0xff) | ((this.regAc & 0x07) << 8);
+                    this.block3Ch[channel] = (this.regAc >> 3) & 0x07;
+                    this.kCode3Ch[channel] = ((this.block3Ch[channel] & 0xff) << 2) | fnNote[this.fNum3Ch[channel] >> 7];
                     break;
-                case 0xac: //ac?
+                case 0xac: // ac?
                     this.regAc = this.data & 0xff;
                     break;
                 case 0xb0: // Connect FeedBack
-                    this.connect[channel] = (byte) (this.data & 0x07);
-                    this.fb[channel] = (byte) ((this.data >> 3) & 0x07);
+                    this.connect[channel] = this.data & 0x07;
+                    this.fb[channel] = (this.data >> 3) & 0x07;
                     break;
-                case 0xb4: //Modulate Pan
-                    this.pms[channel] = (byte) (this.data & 0x07);
-                    this.ams[channel] = (byte) ((this.data >> 4) & 0x03);
-                    this.panL[channel] = (byte) ((this.data >> 7) & 0x01);
-                    this.panR[channel] = (byte) ((this.data >> 6) & 0x01);
+                case 0xb4: // Modulate Pan
+                    this.pms[channel] = this.data & 0x07;
+                    this.ams[channel] = (this.data >> 4) & 0x03;
+                    this.panL[channel] = (this.data >> 7) & 0x01;
+                    this.panR[channel] = (this.data >> 6) & 0x01;
                     break;
                 default:
                     break;
@@ -306,12 +341,12 @@ public class Ym3438 {
                     this.writeFmAddress = 0;
                 }
             }
-            //logger.log(Level.TRACE, "d_en:%d wdata:%d adr:%d".formatted(this.write_d_en, this.write_data, this.address));
+//logger.log(Level.TRACE, "d_en:%d wdata:%d adr:%d".formatted(this.write_d_en, this.write_data, this.address));
             if (this.writeDEn != 0 && (this.writeData & 0x100) == 0) {
                 switch (this.address) {
                 case 0x21: // LSI test 1
                     for (int i = 0; i < 8; i++) {
-                        this.modeTest21[i] = (byte) ((this.writeData >> i) & 0x01);
+                        this.modeTest21[i] = (this.writeData >> i) & 0x01;
                     }
                     break;
                 case 0x22: // LFO control
@@ -320,7 +355,7 @@ public class Ym3438 {
                     } else {
                         this.lfoEn = 0;
                     }
-                    this.lfoFreq = (byte) (this.writeData & 0x07);
+                    this.lfoFreq = this.writeData & 0x07;
                     break;
                 case 0x24: // Timer A
                     this.timerAReg &= 0x03;
@@ -328,7 +363,7 @@ public class Ym3438 {
                     break;
                 case 0x25:
                     this.timerAReg &= 0x3fc;
-                    this.timerAReg |= (byte) (this.writeData & 0x03);
+                    this.timerAReg |= this.writeData & 0x03;
                     break;
                 case 0x26: // Timer B
                     this.timerBReg = this.writeData & 0xff;
@@ -345,7 +380,7 @@ public class Ym3438 {
                     break;
                 case 0x28: // Key on/off
                     for (int i = 0; i < 4; i++) {
-                        this.modeKonOperator[i] = (byte) ((this.writeData >> (4 + i)) & 0x01);
+                        this.modeKonOperator[i] = (this.writeData >> (4 + i)) & 0x01;
                     }
                     if ((this.writeData & 0x03) == 0x03) {
                         // Invalid address
@@ -365,7 +400,7 @@ public class Ym3438 {
                     break;
                 case 0x2c: // LSI test 2
                     for (int i = 0; i < 8; i++) {
-                        this.modeTest2C[i] = (byte) ((this.writeData >> i) & 0x01);
+                        this.modeTest2C[i] = (this.writeData >> i) & 0x01;
                     }
                     this.dacData &= 0x1fe;
                     this.dacData |= this.modeTest2C[3];
@@ -376,7 +411,7 @@ public class Ym3438 {
                 }
             }
             if (this.writeAEn != 0) {
-                this.writeFmModeA = this.writeData & 0xff;
+                this.writeFmModeA = this.writeData & 0xff; // vavi: 0x1ff
             }
         }
 
@@ -386,10 +421,10 @@ public class Ym3438 {
     }
 
     private void phaseCalcIncrement() {
-        int fnum = this.pgFnum;
-        int fnum_h = fnum >> 4;
+        int fNum = this.pgFNum;
+        int fNum_h = fNum >> 4;
         int fm;
-        int basefreq;
+        int baseFreq;
         int lfo = this.lfoPm;
         int lfo_l = lfo & 0x0f;
         int pms = this.pms[this.channel] & 0xff;
@@ -398,26 +433,26 @@ public class Ym3438 {
         int detune = 0;
         int block, note;
         int sum, sum_h, sum_l;
-        int kcode = this.pgKcode;
+        int kcode = this.pgKCode;
 
-        fnum <<= 1;
+        fNum <<= 1;
         if ((lfo_l & 0x08) != 0) {
             lfo_l ^= 0x0f;
         }
-        fm = (fnum_h >> Ym3438Const.pgLfoSh1[pms][lfo_l]) + (fnum_h >> Ym3438Const.pgLfoSh2[pms][lfo_l]);
+        fm = (fNum_h >> pgLfoSh1[pms][lfo_l]) + (fNum_h >> pgLfoSh2[pms][lfo_l]);
         if (pms > 5) {
             fm <<= pms - 5;
         }
         fm >>= 2;
         if ((lfo & 0x10) != 0) {
-            fnum -= fm;
+            fNum -= fm;
         } else {
-            fnum += fm;
+            fNum += fm;
         }
-        fnum &= 0xfff;
+        fNum &= 0xfff;
 
-        basefreq = (fnum << this.pgBlock) >> 2;
-        //logger.log(Level.TRACE, "040   basefreq:%d fNum:%d this.pg_block:%d".formatted(basefreq, fNum, this.pg_block));
+        baseFreq = (fNum << this.pgBlock) >> 2;
+//logger.log(Level.TRACE, "040   baseFreq:%d fNum:%d this.pg_block:%d".formatted(baseFreq, fNum, this.pg_block));
 
         // Apply detune
         if (dt_l != 0) {
@@ -429,16 +464,16 @@ public class Ym3438 {
             sum = block + 9 + (((dt_l == 3) ? 1 : 0) | (dt_l & 0x02));
             sum_h = sum >> 1;
             sum_l = sum & 0x01;
-            detune = Ym3438Const.pgDetune[(sum_l << 2) | note] >> (9 - sum_h);
+            detune = pgDetune[(sum_l << 2) | note] >> (9 - sum_h);
         }
         if ((dt & 0x04) != 0) {
-            basefreq -= detune;
+            baseFreq -= detune;
         } else {
-            basefreq += detune;
+            baseFreq += detune;
         }
-        basefreq &= 0x1ffff;
-        this.pgInc[this.slot] = (basefreq * (this.multi[this.slot] & 0xff)) >> 1;
-        this.pgInc[this.slot] &= 0xfffff;
+        baseFreq &= 0x1_ffff;
+        this.pgInc[this.slot] = (baseFreq * (this.multi[this.slot] & 0xff)) >> 1;
+        this.pgInc[this.slot] &= 0xf_ffff;
     }
 
     private void phaseGenerate() {
@@ -451,7 +486,7 @@ public class Ym3438 {
         // Phase step
         slot = (this.slot + 19) % 24;
         this.pgPhase[slot] += this.pgInc[slot];
-        this.pgPhase[slot] &= 0xfffff;
+        this.pgPhase[slot] &= 0xf_ffff;
         if (this.pgReset[slot] != 0 || this.modeTest21[3] != 0) {
             this.pgPhase[slot] = 0;
         }
@@ -465,7 +500,7 @@ public class Ym3438 {
         this.egSsgHoldUpLatch[slot] = 0;
         this.egSsgInv[slot] = 0;
         if ((this.ssgEg[slot] & 0x08) != 0) {
-            direction = this.egSsgDir[slot] & 0xff;
+            direction = this.egSsgDir[slot];
             if ((this.egLevel[slot] & 0x200) != 0) {
                 // Reset
                 if ((this.ssgEg[slot] & 0x03) == 0x00) {
@@ -489,23 +524,23 @@ public class Ym3438 {
                 this.egSsgHoldUpLatch[slot] = 1;
             }
             direction &= this.egKon[slot];
-            this.egSsgInv[slot] = (byte) (((this.egSsgDir[slot] & 0xff) ^ (((this.ssgEg[slot] & 0xff) >> 2) & 0x01)) & (this.egKon[slot] & 0xff));
+            this.egSsgInv[slot] = ((this.egSsgDir[slot] & 0xff) ^ (((this.ssgEg[slot] & 0xff) >> 2) & 0x01)) & (this.egKon[slot] & 0xff);
         }
-        this.egSsgDir[slot] = (byte) direction;
-        this.egSsgEnable[slot] = (byte) ((this.ssgEg[slot] >> 3) & 0x01);
+        this.egSsgDir[slot] = direction;
+        this.egSsgEnable[slot] = (this.ssgEg[slot] >> 3) & 0x01;
     }
 
     private void envelopeADSR() {
         int slot = (this.slot + 22) % 24;
 
-        int nkon = this.egKonLatch[slot] & 0xff;
-        //logger.log(Level.TRACE, "nkon:%d".formatted(nkon));
-        int okon = this.egKon[slot] & 0xff;
-        int kon_event;
-        int koff_event;
+        int nkOn = this.egKonLatch[slot] & 0xff;
+//logger.log(Level.TRACE, "nkOn:%d".formatted(nkOn));
+        int okOn = this.egKon[slot] & 0xff;
+        int kOn_event;
+        int kOff_event;
         int eg_off;
         int level;
-        int nextlevel;
+        int nextLevel;
         int ssg_level;
         int nextstate = this.egState[slot] & 0xff;
         int inc = 0;
@@ -513,11 +548,11 @@ public class Ym3438 {
         this.egReadInc = this.egInc > 0 ? 1 : 0;
 
         // Reset phase generator
-        this.pgReset[slot] = (byte) (((nkon != 0 && okon == 0) || this.egSsgPgrstLatch[slot] != 0) ? 1 : 0);
+        this.pgReset[slot] = ((nkOn != 0 && okOn == 0) || this.egSsgPgrstLatch[slot] != 0) ? 1 : 0;
 
         // KeyOn/Off
-        kon_event = ((nkon != 0 && okon == 0) || (okon != 0 && this.egSsgRepeatLatch[slot] != 0)) ? 1 : 0;
-        koff_event = (okon != 0 && nkon == 0) ? 1 : 0;
+        kOn_event = ((nkOn != 0 && okOn == 0) || (okOn != 0 && this.egSsgRepeatLatch[slot] != 0)) ? 1 : 0;
+        kOff_event = (okOn != 0 && nkOn == 0) ? 1 : 0;
 
         ssg_level = level = this.egLevel[slot];
 
@@ -526,7 +561,7 @@ public class Ym3438 {
             ssg_level = 512 - level;
             ssg_level &= 0x3ff;
         }
-        if (koff_event != 0) {
+        if (kOff_event != 0) {
             level = ssg_level;
         }
         if (this.egSsgEnable[slot] != 0) {
@@ -534,26 +569,26 @@ public class Ym3438 {
         } else {
             eg_off = (level & 0x3f0) == 0x3f0 ? 1 : 0;
         }
-        nextlevel = level;
-        //logger.log(Level.TRACE, "nextlevel:%d this.eg_state[slot]:%d slot:%d".formatted(nextlevel, this.eg_state[slot],slot));
-        if (kon_event != 0) {
+        nextLevel = level;
+//logger.log(Level.TRACE, "nextLevel:%d this.eg_state[slot]:%d slot:%d".formatted(nextLevel, this.eg_state[slot],slot));
+        if (kOn_event != 0) {
             nextstate = Eg.Attack.ordinal();
             // Instant attack
             if (this.egRateMax != 0) {
-                nextlevel = 0;
-            } else if ((this.egState[slot] & 0xff) == Eg.Attack.ordinal() && level != 0 && this.egInc != 0 && nkon != 0) {
+                nextLevel = 0;
+            } else if ((this.egState[slot] & 0xff) == Eg.Attack.ordinal() && level != 0 && this.egInc != 0 && nkOn != 0) {
                 inc = (~level << this.egInc) >> 5;
             }
-            //logger.log(Level.TRACE, "inc:%d".formatted(inc));
+//logger.log(Level.TRACE, "inc:%d".formatted(inc));
         } else {
-            switch (Eg.valueOf(this.egState[slot])) {
+            switch (Eg.values()[this.egState[slot]]) {
             case Attack:
                 if (level == 0) {
                     nextstate = Eg.Decay.ordinal();
-                } else if (this.egInc != 0 && this.egRateMax == 0 && nkon != 0) {
+                } else if (this.egInc != 0 && this.egRateMax == 0 && nkOn != 0) {
                     inc = (~level << this.egInc) >> 5;
                 }
-                //logger.log(Level.TRACE, "ainc:%d".formatted(inc));
+//logger.log(Level.TRACE, "a-inc:%d".formatted(inc));
                 break;
             case Decay:
                 if ((level >> 5) == this.egSl[1]) {
@@ -564,7 +599,7 @@ public class Ym3438 {
                         inc <<= 2;
                     }
                 }
-                //logger.log(Level.TRACE, "dinc:%d".formatted(inc));
+//logger.log(Level.TRACE, "d-inc:%d".formatted(inc));
                 break;
             case Sustain:
             case Release:
@@ -574,34 +609,34 @@ public class Ym3438 {
                         inc <<= 2;
                     }
                 }
-                //logger.log(Level.TRACE, "srinc:%d".formatted(inc));
+//logger.log(Level.TRACE, "sr-inc:%d".formatted(inc));
                 break;
             default:
                 break;
             }
-            if (nkon == 0) {
+            if (nkOn == 0) {
                 nextstate = Eg.Release.ordinal();
-                //logger.log(Level.TRACE, "1rel".formatted(inc));
+//logger.log(Level.TRACE, "1rel".formatted(inc));
             }
         }
         if (this.egKonCsm[slot] != 0) {
-            nextlevel |= this.egTl[1] << 3;
+            nextLevel |= this.egTl[1] << 3;
         }
 
         // Envelope off
-        if (kon_event == 0 && this.egSsgHoldUpLatch[slot] == 0 && (this.egState[slot] & 0xff) != Eg.Attack.ordinal() && eg_off != 0) {
+        if (kOn_event == 0 && this.egSsgHoldUpLatch[slot] == 0 && (this.egState[slot] & 0xff) != Eg.Attack.ordinal() && eg_off != 0) {
             nextstate = Eg.Release.ordinal();
-            nextlevel = 0x3ff;
-            //logger.log(Level.TRACE, "2rel".formatted(inc));
+            nextLevel = 0x3ff;
+//logger.log(Level.TRACE, "2rel".formatted(inc));
         }
 
-        nextlevel += inc;
-        //logger.log(Level.TRACE, "nextlevel:%d".formatted(nextlevel));
+        nextLevel += inc;
+//logger.log(Level.TRACE, "nextLevel:%d".formatted(nextLevel));
 
         this.egKon[slot] = this.egKonLatch[slot];
-        this.egLevel[slot] = (short) (nextlevel & 0x3ff);
-        this.egState[slot] = (byte) nextstate;
-        //logger.log(Level.TRACE, "this.eg_level[slot]:%d slot:%d".formatted(this.eg_level[slot], slot));
+        this.egLevel[slot] = nextLevel & 0x3ff;
+        this.egState[slot] = nextstate;
+//logger.log(Level.TRACE, "this.eg_level[slot]:%d slot:%d".formatted(this.eg_level[slot], slot));
     }
 
     private void envelopePrepare() {
@@ -635,7 +670,7 @@ public class Ym3438 {
                     break;
                 }
             } else {
-                inc = Ym3438Const.egStephi[rate & 0x03][this.egTimerLowLock] + (rate >> 2) - 11;
+                inc = egStephi[rate & 0x03][this.egTimerLowLock] + (rate >> 2) - 11;
                 if (inc > 4) {
                     inc = 4;
                 }
@@ -650,7 +685,7 @@ public class Ym3438 {
                 || (this.egKon[slot] == 0 && this.egKonLatch[slot] != 0)) {
             rate_sel = Eg.Attack.ordinal();
         }
-        switch (Eg.valueOf(rate_sel)) {
+        switch (Eg.values()[rate_sel]) {
         case Attack:
             this.egRate = this.ar[slot];
             break;
@@ -666,9 +701,9 @@ public class Ym3438 {
         default:
             break;
         }
-        this.egKsv = this.pgKcode >> (this.ks[slot] ^ 0x03);
+        this.egKsv = this.pgKCode >> (this.ks[slot] ^ 0x03);
         if (this.am[slot] != 0) {
-            this.egLfoAm = this.lfoAm >> Ym3438Const.egAmShift[this.ams[this.channel]];
+            this.egLfoAm = this.lfoAm >> egAmShift[this.ams[this.channel]];
         } else {
             this.egLfoAm = 0;
         }
@@ -683,8 +718,8 @@ public class Ym3438 {
         int slot = (this.slot + 23) % 24;
         int level;
 
-        level = this.egLevel[slot] & 0xffff;
-        //logger.log(Level.TRACE, "level:%d".formatted(level));
+        level = this.egLevel[slot];
+//logger.log(Level.TRACE, "level:%d".formatted(level));
 
         if (this.egSsgInv[slot] != 0) {
             // Inverse
@@ -705,12 +740,12 @@ public class Ym3438 {
         if (level > 0x3ff) {
             level = 0x3ff;
         }
-        this.egOut[slot] = (short) level;
-        //logger.log(Level.TRACE, "this.eg_out[slot]:%d slot:%d".formatted(this.eg_out[slot], slot));
+        this.egOut[slot] = level;
+//logger.log(Level.TRACE, "this.eg_out[slot]:%d slot:%d".formatted(this.eg_out[slot], slot));
     }
 
     private void updateLFO() {
-        if ((this.lfoQuotient & Ym3438Const.lfoCycles[this.lfoFreq]) == Ym3438Const.lfoCycles[this.lfoFreq]) {
+        if ((this.lfoQuotient & lfoCycles[this.lfoFreq]) == lfoCycles[this.lfoFreq]) {
             this.lfoQuotient = 0;
             this.lfoCnt++;
         } else {
@@ -730,32 +765,32 @@ public class Ym3438 {
         // Calculate modulation
         mod1 = mod2 = 0;
 
-        if (Ym3438Const.fmAlgorithm[op][0][connect] != 0) {
+        if (fmAlgorithm[op][0][connect] != 0) {
             mod2 |= this.fmOp1[channel][0];
         }
-        if (Ym3438Const.fmAlgorithm[op][1][connect] != 0) {
+        if (fmAlgorithm[op][1][connect] != 0) {
             mod1 |= this.fmOp1[channel][1];
         }
-        if (Ym3438Const.fmAlgorithm[op][2][connect] != 0) {
+        if (fmAlgorithm[op][2][connect] != 0) {
             mod1 |= this.fmOp2[channel];
         }
-        if (Ym3438Const.fmAlgorithm[op][3][connect] != 0) {
+        if (fmAlgorithm[op][3][connect] != 0) {
             mod2 |= this.fmOut[prevslot];
         }
-        if (Ym3438Const.fmAlgorithm[op][4][connect] != 0) {
+        if (fmAlgorithm[op][4][connect] != 0) {
             mod1 |= this.fmOut[prevslot];
         }
         mod = mod1 + mod2;
         if (op == 0) {
             // Feedback
-            mod = mod >> (10 - this.fb[channel] & 0xff);
+            mod = mod >> (10 - this.fb[channel]);
             if (this.fb[channel] == 0) {
                 mod = 0;
             }
         } else {
             mod >>= 1;
         }
-        this.fmMod[slot] = (short) mod;
+        this.fmMod[slot] = mod;
 
         slot = (this.slot + 18) % 24;
         // OP1
@@ -773,19 +808,19 @@ public class Ym3438 {
         int slot = (this.slot + 18) % 24;
         int channel = this.channel;
         int op = slot / 6;
-        int test_dac = this.modeTest2C[5] & 0xff;
-        int acc = this.chAcc[channel] & 0xffff;
+        int test_dac = this.modeTest2C[5];
+        int acc = this.chAcc[channel];
         int add = test_dac;
         int sum;
         if (op == 0 && test_dac == 0) {
             acc = 0;
         }
-        if (Ym3438Const.fmAlgorithm[op][5][this.connect[channel]] != 0 && test_dac == 0) {
-            add += (short) (this.fmOut[slot] >> 5);
-            //logger.log(Level.TRACE, "040   this.fm_out[slot]:%d slot:%d".formatted(this.fm_out[slot], slot));
+        if (fmAlgorithm[op][5][this.connect[channel]] != 0 && test_dac == 0) {
+            add += this.fmOut[slot] >> 5;
+//logger.log(Level.TRACE, "040   this.fm_out[slot]:%d slot:%d".formatted(this.fm_out[slot], slot));
         }
         sum = acc + add;
-        //logger.log(Level.TRACE, "040   acc:%d add:%d".formatted(acc, add));
+//logger.log(Level.TRACE, "040   acc:%d add:%d".formatted(acc, add));
         // Clamp
         if (sum > 255) {
             sum = 255;
@@ -796,14 +831,14 @@ public class Ym3438 {
         if (op == 0 || test_dac != 0) {
             this.chOut[channel] = this.chAcc[channel];
         }
-        this.chAcc[channel] = (short) sum;
+        this.chAcc[channel] = sum;
     }
 
     private void chOutput() {
         int cycles = this.cycles;
         int channel = this.channel;
         int test_dac = this.modeTest2C[5] & 0xff;
-        int out_;
+        short out_;
         int sign;
         int out_en;
         this.chRead = this.chLock;
@@ -814,23 +849,23 @@ public class Ym3438 {
         if ((cycles & 3) == 0) {
             if (test_dac == 0) {
                 // Lock value
-                this.chLock = this.chOut[channel] & 0xffff;
+                this.chLock = this.chOut[channel];
             }
-            this.chLockL = this.panL[channel] & 0xff;
-            this.chLockR = this.panR[channel] & 0xff;
+            this.chLockL = this.panL[channel];
+            this.chLockR = this.panR[channel];
         }
         // Ch 6
         if (((cycles >> 2) == 1 && this.dacEn != 0) || test_dac != 0) {
-            out_ = this.dacData;
+            out_ = (short) this.dacData;
             out_ <<= 7;
             out_ >>= 7;
         } else {
-            out_ = this.chLock;
+            out_ = (short) this.chLock;
         }
 
-        //this.mol = 0;
-        //this.mor = 0;
-        if (Ym3438Const.chip_type == Ym3438Const.Type.ym2612) {
+//        this.mol = 0;
+//        this.mor = 0;
+        if (chip_type == Type.ym2612) {
 
             out_en = (((cycles & 3) == 3) || test_dac != 0) ? 1 : 0;
             // Ym2612 DAC emulation(not verified)
@@ -845,17 +880,15 @@ public class Ym3438 {
 
             if (this.chLockL != 0 && out_en != 0) {
                 this.mol = out_;
+//            } else {
+//                this.mol = sign;
             }
-            //else {
-            //    this.mol = sign;
-            //}
-            //logger.log(Level.TRACE, "040   out:%d sign:%d".formatted(out_, sign));
+//logger.log(Level.TRACE, "040   out:%d sign:%d".formatted(out_, sign));
             if (this.chLockR != 0 && out_en != 0) {
                 this.mor = out_;
+//            } else {
+//                this.mor = sign;
             }
-            //else {
-            //    this.mor = sign;
-            //}
             // Amplify signal
             this.mol *= 3;
             this.mor *= 3;
@@ -865,7 +898,7 @@ public class Ym3438 {
 
             out_en = (((cycles & 3) != 0) || test_dac != 0) ? 1 : 0;
             // Discrete YM3438 seems has the ladder effect too
-            if (out_ >= 0 && Ym3438Const.chip_type == Ym3438Const.Type.discrete) {
+            if (out_ >= 0 && chip_type == Type.discrete) {
                 out_++;
             }
             if (this.chLockL != 0 && out_en != 0) {
@@ -881,7 +914,7 @@ public class Ym3438 {
         int slot = (this.slot + 19) % 24;
         // Calculate phase
         int phase = (this.fmMod[slot] + (this.pgPhase[slot] >> 10)) & 0x3ff;
-        //logger.log(Level.TRACE, "040   this.fm_mod[slot]:%d this.pg_phase[slot]:%d".formatted(this.fm_mod[slot], this.pg_phase[slot]));
+//logger.log(Level.TRACE, "040   this.fm_mod[slot]:%d this.pg_phase[slot]:%d".formatted(this.fm_mod[slot], this.pg_phase[slot]));
         int quarter;
         int level;
         int output;
@@ -890,16 +923,16 @@ public class Ym3438 {
         } else {
             quarter = phase & 0xff;
         }
-        level = Ym3438Const.logSinRom[quarter];
+        level = logSinRom[quarter];
         // Apply envelope
-        level += (this.egOut[slot] & 0xffff) << 2;
-        //logger.log(Level.TRACE, "040   quarter:%d this.eg_out[slot]:%d slot:%d".formatted(quarter, this.eg_out[slot], slot));
+        level += this.egOut[slot] << 2;
+//logger.log(Level.TRACE, "040   quarter:%d this.eg_out[slot]:%d slot:%d".formatted(quarter, this.eg_out[slot], slot));
         // Transform
         if (level > 0x1fff) {
             level = 0x1fff;
         }
-        output = ((Ym3438Const.expRom[(level & 0xff) ^ 0xff] | 0x400) << 2) >> (level >> 8);
-        //logger.log(Level.TRACE, "040   output:%d level:%d".formatted(output, level));
+        output = ((expRom[(level & 0xff) ^ 0xff] | 0x400) << 2) >> (level >> 8);
+//logger.log(Level.TRACE, "040   output:%d level:%d".formatted(output, level));
         if ((phase & 0x200) != 0) {
             output = ((~output) ^ (this.modeTest21[4] << 13)) + 1;
         } else {
@@ -907,7 +940,7 @@ public class Ym3438 {
         }
         output <<= 2;
         output >>= 2;
-        this.fmOut[slot] = (short) output;
+        this.fmOut[slot] = output;
     }
 
     private void doTimerA() {
@@ -986,7 +1019,7 @@ public class Ym3438 {
         // Key On
         this.egKonLatch[this.slot] = this.modeKon[this.slot];
         this.egKonCsm[this.slot] = 0;
-        //logger.log(Level.TRACE, "this.eg_kon_latch[this.slot]:%d slot:%d".formatted(this.eg_kon_latch[this.slot], this.slot));
+//logger.log(Level.TRACE, "this.eg_kon_latch[this.slot]:%d slot:%d".formatted(this.eg_kon_latch[this.slot], this.slot));
         if (this.channel == 2 && this.modeKonCsm != 0) {
             // CSM Key On
             this.egKonLatch[this.slot] = 1;
@@ -1005,43 +1038,39 @@ public class Ym3438 {
     }
 
     public void reset(int rate, int clock) {
-        int i, rateratio;
-        rateratio = this.rateRatio;
-        //chips = new Ym3438_();
-        this.egOut = new short[24];
-        this.egLevel = new short[24];
-        this.egState = new byte[24];
-        this.multi = new byte[24];
-        this.panL = new byte[6];
-        this.panR = new byte[6];
+        int rateRatio = this.rateRatio;
+        this.egOut = new int[24];
+        this.egLevel = new int[24];
+        this.egState = new int[24];
+        this.multi = new int[24];
+        this.panL = new int[6];
+        this.panR = new int[6];
 
-        for (i = 0; i < 24; i++) {
+        for (int i = 0; i < 24; i++) {
             this.egOut[i] = 0x3ff;
             this.egLevel[i] = 0x3ff;
-            this.egState[i] = (byte) Eg.Release.ordinal();
+            this.egState[i] = Eg.Release.ordinal();
             this.multi[i] = 1;
         }
-        for (i = 0; i < 6; i++) {
+        for (int i = 0; i < 6; i++) {
             this.panL[i] = 1;
             this.panR[i] = 1;
         }
         if (rate != 0) {
             this.rateRatio = ((144 * rate) << 10) / clock; // RSM_FRAC) / clock);
         } else {
-            this.rateRatio = rateratio;
+            this.rateRatio = rateRatio;
         }
-        //System.err.printfsw = true;
-        //logger.log(Level.TRACE, "rateratio%d rate%d clock%d".formatted(this.rateratio,rate,clock));
-        //System.err.printfsw = false;
+//logger.log(Level.TRACE, "rateRatio%d rate%d clock%d".formatted(this.rateRatio,rate,clock));
     }
 
     private void clock(int[] buffer) {
-        //logger.log(Level.TRACE, "010 mol:%d mor:%d".formatted(this.mol, this.mor));
+//logger.log(Level.TRACE, "010 mol:%d mor:%d".formatted(this.mol, this.mor));
 
         this.lfoInc = this.modeTest21[1];
         this.pgRead >>= 1;
         this.egRead[1] >>= 1;
-        this.egCycle++;
+        this.egCycle = (this.egCycle + 1) & 0xff;
         // Lock envelope generator timer value
         if (this.cycles == 1 && this.egQuotient == 2) {
             if (this.egCycleStop != 0) {
@@ -1060,7 +1089,7 @@ public class Ym3438 {
             } else {
                 this.lfoAm = this.lfoCnt ^ 0x3f;
             }
-            this.lfoAm <<= 1;
+            this.lfoAm = (this.lfoAm << 1) & 0xff;
             break;
         case 1:
             this.egQuotient++;
@@ -1090,81 +1119,80 @@ public class Ym3438 {
             break;
         }
 
-
         this.egTimer &= ~(this.modeTest21[5] << this.egCycle);
         if ((((this.egTimer >> this.egCycle) | (this.pinTestIn & this.egCustomTimer)) & this.egCycleStop) != 0) {
             this.egShift = this.egCycle;
             this.egCycleStop = 0;
         }
 
-        //logger.log(Level.TRACE, "020 mol:%d mor:%d".formatted(this.mol, this.mor));
+//logger.log(Level.TRACE, "020 mol:%d mor:%d".formatted(this.mol, this.mor));
 
         doIO();
 
-        //logger.log(Level.TRACE, "030 mol:%d mor:%d".formatted(this.mol, this.mor));
+//logger.log(Level.TRACE, "030 mol:%d mor:%d".formatted(this.mol, this.mor));
 
         doTimerA();
         doTimerB();
         keyOn();
 
-        //logger.log(Level.TRACE, "040 mol:%d mor:%d".formatted(this.mol, this.mor));
+//logger.log(Level.TRACE, "040 mol:%d mor:%d".formatted(this.mol, this.mor));
 
         chOutput();
-        //logger.log(Level.TRACE, "045 mol:%d mor:%d".formatted(this.mol, this.mor));
+//logger.log(Level.TRACE, "045 mol:%d mor:%d".formatted(this.mol, this.mor));
         chGenerate();
 
-        //logger.log(Level.TRACE, "050 mol:%d mor:%d".formatted(this.mol, this.mor));
+//logger.log(Level.TRACE, "050 mol:%d mor:%d".formatted(this.mol, this.mor));
 
         fmPrepare();
         fmGenerate();
 
-        //logger.log(Level.TRACE, "060 mol:%d mor:%d".formatted(this.mol, this.mor));
+//logger.log(Level.TRACE, "060 mol:%d mor:%d".formatted(this.mol, this.mor));
 
         phaseGenerate();
         phaseCalcIncrement();
 
-        //logger.log(Level.TRACE, "070 mol:%d mor:%d".formatted(this.mol, this.mor));
+//logger.log(Level.TRACE, "070 mol:%d mor:%d".formatted(this.mol, this.mor));
 
         envelopeADSR();
         envelopeGenerate();
         envelopeSSGEG();
         envelopePrepare();
 
-        //logger.log(Level.TRACE, "080 mol:%d mor:%d".formatted(this.mol, this.mor));
+//logger.log(Level.TRACE, "080 mol:%d mor:%d".formatted(this.mol, this.mor));
 
         // Prepare fNum & block
         if (this.modeCh3 != 0) {
             // Channel 3 special mode
             switch (this.slot) {
             case 1: // OP1
-                this.pgFnum = this.fnum3Ch[1];
+                this.pgFNum = this.fNum3Ch[1];
                 this.pgBlock = this.block3Ch[1];
-                this.pgKcode = this.kcode3Ch[1];
+                this.pgKCode = this.kCode3Ch[1];
                 break;
             case 7: // OP3
-                this.pgFnum = this.fnum3Ch[0];
+                this.pgFNum = this.fNum3Ch[0];
                 this.pgBlock = this.block3Ch[0];
-                this.pgKcode = this.kcode3Ch[0];
+                this.pgKCode = this.kCode3Ch[0];
                 break;
             case 13: // OP2
-                this.pgFnum = this.fnum3Ch[2];
+                this.pgFNum = this.fNum3Ch[2];
                 this.pgBlock = this.block3Ch[2];
-                this.pgKcode = this.kcode3Ch[2];
+                this.pgKCode = this.kCode3Ch[2];
                 break;
             case 19: // OP4
             default:
-                this.pgFnum = this.fnum[(this.channel + 1) % 6];
+                this.pgFNum = this.fNum[(this.channel + 1) % 6];
                 this.pgBlock = this.block[(this.channel + 1) % 6];
-                this.pgKcode = this.kcode[(this.channel + 1) % 6];
+                this.pgKCode = this.kCode[(this.channel + 1) % 6];
                 break;
             }
         } else {
-            this.pgFnum = this.fnum[(this.channel + 1) % 6];
+            this.pgFNum = this.fNum[(this.channel + 1) % 6];
             this.pgBlock = this.block[(this.channel + 1) % 6];
-            this.pgKcode = this.kcode[(this.channel + 1) % 6];
+            this.pgKCode = this.kCode[(this.channel + 1) % 6];
         }
 
-        //logger.log(Level.TRACE, "090 mol:%d mor:%d".formatted(this.mol, this.mor));
+//logger.log(Level.TRACE, "090 mol:%d mor:%d".formatted(this.mol, this.mor));
 
         updateLFO();
         doRegWrite();
@@ -1172,22 +1200,22 @@ public class Ym3438 {
         this.slot = this.cycles;
         this.channel = this.cycles % 6;
 
-        //logger.log(Level.TRACE, "100 mol:%d mor:%d".formatted(this.mol, this.mor));
+//logger.log(Level.TRACE, "100 mol:%d mor:%d".formatted(this.mol, this.mor));
 
         buffer[0] = this.mol;
         buffer[1] = this.mor;
 
-        //logger.log(Level.TRACE, "110 mol:%d mor:%d".formatted(this.mol, this.mor));
+//logger.log(Level.TRACE, "110 mol:%d mor:%d".formatted(this.mol, this.mor));
     }
 
     private void writeInternal(int port, int data) {
-        //if (port == 1 && data == 0xf1) {
-        //    logger.log(Level.TRACE, "");
-        //}
-        //logger.log(Level.TRACE, "port:%x data:%x".formatted(port, data));
+//if (port == 1 && data == 0xf1) {
+// logger.log(Level.TRACE, "");
+//}
+//logger.log(Level.TRACE, "port:%x data:%x".formatted(port, data));
 
         port &= 3;
-        this.writeData = ((port << 7) & 0x100) | data;
+        this.writeData = ((port << 7) & 0x100) | (data & 0xff);
         if ((port & 1) != 0) {
             // data
             this.writeD |= 1;
@@ -1197,26 +1225,26 @@ public class Ym3438 {
         }
     }
 
-    private void setTestPin(int value) {
-        this.pinTestIn = (byte) (value & 1);
+    public void setTestPin(int value) {
+        this.pinTestIn = value & 1;
     }
 
-    private int readTestPin() {
+    public int readTestPin() {
         if (this.modeTest2C[7] == 0) {
             return 0;
         }
         return this.cycles == 23 ? 1 : 0;
     }
 
-    private int readIRQPin() {
+    public int readIRQPin() {
         return this.timerAOverflowFlag | this.timerBOverflowFlag;
     }
 
     private int read(int port) {
-        if ((port & 3) == 0 || Ym3438Const.chip_type == Ym3438Const.Type.asic) {
+        if ((port & 3) == 0 || chip_type == Type.asic) {
             if (this.modeTest21[6] != 0) {
                 // Read test data
-                //int slot = (this.cycles + 18) % 24;
+//                int slot = (this.cycles + 18) % 24;
                 int testdata = ((this.pgRead & 0x01) << 15)
                         | (((this.egRead[this.modeTest21[0] & 0xff]) & 0x01) << 14);
                 if (this.modeTest2C[4] != 0) {
@@ -1227,7 +1255,7 @@ public class Ym3438 {
                 if (this.modeTest21[7] != 0) {
                     return testdata & 0xff;
                 } else {
-                    return (testdata >> 8) & 0xff;
+                    return testdata >> 8;
                 }
             } else {
                 return ((this.busy << 7) | (this.timerBOverflowFlag << 1)
@@ -1241,7 +1269,7 @@ public class Ym3438 {
     private final int[] grBuffer = new int[2];
     private final int[] buf = new int[2];
 
-    public void setChipType(Ym3438Const.Type type) {
+    public void setChipType(Type type) {
         switch (type) {
         case asic:
             Ym3438Const.use_filter = 0;
@@ -1253,16 +1281,16 @@ public class Ym3438 {
             Ym3438Const.use_filter = 1;
             break;
         case ym2612_u:
-            type = Ym3438Const.Type.ym2612;
+            type = Type.ym2612;
             Ym3438Const.use_filter = 0;
             break;
         case asic_lp:
-            type = Ym3438Const.Type.asic;
+            type = Type.asic;
             Ym3438Const.use_filter = 1;
             break;
         }
 
-        Ym3438Const.chip_type = type;
+        chip_type = type;
     }
 
     public void write(int port, int data) {
@@ -1292,7 +1320,7 @@ public class Ym3438 {
 
         this.writeBuf[this.writeBufLast].time = time1;
         this.writeBufLastTime = time1;
-        this.writeBufLast = (this.writeBufLast + 1) % 2048;// OPN_WRITEBUF_SIZE;
+        this.writeBufLast = (this.writeBufLast + 1) % 2048; // OPN_WRITEBUF_SIZE;
     }
 
     public void update(int[] buf) {
@@ -1314,7 +1342,7 @@ public class Ym3438 {
                     default -> 0;
                 };
                 this.clock(grBuffer);
-                //logger.log(Level.TRACE, "l%d r%d".formatted(buffer[0], buffer[1]));
+//logger.log(Level.TRACE, "l%d r%d".formatted(buffer[0], buffer[1]));
                 if (mute == 0) {
                     this.samples[0] += grBuffer[0];
                     this.samples[1] += grBuffer[1];
@@ -1332,39 +1360,39 @@ public class Ym3438 {
                 this.writeBufSampleCnt++;
             }
             if (Ym3438Const.use_filter == 0) {
-                this.samples[0] *= 11;// OUTPUT_FACTOR;
-                this.samples[1] *= 11;// OUTPUT_FACTOR;
+                this.samples[0] *= 11; // OUTPUT_FACTOR;
+                this.samples[1] *= 11; // OUTPUT_FACTOR;
             } else {
-                //this.samples[0] = this.oldsamples[0] + FILTER_CUTOFF_I * (this.samples[0] * OUTPUT_FACTOR_F - this.oldsamples[0]);
-                //this.samples[1] = this.oldsamples[1] + FILTER_CUTOFF_I * (this.samples[1] * OUTPUT_FACTOR_F - this.oldsamples[1]);
+                //this.samples[0] = this.oldSamples[0] + FILTER_CUTOFF_I * (this.samples[0] * OUTPUT_FACTOR_F - this.oldSamples[0]);
+                //this.samples[1] = this.oldSamples[1] + FILTER_CUTOFF_I * (this.samples[1] * OUTPUT_FACTOR_F - this.oldSamples[1]);
                 this.samples[0] = (int) (this.oldSamples[0] + (1 - 0.512331301282628) * (this.samples[0] * 12 - this.oldSamples[0]));
                 this.samples[1] = (int) (this.oldSamples[1] + (1 - 0.512331301282628) * (this.samples[1] * 12 - this.oldSamples[1]));
             }
             this.sampleCnt -= this.rateRatio;
-            //logger.log(Level.TRACE, "samplecnt%d".formatted(this.samplecnt));
+//logger.log(Level.TRACE, "sampleCnt%d".formatted(this.sampleCnt));
         }
         buf[0] = (this.oldSamples[0] * (this.rateRatio - this.sampleCnt)
                 + this.samples[0] * this.sampleCnt) / this.rateRatio;
         buf[1] = (this.oldSamples[1] * (this.rateRatio - this.sampleCnt)
                 + this.samples[1] * this.sampleCnt) / this.rateRatio;
-        //logger.log(Level.TRACE, "bl%d br%d this.oldsamples[0]%d this.samples[0]%d".formatted(buf[0], buf[1], this.oldsamples[0], this.samples[0]));
-        this.sampleCnt += 1 << 10;// RSM_FRAC;
+//logger.log(Level.TRACE, "bl%d br%d this.oldSamples[0]%d this.samples[0]%d".formatted(buf[0], buf[1], this.oldSamples[0], this.samples[0]));
+        this.sampleCnt += 1 << 10; // RSM_FRAC;
     }
 
-    public void setOptions(byte flags) {
+    public void setOptions(int flags) {
         switch ((flags >> 3) & 0x03) {
         case 0x00: // Ym2612
         default:
-            setChipType(Ym3438Const.Type.ym2612);
+            setChipType(Type.ym2612);
             break;
         case 0x01: // ASIC YM3438
-            setChipType(Ym3438Const.Type.asic);
+            setChipType(Type.asic);
             break;
         case 0x02: // Discrete YM3438
-            setChipType(Ym3438Const.Type.discrete);
+            setChipType(Type.discrete);
             break;
         case 0x03: // Ym2612 without filter emulation
-            setChipType(Ym3438Const.Type.ym2612_u);
+            setChipType(Type.ym2612_u);
             break;
         }
     }

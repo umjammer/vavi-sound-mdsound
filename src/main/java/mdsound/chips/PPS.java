@@ -359,8 +359,8 @@ public class PPS {
         setVolume(0);
     }
 
-    public int start(int clock, BiConsumer<Integer, Integer> callback) {
-        this.samplingRate = clock;
+    public int start(int samplingRate, BiConsumer<Integer, Integer> callback) {
+        this.samplingRate = samplingRate;
         reset();
 
         if (callback != null) {
@@ -368,7 +368,7 @@ public class PPS {
             psg = callback;
         }
 
-        return clock;
+        return samplingRate;
     }
 
     public int write(int port, int adr, int data) {

@@ -10,8 +10,23 @@ import mdsound.fmgen.Opna;
 
 public class Ym2203Inst extends Instrument.BaseInstrument {
 
-    private static final int DefaultYM2203ClockValue = 3000000;
-    private final Opna.OPN[] chips = new Opna.OPN[2];
+    public static final int DefaultClockValue = 3000000;
+
+    private final Opna.OPN[] chips = {new Opna.OPN(), new Opna.OPN()};
+
+    private final int[] mask = {0, 0};
+    private final int[][] keyOn = {new int[6], new int[6]};
+
+    public Ym2203Inst() {
+        // 0..Main 1..FM 2..SSG
+        visVolume = new int[][][] {{{0, 0}, {0, 0}, {0, 0}}, {{0, 0}, {0, 0}, {0, 0}}};
+    }
+
+    @Override
+    public void init() {
+        mask[0] = 0;
+        mask[1] = 0;
+    }
 
     @Override
     public String getName() {
@@ -23,44 +38,35 @@ public class Ym2203Inst extends Instrument.BaseInstrument {
         return "OPN";
     }
 
-    public Ym2203Inst() {
-        // 0..Main 1..FM 2..SSG
-        visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}}
-        };
-    }
-
     @Override
     public void reset(int chipId) {
-        if (chips[chipId] == null) return;
+        assert chipId < chips.length;
         chips[chipId].reset();
     }
 
     @Override
-    public int start(int chipId, int samplingRate) {
-        chips[chipId] = new Opna.OPN();
-        chips[chipId].init(DefaultYM2203ClockValue, samplingRate);
-
-        return samplingRate;
-    }
-
-    @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        chips[chipId] = new Opna.OPN();
         chips[chipId].init(clock, samplingRate);
 
         return samplingRate;
     }
 
     @Override
-    public void stop(int chipId) {
-        chips[chipId] = null;
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        assert chipId < chips.length;
+        chips[chipId].setReg(adr, data);
+        return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        if (chips[chipId] == null) return;
+        assert chipId < chips.length;
+
         int[] buffer = new int[2];
         buffer[0] = 0;
         buffer[1] = 0;
@@ -79,27 +85,43 @@ public class Ym2203Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int write(int chipId, int port, int adr, int data) {
-        if (chips[chipId] == null) return 0;
-        chips[chipId].setReg(adr, data);
-        return 0;
+    public void stop(int chipId) {
     }
 
-    public void setMute(int chipId, int val) {
-        Opna.OPN chip = chips[chipId];
-        if (chip == null) return;
-
-        chip.setChannelMask(val);
+    private void setMute(int chipId, int val) {
+        assert chipId < chips.length;
+        chips[chipId].setChannelMask(val);
     }
 
-    private void setFMVolume(int chipId, int db) {
-        if (chips[chipId] == null) return;
-        chips[chipId].setVolumeFM(db);
+    // ----
+
+    public synchronized int[] readKeyOn(int chipId) {
+//        for (int i = 0; i < 6; i++) {
+//            keyOn[chipId][i] = chips[chipId].CHANNEL[i].KeyOn;
+//        }
+        return keyOn[chipId];
     }
 
-    private void setPSGVolume(int chipId, int db) {
-        if (chips[chipId] == null) return;
-        chips[chipId].setVolumePSG(db);
+    public synchronized void setMask(int chipId, int ch) {
+        mask[chipId] |= ch;
+        setMute(chipId, mask[chipId]);
+    }
+
+    public synchronized void resetMask(int chipId, int ch) {
+        mask[chipId] &= ~ch;
+        setMute(chipId, mask[chipId]);
+    }
+
+    // TODO automatic wired, use annotation?
+    public void setFMVolume(int vol, double ignored) {
+        if (chips[0] != null) chips[0].setVolumeFM(vol);
+        if (chips[1] != null) chips[1].setVolumeFM(vol);
+    }
+
+    // TODO automatic wired, use annotation?
+    public void setPSGVolume(int vol, double ignored) {
+        if (chips[0] != null) chips[0].setVolumePSG(vol);
+        if (chips[1] != null) chips[1].setVolumePSG(vol);
     }
 
     // ----
@@ -121,17 +143,5 @@ public class Ym2203Inst extends Instrument.BaseInstrument {
             }
         }
         return result;
-    }
-
-    // TODO automatic wired, use annotation?
-    public void setFMVolume(int vol, double ignored) {
-        setFMVolume(0, vol);
-        setFMVolume(1, vol);
-    }
-
-    // TODO automatic wired, use annotation?
-    public void setPSGVolume(int vol, double ignored) {
-        setPSGVolume(0, vol);
-        setPSGVolume(1, vol);
     }
 }

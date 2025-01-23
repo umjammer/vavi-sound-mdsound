@@ -12,8 +12,8 @@ public class NpNesApu {
 
     // Master Clock: 21477272 (NTSC)
     // APU Clock = Master Clock / 12
-    private static final double DEFAULT_CLOCK = 1789772.0; // not sure if this shouldn't be 1789772,667 instead
-    private static final int DEFAULT_RATE = 44100;
+    public static final double DEFAULT_CLOCK = 1789772.0; // not sure if this shouldn't be 1789772,667 instead
+    public static final int DEFAULT_RATE = 44100;
 
     /**
      * Upper half of APU
@@ -33,65 +33,63 @@ public class NpNesApu {
     }
 
     // Various options
-    public int[] option = new int[OPT.END.ordinal()];
-    public int mask;
-    public int[][] sm = new int[][] {new int[2], new int[2]};
+    private final int[] option = new int[OPT.END.ordinal()];
+    private int mask;
+    public final int[][] sm = {new int[2], new int[2]};
 
-    public int gclock;
-    public byte[] reg = new byte[0x20];
-    public int[] out = new int[2];
-    public double rate, clock;
+    private int gClock;
+    public final int[] reg = new int[0x20];
+    private final int[] out = new int[2];
+    private double rate, clock;
 
     // nonlinear mixer
-    public int[] squareTable = new int[32];
+    public final int[] squareTable = new int[32];
 
     // frequency divider
-    public int[] sCounter = new int[2];
+    private final int[] sCounter = new int[2];
     // phase counter
-    public int[] sPhase = new int[2];
+    private final int[] sPhase = new int[2];
 
-    public int[] duty = new int[2];
-    public int[] volume = new int[2];
-    public int[] freq = new int[2];
-    public int[] sfreq = new int[2];
+    private final int[] duty = new int[2];
+    private final int[] volume = new int[2];
+    private final int[] freq = new int[2];
+    private final int[] sFreq = new int[2];
 
-    public boolean[] sweepEnable = new boolean[2];
-    public boolean[] sweepMode = new boolean[2];
-    public boolean[] sweepWrite = new boolean[2];
-    public int[] sweepDivPeriod = new int[2];
-    public int[] sweepDiv = new int[2];
-    public int[] sweepAmount = new int[2];
+    private final boolean[] sweepEnable = new boolean[2];
+    private final boolean[] sweepMode = new boolean[2];
+    private final boolean[] sweepWrite = new boolean[2];
+    private final int[] sweepDivPeriod = new int[2];
+    private final int[] sweepDiv = new int[2];
+    private final int[] sweepAmount = new int[2];
 
-    public boolean[] envelopeDisable = new boolean[2];
-    public boolean[] envelopeLoop = new boolean[2];
-    public boolean[] envelopeWrite = new boolean[2];
-    public int[] envelopeDivPeriod = new int[2];
-    public int[] envelopeDiv = new int[2];
-    public int[] envelopeCounter = new int[2];
+    private final boolean[] envelopeDisable = new boolean[2];
+    private final boolean[] envelopeLoop = new boolean[2];
+    private final boolean[] envelopeWrite = new boolean[2];
+    private final int[] envelopeDivPeriod = new int[2];
+    private final int[] envelopeDiv = new int[2];
+    private final int[] envelopeCounter = new int[2];
 
-    public int[] lengthCounter = new int[2];
+    private final int[] lengthCounter = new int[2];
 
-    public boolean[] enable = new boolean[2];
+    private final boolean[] enable = new boolean[2];
 
-    public Counter tickCount = new Counter();
-    public int tickLast;
+    private final Counter tickCount = new Counter();
+    private int tickLast;
 
     private void sweepSqr(int i) {
         int shifted = this.freq[i] >> this.sweepAmount[i];
         if (i == 0 && this.sweepMode[i]) shifted += 1;
-        this.sfreq[i] = this.freq[i] + (this.sweepMode[i] ? -shifted : shifted);
-        //logger.log(Level.TRACE, "shifted[%d] = %d (%d >> %d)".formatted(i,shifted,this.freq[i],this.sweep_amount[i]));
+        this.sFreq[i] = this.freq[i] + (this.sweepMode[i] ? -shifted : shifted);
+//logger.log(Level.TRACE, "shifted[%d] = %d (%d >> %d)".formatted(i,shifted,this.freq[i],this.sweep_amount[i]));
     }
 
     public void sequenceFrame(int s) {
-        int i;
-
-        //logger.log(Level.TRACE, "sequenceFrame(%d)".formatted(s));
+//logger.log(Level.TRACE, "sequenceFrame(%d)".formatted(s));
 
         if (s > 3) return; // no operation in step 4
 
         // 240hz clock
-        for (i = 0; i < 2; ++i) {
+        for (int i = 0; i < 2; ++i) {
             boolean divider = false;
             if (this.envelopeWrite[i]) {
                 this.envelopeWrite[i] = false;
@@ -114,7 +112,7 @@ public class NpNesApu {
 
         // 120hz clock
         if ((s & 1) == 0)
-            for (i = 0; i < 2; ++i) {
+            for (int i = 0; i < 2; ++i) {
                 if (!this.envelopeLoop[i] && (this.lengthCounter[i] > 0))
                     --this.lengthCounter[i];
 
@@ -126,10 +124,10 @@ public class NpNesApu {
                         sweepSqr(i); // calculate new sweep target
 
                         //logger.log(Level.TRACE, "sweep_div[%d] (0/%d)".formatted(i,this.sweep_div_period[i]));
-                        //logger.log(Level.TRACE, "freq[%d]=%d > sfreq[%d]=%d".formatted(i,this.freq[i],i,this.sfreq[i]));
+                        //logger.log(Level.TRACE, "freq[%d]=%d > sFreq[%d]=%d".formatted(i,this.freq[i],i,this.sFreq[i]));
 
-                        if (this.freq[i] >= 8 && this.sfreq[i] < 0x800 && this.sweepAmount[i] > 0) { // update frequency if appropriate
-                            this.freq[i] = Math.max(this.sfreq[i], 0);
+                        if (this.freq[i] >= 8 && this.sFreq[i] < 0x800 && this.sweepAmount[i] > 0) { // update frequency if appropriate
+                            this.freq[i] = Math.max(this.sFreq[i], 0);
                             if (this.sCounter[i] > this.freq[i]) this.sCounter[i] = this.freq[i];
                         }
                         this.sweepDiv[i] = this.sweepDivPeriod[i] + 1;
@@ -143,14 +141,13 @@ public class NpNesApu {
                     }
                 }
             }
-
     }
 
-    private static final short[][] sqrTbl = new short[][] {
-            new short[] {0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            new short[] {0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            new short[] {0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0},
-            new short[] {1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+    private static final int[][] sqrTbl = {
+            {0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0},
+            {1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
     };
 
     private int calcSqr(int i, int clocks) {
@@ -165,7 +162,7 @@ public class NpNesApu {
         //int ret = 0;
         if (this.lengthCounter[i] > 0 &&
                 this.freq[i] >= 8 &&
-                this.sfreq[i] < 0x800
+                this.sFreq[i] < 0x800
         ) {
             int v = this.envelopeDisable[i] ? this.volume[i] : this.envelopeCounter[i];
             ret = sqrTbl[this.duty[i]][this.sPhase[i]] != 0 ? v : 0;
@@ -271,7 +268,7 @@ public class NpNesApu {
 
     public void reset() {
         int i;
-        this.gclock = 0;
+        this.gClock = 0;
         this.mask = 0;
 
         this.sCounter[0] = 0;
@@ -320,30 +317,30 @@ public class NpNesApu {
         this.mask = m;
     }
 
-    public void setStereoMix(int trk, short mixl, short mixr) {
+    public void setStereoMix(int trk, int mixL, int mixR) {
         if (trk < 0) return;
         if (trk > 1) return;
-        this.sm[0][trk] = mixl;
-        this.sm[1][trk] = mixr;
+        this.sm[0][trk] = mixL;
+        this.sm[1][trk] = mixR;
     }
 
-    private static final byte[] lengthTable = new byte[] {
-            0x0A, (byte) 0xFE,
+    private static final int[] lengthTable = {
+            0x0a, 0xfe,
             0x14, 0x02,
             0x28, 0x04,
             0x50, 0x06,
-            (byte) 0xA0, 0x08,
-            0x3C, 0x0A,
-            0x0E, 0x0C,
-            0x1A, 0x0E,
-            0x0C, 0x10,
+            0xa0, 0x08,
+            0x3c, 0x0a,
+            0x0e, 0x0c,
+            0x1a, 0x0e,
+            0x0c, 0x10,
             0x18, 0x12,
             0x30, 0x14,
             0x60, 0x16,
-            (byte) 0xC0, 0x18,
-            0x48, 0x1A,
-            0x10, 0x1C,
-            0x20, 0x1E
+            0xc0, 0x18,
+            0x48, 0x1a,
+            0x10, 0x1c,
+            0x20, 0x1e
     };
 
     public boolean write(int adr, int val) {
@@ -402,7 +399,7 @@ public class NpNesApu {
             default:
                 return false;
             }
-            this.reg[adr] = (byte) val;
+            this.reg[adr] = val;
             return true;
         } else if (adr == 0x4015) {
             this.enable[0] = (val & 1) != 0;
@@ -413,7 +410,7 @@ public class NpNesApu {
             if (!this.enable[1])
                 this.lengthCounter[1] = 0;
 
-            this.reg[adr - 0x4000] = (byte) val;
+            this.reg[adr - 0x4000] = val;
             return true;
         }
 
@@ -441,4 +438,3 @@ public class NpNesApu {
                 this.sm[c][t] = 128;
     }
 }
-

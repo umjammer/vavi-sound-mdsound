@@ -10,24 +10,22 @@ import mdsound.chips.YmF262;
 
 public class YmF262Inst extends Instrument.BaseInstrument {
 
-    private static final int MAX_CHIPS = 0x02;
-    private final YmF262[] chips = new YmF262[] {new YmF262(), new YmF262()};
+    public static final int DefaultClockValue = 14318180;
+    public static final int MAX_CHIPS = 0x02;
 
-    private int emuCore = 0x00;
+    private final YmF262[] chips = {new YmF262(), new YmF262()};
 
-    @Override
-    public void reset(int chipId) {
-        device_reset_ymf262(chipId);
+    // TODO separate into each instrument
+//    private int emuCore = YmF262.EC_DBOPL;
+    private int emuCore = YmF262.EC_MAME;
 
-        visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
-        };
+    public YmF262Inst() {
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
 
     @Override
     public String getName() {
-        return "YMF262";
+        return "YMF262" + (emuCore == YmF262.EC_MAME ? "mame" : "db");
     }
 
     @Override
@@ -36,132 +34,99 @@ public class YmF262Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int samplingRate) {
-        return device_start_ymf262(chipId, 14318180);
+    public void reset(int chipId) {
+        chips[chipId].reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        return device_start_ymf262(chipId, clock);
+        assert chipId < MAX_CHIPS;
+
+        int rate = clock / 288;
+        if ((CHIP_SAMPLING_MODE == 0x01 && rate < CHIP_SAMPLE_RATE) || CHIP_SAMPLING_MODE == 0x02)
+            rate = CHIP_SAMPLE_RATE;
+
+        //chip.intf = device.static_config ? (final ymf262_interface) device.static_config : dummy;
+        //chip.intf = dummy;
+        //chip.device = device;
+
+        // stream system initialize
+        chips[chipId].start(emuCore, clock, rate, this::updateHandler);
+
+        if (emuCore == YmF262.EC_MAME) {
+//            assert_always(chip.chips != NULL, "Error creating YMF262 chips");
+
+//            chip.stream = stream_create(device,0,4,rate,chip,ymf262_stream_update);
+
+            // YMF262 setup
+//            ymf262_set_timer_handler(chip.chips, timer_handler_262, chip);
+//            ymf262_set_irq_handler(chip.chips, IRQHandler_262, chip);
+//            ymf262_set_update_handler(chip.chips, _stream_update, chip);
+//
+//            chip.timer[0] = timer_alloc(device.machine, timer_callback_262_0, chip);
+//            chip.timer[1] = timer_alloc(device.machine, timer_callback_262_1, chip);
+        }
+        return rate;
     }
 
     @Override
-    public void stop(int chipId) {
-        device_stop_ymf262(chipId);
+    public int read(int chipId, int adr) {
+        return chips[chipId].read(adr);
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        chips[chipId].write(((port * 0x100 + adr) & 0x100) != 0 ? 0x02 : 0x00, (port * 0x100 + adr));
+        chips[chipId].write(((port * 0x100 + adr) & 0x100) != 0 ? 0x03 : 0x01, data);
+        return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        ymf262_stream_update(chipId, outputs, samples);
+        chips[chipId].update(outputs, samples);
 
-        //common.write("output %d %d", outputs[0][0], outputs[1][0]);
+//logger.log(Level.TRACE, "output %d %d".formatted(outputs[0][0], outputs[1][0]));
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
     }
 
-    private int YMF262_Write(int chipId, int adr, int data) {
-        ymf262_w(chipId, (adr & 0x100) != 0 ? 0x02 : 0x00, adr & 0xff);
-        ymf262_w(chipId, (adr & 0x100) != 0 ? 0x03 : 0x01, data);
-        return 0;
+    @Override
+    public void stop(int chipId) {
+        chips[chipId].stop();
     }
 
-    public void ymf262_stream_update(int chipId, int[][] outputs, int samples) {
-        YmF262 info = chips[chipId];
-        info.update(outputs, samples);
+    public void setEmuCore(int emulator) {
+        emuCore = (emulator < 0x02) ? emulator : 0x00;
     }
 
-    public void setEmuCore(byte emulator) {
-        emuCore = (byte) ((emulator < 0x02) ? emulator : 0x00);
-    }
-
-    private final int[][] dummyBuf = new int[][] {null, null};
+    private final int[][] dummyBuf = {null, null};
 
     private void updateHandler() {
         chips[0].update(dummyBuf, 0);
     }
 
-    public int device_start_ymf262(int chipId, int clock) {
-        if (chipId >= MAX_CHIPS)
-            return 0;
-
-        YmF262 info = chips[chipId];
-        int rate = clock / 288;
-        if ((CHIP_SAMPLING_MODE == 0x01 && rate < CHIP_SAMPLE_RATE) ||
-                CHIP_SAMPLING_MODE == 0x02)
-            rate = CHIP_SAMPLE_RATE;
-
-        //info.intf = device.static_config ? (final ymf262_interface *)device.static_config : &dummy;
-        //info.intf = &dummy;
-        //info.device = device;
-
-        // stream system initialize
-        info.start(emuCore, clock, rate, this::updateHandler);
-
-        if (emuCore == YmF262.EC_MAME) {
-            //assert_always(info.chips != NULL, "Error creating YMF262 chips");
-
-            //info.stream = stream_create(device,0,4,rate,info,ymf262_stream_update);
-
-            // YMF262 setup
-            //ymf262_set_timer_handler(info.chips, timer_handler_262, info);
-            //ymf262_set_irq_handler(info.chips, IRQHandler_262, info);
-            //ymf262_set_update_handler(info.chips, _stream_update, info);
-
-            //info.timer[0] = timer_alloc(device.machine, timer_callback_262_0, info);
-            //info.timer[1] = timer_alloc(device.machine, timer_callback_262_1, info);
-        }
-        return rate;
+    public int readStatus(int chipId, int offset) {
+        return read(chipId, 0);
     }
 
-    public void device_stop_ymf262(int chipId) {
-        YmF262 info = chips[chipId];
-        info.stop();
+    public void writeRegisterA(int chipId, int offset, int data) {
+        chips[chipId].write(0, data);
     }
 
-    /** reset */
-    public void device_reset_ymf262(int chipId) {
-        YmF262 info = chips[chipId];
-        info.reset();
+    public void writeRegisterB(int chipId, int offset, int data) {
+        chips[chipId].write(2, data);
     }
 
-    public byte ymf262_r(int chipId, int offset) {
-        YmF262 info = chips[chipId];
-        return info.read(offset);
+    public void writeDataA(int chipId, int offset, int data) {
+        chips[chipId].write(1, data);
     }
 
-    public void ymf262_w(int chipId, int offset, int data) {
-        YmF262 info = chips[chipId];
-
-        info.write(offset, data);
+    public void writeDataB(int chipId, int offset, int data) {
+        chips[chipId].write(3, data);
     }
 
-    public byte ymf262_status_r(int chipId, int offset) {
-        return ymf262_r(chipId, 0);
-    }
-
-    public void ymf262_register_a_w(int chipId, int offset, int data) {
-        ymf262_w(chipId, 0, data);
-    }
-
-    public void ymf262_register_b_w(int chipId, int offset, int data) {
-        ymf262_w(chipId, 2, data);
-    }
-
-    public void ymf262_data_a_w(int chipId, int offset, int data) {
-        ymf262_w(chipId, 1, data);
-    }
-
-    public void ymf262_data_b_w(int chipId, int offset, int data) {
-        ymf262_w(chipId, 3, data);
-    }
-
-    public void ymf262_set_emu_core(int emulator) {
-        this.emuCore = emulator;
-    }
-
-    public void ymf262_set_mute_mask(int chipId, int muteMask) {
-        YmF262 info = chips[chipId];
-        info.setMuteMask(muteMask);
+    public void setMuteMask(int chipId, int muteMask) {
+        chips[chipId].setMuteMask(muteMask);
     }
 
     private void irqHandler(int irq) {
@@ -169,27 +134,11 @@ public class YmF262Inst extends Instrument.BaseInstrument {
 
     private void timerHandler(int timer, int period) {
         if (period == 0) { // Reset FM Timer
-            //timer_enable(info.timer[timer], 0);
+//            timer_enable(info.timer[timer], 0);
         } else { // Start FM Timer
-            //timer_adjust_oneshot(info.timer[timer], period, 0);
+//            timer_adjust_oneshot(info.timer[timer], period, 0);
         }
     }
-
-    @Override
-    public int write(int chipId, int port, int adr, int data) {
-        return YMF262_Write(chipId, adr, data);
-    }
-
-//    /**
-//     * Generic get_info
-//     */
-//    DEVICE_GET_INFO( YmF262Inst ) {
-//            case DEVINFO_STR_NAME:       strcpy(info.s, "YMF262");       break;
-//            case DEVINFO_STR_FAMILY:     strcpy(info.s, "Yamaha FM");      break;
-//            case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");        break;
-//            case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
-//        }
-//    }
 
     //----
 
@@ -204,6 +153,10 @@ public class YmF262Inst extends Instrument.BaseInstrument {
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+            case "NAME" -> result.put(getName(), "YMF262");
+            case "FAMILY" -> result.put(getName(), "Yamaha FM");
+            case "VERSION" -> result.put(getName(), "1.0");
+            case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
         }
         return result;
     }

@@ -6,6 +6,20 @@
 
 package mdsound.chips;
 
+import static mdsound.chips.C352.Flag.BUSY;
+import static mdsound.chips.C352.Flag.FILTER;
+import static mdsound.chips.C352.Flag.KEYOFF;
+import static mdsound.chips.C352.Flag.KEYON;
+import static mdsound.chips.C352.Flag.LDIR;
+import static mdsound.chips.C352.Flag.LINK;
+import static mdsound.chips.C352.Flag.LOOP;
+import static mdsound.chips.C352.Flag.LOOPHIST;
+import static mdsound.chips.C352.Flag.MULAW;
+import static mdsound.chips.C352.Flag.PHASEFL;
+import static mdsound.chips.C352.Flag.PHASEFR;
+import static mdsound.chips.C352.Flag.PHASERL;
+import static mdsound.chips.C352.Flag.REVERSE;
+
 
 /**
  * C352.c - Namco C352 custom PCM chips emulation
@@ -50,43 +64,43 @@ public class C352 {
 
     private static final int VOICES = 32;
 
-    private enum Flag {
+    enum Flag {
         /** channel is busy */
         BUSY(0x8000),
-        // Keyon *
+        /** Keyon */
         KEYON(0x4000),
-        // Keyoff *
+        /** Keyoff */
         KEYOFF(0x2000),
-        // Loop Trigger *
+        /** Loop Trigger */
         LOOPTRG(0x1000),
-        // Loop History *
+        /** Loop History */
         LOOPHIST(0x0800),
-        // Frequency Modulation *
+        /** Frequency Modulation */
         FM(0x0400),
-        // Rear Left invert phase 180 degrees *
+        /** Rear Left invert phase 180 degrees */
         PHASERL(0x0200),
-        // Front Left invert phase 180 degrees *
+        /** Front Left invert phase 180 degrees */
         PHASEFL(0x0100),
-        // invert phase 180 degrees (e.g. flip sign of sample) *
+        /** invert phase 180 degrees (e.g. flip sign of sample) */
         PHASEFR(0x0080),
-        // loop direction *
+        /** loop direction */
         LDIR(0x0040),
-        // "long-format" sample (can't loop, not sure what else it means) *
+        /** "long-format" sample (can't loop, not sure what else it means) */
         LINK(0x0020),
-        // play noise instead of sample *
+        /** play noise instead of sample */
         NOISE(0x0010),
-        // sample is mulaw instead of linear 8-bit PCM *
+        /** sample is mulaw instead of linear 8-bit PCM */
         MULAW(0x0008),
-        // don't apply filter *
+        /** don't apply filter */
         FILTER(0x0004),
-        // loop backwards *
+        /** loop backwards */
         REVLOOP(0x0003),
-        // loop forward *
+        /** loop forward */
         LOOP(0x0002),
-        // play sample backwards *
+        /** play sample backwards */
         REVERSE(0x0001);
         final int v;
-
+        boolean isOn(int f) { return (f & v) != 0; }
         Flag(int v) {
             this.v = v;
         }
@@ -102,7 +116,7 @@ public class C352 {
 
         private int volF = 0;
         private int volR = 0;
-        private final byte[] currVol = new byte[] {0, 0, 0, 0};
+        private final int[] currVol = new int[] {0, 0, 0, 0};
         private int freq = 0;
         private int flags = 0;
 
@@ -111,9 +125,9 @@ public class C352 {
         private int waveEnd = 0;
         private int waveLoop = 0;
 
-        private byte mute = 0;
+        private int mute = 0;
 
-        private void ramp(int ch, byte val) {
+        private void ramp(int ch, int val) {
             if ((this.flags & Flag.FILTER.v) != 0) {
                 this.currVol[ch] = val;
                 return;
@@ -121,42 +135,42 @@ public class C352 {
 
             short volDelta = (short) (this.currVol[ch] - val);
             if (volDelta != 0)
-                this.currVol[ch] = (byte) (this.currVol[ch] + ((volDelta > 0) ? -1 : 1));
-            //logger.log(Level.TRACE, "this.curr_vol[ch%d] = %d val=%d".formatted(ch, this.curr_vol[ch], val));
+                this.currVol[ch] = this.currVol[ch] + ((volDelta > 0) ? -1 : 1);
+//logger.log(Level.TRACE, "this.curr_vol[ch%d] = %d val=%d".formatted(ch, this.curr_vol[ch], val));
         }
 
-        private void fetchSample(byte s) {
+        private void fetchSample(int s) {
             this.sample = (short) (s << 8);
-            if ((this.flags & 0x0008) != 0) {
+            if (MULAW.isOn(this.flags)) {
 
-                this.sample = mulawTable[s];
+                this.sample = mulawTable[s & 0xff];
             }
 
             int pos = this.pos & 0xffff;
 
-            if ((this.flags & 0x0002) != 0 && (this.flags & 0x0001) != 0) {
+            if (LOOP.isOn(this.flags) && REVERSE.isOn(this.flags)) {
                 // backwards > forwards
-                if ((this.flags & 0x0040) != 0 && pos == this.waveLoop)
+                if (LDIR.isOn(this.flags) && pos == this.waveLoop)
                     this.flags &= 0xffbf;
                     // forwards > backwards
-                else if ((this.flags & 0x0040) == 0 && pos == this.waveEnd)
-                    this.flags |= 0x0040;
+                else if (!LDIR.isOn(this.flags) && pos == this.waveEnd)
+                    this.flags |= LDIR.v;
 
-                this.pos = this.pos + ((this.flags & 0x0040) != 0 ? -1 : 1);
+                this.pos = this.pos + (LDIR.isOn(this.flags) ? -1 : 1);
             } else if (pos == this.waveEnd) {
-                if ((this.flags & 0x0020) != 0 && (this.flags & 0x0002) != 0) {
+                if (LINK.isOn(this.flags) && LOOP.isOn(this.flags)) {
                     this.pos = (this.waveStart << 16) | this.waveLoop;
-                    this.flags |= 0x0800;
-                } else if ((this.flags & 0x0002) != 0) {
+                    this.flags |= LOOPHIST.v;
+                } else if (LOOP.isOn(this.flags)) {
                     this.pos = (this.pos & 0xff0000) | this.waveLoop;
-                    this.flags |= 0x0800;
+                    this.flags |= LOOPHIST.v;
                 } else {
-                    this.flags |= 0x2000;
+                    this.flags |= KEYOFF.v;
                     this.flags &= 0x7fff;
                     this.sample = 0;
                 }
             } else {
-                this.pos = this.pos + ((this.flags & 0x0001) != 0 ? -1 : 1);
+                this.pos = this.pos + (REVERSE.isOn(this.flags) ? -1 : 1);
             }
         }
 
@@ -170,7 +184,7 @@ public class C352 {
                 break;
             case 2:
                 this.freq = val;
-//                logger.log(Level.TRACE, "this.v[ch%d].freq = %d".formatted(ch, val));
+//logger.log(Level.TRACE, "this.v[ch%d].freq = %d".formatted(ch, val));
                 break;
             case 3:
                 this.flags = val;
@@ -191,19 +205,19 @@ public class C352 {
         }
 
         private void keyOnOff() {
-            if ((this.flags & 0x4000) != 0) {
+            if (KEYON.isOn(this.flags)) {
                 this.pos = (this.waveBank << 16) | this.waveStart;
 
                 this.sample = 0;
                 this.lastSample = 0;
                 this.counter = 0xffff;
 
-                this.flags |= 0x8000;
+                this.flags |= BUSY.v;
                 this.flags &= 0xb7ff;
 
                 this.currVol[0] = this.currVol[1] = 0;
                 this.currVol[2] = this.currVol[3] = 0;
-            } else if ((this.flags & 0x2000) != 0) {
+            } else if (KEYOFF.isOn(this.flags)) {
                 this.flags &= 0x5fff;
                 this.counter = 0xffff;
             }
@@ -247,12 +261,12 @@ public class C352 {
     private int waveMask;
 
     // flag from VGM header
-    private byte muteRear;
+    private int muteRear; // ugly
 
-    private static byte muteAllRear = 0x00;
+    private static int muteAllRear = 0x00;
 
     private void fetchSample(Voice v) {
-//        logger.log(Level.TRACE, "v.sample = %d  v.pos = %d  this.wave_mask = %d  v.flags =%d ".formatted(v.sample, v.pos, this.wave_mask, v.flags));
+//logger.log(Level.TRACE, "v.sample = %d  v.pos = %d  this.wave_mask = %d  v.flags =%d ".formatted(v.sample, v.pos, this.wave_mask, v.flags));
 
         v.lastSample = v.sample;
 
@@ -260,14 +274,14 @@ public class C352 {
             this.random = (this.random >> 1) ^ ((-(this.random & 1)) & 0xfff6);
             v.sample = (short) this.random;
         } else {
-            byte s = (byte) (v.pos < this.wave.length ? this.wave[v.pos & this.waveMask] : 0);
+            int s = v.pos < this.wave.length ? this.wave[v.pos & this.waveMask] : 0;
 
             v.fetchSample(s);
         }
     }
 
     public void update(int[][] outputs, int samples) {
-//        short[] out = new short[4];
+//        int[] out = new int[4];
 
         for (int i = 0; i < samples; i++) {
             outputs[0][i] = 0;
@@ -284,7 +298,7 @@ public class C352 {
                 flags[j] = v.flags;
 
 //logger.log(Level.TRACE, " v.flags=%d".formatted(v.flags));
-                if ((v.flags & 0x8000) != 0) {
+                if (BUSY.isOn(v.flags)) {
                     int nextCounter = v.counter + v.freq;
 
                     if ((nextCounter & 0x10000) != 0) {
@@ -294,10 +308,10 @@ public class C352 {
                     }
 
                     if (((nextCounter ^ v.counter) & 0x18000) != 0) {
-                        v.ramp(0, (byte) (v.volF >> 8));
-                        v.ramp(1, (byte) (v.volF & 0xff));
-                        v.ramp(2, (byte) (v.volR >> 8));
-                        v.ramp(3, (byte) (v.volR & 0xff));
+                        v.ramp(0, (v.volF & 0xff00) >> 8);
+                        v.ramp(1, v.volF & 0xff);
+                        v.ramp(2, (v.volR & 0xff00) >> 8);
+                        v.ramp(3, v.volR & 0xff);
                     }
 
                     v.counter = nextCounter & 0xffff;
@@ -307,17 +321,17 @@ public class C352 {
                     s = v.sample;
 
                     // Interpolate samples
-                    if ((v.flags & 0x0004) == 0)
+                    if (!FILTER.isOn(v.flags))
                         s = (short) (v.lastSample + (v.counter * (v.sample - v.lastSample) >> 16));
                 }
 
                 if (this.voices[j].mute == 0) {
                     // Left
-                    out[0] += ((((v.flags & 0x0100) != 0 ? -s : s) * v.currVol[0]) >> 9);
-                    out[2] += ((((v.flags & 0x0080) != 0 ? -s : s) * v.currVol[2]) >> 9);
+                    out[0] += (((PHASEFL.isOn(v.flags) ? -s : s) * v.currVol[0]) >> 9);
+                    out[2] += (((PHASEFR.isOn(v.flags) ? -s : s) * v.currVol[2]) >> 9);
                     // Right
-                    out[1] += ((((v.flags & 0x0200) != 0 ? -s : s) * v.currVol[1]) >> 9);
-                    out[3] += ((((v.flags & 0x0200) != 0 ? -s : s) * v.currVol[3]) >> 9);
+                    out[1] += (((PHASERL.isOn(v.flags) ? -s : s) * v.currVol[1]) >> 9);
+                    out[3] += (((PHASERL.isOn(v.flags) ? -s : s) * v.currVol[3]) >> 9);
                 }
 
 //logger.log(Level.TRACE, "out [0]=%d  [1]=%d  [2]=%d  [3]=%d".formatted(_out[0] , _out[1] , _out[2] , _out[3]));
@@ -340,7 +354,7 @@ public class C352 {
 
         this.divider = clkdiv != 0 ? clkdiv : 288;
         this.sampleRateBase = (clock & 0x7fff_ffff) / this.divider;
-        this.muteRear = (byte) ((clock & 0x8000_0000) >> 31);
+        this.muteRear = (clock & 0x8000_0000) >> 31;
 
         this.voices = new Voice[VOICES];
         for (int i = 0; i < VOICES; i++) {
@@ -399,25 +413,10 @@ public class C352 {
     }
 
     public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData) {
-        if (this.waveSize != romSize) {
-            this.wave = new byte[romSize];
-            this.waveSize = romSize;
-            for (this.waveMask = 1; this.waveMask < this.waveSize; this.waveMask <<= 1)
-                ;
-            this.waveMask--;
-            for (int i = 0; i < romSize; i++) {
-                this.wave[i] = (byte) 0xff;
-            }
-        }
-        if (dataStart > romSize)
-            return;
-        if (dataStart + dataLength > romSize)
-            dataLength = romSize - dataStart;
-
-        System.arraycopy(romData, 0, this.wave, dataStart, dataLength);
+        writeRom(romSize, dataStart, dataLength, romData, 0);
     }
 
-    public void writeRom2(int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
+    public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
 //logger.log(Level.TRACE, "romSize=%x , dataStart=%x , dataLength=%x".formatted(romSize, dataStart, dataLength));
         if (this.waveSize != romSize) {
             this.wave = new byte[romSize];
@@ -434,24 +433,24 @@ public class C352 {
         if (dataStart + dataLength > romSize)
             dataLength = romSize - dataStart;
 
-        if (dataLength >= 0) System.arraycopy(romData, srcStartAdr, this.wave, dataStart, dataLength);
+        System.arraycopy(romData, srcStartAdr, this.wave, dataStart, dataLength);
     }
 
     public void setMuteMask(int muteMask) {
-        for (byte curChn = 0; curChn < VOICES; curChn++)
-            this.voices[curChn].mute = (byte) ((muteMask >> curChn) & 0x01);
+        for (int curChn = 0; curChn < VOICES; curChn++)
+            this.voices[curChn].mute = (muteMask >> curChn) & 0x01;
     }
 
     public int getMuteMask() {
-        int muteMask = 0x00000000;
-        for (byte curChn = 0; curChn < VOICES; curChn++)
+        int muteMask = 0x0000_0000;
+        for (int curChn = 0; curChn < VOICES; curChn++)
             muteMask |= (this.voices[curChn].mute << curChn);
 
         return muteMask;
     }
 
-    public static void setOptions(byte flags) {
-        muteAllRear = (byte) ((flags & 0x01) >> 0);
+    public static void setOptions(int flags) { // ugly
+        muteAllRear = (flags & 0x01) >> 0;
     }
 
     public int[] getFlags() {

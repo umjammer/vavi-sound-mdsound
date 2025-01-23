@@ -7,6 +7,8 @@ import mdsound.chips.Ym2151;
 
 public class MameYm2151Inst extends Instrument.BaseInstrument {
 
+    private final Ym2151[] chips = {new Ym2151(), new Ym2151()};
+
     @Override
     public String getName() {
         return "YM2151mame";
@@ -18,50 +20,41 @@ public class MameYm2151Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int start(int chipId, int samplingRate) {
-        return start(chipId, samplingRate, Ym2151Inst.DefaultYM2151ClockValue);
+    public void reset(int chipId) {
+        assert chipId < chips.length;
+        chips[chipId].reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        if (chipId >= 2)
-            return 0;
-
-        chips[chipId] = new Ym2151(clock, samplingRate);
+        assert chipId < chips.length;
+        chips[chipId].init(clock, samplingRate);
 
         return samplingRate;
     }
 
     @Override
-    public void stop(int chipId) {
-        if (chips[chipId] == null) return;
-        Ym2151 chip = chips[chipId];
-        chip.stop();
-        chips[chipId] = null;
-    }
-
-    @Override
-    public void reset(int chipId) {
-        if (chips[chipId] == null) return;
-        Ym2151 info = chips[chipId];
-        info.reset();
-    }
-
-    @Override
-    public void update(int chipId, int[][] outputs, int samples) {
-        if (chips[chipId] == null) return;
-        Ym2151 info = chips[chipId];
-        info.update(outputs, samples);
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        if (chips[chipId] == null) return 0;
-        Ym2151 token = chips[chipId];
-        token.ym2151_write_reg(adr, data);
+        assert chipId < chips.length;
+        chips[chipId].write_reg(adr, data);
 
         return 0;
     }
 
-    private final Ym2151[] chips = new Ym2151[2];
+    @Override
+    public void update(int chipId, int[][] outputs, int samples) {
+        assert chipId < chips.length;
+        chips[chipId].update(outputs, samples);
+    }
+
+    @Override
+    public void stop(int chipId) {
+        assert chipId < chips.length;
+        chips[chipId].stop();
+    }
 }

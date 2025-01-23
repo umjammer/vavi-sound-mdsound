@@ -56,9 +56,8 @@ public class Nes {
         int[] bufferD = new int[2];
         int[] bufferF = new int[2];
 
-//            switch (EMU_CORE)
-//            {
-//# ifdef ENABLE_ALL_CORES
+//            switch (EMU_CORE) {
+//#ifdef ENABLE_ALL_CORES
 //                case EC_MAME:
 //                    nes_psg_update_sound(this.chip_apu, outputs, samples);
 //                   break;
@@ -92,8 +91,7 @@ public class Nes {
 
     public void start(int clock, int rate) {
         boolean enableFDS = ((clock >> 31) & 0x01) != 0;
-        clock &= 0x7FFFFFFF;
-
+        clock &= 0x7fff_ffff;
 
         this.chipApu = new NpNesApu(clock, rate);
 
@@ -130,7 +128,7 @@ public class Nes {
             this.chipFds.reset();
     }
 
-    public void write(int offset, byte data) {
+    public void write(int offset, int data) {
         switch (offset & 0xE0) {
         case 0x00: // NES APU
             this.chipApu.write(0x4000 | offset, data);
@@ -193,12 +191,12 @@ public class Nes {
         }
     }
 
-    public byte[] readApu() {
+    public int[] readApu() {
         if (this.chipApu == null) return null;
         return this.chipApu.reg;
     }
 
-    public byte[] readDmc() {
+    public int[] readDmc() {
         if (this.chipDmc == null) return null;
 
         return this.chipDmc.reg;

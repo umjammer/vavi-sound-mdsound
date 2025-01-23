@@ -67,6 +67,8 @@ import mdsound.instrument.PokeyInst;
  * - serout ready/complete delayed interrupts.
  * - reworked pot anaSystem.err.printf/digital conversion timing.
  * - optional non-indexing Pokey update functions.
+ *
+ * @author Nicola Salmoria (MAME)
  */
 public class Pokey {
 
@@ -250,7 +252,7 @@ public class Pokey {
     private final int[] audible = new int[4];
     private final int[] muted = new int[4];
     /** sample rate in 24.8 format */
-    private int samplerate24_8;
+    private int sampleRate24_8;
     /** sample position fractional part */
     private int samplePosFract;
     /** sample position whole part */
@@ -308,20 +310,20 @@ public class Pokey {
     private final byte[] rand9 = new byte[0x1ff];
     private final byte[] rand17 = new byte[0x1ffff];
 
-    private byte P4() {
-        return this.poly4[this.p4];
+    private int P4() {
+        return this.poly4[this.p4] & 0xff;
     }
 
-    private byte P5() {
-        return this.poly5[this.p5];
+    private int P5() {
+        return this.poly5[this.p5] & 0xff;
     }
 
-    private byte P9() {
-        return this.poly9[this.p9];
+    private int P9() {
+        return this.poly9[this.p9] & 0xff;
     }
 
-    private byte P17() {
-        return this.poly17[this.p17];
+    private int P17() {
+        return this.poly17[this.p17] & 0xff;
     }
 
     private static final int SAMPLE = -1;
@@ -524,7 +526,7 @@ LOG_RAND.log(Level.DEBUG, "%05x: %02x".formatted(x, rng[i]));
         randRand(this.rand9, 9, 8, 1, 0x00180);
         randRand(this.rand17, 17, 16, 1, 0x1c000);
 
-        this.samplerate24_8 = (clock << 8) / sampleRate;
+        this.sampleRate24_8 = (clock << 8) / sampleRate;
         this.divisor[CHAN1] = 4;
         this.divisor[CHAN2] = 4;
         this.divisor[CHAN3] = 4;
@@ -537,7 +539,7 @@ LOG_RAND.log(Level.DEBUG, "%05x: %02x".formatted(x, rng[i]));
     }
 
     public void reset() {
-        for (byte curChn = 0; curChn < 4; curChn++) {
+        for (int curChn = 0; curChn < 4; curChn++) {
             this.counter[curChn] = 0;
             this.divisor[curChn] = 4;
             this.volume[curChn] = 0;
@@ -899,7 +901,7 @@ LOG_RAND.log(Level.DEBUG, "%05x: %02x".formatted(x, rng[i]));
 //                this.timer[TIMER1].adjust(this.clock_period * newVal, this.timer_param[TIMER1], this.timer_period[TIMER1]);
             this.audible[CHAN1] = (this.audioC[CHAN1] & VOLUME_ONLY) != 0 ||
                             (this.audioC[CHAN1] & VOLUME_MASK) == 0 ||
-                            ((this.audioC[CHAN1] & PURE) != 0 && newVal < (this.samplerate24_8 >> 8))
+                            ((this.audioC[CHAN1] & PURE) != 0 && newVal < (this.sampleRate24_8 >> 8))
                             ? 0 : 1;
             if (this.audible[CHAN1] == 0) {
                 this.output[CHAN1] = 1;
@@ -928,10 +930,10 @@ LOG_RAND.log(Level.DEBUG, "%05x: %02x".formatted(x, rng[i]));
                 this.counter[CHAN2] = newVal;
 //            if (this.interrupt_cb && this.timer[TIMER2])
 //                this.timer[TIMER2].adjust(this.clock_period * newVal, this.timer_param[TIMER2], this.timer_period[TIMER2]);
-            this.audible[CHAN2] = (byte) (
+            this.audible[CHAN2] = (
                     (this.audioC[CHAN2] & VOLUME_ONLY) != 0 ||
                             (this.audioC[CHAN2] & VOLUME_MASK) == 0 ||
-                            ((this.audioC[CHAN2] & PURE) != 0 && newVal < (this.samplerate24_8 >> 8))
+                            ((this.audioC[CHAN2] & PURE) != 0 && newVal < (this.sampleRate24_8 >> 8))
                             ? 0 : 1
             );
             if (this.audible[CHAN2] == 0) {
@@ -958,7 +960,7 @@ LOG_RAND.log(Level.DEBUG, "%05x: %02x".formatted(x, rng[i]));
             // channel 3 does not have a timer associated
             this.audible[CHAN3] = !((this.audioC[CHAN3] & VOLUME_ONLY) != 0 ||
                             (this.audioC[CHAN3] & VOLUME_MASK) == 0 ||
-                            ((this.audioC[CHAN3] & PURE) != 0 && newVal < (this.samplerate24_8 >> 8))
+                            ((this.audioC[CHAN3] & PURE) != 0 && newVal < (this.sampleRate24_8 >> 8))
                     ) ||
                             (this.audioControl & CH1_FILTER) != 0
                             ? 1 : 0;
@@ -991,7 +993,7 @@ LOG_RAND.log(Level.DEBUG, "%05x: %02x".formatted(x, rng[i]));
 //                this.timer[TIMER4].adjust(this.clock_period * newVal, this.timer_param[TIMER4], this.timer_period[TIMER4]);
             this.audible[CHAN4] = !((this.audioC[CHAN4] & VOLUME_ONLY) != 0 ||
                             (this.audioC[CHAN4] & VOLUME_MASK) == 0 ||
-                            (this.audioC[CHAN4] & PURE) != 0 && newVal < (this.samplerate24_8 >> 8)
+                            (this.audioC[CHAN4] & PURE) != 0 && newVal < (this.sampleRate24_8 >> 8)
                     ) ||
                             (this.audioControl & CH2_FILTER) != 0
                             ? 1 : 0;

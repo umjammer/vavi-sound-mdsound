@@ -13,55 +13,16 @@ import mdsound.chips.OkiM6295;
 
 public class OkiM6295Inst extends Instrument.BaseInstrument {
 
+    public static final int MAX_CHIPS = 0x02;
+
+    private final OkiM6295[] chips = {new OkiM6295(), new OkiM6295()};
+
+    private final int[] mask = {0, 0};
+
     public OkiM6295Inst() {
         // 0..Main
-        visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
-        };
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
-
-    @Override
-    public int start(int chipId, int samplingRate) {
-        if (chipId >= MAX_CHIPS)
-            return 0;
-
-        OkiM6295 chip = chips[chipId];
-        return chip.start(samplingRate);
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate, int clock, Object... option) {
-        if (chipId >= MAX_CHIPS)
-            return 0;
-
-        OkiM6295 chip = chips[chipId];
-        return chip.start(clock);
-    }
-
-    @Override
-    public void stop(int chipId) {
-        OkiM6295 chip = chips[chipId];
-        chip.stop();
-    }
-
-    @Override
-    public void reset(int chipId) {
-        OkiM6295 chip = chips[chipId];
-        chip.reset();
-    }
-
-    @Override
-    public void update(int chipId, int[][] outputs, int samples) {
-        OkiM6295 chip = chips[chipId];
-        chip.update(outputs, samples);
-
-        visVolume[chipId][0][0] = outputs[0][0];
-        visVolume[chipId][0][1] = outputs[1][0];
-    }
-
-    private static final int MAX_CHIPS = 0x02;
-    public OkiM6295[] chips = new OkiM6295[] {new OkiM6295(), new OkiM6295()};
 
     @Override
     public String getName() {
@@ -73,57 +34,81 @@ public class OkiM6295Inst extends Instrument.BaseInstrument {
         return "OKI9";
     }
 
+    @Override
+    public void reset(int chipId) {
+        chips[chipId].reset();
+    }
+
+    @Override
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        assert chipId < MAX_CHIPS;
+
+        return chips[chipId].start(clock);
+    }
+
     /**
      * read the status port of an OKIM6295-compatible chips
      */
-    private int okim6295_r(int chipId, int offset) {
-        OkiM6295 chip = chips[chipId];
-        return chip.read(offset);
-    }
-
-    public void okim6295_write_rom(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
-        OkiM6295 chip = chips[chipId];
-        chip.writeRom(romSize, dataStart, dataLength, romData);
-    }
-
-    public void okim6295_write_rom2(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddr) {
-        OkiM6295 chip = chips[chipId];
-        chip.writeRom2(romSize, dataStart, dataLength, romData, srcStartAddr);
-    }
-
-    public void okim6295_set_mute_mask(int chipId, int muteMask) {
-        OkiM6295 chip = chips[chipId];
-        chip.setMuteMask(muteMask);
-    }
-
-    public void okim6295_set_srchg_cb(int chipId, BiConsumer<Chip, Integer> callbackFunc, MDSound.Chip dataPtr) {
-        OkiM6295 chip = chips[chipId];
-        chip.setCallback(samplingRate -> callbackFunc.accept(dataPtr, samplingRate));
+    @Override
+    public int read(int chipId, int adr) {
+        return chips[chipId].read(adr);
     }
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        OkiM6295 chip = chips[chipId];
-        chip.write(adr, data);
+        chips[chipId].write(adr, data);
         return 0;
     }
 
-    public OkiM6295.ChannelInfo readChInfo(int chipId) {
+    @Override
+    public void update(int chipId, int[][] outputs, int samples) {
+        chips[chipId].update(outputs, samples);
+
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
+    }
+
+    @Override
+    public void stop(int chipId) {
+        chips[chipId].stop();
+    }
+
+    public void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
+        writePcm(chipId, romSize, dataStart, dataLength, romData, 0);
+    }
+
+    private void setMuteMask(int chipId, int muteMask) {
+        chips[chipId].setMuteMask(muteMask);
+    }
+
+    public void setCallback(int chipId, BiConsumer<Chip, Integer> callbackFunc, MDSound.Chip dataPtr) {
+        chips[chipId].setCallback(samplingRate -> callbackFunc.accept(dataPtr, samplingRate));
+    }
+
+    //----
+
+    public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
+        chips[chipId].writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
+    }
+
+    public synchronized OkiM6295 getChip(int chipId) {
+        return chips[chipId];
+    }
+
+    public synchronized void setMask(int chipId, int ch) {
+        mask[chipId] |= ch;
+        setMuteMask(chipId, mask[chipId]);
+    }
+
+    public synchronized OkiM6295.ChannelInfo getChInfo(int chipId) {
         OkiM6295 chip = chips[chipId];
         return chip.readChInfo();
     }
 
-//    /**
-//     * Generic get_info
-//     */
-//    DEVICE_GET_INFO( OkiM6295 ) {
-//       switch (state) {
-//        case DEVINFO_STR_NAME:      strcpy(info.s, "OKI6295");      break;
-//        case DEVINFO_STR_FAMILY:     strcpy(info.s, "OKI ADPCM");     break;
-//        case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;
-//        case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
-//       }
-//    }
+    public synchronized void resetMask(int chipId, int ch) {
+        mask[chipId] &= ~(int) ch;
+        setMuteMask(chipId, mask[chipId]);
+    }
 
     //----
 
@@ -138,6 +123,10 @@ public class OkiM6295Inst extends Instrument.BaseInstrument {
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+            case "NAME" -> result.put(getName(), "OKI6295");
+            case "FAMILY" -> result.put(getName(), "OKI ADPCM");
+            case "VERSION" -> result.put(getName(), "1.0");
+            case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
         }
         return result;
     }

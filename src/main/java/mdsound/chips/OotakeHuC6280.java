@@ -463,9 +463,9 @@ public class OotakeHuC6280 {
         }
     }
 
-    private final double sampleRate;
-    private final double psgFreq;
-    private final double resampleRate;
+    private double sampleRate;
+    private double psgFreq;
+    private double resampleRate;
 
     private final Psg[] psgs = new Psg[8]; // 6, 7 is unused
     private int channel; // 0 - 5;
@@ -478,7 +478,7 @@ public class OotakeHuC6280 {
     /** Not used since v1.59. Retained for state loading of previous versions. */
     private final int lfoShift = 0;
     /** Added by Kitao. */
-    private final int psgVolumeEffect;
+    private int psgVolumeEffect;
     /** Added by Kitao. */
     private double volume;
     /** Added by Kitao. v1.08 */
@@ -678,7 +678,7 @@ public class OotakeHuC6280 {
     /**
      * Initialize Psg.
      */
-    public OotakeHuC6280(int clock, int sampleRate) {
+    public void init(int clock, int sampleRate) {
 
         this.psgFreq = clock & 0x7fff_ffff;
         setHoneyInTheSky(((clock >> 31) & 0x01) != 0);

@@ -58,11 +58,11 @@ public class Ym2413 {
         return 1 << x;
     }
 
-    private final int MASK_HH = 1 << 9;
-    private final int MASK_CYM = 1 << 10;
-    private final int MASK_TOM = 1 << 11;
-    private final int MASK_SD = 1 << 12;
-    private final int MASK_BD = 1 << 13;
+    private static final int MASK_HH = 1 << 9;
+    private static final int MASK_CYM = 1 << 10;
+    private static final int MASK_TOM = 1 << 11;
+    private static final int MASK_SD = 1 << 12;
+    private static final int MASK_BD = 1 << 13;
 //    private int OPLL_MASK_RHYTHM = 0x1f << 9; // (OPLL_MASK_HH | OPLL_MASK_CYM | OPLL_MASK_TOM | OPLL_MASK_SD | OPLL_MASK_BD);
 
     private enum Tone {_2413, _VRC7, _281B}
@@ -151,15 +151,13 @@ public class Ym2413 {
             pgOut = highBits(phase, DP_BASE_BITS);
         }
 
-        /**
-         * CARRIOR
-         */
+        /** CARRIOR */
         private int calcCar(int fm) {
             if (egOut >= (DB_MUTE - 1)) {
-                //logger.log(Level.TRACE, "calc_slot_car: output over");
+//logger.log(Level.TRACE, "calc_slot_car: output over");
                 output[0] = 0;
             } else {
-                //logger.log(Level.TRACE, "calc_slot_car: slot.egout %d".formatted(slot.egout));
+//logger.log(Level.TRACE, "calc_slot_car: slot.egout %d".formatted(slot.egout));
                 output[0] = db2LinTable[sinTbl[(pgOut + wave2_8pi(fm)) & (PG_WIDTH - 1)] + egOut];
             }
 
@@ -254,9 +252,7 @@ public class Ym2413 {
             return db2LinTable[dbOut + egOut];
         }
 
-        /**
-         * EG
-         */
+        /** EG */
         private void calcEnvelope(int lfo, Consumer<Slot> updateEg) {
             int egOut = switch (egMode) {
                 case ATTACK -> {
@@ -629,21 +625,21 @@ public class Ym2413 {
     private static final Slot.Patch nullPatch = new Slot.Patch();
 
     /** Basic Voice data */
-    private final Slot.Patch[][] defaultPatch;
+    private Slot.Patch[][] defaultPatch;
 
     /** Definition of envelope mode */
     private enum EgState {
         READY, ATTACK, DECAY, SUSHOLD, SUSTAIN, RELEASE, SETTLE, FINISH
     }
 
-    /** Phase incr table for Attack */
+    /** Phase incR table for Attack */
     private final int[][] dPhaseArTable = new int[][] {
             new int[16], new int[16], new int[16], new int[16],
             new int[16], new int[16], new int[16], new int[16],
             new int[16], new int[16], new int[16], new int[16],
             new int[16], new int[16], new int[16], new int[16]
     };
-    /** Phase incr table for Decay and Release */
+    /** Phase incR table for Decay and Release */
     private final int[][] dPhaseDrTable = new int[][] {
             new int[16], new int[16], new int[16], new int[16],
             new int[16], new int[16], new int[16], new int[16],
@@ -655,7 +651,7 @@ public class Ym2413 {
     private static final int[][][][] tllTable;
     private static final int[][][] rksTable;
 
-    /** Phase incr table for PG */
+    /** Phase incR table for PG */
     private int[][][] dPhaseTable;
 
     /* Table for AR to LogCurve. */
@@ -1216,7 +1212,7 @@ public class Ym2413 {
     }
 
     /** */
-    public Ym2413(int clock, int samplingRate, byte[] patch) {
+    public void init(int clock, int samplingRate, byte[] patch) {
 
         defaultPatch = new Slot.Patch[19][];
         for (int i = 0; i < 19; i++) {
@@ -1871,9 +1867,9 @@ public class Ym2413 {
             bufMO[i] <<= 1;
             bufRO[i] <<= 1;
 
-            //logger.log(Level.TRACE, "OPLL_calc_stereo:out[0][%d]:%d:out[1][%d]:%d:samples:%d".formatted(i, out[0][i], out[1][i], samples));
+//logger.log(Level.TRACE, "OPLL_calc_stereo:out[0][%d]:%d:out[1][%d]:%d:samples:%d".formatted(i, out[0][i], out[1][i], samples));
         }
-        //logger.log(Level.TRACE, "elapsed:%d:%d:%d:%d:%d:%d".formatted(e0,e1,e2,e3,e4,e5));
+//logger.log(Level.TRACE, "elapsed:%d:%d:%d:%d:%d:%d".formatted(e0,e1,e2,e3,e4,e5));
     }
 
 //#endif /* EMU2413_COMPACTION */

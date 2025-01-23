@@ -4,49 +4,53 @@ import java.util.Arrays;
 
 
 /**
- Konami 054539 (TOP) PCM Sound Chip
-
- A lot of information comes from Amuse.
- Big thanks to them.
-
-   Registers:
-   00..ff: 20 bytes/channel, 8 channels
-     00..02: pitch (lsb, mid, msb)
-         03: volume (0=max, 0x40=-36dB)
-         04: Reverb volume (idem)
-     05: pan (1-f right, 10 middle, 11-1f left)
-     06..07: Reverb delay (0=max, current computation non-trusted)
-     08..0a: loop (lsb, mid, msb)
-     0c..0e: start (lsb, mid, msb) (and current position ?)
-
-   100.1ff: effects?
-     13f: pan of the analog input (1-1f)
-
-   200..20f: 2 bytes/channel, 8 channels
-     00: type (b2-3), reverse (b5)
-     01: loop (b0)
-
-   214: Key on (b0-7 = channel 0-7)
-   215: Key off          ""
-   225: ?
-   227: Timer frequency
-   228: ?
-   229: ?
-   22a: ?
-   22b: ?
-   22c: Channel active? (b0-7 = channel 0-7)
-   22d: data read/write port
-   22e: ROM/RAM select (00..7f == ROM banks, 80 = Reverb RAM)
-   22f: Global control:
-        .......x - Enable PCM
-        ......x. - Timer related?
-        ...x.... - Enable ROM/RAM readback from 0x22d
-        ..x..... - Timer output enable?
-        x....... - Disable register RAM updates
-
-    The chips has an optional 0x8000 byte Reverb buffer.
-    The Reverb delay is actually an offset in this buffer.
-*/
+ * Konami 054539 (TOP) PCM Sound Chip
+ * <p>
+ * A lot of information comes from Amuse.
+ * Big thanks to them.
+ *
+ * <pre>
+ *   Registers:
+ *   00..ff: 20 bytes/channel, 8 channels
+ *     00..02: pitch (lsb, mid, msb)
+ *         03: volume (0=max, 0x40=-36dB)
+ *         04: Reverb volume (idem)
+ *     05: pan (1-f right, 10 middle, 11-1f left)
+ *     06..07: Reverb delay (0=max, current computation non-trusted)
+ *     08..0a: loop (lsb, mid, msb)
+ *     0c..0e: start (lsb, mid, msb) (and current position ?)
+ *
+ *   100.1ff: effects?
+ *     13f: pan of the analog input (1-1f)
+ *
+ *   200..20f: 2 bytes/channel, 8 channels
+ *     00: type (b2-3), reverse (b5)
+ *     01: loop (b0)
+ *
+ *   214: Key on (b0-7 = channel 0-7)
+ *   215: Key off          ""
+ *   225: ?
+ *   227: Timer frequency
+ *   228: ?
+ *   229: ?
+ *   22a: ?
+ *   22b: ?
+ *   22c: Channel active? (b0-7 = channel 0-7)
+ *   22d: data read/write port
+ *   22e: ROM/RAM select (00..7f == ROM banks, 80 = Reverb RAM)
+ *   22f: Global control:
+ *        .......x - Enable PCM
+ *        ......x. - Timer related?
+ *        ...x.... - Enable ROM/RAM readback from 0x22d
+ *        ..x..... - Timer output enable?
+ *        x....... - Disable register RAM updates
+ *
+ *    The chips has an optional 0x8000 byte Reverb buffer.
+ *    The Reverb delay is actually an offset in this buffer.
+ * </pre>
+ *
+ * @author Aaron Giles (MAME)
+ */
 public class K054539 {
 
     private static final int RESET_FLAGS = 0;
@@ -65,16 +69,15 @@ public class K054539 {
     private static final double[] panTab = new double[0xf];
 
     static {
-        /*
-            I've tried various equations on volume control but none worked consistently.
-            The upper four channels in most MW/GX games simply need a significant boost
-            to Sound right. For example, the bass and smash Sound volumes in Violent Storm
-            have roughly the same values and the voices in Tokimeki Puzzledama are given
-            values smaller than those of the hihats. Needless to say the two K054539 chips
-            in Mystic Warriors are completely out of balance. Rather than forcing a
-            "one size fits all" function to the voltab the current invert exponential
-            appraoch seems most appropriate.
-        */
+        // I've tried various equations on volume control but none worked consistently.
+        // The upper four channels in most MW/GX games simply need a significant boost
+        // to Sound right. For example, the bass and smash Sound volumes in Violent Storm
+        // have roughly the same values and the voices in Tokimeki Puzzledama are given
+        // values smaller than those of the hihats. Needless to say the two K054539 chips
+        // in Mystic Warriors are completely out of balance. Rather than forcing a
+        // "one size fits all" function to the voltab the current invert exponential
+        // appraoch seems most appropriate.
+
         // Factor the 1/4 for the number of channels in the volume (1/8 is too harsh, 1/2 gives clipping)
         // vol=0 . no attenuation, vol=0x40 . -36dB
         for (int i = 0; i < 256; i++)
@@ -89,9 +92,9 @@ public class K054539 {
     }
 
     private final double[] gain = new double[8];
-    private final byte[][] posRegLatch = new byte[][] {
-            new byte[3], new byte[3], new byte[3], new byte[3],
-            new byte[3], new byte[3], new byte[3], new byte[3]};
+    private final byte[][] posRegLatch = {
+            new byte [3], new byte [3], new byte [3], new byte[3],
+            new byte [3], new byte [3], new byte [3], new byte[3]};
     private int flags;
 
     private final byte[] regs = new byte[0x230];
@@ -101,7 +104,7 @@ public class K054539 {
 
     private int curPtr;
     private int curLimit;
-    private byte[] curZone;
+    private byte [] curZone;
     private int ptrCurZone;
     private byte[] rom;
     private final int ptrRom = 0;
@@ -120,7 +123,7 @@ public class K054539 {
             new Channel()
     };
 
-    private final byte[] muted = new byte[8];
+    private final int[] muted = new int[8];
 
     private int clock;
 
@@ -258,11 +261,11 @@ public class K054539 {
         regBase[offset] = (byte) data;
     }
 
-    public byte write(int offset) {
+    public int write(int offset) {
         switch (offset) {
         case 0x22d:
             if ((this.regs[0x22f] & 0x10) != 0) {
-                byte res = this.curZone[this.ptrCurZone + this.curPtr];
+                int res = this.curZone[this.ptrCurZone + this.curPtr];
                 this.curPtr++;
                 if (this.curPtr == this.curLimit)
                     this.curPtr = 0;
@@ -272,7 +275,7 @@ public class K054539 {
         case 0x22c:
             break;
         default:
-            //logger.log(Level.TRACE, "K054539 read %03x".formatted(offset));
+//logger.log(Level.TRACE, "K054539 read %03x".formatted(offset));
             break;
         }
         return this.regs[offset];
@@ -308,30 +311,10 @@ public class K054539 {
     }
 
     public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData) {
-        if (this.romSize != romSize) {
-            this.rom = new byte[romSize];
-            this.romSize = romSize;
-            for (byte i = 0; i < romSize; i++) {
-                this.rom[i] = (byte) 0xff;
-            }
-
-            this.romMask = 0xffff_ffff;
-            for (byte i = 0; i < 32; i++) {
-                if ((1 << i) >= this.romSize) {
-                    this.romMask = (1 << i) - 1;
-                    break;
-                }
-            }
-        }
-        if (dataStart > romSize)
-            return;
-        if (dataStart + dataLength > romSize)
-            dataLength = romSize - dataStart;
-
-        System.arraycopy(romData, 0, this.rom, dataStart, dataLength);
+        writeRom(romSize, dataStart, dataLength, romData, 0);
     }
 
-    public void writeRom2(int romSize, int dataStart, int dataLength, byte[] romData, int startAdr) {
+    public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData, int startAdr) {
         if (this.romSize != romSize) {
             this.rom = new byte[romSize];
             this.romSize = romSize;
@@ -340,7 +323,7 @@ public class K054539 {
             }
 
             this.romMask = 0xffff_ffff;
-            for (byte i = 0; i < 32; i++) {
+            for (int i = 0; i < 32; i++) {
                 if ((1 << i) >= this.romSize) {
                     this.romMask = (1 << i) - 1;
                     break;
@@ -372,7 +355,7 @@ public class K054539 {
             return;
 
         for (int i = 0; i != samples; i++) {
-            // リバーブ
+            // Reverb
             double lVal, rVal;
             if ((this.flags & DISABLE_REVERB) == 0) {
                 //lVal = rVal = rbase[this.reverb_pos];
@@ -459,10 +442,10 @@ public class K054539 {
                             curPos += pDelta;
 
                             curPval = curVal;
-                            curVal = (this.rom[curPos] & 0xff) << 8;
+                            curVal = (short) ((this.rom[curPos] & 0xff) << 8);
                             if ((this.rom[curPos] & 0xff) == 0x80 && (this.regs[regP2 + 1] & 1) != 0) {
                                 curPos = ((this.regs[regP1 + 0x08] & 0xff) | ((this.regs[regP1 + 0x09] & 0xff) << 8) | ((this.regs[regP1 + 0x0a] & 0xff) << 16)) & this.romMask;
-                                curVal = (this.rom[curPos] & 0xff) << 8;
+                                curVal = (short) ((this.rom[curPos] & 0xff) << 8);
                             }
                             if ((this.rom[curPos] & 0xff) == 0x80) {
                                 this.keyOff(ch);
@@ -484,12 +467,12 @@ public class K054539 {
                             curPos += pDelta;
 
                             curPval = curVal;
-                            curVal = (this.rom[curPos] & 0xff) | (this.rom[curPos + 1] & 0xff) << 8;
-                            if (curVal == ((0x8000 - 0x10000) & 0xffff) && (this.regs[regP2 + 1] & 1) != 0) {
+                            curVal = (short) ((this.rom[curPos] & 0xff) | (this.rom[curPos + 1] & 0xff) << 8);
+                            if (curVal == (short) ((0x8000 - 0x10000) & 0xffff) && (this.regs[regP2 + 1] & 1) != 0) {
                                 curPos = ((this.regs[regP1 + 0x08] & 0xff) | ((this.regs[regP1 + 0x09] & 0xff) << 8) | (this.regs[regP1 + 0x0a] << 16)) & this.romMask;
-                                curVal = (this.rom[curPos] & 0xff) | (this.rom[curPos + 1] & 0xff) << 8;
+                                curVal = (short) ((this.rom[curPos] & 0xff) | (this.rom[curPos + 1] & 0xff) << 8);
                             }
-                            if (curVal == ((0x8000 - 0x10000) & 0xffff)) {
+                            if (curVal == (short) ((0x8000 - 0x10000) & 0xffff)) {
                                 this.keyOff(ch);
                                 curVal = 0;
                                 break;
@@ -513,10 +496,10 @@ public class K054539 {
                             curPos += pDelta;
 
                             curPval = curVal;
-                            curVal = this.rom[curPos >> 1];
+                            curVal = this.rom[curPos >> 1] & 0xff;
                             if ((curVal & 0xff) == 0x88 && (this.regs[regP2 + 1] & 1) != 0) {
                                 curPos = (((this.regs[regP1 + 0x08] & 0xff) | ((this.regs[regP1 + 0x09] & 0xff) << 8) | ((this.regs[regP1 + 0x0a] & 0xff) << 16)) & this.romMask) << 1;
-                                curVal = this.rom[curPos >> 1];
+                                curVal = this.rom[curPos >> 1] & 0xff;
                             }
                             if ((curVal & 0xff) == 0x88) {
                                 this.keyOff(ch);

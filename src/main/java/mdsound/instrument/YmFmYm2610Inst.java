@@ -5,16 +5,19 @@ import java.util.Map;
 
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
-import mdsound.fmgen.Opna.OPNB;
-import vavi.sound.ymfm.Opn.Ym2608;
 import vavi.sound.ymfm.Opn.Ym2610;
 import vavi.sound.ymfm.YmFm.VgmChip;
 
 
 public class YmFmYm2610Inst extends Instrument.BaseInstrument {
 
-    private static final int DefaultYM2610ClockValue = 8000000;
-    private final VgmChip[] chip = new VgmChip[2];
+    public static final int DefaultClockValue = 8000000;
+
+    private final VgmChip[] chips = new VgmChip[2];
+
+    // TODO similar variables in VgmChip class, those can be eliminated?
+    long output_pos;
+    long output_step;
 
     @Override
     public String getName() {
@@ -29,35 +32,22 @@ public class YmFmYm2610Inst extends Instrument.BaseInstrument {
     public YmFmYm2610Inst() {
         //0..Main 1..FM 2..SSG 3..PCMa 4..PCMb
         visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}, new int[] {0, 0}}
+                {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}},
+                {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}}
         };
     }
 
-    // TODO similar variables in VgmChip class, those can be eliminated?
-    long output_pos;
-    long output_step;
-
     @Override
     public void reset(int chipId) {
-        if (chip[chipId] == null) return;
-        chip[chipId].reset();
+        assert chipId < chips.length;
+        chips[chipId].reset();
 
         output_pos = 0;
     }
 
     @Override
-    public int start(int chipId, int samplingRate) {
-        chip[chipId] = new VgmChip(DefaultYM2610ClockValue, Ym2610.class);
-
-        output_step = 0x1_0000_0000L / samplingRate;
-
-        return samplingRate;
-    }
-
-    @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        chip[chipId] = new VgmChip(clock, Ym2610.class);
+        chips[chipId] = new VgmChip(clock, Ym2610.class);
 
         output_step = 0x1_0000_0000L / samplingRate;
 
@@ -65,17 +55,25 @@ public class YmFmYm2610Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void stop(int chipId) {
-        chip[chipId] = null;
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        assert chipId < chips.length;
+        chips[chipId].write(port * 0x100 + adr, data);
+        return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        if (chip[chipId] == null) return;
+        assert chipId < chips.length;
+
         int[] buffer = new int[2];
         buffer[0] = 0;
         buffer[1] = 0;
-        chip[chipId].generate(output_pos, output_step, buffer);
+        chips[chipId].generate(output_pos, output_step, buffer);
         for (int i = 0; i < 1; i++) {
             outputs[0][i] = buffer[i * 2 + 0];
             outputs[1][i] = buffer[i * 2 + 1];
@@ -86,51 +84,55 @@ public class YmFmYm2610Inst extends Instrument.BaseInstrument {
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
-//        visVolume[chipId][1][0] = chip[chipId].visVolume[0];
-//        visVolume[chipId][1][1] = chip[chipId].visVolume[1];
-//        visVolume[chipId][2][0] = chip[chipId].psg.visVolume;
-//        visVolume[chipId][2][1] = chip[chipId].psg.visVolume;
-//        visVolume[chipId][3][0] = chip[chipId].visRtmVolume[0];
-//        visVolume[chipId][3][1] = chip[chipId].visRtmVolume[1];
-//        visVolume[chipId][4][0] = chip[chipId].visAPCMVolume[0];
-//        visVolume[chipId][4][1] = chip[chipId].visAPCMVolume[1];
+//        visVolume[chipId][1][0] = chips[chipId].visVolume[0];
+//        visVolume[chipId][1][1] = chips[chipId].visVolume[1];
+//        visVolume[chipId][2][0] = chips[chipId].psg.visVolume;
+//        visVolume[chipId][2][1] = chips[chipId].psg.visVolume;
+//        visVolume[chipId][3][0] = chips[chipId].visRtmVolume[0];
+//        visVolume[chipId][3][1] = chips[chipId].visRtmVolume[1];
+//        visVolume[chipId][4][0] = chips[chipId].visAPCMVolume[0];
+//        visVolume[chipId][4][1] = chips[chipId].visAPCMVolume[1];
     }
 
     @Override
-    public int write(int chipId, int port, int adr, int data) {
-        if (chip[chipId] == null) return 0;
-        chip[chipId].write(port * 0x100 + adr, data);
-        return 0;
+    public void stop(int chipId) {
+        chips[chipId] = null;
     }
 
-    public void setAdpcmA(int chipId, byte[] _adpcma, int _adpcma_size) {
-        if (chip[chipId] == null) return;
-//        chip[chipId].setAdpcmA(_adpcma, _adpcma_size);
+    private void setAdpcmA(int chipId, byte[] _adpcma, int _adpcma_size) {
+        assert chipId < chips.length;
+//        chips[chipId].setAdpcmA(_adpcma, _adpcma_size);
     }
 
-    public void setAdpcmB(int chipId, byte[] _adpcmb, int _adpcmb_size) {
-        if (chip[chipId] == null) return;
-//        chip[chipId].setAdpcmB(_adpcmb, _adpcmb_size);
+    private void setAdpcmB(int chipId, byte[] _adpcmb, int _adpcmb_size) {
+        assert chipId < chips.length;
+//        chips[chipId].setAdpcmB(_adpcmb, _adpcmb_size);
     }
 
-    private void setFMVolume(int chipId, int db) {
-        if (chip[chipId] == null) return;
-//        chip[chipId].setVolumeFM(db);
+    // ----
+
+    // TODO automatic wired, use annotation?
+    public void setFMVolume(int vol, double ignored) {
+        if (chips[0] == null) return; // chips[0].setFMVolume(vol);
+        if (chips[1] == null) return; // chips[1].setFMVolume(vol);
     }
 
-    private void setPSGVolume(int chipId, int db) {
-        if (chip[chipId] == null) return;
-//        chip[chipId].setVolumePSG(db);
+    // TODO automatic wired, use annotation?
+    public void setPSGVolume(int vol, double ignored) {
+        if (chips[0] == null) return; // chips[0].setPSGVolume(vol);
+        if (chips[1] == null) return; // chips[1].setPSGVolume(vol);
     }
 
-    private void setAdpcmAVolume(int chipId, int db) {
-        if (chip[chipId] == null) return;
-//        chip[chipId].setVolumeADPCMATotal(db);
+    // TODO automatic wired, use annotation?
+    public void setAdpcmAVolume(int vol, double ignored) {
+        if (chips[0] == null) return; // chips[0].setAdpcmAVolume(vol);
+        if (chips[1] == null) return; // chips[1].setAdpcmAVolume(vol);
     }
 
-    private void setAdpcmBVolume(int chipId, int db) {
-        if (chip[chipId] == null) return;
-//        chip[chipId].setVolumeADPCMB(db);
+    // TODO automatic wired, use annotation?
+    public void setAdpcmBVolume(int vol, double ignored) {
+        if (chips[0] == null) return; // chips[0].setAdpcmBVolume(vol);
+        if (chips[1] == null) return; // chips[1].setAdpcmBVolume(vol);
     }
 
     // ----
@@ -154,30 +156,6 @@ public class YmFmYm2610Inst extends Instrument.BaseInstrument {
             }
         }
         return result;
-    }
-
-    // TODO automatic wired, use annotation?
-    public void setFMVolume(int vol, double ignored) {
-        setFMVolume(0, vol);
-        setFMVolume(1, vol);
-    }
-
-    // TODO automatic wired, use annotation?
-    public void setPSGVolume(int vol, double ignored) {
-        setPSGVolume(0, vol);
-        setPSGVolume(1, vol);
-    }
-
-    // TODO automatic wired, use annotation?
-    public void setAdpcmAVolume(int vol, double ignored) {
-        setAdpcmAVolume(0, vol);
-        setAdpcmAVolume(1, vol);
-    }
-
-    // TODO automatic wired, use annotation?
-    public void setAdpcmBVolume(int vol, double ignored) {
-        setAdpcmBVolume(0, vol);
-        setAdpcmBVolume(1, vol);
     }
 }
 

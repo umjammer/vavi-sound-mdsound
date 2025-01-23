@@ -50,8 +50,8 @@ public class NesApu implements SoundChip {
     }
 
     @Override
-    public void setStereoMix(int trk, short mixl, short mixr) {
-        apu.setStereoMix(trk, mixl, mixr);
+    public void setStereoMix(int trk, int mixL, int mixR) {
+        apu.setStereoMix(trk, mixL, mixR);
     }
 
     @Override

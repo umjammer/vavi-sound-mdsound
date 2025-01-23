@@ -1,6 +1,4 @@
-
 package mdsound.instrument;
-
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,60 +11,13 @@ import mdsound.chips.GbSound;
 // DMG
 public class DmgInst extends Instrument.BaseInstrument {
 
-    @Override
-    public void reset(int chipId) {
-        resetDevice(chipId);
+    public static final int DefaultClockValue = 4194304;
+    public static final int MAX_CHIPS = 0x02;
 
-        visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
-        };
-    }
+    private final GbSound[] chips = {new GbSound(), new GbSound()};
 
-    @Override
-    public int start(int chipId, int samplingRate) {
-        return startDevice(chipId, 4194304);
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate, int clock, Object... option) {
-        return startDevice(chipId, clock);
-    }
-
-    @Override
-    public void stop(int chipId) {
-        stopDevice(chipId);
-    }
-
-    @Override
-    public void update(int chipId, int[][] outputs, int samples) {
-        updateDevice(chipId, outputs, samples);
-
-        visVolume[chipId][0][0] = outputs[0][0];
-        visVolume[chipId][0][1] = outputs[1][0];
-    }
-
-    private static final int MAX_CHIPS = 0x02;
-    private final GbSound[] gbSoundData = new GbSound[] {new GbSound(), new GbSound()};
-
-    public int readWave(int chipId, int offset) {
-        GbSound gb = gbSoundData[chipId];
-        return gb.readWave(offset);
-    }
-
-    public void writeWave(int chipId, int offset, byte data) {
-        GbSound gb = gbSoundData[chipId];
-        gb.writeWave(offset, data);
-    }
-
-    public int readSound(int chipId, int offset) {
-        GbSound gb = gbSoundData[chipId];
-        return gb.readSound(offset);
-    }
-
-    private void writeSound(int chipId, int offset, int data) {
-        GbSound gb = gbSoundData[chipId];
-        gb.writeSound(offset, data);
+    public DmgInst() {
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
 
     @Override
@@ -79,54 +30,81 @@ public class DmgInst extends Instrument.BaseInstrument {
         return "DMG";
     }
 
-    public void updateDevice(int chipId, int[][] outputs, int samples) {
-        GbSound gb = gbSoundData[chipId];
-        gb.update(outputs, samples);
+    @Override
+    public void reset(int chipId) {
+        chips[chipId].reset();
     }
 
-    public int startDevice(int chipId, int clock) {
-        if (chipId >= MAX_CHIPS)
-            return 0;
-
-        GbSound gb = gbSoundData[chipId];
+    @Override
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        assert  chipId < MAX_CHIPS;
 
         int rate = (clock & 0x7fff_ffff) / 64;
-        if (((Instrument.BaseInstrument.CHIP_SAMPLING_MODE & 0x01) != 0 && rate < Instrument.BaseInstrument.CHIP_SAMPLE_RATE) ||
-                Instrument.BaseInstrument.CHIP_SAMPLING_MODE == 0x02)
-            rate = Instrument.BaseInstrument.CHIP_SAMPLE_RATE;
-        gb.start(clock, rate);
+        if (((CHIP_SAMPLING_MODE & 0x01) != 0 && rate < CHIP_SAMPLE_RATE) || CHIP_SAMPLING_MODE == 0x02)
+            rate = CHIP_SAMPLE_RATE;
+
+        chips[chipId].start(clock, rate);
         return rate;
     }
 
-    public void stopDevice(int chipId) {
-    }
-
-    public void resetDevice(int chipId) {
-        GbSound gb = gbSoundData[chipId];
-        gb.reset();
-    }
-
-    public void setMuteMask(int chipId, int muteMask) {
-        GbSound gb = gbSoundData[chipId];
-        gb.setMuteMask(muteMask);
-    }
-
-    public int getMuteMask(int chipId) {
-        GbSound gb = gbSoundData[chipId];
-        return gb.getMuteMask();
+    @Override
+    public int read(int chipId, int adr) {
+        return chips[chipId].readSound(adr);
     }
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        writeSound(chipId, adr, data);
+        chips[chipId].writeSound(adr, data);
         return 0;
     }
 
-    public GbSound getSoundData(int chipId) {
-        return gbSoundData[chipId];
+    @Override
+    public void update(int chipId, int[][] outputs, int samples) {
+        chips[chipId].update(outputs, samples);
+
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
+    }
+
+    @Override
+    public void stop(int chipId) {
+    }
+
+    public int readPcm(int chipId, int offset) {
+        return chips[chipId].readWave(offset);
+    }
+
+    public void writePcm(int chipId, int offset, byte data) {
+        chips[chipId].writeWave(offset, data);
+    }
+
+    private void setMuteMask(int chipId, int muteMask) {
+        chips[chipId].setMuteMask(muteMask);
+    }
+
+    public int getMuteMask(int chipId) {
+        return chips[chipId].getMuteMask();
     }
 
     //----
+
+    public synchronized GbSound getChip(int chipId) {
+        return chips[chipId];
+    }
+
+    public synchronized void setMask(int chipId, int ch) {
+        int maskStatus = getMuteMask(chipId);
+        maskStatus |= 1 << ch;//ch:0 - 3
+        setMuteMask(chipId, maskStatus);
+    }
+
+    public synchronized void resetMask(int chipId, int ch) {
+        int maskStatus = getMuteMask(chipId);
+        maskStatus &= ~(1 << ch);//ch:0 - 3
+        setMuteMask(chipId, maskStatus);
+    }
+
+    // ----
 
     @Override
     public Tuple<Integer, Double> getRegulationVolume() {

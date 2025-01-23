@@ -50,16 +50,16 @@ public class C140 {
     private static final int MAX_VOICE = 24;
 
     private static class Voice {
-        private int ptoffset;
+        private int ptOffset;
         private int pos;
         private int key;
         //--work
-        private int lastdt;
-        private int prevdt;
-        private int dltdt;
+        private int lastDt;
+        private int prevDt;
+        private int dltDt;
         //--reg
-        private int rvol;
-        private int lvol;
+        private int rVol;
+        private int lVol;
         private int frequency;
         private int bank;
         private int mode;
@@ -71,9 +71,9 @@ public class C140 {
 
         private void init_voice() {
             this.key = 0;
-            this.ptoffset = 0;
-            this.rvol = 0;
-            this.lvol = 0;
+            this.ptOffset = 0;
+            this.rVol = 0;
+            this.lVol = 0;
             this.frequency = 0;
             this.bank = 0;
             this.mode = 0;
@@ -89,7 +89,7 @@ public class C140 {
     private int[] mixerBufferLeft;
     private int[] mixerBufferRight;
 
-    private int baserate;
+    private int baseRate;
     private int pRomSize;
     private byte[] pRom;
     private final byte[] reg;
@@ -161,11 +161,11 @@ public class C140 {
                     //voice_registers vreg = (voice_registers)this.REG[offset & 0x1f0];
                     int vreg = offset & 0x1f0;
                     v.key = 1;
-                    v.ptoffset = 0;
+                    v.ptOffset = 0;
                     v.pos = 0;
-                    v.lastdt = 0;
-                    v.prevdt = 0;
-                    v.dltdt = 0;
+                    v.lastDt = 0;
+                    v.prevDt = 0;
+                    v.dltDt = 0;
                     v.bank = this.reg[vreg + 4];// vreg.bank;
                     v.mode = data;
 
@@ -203,21 +203,10 @@ public class C140 {
     }
 
     public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData) {
-        if (this.pRomSize != romSize) {
-            this.pRom = new byte[romSize];
-            this.pRomSize = romSize;
-            for (int i = 0; i < romSize; i++) this.pRom[i] = (byte) 0xff;
-            //memset(this.pRom, 0xff, romSize);
-        }
-        if (dataStart > romSize)
-            return;
-        if (dataStart + dataLength > romSize)
-            dataLength = romSize - dataStart;
-
-        if (dataLength >= 0) System.arraycopy(romData, 0, this.pRom, dataStart, dataLength);
+        writeRom(romSize, dataStart, dataLength, romData, 0);
     }
 
-    public void writeRom2(int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
+    public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
         if (this.pRomSize != romSize) {
             this.pRom = new byte[romSize];
             this.pRomSize = romSize;
@@ -229,14 +218,13 @@ public class C140 {
         if (dataStart + dataLength > romSize)
             dataLength = romSize - dataStart;
 
-        if (dataLength >= 0) System.arraycopy(romData, srcStartAdr, this.pRom, dataStart, dataLength);
-
-        //logger.log(Level.TRACE, "c140_write_rom2:%d:%d:%d:%d:%d".formatted(chipId, romSize, dataStart, dataLength, srcStartAdr));
+        System.arraycopy(romData, srcStartAdr, this.pRom, dataStart, dataLength);
+//logger.log(Level.TRACE, "c140_write_rom2:%d:%d:%d:%d:%d".formatted(chipId, romSize, dataStart, dataLength, srcStartAdr));
     }
 
     public void setMuteMask(int muteMask) {
-        for (byte curChn = 0; curChn < MAX_VOICE; curChn++)
-            this.voi[curChn].muted = (byte) ((muteMask >> curChn) & 0x01);
+        for (int curChn = 0; curChn < MAX_VOICE; curChn++)
+            this.voi[curChn].muted = (muteMask >> curChn) & 0x01;
     }
 
     public void update(int[][] outputs, int samples) {
@@ -249,7 +237,7 @@ public class C140 {
         int frequency, delta, offset, pos;
         int cnt, voiceCnt;
         int lastdt, prevdt, dltdt;
-        float pbase = (float) this.baserate * 2.0f / (float) this.sampleRate;
+        float pbase = (float) this.baseRate * 2.0f / (float) this.sampleRate;
 
         int[] lmix, rmix;
 
@@ -269,10 +257,10 @@ public class C140 {
         //--- audio update
         for (int i = 0; i < voiceCnt; i++) {
             Voice v = this.voi[i];
-            int vreg = i * 16;
+            int vReg = i * 16;
 
             if (v.key == 0 || v.muted != 0) continue;
-            frequency = ((this.reg[vreg + 2] & 0xff) << 8) | (this.reg[vreg + 3] & 0xff);
+            frequency = ((this.reg[vReg + 2] & 0xff) << 8) | (this.reg[vReg + 3] & 0xff);
 
             // Abort Voice if no frequency value set
             if (frequency == 0) continue;
@@ -281,8 +269,8 @@ public class C140 {
             delta = (int) (frequency * pbase);
 
             // Calculate left/right channel volumes
-            lvol = ((this.reg[vreg + 1] & 0xff) << 5) / MAX_VOICE; //32ch . 24ch
-            rvol = ((this.reg[vreg + 0] & 0xff) << 5) / MAX_VOICE;
+            lvol = ((this.reg[vReg + 1] & 0xff) << 5) / MAX_VOICE; //32ch . 24ch
+            rvol = ((this.reg[vReg + 0] & 0xff) << 5) / MAX_VOICE;
 
             // Set mixer outputs base pointers
             lmix = this.mixerBufferLeft;
@@ -297,11 +285,11 @@ public class C140 {
             pSampleData = findSample(st, v.bank, i);
 
             // Fetch back previous data pointers
-            offset = v.ptoffset;
+            offset = v.ptOffset;
             pos = v.pos;
-            lastdt = v.lastdt;
-            prevdt = v.prevdt;
-            dltdt = v.dltdt;
+            lastdt = v.lastDt;
+            prevdt = v.prevDt;
+            dltdt = v.dltDt;
 
             // Switch on data type - compressed PCM is only for C140
             if ((v.mode & 8) != 0 && (this.bankingType != Type.ASIC219)) {
@@ -395,11 +383,11 @@ public class C140 {
             }
 
             // Save positional data for next Callback
-            v.ptoffset = offset;
+            v.ptOffset = offset;
             v.pos = pos;
-            v.lastdt = lastdt;
-            v.prevdt = prevdt;
-            v.dltdt = dltdt;
+            v.lastDt = lastdt;
+            v.prevDt = prevdt;
+            v.dltDt = dltdt;
         }
 
         // render to MAME's stream buffer
@@ -420,9 +408,9 @@ public class C140 {
 
     public void start(int clockValue, int sampleRate, Type bankingType) {
         if (clockValue < 1000000)
-            this.baserate = clockValue;
+            this.baseRate = clockValue;
         else
-            this.baserate = clockValue / 384; // based on MAME's notes on Namco System II
+            this.baseRate = clockValue / 384; // based on MAME's notes on Namco System II
         this.sampleRate = sampleRate;
         this.bankingType = bankingType;
 

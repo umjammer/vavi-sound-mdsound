@@ -196,16 +196,16 @@ public class Ym2151 {
     /** Global envelope generator counter works at frequency = chipclock / 64 / 3 */
     private int eg_timer;
     /** step of eg_timer */
-    private final int eg_timer_add;
+    private int eg_timer_add;
     /** envelope generator timer overlfows every 3 samples (on real chips) */
-    private final int eg_timer_overflow;
+    private int eg_timer_overflow;
 
     /** accumulated LFO phase (0 to 255) */
     private int lfo_phase;
     /** LFO timer */
     private int lfo_timer;
     /** step of lfo_timer */
-    private final int lfo_timer_add;
+    private int lfo_timer_add;
     /** LFO generates new output when lfo_timer reaches this value */
     private int lfo_overflow;
     /** LFO phase increment counter */
@@ -300,9 +300,9 @@ public class Ym2151 {
     private final int[] noise_tab = new int[32];
 
     /** chips clock in Hz (passed from 2151intf.c) */
-    private final int clock;
+    private int clock;
     /** sampling frequency in Hz (passed from 2151intf.c) */
-    private final int sampfreq;
+    private int sampfreq;
 
     /** 16.16 fixed point (frequency calculations) */
     private static final int FREQ_SH = 16;
@@ -779,7 +779,7 @@ public class Ym2151 {
             j = 32 - j;
             j = (int) (65536.0 / (j * 32.0)); // number of samples per one shift of the shift register
             this.noise_tab[i] = (int) (j * 64 * scaler);
-            //logger.log(Level.TRACE, "noise_tab[%02x]=%08x".formatted(i, this.noise_tab[i]));
+//logger.log(Level.TRACE, "noise_tab[%02x]=%08x".formatted(i, this.noise_tab[i]));
         }
     }
 
@@ -792,7 +792,7 @@ public class Ym2151 {
 
         // MEM is simply one sample delay
 
-        //logger.log(Level.TRACE, "v:%d c1:%d mem:%d c2:%d m2:%d chanout[cha]:%d".formatted(v, c1.v, mem.v, c2.v, m2.v, chanout[cha]));
+//logger.log(Level.TRACE, "v:%d c1:%d mem:%d c2:%d m2:%d chanout[cha]:%d".formatted(v, c1.v, mem.v, c2.v, m2.v, chanout[cha]));
 
         switch (v & 7) {
         case 0:
@@ -979,7 +979,7 @@ public class Ym2151 {
     }
 
     /** write a register on YM2151 chips number 'n' */
-    public void ym2151_write_reg(int r, int v) {
+    public void write_reg(int r, int v) {
         int i = (r & 0x07) * 4 + ((r & 0x18) >> 3);
         Operator op = this.oper[i];
         Operator[] opBuf;
@@ -1226,7 +1226,7 @@ public class Ym2151 {
         }
     }
 
-    private int ym2151_read_status() {
+    public int read_status() {
         return this.status;
     }
 
@@ -1236,7 +1236,7 @@ public class Ym2151 {
      * @param clock is the chips clock in Hz
      * @param rate  is sampling rate
      */
-    public Ym2151(int clock, int rate) {
+    public void init(int clock, int rate) {
         int chn;
 
         this.clock = clock;
@@ -1305,10 +1305,10 @@ public class Ym2151 {
         this.csm_req = 0;
         this.status = 0;
 
-        ym2151_write_reg(0x1b, 0); // only because of CT1, CT2 output pins */
-        ym2151_write_reg(0x18, 0); // set LFO frequency */
+        write_reg(0x1b, 0); // only because of CT1, CT2 output pins */
+        write_reg(0x18, 0); // set LFO frequency */
         for (i = 0x20; i < 0x100; i++) { // set the operators */
-            ym2151_write_reg(i, 0);
+            write_reg(i, 0);
         }
     }
 

@@ -2,31 +2,32 @@ package mdsound.instrument;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Function;
 
+import dotnet4j.io.Stream;
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
-import mdsound.chips.K053260;
+import mdsound.chips.YmF278b;
 
 
-public class K053260Inst extends Instrument.BaseInstrument {
+public class YmF278BInst extends Instrument.BaseInstrument {
 
-    public static final int MAX_CHIPS = 0x02;
-    public static final int DefaultClockValue = 3579545;
+    public static final int MAX_CHIPS = 0x10;
 
-    private final K053260[] chips = {new K053260(), new K053260()};
-
-    public K053260Inst() {
-        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
-    }
+    private final YmF278b[] chips = {new YmF278b(), new YmF278b()};
 
     @Override
     public String getName() {
-        return "K053260";
+        return "YMF278B";
     }
 
     @Override
     public String getShortName() {
-        return "K053";
+        return "OPL4";
+    }
+
+    public YmF278BInst() {
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
 
     @Override
@@ -34,26 +35,44 @@ public class K053260Inst extends Instrument.BaseInstrument {
         chips[chipId].reset();
     }
 
+    /**
+     * @param option String:, Function<String, Stream>:. TODO
+     */
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
         assert chipId < MAX_CHIPS;
-        return chips[chipId].start(clock);
+
+        String romPath = null;
+        Function<String, Stream> romStream = null;
+        if (option != null && option.length > 0) {
+            if (option[0] instanceof String) {
+                romPath = (String) option[0];
+                romStream = null;
+            }
+            if (option[0] instanceof Function /*<String, Stream>*/) {
+                romPath = null;
+                romStream = (Function<String, Stream>) option[0];
+            }
+        }
+
+        return chips[chipId].start(clock, romPath, romStream);
     }
 
     @Override
     public int read(int chipId, int adr) {
-        return chips[chipId].read(adr);
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        chips[chipId].write(adr, data);
+        chips[chipId].write((port << 1) | 0x00, adr);
+        chips[chipId].write((port << 1) | 0x01, data);
         return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        chips[chipId].update(outputs, samples);
+        chips[chipId].updatePcm(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
@@ -68,8 +87,8 @@ public class K053260Inst extends Instrument.BaseInstrument {
         writePcm(chipId, romSize, dataStart, dataLength, romData, 0);
     }
 
-    public void setMuteMask(int chipId, int muteMask) {
-        chips[chipId].setMuteMask(muteMask);
+    public void setMuteMask(int chipId, int muteMaskFM, int muteMaskWT) {
+        chips[chipId].setMuteMask(muteMaskFM, muteMaskWT);
     }
 
     //----
@@ -78,11 +97,15 @@ public class K053260Inst extends Instrument.BaseInstrument {
         chips[chipId].writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
     }
 
-    // ----
+    public synchronized void writeRam(int chipId, int RAMSize, int dataStart, int dataLength, byte[] ramData, int srcStartAdr) {
+        chips[chipId].writeRam(dataStart, dataLength, ramData, srcStartAdr);
+    }
+
+    //----
 
     @Override
     public Tuple<Integer, Double> getRegulationVolume() {
-        return new Tuple<>(0xB3, 1d);
+        return new Tuple<>(0x100, 1d);
     }
 
     @Override
@@ -91,10 +114,6 @@ public class K053260Inst extends Instrument.BaseInstrument {
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
-            case "NAME" -> result.put(getName(), "K053260");
-            case "FAMILY" -> result.put(getName(), "Konami custom");
-            case "VERSION" -> result.put(getName(), "1.0");
-            case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
         }
         return result;
     }

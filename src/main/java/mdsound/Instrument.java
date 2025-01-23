@@ -24,10 +24,11 @@ public interface Instrument {
      */
     String getShortName();
 
-    /**
-     * @return sampling rate
-     */
-    int start(int chipId, int samplingRate);
+    /** */
+    default void init() {}
+
+    /** */
+    void reset(int chipId);
 
     /**
      * @return sampling rate
@@ -35,23 +36,25 @@ public interface Instrument {
     int start(int chipId, int samplingRate, int clock, Object... option);
 
     /** */
-    void stop(int chipId);
+    int read(int chipId, int adr);
 
     /** */
-    void reset(int chipId);
+    int write(int chipId, int port, int adr, int data);
 
     /** */
     void update(int chipId, int[][] outputs, int samples);
 
     /** */
-    int write(int chipId, int port, int adr, int data);
+    void stop(int chipId);
 
     //
 
     Tuple<Integer, Double> getRegulationVolume();
 
     abstract class BaseInstrument implements Instrument {
+
         protected static int CHIP_SAMPLING_MODE = 2;
+
         public static int CHIP_SAMPLE_RATE = 44100;
 
         // chipId , type , LR
@@ -67,7 +70,7 @@ public interface Instrument {
             return new Tuple<>(0x100, 1d);
         }
 
-        protected int getMonoVolume(int pl, int pr, int sl, int sr) {
+        protected static int getMonoVolume(int pl, int pr, int sl, int sr) {
             int v = pl + pr + sl + sr;
             v >>= 1;
             if (sl + sr != 0) v >>= 1;

@@ -1,3 +1,9 @@
+/*
+ * license:BSD-3-Clause
+ *
+ * copyright-holders: Juergen Buchmueller, Manuel Abadia
+ */
+
 package mdsound.chips;
 
 
@@ -5,10 +11,10 @@ package mdsound.chips;
  * Philips SAA1099 Sound driver
  * <p>
  * By Juergen Buchmueller and Manuel Abadia
- * <p>
+ * <pre>
  * SAA1099 register layout:
  * ========================
- * <p>
+ *
  * offs | 7654 3210 | description
  * -----+-----------+---------------------------
  * 0x00 | ---- xxxx | Amplitude channel 0 (left)
@@ -62,28 +68,32 @@ package mdsound.chips;
  * |           |
  * 0x1c | ---- ---x | All channels enable (0 = off, 1 = on)
  * 0x1c | ---- --x- | Synch & Reset generators
+ * </pre>
+ *
+ * @author Juergen Buchmueller
+ * @author Manuel Abadia
  */
 public class Saa1099 {
 
     private static final int LEFT = 0x00;
     private static final int RIGHT = 0x01;
 
-    /* this structure defines a channel */
+    /** this structure defines a channel */
     private static class Channel {
-        /* frequency (0x00..0xff) */
+        /** frequency (0x00..0xff) */
         private int frequency;
-        /* frequency enable */
+        /** frequency enable */
         private int freqEnable;
-        /* noise enable */
+        /** noise enable */
         private int noiseEnable;
-        /* octave (0x00..0x07) */
+        /** octave (0x00..0x07) */
         private int octave;
-        /* amplitude (0x00..0x0f) */
+        /** amplitude (0x00..0x0f) */
         private final int[] amplitude = new int[2];
-        /* envelope (0x00..0x0f or 0x10 == off) */
+        /** envelope (0x00..0x0f or 0x10 == off) */
         private final int[] envelope = new int[2];
 
-        /* vars to simulate the square wave */
+        // vars to simulate the square wave
         private double counter;
         private double freq;
         private int level;
@@ -105,12 +115,12 @@ public class Saa1099 {
         }
     }
 
-    /* this structure defines a noise channel */
+    /** this structure defines a noise channel */
     private static class Noise {
-        /* vars to simulate the noise generator output */
+        // vars to simulate the noise generator output
         private double counter;
         private double freq;
-        /* noise polynomal shifter */
+        /** noise polynomial shifter */
         private int level;
 
         private void reset() {
@@ -120,65 +130,65 @@ public class Saa1099 {
         }
     }
 
-    private static final int[] amplitudeLookup = new int[] {
+    private static final int[] amplitudeLookup = {
             0 * 32767 / 16, 1 * 32767 / 16, 2 * 32767 / 16, 3 * 32767 / 16,
             4 * 32767 / 16, 5 * 32767 / 16, 6 * 32767 / 16, 7 * 32767 / 16,
             8 * 32767 / 16, 9 * 32767 / 16, 10 * 32767 / 16, 11 * 32767 / 16,
             12 * 32767 / 16, 13 * 32767 / 16, 14 * 32767 / 16, 15 * 32767 / 16
     };
 
-    private static final int[][] envelope = new int[][] {
+    private static final int[][] envelope = {
             // zero amplitude
-            new int[] {
+            {
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
             },
             // maximum amplitude
-            new int[] {
+            {
                     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
                     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
                     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
                     15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
             },
             /* single decay */
-            new int[] {
+            {
                     15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
             },
             /* repetitive decay */
-            new int[] {
+            {
                     15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0,
                     15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0,
                     15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0,
                     15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0
             },
             // single triangular
-            new int[] {
+            {
                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
                     15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
             },
             // repetitive triangular
-            new int[] {
+            {
                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
                     15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0,
                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
                     15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0
             },
             // single attack
-            new int[] {
+            {
                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
             },
             // repetitive attack
-            new int[] {
+            {
                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
                     0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
@@ -206,9 +216,9 @@ public class Saa1099 {
     private int syncState;
     /** selected register */
     private int selectedReg;
-    private final Channel[] channels = new Channel[] {new Channel(), new Channel(), new Channel(), new Channel(), new Channel(), new Channel()}; /* channels */
+    private final Channel[] channels = {new Channel(), new Channel(), new Channel(), new Channel(), new Channel(), new Channel()}; /* channels */
     /** noise generators */
-    private final Noise[] noise = new Noise[] {new Noise(), new Noise()};
+    private final Noise[] noise = {new Noise(), new Noise()};
     private double sampleRate;
     private int masterClock;
 
@@ -309,24 +319,24 @@ public class Saa1099 {
                     continue; // placed here to ensure that envelopes are updated
 
 //#if false
-//                    // if the noise is enabled
-//                    if (this.channels[ch].noiseEnable != 0) {
-//                        // if the noise level is high (noise 0: chan 0-2, noise 1: chan 3-5)
-//                        if ((this.noise[ch / 3].level & 1) != 0) {
-//                            // subtract to avoid overflows, also use only half amplitude
-//                            output_l -= this.channels[ch].amplitude[LEFT] * this.channels[ch].envelope[LEFT] / 16 / 2;
-//                            output_r -= this.channels[ch].amplitude[RIGHT] * this.channels[ch].envelope[RIGHT] / 16 / 2;
-//                        }
+//                // if the noise is enabled
+//                if (this.channels[ch].noiseEnable != 0) {
+//                    // if the noise level is high (noise 0: chan 0-2, noise 1: chan 3-5)
+//                    if ((this.noise[ch / 3].level & 1) != 0) {
+//                        // subtract to avoid overflows, also use only half amplitude
+//                        output_l -= this.channels[ch].amplitude[LEFT] * this.channels[ch].envelope[LEFT] / 16 / 2;
+//                        output_r -= this.channels[ch].amplitude[RIGHT] * this.channels[ch].envelope[RIGHT] / 16 / 2;
 //                    }
+//                }
 //
-//                    // if the square wave is enabled
-//                    if (this.channels[ch].freqEnable != 0) {
-//                        // if the channel level is high
-//                        if ((this.channels[ch].level & 1) != 0) {
-//                            output_l += this.channels[ch].amplitude[LEFT] * this.channels[ch].envelope[LEFT] / 16;
-//                            output_r += this.channels[ch].amplitude[RIGHT] * this.channels[ch].envelope[RIGHT] / 16;
-//                        }
+//                // if the square wave is enabled
+//                if (this.channels[ch].freqEnable != 0) {
+//                    // if the channel level is high
+//                    if ((this.channels[ch].level & 1) != 0) {
+//                        output_l += this.channels[ch].amplitude[LEFT] * this.channels[ch].envelope[LEFT] / 16;
+//                        output_r += this.channels[ch].amplitude[RIGHT] * this.channels[ch].envelope[RIGHT] / 16;
 //                    }
+//                }
 //#else
                 // Now with bipolar output. -Valley Bell
                 if (this.channels[ch].noiseEnable != 0) {
@@ -492,7 +502,7 @@ public class Saa1099 {
             if ((data & 0x02) != 0) {
                 int i;
 
-                // Synch & Reset generators
+                // Sync & Reset generators
                 //throw new Exception("SAA1099: -reg 0x1c- Chip reset\n");
                 for (i = 0; i < 6; i++) {
                     this.channels[i].level = 0;

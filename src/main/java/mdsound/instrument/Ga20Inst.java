@@ -11,41 +11,14 @@ import mdsound.chips.IremGa20;
 // GA20
 public class Ga20Inst extends Instrument.BaseInstrument {
 
-    @Override
-    public void reset(int chipId) {
-        device_reset_iremga20(chipId);
+    public static final int DefaultClockValue = 3579545;
+    public static final int MAX_CHIPS = 0x02;
 
-        visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
-        };
+    private final IremGa20[] chips = {new IremGa20(), new IremGa20()};
+
+    public Ga20Inst() {
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
-
-    @Override
-    public int start(int chipId, int samplingRate) {
-        return device_start_iremga20(chipId, 3579545);
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate, int clock, Object... option) {
-        return device_start_iremga20(chipId, clock);
-    }
-
-    @Override
-    public void stop(int chipId) {
-        device_stop_iremga20(chipId);
-    }
-
-    @Override
-    public void update(int chipId, int[][] outputs, int samples) {
-        IremGA20_update(chipId, outputs, samples);
-
-        visVolume[chipId][0][0] = outputs[0][0];
-        visVolume[chipId][0][1] = outputs[1][0];
-    }
-
-    private static final int MAX_CHIPS = 0x02;
-    private final IremGa20[] ga20Data = new IremGa20[] {new IremGa20(), new IremGa20()};
 
     @Override
     public String getName() {
@@ -57,58 +30,53 @@ public class Ga20Inst extends Instrument.BaseInstrument {
         return "GA20";
     }
 
-    private void IremGA20_update(int chipId, int[][] outputs, int samples) {
-        IremGa20 chip = ga20Data[chipId];
-        chip.update(outputs, samples);
+    @Override
+    public void reset(int chipId) {
+        chips[chipId].reset();
     }
 
-    private void irem_ga20_w(int chipId, int offset, byte data) {
-        IremGa20 chip = ga20Data[chipId];
-        chip.write(offset, data);
+    @Override
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        assert chipId < MAX_CHIPS;
+        return chips[chipId].start(clock);
     }
 
-    public byte irem_ga20_r(int chipId, int offset) {
-        IremGa20 chip = ga20Data[chipId];
-        return chip.read(offset);
-    }
-
-    private void device_reset_iremga20(int chipId) {
-        IremGa20 chip = ga20Data[chipId];
-        chip.reset();
-    }
-
-    private int device_start_iremga20(int chipId, int clock) {
-        if (chipId >= MAX_CHIPS)
-            return 0;
-
-        IremGa20 chip = ga20Data[chipId];
-        return chip.start(clock);
-    }
-
-    public void device_stop_iremga20(int chipId) {
-        IremGa20 chip = ga20Data[chipId];
-        chip.stop();
-    }
-
-    public void iremga20_write_rom(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
-        IremGa20 chip = ga20Data[chipId];
-        chip.writeRom(romSize, dataStart, dataLength, romData);
-    }
-
-    public void iremga20_write_rom(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddress) {
-        IremGa20 chip = ga20Data[chipId];
-        chip.writeRom(romSize, dataStart, dataLength, romData, srcStartAddress);
-    }
-
-    private void iremga20_set_mute_mask(int chipId, int muteMask) {
-        IremGa20 chip = ga20Data[chipId];
-        chip.setMuteMask(muteMask);
+    @Override
+    public int read(int chipId, int adr) {
+        return chips[chipId].read(adr);
     }
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        irem_ga20_w(chipId, adr, (byte) data);
+        chips[chipId].write(adr, data);
         return 0;
+    }
+
+    @Override
+    public void update(int chipId, int[][] outputs, int samples) {
+        chips[chipId].update(outputs, samples);
+
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
+    }
+
+    @Override
+    public void stop(int chipId) {
+        chips[chipId].stop();
+    }
+
+    public void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
+        writePcm(chipId, romSize, dataStart, dataLength, romData, 0);
+    }
+
+    public void setMuteMask(int chipId, int muteMask) {
+        chips[chipId].setMuteMask(muteMask);
+    }
+
+    //----
+
+    public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
+        chips[chipId].writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
     }
 
     //----

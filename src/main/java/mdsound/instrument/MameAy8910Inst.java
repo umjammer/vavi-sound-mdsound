@@ -13,13 +13,18 @@ import mdsound.chips.Ay8910;
 
 public class MameAy8910Inst extends Instrument.BaseInstrument {
 
-    private final Ay8910[] chip = new Ay8910[2];
-    private static final int DefaultAY8910ClockValue = 1789750;
+    public static final int DefaultClockValue = 1789750;
+
     private int sampleRate = 44100;
-    private int masterClock = DefaultAY8910ClockValue;
+
+    private final Ay8910[] chips = {new Ay8910(), new Ay8910()};
+
+    private int masterClock = DefaultClockValue;
     private double sampleCounter = 0;
-    private final int[][] frm = new int[][] {new int[1], new int[1]};
-    private final int[][] before = new int[][] {new int[1], new int[1]};
+    private final int[][] frm = {new int[1], new int[1]};
+    private final int[][] before = {new int[1], new int[1]};
+
+    public final int[] mask = {0, 0};
 
     @Override
     public String getName() {
@@ -33,22 +38,14 @@ public class MameAy8910Inst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        chip[chipId].reset();
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate) {
-        return start(chipId, samplingRate, DefaultAY8910ClockValue);
+        chips[chipId].reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        Ay8910 ch = new Ay8910();
         sampleRate = samplingRate;
         masterClock = clock / 4;
-        ch.init(clock, (byte) 0, (byte) 0);
-
-        chip[chipId] = ch;
+        chips[chipId].init(clock, 0, 0);
 
         visVolume = new int[2][][];
         visVolume[0] = new int[2][];
@@ -62,8 +59,14 @@ public class MameAy8910Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void stop(int chipId) {
-        chip[chipId].stop();
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        chips[chipId].writeReg(adr, data);
+        return 0;
     }
 
     @Override
@@ -75,7 +78,7 @@ public class MameAy8910Inst extends Instrument.BaseInstrument {
             sampleCounter += (double) masterClock / sampleRate;
             int upc = (int) sampleCounter;
             while (sampleCounter >= 1) {
-                chip[chipId].updateOne(1, frm);
+                chips[chipId].updateOne(1, frm);
 
                 outputs[0][i] += frm[0][0];
                 outputs[1][i] += frm[1][0];
@@ -92,9 +95,6 @@ public class MameAy8910Inst extends Instrument.BaseInstrument {
                 outputs[0][i] = before[0][i];
                 outputs[1][i] = before[1][i];
             }
-
-            //outputs[0][i] <<= 0;
-            //outputs[1][i] <<= 0;
         }
 
         visVolume[chipId][0][0] = outputs[0][0];
@@ -102,12 +102,28 @@ public class MameAy8910Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public int write(int chipId, int port, int adr, int data) {
-        chip[chipId].writeReg(adr, data);
-        return 0;
+    public void stop(int chipId) {
+        chips[chipId].stop();
     }
 
-    public void setMute(int chipId, int mask) {
-        chip[chipId].setMuteMask(mask);
+    // ----
+
+    public synchronized void setMask(int chipId, int ch) {
+        mask[chipId] |= ch;
+        chips[chipId].setMuteMask(mask[chipId]);
+    }
+
+    public synchronized void resetMask(int chipId, int ch) {
+        mask[chipId] &= ~ch;
+        chips[chipId].setMuteMask(mask[chipId]);
+    }
+
+    // ----
+
+    public void setVolume(int vol) {
+        // TODO
+//        c.volume = Math.max(Math.min(vol, 20), -192);
+//        int n = (((int) (16384.0 * Math.pow(10.0, c.volume / 40.0)) * c.tVolumeBalance) >> 8);
+//        c.tVolume = Math.max(Math.min((int) (n * volumeMul), Short.MAX_VALUE), Short.MIN_VALUE);
     }
 }

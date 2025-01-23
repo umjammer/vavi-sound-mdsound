@@ -13,114 +13,13 @@ import mdsound.chips.OkiM6258;
 
 public class OkiM6258Inst extends Instrument.BaseInstrument {
 
-    private static final int MAX_CHIPS = 0x02;
-    public OkiM6258[] okiM6258Data = new OkiM6258[MAX_CHIPS];
+    public static final int MAX_CHIPS = 0x02;
 
-    @Override
-    public void update(int chipId, int[][] outputs, int samples) {
-        OkiM6258 chip = okiM6258Data[chipId];
-        chip.update(outputs, samples);
-
-        visVolume[chipId][0][0] = outputs[0][0];
-        visVolume[chipId][0][1] = outputs[1][0];
-    }
-
-    private int device_start_okim6258(int chipId, int clock, int divider, int adpcm_type, int output_12bits) {
-        if (chipId >= MAX_CHIPS)
-            return 0;
-
-        OkiM6258 info = okiM6258Data[chipId];
-        return info.start(clock, divider, adpcm_type, output_12bits);
-    }
-
-    /**
-     * stop emulation of an OKIM6258-compatible chips
-     */
-    private void device_stop_okim6258(int chipId) {
-        okiM6258Data[chipId] = null;
-    }
-
-    private void device_reset_okim6258(int chipId) {
-        OkiM6258 info = okiM6258Data[chipId];
-        info.reset();
-    }
-
-    private void okim6258_set_divider(int chipId, int val) {
-        OkiM6258 info = okiM6258Data[chipId];
-        info.setDivider(val);
-    }
-
-    private void okim6258_set_clock(int chipId, int val) {
-        OkiM6258 info = okiM6258Data[chipId];
-        info.setClock(val);
-    }
-
-    private int okim6258_get_vclk(int chipId) {
-        OkiM6258 info = okiM6258Data[chipId];
-        return info.getVclk();
-    }
-
-//    /**
-//     * read the status port of an OKIM6258-compatible chips
-//     */
-//    int okim6258_status_r(int chipId, int offset) {
-//        OkiM6258 info = OKIM6258Data[chipId];
-//
-//        return (info.status & STATUS_PLAYING) ? 0x00 : 0x80;
-//    }
-
-    private void okim6258_data_w(int chipId, /* offs_t offset, */ int data) {
-        OkiM6258 info = okiM6258Data[chipId];
-        info.data_write(data);
-    }
-
-    private void okim6258_ctrl_w(int chipId, /* offs_t offset, */ int data) {
-        OkiM6258 info = okiM6258Data[chipId];
-        info.writeControl(data);
-    }
-
-    private void okim6258_set_clock_byte(int chipId, int byte_, int val) {
-        OkiM6258 info = okiM6258Data[chipId];
-        info.setClock(val);
-    }
-
-    private void okim6258_pan_w(int chipId, int data) {
-        OkiM6258 info = okiM6258Data[chipId];
-        info.writePan(data);
-    }
-
-//    /**
-//     * Generic get_info
-//     */
-//        DEVICE_GET_INFO( OkiM6258 ) {
-//            switch (state) {
-//                case DEVINFO_STR_NAME:       strcpy(info.s, "OKI6258");     break;
-//                case DEVINFO_STR_FAMILY:     strcpy(info.s, "OKI ADPCM");    break;
-//                case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");      break;
-//                case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
-//            }
-//        }
+    private final OkiM6258[] chips = {new OkiM6258(), new OkiM6258()};
 
     public OkiM6258Inst() {
         // 0..Main
-        visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
-        };
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate) {
-        return start(chipId, 44100, samplingRate, 0);
-    }
-
-    /** @param option int[1] */
-    @Override
-    public int start(int chipId, int samplingRate, int clock, Object... option) {
-        int divider = ((int) option[0] & 0x03) >> 0;
-        int adpcmType = ((int) option[0] & 0x04) >> 2;
-        int output12Bits = ((int) option[0] & 0x08) >> 3;
-        return device_start_okim6258(chipId, clock, divider, adpcmType, output12Bits);
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
 
     @Override
@@ -134,33 +33,91 @@ public class OkiM6258Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void stop(int chipId) {
-        device_stop_okim6258(chipId);
+    public void reset(int chipId) {
+        chips[chipId].reset();
+    }
+
+    /** @param option int[1] */
+    @Override
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
+        assert chipId < MAX_CHIPS;
+
+        int divider = ((int) option[0] & 0x03) >> 0;
+        int adpcmType = ((int) option[0] & 0x04) >> 2;
+        int output12Bits = ((int) option[0] & 0x08) >> 3;
+
+        return chips[chipId].start(clock, divider, adpcmType, output12Bits);
     }
 
     @Override
-    public void reset(int chipId) {
-        device_reset_okim6258(chipId);
-    }
+    public int read(int chipId, int adr) {
+//        // read the status port of an OKIM6258-compatible chips
+//        OkiM6258 chip = chips[chipId];
+//
+//        return (chip.status & STATUS_PLAYING) ? 0x00 : 0x80;
 
-    private void okim6258_write(int chipId, int port, int data) {
-        OkiM6258 info = okiM6258Data[chipId];
-        info.write(port, data);
-    }
-
-    public void okim6258_set_options(int options) {
-        OkiM6258.setOptions(options);
-    }
-
-    public void okim6258_set_srchg_cb(int chipId, BiConsumer<Chip, Integer> callbackFunc, MDSound.Chip dataPtr) {
-        OkiM6258 chip = okiM6258Data[chipId];
-        chip.setCallback(samplingRate -> callbackFunc.accept(dataPtr, samplingRate));
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        okim6258_write(chipId, adr, data);
+        chips[chipId].write(adr, data);
         return 0;
+    }
+
+    @Override
+    public void update(int chipId, int[][] outputs, int samples) {
+        chips[chipId].update(outputs, samples);
+
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
+    }
+
+    @Override
+    public void stop(int chipId) {
+        chips[chipId] = null;
+    }
+
+    public void setDivider(int chipId, int val) {
+        chips[chipId].setDivider(val);
+    }
+
+    public void setClock(int chipId, int val) {
+        chips[chipId].setClock(val);
+    }
+
+    public int getVclk(int chipId) {
+        return chips[chipId].getVclk();
+    }
+
+    public void writeData(int chipId, /* int offset, */ int data) {
+        chips[chipId].data_write(data);
+    }
+
+    public void writeCtrl(int chipId, /* int offset, */ int data) {
+        chips[chipId].writeControl(data);
+    }
+
+    public void setClockByte(int chipId, int byte_, int val) {
+        chips[chipId].setClock(val);
+    }
+
+    public void writePan(int chipId, int data) {
+        chips[chipId].writePan(data);
+    }
+
+    public static void setOptions(int options) {
+        OkiM6258.setOptions(options);
+    }
+
+    public void setCallback(int chipId, BiConsumer<Chip, Integer> callbackFunc, MDSound.Chip dataPtr) {
+        chips[chipId].setCallback(samplingRate -> callbackFunc.accept(dataPtr, samplingRate));
+    }
+
+    //----
+
+    public synchronized OkiM6258 getChip(int chipId) {
+        return chips[chipId];
     }
 
     //----
@@ -176,6 +133,10 @@ public class OkiM6258Inst extends Instrument.BaseInstrument {
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+            case "NAME" -> result.put(getName(), "OKI6258");
+            case "FAMILY" -> result.put(getName(), "OKI ADPCM");
+            case "VERSION" -> result.put(getName(), "1.0");
+            case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
         }
         return result;
     }

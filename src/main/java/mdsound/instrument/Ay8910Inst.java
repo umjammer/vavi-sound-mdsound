@@ -10,8 +10,16 @@ import mdsound.fmgen.PSG;
 
 public class Ay8910Inst extends Instrument.BaseInstrument {
 
-    private final PSG[] chip = new PSG[2];
-    private static final int DefaultClockValue = 1789750;
+    public static final int DefaultClockValue = 1789750;
+
+    private final PSG[] chips = {new PSG(), new PSG()};
+
+    private final int[] mask = {0, 0};
+
+    public Ay8910Inst() {
+        // 0..Main
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
+    }
 
     @Override
     public String getName() {
@@ -23,83 +31,80 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
         return "AY10";
     }
 
-    public Ay8910Inst() {
-        visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
-        };
-        //0..Main
+    @Override
+    public void init() {
+        mask[0] = 0;
+        mask[1] = 0;
     }
 
     @Override
     public void reset(int chipId) {
-        if (chip[chipId] == null) return;
-        chip[chipId].reset();
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate) {
-        chip[chipId] = new PSG();
-        chip[chipId].setClock(DefaultClockValue, samplingRate);
-
-        return samplingRate;
+        assert chipId < chips.length;
+        chips[chipId].reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        chip[chipId] = new PSG();
-        chip[chipId].setClock(clock, samplingRate);
-
+        PSG chip = chips[chipId];
+        chip.setClock(clock, samplingRate);
         return samplingRate;
     }
 
     @Override
-    public void stop(int chipId) {
-        chip[chipId] = null;
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        assert chipId < chips.length;
+        chips[chipId].setReg(adr, data);
+        return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        if (chip[chipId] == null) return;
+        assert chipId < chips.length;
+
         int[] buffer = new int[2];
         buffer[0] = 0;
         buffer[1] = 0;
-        chip[chipId].mix(buffer, 1);
+        chips[chipId].mix(buffer, 1);
         for (int i = 0; i < 1; i++) {
             outputs[0][i] = buffer[i * 2 + 0];
             outputs[1][i] = buffer[i * 2 + 1];
-            //logger.log(Level.TRACE, "[%8d] : [%8d] [%d]".formatted(outputs[0][i], outputs[1][i], i));
+//logger.log(Level.TRACE, "[%8d] : [%8d] [%d]".formatted(outputs[0][i], outputs[1][i], i));
         }
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
     }
 
-    private int write(int chipId, byte adr, byte data) {
-        if (chip[chipId] == null) return 0;
-        chip[chipId].setReg(adr, data);
-        return 0;
-    }
-
-    public void setMute(int chipId, int val) {
-        PSG psg = chip[chipId];
-        if (psg == null) return;
-
-
-        psg.setChannelMask(val);
+    @Override
+    public void stop(int chipId) {
+        chips[chipId] = null;
     }
 
     public void setVolume(int chipId, int db) {
-        if (chip[chipId] == null) return;
-
-        chip[chipId].setVolume(db);
+        assert chipId < chips.length;
+        chips[chipId].setVolume(db);
     }
 
-    @Override
-    public int write(int chipId, int port, int adr, int data) {
-        if (chip[chipId] == null) return 0;
-        chip[chipId].setReg(adr, data);
-        return 0;
+    private void setMute(int chipId, int val) {
+        assert chipId < chips.length;
+        chips[chipId].setChannelMask(val);
+    }
+
+    //----
+
+    public synchronized void setMask(int chipId, int ch) {
+        mask[chipId] |= ch;
+        setMute(chipId, mask[chipId]);
+    }
+
+    public synchronized void resetMask(int chipId, int ch) {
+        mask[chipId] &= ~ch;
+        setMute(chipId, mask[chipId]);
     }
 
     //----

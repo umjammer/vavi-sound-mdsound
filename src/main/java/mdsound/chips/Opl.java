@@ -499,7 +499,7 @@ public class Opl {
                         this.limit = ((this.reg[0xd] & 0xff) * 0x0100 | (this.reg[0xc] & 0xff)) << (this.portshift - this.dramPortShift);
                     }
                 }
-                this.control2 = (byte) v;
+                this.control2 = v;
                 break;
             case 0x02: // Start Address L
             case 0x03: // Start Address H
@@ -699,7 +699,7 @@ public class Opl {
 
                     if ((this.now_addr & 1) != 0) data = this.nowData & 0x0f;
                     else {
-                        this.nowData = this.memory[this.now_addr >> 1];
+                        this.nowData = this.memory[this.now_addr >> 1] & 0xff;
                         data = this.nowData >> 4;
                     }
 
@@ -1199,7 +1199,7 @@ public class Opl {
     /**
      * waveform select enable flag
      */
-    private byte waveSel;
+    private int waveSel;
 
     /**
      * timer counters
@@ -1676,7 +1676,7 @@ public class Opl {
         if (this.lfoAmCnt >= (LFO_AM_TAB_ELEMENTS << LFO_SH)) // lfo_am_table is 210 elements long
             this.lfoAmCnt -= (LFO_AM_TAB_ELEMENTS << LFO_SH);
 
-        int tmp = lfoAmTable[this.lfoAmCnt >> LFO_SH];
+        int tmp = lfoAmTable[this.lfoAmCnt >>> LFO_SH];
 
         if (this.lfoAmDepth != 0)
             this.lfoAm = tmp;
@@ -2345,7 +2345,7 @@ public class Opl {
             switch (r & 0x1f) {
             case 0x01: // waveform select enable
                 if ((this.type & SUB_TYPE_WAVESEL) != 0) {
-                    this.waveSel = (byte) (v & 0x20);
+                    this.waveSel = v & 0x20;
                     // do not change the waveform previously selected
                 }
                 break;
@@ -2398,10 +2398,10 @@ public class Opl {
                 this.mode = v;
                 if ((this.type & SUB_TYPE_ADPCM) != 0)
                     this.deltaT.write(r - 0x07, v & 0x0f); // mask 4 LSBs in register 08 for DELTA-T unit
-                //#endif
+//#endif
                 break;
 
-            //#if BUILD_Y8950
+//#if BUILD_Y8950
             case 0x09: // START ADD
             case 0x0a:
             case 0x0b: // STOP ADD
@@ -2726,9 +2726,9 @@ public class Opl {
     }
 
     public void setMuteMask(int muteMask) {
-        for (byte curChn = 0; curChn < 9; curChn++)
+        for (int curChn = 0; curChn < 9; curChn++)
             this.channels[curChn].muted = (muteMask >> curChn) & 0x01;
-        for (byte curChn = 0; curChn < 6; curChn++)
+        for (int curChn = 0; curChn < 6; curChn++)
             this.muteSpc[curChn] = (muteMask >> (9 + curChn)) & 0x01;
     }
 
@@ -2842,18 +2842,7 @@ public class Opl {
     }
 
     public void writePcmRom(int romSize, int dataStart, int dataLength, byte[] romData) {
-        if (this.deltaT.memorySize != romSize) {
-            this.deltaT.memory = new byte[romSize];
-            this.deltaT.memorySize = romSize;
-            Arrays.fill(this.deltaT.memory, 0, romSize, (byte) 0xff);
-            this.deltaT.calcMemMask();
-        }
-        if (dataStart > romSize)
-            return;
-        if (dataStart + dataLength > romSize)
-            dataLength = romSize - dataStart;
-
-        System.arraycopy(romData, 0, this.deltaT.memory, dataStart, dataLength);
+        writePcmRom(romSize, dataStart, dataLength, romData, 0);
     }
 
     public void writePcmRom(int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddress) {

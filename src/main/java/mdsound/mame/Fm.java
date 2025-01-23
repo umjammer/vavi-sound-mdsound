@@ -33,7 +33,7 @@ import dotnet4j.util.compat.TriConsumer;
  *
  * 03-08-2003 Jarek Burczynski:
  *  - fixed YM2608 initial values (after the reset)
- *  - fixed flag and irqmask handling (YM2608)
+ *  - fixed flag and irqMask handling (YM2608)
  *  - fixed BUFRDY flag handling (YM2608)
  *
  * 14-06-2003 Jarek Burczynski:
@@ -195,274 +195,242 @@ public class Fm {
         ym2612_update_request.run();
     }
 
-    // FM_TIMERHANDLER : Stop or Start timer
-    // int n          = chips number
-    // int c          = Channel 0=TimerA,1=TimerB
-    // int count      = timer count (0=stop)
-    // doube stepTime = step time of one count (sec.)
-
-    // FM_IRQHHANDLER : IRQ level changing sense 
-    // int n       = chips number
-    // int irq     = IRQ level 0=OFF,1=ON 
-
-    // include external DELTA-T unit (when needed)
-
-    // shared function building option 
-    private static final int BUILD_OPN = 1;
-    private static final int BUILD_OPN_PRESCALER = 1;
-
-    // globals
-
-    /** SSG support */
-    private static final int TYPE_SSG = 0x01;
-    /** OPN type LFO and PAN */
-    private static final int TYPE_LFOPAN = 0x02;
-    /** FM 6CH / 3CH */
-    private static final int TYPE_6CH = 0x04;
-    /** Ym2612Inst's DAC device */
-    private static final int TYPE_DAC = 0x08;
-    /** two ADPCM units */
-    private static final int TYPE_ADPCM = 0x10;
-    /** bogus flag to differentiate 2608 from 2610 */
-    private static final int TYPE_2610 = 0x20;
-
-    private static final int TYPE_YM2203 = TYPE_SSG;
-    private static final int TYPE_YM2608 = TYPE_SSG | TYPE_LFOPAN | TYPE_6CH | TYPE_ADPCM;
-    private static final int TYPE_YM2610 = TYPE_SSG | TYPE_LFOPAN | TYPE_6CH | TYPE_ADPCM | TYPE_2610;
-
-    /** 16.16 fixed point (frequency calculations) */
-    private static final int FREQ_SH = 16;
-    /** 16.16 fixed point (envelope generator timing) */
-    private static final int EG_SH = 16;
-    /** 8.24 fixed point (LFO calculations) */
-    private static final int LFO_SH = 24;
-    /** 16.16 fixed point (timers calculations) */
-    private static final int TIMER_SH = 16;
-
-    private static final int FREQ_MASK = (1 << FREQ_SH) - 1;
-
-    private static final int ENV_BITS = 10;
-    private static final int ENV_LEN = 1 << ENV_BITS;
-    private static final double ENV_STEP = 128.0 / ENV_LEN;
-
-    private static final int MAX_ATT_INDEX = ENV_LEN - 1;
-    private static final int MIN_ATT_INDEX = 0;
-
-    private static final int EG_ATT = 4;
-    private static final int EG_DEC = 3;
-    private static final int EG_SUS = 2;
-    private static final int EG_REL = 1;
-    private static final int EG_OFF = 0;
-
-    private static final int SIN_BITS = 10;
-    private static final int SIN_LEN = 1 << SIN_BITS;
-    private static final int SIN_MASK = SIN_LEN - 1;
-
-    /** 8 bits addressing (real chips) */
-    private static final int TL_RES_LEN = 256;
-
-    private static final int FINAL_SH = 0;
-    private static final int MAXOUT = 32767;
-    private static final int MINOUT = -32768;
-
-    private static final int RATE_STEPS = 8;
-    private static final int[] eg_inc = {
-            // cycle:0  1  2  3  4  5  6  7
-            /*  0 */ 0, 1, 0, 1, 0, 1, 0, 1, // rates 00..11 0 (increment by 0 or 1)
-            /*  1 */ 0, 1, 0, 1, 1, 1, 0, 1, // rates 00..11 1
-            /*  2 */ 0, 1, 1, 1, 0, 1, 1, 1, // rates 00..11 2
-            /*  3 */ 0, 1, 1, 1, 1, 1, 1, 1, // rates 00..11 3
-
-            /*  4 */ 1, 1, 1, 1, 1, 1, 1, 1, // rate 12 0 (increment by 1)
-            /*  5 */ 1, 1, 1, 2, 1, 1, 1, 2, // rate 12 1
-            /*  6 */ 1, 2, 1, 2, 1, 2, 1, 2, // rate 12 2
-            /*  7 */ 1, 2, 2, 2, 1, 2, 2, 2, // rate 12 3
-
-            /*  8 */ 2, 2, 2, 2, 2, 2, 2, 2, // rate 13 0 (increment by 2)
-            /*  9 */ 2, 2, 2, 4, 2, 2, 2, 4, // rate 13 1
-            /* 10 */ 2, 4, 2, 4, 2, 4, 2, 4, // rate 13 2
-            /* 11 */ 2, 4, 4, 4, 2, 4, 4, 4, // rate 13 3
-
-            /* 12 */ 4, 4, 4, 4, 4, 4, 4, 4, // rate 14 0 (increment by 4)
-            /* 13 */ 4, 4, 4, 8, 4, 4, 4, 8, // rate 14 1
-            /* 14 */ 4, 8, 4, 8, 4, 8, 4, 8, // rate 14 2
-            /* 15 */ 4, 8, 8, 8, 4, 8, 8, 8, // rate 14 3
-
-            /* 16 */ 8, 8, 8, 8, 8, 8, 8, 8, // rates 15 0, 15 1, 15 2, 15 3 (increment by 8)
-            /* 17 */ 16, 16, 16, 16, 16, 16, 16, 16, // rates 15 2, 15 3 for attack
-            /* 18 */ 0, 0, 0, 0, 0, 0, 0, 0, // infinity rates for attack and decay(s)
-    };
-
-    /** this is YM2151 and Ym2612 phase increment data (in 10.10 fixed point format) */
-    private static final int[] dt_tab = {
-            // FD=0 
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            // FD=1 
-            0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2,
-            2, 3, 3, 3, 4, 4, 4, 5, 5, 6, 6, 7, 8, 8, 8, 8,
-            // FD=2 
-            1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5,
-            5, 6, 6, 7, 8, 8, 9, 10, 11, 12, 13, 14, 16, 16, 16, 16,
-            // FD=3 
-            2, 2, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 6, 6, 7,
-            8, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 20, 22, 22, 22, 22
-    };
-
-    /**
-     * OPN key frequency number . key code follow table
-     * fNum higher 4bit . keycode lower 2bit
-     */
-    private static final int[] opn_fkTable = new int[] {0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 3, 3, 3};
-
-    /**
-     * 8 LFO speed parameters
-     * each value represents number of samples that one LFO level will last for
-     */
-    private static final int[] lfo_samples_per_step = new int[] {108, 77, 71, 67, 62, 44, 8, 5};
-
-    /*
-     * There are 4 different LFO AM depths available, they are:
-     *  0 dB, 1.4 dB, 5.9 dB, 11.8 dB
-     *  Here is how it is generated (in EG steps):
-     * <pre>
-     *  11.8 dB = 0, 2, 4, 6, 8, 10,12,14,16...126,126,124,122,120,118,....4,2,0
-     *   5.9 dB = 0, 1, 2, 3, 4, 5, 6, 7, 8....63, 63, 62, 61, 60, 59,.....2,1,0
-     *   1.4 dB = 0, 0, 0, 0, 1, 1, 1, 1, 2,...15, 15, 15, 15, 14, 14,.....0,0,0
-     * </pre>
-     *  (1.4 dB is losing precision as you can see)
-     *
-     *  It's implemented as generator from 0..126 with step 2 then a shift
-     *  right N times, where N is:
-     *    8 for 0 dB
-     *    3 for 1.4 dB
-     *    1 for 5.9 dB
-     *    0 for 11.8 dB
-     */
-    private static final int[] lfo_ams_depth_shift = new int[] {8, 3, 1, 0};
-
-    /*
-     * There are 8 different LFO PM depths available, they are:
-     * 0, 3.4, 6.7, 10, 14, 20, 40, 80 (cents)
-     *
-     * Modulation level at each depth depends on F-NUMBER bits: 4,5,6,7,8,9,10
-     * (bits 8,9,10 = FNUM MSB from OCT/FNUM register)
-     *
-     * Here we store only first quarter (positive one) of full waveform.
-     * Full table (lfo_pm_table) containing all 128 waveforms is build
-     * at run (init) time.
-     *
-     * One value in table below represents 4 (four) basic LFO steps
-     * (1 PM step = 4 AM steps).
-     *
-     *  For example:
-     *   at LFO SPEED=0 (which is 108 samples per basic LFO step)
-     *   one value from "lfo_pm_output" table lasts for 432 consecutive
-     *   samples (4*108=432) and one full LFO waveform cycle lasts for 13824
-     *   samples (32*432=13824; 32 because we store only a quarter of whole
-     *   waveform in the table below)
-     */
-    private static final int[][] lfo_pm_output = { // 7 bits meaningful (of F-NUMBER), 8 LFO output levels per one depth (of 32), 8 LFO depths
-            // FNUM BIT 4: 000 0001xxxx
-            /* DEPTH 0 */ {0, 0, 0, 0, 0, 0, 0, 0},
-            /* DEPTH 1 */ {0, 0, 0, 0, 0, 0, 0, 0},
-            /* DEPTH 2 */ {0, 0, 0, 0, 0, 0, 0, 0},
-            /* DEPTH 3 */ {0, 0, 0, 0, 0, 0, 0, 0},
-            /* DEPTH 4 */ {0, 0, 0, 0, 0, 0, 0, 0},
-            /* DEPTH 5 */ {0, 0, 0, 0, 0, 0, 0, 0},
-            /* DEPTH 6 */ {0, 0, 0, 0, 0, 0, 0, 0},
-            /* DEPTH 7 */ {0, 0, 0, 0, 1, 1, 1, 1},
-
-            // FNUM BIT 5: 000 0010xxxx
-            /* DEPTH 0 */ {0, 0, 0, 0, 0, 0, 0, 0},
-            /* DEPTH 1 */ {0, 0, 0, 0, 0, 0, 0, 0},
-            /* DEPTH 2 */ {0, 0, 0, 0, 0, 0, 0, 0},
-            /* DEPTH 3 */ {0, 0, 0, 0, 0, 0, 0, 0},
-            /* DEPTH 4 */ {0, 0, 0, 0, 0, 0, 0, 0},
-            /* DEPTH 5 */ {0, 0, 0, 0, 0, 0, 0, 0},
-            /* DEPTH 6 */ {0, 0, 0, 0, 1, 1, 1, 1},
-            /* DEPTH 7 */ {0, 0, 1, 1, 2, 2, 2, 3},
-
-            // FNUM BIT 6: 000 0100xxxx 
-            /* DEPTH 0 */ {0, 0, 0, 0, 0, 0, 0, 0},
-            /* DEPTH 1 */ {0, 0, 0, 0, 0, 0, 0, 0},
-            /* DEPTH 2 */ {0, 0, 0, 0, 0, 0, 0, 0},
-            /* DEPTH 3 */ {0, 0, 0, 0, 0, 0, 0, 0},
-            /* DEPTH 4 */ {0, 0, 0, 0, 0, 0, 0, 1},
-            /* DEPTH 5 */ {0, 0, 0, 0, 1, 1, 1, 1},
-            /* DEPTH 6 */ {0, 0, 1, 1, 2, 2, 2, 3},
-            /* DEPTH 7 */ {0, 0, 2, 3, 4, 4, 5, 6},
-
-            // FNUM BIT 7: 000 1000xxxx 
-            /* DEPTH 0 */ {0, 0, 0, 0, 0, 0, 0, 0},
-            /* DEPTH 1 */ {0, 0, 0, 0, 0, 0, 0, 0},
-            /* DEPTH 2 */ {0, 0, 0, 0, 0, 0, 1, 1},
-            /* DEPTH 3 */ {0, 0, 0, 0, 1, 1, 1, 1},
-            /* DEPTH 4 */ {0, 0, 0, 1, 1, 1, 1, 2},
-            /* DEPTH 5 */ {0, 0, 1, 1, 2, 2, 2, 3},
-            /* DEPTH 6 */ {0, 0, 2, 3, 4, 4, 5, 6},
-            /* DEPTH 7 */ {0, 0, 4, 6, 8, 8, 0xa, 0xc},
-
-            // FNUM BIT 8: 001 0000xxxx 
-            /* DEPTH 0 */ {0, 0, 0, 0, 0, 0, 0, 0},
-            /* DEPTH 1 */ {0, 0, 0, 0, 1, 1, 1, 1},
-            /* DEPTH 2 */ {0, 0, 0, 1, 1, 1, 2, 2},
-            /* DEPTH 3 */ {0, 0, 1, 1, 2, 2, 3, 3},
-            /* DEPTH 4 */ {0, 0, 1, 2, 2, 2, 3, 4},
-            /* DEPTH 5 */ {0, 0, 2, 3, 4, 4, 5, 6},
-            /* DEPTH 6 */ {0, 0, 4, 6, 8, 8, 0xa, 0xc},
-            /* DEPTH 7 */ {0, 0, 8, 0xc, 0x10, 0x10, 0x14, 0x18},
-
-            // FNUM BIT 9: 010 0000xxxx 
-            /* DEPTH 0 */ {0, 0, 0, 0, 0, 0, 0, 0},
-            /* DEPTH 1 */ {0, 0, 0, 0, 2, 2, 2, 2},
-            /* DEPTH 2 */ {0, 0, 0, 2, 2, 2, 4, 4},
-            /* DEPTH 3 */ {0, 0, 2, 2, 4, 4, 6, 6},
-            /* DEPTH 4 */ {0, 0, 2, 4, 4, 4, 6, 8},
-            /* DEPTH 5 */ {0, 0, 4, 6, 8, 8, 0xa, 0xc},
-            /* DEPTH 6 */ {0, 0, 8, 0xc, 0x10, 0x10, 0x14, 0x18},
-            /* DEPTH 7 */ {0, 0, 0x10, 0x18, 0x20, 0x20, 0x28, 0x30},
-
-            // FNUM BIT10: 100 0000xxxx 
-            /* DEPTH 0 */ {0, 0, 0, 0, 0, 0, 0, 0},
-            /* DEPTH 1 */ {0, 0, 0, 0, 4, 4, 4, 4},
-            /* DEPTH 2 */ {0, 0, 0, 4, 4, 4, 8, 8},
-            /* DEPTH 3 */ {0, 0, 4, 4, 8, 8, 0xc, 0xc},
-            /* DEPTH 4 */ {0, 0, 4, 8, 8, 8, 0xc, 0x10},
-            /* DEPTH 5 */ {0, 0, 8, 0xc, 0x10, 0x10, 0x14, 0x18},
-            /* DEPTH 6 */ {0, 0, 0x10, 0x18, 0x20, 0x20, 0x28, 0x30},
-            /* DEPTH 7 */ {0, 0, 0x20, 0x30, 0x40, 0x40, 0x50, 0x60},
-
-    };
-
-    /** all 128 LFO PM waveforms */
-    private static final int[] lfo_pm_table = new int[128 * 8 * 32]; // 128 combinations of 7 bits meaningful (of F-NUMBER), 8 LFO depths, 32 LFO output levels per one depth
-
-    // slot number 
-    private static final int SLOT1 = 0;
-    private static final int SLOT2 = 2;
-    private static final int SLOT3 = 1;
-    private static final int SLOT4 = 3;
-
-    // bit0 = Right enable , bit1 = Left enable 
-    private static final int OUTD_RIGHT = 1;
-    private static final int OUTD_LEFT = 2;
-    static final int OUTD_CENTER = 3;
-
     //
     // OPN unit
     //
 
     /** OPN/A/B common state */
-    private static class FM_OPN {
+    private static class FM_OPN extends BaseChip {
 
-        protected static void resetChannels(Channel[] ch, int num) {
+        // FM_TIMERHANDLER : Stop or Start timer
+        // int n          = chips number
+        // int c          = Channel 0=TimerA,1=TimerB
+        // int count      = timer count (0=stop)
+        // doube stepTime = step time of one count (sec.)
+
+        // FM_IRQHHANDLER : IRQ level changing sense
+        // int n       = chips number
+        // int irq     = IRQ level 0=OFF,1=ON
+
+        // include external DELTA-T unit (when needed)
+
+        // shared function building option
+        private static final int BUILD_OPN = 1;
+        private static final int BUILD_OPN_PRESCALER = 1;
+
+        /** 16.16 fixed point (frequency calculations) */
+        private static final int FREQ_SH = 16;
+        /** 16.16 fixed point (envelope generator timing) */
+        private static final int EG_SH = 16;
+        /** 8.24 fixed point (LFO calculations) */
+        private static final int LFO_SH = 24;
+        /** 16.16 fixed point (timers calculations) */
+        private static final int TIMER_SH = 16;
+
+        private static final int FREQ_MASK = (1 << FREQ_SH) - 1;
+
+        private static final int ENV_BITS = 10;
+        private static final int ENV_LEN = 1 << ENV_BITS;
+        private static final double ENV_STEP = 128.0 / ENV_LEN;
+
+        private static final int MAX_ATT_INDEX = ENV_LEN - 1;
+        private static final int MIN_ATT_INDEX = 0;
+
+        private static final int EG_ATT = 4;
+        private static final int EG_DEC = 3;
+        private static final int EG_SUS = 2;
+        private static final int EG_REL = 1;
+        private static final int EG_OFF = 0;
+
+        private static final int SIN_BITS = 10;
+        private static final int SIN_LEN = 1 << SIN_BITS;
+        private static final int SIN_MASK = SIN_LEN - 1;
+
+        /** 8 bits addressing (real chips) */
+        private static final int TL_RES_LEN = 256;
+
+        private static final int MAXOUT = 32767;
+        private static final int MINOUT = -32768;
+
+        private static final int RATE_STEPS = 8;
+        private static final int[] eg_inc = {
+                // cycle:0  1  2  3  4  5  6  7
+                /*  0 */ 0, 1, 0, 1, 0, 1, 0, 1, // rates 00..11 0 (increment by 0 or 1)
+                /*  1 */ 0, 1, 0, 1, 1, 1, 0, 1, // rates 00..11 1
+                /*  2 */ 0, 1, 1, 1, 0, 1, 1, 1, // rates 00..11 2
+                /*  3 */ 0, 1, 1, 1, 1, 1, 1, 1, // rates 00..11 3
+
+                /*  4 */ 1, 1, 1, 1, 1, 1, 1, 1, // rate 12 0 (increment by 1)
+                /*  5 */ 1, 1, 1, 2, 1, 1, 1, 2, // rate 12 1
+                /*  6 */ 1, 2, 1, 2, 1, 2, 1, 2, // rate 12 2
+                /*  7 */ 1, 2, 2, 2, 1, 2, 2, 2, // rate 12 3
+
+                /*  8 */ 2, 2, 2, 2, 2, 2, 2, 2, // rate 13 0 (increment by 2)
+                /*  9 */ 2, 2, 2, 4, 2, 2, 2, 4, // rate 13 1
+                /* 10 */ 2, 4, 2, 4, 2, 4, 2, 4, // rate 13 2
+                /* 11 */ 2, 4, 4, 4, 2, 4, 4, 4, // rate 13 3
+
+                /* 12 */ 4, 4, 4, 4, 4, 4, 4, 4, // rate 14 0 (increment by 4)
+                /* 13 */ 4, 4, 4, 8, 4, 4, 4, 8, // rate 14 1
+                /* 14 */ 4, 8, 4, 8, 4, 8, 4, 8, // rate 14 2
+                /* 15 */ 4, 8, 8, 8, 4, 8, 8, 8, // rate 14 3
+
+                /* 16 */ 8, 8, 8, 8, 8, 8, 8, 8, // rates 15 0, 15 1, 15 2, 15 3 (increment by 8)
+                /* 17 */ 16, 16, 16, 16, 16, 16, 16, 16, // rates 15 2, 15 3 for attack
+                /* 18 */ 0, 0, 0, 0, 0, 0, 0, 0, // infinity rates for attack and decay(s)
+        };
+
+        /** this is YM2151 and Ym2612 phase increment data (in 10.10 fixed point format) */
+        private static final int[] dt_tab = {
+                // FD=0
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                // FD=1
+                0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2,
+                2, 3, 3, 3, 4, 4, 4, 5, 5, 6, 6, 7, 8, 8, 8, 8,
+                // FD=2
+                1, 1, 1, 1, 2, 2, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5,
+                5, 6, 6, 7, 8, 8, 9, 10, 11, 12, 13, 14, 16, 16, 16, 16,
+                // FD=3
+                2, 2, 2, 2, 2, 3, 3, 3, 4, 4, 4, 5, 5, 6, 6, 7,
+                8, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 20, 22, 22, 22, 22
+        };
+
+        /**
+         * OPN key frequency number . key code follow table
+         * fNum higher 4bit . keycode lower 2bit
+         */
+        private static final int[] opn_fkTable = new int[] {0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 3, 3, 3};
+
+        /**
+         * 8 LFO speed parameters
+         * each value represents number of samples that one LFO level will last for
+         */
+        private static final int[] lfo_samples_per_step = new int[] {108, 77, 71, 67, 62, 44, 8, 5};
+
+        /*
+         * There are 4 different LFO AM depths available, they are:
+         *  0 dB, 1.4 dB, 5.9 dB, 11.8 dB
+         *  Here is how it is generated (in EG steps):
+         * <pre>
+         *  11.8 dB = 0, 2, 4, 6, 8, 10,12,14,16...126,126,124,122,120,118,....4,2,0
+         *   5.9 dB = 0, 1, 2, 3, 4, 5, 6, 7, 8....63, 63, 62, 61, 60, 59,.....2,1,0
+         *   1.4 dB = 0, 0, 0, 0, 1, 1, 1, 1, 2,...15, 15, 15, 15, 14, 14,.....0,0,0
+         * </pre>
+         *  (1.4 dB is losing precision as you can see)
+         *
+         *  It's implemented as generator from 0..126 with step 2 then a shift
+         *  right N times, where N is:
+         *    8 for 0 dB
+         *    3 for 1.4 dB
+         *    1 for 5.9 dB
+         *    0 for 11.8 dB
+         */
+        private static final int[] lfo_ams_depth_shift = new int[] {8, 3, 1, 0};
+
+        /*
+         * There are 8 different LFO PM depths available, they are:
+         * 0, 3.4, 6.7, 10, 14, 20, 40, 80 (cents)
+         *
+         * Modulation level at each depth depends on F-NUMBER bits: 4,5,6,7,8,9,10
+         * (bits 8,9,10 = FNUM MSB from OCT/FNUM register)
+         *
+         * Here we store only first quarter (positive one) of full waveform.
+         * Full table (lfo_pm_table) containing all 128 waveforms is build
+         * at run (init) time.
+         *
+         * One value in table below represents 4 (four) basic LFO steps
+         * (1 PM step = 4 AM steps).
+         *
+         *  For example:
+         *   at LFO SPEED=0 (which is 108 samples per basic LFO step)
+         *   one value from "lfo_pm_output" table lasts for 432 consecutive
+         *   samples (4*108=432) and one full LFO waveform cycle lasts for 13824
+         *   samples (32*432=13824; 32 because we store only a quarter of whole
+         *   waveform in the table below)
+         */
+        private static final int[][] lfo_pm_output = { // 7 bits meaningful (of F-NUMBER), 8 LFO output levels per one depth (of 32), 8 LFO depths
+                // FNUM BIT 4: 000 0001xxxx
+                /* DEPTH 0 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 1 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 2 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 3 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 4 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 5 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 6 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 7 */ {0, 0, 0, 0, 1, 1, 1, 1},
+
+                // FNUM BIT 5: 000 0010xxxx
+                /* DEPTH 0 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 1 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 2 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 3 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 4 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 5 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 6 */ {0, 0, 0, 0, 1, 1, 1, 1},
+                /* DEPTH 7 */ {0, 0, 1, 1, 2, 2, 2, 3},
+
+                // FNUM BIT 6: 000 0100xxxx
+                /* DEPTH 0 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 1 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 2 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 3 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 4 */ {0, 0, 0, 0, 0, 0, 0, 1},
+                /* DEPTH 5 */ {0, 0, 0, 0, 1, 1, 1, 1},
+                /* DEPTH 6 */ {0, 0, 1, 1, 2, 2, 2, 3},
+                /* DEPTH 7 */ {0, 0, 2, 3, 4, 4, 5, 6},
+
+                // FNUM BIT 7: 000 1000xxxx
+                /* DEPTH 0 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 1 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 2 */ {0, 0, 0, 0, 0, 0, 1, 1},
+                /* DEPTH 3 */ {0, 0, 0, 0, 1, 1, 1, 1},
+                /* DEPTH 4 */ {0, 0, 0, 1, 1, 1, 1, 2},
+                /* DEPTH 5 */ {0, 0, 1, 1, 2, 2, 2, 3},
+                /* DEPTH 6 */ {0, 0, 2, 3, 4, 4, 5, 6},
+                /* DEPTH 7 */ {0, 0, 4, 6, 8, 8, 0xa, 0xc},
+
+                // FNUM BIT 8: 001 0000xxxx
+                /* DEPTH 0 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 1 */ {0, 0, 0, 0, 1, 1, 1, 1},
+                /* DEPTH 2 */ {0, 0, 0, 1, 1, 1, 2, 2},
+                /* DEPTH 3 */ {0, 0, 1, 1, 2, 2, 3, 3},
+                /* DEPTH 4 */ {0, 0, 1, 2, 2, 2, 3, 4},
+                /* DEPTH 5 */ {0, 0, 2, 3, 4, 4, 5, 6},
+                /* DEPTH 6 */ {0, 0, 4, 6, 8, 8, 0xa, 0xc},
+                /* DEPTH 7 */ {0, 0, 8, 0xc, 0x10, 0x10, 0x14, 0x18},
+
+                // FNUM BIT 9: 010 0000xxxx
+                /* DEPTH 0 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 1 */ {0, 0, 0, 0, 2, 2, 2, 2},
+                /* DEPTH 2 */ {0, 0, 0, 2, 2, 2, 4, 4},
+                /* DEPTH 3 */ {0, 0, 2, 2, 4, 4, 6, 6},
+                /* DEPTH 4 */ {0, 0, 2, 4, 4, 4, 6, 8},
+                /* DEPTH 5 */ {0, 0, 4, 6, 8, 8, 0xa, 0xc},
+                /* DEPTH 6 */ {0, 0, 8, 0xc, 0x10, 0x10, 0x14, 0x18},
+                /* DEPTH 7 */ {0, 0, 0x10, 0x18, 0x20, 0x20, 0x28, 0x30},
+
+                // FNUM BIT10: 100 0000xxxx
+                /* DEPTH 0 */ {0, 0, 0, 0, 0, 0, 0, 0},
+                /* DEPTH 1 */ {0, 0, 0, 0, 4, 4, 4, 4},
+                /* DEPTH 2 */ {0, 0, 0, 4, 4, 4, 8, 8},
+                /* DEPTH 3 */ {0, 0, 4, 4, 8, 8, 0xc, 0xc},
+                /* DEPTH 4 */ {0, 0, 4, 8, 8, 8, 0xc, 0x10},
+                /* DEPTH 5 */ {0, 0, 8, 0xc, 0x10, 0x10, 0x14, 0x18},
+                /* DEPTH 6 */ {0, 0, 0x10, 0x18, 0x20, 0x20, 0x28, 0x30},
+                /* DEPTH 7 */ {0, 0, 0x20, 0x30, 0x40, 0x40, 0x50, 0x60},
+        };
+
+        /** all 128 LFO PM waveforms */
+        private static final int[] lfo_pm_table = new int[128 * 8 * 32]; // 128 combinations of 7 bits meaningful (of F-NUMBER), 8 LFO depths, 32 LFO output levels per one depth
+
+        private static void resetChannels(Channel[] ch, int num) {
             for (int c = 0; c < num; c++) {
                 ch[c].reset();
             }
         }
 
-        public void reset2203(Channel[] ch) {
+        private void reset2203(Channel[] ch) {
             // Reset Prescaler
             this.setPreScaler(0, 1);
             // reset SSG section
@@ -484,7 +452,7 @@ public class Fm {
             for (int i = 0x26; i >= 0x20; i--) this.writeReg(i, 0);
         }
 
-        public void reset2610(Channel[] ch) {
+        private void reset2610(Channel[] ch) {
             // Reset Prescaler 
             this.setPreS((short) (6 * 24), (short) (6 * 24), (short) (4 * 2)); // opn 1/6 , SSG 1/4 
             // reset SSG section 
@@ -513,7 +481,7 @@ public class Fm {
             for (int i = 0x26; i >= 0x20; i--) this.writeReg(i, 0);
         }
 
-        public void reset2608(YM2610 ym2610) {
+        private void reset2608(YM2610 ym2610) {
             // Reset Prescaler 
             this.setPreScaler(0, 2);
             // reset SSG section 
@@ -554,13 +522,13 @@ public class Fm {
         private static class _3Slot {
 
             /** fNum3,blk3: calculated */
-            public int[] fc = new int[3];
+            private int[] fc = new int[3];
             /** freq3 latch */
-            public int fnH;
+            private int fnH;
             /** key code */
-            public int[] kCode = new int[3];
+            private int[] kCode = new int[3];
             /** current fNum value for this slot (can be different between slots of one channel in 3slot mode) */
-            public int[] blockFNum = new int[3];
+            private int[] blockFNum = new int[3];
         }
 
         private static class Channel {
@@ -680,71 +648,71 @@ public class Fm {
                 }
 
                 /** detune: dt_tab[DT] */
-                public int[] dt;
+                private int[] dt;
                 /** key scale rate: 3-KSR */
-                public int KSR;
+                private int KSR;
                 /** attack rate */
-                public int ar;
+                private int ar;
                 /** decay rate */
-                public int d1r;
+                private int d1r;
                 /** sustain rate */
-                public int d2r;
+                private int d2r;
                 /** release rate */
-                public int rr;
+                private int rr;
                 /** key scale rate: kcode>>(3-KSR) */
-                public int ksr;
+                private int ksr;
                 /** multiple: ML_TABLE[ML] */
-                public int mul;
+                private int mul;
 
                 // Phase Generator
 
                 /** phase counter */
-                public int phase;
+                private int phase;
                 /** phase step */
-                public int incr;
+                private int incr;
 
                 // Envelope Generator
 
                 /** phase type */
-                public int state;
+                private int state;
                 /** total level: TL << 3 */
-                public int tl;
+                private int tl;
                 /** envelope counter */
-                public int volume;
+                private int volume;
                 /** sustain level:sl_table[SL] */
-                public int sl;
+                private int sl;
                 /** current output from EG circuit (without AM from LFO) */
-                public int volOut;
+                private int volOut;
 
                 /** (attack state) */
-                public int egShAr;
+                private int egShAr;
                 /** (attack state) */
-                public int egSelAr;
+                private int egSelAr;
                 /** (decay state) */
-                public int egShD1R;
+                private int egShD1R;
                 /** (decay state) */
-                public int egSelD1R;
+                private int egSelD1R;
                 /** (sustain state) */
-                public int egShD2R;
+                private int egShD2R;
                 /** (sustain state) */
-                public int egSelD2R;
+                private int egSelD2R;
                 /** (release state) */
-                public int egShRr;
+                private int egShRr;
                 /** (release state) */
-                public int egSelRr;
+                private int egSelRr;
 
                 /** SSG-EG waveform */
-                public int ssg;
+                private int ssg;
                 /** SSG-EG negated output */
-                public int ssgn;
+                private int ssgn;
 
                 /** 0=last key was KEY OFF, 1=KEY ON */
-                public int key;
+                private int key;
 
                 // LFO
 
                 /** AM enable flag */
-                public int amMask;
+                private int amMask;
 
                 /** set total level */
                 private void set_tl(Channel ch, int v) {
@@ -850,7 +818,7 @@ public class Fm {
                     }
                 }
 
-                public void advance_eg(int eg_cnt) {
+                private void advance_eg(int eg_cnt) {
                     int _out;
                     // reset SSG-EG swap flag 
                     int swapFlag = 0;
@@ -979,51 +947,51 @@ public class Fm {
             }
 
             /** four SLOTs (operators) */
-            public Slot[] slots = new Slot[4];
+            private Slot[] slots = new Slot[4];
 
             /** algorithm */
-            public int ALGO;
+            private int ALGO;
             /** feedback shift */
-            public int FB;
+            private int FB;
             /** op1 output for feedback */
-            public int[] op1Out = new int[2];
+            private int[] op1Out = new int[2];
 
             /** SLOT1 output pointer */
-            public int[] connect1;
+            private int[] connect1;
             /** SLOT3 output pointer */
-            public int[] connect3;
+            private int[] connect3;
             /** SLOT2 output pointer */
-            public int[] connect2;
+            private int[] connect2;
             /** SLOT4 output pointer */
-            public int[] connect4;
+            private int[] connect4;
             /** SLOT1 output pointer */
-            public int connect1Ptr;
+            private int connect1Ptr;
             /** SLOT3 output pointer */
-            public int connect3Ptr;
+            private int connect3Ptr;
             /** SLOT2 output pointer */
-            public int connect2Ptr;
+            private int connect2Ptr;
             /** SLOT4 output pointer */
-            public int connect4Ptr;
+            private int connect4Ptr;
 
             /** where to put the delayed sample (MEM) */
-            public int[] memConnect;
+            private int[] memConnect;
             /** where to put the delayed sample (MEM) */
-            public int memConnectPtr;
+            private int memConnectPtr;
             /** delayed sample (MEM) value */
-            public int memValue;
+            private int memValue;
 
             /** channel PMS */
-            public int pms;
+            private int pms;
             /** channel AMS */
-            public int ams;
+            private int ams;
 
             /** fNum,blk:adjusted to sample rate */
-            public int fc;
+            private int fc;
             /** key code: */
-            public int kCode;
+            private int kCode;
             /** current blk/fNum value for this slot (can be different betweeen slots of one channel in 3slot mode) */
-            public int blockFNum;
-            public int muted;
+            private int blockFNum;
+            private int muted;
 
             private void keyOn(int _type, int s) {
                 this.slots[s].keyOn();
@@ -2038,7 +2006,7 @@ public class Fm {
             }
         }
 
-        static int op_calc(int phase, int env, short pm) {
+        private static int op_calc(int phase, int env, short pm) {
             int p = (env << 3) + sin_tab[(((short) ((phase & ~FREQ_MASK) + (pm << 15))) >> FREQ_SH) & SIN_MASK];
 
             if (p >= TL_TAB_LEN)
@@ -2046,7 +2014,7 @@ public class Fm {
             return tl_tab[p];
         }
 
-        static short op_calc1(int phase, int env, short pm) {
+        private static short op_calc1(int phase, int env, short pm) {
             int p = (env << 3) + sin_tab[(((short) ((phase & ~FREQ_MASK) + pm)) >> FREQ_SH) & SIN_MASK];
 
             if (p >= TL_TAB_LEN)
@@ -2059,8 +2027,8 @@ public class Fm {
             if ((v & 0x80) != 0) { // Reset IRQ flag 
                 this.st.resetStatus(0xf7); // don't touch BUFRDY flag otherwise we'd have to call ymdeltat module to set the flag back 
             } else { // Set status flag mask 
-                ym2610.flagmask = ~(v & 0x1f);
-                this.st.setIrqMask(ym2610.irqmask & ym2610.flagmask);
+                ym2610.flagMask = ~(v & 0x1f);
+                this.st.setIrqMask(ym2610.irqMask & ym2610.flagMask);
             }
         }
 
@@ -2075,8 +2043,8 @@ public class Fm {
                 this.type &= ~TYPE_6CH; // OPN mode - 3 FM channels
 
             // IRQ MASK store and set 
-            ym2610.irqmask = v & 0x1f;
-            this.st.setIrqMask((ym2610.irqmask & ym2610.flagmask));
+            ym2610.irqMask = v & 0x1f;
+            this.st.setIrqMask((ym2610.irqMask & ym2610.flagMask));
         }
     }
 
@@ -2085,7 +2053,7 @@ public class Fm {
     public static class DeviceConfig {
 
         /** FM channel save , internal state only */
-        private static void saveAdpcmaState(YM2610.AdpcmA[] adpcm) {
+        private static void saveAdpcmAState(YM2610.AdpcmA[] adpcm) {
 
             for (int ch = 0; ch < 6; ch++) {
                 state_save_register_device_item(ch, adpcm[ch].flag);
@@ -2099,7 +2067,7 @@ public class Fm {
         }
 
         /** FM channel save , internal state only */
-        private void saveChannelState(FM_OPN.Channel[] CH, int num_ch) {
+        private static void saveChannelState(Fm.FM_OPN.Channel[] CH, int num_ch) {
 
             int slot;
             int chPtr = 0;
@@ -2110,7 +2078,7 @@ public class Fm {
                 state_save_register_device_item(ch, CH[chPtr].fc);
                 // slots 
                 for (slot = 0; slot < 4; slot++) {
-                    FM_OPN.Channel.Slot SLOT = CH[chPtr].slots[slot];
+                    Fm.FM_OPN.Channel.Slot SLOT = CH[chPtr].slots[slot];
                     state_save_register_device_item(ch * 4 + slot, SLOT.phase);
                     state_save_register_device_item(ch * 4 + slot, SLOT.state);
                     state_save_register_device_item(ch * 4 + slot, SLOT.volume);
@@ -2118,7 +2086,7 @@ public class Fm {
             }
         }
 
-        private void saveStState(FM_OPN.State ST) {
+        private static void saveStState(Fm.FM_OPN.State ST) {
 //#if FM_BUSY_FLAG_SUPPORT
 //         state_save_register_device_item(0, ST.busy_expiry_time.seconds );
 //         state_save_register_device_item(0, ST.busy_expiry_time.attoseconds );
@@ -2149,8 +2117,39 @@ public class Fm {
         }
     }
 
-    public static class BaseChip {
+    protected abstract static class BaseChip {
 
+        // globals
+
+        /** SSG support */
+        protected static final int TYPE_SSG = 0x01;
+        /** OPN type LFO and PAN */
+        protected static final int TYPE_LFOPAN = 0x02;
+        /** FM 6CH / 3CH */
+        protected static final int TYPE_6CH = 0x04;
+        /** Ym2612Inst's DAC device */
+        protected static final int TYPE_DAC = 0x08;
+        /** two ADPCM units */
+        protected static final int TYPE_ADPCM = 0x10;
+        /** bogus flag to differentiate 2608 from 2610 */
+        protected static final int TYPE_2610 = 0x20;
+
+        public static final int TYPE_YM2203 = TYPE_SSG;
+        public static final int TYPE_YM2608 = TYPE_SSG | TYPE_LFOPAN | TYPE_6CH | TYPE_ADPCM;
+        public static final int TYPE_YM2610 = TYPE_SSG | TYPE_LFOPAN | TYPE_6CH | TYPE_ADPCM | TYPE_2610;
+
+        // slot number
+        protected static final int SLOT1 = 0;
+        protected static final int SLOT2 = 2;
+        protected static final int SLOT3 = 1;
+        protected static final int SLOT4 = 3;
+
+        // bit0 = Right enable , bit1 = Left enable
+        protected static final int OUTD_RIGHT = 1;
+        protected static final int OUTD_LEFT = 2;
+        protected static final int OUTD_CENTER = 3;
+
+        protected static final int FINAL_SH = 0;
     }
 
     /*
@@ -2158,21 +2157,21 @@ public class Fm {
      */
 
     /** here's the virtual YM2203(OPN) */
-    private static class YM2203 extends BaseChip {
+    public static class YM2203 extends BaseChip {
 
         /** registers */
-        public int[] regs = new int[256];
+        private int[] regs = new int[256];
         /** OPN state */
-        public FM_OPN opn;
+        private FM_OPN opn;
         /** channel state */
-        public FM_OPN.Channel[] ch = new FM_OPN.Channel[3];
+        private Fm.FM_OPN.Channel[] ch = new Fm.FM_OPN.Channel[3];
 
         /** Generate samples for one of the YM2203s */
-        void updateOne(int[][] buffer, int length) {
+        public void updateOne(int[][] buffer, int length) {
             FM_OPN opn = this.opn;
             int[] bufL = buffer[0];
             int[] bufR = buffer[1];
-            FM_OPN.Channel[] cch = new FM_OPN.Channel[3];
+            Fm.FM_OPN.Channel[] cch = new Fm.FM_OPN.Channel[3];
 
             cch[0] = this.ch[0];
             cch[1] = this.ch[1];
@@ -2238,11 +2237,11 @@ public class Fm {
         }
 
         /** reset one of chips */
-        void reset() {
+        public void reset() {
             this.opn.reset2203(this.ch);
         }
 
-        void postload() {
+        public void postLoad() {
             // prescaler 
             this.opn.setPreScaler(1, 1);
 
@@ -2266,11 +2265,11 @@ public class Fm {
             //postload(this.CH, 3);
         }
 
-        void saveState(DeviceConfig device) {
+        public void saveState(DeviceConfig device) {
 
             DeviceConfig.state_save_register_device_item_array(0, this.regs);
-            device.saveStState(this.opn.st);
-            device.saveChannelState(this.ch, 3);
+            DeviceConfig.saveStState(this.opn.st);
+            DeviceConfig.saveChannelState(this.ch, 3);
             // 3slots 
             DeviceConfig.state_save_register_device_item_array(0, this.opn.sl3.fc);
             DeviceConfig.state_save_register_device_item(0, this.opn.sl3.fnH);
@@ -2284,11 +2283,10 @@ public class Fm {
          * @param rate          is sampling rate
          * @param timer_handler timer Callback handler when timer start and clear
          * @param IRQHandler    IRQ Callback handler when changed IRQ level
-         * @return 0 = success
          */
-        private YM2203(int clock, int rate,
-                       FM_OPN.State.TimerHandler timer_handler,
-                       FM_OPN.State.IrqHandler IRQHandler, Callbacks ssg) {
+        public void init(int clock, int rate,
+                         Fm.FM_OPN.State.TimerHandler timer_handler,
+                         Fm.FM_OPN.State.IrqHandler IRQHandler, Callbacks ssg) {
 
             this.opn.type = TYPE_YM2203;
             this.opn.pCh = this.ch;
@@ -2304,10 +2302,10 @@ public class Fm {
         /**
          * shutdown the YM2203 emulators
          */
-        void shutdown() {
+        public void shutdown() {
         }
 
-        int read(int a) {
+        public int read(int a) {
             int addr = this.opn.st.address;
             int ret = 0;
 
@@ -2319,13 +2317,13 @@ public class Fm {
             return ret;
         }
 
-        void setMmuteMask(int muteMask) {
+        public void setMuteMask(int muteMask) {
             for (int curChn = 0; curChn < 3; curChn++)
-                this.ch[curChn].muted = (int) ((muteMask >> curChn) & 0x01);
+                this.ch[curChn].muted = (muteMask >> curChn) & 0x01;
         }
 
         /** YM2203 I/O interface */
-        int write(int a, int v) {
+        public int write(int a, int v) {
             FM_OPN opn = this.opn;
 
             if ((a & 1) == 0) { // address port
@@ -2376,14 +2374,138 @@ public class Fm {
             return this.opn.st.irq;
         }
 
-        public UpdateRequestCallback updateRequest;
+        private UpdateRequestCallback updateRequest;
     }
 
     /** here's the virtual YM2610 */
-    private static class YM2610 extends BaseChip {
+    public static class YM2610 extends BaseChip {
+
+        /**
+         * write
+         *
+         * @param chipId number
+         * @param a      address
+         * @param v      value
+         * @param fm
+         */
+        private int ym2610_write(int chipId, int a, int v, Fm fm) {
+            YM2610 f2610 = this;
+            FM_OPN opn = f2610.opn;
+            int addr;
+            int ch;
+
+            v &= 0xff; // adjust to 8 bit bus
+
+            switch (a & 3) {
+                case 0: // address port 0
+                    opn.st.address = v;
+                    f2610.addrA1 = 0;
+
+                    // Write register to SSG emulator
+                    if (v < 16) opn.st.ssg.write.accept(opn.st.param, 0, v & 0xff);
+                    break;
+
+                case 1: // data port 0
+                    if (f2610.addrA1 != 0)
+                        break; // verified on real YM2608
+
+                    addr = opn.st.address;
+                    f2610.regs[addr] = v;
+                    switch (addr & 0xf0) {
+                        case 0x00: // SSG section
+                            // Write data to SSG emulator
+                            opn.st.ssg.write.accept(opn.st.param, a, v & 0xff);
+                            break;
+                        case 0x10: // DeltaT ADPCM
+                            fm.ym2610_update_req(chipId, (YM2610) opn.st.param);
+
+                            switch (addr) {
+                                case 0x10: // control 1
+                                case 0x11: // control 2
+                                case 0x12: // start address L
+                                case 0x13: // start address H
+                                case 0x14: // stop address L
+                                case 0x15: // stop address H
+
+                                case 0x19: // delta-n L
+                                case 0x1a: // delta-n H
+                                case 0x1b: { // volume
+                                    f2610.deltaT.writeAdpcm(addr - 0x10, v);
+                                }
+                                break;
+
+                                case 0x1c: { // FLAG CONTROL : Extend Status Clear/Mask
+                                    int statusmask = ~v;
+                                    // set arrived flag mask
+                                    for (ch = 0; ch < 6; ch++)
+                                        f2610.adpcm[ch].flagMask = statusmask & (1 << ch);
+
+                                    f2610.deltaT.statusChangeEOSBit = statusmask & 0x80; // status flag: set bit7 on End Of Sample
+
+                                    // clear arrived flag
+                                    f2610.adpcmArrivedEndAddress &= statusmask;
+                                }
+                                break;
+
+                                default:
+    //logger.log(Level.TRACE, "YM2610: write to unknown DeltaT register %02x val=%02x".formatted(addr, v));
+                                    break;
+                            }
+
+                            break;
+                        case 0x20: // Mode Register
+                            fm.ym2610_update_req(chipId, (YM2610) opn.st.param);
+                            f2610.opn.writeMode(addr, v);
+                            break;
+                        default: // opn section
+                            fm.ym2610_update_req(chipId, (YM2610) opn.st.param);
+                            // write register
+                            f2610.opn.writeReg(addr, v);
+                            break;
+                    }
+                    break;
+
+                case 2: // address port 1
+                    opn.st.address = v;
+                    f2610.addrA1 = 1;
+                    break;
+
+                case 3: // data port 1
+                    if (f2610.addrA1 != 1)
+                        break; // verified on real YM2608
+
+                    fm.ym2610_update_req(chipId, (YM2610) opn.st.param);
+                    addr = opn.st.address;
+                    f2610.regs[addr | 0x100] = v;
+                    if (addr < 0x30)
+                        // 100-12f : ADPCM A section
+                        f2610.writeAdpcmA(addr, v);
+                    else
+                        f2610.opn.writeReg(addr | 0x100, v);
+                    break;
+            }
+            return opn.st.irq;
+        }
+
+        private int ym2610_timer_over(int chipId, int c, Fm fm) {
+            YM2610 F2610 = this;
+
+            if (c != 0) { // Timer B
+                F2610.opn.st.timerBOver();
+            } else { // Timer A
+                fm.ym2610_update_req(chipId, (YM2610) F2610.opn.st.param);
+                // timer update
+                F2610.opn.st.timerAOver();
+                // CSM mode key,TL controll
+                if ((F2610.opn.st.mode & 0x80) != 0) { // CSM mode total level latch and auto key on
+                    F2610.ch[2].CSMKeyControl(F2610.opn.type);
+                }
+            }
+            return F2610.opn.st.irq;
+        }
 
         /** ADPCM type A channel struct */
-        public static class AdpcmA {
+        static class AdpcmA {
 
             // YM2610 ADPCM defines
 
@@ -2954,7 +3076,7 @@ public class Fm {
             // Algorithm and tables verified on real YM2608 and YM2610
 
             /** usual ADPCM table (16 * 1.1^N) */
-            private static final int[] steps = new int[] {
+            private static final int[] steps = {
                     16, 17, 19, 21, 23, 25, 28,
                     31, 34, 37, 41, 45, 50, 55,
                     60, 66, 73, 80, 88, 97, 107,
@@ -2965,7 +3087,7 @@ public class Fm {
             };
 
             /** speedup purposes only */
-            static int[] jedi_table = new int[49 * 16];
+            private static int[] jedi_table = new int[49 * 16];
 
             static {
                 for (int step = 0; step < 49; step++) {
@@ -2978,43 +3100,43 @@ public class Fm {
             }
 
             /** different from the usual ADPCM table */
-            private static final int[] step_inc = new int[] {
+            private static final int[] step_inc = {
                     -1 * 16, -1 * 16, -1 * 16, -1 * 16, 2 * 16, 5 * 16, 7 * 16, 9 * 16
             };
 
             /** port state */
-            public int flag;
+            private int flag;
             /** arrived flag mask */
-            public int flagMask;
+            private int flagMask;
             /** current ROM data */
-            public int nowData;
+            private int nowData;
             /** current ROM address */
-            public int nowAddr;
-            public int nowStep;
-            public int step;
+            private int nowAddr;
+            private int nowStep;
+            private int step;
             /** sample data start address */
-            public int start;
+            private int start;
             /** sample data end address */
-            public int end;
+            private int end;
             /** Instrument Level */
-            public int IL;
+            private int IL;
             /** accumulator */
-            public int adpcmAcc;
+            private int adpcmAcc;
             /** step */
-            public int adpcmStep;
+            private int adpcmStep;
             /** (speedup) hiro-shi!! */
-            public int adpcmOut;
+            private int adpcmOut;
             /** volume in "0.75dB" steps */
-            public int volMul;
+            private int volMul;
             /** volume in "-6dB" steps */
-            public int volShift;
+            private int volShift;
             /** &out_adpcm[OPN_xxxx] */
-            public int[] pan;
-            public int panPtr;
-            public int muted;
+            private int[] pan;
+            private int panPtr;
+            private int muted;
 
             /** ADPCM A (Non control type) : calculate one channel output */
-            int calcChan(int a, int b) {
+            private int calcChan(int a, int b) {
                 if (this.muted != 0)
                     return a;
 
@@ -3107,44 +3229,40 @@ public class Fm {
         }
 
         /** registers */
-        public int[] regs = new int[512];
+        int[] regs = new int[512];
         /** OPN state */
-        public FM_OPN opn;
+        FM_OPN opn;
         /** channel state */
-        public FM_OPN.Channel[] ch = new FM_OPN.Channel[6];
+        Fm.FM_OPN.Channel[] ch = new Fm.FM_OPN.Channel[6];
         /** address line A1 */
-        public int addrA1;
+        int addrA1;
 
         // ADPCM-A unit
 
         /** pcm rom buffer */
-        public byte[] pcmBuf;
+        byte[] pcmBuf;
         /** pcm rom buffer */
-        public int pcmbufPtr;
+        int pcmbufPtr;
         /** size of pcm rom */
-        public int pcmSize;
+        int pcmSize;
         /** adpcmA total level */
-        public int adpcmTL;
+        int adpcmTL;
         /** adpcm channels */
-        public AdpcmA[] adpcm = new AdpcmA[6];
+        AdpcmA[] adpcm = new AdpcmA[6];
         /** registers */
-        public int[] adpcmreg = new int[0x30];
-        public int adpcmArrivedEndAddress;
+        private int[] adpcmReg = new int[0x30];
+        int adpcmArrivedEndAddress;
         /** Delta-T ADPCM unit */
-        public YmDeltaT deltaT;
-        public int muteDeltaT;
+        YmDeltaT deltaT;
+        int muteDeltaT;
 
         /** YM2608 only */
-        public int flagmask;
+        int flagMask;
         /** YM2608 only */
-        public int irqmask;
+        private int irqMask;
 
-        // for subclasses
-        protected YM2610() {
-        }
-
-        public YM2610(int clock, int rate,
-                      FM_OPN.State.TimerHandler timer_handler, FM_OPN.State.IrqHandler IRQHandler, Callbacks ssg) {
+        public void init(int clock, int rate,
+                         Fm.FM_OPN.State.TimerHandler timer_handler, Fm.FM_OPN.State.IrqHandler IRQHandler, Callbacks ssg) {
 
             // FM 
             this.opn.st.param = this;
@@ -3175,7 +3293,7 @@ public class Fm {
         void writeAdpcmA(int r, int v) {
             int c;
 
-            this.adpcmreg[r] = v & 0xff; // stock data 
+            this.adpcmReg[r] = v & 0xff; // stock data
             switch (r) {
                 case 0x00: // DM,--,C5,C4,C3,C2,C1,C0
                     if ((v & 0x80) == 0) {
@@ -3258,11 +3376,11 @@ public class Fm {
                         break;
                         case 0x10:
                         case 0x18:
-                            adpcm[c].start = ((this.adpcmreg[0x18 + c] * 0x0100 | this.adpcmreg[0x10 + c]) << AdpcmA.ADDRESS_SHIFT);
+                            adpcm[c].start = ((this.adpcmReg[0x18 + c] * 0x0100 | this.adpcmReg[0x10 + c]) << AdpcmA.ADDRESS_SHIFT);
                             break;
                         case 0x20:
                         case 0x28:
-                            adpcm[c].end = ((this.adpcmreg[0x28 + c] * 0x0100 | this.adpcmreg[0x20 + c]) << AdpcmA.ADDRESS_SHIFT);
+                            adpcm[c].end = ((this.adpcmReg[0x28 + c] * 0x0100 | this.adpcmReg[0x20 + c]) << AdpcmA.ADDRESS_SHIFT);
                             adpcm[c].end += (1 << AdpcmA.ADDRESS_SHIFT) - 1;
                             break;
                     }
@@ -3270,7 +3388,7 @@ public class Fm {
             }
         }
 
-        int read(int a) {
+        public int read(int a) {
             int addr = this.opn.st.address;
             int ret = 0;
 
@@ -3297,10 +3415,10 @@ public class Fm {
         }
 
         /** Generate samples for one of the YM2610s */
-        void updateOne(int[][] buffer, int length) {
+        public void updateOne(int[][] buffer, int length) {
             int i, j;
             int[] bufL, bufR;
-            FM_OPN.Channel[] cch = new FM_OPN.Channel[4];
+            Fm.FM_OPN.Channel[] cch = new Fm.FM_OPN.Channel[4];
             int[] out_fm = opn.outFm;
 
             // buffer setup 
@@ -3416,9 +3534,9 @@ public class Fm {
         }
 
         /** Generate samples for one of the YM2610Bs */
-        void updateOneB(int[][] buffer, int length) {
+        private void updateOneB(int[][] buffer, int length) {
             int[] bufL, bufR;
-            FM_OPN.Channel[] cch = new FM_OPN.Channel[6];
+            Fm.FM_OPN.Channel[] cch = new Fm.FM_OPN.Channel[6];
             int[] out_fm = opn.outFm;
 
             // buffer setup 
@@ -3530,7 +3648,7 @@ public class Fm {
             opn.st.internalTimerB(length);
         }
 
-        void postLoad() {
+        private void postLoad() {
             // SSG registers 
             for (int r = 0; r < 16; r++) {
                 this.opn.st.ssg.write.accept(this.opn.st.param, 0, r & 0xff);
@@ -3566,10 +3684,10 @@ public class Fm {
             this.deltaT.postLoad(this.regs, 0x010);
         }
 
-        void saveState(DeviceConfig device) {
+        public void saveState(DeviceConfig device) {
             DeviceConfig.state_save_register_device_item_array(0, this.regs);
-            device.saveStState(this.opn.st);
-            device.saveChannelState(this.ch, 6);
+            DeviceConfig.saveStState(this.opn.st);
+            DeviceConfig.saveChannelState(this.ch, 6);
             // 3slots 
             DeviceConfig.state_save_register_device_item_array(0, this.opn.sl3.fc);
             DeviceConfig.state_save_register_device_item(0, this.opn.sl3.fnH);
@@ -3579,19 +3697,19 @@ public class Fm {
 
             DeviceConfig.state_save_register_device_item(0, this.adpcmArrivedEndAddress);
             // rythm(AdpcmA) 
-            device.saveAdpcmaState(this.adpcm);
+            device.saveAdpcmAState(this.adpcm);
             // Delta-T ADPCM unit 
             this.deltaT.saveState(device);
         }
 
         /** shut down emulator */
-        void shutdown() {
+        public void shutdown() {
             this.pcmBuf = null;
             this.deltaT.memory = null;
         }
 
         /** reset one of chips */
-        void reset() {
+        public void reset() {
             opn.reset2610(this.ch);
 
             // ADPCM work initial
@@ -3606,7 +3724,7 @@ public class Fm {
             deltaT.reset2610(opn.st.freqBase, opn.outDelta);
         }
 
-        void writePcmRom(int rom_id, int romSize, int dataStart,
+        public void writePcmRom(int rom_id, int romSize, int dataStart,
                          int dataLength, byte[] romData) {
             switch (rom_id) {
                 case 0x01: // ADPCM
@@ -3640,7 +3758,7 @@ public class Fm {
         }
 
         /** @mdsound */
-        void setMuteMask(int muteMask) {
+        public void setMuteMask(int muteMask) {
             for (int curChn = 0; curChn < 6; curChn++)
                 this.ch[curChn].muted = (muteMask >> curChn) & 0x01;
             for (int curChn = 0; curChn < 6; curChn++)
@@ -3648,29 +3766,29 @@ public class Fm {
             this.muteDeltaT = (muteMask >> 12) & 0x01;
         }
 
-        void setDeltaTStatus(int changeBits) {
+        public void setDeltaTStatus(int changeBits) {
             adpcmArrivedEndAddress |= changeBits;
         }
 
-        void resetDelTatStatus(int changeBits) {
+        public void resetDelTatStatus(int changeBits) {
             adpcmArrivedEndAddress &= ~changeBits;
         }
     }
 
     /** here is the virtual YM2608 */
-    private static class YM2608 extends YM2610 {
+    public static class YM2608 extends YM2610 {
 
         //
         // YM2608 local section
         //
 
         // Generate samples for one of the YM2608s 
-        void updateOne(int[][] buffer, int length) {
+        public void updateOne(int[][] buffer, int length) {
             FM_OPN opn = this.opn;
             YmDeltaT deltaT = this.deltaT;
             int i, j;
             int[] bufL, bufR;
-            FM_OPN.Channel[] cch = new FM_OPN.Channel[6];
+            Fm.FM_OPN.Channel[] cch = new Fm.FM_OPN.Channel[6];
             int[] out_fm = opn.outFm;
 
             // set buffer
@@ -3789,7 +3907,7 @@ public class Fm {
             opn.st.setStatus(0);
         }
 
-        void postLoad() {
+        private void postLoad() {
             // prescaler 
             this.opn.setPreScaler(1, 2);
             this.deltaT.freqBase = this.opn.st.freqBase;
@@ -3824,11 +3942,11 @@ public class Fm {
             this.deltaT.postLoad(this.regs, 0x100);
         }
 
-        void saveState(DeviceConfig device) {
+        public void saveState(DeviceConfig device) {
 
             DeviceConfig.state_save_register_device_item_array(0, this.regs);
-            device.saveStState(this.opn.st);
-            device.saveChannelState(this.ch, 6);
+            DeviceConfig.saveStState(this.opn.st);
+            DeviceConfig.saveChannelState(this.ch, 6);
             // 3slots 
             DeviceConfig.state_save_register_device_item_array(0, this.opn.sl3.fc);
             DeviceConfig.state_save_register_device_item(0, this.opn.sl3.fnH);
@@ -3836,14 +3954,14 @@ public class Fm {
             // address register1 
             DeviceConfig.state_save_register_device_item(0, this.addrA1);
             // rythm(AdpcmA) 
-            device.saveAdpcmaState(this.adpcm);
+            device.saveAdpcmAState(this.adpcm);
             // Delta-T ADPCM unit 
             this.deltaT.saveState(device);
         }
 
         /** YM2608(OPNA) */
-        public YM2608(YM2608 param, int clock, int rate,
-                      FM_OPN.State.TimerHandler timer_handler, FM_OPN.State.IrqHandler IRQHandler, Callbacks ssg) {
+        public void init(YM2608 param, int clock, int rate,
+                         Fm.FM_OPN.State.TimerHandler timer_handler, Fm.FM_OPN.State.IrqHandler IRQHandler, Callbacks ssg) {
 
             this.opn.st.param = param;
             this.opn.type = TYPE_YM2608;
@@ -3878,12 +3996,12 @@ public class Fm {
         }
 
         /** shut down emulator */
-        void shutdown() {
+        public void shutdown() {
             this.deltaT.memory = null;
         }
 
         /** reset one of chips */
-        void reset() {
+        public void reset() {
 
             this.opn.reset2608(this);
 
@@ -3899,7 +4017,7 @@ public class Fm {
             this.deltaT.reset2608(this.opn.st.freqBase, this.opn.outDelta);
         }
 
-        int read(int a) {
+        public int read(int a) {
             int addr = this.opn.st.address;
             int ret = 0;
 
@@ -3916,7 +4034,7 @@ public class Fm {
 
                 case 2: // status 1 : status 0 + ADPCM status
                     // BUSY : x : PCMBUSY : ZERO : BRDY : EOS : FLAGB : FLAGA
-                    ret = (this.opn.st.getStatus() & this.flagmask | 0x80) | ((this.deltaT.pcmBsy & 1) << 5);
+                    ret = (this.opn.st.getStatus() & this.flagMask | 0x80) | ((this.deltaT.pcmBsy & 1) << 5);
                     break;
 
                 case 3:
@@ -3935,7 +4053,7 @@ public class Fm {
             return ret;
         }
 
-        void writePcmRom(int rom_id, int romSize, int dataStart,
+        public void writePcmRom(int rom_id, int romSize, int dataStart,
                          int dataLength, byte[] romData) {
             switch (rom_id) {
                 case 0x01: // ADPCM
@@ -3959,7 +4077,7 @@ public class Fm {
             }
         }
 
-        void setMuteMask(int muteMask) {
+        public void setMuteMask(int muteMask) {
             for (int curChn = 0; curChn < 6; curChn++)
                 this.ch[curChn].muted = (int) ((muteMask >> curChn) & 0x01);
             for (int curChn = 0; curChn < 6; curChn++)
@@ -3967,260 +4085,139 @@ public class Fm {
             this.muteDeltaT = (int) ((muteMask >> 12) & 0x01);
         }
 
-        void setDeltaTStatus(int changeBits) {
+        public void setDeltaTStatus(int changeBits) {
             opn.st.setStatus(changeBits);
         }
 
-        void resetDelTatStatus(int changeBits) {
+        public void resetDelTatStatus(int changeBits) {
             opn.st.resetStatus(changeBits);
         }
-    }
 
-    /**
-     * YM2608 write
-     *
-     * @param a = address
-     * @param v = value
-     */
-    private int ym2608_write(int chipId, YM2608 chip, int a, int v) {
-        YM2608 f2608 = chip;
-        FM_OPN opn = f2608.opn;
-        int addr;
+        private int ym2608_timer_over(int chipId, int c, Fm fm) {
+            YM2608 f2608 = this;
 
-        v &= 0xff; //adjust to 8 bit bus */
-
-        switch (a & 3) {
-            case 0: // address port 0
-                opn.st.address = v;
-                f2608.addrA1 = 0;
-
-                // Write register to SSG emulator
-                if (v < 16) opn.st.ssg.write.accept(opn.st.param, 0, v & 0xff);
-                // prescaler selecter : 2d,2e,2f
-                if (v >= 0x2d && v <= 0x2f) {
-                    f2608.opn.setPreScaler(v, 2);
-                    //TODO: set ADPCM[c].step
-                    f2608.deltaT.freqBase = opn.st.freqBase;
+            switch (c) {
+                case 1: { // Timer B
+                    f2608.opn.st.timerBOver();
                 }
                 break;
-
-            case 1: // data port 0
-                if (f2608.addrA1 != 0)
-                    break; // verified on real YM2608
-
-                addr = opn.st.address;
-                f2608.regs[addr] = v;
-                switch (addr & 0xf0) {
-                    case 0x00: // SSG section
-                        // Write data to SSG emulator
-                        opn.st.ssg.write.accept(opn.st.param, a, v & 0xff);
-                        break;
-                    case 0x10: // 0x10-0x1f : Rhythm section
-                        ym2608_update_req(chipId, (YM2608) opn.st.param);
-                        f2608.writeAdpcmA(addr - 0x10, v);
-                        break;
-                    case 0x20: // Mode Register
-                        switch (addr) {
-                            case 0x29: // SCH,xx,xxx,EN_ZERO,EN_BRDY,EN_EOS,EN_TB,EN_TA
-                                opn.writeIRQMask(f2608, v);
-                                break;
-                            default:
-                                ym2608_update_req(chipId, (YM2608) opn.st.param);
-                                f2608.opn.writeMode(addr, v);
-                                break;
-                        }
-                        break;
-                    default: // opn section
-                        ym2608_update_req(chipId, (YM2608) opn.st.param);
-                        f2608.opn.writeReg(addr, v);
-                        break;
+                case 0: { // Timer A
+                    fm.ym2608_update_req(chipId, (YM2608) f2608.opn.st.param);
+                    // timer update
+                    f2608.opn.st.timerAOver();
+                    // CSM mode key,TL control
+                    if ((f2608.opn.st.mode & 0x80) != 0) { // CSM mode total level latch and auto key on
+                        f2608.ch[2].CSMKeyControl(f2608.opn.type);
+                    }
                 }
                 break;
-
-            case 2: // address port 1
-                opn.st.address = v;
-                f2608.addrA1 = 1;
-                break;
-
-            case 3: // data port 1
-                if (f2608.addrA1 != 1)
-                    break; // verified on real YM2608
-
-                addr = opn.st.address;
-                f2608.regs[addr | 0x100] = v;
-                ym2608_update_req(chipId, (YM2608) opn.st.param);
-                switch (addr & 0xf0) {
-                    case 0x00: // DeltaT PORT
-                        switch (addr) {
-                            case 0x0e: // DAC data
-//logger.log(Level.TRACE, "YM2608: write to DAC data (unimplemented) value=%02x".formatted(v));
-                                break;
-                            default:
-                                // 0x00-0x0d
-                                f2608.deltaT.writeAdpcm(addr, v);
-                                break;
-                        }
-                        break;
-                    case 0x10: // IRQ Flag control
-                        if (addr == 0x10) {
-                            opn.writeIRQFlag(f2608, v);
-                        }
-                        break;
-                    default:
-                        f2608.opn.writeReg(addr | 0x100, v);
-                        break;
-                }
-                break;
-        }
-        return opn.st.irq;
-    }
-
-    private int ym2608_timer_over(int chipId, YM2608 chip, int c) {
-        YM2608 f2608 = chip;
-
-        switch (c) {
-            case 1: { // Timer B
-                f2608.opn.st.timerBOver();
+                default:
+                    break;
             }
-            break;
-            case 0: { // Timer A
-                ym2608_update_req(chipId, (YM2608) f2608.opn.st.param);
-                // timer update
-                f2608.opn.st.timerAOver();
-                // CSM mode key,TL control
-                if ((f2608.opn.st.mode & 0x80) != 0) { // CSM mode total level latch and auto key on
-                    f2608.ch[2].CSMKeyControl(f2608.opn.type);
-                }
-            }
-            break;
-            default:
-                break;
+
+            return f2608.opn.st.irq;
         }
 
-        return f2608.opn.st.irq;
-    }
+        /**
+         * YM2608 write
+         *
+         * @param chipId
+         * @param a      = address
+         * @param v      = value
+         * @param fm
+         */
+        public int ym2608_write(int chipId, int a, int v, Fm fm) {
+            YM2608 f2608 = this;
+            FM_OPN opn = f2608.opn;
+            int addr;
 
-    /**
-     * write
-     *
-     * @param chipId number
-     * @param a      address
-     * @param v      value
-     */
-    private int ym2610_write(int chipId, YM2610 chip, int a, int v) {
-        YM2610 f2610 = chip;
-        FM_OPN opn = f2610.opn;
-        int addr;
-        int ch;
+            v &= 0xff; //adjust to 8 bit bus */
 
-        v &= 0xff; // adjust to 8 bit bus
+            switch (a & 3) {
+                case 0: // address port 0
+                    opn.st.address = v;
+                    f2608.addrA1 = 0;
 
-        switch (a & 3) {
-            case 0: // address port 0
-                opn.st.address = v;
-                f2610.addrA1 = 0;
+                    // Write register to SSG emulator
+                    if (v < 16) opn.st.ssg.write.accept(opn.st.param, 0, v & 0xff);
+                    // prescaler selecter : 2d,2e,2f
+                    if (v >= 0x2d && v <= 0x2f) {
+                        f2608.opn.setPreScaler(v, 2);
+                        //TODO: set ADPCM[c].step
+                        f2608.deltaT.freqBase = opn.st.freqBase;
+                    }
+                    break;
 
-                // Write register to SSG emulator
-                if (v < 16) opn.st.ssg.write.accept(opn.st.param, 0, v & 0xff);
-                break;
+                case 1: // data port 0
+                    if (f2608.addrA1 != 0)
+                        break; // verified on real YM2608
 
-            case 1: // data port 0
-                if (f2610.addrA1 != 0)
-                    break; // verified on real YM2608
-
-                addr = opn.st.address;
-                f2610.regs[addr] = v;
-                switch (addr & 0xf0) {
-                    case 0x00: // SSG section
-                        // Write data to SSG emulator
-                        opn.st.ssg.write.accept(opn.st.param, a, v & 0xff);
-                        break;
-                    case 0x10: // DeltaT ADPCM
-                        ym2610_update_req(chipId, (YM2610) opn.st.param);
-
-                        switch (addr) {
-                            case 0x10: // control 1
-                            case 0x11: // control 2
-                            case 0x12: // start address L
-                            case 0x13: // start address H
-                            case 0x14: // stop address L
-                            case 0x15: // stop address H
-
-                            case 0x19: // delta-n L
-                            case 0x1a: // delta-n H
-                            case 0x1b: { // volume
-                                f2610.deltaT.writeAdpcm(addr - 0x10, v);
+                    addr = opn.st.address;
+                    f2608.regs[addr] = v;
+                    switch (addr & 0xf0) {
+                        case 0x00: // SSG section
+                            // Write data to SSG emulator
+                            opn.st.ssg.write.accept(opn.st.param, a, v & 0xff);
+                            break;
+                        case 0x10: // 0x10-0x1f : Rhythm section
+                            fm.ym2608_update_req(chipId, (YM2608) opn.st.param);
+                            f2608.writeAdpcmA(addr - 0x10, v);
+                            break;
+                        case 0x20: // Mode Register
+                            switch (addr) {
+                                case 0x29: // SCH,xx,xxx,EN_ZERO,EN_BRDY,EN_EOS,EN_TB,EN_TA
+                                    opn.writeIRQMask(f2608, v);
+                                    break;
+                                default:
+                                    fm.ym2608_update_req(chipId, (YM2608) opn.st.param);
+                                    f2608.opn.writeMode(addr, v);
+                                    break;
                             }
                             break;
+                        default: // opn section
+                            fm.ym2608_update_req(chipId, (YM2608) opn.st.param);
+                            f2608.opn.writeReg(addr, v);
+                            break;
+                    }
+                    break;
 
-                            case 0x1c: { // FLAG CONTROL : Extend Status Clear/Mask
-                                int statusmask = ~v;
-                                // set arrived flag mask
-                                for (ch = 0; ch < 6; ch++)
-                                    f2610.adpcm[ch].flagMask = statusmask & (1 << ch);
+                case 2: // address port 1
+                    opn.st.address = v;
+                    f2608.addrA1 = 1;
+                    break;
 
-                                f2610.deltaT.statusChangeEOSBit = statusmask & 0x80; // status flag: set bit7 on End Of Sample
+                case 3: // data port 1
+                    if (f2608.addrA1 != 1)
+                        break; // verified on real YM2608
 
-                                // clear arrived flag
-                                f2610.adpcmArrivedEndAddress &= statusmask;
+                    addr = opn.st.address;
+                    f2608.regs[addr | 0x100] = v;
+                    fm.ym2608_update_req(chipId, (YM2608) opn.st.param);
+                    switch (addr & 0xf0) {
+                        case 0x00: // DeltaT PORT
+                            switch (addr) {
+                                case 0x0e: // DAC data
+    //logger.log(Level.TRACE, "YM2608: write to DAC data (unimplemented) value=%02x".formatted(v));
+                                    break;
+                                default:
+                                    // 0x00-0x0d
+                                    f2608.deltaT.writeAdpcm(addr, v);
+                                    break;
                             }
                             break;
-
-                            default:
-//logger.log(Level.TRACE, "YM2610: write to unknown DeltaT register %02x val=%02x".formatted(addr, v));
-                                break;
-                        }
-
-                        break;
-                    case 0x20: // Mode Register
-                        ym2610_update_req(chipId, (YM2610) opn.st.param);
-                        f2610.opn.writeMode(addr, v);
-                        break;
-                    default: // opn section
-                        ym2610_update_req(chipId, (YM2610) opn.st.param);
-                        // write register
-                        f2610.opn.writeReg(addr, v);
-                        break;
-                }
-                break;
-
-            case 2: // address port 1
-                opn.st.address = v;
-                f2610.addrA1 = 1;
-                break;
-
-            case 3: // data port 1
-                if (f2610.addrA1 != 1)
-                    break; // verified on real YM2608
-
-                ym2610_update_req(chipId, (YM2610) opn.st.param);
-                addr = opn.st.address;
-                f2610.regs[addr | 0x100] = v;
-                if (addr < 0x30)
-                    // 100-12f : ADPCM A section
-                    f2610.writeAdpcmA(addr, v);
-                else
-                    f2610.opn.writeReg(addr | 0x100, v);
-                break;
-        }
-        return opn.st.irq;
-    }
-
-    private int ym2610_timer_over(int chipId, YM2610 chip, int c) {
-        YM2610 F2610 = chip;
-
-        if (c != 0) { // Timer B
-            F2610.opn.st.timerBOver();
-        } else { // Timer A
-            ym2610_update_req(chipId, (YM2610) F2610.opn.st.param);
-            // timer update
-            F2610.opn.st.timerAOver();
-            // CSM mode key,TL controll
-            if ((F2610.opn.st.mode & 0x80) != 0) { // CSM mode total level latch and auto key on
-                F2610.ch[2].CSMKeyControl(F2610.opn.type);
+                        case 0x10: // IRQ Flag control
+                            if (addr == 0x10) {
+                                opn.writeIRQFlag(f2608, v);
+                            }
+                            break;
+                        default:
+                            f2608.opn.writeReg(addr | 0x100, v);
+                            break;
+                    }
+                    break;
             }
+            return opn.st.irq;
         }
-        return F2610.opn.st.irq;
     }
 
 //#endif (BUILD_YM2610||BUILD_YM2610B)

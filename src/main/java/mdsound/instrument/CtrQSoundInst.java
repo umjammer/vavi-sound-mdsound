@@ -7,6 +7,13 @@ import mdsound.chips.CtrQsound;
 
 public class CtrQSoundInst extends Instrument.BaseInstrument {
 
+    public static final int DefaultClockValue = 4000000;
+    public static final int MAX_CHIPS = 0x02;
+
+    private final CtrQsound[] chips = {new CtrQsound(), new CtrQsound()};
+
+    private final int[] mask = {0, 0};
+
     @Override
     public String getName() {
         return "QSound_ctr";
@@ -17,134 +24,81 @@ public class CtrQSoundInst extends Instrument.BaseInstrument {
         return "QSNDc";
     }
 
-    @Override
-    public void reset(int chipId) {
-        device_reset_qsound(chipId);
-
-        visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
-        };
+    public CtrQSoundInst() {
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
 
     @Override
-    public int start(int chipId, int samplingRate) {
-        return device_start_qsound(chipId, 4000000);
+    public void init() {
+        mask[0] = 0;
+        mask[1] = 0;
+    }
+
+    @Override
+    public void reset(int chipId) {
+        chips[chipId].reset();
+        // need to wait until the chips is ready before we start writing to it ...
+        // we do this by time travel.
+        chips[chipId].waitBusy();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        return device_start_qsound(chipId, clock);
+        return chips[chipId].start2(clock);
     }
 
     @Override
-    public void stop(int chipId) {
-        device_stop_qsound(chipId);
+    public int read(int chipId, int adr) {
+        return chips[chipId].read(adr);
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        chips[chipId].write2(adr, data);
+        return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        qsound_update(chipId, outputs, samples);
+        chips[chipId].update(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
     }
 
     @Override
-    public int write(int chipId, int port, int adr, int data) {
-        qsound_w(chipId, adr, data);
-        return 0;
+    public void stop(int chipId) {
     }
 
-    private int device_start_qsound(int chipId, int clock) {
-        CtrQsound chip = QSoundData[chipId];
-        return chip.start2(clock);
+    public void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
+        writePcm(chipId, romSize, dataStart, dataLength, romData, 0);
     }
 
-    private void device_stop_qsound(int chipId) {
-        device_stop_qsound_ctr(chipId);
+    private void setMuteMask(int chipId, int muteMask) {
+        assert chipId < MAX_CHIPS;
+        chips[chipId].setMuteMask(muteMask);
     }
 
-    private void device_reset_qsound(int chipId) {
-        device_reset_qsound_ctr(chipId);
-        // need to wait until the chips is ready before we start writing to it ...
-        // we do this by time travel.
-        qsoundc_wait_busy(chipId);
+    private void writeData(int chipId, byte address, int data) {
+        chips[chipId].writeData(address, data);
     }
 
-    public void qsound_w(int chipId, int offset, int data) {
-        CtrQsound chip = QSoundData[chipId];
-        chip.write2(offset, data);
+    //----
+
+    public synchronized void setMask(int chipId, int ch) {
+        ch = (1 << ch);
+        mask[chipId] |= ch;
+        setMuteMask(chipId, mask[chipId]);
     }
 
-    private void qsound_update(int chipId, int[][] outputs, int samples) {
-        qsoundc_update(chipId, outputs, samples);
+    public synchronized void resetMask(int chipId, int ch) {
+        ch = (1 << ch);
+        mask[chipId] &= ~ch;
+        setMuteMask(chipId, mask[chipId]);
     }
 
-    public void qsound_write_rom(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
-        qsoundc_write_rom(chipId, romSize, dataStart, dataLength, romData, 0);
-    }
-
-    public void qsound_write_rom(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddress) {
-        qsoundc_write_rom(chipId, romSize, dataStart, dataLength, romData, srcStartAddress);
-    }
-
-    public void qsound_set_mute_mask(int chipId, int muteMask) {
-        qsoundc_set_mute_mask(chipId, muteMask);
-    }
-
-    private static final int MAX_CHIPS = 0x02;
-    CtrQsound[] QSoundData = new CtrQsound[MAX_CHIPS];
-
-    private int device_start_qsound_ctr(int chipId, int clock) {
-        QSoundData[chipId] = new CtrQsound();
-        CtrQsound chip = QSoundData[chipId];
-        return chip.start(clock);
-    }
-
-    private void device_stop_qsound_ctr(int chipId) {
-        CtrQsound chip = QSoundData[chipId];
-    }
-
-    private void device_reset_qsound_ctr(int chipId) {
-        CtrQsound chip = QSoundData[chipId];
-        chip.reset();
-    }
-
-    private byte qsoundc_r(int chipId, int offset) {
-        CtrQsound chip = QSoundData[chipId];
-        return chip.read(offset);
-    }
-
-    private void qsoundc_w(int chipId, int offset, byte data) {
-        CtrQsound chip = QSoundData[chipId];
-        chip.write(offset, data);
-    }
-
-    private void qsoundc_write_data(int chipId, byte address, int data) {
-        CtrQsound chip = QSoundData[chipId];
-        chip.writeData(address, data);
-    }
-
-    private void qsoundc_update(int chipId, int[][] outputs, int samples) {
-        CtrQsound chip = QSoundData[chipId];
-        chip.update(outputs, samples);
-    }
-
-    private void qsoundc_write_rom(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddress) {
-        CtrQsound chip = QSoundData[chipId];
-        chip.writeRom(romSize, dataStart, dataLength, romData, srcStartAddress);
-    }
-
-    private void qsoundc_set_mute_mask(int chipId, int muteMask) {
-        CtrQsound chip = QSoundData[chipId];
-        if (chip == null) return;
-        chip.setMuteMask(muteMask);
-    }
-
-    private void qsoundc_wait_busy(int chipId) {
-        CtrQsound chip = QSoundData[chipId];
-        chip.waitBusy();
+    public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddress) {
+        chips[chipId].writeRom(romSize, dataStart, dataLength, romData, srcStartAddress);
     }
 
     //----

@@ -42,8 +42,8 @@ public class IremGa20 {
         private int volume;
         private int pan;
         //int effect;
-        private byte play;
-        private byte muted;
+        private int play;
+        private int muted;
 
         private void reset() {
             this.rate = 0;
@@ -58,7 +58,7 @@ public class IremGa20 {
             this.play = 0;
         }
 
-        private void write(int offset, byte data) {
+        private void write(int offset, int data) {
             switch (offset & 0x7) {
             case 0: // start address low
                 this.start = ((this.start) & 0xff000) | (data << 4);
@@ -137,7 +137,7 @@ public class IremGa20 {
                 ch.pos = this.pos;
                 ch.frac = this.frac;
                 if (ch.muted == 0)
-                    ch.play = (byte) this.play;
+                    ch.play = this.play;
             }
         }
 
@@ -165,7 +165,7 @@ public class IremGa20 {
         }
     }
 
-    public void write(int offset, byte data) {
+    public void write(int offset, int data) {
 //logger.log(Level.TRACE, "GA20:  Offset %02x, data %04x".formatted(offset, data));
 
         int channel = offset >> 3;
@@ -175,12 +175,12 @@ public class IremGa20 {
         this.channel[channel].write(offset, data);
     }
 
-    public byte read(int offset) {
+    public int read(int offset) {
         int channel = offset >> 3;
 
         switch (offset & 0x7) {
         case 7: // Voice status.  bit 0 is 1 if active. (routine around 0xccc in rtypeleo)
-            return (byte) (this.channel[channel].play != 0 ? 1 : 0);
+            return this.channel[channel].play != 0 ? 1 : 0;
 
         default:
 //logger.log(Level.TRACE, "GA20: read unk. register %d, channel %d".formatted(offset & 0xf, channel));
@@ -252,7 +252,7 @@ public class IremGa20 {
     }
 
     public void setMuteMask(int muteMask) {
-        for (byte curChn = 0; curChn < 4; curChn++)
-            this.channel[curChn].muted = (byte) ((muteMask >> curChn) & 0x01);
+        for (int curChn = 0; curChn < 4; curChn++)
+            this.channel[curChn].muted = (muteMask >> curChn) & 0x01;
     }
 }

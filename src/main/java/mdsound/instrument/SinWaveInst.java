@@ -6,6 +6,15 @@ import mdsound.chips.SinWaveGen;
 
 public class SinWaveInst extends Instrument.BaseInstrument {
 
+    public static final int DefaultClockValue = 0;
+
+    private final SinWaveGen[] chips = {new SinWaveGen(), new SinWaveGen()};
+
+    public SinWaveInst() {
+        // 0..Main
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
+    }
+
     @Override
     public String getName() {
         return "SinWave";
@@ -16,54 +25,40 @@ public class SinWaveInst extends Instrument.BaseInstrument {
         return "SIN";
     }
 
-    public SinWaveInst() {
-        // 0..Main
-        visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
-        };
-    }
-
     @Override
     public void reset(int chipId) {
-        if (chip[chipId] == null) {
-            chip[chipId] = new SinWaveGen();
-        }
-        // chips[chipId].render = false;
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate) {
-        return start(chipId, samplingRate, DefaultClockValue);
+        assert chipId < chips.length;
+//        chips[chipId].render = false;
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        reset(chipId);
-        chip[chipId].clock = samplingRate;
-        chip[chipId].render = true;
-
+        assert chipId < chips.length;
+        chips[chipId].clock = samplingRate;
+        chips[chipId].render = true;
         return samplingRate; // samplingRate
     }
 
     @Override
-    public void stop(int chipId) {
-        if (chip[chipId] == null) return;
-        chip[chipId].render = false;
-    }
-
-    @Override
-    public void update(int chipId, int[][] outputs, int samples) {
-        if (chip[chipId] == null) return;
-        chip[chipId].update(outputs, samples);
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        if (chip[chipId] == null) return 0;
-        return chip[chipId].write(data);
+        assert chipId < chips.length;
+        return chips[chipId].write(data);
     }
 
-    private static final int DefaultClockValue = 0;
-    private final SinWaveGen[] chip = new SinWaveGen[2];
+    @Override
+    public void update(int chipId, int[][] outputs, int samples) {
+        assert chipId < chips.length;
+        chips[chipId].update(outputs, samples);
+    }
+
+    @Override
+    public void stop(int chipId) {
+        assert chipId < chips.length;
+        chips[chipId].render = false;
+    }
 }

@@ -8,6 +8,10 @@ import mdsound.chips.MPcm;
 
 public class X68kMPcmInst extends Instrument.BaseInstrument {
 
+    public static final int MAX_CHIPS = 0x02;
+
+    private final MPcm[] chips = {new MPcm(), new MPcm()};
+
     @Override
     public String getName() {
         return "X68kMPcm";
@@ -20,29 +24,19 @@ public class X68kMPcmInst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        reset_(chipId);
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate) {
-        return start(chipId, 44100, samplingRate);
+        chips[chipId].reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        mountMpcmX68K(chipId);
-        initialize(chipId, clock, samplingRate);
+        chips[chipId].mount();
+        chips[chipId].init(clock, (float) samplingRate);
         return samplingRate;
     }
 
     @Override
-    public void stop(int chipId) {
-        unmountMpcmX68K(chipId);
-    }
-
-    @Override
-    public void update(int chipId, int[][] outputs, int samples) {
-        update_(chipId, outputs, samples);
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -50,71 +44,45 @@ public class X68kMPcmInst extends Instrument.BaseInstrument {
         return 0;
     }
 
-    private static final int MAX_CHIPS = 0x02;
-    public MPcm[] chips = new MPcm[] {new MPcm(), new MPcm()};
-
-    public void mountMpcmX68K(int chipId) {
-        MPcm chip = chips[chipId];
-        chip.mount();
+    @Override
+    public void update(int chipId, int[][] outputs, int samples) {
+        chips[chipId].update(outputs, samples);
     }
 
-    public void unmountMpcmX68K(int chipId) {
-        MPcm chip = chips[chipId];
-        chip.unmount();
-    }
-
-    public boolean initialize(int chipId, int base, float samplingRate) {
-        MPcm chip = chips[chipId];
-        return chip.init(base, samplingRate);
-    }
-
-    public void reset_(int chipId) {
-        MPcm chip = chips[chipId];
-        chip.reset();
+    @Override
+    public void stop(int chipId) {
+        chips[chipId].unmount();
     }
 
     public void keyOn(int chipId, int ch) {
-        MPcm chip = chips[chipId];
-        chip.keyOn(ch);
+        chips[chipId].keyOn(ch);
     }
 
     public void keyOff(int chipId, int ch) {
-        MPcm chip = chips[chipId];
-        chip.keyOff(ch);
+        chips[chipId].keyOff(ch);
     }
 
-    public boolean setPcm(int chipId, int ch, MPcm.PCM ptr) {
-        MPcm chip = chips[chipId];
-        return chip.setPcm(ch, ptr);
+    public boolean writePcm(int chipId, int ch, MPcm.PCM ptr) {
+        return chips[chipId].setPcm(ch, ptr);
     }
 
     public void setPitch(int chipId, int ch, int note) {
-        MPcm chip = chips[chipId];
-        chip.setPitch(ch, note);
+        chips[chipId].setPitch(ch, note);
     }
 
     public void setVol(int chipId, int ch, int vol) {
-        MPcm chip = chips[chipId];
-        chip.setVol(ch, vol);
+        chips[chipId].setVol(ch, vol);
     }
 
     public void setPan(int chipId, int ch, int pan) {
-        MPcm chip = chips[chipId];
-        chip.setPan(ch, pan);
+        chips[chipId].setPan(ch, pan);
     }
 
     public void setVolTable(int chipId, int sel, ByteBuffer tbl) {
-        MPcm chip = chips[chipId];
-        chip.setVolTable(sel, tbl);
+        chips[chipId].setVolTable(sel, tbl);
     }
 
     private int decode(int chipId, int ch, byte[] buffer, int bufferP, int pos) {
-        MPcm chip = chips[chipId];
-        return chip.decode(ch, buffer, bufferP, pos);
-    }
-
-    public void update_(int chipId, int[][] buffer, int count) {
-        MPcm chip = chips[chipId];
-        chip.update(buffer, count);
+        return chips[chipId].decode(ch, buffer, bufferP, pos);
     }
 }

@@ -65,7 +65,7 @@ public class NesVrc7 implements SoundChip {
     }
 
     @Override
-    public void setStereoMix(int trk, short mixL, short mixR) {
+    public void setStereoMix(int trk, int mixL, int mixR) {
         if (trk < 0) return;
         if (trk > 5) return;
         sm[0][trk] = mixL;
@@ -86,7 +86,7 @@ public class NesVrc7 implements SoundChip {
             return null;
     }
 
-    public byte[] getRegs() {
+    public int[] getRegs() {
         return opll.reg;
     }
 

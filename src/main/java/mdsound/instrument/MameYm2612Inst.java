@@ -1,15 +1,22 @@
 package mdsound.instrument;
 
 import mdsound.Instrument;
-import mdsound.mame.Fm2612;
+import mdsound.mame.Fm2612.Ym2612;
 
 
 public class MameYm2612Inst extends Instrument.BaseInstrument {
 
-    private static final int MAX_CHIPS = 2;
-    private static final int DefaultFMClockValue = 7670454;
-    public Fm2612[] chips = new Fm2612[MAX_CHIPS];
-    private final Fm2612.Ym2612[] ym2612 = new Fm2612.Ym2612[MAX_CHIPS];
+    public static final int MAX_CHIPS = 2;
+    public static final int DefaultClockValue = 7670454;
+
+    private final Ym2612[] chips = {new Ym2612(), new Ym2612()};
+
+    private final int[] mask = {0, 0};
+
+    public MameYm2612Inst() {
+        // 0..Main
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
+    }
 
     @Override
     public String getName() {
@@ -21,36 +28,42 @@ public class MameYm2612Inst extends Instrument.BaseInstrument {
         return "OPN2mame";
     }
 
-    public MameYm2612Inst() {
-        // 0..Main
-        visVolume = new int[][][] {
-                new int[][] {new int[] {0, 0}},
-                new int[][] {new int[] {0, 0}}
-        };
-    }
-
     @Override
     public void reset(int chipId) {
-        if (chips[chipId] == null) return;
-
-        chips[chipId].ym2612_reset_chip(ym2612[chipId]);
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate) {
-        chips[chipId] = new Fm2612();
-        ym2612[chipId] = new Fm2612.Ym2612(DefaultFMClockValue, samplingRate, null, null);
-
-        return samplingRate;
+        assert chipId < MAX_CHIPS;
+        chips[chipId].reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        chips[chipId] = new Fm2612();
-        ym2612[chipId] = new Fm2612.Ym2612(clock, samplingRate, null, null);
-        ym2612[chipId].updateRequest = () -> ym2612[chipId].updateOne(new int[2][], 0);
+        assert chipId < MAX_CHIPS;
+
+        chips[chipId].init(clock, samplingRate, null, null);
+        chips[chipId].updateRequest = () -> chips[chipId].updateOne(new int[2][], 0);
 
         return samplingRate;
+    }
+
+    @Override
+    public int read(int chipId, int adr) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public int write(int chipId, int port, int adr, int data) {
+        writeInternal(chipId, 0 + (port & 1) * 2, adr);
+        writeInternal(chipId, 1 + (port & 1) * 2, data);
+        return 0;
+    }
+
+    @Override
+    public void update(int chipId, int[][] outputs, int samples) {
+        assert chipId < MAX_CHIPS;
+
+        chips[chipId].updateOne(outputs, samples);
+
+        visVolume[chipId][0][0] = outputs[0][0];
+        visVolume[chipId][0][1] = outputs[1][0];
     }
 
     @Override
@@ -58,23 +71,21 @@ public class MameYm2612Inst extends Instrument.BaseInstrument {
         chips[chipId] = null;
     }
 
-    @Override
-    public void update(int chipId, int[][] outputs, int samples) {
-        chips[chipId].ym2612_update_one(ym2612[chipId], outputs, samples);
-
-        visVolume[chipId][0][0] = outputs[0][0];
-        visVolume[chipId][0][1] = outputs[1][0];
+    private void setMute(int chipId, int mask) {
+        assert chipId < MAX_CHIPS;
+        chips[chipId].setMuteMask(mask);
     }
 
-    @Override
-    public int write(int chipId, int port, int adr, int data) {
-        if (chips[chipId] == null) return 0;
-
-        return chips[chipId].ym2612_write(chipId, ym2612[chipId], adr, data);
+    private void writeInternal(int chipId, int adr, int data) {
+        assert chipId < MAX_CHIPS;
+        chips[chipId].write(adr, data);
     }
 
-    public void SetMute(int chipId, int mask) {
-        if (chips[chipId] == null) return;
-        chips[chipId].ym2612_set_mutemask(chipId, ym2612[chipId], mask);
+    // ----
+
+    // TODO 2612
+    public synchronized void setMask(int chipId, int ch) {
+        mask[chipId] |= 1 << ch;
+        setMute(chipId, mask[chipId]);
     }
 }

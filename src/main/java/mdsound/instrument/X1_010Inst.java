@@ -1,11 +1,25 @@
 package mdsound.instrument;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
 import mdsound.chips.X1_010;
 
 
 public class X1_010Inst extends Instrument.BaseInstrument {
+
+    public static final int DefaultClockValue = 16000000;
+
+    public static final int MAX_CHIPS = 0x02;
+
+    private final X1_010[] chips = {new X1_010(), new X1_010()};
+
+    private final int[] mask = {0, 0};
+
+    public X1_010Inst() {
+    }
 
     @Override
     public String getName() {
@@ -17,105 +31,80 @@ public class X1_010Inst extends Instrument.BaseInstrument {
         return "X1-010";
     }
 
-    public X1_010Inst() {
-    }
-
     @Override
     public void reset(int chipId) {
-        device_reset_x1_010(chipId);
-    }
-
-    @Override
-    public int start(int chipId, int samplingRate) {
-        return device_start_x1_010(chipId, 16000000);
+        chips[chipId].reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        return device_start_x1_010(chipId, clock);
+        assert chipId < MAX_CHIPS;
+
+        int rate = clock / 512;
+        if (((CHIP_SAMPLING_MODE & 0x01) != 0 && rate < CHIP_SAMPLE_RATE) || CHIP_SAMPLING_MODE == 0x02)
+            rate = CHIP_SAMPLE_RATE;
+
+        chips[chipId].start(clock, rate);
+        return rate;
     }
 
     @Override
-    public void stop(int chipId) {
-        device_stop_x1_010(chipId);
-    }
-
-    @Override
-    public void update(int chipId, int[][] outputs, int samples) {
-        seta_update(chipId, outputs, samples);
+    public int read(int chipId, int adr) {
+        return chips[chipId].read(adr);
     }
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        seta_sound_w(chipId, (port << 8) | adr, data);
+        chips[chipId].write((port << 8) | adr, data);
         return 0;
     }
 
-    private static final int MAX_CHIPS = 0x02;
-    private final X1_010[] x1010Data = new X1_010[] {new X1_010(), new X1_010()};
-
-    private void seta_update(int chipId, int[][] outputs, int samples) {
-        X1_010 info = x1010Data[chipId];
-        info.update(outputs, samples);
+    @Override
+    public void update(int chipId, int[][] outputs, int samples) {
+        chips[chipId].update(outputs, samples);
     }
 
-    private int device_start_x1_010(int chipId, int clock) {
-        if (chipId >= MAX_CHIPS)
-            return 0;
-
-        X1_010 info = x1010Data[chipId];
-
-        int rate = clock / 512;
-        if (((Instrument.BaseInstrument.CHIP_SAMPLING_MODE & 0x01) != 0 && rate < Instrument.BaseInstrument.CHIP_SAMPLE_RATE) ||
-                Instrument.BaseInstrument.CHIP_SAMPLING_MODE == 0x02)
-            rate = Instrument.BaseInstrument.CHIP_SAMPLE_RATE;
-        info.start(clock, rate);
-        return rate;
+    @Override
+    public void stop(int chipId) {
+        chips[chipId].stop();
     }
 
-    private void device_stop_x1_010(int chipId) {
-        X1_010 info = x1010Data[chipId];
-        info.stop();
+    private void setMuteMask(int chipId, int muteMask) {
+        chips[chipId].setMuteMask(muteMask);
     }
 
-    private void device_reset_x1_010(int chipId) {
-        X1_010 info = x1010Data[chipId];
-        info.reset();
+    //----
+
+    public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
+        chips[chipId].writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
     }
 
-    private int seta_sound_r(int chipId, int offset) {
-        X1_010 info = x1010Data[chipId];
-        return info.read(offset);
+    public synchronized void setMask(int chipId, int ch) {
+        mask[chipId] |= ch;
+        setMuteMask(chipId, mask[chipId]);
     }
 
-    private void seta_sound_w(int chipId, int offset, int data) {
-        X1_010 info = x1010Data[chipId];
-        info.write(offset, data);
+    public synchronized void resetMask(int chipId, int ch) {
+        mask[chipId] &= ~ch;
+        setMuteMask(chipId, mask[chipId]);
     }
-
-    public void x1_010_write_rom(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int romDataStartAddress/* = 0*/) {
-        X1_010 info = x1010Data[chipId];
-        info.writeRom(romSize, dataStart, dataLength, romData, romDataStartAddress);
-    }
-
-    public void x1_010_set_mute_mask(int chipId, int muteMask) {
-        X1_010 info = x1010Data[chipId];
-        info.setMuteMask(muteMask);
-    }
-
-//    /**
-//     * Generic get_info
-//     */
-//  DEVICE_GET_INFO( X1_010Inst ) {
-//    case DEVINFO_STR_NAME:       strcpy(info.s, "X1-010");      break;
-//    case DEVINFO_STR_FAMILY:     strcpy(info.s, "Seta custom");     break;
-//    case DEVINFO_STR_VERSION:     strcpy(info.s, "1.0");       break;
-//    case DEVINFO_STR_CREDITS:     strcpy(info.s, "Copyright Nicola Salmoria and the MAME Team"); break;
 
     //----
 
     @Override
     public Tuple<Integer, Double> getRegulationVolume() {
         return new Tuple<>(0x100, 1d);
+    }
+
+    @Override
+    public Map<String, Object> getView(String key, Map<String, Object> args) {
+        Map<String, Object> result = new HashMap<>();
+        switch (key) {
+            case "NAME" -> result.put(getName(), "X1-010");
+            case "FAMILY" -> result.put(getName(), "Seta custom");
+            case "VERSION" -> result.put(getName(), "1.0");
+            case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
+        }
+        return result;
     }
 }
