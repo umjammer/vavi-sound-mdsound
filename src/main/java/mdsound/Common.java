@@ -63,4 +63,16 @@ public class Common {
             return ms.toArray();
         }
     }
+
+    public static int pow2_mask(int v) {
+        if (v == 0)
+            return 0;
+        v--;
+        v |= (v >> 1);
+        v |= (v >> 2);
+        v |= (v >> 4);
+        v |= (v >> 8);
+        v |= (v >> 16);
+        return v;
+    }
 }

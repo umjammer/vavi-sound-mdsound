@@ -32,7 +32,7 @@ mdsound.instrument.OkiM6258Inst
 mdsound.instrument.OkiM6295Inst
 mdsound.instrument.P86Inst
 mdsound.instrument.PokeyInst
-mdsound.instrument.PpsDrvInst
+mdsound.instrument.PpsInst
 mdsound.instrument.Ppz8Inst
 mdsound.instrument.PwmInst
 mdsound.instrument.QSoundInst

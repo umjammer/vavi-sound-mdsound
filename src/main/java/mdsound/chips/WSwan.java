@@ -311,13 +311,13 @@ public class WSwan {
         }
     }
 
-    // SoundDMA の転送間隔
-    // 実際の数値が分からないので、予想です
-    // サンプリング周期から考えてみて以下のようにした
-    // 12KHz = 1.00HBlank = 256cycles間隔
-    // 16KHz = 0.75HBlank = 192cycles間隔
-    // 20KHz = 0.60HBlank = 154cycles間隔
-    // 24KHz = 0.50HBlank = 128cycles間隔
+    // SoundDMA transfer interval
+    // I don't know the actual numbers, so it's just a guess.
+    // Considering the sampling period, we did the following:
+    // 12KHz = 1.00HBlank = 256 cycles interval
+    // 16KHz = 0.75HBlank = 192 cycles interval
+    // 20KHz = 0.60HBlank = 154 cycles interval
+    // 24KHz = 0.50HBlank = 128 cycles interval
     private static final int[] DMACycles = new int[] {256, 192, 154, 128};
 
     private static class Channel {
@@ -328,6 +328,16 @@ public class WSwan {
         private int delta;
         private int pos;
         private int muted;
+
+        public void reset() {
+            this.wave = 0;
+            this.lVol = 0;
+            this.rVol = 0;
+            this.offset = 0;
+            this.delta = 0;
+            this.pos = 0;
+            this.muted = 0;
+        }
     }
 
     /** Ratio */
@@ -362,7 +372,7 @@ public class WSwan {
         }
     }
 
-    private Channel[] audios = new Channel[] {
+    private Channel[] audios = {
             new Channel(), new Channel(), new Channel(), new Channel()
     };
     private final RatioCounter blankTimer = new RatioCounter();
@@ -395,7 +405,7 @@ public class WSwan {
         this.sampleRate = clock / 128;
 
         // actual size is 64 KB, but the audio chips can only access 16 KB
-        this.internalRam = new byte[0x4000]; // ((int)8*)malloc(0x4000);
+        this.internalRam = new byte[0x4000];
 
         this.ratEmul = (float) this.clock * 65536.0f / (float) this.sampleRate;
         // one step every 256 cycles
@@ -406,7 +416,7 @@ public class WSwan {
 
     public void ws_audio_reset() {
         int muteMask = getMuteMask();
-        this.audios = new Channel[] {new Channel(), new Channel(), new Channel(), new Channel()};
+        Arrays.stream(this.audios).forEach(Channel::reset);
         setMuteMask(muteMask);
 
         this.sweepTime = 0;
@@ -426,8 +436,8 @@ public class WSwan {
     public void stop() {
     }
 
-    /** OSWAN の擬似乱数の処理と同等のつもり */
-    private static final int[] noiseMask = new int[] {
+    /** It is intended to be equivalent to OSWAN's pseudorandom number processing. */
+    private static final int[] noiseMask = {
             0b11,
             0b110011,
             0b11011,
@@ -438,7 +448,7 @@ public class WSwan {
             0b11101
     };
 
-    private static final int[] noiseBit = new int[] {
+    private static final int[] noiseBit = {
             0b1000_0000_0000_0000,
             0b0100_0000_0000_0000,
             0b0010_0000_0000_0000,
@@ -462,19 +472,19 @@ public class WSwan {
 
             int l = 0, r = 0;
 
-            for (byte ch = 0; ch < 4; ch++) {
+            for (int ch = 0; ch < 4; ch++) {
                 if (this.audios[ch].muted != 0)
                     continue;
 
                 if ((ch == 1) && ((this.ioRam[IORam.SNDMOD.v] & 0x20) != 0)) {
-                    // Voice出力
+                    // Voice Output
                     int w = this.ioRam[0x89] & 0xff;
                     w -= 0x80;
                     l += this.pcmVolumeLeft * w;
                     r += this.pcmVolumeRight * w;
                 } else if ((this.ioRam[IORam.SNDMOD.v] & (1 << ch)) != 0) {
                     if ((ch == 3) && ((this.ioRam[IORam.SNDMOD.v] & 0x80) != 0)) {
-                        //Noise
+                        // Noise
 
                         int masked, xorReg;
 
@@ -512,9 +522,9 @@ public class WSwan {
                         this.audios[ch].pos &= 0x1f;
                         int w = this.internalRam[(this.audios[ch].wave & 0xfff0) + (this.audios[ch].pos >> 1)] & 0xff;
                         if ((this.audios[ch].pos & 1) == 0)
-                            w = (w << 4) & 0xf0; // 下位ニブル
+                            w = (w << 4) & 0xf0; // Low nibble
                         else
-                            w = w & 0xf0; // 上位ニブル
+                            w = w & 0xf0; // High nibble
                         w -= 0x80;
                         l += this.audios[ch].lVol * w;
                         r += this.audios[ch].rVol * w;
@@ -534,11 +544,11 @@ public class WSwan {
         this.ioRam[port] = (byte) value;
 
         switch (port & 0xff) {
-        // 0x80-0x87の周波数レジスタについて
-        // - ロックマン&フォルテの0x0fの曲では、周波数=0xffFF の音が不要
-        // - デジモンディープロジェクトの0x0dの曲のノイズは 周波数=0x07FF で音を出す
-        // →つまり、0xffFF の時だけ音を出さないってことだろうか。
-        //   でも、0x07FF の時も音を出さないけど、ノイズだけ音を出すのかも。
+        // About frequency registers 0x80-0x87
+        // - In the song 0x0f by "Rockman & Forte", the sound with frequency = 0xffFF is not needed.
+        // - The noise in the song 0x0d from "Digimon D Project" is generated at frequency 0x07ff.
+        // -> In other words, it means that no sound will be made when the value is 0xffff.
+        //    But even when it's 0x07ff, it doesn't make any sound, maybe it just makes noise.
         case 0x80:
         case 0x81:
             i = ((this.ioRam[0x81] & 0xff) << 8) + (this.ioRam[0x80] & 0xff);
@@ -596,19 +606,19 @@ public class WSwan {
             this.sweepStep = value;
             break;
         case 0x8D:
-            // Sweepの間隔は 1/375[s] = 2.666..[ms]
-            // CPU Clockで言うと 3072000/375 = 8192[cycles]
-            // ここの設定値をnとすると、8192[cycles]*(n+1) 間隔でSweepすることになる
+            // The sweep interval is 1/375[s] = 2.666..[ms]
+            // In terms of CPU clock, 3072000/375 = 8192[cycles]
+            // If the setting value here is n, the sweep will be performed at intervals of 8192[cycles]*(n+1).
             //
-            // これを HBlank (256cycles) の間隔で言うと、
+            // In terms of HBlank (256 cycles) intervals,
             //　8192/256 = 32
-            // なので、32[HBlank]*(n+1) 間隔となる
+            // So, the interval is 32[HBlank]*(n+1).
             this.sweepTime = (value + 1) << 5;
             this.sweepCount = this.sweepTime;
             break;
         case 0x8E:
             this.noiseType = value & 7;
-            if ((value & 8) != 0) this.noiseRng = 1; // ノイズカウンターリセット
+            if ((value & 8) != 0) this.noiseRng = 1; // Noise Counter Reset
             break;
         case 0x8F:
             this.audios[0].wave = value << 6;
@@ -619,8 +629,8 @@ public class WSwan {
         case 0x90: // SNDMOD
             break;
         case 0x91:
-            // ここでのボリューム調整は、内蔵 Speaker に対しての調整だけらしいので、
-            // ヘッドフォン接続されていると認識させれば問題無いらしい。
+            // The volume adjustment here seems to be only for the built-in speaker, so
+            // It seems that there is no problem if you make it recognize that headphones are connected.
             this.ioRam[port] |= 0x80;
             break;
         case 0x92:
@@ -641,7 +651,7 @@ public class WSwan {
         return this.ioRam[port] & 0xff;
     }
 
-    // HBlank 間隔で呼ばれる
+    // Called at HBlank intervals
     // Note: Must be called every 256 cycles (3072000 Hz clock), i.e. at 12000 Hz
     private void process() {
         if (this.sweepStep != 0 && (this.ioRam[IORam.SNDMOD.v] & 0x40) != 0) {
@@ -686,7 +696,7 @@ public class WSwan {
         this.internalRam[offset & 0x3fff] = (byte) value;
     }
 
-    private int readRamByte(int offset) {
+    public int readRamByte(int offset) {
         return this.internalRam[offset & 0x3fff] & 0xff;
     }
 

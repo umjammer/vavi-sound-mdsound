@@ -13,7 +13,7 @@ public class MultiPcmInst extends Instrument.BaseInstrument {
 
     public static final int MAX_CHIPS = 0x02;
 
-    private final MultiPCM[] chips = new MultiPCM[MAX_CHIPS];
+    private final MultiPCM[] chips = {new MultiPCM(), new MultiPCM()};
 
     public MultiPcmInst() {
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
@@ -64,10 +64,7 @@ public class MultiPcmInst extends Instrument.BaseInstrument {
         chips[chipId].stop();
     }
 
-    /* MAME/M1 access functions */
-    public void setBank(int chipId, int leftOffs, int rightOffs) {
-        chips[chipId].setBank(leftOffs, rightOffs);
-    }
+    // MAME/M1 access functions
 
     public void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
         writePcm(chipId, romSize, dataStart, dataLength, romData, 0);
@@ -79,8 +76,18 @@ public class MultiPcmInst extends Instrument.BaseInstrument {
 
     // ----
 
-    public synchronized void writeBank(int chipId, int Ch, int adr) {
-        chips[chipId].writeBank(Ch, adr);
+    public synchronized void writeBank(int chipId, int ch, int adr) {
+        int bankMask = ch & 0x03;
+        if (bankMask == 0x03 && (adr & 0x08) == 0) {
+            // 1 MB banking (reg 0x10)
+            chips[chipId].write(0x10, adr / 0x10);
+        } else {
+            // 512 KB banking (regs 0x11/0x12)
+            if ((bankMask & 0x02) != 0) // low bank
+                chips[chipId].write(0x11, adr / 0x08);
+            if ((bankMask & 0x01) != 0) // high bank
+                chips[chipId].write(0x12, adr / 0x08);
+        }
     }
 
     public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {

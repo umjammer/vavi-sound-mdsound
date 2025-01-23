@@ -1,6 +1,9 @@
 package mdsound.chips;
 
 import java.util.Arrays;
+import java.util.function.Function;
+
+import mdsound.Common;
 
 
 /**
@@ -36,8 +39,12 @@ import java.util.Arrays;
  */
 public class MultiPCM {
 
-    // ????
-    private static final double MULTIPCM_CLOCKDIV = 180.0;
+    private static final float MULTIPCM_CLOCKDIV = 180.0f; // 224.0
+
+    private static int value_to_fixed(int bits, float value) {
+        float float_shift = (float) (1 << bits);
+        return (int) (float_shift * value);
+    }
 
     /*
      * ENVELOPE SECTION
@@ -54,14 +61,26 @@ public class MultiPCM {
         private static final int[] lin2expvol = new int[0x400];
 
         // Times are based on a 44100Hz timesuper. It's adjusted to the actual sampling rate on startup
-        private static final double[] BaseTimes = new double[] {
-                0, 0, 0, 0, 6222.95, 4978.37, 4148.66, 3556.01, 3111.47, 2489.21, 2074.33, 1778.00, 1555.74, 1244.63, 1037.19, 889.02,
-                777.87, 622.31, 518.59, 444.54, 388.93, 311.16, 259.32, 222.27, 194.47, 155.60, 129.66, 111.16, 97.23, 77.82, 64.85, 55.60,
-                48.62, 38.91, 32.43, 27.80, 24.31, 19.46, 16.24, 13.92, 12.15, 9.75, 8.12, 6.98, 6.08, 4.90, 4.08, 3.49,
-                3.04, 2.49, 2.13, 1.90, 1.72, 1.41, 1.18, 1.04, 0.91, 0.73, 0.59, 0.50, 0.45, 0.45, 0.45, 0.45
+        private static final double[] BaseTimes = {
+                0,          0,          0,          0,
+                6222.95,    4978.37,    4148.66,    3556.01,
+                3111.47,    2489.21,    2074.33,    1778.00,
+                1555.74,    1244.63,    1037.19,    889.02,
+                777.87,     622.31,     518.59,     444.54,
+                388.93,     311.16,     259.32,     222.27,
+                194.47,     155.60,     129.66,     111.16,
+                97.23,      77.82,      64.85,      55.60,
+                48.62,      38.91,      32.43,      27.80,
+                24.31,      19.46,      16.24,      13.92,
+                12.15,      9.75,       8.12,       6.98,
+                6.08,       4.90,       4.08,       3.49,
+                3.04,       2.49,       2.13,       1.90,
+                1.72,       1.41,       1.18,       1.04,
+                0.91,       0.73,       0.59,       0.50,
+                0.45,       0.45,       0.45,       0.45
         };
 
-        //private double MULTIPCM_RATE = 44100.0;
+//        private double MULTIPCM_RATE = 44100.0;
 
         private static final double AR2DR = 14.32833;
 
@@ -70,34 +89,35 @@ public class MultiPCM {
         private int volume; //
         private Eg.State state;
         private final int step = 0;
-        //step vals
+        // step vals
         /** Attack */
         private int ar;
-        // Decay1
+        /** Decay1 */
         private int d1r;
-        // Decay2
+        /** Decay2 */
         private int d2r;
-        // Release
+        /** Release */
         private int rr;
-        // Decay level
+        /** Decay level */
         private int dl;
 
         static {
+            // build the linear.exponential ramps
+            for (int i = 0; i < 0x400; ++i) {
+                float db = -((96.0f - (96.0f * i / 0x400f)));
+                float exp_volume = (float) (Math.pow(10.0, db / 20.0));
+                lin2expvol[i] = value_to_fixed(MultiPCM.SHIFT, exp_volume);
+            }
+
             // Envelope steps
             for (int i = 0; i < 0x40; ++i) {
                 // Times are based on 44100 clock, adjust to real chips clock
-                arStep[i] = (int) ((float) (0x400 << SHIFT) / (BaseTimes[i] * 44100.0 / (1000.0)));
-                drStep[i] = (int) ((float) (0x400 << SHIFT) / (BaseTimes[i] * AR2DR * 44100.0 / (1000.0)));
+                arStep[i] = (int) ((0x400 << SHIFT) / (BaseTimes[i] * 44100.0 / (1000.0)));
+                drStep[i] = (int) ((0x400 << SHIFT) / (BaseTimes[i] * AR2DR * 44100.0 / (1000.0)));
             }
             arStep[0] = arStep[1] = arStep[2] = arStep[3] = 0;
             arStep[0x3f] = 0x400 << SHIFT;
             drStep[0] = drStep[1] = drStep[2] = drStep[3] = 0;
-
-            // build the linear.exponential ramps
-            for (int i = 0; i < 0x400; ++i) {
-                float db = -(float) ((96.0 - (96.0 * (float) i / (float) 0x400)));
-                lin2expvol[i] = (int) (Math.pow(10.0, db / 20.0) * (float) (1 << SHIFT));
-            }
         }
 
         private void update() {
@@ -160,72 +180,57 @@ public class MultiPCM {
                 }
                 break;
             default:
-                return 1 << SHIFT;
+                return 1 << MultiPCM.SHIFT;
             }
             return lin2expvol[this.volume >> SHIFT];
         }
     }
 
-    /*
-     * LFO  SECTION
+    /**
+     * LFO SECTION
      */
     static class Lfo {
 
         private static final int SHIFT = 8;
 
-        private static int lFix(float v) {
-            return (int) ((float) (1 << SHIFT) * v);
-        }
-
-        // Convert DB to multiply amplitude
-        private static int db(float v) {
-            return lFix((float) Math.pow(10.0, v / 20.0));
-        }
-
-        // Convert cents to step increment
-        private static int cents(float v) {
-            return lFix((float) Math.pow(2.0, v / 1200.0));
-        }
-
         private static final int[] pLfoTri = new int[256];
         private static final int[] aLfoTri = new int[256];
 
-        private static final float[] LFOFreq = new float[] {0.168f, 2.019f, 3.196f, 4.206f, 5.215f, 5.888f, 6.224f, 7.066f}; //Hz;
-        private static final float[] PSCALE = new float[] {0.0f, 3.378f, 5.065f, 6.750f, 10.114f, 20.170f, 40.180f, 79.307f}; //cents
-        private static final float[] ASCALE = new float[] {0.0f, 0.4f, 0.8f, 1.5f, 3.0f, 6.0f, 12.0f, 24.0f}; //DB
-        private static final int[][] pScales = new int[][] {new int[256], new int[256], new int[256], new int[256], new int[256], new int[256], new int[256], new int[256]};
-        private static final int[][] aScales = new int[][] {new int[256], new int[256], new int[256], new int[256], new int[256], new int[256], new int[256], new int[256]};
+        private static final float[] LFOFreq = {0.168f, 2.019f, 3.196f, 4.206f, 5.215f, 5.888f, 6.224f, 7.066f}; // Hz;
+        private static final float[] PSCALE = {0.0f, 3.378f, 5.065f, 6.750f, 10.114f, 20.170f, 40.180f, 79.307f}; // cents
+        private static final float[] ASCALE = {0.0f, 0.4f, 0.8f, 1.5f, 3.0f, 6.0f, 12.0f, 24.0f}; // DB
+        private static final int[][] pScales = {new int[256], new int[256], new int[256], new int[256], new int[256], new int[256], new int[256], new int[256]};
+        private static final int[][] aScales = {new int[256], new int[256], new int[256], new int[256], new int[256], new int[256], new int[256], new int[256]};
 
         static {
             for (int i = 0; i < 256; ++i) {
-                int a; // amplitude
-                int p; // phase
-
-                // Tri
-                if (i < 128)
-                    a = 255 - (i * 2);
-                else
-                    a = (i * 2) - 256;
                 if (i < 64)
-                    p = i * 2;
+                    pLfoTri[i] = i * 2 + 128;
                 else if (i < 128)
-                    p = 255 - i * 2;
+                    pLfoTri[i] = 383 - i * 2;
                 else if (i < 192)
-                    p = 256 - i * 2;
+                    pLfoTri[i] = 384 - i * 2;
                 else
-                    p = i * 2 - 511;
-                aLfoTri[i] = a;
-                pLfoTri[i] = p;
+                    pLfoTri[i] = i * 2 - 383;
+
+                if (i < 128)
+                    aLfoTri[i] = 255 - (i * 2);
+                else
+                    aLfoTri[i] = (i * 2) - 256;
             }
 
             for (int s = 0; s < 8; ++s) {
                 float limit = PSCALE[s];
                 for (int i = -128; i < 128; ++i) {
-                    pScales[s][i + 128] = cents((limit * (float) i) / 128.0F);
+                    float value = (limit * (float) i) / 128.0f;
+                    float converted = (float) Math.pow(2.0, value / 1200.0);
+                    pScales[s][i + 128] = value_to_fixed(SHIFT, converted);
                 }
                 limit = -ASCALE[s];
                 for (int i = 0; i < 256; ++i) {
-                    aScales[s][i] = db((limit * (float) i) / 256.0F);
+                    float value = (limit * (float) i) / 256.0f;
+                    float converted = (float) Math.pow(10.0, value / 20.0);
+                    aScales[s][i] = value_to_fixed(SHIFT, converted);
                 }
             }
         }
@@ -250,7 +255,7 @@ public class MultiPCM {
         }
 
         private void computeStep(int lfoF, int lfoS, int aLfo, float rate) {
-            float step = (float) (LFOFreq[lfoF] * 256.0 / rate);
+            float step = LFOFreq[lfoF] * 256.0f / rate;
             this.phaseStep = (int) ((float) (1 << SHIFT) * step);
             if (aLfo != 0) {
                 this.table = aLfoTri;
@@ -276,19 +281,22 @@ public class MultiPCM {
             public int krs;
             public int lfoVib;
             public int am;
+            private int format;
 
-            private void writeRom(byte[] rom, int ptSample) {
-                this.start = ((rom[ptSample + 0] & 0xff) << 16) | ((rom[ptSample + 1] & 0xff) << 8) | ((rom[ptSample + 2] & 0xff) << 0);
-                this.loop = ((rom[ptSample + 3] & 0xff) << 8) | ((rom[ptSample + 4] & 0xff) << 0);
-                this.end = 0xffff - (((rom[ptSample + 5] & 0xff) << 8) | ((rom[ptSample + 6] & 0xff) << 0));
-                this.lfoVib = rom[ptSample + 7];
-                this.dr1 = rom[ptSample + 8] & 0xf;
-                this.ar = (rom[ptSample + 8] >> 4) & 0xf;
-                this.dr2 = rom[ptSample + 9] & 0xf;
-                this.dl = (rom[ptSample + 9] >> 4) & 0xf;
-                this.rr = rom[ptSample + 10] & 0xf;
-                this.krs = (rom[ptSample + 10] >> 4) & 0xf;
-                this.am = rom[ptSample + 11] & 0xff;
+            private void init(byte[] rom, int address) {
+                this.start = ((rom[address + 0] & 0xff) << 16) | ((rom[address + 1] & 0xff) << 8) | ((rom[address + 2] & 0xff) << 0);
+                this.format = rom[address >> 20] & 0xfe;
+                this.start &= 0x3fffff;
+                this.loop = ((rom[address + 3] & 0xff) << 8) | ((rom[address + 4] & 0xff) << 0);
+                this.end = 0xffff - (((rom[address + 5] & 0xff) << 8) | ((rom[address + 6] & 0xff) << 0));
+                this.lfoVib = rom[address + 7];
+                this.dr1 = rom[address + 8] & 0xf;
+                this.ar = (rom[address + 8] >> 4) & 0xf;
+                this.dr2 = rom[address + 9] & 0xf;
+                this.dl = (rom[address + 9] >> 4) & 0xf;
+                this.rr = rom[address + 10] & 0xf;
+                this.krs = (rom[address + 10] >> 4) & 0xf;
+                this.am = rom[address + 11] & 0xff;
             }
         }
 
@@ -305,7 +313,7 @@ public class MultiPCM {
         private int num;
         public int[] regs = new int[8];
         private int playing;
-        public Slot.Sample sample;
+        public Sample sample;
         private int base;
         private int offset;
         private int step;
@@ -315,9 +323,9 @@ public class MultiPCM {
         private int tlStep;
         private int prev;
         private final Eg eg;
-        // Phase Lfo
+        /** Phase Lfo */
         private final Lfo pLfo;
-        // AM Lfo
+        /** AM Lfo */
         private final Lfo aLfo;
 
         private int muted;
@@ -326,6 +334,7 @@ public class MultiPCM {
             this.eg = new Eg();
             this.aLfo = new Lfo();
             this.pLfo = new Lfo();
+            this.sample = new Sample();
         }
 
         private void calcEG() {
@@ -351,7 +360,7 @@ public class MultiPCM {
             this.step = (int) (pitch / rate);
         }
 
-        private void keyOn(Slot.Sample[] samples, int bankL, int bankR) {
+        private void keyOn(Sample[] samples, int bankL, int bankR, int sega_banking) {
             this.sample = samples[this.regs[1]];
             this.playing = 1;
             this.base = this.sample.start;
@@ -363,11 +372,14 @@ public class MultiPCM {
             this.eg.state = Eg.State.ATTACK;
             this.eg.volume = 0;
 
-            if (this.base >= 0x10_0000) {
-                if ((this.pan & 8) != 0)
-                    this.base = (this.base & 0xf_ffff) | bankL;
-                else
-                    this.base = (this.base & 0xf_ffff) | bankR;
+            if (sega_banking != 0) {
+                this.base &= 0x1f_ffff;
+                if (this.base >= 0x10_0000) {
+                    if ((this.pan & 8) != 0)
+                        this.base = (this.base & 0xf_ffff) | bankL;
+                    else
+                        this.base = (this.base & 0xf_ffff) | bankR;
+                }
             }
         }
 
@@ -398,12 +410,42 @@ public class MultiPCM {
             }
         }
 
-        private int update(int cSample) {
-            int adr = this.offset >> SHIFT;
+        private int update(Function<Integer, Integer> read) {
+            int sPos = this.offset >> SHIFT;
             int step = this.step;
-
+            int cSample = 0;
             int fPart = this.offset & ((1 << SHIFT) - 1);
-            int sample = (cSample * fPart + this.prev * ((1 << SHIFT) - fPart)) >> SHIFT;
+            int sample;
+
+            if ((this.sample.format & 8) != 0) { // 12-bit linear
+                int adr = this.base + (sPos >> 2) * 6;
+                switch (sPos & 3) {
+                    case 0: { // ab.c .... ....
+                        short w0 = (short) (read.apply(adr) << 8 | ((read.apply(adr + 1) & 0xf) << 4));
+                        cSample = w0;
+                        break;
+                    }
+                    case 1: { // ..C. AB.. ....
+                        short w0 = (short) ((read.apply(adr + 2) << 8) | (read.apply(adr + 1) & 0xf0));
+                        cSample = w0;
+                        break;
+                    }
+                    case 2: { // .... ..ab .c..
+                        short w0 = (short) (read.apply(adr + 3) << 8 | ((read.apply(adr + 4) & 0xf) << 4));
+                        cSample = w0;
+                        break;
+                    }
+                    case 3: { // .... .... C.AB
+                        short w0 = (short) ((read.apply(adr + 5) << 8) | (read.apply(adr + 4) & 0xf0));
+                        cSample = w0;
+                        break;
+                    }
+                }
+            } else {
+                cSample = (short) (read.apply(this.base + sPos) << 8);
+            }
+
+            sample = (cSample * fPart + this.prev * ((1 << SHIFT) - fPart)) >> SHIFT;
 
             if ((this.regs[6] & 7) != 0) { // Vibrato enabled
                 step = step * this.pLfo.stepP();
@@ -414,12 +456,14 @@ public class MultiPCM {
             if (this.offset >= (this.sample.end << SHIFT)) {
                 this.offset = this.sample.loop << SHIFT;
             }
-            if ((adr ^ (this.offset >> SHIFT)) != 0) {
+
+            if ((sPos ^ (this.offset >> SHIFT)) != 0) {
                 this.prev = cSample;
             }
 
-            if ((this.tl >> SHIFT) != this.dstTL)
+            if ((this.tl >> SHIFT) != this.dstTL) {
                 this.tl += this.tlStep;
+            }
 
             if ((this.regs[7] & 7) != 0) { // Tremolo enabled
                 sample = sample * this.aLfo.stepA();
@@ -435,6 +479,7 @@ public class MultiPCM {
     private final Slot[] slots = new Slot[28];
     private int curSlot;
     private int address;
+    public int sega_banking;
     private int bankR, bankL;
     private float rate;
     private int romMask;
@@ -446,62 +491,54 @@ public class MultiPCM {
     private static final int[] LPANTABLE = new int[0x800];
     private static final int[] RPANTABLE = new int[0x800];
 
-    private static int fix(float v) {
-        return (int) ((float) (1 << SHIFT) * v);
-    }
+    private static final int SHIFT = 12;
 
-    static {
-        // Volume+pan table
-        for (int i = 0; i < 0x800; i++) {
-
-            int iTL = i & 0x7f;
-            int iPAN = (i >> 7) & 0xf;
-
-            float segaDB = (float) (iTL * (-24.0) / (float) 0x40);
-
-            float tl = (float) Math.pow(10.0, segaDB / 20.0);
-
-            float lpan, rPan;
-            if (iPAN == 0x8) {
-                lpan = rPan = 0.0F;
-            } else if (iPAN == 0x0) {
-                lpan = rPan = 1.0F;
-            } else if ((iPAN & 0x8) != 0) {
-                lpan = 1.0F;
-
-                iPAN = (byte) (0x10 - iPAN);
-
-                segaDB = (float) (iPAN * (-12.0) / (float) 0x4);
-
-                rPan = (float) Math.pow(10.0, segaDB / 20.0);
-
-                if ((iPAN & 0x7) == 7)
-                    rPan = 0.0F;
-            } else {
-                rPan = 1.0F;
-
-                segaDB = (float) (iPAN * (-12.0) / (float) 0x4);
-
-                lpan = (float) Math.pow(10.0, segaDB / 20.0);
-                if ((iPAN & 0x7) == 7)
-                    lpan = 0.0F;
-            }
-
-            tl /= 4.0F;
-
-            LPANTABLE[i] = fix(lpan * tl);
-            RPANTABLE[i] = fix(rPan * tl);
-        }
-    }
-
-    private static final int[] val2chan = new int[] {
+    private static final int[] val2chan = {
             0, 1, 2, 3, 4, 5, 6, -1,
             7, 8, 9, 10, 11, 12, 13, -1,
             14, 15, 16, 17, 18, 19, 20, -1,
             21, 22, 23, 24, 25, 26, 27, -1,
     };
 
-    private static final int SHIFT = 12;
+    static {
+        // Volume+pan table
+        for (int level = 0; level < 0x80; ++level) {
+
+            float vol_db = (float) level * -24.0f / 64.0f;
+            float total_level = (float) Math.pow(10.0, vol_db / 20.0) / 4.0f;
+
+            for (int pan = 0; pan < 0x10; ++pan) {
+                float pan_left, pan_right;
+                if (pan == 0x8) {
+                    pan_left = 0.0f;
+                    pan_right = 0.0f;
+                } else if (pan == 0x0) {
+                    pan_left = 1.0f;
+                    pan_right = 1.0f;
+                } else if ((pan & 0x8) != 0) {
+                    int inverted_pan = 0x10 - pan;
+                    float pan_vol_db = (float) inverted_pan * (-12.0f) / 4.0f;
+
+                    pan_left = 1.0f;
+                    pan_right = (float) Math.pow(10.0f, pan_vol_db / 20.0f);
+
+                    if ((inverted_pan & 0x7) == 7)
+                        pan_right = 0.0f;
+                } else {
+                    float pan_vol_db = (float) pan * (-12.0f) / 4.0f;
+
+                    pan_left = (float) Math.pow(10.0f, pan_vol_db / 20.0f);
+                    pan_right = 1.0f;
+
+                    if ((pan & 0x7) == 7)
+                        pan_left = 0.0f;
+                }
+
+                LPANTABLE[(pan << 7) | level] = value_to_fixed(SHIFT, pan_left * total_level);
+                RPANTABLE[(pan << 7) | level] = value_to_fixed(SHIFT, pan_right * total_level);
+            }
+        }
+    }
 
     public void update(int[][] outputs, int samples) {
 
@@ -517,8 +554,8 @@ public class MultiPCM {
                 Slot slot = this.slots[s];
                 if (slot.playing != 0 && slot.muted == 0) {
                     int vol = (slot.tl >> SHIFT) | (slot.pan << 7);
-                    int adr = slot.offset >> SHIFT;
-                    int sample = slot.update((this.rom[(slot.base + adr) & this.romMask] & 0xff) << 8);
+
+                    int sample = slot.update(offset -> rom[offset & romMask] & 0xff);
 
                     sampleL += (LPANTABLE[vol] * sample) >> SHIFT;
                     sampleR += (RPANTABLE[vol] * sample) >> SHIFT;
@@ -534,20 +571,23 @@ public class MultiPCM {
             this.slots[s] = new Slot();
         }
         for (int i = 0; i < this.samples.length; i++) {
-            this.samples[i] = new Slot.Sample();
+            this.samples[i] = new MultiPCM.Slot.Sample();
         }
         this.romMask = 0x00;
         this.romSize = 0x00;
         this.rom = null;
-        this.rate = (float) (clock / MULTIPCM_CLOCKDIV);
+        this.rate = clock / MULTIPCM_CLOCKDIV;
 
         // Pitch steps
         for (int j = 0; j < 0x400; j++) {
-            float fCent = (float) (this.rate * (1024.0 + (float) j) / 1024.0);
-            this.fnsTable[j] = (int) ((float) (1 << SHIFT) * fCent);
+            float fCent = this.rate * (1024.0f + j) / 1024.0f;
+            this.fnsTable[j] = value_to_fixed(SHIFT, fCent);
         }
 
-        setBank(0x00, 0x00);
+        sega_banking = 0;
+        this.bankL = this.bankR = 0x00_0000;
+
+        setMuteMask(0);
 
         return (int) (this.rate + 0.5);
     }
@@ -558,7 +598,7 @@ public class MultiPCM {
 
     public void reset() {
         for (int s = 0; s < 28; ++s) {
-            this.slots[s].num = (byte) s;
+            this.slots[s].num = s;
             this.slots[s].playing = 0;
         }
     }
@@ -566,133 +606,95 @@ public class MultiPCM {
     public void write(int offset, int data) {
         switch (offset) {
         case 0: // data write
+            if (this.curSlot == -1)
+                return;
             writeSlot(this.slots[this.curSlot], this.address, data);
             break;
         case 1:
             this.curSlot = val2chan[data & 0x1f];
-            //logger.log(Level.TRACE, "curSlot%s".formatted(this.curSlot));
+//logger.log(Level.TRACE, "curSlot%s".formatted(this.curSlot));
             break;
         case 2:
             this.address = Math.min(data, 7);
             break;
+        // special SEGA banking
+        case 0x10:  // 1 MB banking (Sega Model 1)
+            this.sega_banking = 1;
+            this.bankL = (data << 20) | 0x00_0000;
+            this.bankR = (data << 20) | 0x08_0000;
+            break;
+        case 0x11:  // 512 KB banking - low bank (Sega Multi 32)
+            this.sega_banking = 1;
+            this.bankL = (data << 19);
+            break;
+        case 0x12:  // 512 KB banking - high bank (Sega Multi 32)
+            this.sega_banking = 1;
+            this.bankR = (data << 19);
+            break;
         }
-        /*this.curSlot = val2chan[(offset >> 3) & 0x1F];
+    }
+
+    public void quickWrite(int offset, int data) {
+        this.curSlot = val2chan[(offset >> 3) & 0x1F];
         this.address = offset & 0x07;
-        writeSlot(this.slots + this.curSlot, this.address, data);*/
+        if (this.curSlot == -1)
+            return;
+        writeSlot(this.slots[this.curSlot], this.address, data);
     }
 
-    public void setBank(int leftOffset, int rightOffset) {
-        this.bankL = leftOffset;
-        this.bankR = rightOffset;
-    }
+    public void allocRom(int romSize) {
+        this.rom =new byte[romSize];
+        this.romSize = romSize;
+        Arrays.fill(this.rom, 0, romSize, (byte) 0xff);
 
-    public void writeBank(int offset, int data) {
-        if ((offset & 0x01) != 0)
-            this.bankL = data << 16;
-        if ((offset & 0x02) != 0)
-            this.bankR = data << 16;
+        this.romMask = Common.pow2_mask(romSize);
     }
 
     public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData) {
-        if (this.romSize != romSize) {
-            this.rom = new byte[romSize];
-            this.romSize = romSize;
-
-            for (this.romMask = 1; this.romMask < romSize; this.romMask <<= 1)
-                ;
-            this.romMask--;
-
-            Arrays.fill(this.rom, 0, romSize, (byte) 0xff);
-        }
-        if (dataStart > romSize)
-            return;
-        if (dataStart + dataLength > romSize)
-            dataLength = romSize - dataStart;
-
-        System.arraycopy(romData, 0, this.rom, dataStart, dataLength);
-
-        if (dataStart < 0x200 * 12) {
-            for (int i = 0; i < 512; i++) {
-                Slot.Sample tempSample = this.samples[i];
-                int sampleP = i * 12;
-                tempSample.writeRom(this.rom, sampleP);
-            }
-        }
+        writeRom(romSize, dataStart, dataLength, romData, 0);
     }
 
     public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddress) {
-        if (this.romSize != romSize) {
-            this.rom = new byte[romSize];
-            this.romSize = romSize;
-
-            for (this.romMask = 1; this.romMask < romSize; this.romMask <<= 1)
-                ;
-            this.romMask--;
-
-            Arrays.fill(this.rom, 0, romSize, (byte) 0xff);
+        if (this.rom == null || this.rom.length < romSize) {
+            allocRom(romSize);
         }
+
         if (dataStart > romSize)
             return;
         if (dataStart + dataLength > romSize)
             dataLength = romSize - dataStart;
 
         System.arraycopy(romData, srcStartAddress, this.rom, dataStart, dataLength);
-
-        if (dataStart < 0x200 * 12) {
-            for (int curSmpl = 0; curSmpl < 512; curSmpl++) {
-                Slot.Sample tempSmpl = this.samples[curSmpl];
-                int ptSample = curSmpl * 12;
-                tempSmpl.writeRom(this.rom, ptSample);
-                //logger.log(Level.TRACE, "LFOVIB%d  AM%d".formatted(this.ROM[ptSample + 7], this.ROM[ptSample + 11]));
-            }
-        }
     }
 
     public void setMuteMask(int muteMask) {
-        for (byte curChn = 0; curChn < 28; curChn++)
-            this.slots[curChn].muted = (byte) ((muteMask >> curChn) & 0x01);
+        for (int ch = 0; ch < 28; ch++)
+            this.slots[ch].muted = (muteMask >> ch) & 0x01;
     }
 
     private void writeSlot(Slot slot, int reg, int data) {
         slot.regs[reg] = data;
 
         switch (reg) {
-        case 0: // PANPOT
-            slot.pan = (data >> 4) & 0xf;
-            break;
-        case 1: { // sample
-            // according to YMF278 sample write causes some base params written to the regs (envelope+lfos)
-            // the game should never change the sample while playing.
-            Slot.Sample sample = this.samples[slot.regs[1]];
-            writeSlot(slot, 6, sample.lfoVib);
-            writeSlot(slot, 7, sample.am);
-        }
-        break;
-        case 2: // Pitch
-        case 3: {
-            slot.setPitch(this.fnsTable, this.rate);
-        }
-        break;
-        case 4: { // KeyOn/Off (and more?)
-            if ((data & 0x80) != 0) { // KeyOn
-                slot.keyOn(samples, bankL, bankR);
-            } else {
-                slot.keyOff();
+            case 0 -> slot.pan = (data >> 4) & 0xf; // PANPOT
+            case 1 -> { // sample
+                // according to YMF278 sample write causes some base params written to the regs (envelope+lfos)
+                // the game should never change the sample while playing.
+                slot.sample.init(rom, ((slot.regs[1] | ((slot.regs[2] & 1) << 8)) * 12) & romMask);
+                writeSlot(slot, 6, slot.sample.lfoVib);
+                writeSlot(slot, 7, slot.sample.am);
             }
-        }
-        break;
-        case 5: { // TL+Interpolation
-            slot.interpolate(data);
-        }
-        break;
-        case 6: { // LFO freq+PLFO
-            slot.lfo(data, this.rate);
-        }
-        break;
-        case 7: { // ALFO
-            slot.lfo(data, this.rate);
-        }
-        break;
+            case 2, 3 -> slot.setPitch(this.fnsTable, this.rate); // Pitch
+            case 4 -> { // KeyOn/Off (and more?)
+                if ((data & 0x80) != 0) { // KeyOn
+                    slot.keyOn(samples, bankL, bankR, sega_banking);
+                } else {
+                    slot.keyOff();
+                }
+            }
+            case 5 -> slot.interpolate(data); // TL+Interpolation
+            case 6 -> slot.lfo(data, this.rate); // LFO freq+PLFO
+            case 7 -> slot.lfo(data, this.rate); // ALFO
         }
     }
 

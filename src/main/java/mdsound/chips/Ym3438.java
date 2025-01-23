@@ -235,8 +235,8 @@ public class Ym3438 {
         this.writeAEn = (this.writeA & 0x03) == 0x01 ? 1 : 0;
         this.writeDEn = (this.writeD & 0x03) == 0x01 ? 1 : 0;
         //logger.log(Level.TRACE, "aen:%d den:%d".formatted(this.write_a_en, this.write_d_en));
-        this.writeA <<= 1;
-        this.writeD <<= 1;
+        this.writeA = (this.writeA << 1) & 0xff;
+        this.writeD = (this.writeD << 1) & 0xff;
         // BUSY Counter
         this.busy = this.writeBusy;
         this.writeBusyCnt += this.writeBusy;
@@ -255,7 +255,7 @@ public class Ym3438 {
                 }
                 address = this.address & 0xf0;
                 switch (address) {
-                case 0x30: //DT MULTI
+                case 0x30: // DT MULTI
                     this.multi[slot] = this.data & 0x0f;
                     if (this.multi[slot] == 0) {
                         this.multi[slot] = 1;
@@ -264,7 +264,7 @@ public class Ym3438 {
                     }
                     this.dt[slot] = (this.data >> 4) & 0x07;
                     break;
-                case 0x40: //TL
+                case 0x40: // TL
                     this.tl[slot] = this.data & 0x7f;
                     break;
                 case 0x50: // KS AR
@@ -411,7 +411,7 @@ public class Ym3438 {
                 }
             }
             if (this.writeAEn != 0) {
-                this.writeFmModeA = this.writeData & 0xff;
+                this.writeFmModeA = this.writeData & 0xff; // vavi: 0x1ff
             }
         }
 
@@ -500,7 +500,7 @@ public class Ym3438 {
         this.egSsgHoldUpLatch[slot] = 0;
         this.egSsgInv[slot] = 0;
         if ((this.ssgEg[slot] & 0x08) != 0) {
-            direction = this.egSsgDir[slot] & 0xff;
+            direction = this.egSsgDir[slot];
             if ((this.egLevel[slot] & 0x200) != 0) {
                 // Reset
                 if ((this.ssgEg[slot] & 0x03) == 0x00) {
@@ -718,7 +718,7 @@ public class Ym3438 {
         int slot = (this.slot + 23) % 24;
         int level;
 
-        level = this.egLevel[slot] & 0xffff;
+        level = this.egLevel[slot];
 //logger.log(Level.TRACE, "level:%d".formatted(level));
 
         if (this.egSsgInv[slot] != 0) {
@@ -783,7 +783,7 @@ public class Ym3438 {
         mod = mod1 + mod2;
         if (op == 0) {
             // Feedback
-            mod = mod >> (10 - this.fb[channel] & 0xff);
+            mod = mod >> (10 - this.fb[channel]);
             if (this.fb[channel] == 0) {
                 mod = 0;
             }
@@ -808,8 +808,8 @@ public class Ym3438 {
         int slot = (this.slot + 18) % 24;
         int channel = this.channel;
         int op = slot / 6;
-        int test_dac = this.modeTest2C[5] & 0xff;
-        int acc = this.chAcc[channel] & 0xffff;
+        int test_dac = this.modeTest2C[5];
+        int acc = this.chAcc[channel];
         int add = test_dac;
         int sum;
         if (op == 0 && test_dac == 0) {
@@ -838,7 +838,7 @@ public class Ym3438 {
         int cycles = this.cycles;
         int channel = this.channel;
         int test_dac = this.modeTest2C[5] & 0xff;
-        int out_;
+        short out_;
         int sign;
         int out_en;
         this.chRead = this.chLock;
@@ -849,18 +849,18 @@ public class Ym3438 {
         if ((cycles & 3) == 0) {
             if (test_dac == 0) {
                 // Lock value
-                this.chLock = this.chOut[channel] & 0xffff;
+                this.chLock = this.chOut[channel];
             }
-            this.chLockL = this.panL[channel] & 0xff;
-            this.chLockR = this.panR[channel] & 0xff;
+            this.chLockL = this.panL[channel];
+            this.chLockR = this.panR[channel];
         }
         // Ch 6
         if (((cycles >> 2) == 1 && this.dacEn != 0) || test_dac != 0) {
-            out_ = this.dacData;
+            out_ = (short) this.dacData;
             out_ <<= 7;
             out_ >>= 7;
         } else {
-            out_ = this.chLock;
+            out_ = (short) this.chLock;
         }
 
 //        this.mol = 0;
@@ -925,7 +925,7 @@ public class Ym3438 {
         }
         level = logSinRom[quarter];
         // Apply envelope
-        level += (this.egOut[slot] & 0xffff) << 2;
+        level += this.egOut[slot] << 2;
 //logger.log(Level.TRACE, "040   quarter:%d this.eg_out[slot]:%d slot:%d".formatted(quarter, this.eg_out[slot], slot));
         // Transform
         if (level > 0x1fff) {
@@ -1019,7 +1019,7 @@ public class Ym3438 {
         // Key On
         this.egKonLatch[this.slot] = this.modeKon[this.slot];
         this.egKonCsm[this.slot] = 0;
-        //logger.log(Level.TRACE, "this.eg_kon_latch[this.slot]:%d slot:%d".formatted(this.eg_kon_latch[this.slot], this.slot));
+//logger.log(Level.TRACE, "this.eg_kon_latch[this.slot]:%d slot:%d".formatted(this.eg_kon_latch[this.slot], this.slot));
         if (this.channel == 2 && this.modeKonCsm != 0) {
             // CSM Key On
             this.egKonLatch[this.slot] = 1;
@@ -1070,7 +1070,7 @@ public class Ym3438 {
         this.lfoInc = this.modeTest21[1];
         this.pgRead >>= 1;
         this.egRead[1] >>= 1;
-        this.egCycle++;
+        this.egCycle = (this.egCycle + 1) & 0xff;
         // Lock envelope generator timer value
         if (this.cycles == 1 && this.egQuotient == 2) {
             if (this.egCycleStop != 0) {
@@ -1089,7 +1089,7 @@ public class Ym3438 {
             } else {
                 this.lfoAm = this.lfoCnt ^ 0x3f;
             }
-            this.lfoAm <<= 1;
+            this.lfoAm = (this.lfoAm << 1) & 0xff;
             break;
         case 1:
             this.egQuotient++;
@@ -1215,7 +1215,7 @@ public class Ym3438 {
 //logger.log(Level.TRACE, "port:%x data:%x".formatted(port, data));
 
         port &= 3;
-        this.writeData = ((port << 7) & 0x100) | data;
+        this.writeData = ((port << 7) & 0x100) | (data & 0xff);
         if ((port & 1) != 0) {
             // data
             this.writeD |= 1;
@@ -1226,7 +1226,7 @@ public class Ym3438 {
     }
 
     public void setTestPin(int value) {
-        this.pinTestIn = (int) (value & 1);
+        this.pinTestIn = value & 1;
     }
 
     public int readTestPin() {
@@ -1255,7 +1255,7 @@ public class Ym3438 {
                 if (this.modeTest21[7] != 0) {
                     return testdata & 0xff;
                 } else {
-                    return (testdata >> 8) & 0xff;
+                    return testdata >> 8;
                 }
             } else {
                 return ((this.busy << 7) | (this.timerBOverflowFlag << 1)
