@@ -66,10 +66,6 @@ public class MultiPcmInst extends Instrument.BaseInstrument {
 
     // MAME/M1 access functions
 
-    public void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
-        writePcm(chipId, romSize, dataStart, dataLength, romData, 0);
-    }
-
     public void setMuteMask(int chipId, int muteMask) {
         chips[chipId].setMuteMask(muteMask);
     }

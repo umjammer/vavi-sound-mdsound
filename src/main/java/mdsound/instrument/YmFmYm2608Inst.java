@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2025 by Naohide Sano, All rights reserved.
+ *
+ * Programmed by Naohide Sano
+ */
+
 package mdsound.instrument;
 
 import java.io.IOException;
@@ -18,11 +24,17 @@ import static java.lang.System.getLogger;
 import static vavi.sound.ymfm.YmFm.AccessClass.ADPCM_A;
 
 
+/**
+ * Ym2608 (OPNA) YmFm version.
+ *
+ * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
+ * @version 0.00 2025-01-18 nsano initial version <br>
+ */
 public class YmFmYm2608Inst extends Instrument.BaseInstrument {
 
     private static final Logger logger = getLogger(Ym2608Inst.class.getName());
 
-    public static final int DefaultYM2608ClockValue = 8000000;
+    public static final int DefaultClockValue = 8000000;
 
     private final VgmChip[] chips = new VgmChip[2];
 

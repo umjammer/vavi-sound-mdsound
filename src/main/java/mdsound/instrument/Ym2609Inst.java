@@ -1,3 +1,9 @@
+/*
+ * GPLv3
+ *
+ * https://github.com/kuma4649/MDSound
+ */
+
 package mdsound.instrument;
 
 import java.util.function.Function;
@@ -7,6 +13,11 @@ import mdsound.Instrument;
 import mdsound.fmvgen.OPNA2;
 
 
+/**
+ * A virtual instrument.
+ *
+ * @see "https://ja.wikipedia.org/wiki/%E6%A2%85%E6%9C%AC%E7%AB%9C"
+ */
 public class Ym2609Inst extends Instrument.BaseInstrument {
 
     public static final int DefaultClockValue = 8000000;

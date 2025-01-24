@@ -274,42 +274,31 @@ public class WSwan {
             0xd1 //ff
     };
 
-    private enum IORam {
-        SNDP(0x80),
-        SNDV(0x88),
-        SNDSWP(0x8C),
-        SWPSTP(0x8D),
-        NSCTL(0x8E),
-        WAVDTP(0x8F),
-        SNDMOD(0x90),
-        SNDOUT(0x91),
-        PCSRL(0x92),
-        PCSRH(0x93),
-        DMASL(0x40),
-        DMASH(0x41),
-        DMASB(0x42),
-        DMADB(0x43),
-        DMADL(0x44),
-        DMADH(0x45),
-        DMACL(0x46),
-        DMACH(0x47),
-        DMACTL(0x48),
-        SDMASL(0x4A),
-        SDMASH(0x4B),
-        SDMASB(0x4C),
-        SDMACL(0x4E),
-        SDMACH(0x4F),
-        SDMACTL(0x52);
-        final int v;
-
-        IORam(int v) {
-            this.v = v;
-        }
-
-        static IORam valueOf(int v) {
-            return Arrays.stream(values()).filter(e -> e.v == v).findFirst().get();
-        }
-    }
+    private static final int SNDP = 0x80;
+    private static final int SNDV = 0x88;
+    private static final int SNDSWP = 0x8c;
+    private static final int SWPSTP = 0x8d;
+    private static final int NSCTL = 0x8e;
+    private static final int WAVDTP = 0x8f;
+    private static final int SNDMOD = 0x90;
+    private static final int SNDOUT = 0x91;
+    private static final int PCSRL = 0x92;
+    private static final int PCSRH = 0x93;
+    private static final int DMASL = 0x40;
+    private static final int DMASH = 0x41;
+    private static final int DMASB = 0x42;
+    private static final int DMADB = 0x43;
+    private static final int DMADL = 0x44;
+    private static final int DMADH = 0x45;
+    private static final int DMACL = 0x46;
+    private static final int DMACH = 0x47;
+    private static final int DMACTL = 0x48;
+    private static final int SDMASL = 0x4a;
+    private static final int SDMASH = 0x4b;
+    private static final int SDMASB = 0x4c;
+    private static final int SDMACL = 0x4e;
+    private static final int SDMACH = 0x4f;
+    private static final int SDMACTL = 0x52;
 
     // SoundDMA transfer interval
     // I don't know the actual numbers, so it's just a guess.
@@ -372,7 +361,7 @@ public class WSwan {
         }
     }
 
-    private Channel[] audios = {
+    private final Channel[] audios = {
             new Channel(), new Channel(), new Channel(), new Channel()
     };
     private final RatioCounter blankTimer = new RatioCounter();
@@ -398,7 +387,7 @@ public class WSwan {
         sampleRate = clock / 128;
     }
 
-    private static final int DEFAULT_CLOCK = 3072000;
+    public static final int DEFAULT_CLOCK = 3072000;
 
     public void init(int sampleRate, int masterClock) {
         clock = masterClock;
@@ -414,7 +403,7 @@ public class WSwan {
         setMuteMask(0x00);
     }
 
-    public void ws_audio_reset() {
+    public void reset() {
         int muteMask = getMuteMask();
         Arrays.stream(this.audios).forEach(Channel::reset);
         setMuteMask(muteMask);
@@ -476,14 +465,14 @@ public class WSwan {
                 if (this.audios[ch].muted != 0)
                     continue;
 
-                if ((ch == 1) && ((this.ioRam[IORam.SNDMOD.v] & 0x20) != 0)) {
+                if ((ch == 1) && ((this.ioRam[SNDMOD] & 0x20) != 0)) {
                     // Voice Output
                     int w = this.ioRam[0x89] & 0xff;
                     w -= 0x80;
                     l += this.pcmVolumeLeft * w;
                     r += this.pcmVolumeRight * w;
-                } else if ((this.ioRam[IORam.SNDMOD.v] & (1 << ch)) != 0) {
-                    if ((ch == 3) && ((this.ioRam[IORam.SNDMOD.v] & 0x80) != 0)) {
+                } else if ((this.ioRam[SNDMOD] & (1 << ch)) != 0) {
+                    if ((ch == 3) && ((this.ioRam[SNDMOD] & 0x80) != 0)) {
                         // Noise
 
                         int masked, xorReg;
@@ -508,15 +497,15 @@ public class WSwan {
                             this.noiseRng >>= 1;
                         }
 
-                        this.ioRam[IORam.PCSRL.v] = (byte) (this.noiseRng & 0xff);
-                        this.ioRam[IORam.PCSRH.v] = (byte) ((this.noiseRng >> 8) & 0x7f);
+                        this.ioRam[PCSRL] = (byte) (this.noiseRng & 0xff);
+                        this.ioRam[PCSRH] = (byte) ((this.noiseRng >> 8) & 0x7f);
 
                         int w = (this.noiseRng & 1) != 0 ? 0x7f : -0x80;
                         l += this.audios[ch].lVol * w;
                         r += this.audios[ch].rVol * w;
                     } else {
                         this.audios[ch].offset += this.audios[ch].delta;
-                        int cnt = this.audios[ch].offset >> 16;
+                        int cnt = (this.audios[ch].offset >> 16) & 0xff;
                         this.audios[ch].offset &= 0xffff;
                         this.audios[ch].pos += cnt;
                         this.audios[ch].pos &= 0x1f;
@@ -543,7 +532,7 @@ public class WSwan {
 
         this.ioRam[port] = (byte) value;
 
-        switch (port & 0xff) {
+        switch (port) {
         // About frequency registers 0x80-0x87
         // - In the song 0x0f by "Rockman & Forte", the sound with frequency = 0xffFF is not needed.
         // - The noise in the song 0x0d from "Digimon D Project" is generated at frequency 0x07ff.
@@ -613,7 +602,7 @@ public class WSwan {
             // In terms of HBlank (256 cycles) intervals,
             //　8192/256 = 32
             // So, the interval is 32[HBlank]*(n+1).
-            this.sweepTime = (value + 1) << 5;
+            this.sweepTime = (short) (((value + 1) << 5) & 0xffff);
             this.sweepCount = this.sweepTime;
             break;
         case 0x8E:
@@ -621,10 +610,10 @@ public class WSwan {
             if ((value & 8) != 0) this.noiseRng = 1; // Noise Counter Reset
             break;
         case 0x8F:
-            this.audios[0].wave = value << 6;
-            this.audios[1].wave = this.audios[0].wave + 0x10;
-            this.audios[2].wave = this.audios[1].wave + 0x10;
-            this.audios[3].wave = this.audios[2].wave + 0x10;
+            this.audios[0].wave = (value << 6) & 0xffff;
+            this.audios[1].wave = (this.audios[0].wave + 0x10) & 0xffff;
+            this.audios[2].wave = (this.audios[1].wave + 0x10) & 0xffff;
+            this.audios[3].wave = (this.audios[2].wave + 0x10) & 0xffff;
             break;
         case 0x90: // SNDMOD
             break;
@@ -647,14 +636,14 @@ public class WSwan {
         }
     }
 
-    private int readPort(int port) {
+    public int read(int port) {
         return this.ioRam[port] & 0xff;
     }
 
     // Called at HBlank intervals
     // Note: Must be called every 256 cycles (3072000 Hz clock), i.e. at 12000 Hz
     private void process() {
-        if (this.sweepStep != 0 && (this.ioRam[IORam.SNDMOD.v] & 0x40) != 0) {
+        if (this.sweepStep != 0 && (this.ioRam[SNDMOD] & 0x40) != 0) {
             if (this.sweepCount < 0) {
                 this.sweepCount = this.sweepTime;
                 this.sweepFreq += this.sweepStep;
@@ -668,9 +657,9 @@ public class WSwan {
     }
 
     private void soundDma() {
-        if ((this.ioRam[IORam.SDMACTL.v] & 0x88) == 0x80) {
-            int i = ((this.ioRam[IORam.SDMACH.v] & 0xff) << 8) | (this.ioRam[IORam.SDMACL.v] & 0xff);
-            int j = ((this.ioRam[IORam.SDMASB.v] & 0xff) << 16) | ((this.ioRam[IORam.SDMASH.v] & 0xff) << 8) | (this.ioRam[IORam.SDMASL.v] & 0xff);
+        if ((this.ioRam[SDMACTL] & 0x88) == 0x80) {
+            int i = ((this.ioRam[SDMACH] & 0xff) << 8) | (this.ioRam[SDMACL] & 0xff);
+            int j = ((this.ioRam[SDMASB] & 0xff) << 16) | ((this.ioRam[SDMASH] & 0xff) << 8) | (this.ioRam[SDMASL] & 0xff);
             int b = this.internalRam[j & 0x3fff] & 0xff;
 
             this.ioRam[0x89] = (byte) b;
@@ -678,25 +667,25 @@ public class WSwan {
             j++;
             if (i < 32) {
                 i = 0;
-                this.ioRam[IORam.SDMACTL.v] &= 0x7F;
+                this.ioRam[SDMACTL] &= 0x7F;
             } else {
                 // set DMA timer
                 //ws_timer_set(2, DMACycles[SDMACTL&3]);
             }
-            this.ioRam[IORam.SDMASB.v] = (byte) ((j >> 16) & 0xff);
-            this.ioRam[IORam.SDMASH.v] = (byte) ((j >> 8) & 0xff);
-            this.ioRam[IORam.SDMASL.v] = (byte) (j & 0xff);
-            this.ioRam[IORam.SDMACH.v] = (byte) ((i >> 8) & 0xff);
-            this.ioRam[IORam.SDMACL.v] = (byte) (i & 0xff);
+            this.ioRam[SDMASB] = (byte) ((j >> 16) & 0xff);
+            this.ioRam[SDMASH] = (byte) ((j >> 8) & 0xff);
+            this.ioRam[SDMASL] = (byte) (j & 0xff);
+            this.ioRam[SDMACH] = (byte) ((i >> 8) & 0xff);
+            this.ioRam[SDMACL] = (byte) (i & 0xff);
         }
     }
 
-    public void writeRamByte(int offset, int value) {
+    public void writeRam(int offset, int value) {
         // RAM - 16 KB (WS) / 64 KB (WSC) internal RAM
         this.internalRam[offset & 0x3fff] = (byte) value;
     }
 
-    public int readRamByte(int offset) {
+    public int readRam(int offset) {
         return this.internalRam[offset & 0x3fff] & 0xff;
     }
 

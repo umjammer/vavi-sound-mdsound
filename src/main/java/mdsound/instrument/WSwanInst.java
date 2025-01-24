@@ -14,7 +14,11 @@ public class WSwanInst extends Instrument.BaseInstrument {
 
     private final WSwan[] chips = {new WSwan(DefaultClockValue), new WSwan(DefaultClockValue)};
 
-    final int[] mask = {0, 0};
+    private final int[] mask = {0, 0};
+
+    public WSwanInst() {
+        visVolume = new int[][][] {{{0, 0}, {0, 0}}};
+    }
 
     @Override
     public String getName() {
@@ -28,7 +32,7 @@ public class WSwanInst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        chips[chipId].ws_audio_reset();
+        chips[chipId].reset();
     }
 
     @Override
@@ -36,14 +40,6 @@ public class WSwanInst extends Instrument.BaseInstrument {
         chips[chipId].init(samplingRate, clock);
         sampleRate = samplingRate;
         masterClock = clock;
-
-        visVolume = new int[2][][];
-        visVolume[0] = new int[2][];
-        visVolume[1] = new int[2][];
-        visVolume[0][0] = new int[2];
-        visVolume[1][0] = new int[2];
-        visVolume[0][1] = new int[2];
-        visVolume[1][1] = new int[2];
 
         return samplingRate;
     }
@@ -120,7 +116,7 @@ public class WSwanInst extends Instrument.BaseInstrument {
     }
 
     public synchronized void writeMemory(int chipId, int adr, int data) {
-        chips[chipId].writeRamByte(adr, data);
+        chips[chipId].writeRam(adr, data);
     }
 
     public void setVolume(int vol) {
