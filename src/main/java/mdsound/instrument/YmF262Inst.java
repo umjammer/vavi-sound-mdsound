@@ -95,6 +95,16 @@ public class YmF262Inst extends Instrument.BaseInstrument {
         chips[chipId].stop();
     }
 
+    @Override
+    public void setMask(int chipId, int ch) {
+//        chips[chipId].setMuteMask(ch); // TODO
+    }
+
+    @Override
+    public void resetMask(int chipId, int ch) {
+//        chips[chipId].setMuteMask(~ch); // TODO
+    }
+
     public void setEmuCore(int emulator) {
         emuCore = (emulator < 0x02) ? emulator : 0x00;
     }
@@ -123,10 +133,6 @@ public class YmF262Inst extends Instrument.BaseInstrument {
 
     public void writeDataB(int chipId, int offset, int data) {
         chips[chipId].write(3, data);
-    }
-
-    public void setMuteMask(int chipId, int muteMask) {
-        chips[chipId].setMuteMask(muteMask);
     }
 
     private void irqHandler(int irq) {

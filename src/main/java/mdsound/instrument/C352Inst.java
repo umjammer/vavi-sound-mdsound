@@ -70,16 +70,16 @@ public class C352Inst extends Instrument.BaseInstrument {
         chips[chipId].stop();
     }
 
-    public void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
-        writePcm(chipId, romSize, dataStart, dataLength, romData, 0);
-    }
-
-    public void setMuteMask(int chipId, int muteMask) {
+    @Override
+    public void setMask(int chipId, int ch) {
+        int muteMask = chips[chipId].getMuteMask() | ch;
         chips[chipId].setMuteMask(muteMask);
     }
 
-    public int getMuteMask(int chipId) {
-        return chips[chipId].getMuteMask();
+    @Override
+    public void resetMask(int chipId, int ch) {
+        int muteMask = chips[chipId].getMuteMask() & ~ch;
+        chips[chipId].setMuteMask(muteMask);
     }
 
     //----

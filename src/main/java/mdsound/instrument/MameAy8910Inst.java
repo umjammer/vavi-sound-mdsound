@@ -106,13 +106,13 @@ public class MameAy8910Inst extends Instrument.BaseInstrument {
         chips[chipId].stop();
     }
 
-    // ----
-
+    @Override
     public synchronized void setMask(int chipId, int ch) {
         mask[chipId] |= ch;
         chips[chipId].setMuteMask(mask[chipId]);
     }
 
+    @Override
     public synchronized void resetMask(int chipId, int ch) {
         mask[chipId] &= ~ch;
         chips[chipId].setMuteMask(mask[chipId]);

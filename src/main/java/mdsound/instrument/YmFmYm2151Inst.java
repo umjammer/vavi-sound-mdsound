@@ -99,6 +99,14 @@ public class YmFmYm2151Inst extends Instrument.BaseInstrument {
         chips[chipId] = null;
     }
 
+    @Override
+    public void setMask(int chipId, int ch) {
+    }
+
+    @Override
+    public void resetMask(int chipId, int ch) {
+    }
+
     //----
 
     @Override

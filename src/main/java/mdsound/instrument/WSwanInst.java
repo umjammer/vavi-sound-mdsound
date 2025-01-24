@@ -100,20 +100,17 @@ public class WSwanInst extends Instrument.BaseInstrument {
         chips[chipId].stop();
     }
 
-    private void setMute(int chipId, int v) {
+    @Override
+    public synchronized void setMask(int chipId, int ch) {
+        mask[chipId] |= ch;
+    }
+
+    @Override
+    public synchronized void resetMask(int chipId, int ch) {
+        mask[chipId] &= ~ch;
     }
 
     // ----
-
-    public synchronized void setMask(int chipId, int ch) {
-        mask[chipId] |= ch;
-        setMute(chipId, mask[chipId]);
-    }
-
-    public synchronized void resetMask(int chipId, int ch) {
-        mask[chipId] &= ~ch;
-        setMute(chipId, mask[chipId]);
-    }
 
     public synchronized void writeMemory(int chipId, int adr, int data) {
         chips[chipId].writeRam(adr, data);

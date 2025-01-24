@@ -74,16 +74,18 @@ public class K054539Inst extends Instrument.BaseInstrument {
         chips[chipId].stop();
     }
 
+    @Override
+    public void setMask(int chipId, int ch) {
+//        chips[chipId].setMuteMask(ch); // TODO
+    }
+
+    @Override
+    public void resetMask(int chipId, int ch) {
+//        chips[chipId].setMuteMask(~ch); // TODO
+    }
+
     public void setGain(int chipId, int channel, double gain) {
         if (gain >= 0) chips[chipId].setGain(channel, gain);
-    }
-
-    private void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
-        writePcm(chipId, romSize, dataStart, dataLength, romData, 0);
-    }
-
-    public void setMuteMask(int chipId, int muteMask) {
-        chips[chipId].setMuteMask(muteMask);
     }
 
     //----

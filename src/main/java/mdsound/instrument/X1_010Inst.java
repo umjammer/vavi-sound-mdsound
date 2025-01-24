@@ -69,24 +69,22 @@ public class X1_010Inst extends Instrument.BaseInstrument {
         chips[chipId].stop();
     }
 
-    private void setMuteMask(int chipId, int muteMask) {
-        chips[chipId].setMuteMask(muteMask);
+    @Override
+    public synchronized void setMask(int chipId, int ch) {
+        mask[chipId] |= ch;
+        chips[chipId].setMuteMask(mask[chipId]);
+    }
+
+    @Override
+    public synchronized void resetMask(int chipId, int ch) {
+        mask[chipId] &= ~ch;
+        chips[chipId].setMuteMask(mask[chipId]);
     }
 
     //----
 
     public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
         chips[chipId].writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
-    }
-
-    public synchronized void setMask(int chipId, int ch) {
-        mask[chipId] |= ch;
-        setMuteMask(chipId, mask[chipId]);
-    }
-
-    public synchronized void resetMask(int chipId, int ch) {
-        mask[chipId] &= ~ch;
-        setMuteMask(chipId, mask[chipId]);
     }
 
     //----

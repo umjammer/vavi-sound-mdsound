@@ -60,6 +60,14 @@ public class Ppz8Inst extends Instrument.BaseInstrument {
         // none
     }
 
+    @Override
+    public void setMask(int chipId, int ch) {
+    }
+
+    @Override
+    public void resetMask(int chipId, int ch) {
+    }
+
     public void initialize(int chipId) {
         chips[chipId].init();
     }

@@ -60,8 +60,14 @@ public class PokeyInst extends Instrument.BaseInstrument {
     public void stop(int chipId) {
     }
 
-    public void setMuteMask(int chipId, int muteMask) {
-        chips[chipId].setMuteMask(muteMask);
+    @Override
+    public void setMask(int chipId, int ch) {
+//        chips[chipId].setMuteMask(ch); // TODO
+    }
+
+    @Override
+    public void resetMask(int chipId, int ch) {
+//        chips[chipId].setMuteMask(~ch); // TODO
     }
 
     //----

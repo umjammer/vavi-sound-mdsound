@@ -88,9 +88,18 @@ public class Ym2203Inst extends Instrument.BaseInstrument {
     public void stop(int chipId) {
     }
 
-    private void setMute(int chipId, int val) {
+    @Override
+    public synchronized void setMask(int chipId, int ch) {
+        mask[chipId] |= ch;
         assert chipId < chips.length;
-        chips[chipId].setChannelMask(val);
+        chips[chipId].setChannelMask(mask[chipId]);
+    }
+
+    @Override
+    public synchronized void resetMask(int chipId, int ch) {
+        mask[chipId] &= ~ch;
+        assert chipId < chips.length;
+        chips[chipId].setChannelMask(mask[chipId]);
     }
 
     // ----
@@ -100,16 +109,6 @@ public class Ym2203Inst extends Instrument.BaseInstrument {
 //            keyOn[chipId][i] = chips[chipId].CHANNEL[i].KeyOn;
 //        }
         return keyOn[chipId];
-    }
-
-    public synchronized void setMask(int chipId, int ch) {
-        mask[chipId] |= ch;
-        setMute(chipId, mask[chipId]);
-    }
-
-    public synchronized void resetMask(int chipId, int ch) {
-        mask[chipId] &= ~ch;
-        setMute(chipId, mask[chipId]);
     }
 
     // TODO automatic wired, use annotation?

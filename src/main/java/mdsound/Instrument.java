@@ -47,6 +47,12 @@ public interface Instrument {
     /** */
     void stop(int chipId);
 
+    /** */
+    void setMask(int chipId, int ch);
+
+    /** */
+    void resetMask(int chipId, int ch);
+
     //
 
     Tuple<Integer, Double> getRegulationVolume();

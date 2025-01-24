@@ -111,6 +111,14 @@ public class YmFmYm2610Inst extends Instrument.BaseInstrument {
         chips[chipId] = null;
     }
 
+    @Override
+    public void setMask(int chipId, int ch) {
+    }
+
+    @Override
+    public void resetMask(int chipId, int ch) {
+    }
+
     private void setAdpcmA(int chipId, byte[] _adpcma, int _adpcma_size) {
         assert chipId < chips.length;
 //        chips[chipId].setAdpcmA(_adpcma, _adpcma_size);

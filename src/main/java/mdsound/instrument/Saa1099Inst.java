@@ -66,20 +66,16 @@ public class Saa1099Inst extends Instrument.BaseInstrument {
     public void stop(int chipId) {
     }
 
-    private void setMute(int chipId, int v) {
-        chips[chipId].setMuteMask(v);
-    }
-
-    // ----
-
+    @Override
     public synchronized void setMask(int chipId, int ch) {
         mask[chipId] |= ch;
-        setMute(chipId, mask[chipId]);
+        chips[chipId].setMuteMask(mask[chipId]);
     }
 
+    @Override
     public synchronized void resetMask(int chipId, int ch) {
         mask[chipId] &= ~ch;
-        setMute(chipId, mask[chipId]);
+        chips[chipId].setMuteMask(mask[chipId]);
     }
 
     //----

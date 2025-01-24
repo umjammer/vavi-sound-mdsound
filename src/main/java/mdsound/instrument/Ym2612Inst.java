@@ -80,8 +80,9 @@ logger.log(Level.DEBUG, "option: " + flags);
 
     @Override
     public synchronized int write(int chipId, int port, int adr, int data) {
-        writeInternal(chipId, 0 + (port & 1) * 2, adr);
-        writeInternal(chipId, 1 + (port & 1) * 2, data);
+        assert chipId < MAX_CHIPS;
+        chips[chipId].write(0 + (port & 1) * 2, adr);
+        chips[chipId].write(1 + (port & 1) * 2, data);
         return 0;
     }
 
@@ -100,14 +101,19 @@ logger.log(Level.DEBUG, "option: " + flags);
     public void stop(int chipId) {
     }
 
-    private void writeInternal(int chipId, int adr, int data) {
+    // TODO 2612
+    @Override
+    public synchronized void setMask(int chipId, int ch) {
         assert chipId < MAX_CHIPS;
-        chips[chipId].write(adr, data);
+        mask[chipId] |= 1 << ch;
+        chips[chipId].setMute(mask[chipId]);
     }
 
-    private void setMute(int chipId, int v) {
+    @Override
+    public synchronized void resetMask(int chipId, int ch) {
         assert chipId < MAX_CHIPS;
-        chips[chipId].setMute(v);
+        mask[chipId] &= ~(1 << ch);
+        chips[chipId].setMute(mask[chipId]);
     }
 
     //----
@@ -118,17 +124,6 @@ logger.log(Level.DEBUG, "option: " + flags);
 
     public synchronized int[] readKeyOn(int chipId) {
         return chips[chipId].keyStatuses();
-    }
-
-    // TODO 2612
-    public synchronized void setMask(int chipId, int ch) {
-        mask[chipId] |= 1 << ch;
-        setMute(chipId, mask[chipId]);
-    }
-
-    public synchronized void resetMask(int chipId, int ch) {
-        mask[chipId] &= ~(1 << ch);
-        setMute(chipId, mask[chipId]);
     }
 
     //----

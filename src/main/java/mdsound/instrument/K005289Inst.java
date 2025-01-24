@@ -46,4 +46,14 @@ public class K005289Inst extends Instrument.BaseInstrument {
     public void stop(int chipId) {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public void setMask(int chipId, int ch) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void resetMask(int chipId, int ch) {
+        throw new UnsupportedOperationException();
+    }
 }

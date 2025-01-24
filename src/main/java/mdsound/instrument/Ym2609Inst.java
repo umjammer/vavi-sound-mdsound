@@ -110,6 +110,14 @@ public class Ym2609Inst extends Instrument.BaseInstrument {
     public void stop(int chipId) {
     }
 
+    @Override
+    public void setMask(int chipId, int ch) {
+    }
+
+    @Override
+    public void resetMask(int chipId, int ch) {
+    }
+
     private void setFMVolume(int chipId, int db) {
         assert chipId < chips.length;
         chips[chipId].setVolumeFM(db);

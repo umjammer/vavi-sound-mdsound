@@ -97,6 +97,14 @@ public class Sn76496Inst extends Instrument.BaseInstrument {
         chips.get(chipId).stop();
     }
 
+    @Override
+    public void setMask(int chipId, int ch) {
+    }
+
+    @Override
+    public void resetMask(int chipId, int ch) {
+    }
+
     // ----
 
     public synchronized void setPan(int chipId, int data) {

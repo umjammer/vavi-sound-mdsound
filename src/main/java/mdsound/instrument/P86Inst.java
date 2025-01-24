@@ -49,6 +49,14 @@ public class P86Inst extends Instrument.BaseInstrument {
         // none
     }
 
+    @Override
+    public void setMask(int chipId, int ch) {
+    }
+
+    @Override
+    public void resetMask(int chipId, int ch) {
+    }
+
     // ----
 
     public synchronized void writePcm(int chipId, int address, int data, byte[] pcmData) {

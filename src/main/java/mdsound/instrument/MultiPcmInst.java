@@ -64,10 +64,14 @@ public class MultiPcmInst extends Instrument.BaseInstrument {
         chips[chipId].stop();
     }
 
-    // MAME/M1 access functions
+    @Override
+    public void setMask(int chipId, int ch) {
+//        chips[chipId].setMuteMask(ch); // TODO
+    }
 
-    public void setMuteMask(int chipId, int muteMask) {
-        chips[chipId].setMuteMask(muteMask);
+    @Override
+    public void resetMask(int chipId, int ch) {
+//        chips[chipId].setMuteMask(~ch); // TODO
     }
 
     // ----

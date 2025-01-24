@@ -51,6 +51,14 @@ public class PpsInst extends Instrument.BaseInstrument {
         chips[chipId].stop();
     }
 
+    @Override
+    public void setMask(int chipId, int ch) {
+    }
+
+    @Override
+    public void resetMask(int chipId, int ch) {
+    }
+
     /** Sets volume. */
     public void setVolume(int chipId, int vol) {
         chips[chipId].setVolume(vol);

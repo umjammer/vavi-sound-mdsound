@@ -88,6 +88,14 @@ public class X68SoundYm2151Inst extends Instrument.BaseInstrument {
         soundIocs[chipId] = null;
     }
 
+    @Override
+    public void setMask(int chipId, int ch) {
+    }
+
+    @Override
+    public void resetMask(int chipId, int ch) {
+    }
+
     public void update(int chipId, int[][] outputs, int samples, BiConsumer<Runnable, Boolean> oneFrameProc) {
         assert chipId < chips.length;
         for (int i = 0; i < samples; i++) {

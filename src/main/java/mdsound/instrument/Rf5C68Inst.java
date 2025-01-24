@@ -63,12 +63,18 @@ public class Rf5C68Inst extends Instrument.BaseInstrument {
         chips[chipId].stop();
     }
 
-    public void writeRam(int chipId, int dataStart, int dataLength, byte[] ramData) {
-        chips[chipId].writeRam(dataStart, dataLength, ramData);
+    @Override
+    public synchronized void setMask(int chipId, int ch) {
+        chips[chipId].setMuteMask(1);
     }
 
-    private void setMuteMask(int chipId, int muteMask) {
-        chips[chipId].setMuteMask(muteMask);
+    @Override
+    public synchronized void resetMask(int chipId, int ch) {
+        chips[chipId].setMuteMask(0);
+    }
+
+    public void writeRam(int chipId, int dataStart, int dataLength, byte[] ramData) {
+        chips[chipId].writeRam(dataStart, dataLength, ramData);
     }
 
     //----
@@ -83,14 +89,6 @@ public class Rf5C68Inst extends Instrument.BaseInstrument {
 
     public synchronized Rf5c68 getChip(int chipId) {
         return chips[chipId];
-    }
-
-    public synchronized void setMask(int chipId, int ch) {
-        setMuteMask(chipId, 1);
-    }
-
-    public synchronized void resetMask(int chipId, int ch) {
-        setMuteMask(chipId, 0);
     }
 
     //----

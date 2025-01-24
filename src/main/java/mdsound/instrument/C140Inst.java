@@ -83,6 +83,18 @@ public class C140Inst extends Instrument.BaseInstrument {
         chips[chipId].stop();
     }
 
+    @Override
+    public synchronized void setMask(int chipId, int ch) {
+        mask[chipId] |= ch;
+        chips[chipId].setMuteMask(mask[chipId]);
+    }
+
+    @Override
+    public synchronized void resetMask(int chipId, int ch) {
+        mask[chipId] &= ~(int) ch;
+        chips[chipId].setMuteMask(mask[chipId]);
+    }
+
     //----
 
     public void setBase(int chipId, byte[] base) {
@@ -93,22 +105,8 @@ public class C140Inst extends Instrument.BaseInstrument {
         writePcm(chipId, romSize, dataStart, dataLength, romData, 0);
     }
 
-    private void setMuteMask(int chipId, int muteMask) {
-        chips[chipId].setMuteMask(muteMask);
-    }
-
     public synchronized C140 getRegister(int cur) {
         return chips[cur];
-    }
-
-    public synchronized void setMask(int chipId, int ch) {
-        mask[chipId] |= ch;
-        setMuteMask(chipId, mask[chipId]);
-    }
-
-    public synchronized void resetMask(int chipId, int ch) {
-        mask[chipId] &= ~(int) ch;
-        setMuteMask(chipId, mask[chipId]);
     }
 
     public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {

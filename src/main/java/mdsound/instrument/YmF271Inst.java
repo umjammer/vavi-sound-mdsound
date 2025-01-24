@@ -70,13 +70,14 @@ public class YmF271Inst extends Instrument.BaseInstrument {
         chip.stop();
     }
 
-    public void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
-        writePcm(chipId, romSize, dataStart, dataLength, romData ,0);
+    @Override
+    public void setMask(int chipId, int ch) {
+//        chips[chipId].setMuteMask(ch); // TODO
     }
 
-    public void setMuteMask(int chipId, int muteMask) {
-        YmF271 chip = chips[chipId];
-        chip.setMuteMask(muteMask);
+    @Override
+    public void resetMask(int chipId, int ch) {
+//        chips[chipId].setMuteMask(~ch); // TODO
     }
 
     //----

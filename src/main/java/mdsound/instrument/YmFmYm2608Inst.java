@@ -124,6 +124,14 @@ public class YmFmYm2608Inst extends Instrument.BaseInstrument {
         chips[chipId] = null;
     }
 
+    @Override
+    public void setMask(int chipId, int ch) {
+    }
+
+    @Override
+    public void resetMask(int chipId, int ch) {
+    }
+
     private void load(int chipId) {
         try {
             Path rom = Path.of(System.getProperty("mdsound.pcm.path", ""), "ym2608_adpcm_rom.bin");

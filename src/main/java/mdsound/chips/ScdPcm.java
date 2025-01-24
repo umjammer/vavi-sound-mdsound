@@ -332,10 +332,6 @@ public class ScdPcm {
             this.channels[curChn].muted = (muteMask >> curChn) & 0x01;
     }
 
-    public void setMuteCh(int ch, int mute) {
-        this.channels[ch].muted = mute & 0x1;
-    }
-
     public Channel getChannel(int ch) {
         return channels[ch];
     }

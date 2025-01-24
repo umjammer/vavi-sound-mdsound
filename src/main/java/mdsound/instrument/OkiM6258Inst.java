@@ -78,6 +78,14 @@ public class OkiM6258Inst extends Instrument.BaseInstrument {
         chips[chipId] = null;
     }
 
+    @Override
+    public void setMask(int chipId, int ch) {
+    }
+
+    @Override
+    public void resetMask(int chipId, int ch) {
+    }
+
     public void setDivider(int chipId, int val) {
         chips[chipId].setDivider(val);
     }

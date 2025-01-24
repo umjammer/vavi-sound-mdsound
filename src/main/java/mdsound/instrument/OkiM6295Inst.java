@@ -73,8 +73,16 @@ public class OkiM6295Inst extends Instrument.BaseInstrument {
         chips[chipId].stop();
     }
 
-    public void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
-        writePcm(chipId, romSize, dataStart, dataLength, romData, 0);
+    @Override
+    public synchronized void setMask(int chipId, int ch) {
+        mask[chipId] |= ch;
+        setMuteMask(chipId, mask[chipId]);
+    }
+
+    @Override
+    public synchronized void resetMask(int chipId, int ch) {
+        mask[chipId] &= ~(int) ch;
+        setMuteMask(chipId, mask[chipId]);
     }
 
     private void setMuteMask(int chipId, int muteMask) {
@@ -95,19 +103,9 @@ public class OkiM6295Inst extends Instrument.BaseInstrument {
         return chips[chipId];
     }
 
-    public synchronized void setMask(int chipId, int ch) {
-        mask[chipId] |= ch;
-        setMuteMask(chipId, mask[chipId]);
-    }
-
     public synchronized OkiM6295.ChannelInfo getChInfo(int chipId) {
         OkiM6295 chip = chips[chipId];
         return chip.readChInfo();
-    }
-
-    public synchronized void resetMask(int chipId, int ch) {
-        mask[chipId] &= ~(int) ch;
-        setMuteMask(chipId, mask[chipId]);
     }
 
     //----

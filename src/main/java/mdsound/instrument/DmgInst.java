@@ -70,6 +70,20 @@ public class DmgInst extends Instrument.BaseInstrument {
     public void stop(int chipId) {
     }
 
+    @Override
+    public synchronized void setMask(int chipId, int ch) {
+        int maskStatus = chips[chipId].getMuteMask();
+        maskStatus |= 1 << ch; // ch:0 - 3
+        chips[chipId].setMuteMask(maskStatus);
+    }
+
+    @Override
+    public synchronized void resetMask(int chipId, int ch) {
+        int maskStatus = chips[chipId].getMuteMask();
+        maskStatus &= ~(1 << ch); // ch:0 - 3
+        chips[chipId].setMuteMask(maskStatus);
+    }
+
     public int readPcm(int chipId, int offset) {
         return chips[chipId].readWave(offset);
     }
@@ -78,30 +92,10 @@ public class DmgInst extends Instrument.BaseInstrument {
         chips[chipId].writeWave(offset, data);
     }
 
-    private void setMuteMask(int chipId, int muteMask) {
-        chips[chipId].setMuteMask(muteMask);
-    }
-
-    public int getMuteMask(int chipId) {
-        return chips[chipId].getMuteMask();
-    }
-
     //----
 
     public synchronized GbSound getChip(int chipId) {
         return chips[chipId];
-    }
-
-    public synchronized void setMask(int chipId, int ch) {
-        int maskStatus = getMuteMask(chipId);
-        maskStatus |= 1 << ch;//ch:0 - 3
-        setMuteMask(chipId, maskStatus);
-    }
-
-    public synchronized void resetMask(int chipId, int ch) {
-        int maskStatus = getMuteMask(chipId);
-        maskStatus &= ~(1 << ch);//ch:0 - 3
-        setMuteMask(chipId, maskStatus);
     }
 
     // ----

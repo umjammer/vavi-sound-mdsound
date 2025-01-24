@@ -85,6 +85,18 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
         chips[chipId] = null;
     }
 
+    @Override
+    public synchronized void setMask(int chipId, int ch) {
+        mask[chipId] |= ch;
+        setMute(chipId, mask[chipId]);
+    }
+
+    @Override
+    public synchronized void resetMask(int chipId, int ch) {
+        mask[chipId] &= ~ch;
+        setMute(chipId, mask[chipId]);
+    }
+
     public void setVolume(int chipId, int db) {
         assert chipId < chips.length;
         chips[chipId].setVolume(db);
@@ -93,18 +105,6 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
     private void setMute(int chipId, int val) {
         assert chipId < chips.length;
         chips[chipId].setChannelMask(val);
-    }
-
-    //----
-
-    public synchronized void setMask(int chipId, int ch) {
-        mask[chipId] |= ch;
-        setMute(chipId, mask[chipId]);
-    }
-
-    public synchronized void resetMask(int chipId, int ch) {
-        mask[chipId] &= ~ch;
-        setMute(chipId, mask[chipId]);
     }
 
     //----

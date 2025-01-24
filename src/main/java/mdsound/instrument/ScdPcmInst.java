@@ -77,20 +77,18 @@ public class ScdPcmInst extends Instrument.BaseInstrument {
     public void stop(int chipId) {
     }
 
+    @Override
+    public synchronized void setMask(int chipId, int ch) {
+        chips[chipId].setMuteMask(1);
+    }
+
+    @Override
+    public synchronized void resetMask(int chipId, int ch) {
+        chips[chipId].setMuteMask(0);
+    }
+
     public void setRate(int chipId, int rate) {
         chips[chipId].setRate(rate);
-    }
-
-    public void writePcm(int chipId, int dataStart, int dataLength, byte[] ramData) {
-        writePcm(chipId, dataStart, dataLength, ramData, 0);
-    }
-
-    private void setMuteMask(int chipId, int muteMask) {
-        chips[chipId].setMuteMask(muteMask);
-    }
-
-    public void setMuteCh(int chipId, int ch, int mute) {
-        chips[chipId].setMuteCh(ch, mute);
     }
 
     // ----
@@ -105,14 +103,6 @@ public class ScdPcmInst extends Instrument.BaseInstrument {
 
     public synchronized int[][] readVolumes(int chipId) {
         return volumes[chipId];
-    }
-
-    public synchronized void setMask(int chipId, int ch) {
-        setMuteMask(chipId, 1);
-    }
-
-    public synchronized void resetMask(int chipId, int ch) {
-        setMuteMask(chipId, 0);
     }
 
     public synchronized ScdPcm getChip(int chipId) {
