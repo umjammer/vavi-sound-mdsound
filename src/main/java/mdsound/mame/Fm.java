@@ -4079,10 +4079,10 @@ public class Fm {
 
         public void setMuteMask(int muteMask) {
             for (int curChn = 0; curChn < 6; curChn++)
-                this.ch[curChn].muted = (int) ((muteMask >> curChn) & 0x01);
+                this.ch[curChn].muted = (muteMask >> curChn) & 0x01;
             for (int curChn = 0; curChn < 6; curChn++)
-                this.adpcm[curChn].muted = (int) ((muteMask >> (curChn + 6)) & 0x01);
-            this.muteDeltaT = (int) ((muteMask >> 12) & 0x01);
+                this.adpcm[curChn].muted = (muteMask >> (curChn + 6)) & 0x01;
+            this.muteDeltaT = (muteMask >> 12) & 0x01;
         }
 
         public void setDeltaTStatus(int changeBits) {

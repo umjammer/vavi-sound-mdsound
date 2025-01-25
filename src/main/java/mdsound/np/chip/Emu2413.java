@@ -901,7 +901,7 @@ public class Emu2413 {
             this._out = (int) (((double) this.next * (this.opllStep - this.opllTime)
                     + (double) this.prev * this.opllTime) / this.opllStep);
 
-            return (int) this._out;
+            return this._out;
         }
 
         public int setMask(int mask) {
@@ -926,7 +926,7 @@ public class Emu2413 {
 
             data = data & 0xff;
             reg = reg & 0x3f;
-            this.reg[reg] = (int) data;
+            this.reg[reg] = data;
 
             switch (reg) {
             case 0x00:

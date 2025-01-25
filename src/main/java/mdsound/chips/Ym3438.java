@@ -51,7 +51,7 @@ public class Ym3438 {
         Attack,
         Decay,
         Sustain,
-        Release;
+        Release
     }
 
     private static class Opn2WriteBuf {

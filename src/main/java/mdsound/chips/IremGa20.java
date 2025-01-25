@@ -122,7 +122,7 @@ public class IremGa20 {
                 frac = ch.frac;
                 end = ch.end - 0x20;
                 vol = ch.volume;
-                play = (int) ((ch.muted == 0) ? ch.play : 0);
+                play = (ch.muted == 0) ? ch.play : 0;
             }
 
             private int update() {

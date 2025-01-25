@@ -467,8 +467,8 @@ public class YmF262 {
                 public void setMul(int v) {
                     this.mul = mulTab[v & 0x0f];
                     this.KSR = (v & 0x10) != 0 ? 0 : 2;
-                    this.egType = (int) (v & 0x20);
-                    this.vib = (int) (v & 0x40);
+                    this.egType = v & 0x20;
+                    this.vib = v & 0x40;
                     this.amMask = (v & 0x80) != 0 ? ~0 : 0;
                 }
 

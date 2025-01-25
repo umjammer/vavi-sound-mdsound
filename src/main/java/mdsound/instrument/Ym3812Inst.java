@@ -6,7 +6,6 @@ import java.util.Map;
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
 import mdsound.chips.DosboxYm3812;
-import vavi.sound.ymfm.Opl.Ym3812;
 
 
 public class Ym3812Inst extends Instrument.BaseInstrument {
