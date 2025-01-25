@@ -37,10 +37,10 @@ public class Global {
     public static int OpmWait = 240; // 24.0μｓ
     public int opmRate = 62500; // Input clock ÷ 64
 
-    public int[] STEPTBL = new int[11 * 12 * 64];
+    public final int[] STEPTBL = new int[11 * 12 * 64];
     public static final int ALPHAZERO = (SIZEALPHATBL * 3);
-    public int[] ALPHATBL = new int[ALPHAZERO + SIZEALPHATBL + 1];
-    public short[] SINTBL = new short[SIZESINTBL];
+    public final int[] ALPHATBL = new int[ALPHAZERO + SIZEALPHATBL + 1];
+    public final short[] SINTBL = new short[SIZESINTBL];
     public static final int[] STEPTBL_O2 = {
             1299, 1300, 1301, 1302, 1303, 1304, 1305, 1306,
             1308, 1309, 1310, 1311, 1313, 1314, 1315, 1316,
@@ -139,9 +139,9 @@ public class Global {
             2561, 2563, 2565, 2567, 2568, 2571, 2572, 2575,
             2577, 2579, 2581, 2583, 2586, 2589, 2590, 2593,
     };
-    public int[] D1LTBL = new int[16];
+    public final int[] D1LTBL = new int[16];
 
-    public int[] DT1TBL = new int[128 + 4];
+    public final int[] DT1TBL = new int[128 + 4];
     public static final int[] DT1TBL_org = {
             0, 0, 1, 2,
             0, 0, 1, 2,
@@ -218,7 +218,7 @@ public class Global {
 
 
     public static final int[] DT2TBL = {0, 384, 500, 608};
-    public int[] NOISEALPHATBL = new int[ALPHAZERO + SIZEALPHATBL + 1];
+    public final int[] NOISEALPHATBL = new int[ALPHAZERO + SIZEALPHATBL + 1];
 
 
     public static final int[] dltLTBL = {
@@ -249,7 +249,7 @@ public class Global {
     public static final int PCM8_NCH = 8;
 
     public static int bswapl(int adrs) {
-        return (adrs << 24) + ((adrs << 8) & 0xff0000) + ((adrs >> 8) & 0xff00) + (adrs >> 24);
+        return (adrs << 24) + ((adrs << 8) & 0xff_0000) + ((adrs >> 8) & 0xff00) + (adrs >> 24);
     }
 
     public static int bswapw(int data) {
@@ -341,10 +341,10 @@ public class Global {
 
         if (waveOutSamp == 44100 || waveOutSamp == 48000) {
             //opm.pcmset62((int) nSamples);
-            opm.pcmset62(buffer, offset, sampleCount, null);
+            opm.setPcm62(buffer, offset, sampleCount, null);
         } else {
             //opm.pcmset22((int) nSamples);
-            opm.pcmset22(buffer, offset, sampleCount);
+            opm.setPcm22(buffer, offset, sampleCount);
         }
 
         // opm.timer();

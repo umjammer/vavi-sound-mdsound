@@ -1,3 +1,9 @@
+/*
+ * license:BSD-3-Clause
+ *
+ * copyright-holders: Acho A. Tang,R. Belmont, Valley Bell
+ */
+
 package mdsound.chips;
 
 import java.util.Arrays;
@@ -7,26 +13,24 @@ import java.util.Arrays;
  * Irem GA20 PCM Sound Chip
  * <p>
  * It's not currently known whether this chips is stereo.
- * <p>
- * <p>
- * Revisions:
- * <p>
- * 04-15-2002 Acho A. Tang
- * - rewrote channel mixing
- * - added prelimenary volume and sample rate emulation
- * <p>
- * 05-30-2002 Acho A. Tang
- * - applied hyperbolic gain control to volume and used
- * a musical-note style progression in sample rate
- * calculation(still very inaccurate)
- * <p>
- * 02-18-2004 R. Belmont
- * - sample rate calculation reverse-engineered.
- * Thanks to Fujix, Yasuhiro Ogawa, the Guru, and Tormod
- * for real PCB samples that made this possible.
- * <p>
- * 02-03-2007 R. Belmont
- * - Cleaned up faux x86 assembly.
+ *
+ * @version 04-15-2002 Acho A. Tang<br/>
+ *          - rewrote channel mixing<br/>
+ *          - added prelimenary volume and sample rate emulation
+ *          05-30-2002 Acho A. Tang<br/>
+ *          - applied hyperbolic gain control to volume and used
+ *            a musical-note style progression in sample rate
+ *            calculation(still very inaccurate)<br/>
+ *          02-18-2004 R. Belmont<br/>
+ *          - sample rate calculation reverse-engineered.
+ *            Thanks to Fujix, Yasuhiro Ogawa, the Guru, and Tormod
+ *            for real PCB samples that made this possible.<br/>
+ *          02-03-2007 R. Belmont<br/>
+ *          - Cleaned up faux x86 assembly.<br/>
+ * @author Acho A.
+ * @author Tang,R.
+ * @author Belmont
+ * @author Valley Bell
  */
 public class IremGa20 {
 

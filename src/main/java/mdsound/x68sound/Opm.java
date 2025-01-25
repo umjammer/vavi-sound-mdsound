@@ -47,7 +47,7 @@ public class Opm {
 //    int pmd;
 //    int amd;
 //    int pmspmd[N_CH]; //pms[]* pmd
-    private Lfo lfo = null;
+    private Lfo lfo;
     private final int[] SLOTTBL = new int[8 * 4];
 
     /** Initialize in the constructor */
@@ -61,19 +61,14 @@ public class Opm {
     private short[] pcmBuf; // ?
     public int pcmBufSize;
     private int _pcmBufPtr;
-    private final Object _pcmBufptrLockObj = new Object();
     int pcmBufPtr;
 
-    public int getPcmBufPtr() {
-        synchronized (_pcmBufptrLockObj) {
-            return _pcmBufPtr;
-        }
+    public synchronized int getPcmBufPtr() {
+        return _pcmBufPtr;
     }
 
-    public void setPcmBufPtr(int value) {
-        synchronized (_pcmBufptrLockObj) {
-            _pcmBufPtr = value;
-        }
+    public synchronized void setPcmBufPtr(int value) {
+        _pcmBufPtr = value;
     }
 
     public int TimerID = 0;
@@ -94,17 +89,17 @@ public class Opm {
     private final int[] opOutDummy = new int[1];
 
     /** value of OPMreg$10 */
-    private int timerAreg10;
+    private int timerAReg10;
     /** value of OPMreg$11 */
-    private int timerAreg11;
+    private int timerAReg11;
     /** Timer A overflow setting */
     private int timerA;
     /** Timer A counter value */
-    private int timerAcounter;
+    private int timerACounter;
     /** Timer B overflow setting value */
     private int timerB;
     /** Timer B counter value */
-    private int timerBcounter;
+    private int timerBCounter;
     /** Timer control register (lower 4 bits of OPMreg$14 + 7 bits) */
     private int timerReg;
     /** OPM status register (lowest 2 bits of $E90003) */
@@ -112,14 +107,14 @@ public class Opm {
     /** OPM interrupt callback function */
     private Runnable opmIntProc;
 
-    public double inpopmbuf_dummy;
+//    public double inpopmbuf_dummy;
     private final short[] inpOpmBuf0 = new short[global.OPMLPF_COL * 2];
     private final short[] InpOpmBuf1 = new short[global.OPMLPF_COL * 2];
     private int inpOpmIdx;
-    private int opmLPFidx;
+    private int opmLpfIdx;
     private short[][] opmLPFpBuf;
     private int opmLPFpPtr;
-    public double inpadpcmbuf_dummy;
+//    public double inpadpcmbuf_dummy;
 //    short InpAdpcmBuf0[ADPCMLPF_COL*2],InpAdpcmBuf1[ADPCMLPF_COL*2];
 //    int InpAdpcm_idx;
 //    int AdpcmLPFidx; short *AdpcmLPFp;
@@ -177,7 +172,7 @@ public class Opm {
     private int opmChMask;
 
     //public:
-    private Adpcm adpcm = null;
+    private Adpcm adpcm;
     //private:
     private final Pcm8[] pcm8 = new Pcm8[Global.PCM8_NCH];
 
@@ -298,7 +293,7 @@ public class Opm {
             inpOpmBuf0[i] = InpOpmBuf1[i] = 0;
         }
         inpOpmIdx = 0;
-        opmLPFidx = 0;
+        opmLpfIdx = 0;
         opmLPFpBuf = global.OPMLOWPASS;
         opmLPFpPtr = 0;
 
@@ -356,12 +351,12 @@ public class Opm {
         //PcmBufSize = PCMBUFSIZE;
 
         // Timer related initialization
-        timerAreg10 = 0;
-        timerAreg11 = 0;
+        timerAReg10 = 0;
+        timerAReg11 = 0;
         timerA = 1024 - 0;
-        timerAcounter = 0;
+        timerACounter = 0;
         timerB = (256 - 0) << (10 - 6);
-        timerBcounter = 0;
+        timerBCounter = 0;
         timerReg = 0;
         statReg = 0;
         opmIntProc = null;
@@ -420,7 +415,7 @@ public class Opm {
                 inpOpmBuf0[i] = InpOpmBuf1[i] = 0;
             }
             inpOpmIdx = 0;
-            opmLPFidx = 0;
+            opmLpfIdx = 0;
             opmLPFpBuf = global.OPMLOWPASS;
             opmLPFpPtr = 0;
         }
@@ -651,15 +646,15 @@ public class Opm {
         }
     }
 
-    public int opmPeek() {
+    public int peekOpm() {
         return statReg;
     }
 
-    public void opmReg(int no) {
+    public void setRegNo(int no) {
         opmRegNo = no;
     }
 
-    public void opmPoke(int data) {
+    public void pokeOpm(int data) {
         if (useOpmFlag < 2) {
 
 //#if C86CTL
@@ -700,8 +695,8 @@ public class Opm {
         case 0x10:
             // TimerA
 
-            timerAreg10 = data;
-            timerA = 1024 - ((timerAreg10 << 2) + timerAreg11);
+            timerAReg10 = data;
+            timerA = 1024 - ((timerAReg10 << 2) + timerAReg11);
 
             break;
         case 0x11:
@@ -710,16 +705,16 @@ public class Opm {
 //            if (OpmRegNo == 0x10) {
 //                TimerAreg10 = data;
 //            } else {
-                timerAreg11 = data & 3;
+                timerAReg11 = data & 3;
 //            }
-            timerA = 1024 - ((timerAreg10 << 2) + timerAreg11);
+            timerA = 1024 - ((timerAReg10 << 2) + timerAReg11);
 
             break;
 
         case 0x12:
             // TimerB
 
-            timerB = (256 - (int) data) << (10 - 6);
+            timerB = (256 - data) << (10 - 6);
 
             break;
 
@@ -745,7 +740,7 @@ public class Opm {
         }
     }
 
-    private void executeCmnd() {
+    private void executeCommand() {
 
         if (useOpmFlag < 2) {
             int rate = 0;
@@ -761,7 +756,7 @@ public class Opm {
                         cmndReadIdx &= CMNDBUFSIZE;
                         --numCmnd;
                         //_InterlockedDecrement(&NumCmnd);
-                        executeCmndCore(regno, data);
+                        executeCoreCommand(regno, data);
                     }
                 }
             }
@@ -769,7 +764,7 @@ public class Opm {
             synchronized (numCmndLockObj) {
                 while (numCmnd != 0) {
                     int t1, t2;
-                    int regno, data;
+                    int regNo, data;
                     t1 = 0;// timeGetTime();
                     t2 = (cmndBuf[cmndReadIdx][0] * 0x100_0000) +
                             (cmndBuf[cmndReadIdx][1] * 0x1_0000) +
@@ -777,13 +772,13 @@ public class Opm {
                             (cmndBuf[cmndReadIdx][3] * 0x1);
                     t1 -= t2;
                     if (t1 < _late) break;
-                    regno = cmndBuf[cmndReadIdx][4];
+                    regNo = cmndBuf[cmndReadIdx][4];
                     data = cmndBuf[cmndReadIdx][5];
                     cmndReadIdx += 4;
                     cmndReadIdx &= CMNDBUFSIZE;
                     --numCmnd;
                     //_InterlockedDecrement(&NumCmnd);
-                    executeCmndCore(regno, data);
+                    executeCoreCommand(regNo, data);
                 }
             }
         }
@@ -791,7 +786,7 @@ public class Opm {
 
     private final BiConsumer<Integer, Integer>[] cmdTbl;
 
-    private void executeCmndCore(int regno, int data) {
+    private void executeCoreCommand(int regno, int data) {
 
         cmdTbl[regno].accept(regno, data);
 
@@ -1200,7 +1195,7 @@ public class Opm {
 
     static int rate = 0;
 
-    public void pcmset62(short[] buffer, int offset, int ndata, BiConsumer<Runnable, Boolean> oneFrameProc/* = null*/) {
+    public void setPcm62(short[] buffer, int offset, int ndata, BiConsumer<Runnable, Boolean> oneFrameProc /* = null */) {
 
         //DetectMMX();
 
@@ -1210,9 +1205,9 @@ public class Opm {
             out[0] = out[1] = 0;
             boolean firstFlg = true;
 
-            opmLPFidx += Global.sampleRate;
-            while (opmLPFidx >= Global.waveOutSamp) {
-                opmLPFidx -= Global.waveOutSamp;
+            opmLpfIdx += Global.sampleRate;
+            while (opmLpfIdx >= Global.waveOutSamp) {
+                opmLpfIdx -= Global.waveOutSamp;
 
                 outInpOpm[0] = outInpOpm[1] = 0;
                 if (useOpmFlag != 0) {
@@ -1226,7 +1221,7 @@ public class Opm {
                         } else {
                             timer();
                         }
-                        executeCmnd();
+                        executeCommand();
                         if ((--envCounter2) == 0) {
                             envCounter2 = 3;
                             ++envCounter1;
@@ -1328,8 +1323,8 @@ public class Opm {
                     int o = adpcm.getPcm62();
                     if ((opmChMask & 0x100) == 0)
                         if (o != -2147483648) {
-                            outInpAdpcm[0] += ((((int) (ppiReg) >> 1) & 1) - 1) & o;
-                            outInpAdpcm[1] += (((int) (ppiReg) & 1) - 1) & o;
+                            outInpAdpcm[0] += (((ppiReg >> 1) & 1) - 1) & o;
+                            outInpAdpcm[1] += ((ppiReg & 1) - 1) & o;
                         }
 
                     // Add the output PCM of Pcm8 to OutInpAdpcm[]
@@ -1437,12 +1432,11 @@ public class Opm {
             // Add the output value of WaveFunc()
             if (waveFunc != null) {
                 int ret = waveFunc.get();
-                out[0] += ret & 0xffff;
-                out[1] += (ret >>> 16) & 0xffff;
+                out[0] += (short) (ret & 0xffff);
+                out[1] += (short) ((ret >> 16) & 0xffff);
             }
 
-
-            // 音割れ防止
+            // Prevents distortion
             if ((out[0] + 32767) > (32767 * 2)) {
                 if ((out[0] + 32767) >= (32767 * 2)) {
                     out[0] = 32767;
@@ -1475,7 +1469,7 @@ public class Opm {
     int rate_b = 0;
     int rate2 = 0;
 
-    public void pcmset22(short[] buffer, int offset, int ndata) {
+    public void setPcm22(short[] buffer, int offset, int ndata) {
         pcmBufPtr = 0;
 
         for (int i = 0; i < ndata / 2; ++i) {
@@ -1489,7 +1483,7 @@ public class Opm {
                     rate_b += Global.waveOutSamp;
 
                     timer();
-                    executeCmnd();
+                    executeCommand();
                     if ((--envCounter2) == 0) {
                         envCounter2 = 3;
                         ++envCounter1;
@@ -1590,8 +1584,8 @@ public class Opm {
                     int o = adpcm.getPcm();
                     if ((opmChMask & 0x100) == 0)
                         if (o != -2147483648) {
-                            outInpAdpcm[0] += ((((int) (ppiReg) >> 1) & 1) - 1) & o;
-                            outInpAdpcm[1] += (((int) (ppiReg) & 1) - 1) & o;
+                            outInpAdpcm[0] += (((ppiReg >> 1) & 1) - 1) & o;
+                            outInpAdpcm[1] += ((ppiReg & 1) - 1) & o;
                         }
 
                     // Add the output PCM of Pcm8 to OutInpAdpcm[]
@@ -1656,8 +1650,8 @@ public class Opm {
             if (waveFunc != null) {
                 int ret;
                 ret = waveFunc.get();
-                out[0] += (short) ret;
-                out[1] += (ret >> 16);
+                out[0] += (short) (ret & 0xffff);
+                out[1] += (short) ((ret >> 16) & 0xffff);
             }
 
             // Prevents distortion
@@ -1693,9 +1687,9 @@ public class Opm {
         pcmBuf = buf;
         pcmBufPtr = 0;
         if (Global.waveOutSamp == 44100 || Global.waveOutSamp == 48000) {
-            pcmset62(pcmBuf, offset, ndata, oneFrameProc);
+            setPcm62(pcmBuf, offset, ndata, oneFrameProc);
         } else {
-            pcmset22(pcmBuf, 0, ndata);
+            setPcm22(pcmBuf, 0, ndata);
         }
         pcmBuf = null;
         return 0;
@@ -1709,18 +1703,18 @@ public class Opm {
         int prevStat = statReg;
         int flagSet = 0;
         if ((timerReg & 0x01) != 0) { // TimerA is running
-            ++timerAcounter;
-            if (timerAcounter >= timerA) {
+            ++timerACounter;
+            if (timerACounter >= timerA) {
                 flagSet |= ((timerReg >> 2) & 0x01);
-                timerAcounter = 0;
+                timerACounter = 0;
                 if ((timerReg & 0x80) != 0) csmKeyOn();
             }
         }
         if ((timerReg & 0x02) != 0) { // TimerB is running
-            ++timerBcounter;
-            if (timerBcounter >= timerB) {
+            ++timerBCounter;
+            if (timerBCounter >= timerB) {
                 flagSet |= ((timerReg >> 2) & 0x02);
-                timerBcounter = 0;
+                timerBCounter = 0;
             }
         }
 
@@ -1739,7 +1733,7 @@ public class Opm {
         }
     }
 
-    public int start(int samprate, int opmflag, int adpcmflag, int betw, int pcmbuf, int late, double rev) {
+    public int start(int sampleRate, int opmFlag, int adpcmFlag, int betw, int pcmBuf, int late, double rev) {
         if (dousaMode != 0) {
             return X68Sound.SNDERR_ALREADYACTIVE;
         }
@@ -1747,29 +1741,28 @@ public class Opm {
 
         if (rev < 0.1) rev = 0.1;
 
-        useOpmFlag = opmflag;
-        useAdpcmFlag = adpcmflag;
+        useOpmFlag = opmFlag;
+        useAdpcmFlag = adpcmFlag;
         _betw = betw;
-        _pcmbuf = pcmbuf;
+        _pcmbuf = pcmBuf;
         _late = late;
         _rev = (int) rev;
 
-        if (samprate == 44100) {
+        if (sampleRate == 44100) {
             Global.sampleRate = global.opmRate;
             global.OPMLPF_ROW = global.OPMLPF_ROW_44;
             global.OPMLOWPASS = Global.OPMLOWPASS_44;
-        } else if (samprate == 48000) {
+        } else if (sampleRate == 48000) {
             Global.sampleRate = global.opmRate;
             global.OPMLPF_ROW = global.OPMLPF_ROW_48;
             global.OPMLOWPASS = Global.OPMLOWPASS_48;
         } else {
-            Global.sampleRate = samprate;
+            Global.sampleRate = sampleRate;
         }
-        Global.waveOutSamp = samprate;
+        Global.waveOutSamp = sampleRate;
 
 //#if ROMEO
-//    if (UseOpmFlag == 2)
-//    {
+//    if (UseOpmFlag == 2) {
 //        juliet_load();
 //        juliet_prepare();
 //        juliet_YM2151Mute(0);
@@ -1782,31 +1775,31 @@ public class Opm {
         return waveAndTimerStart();
     }
 
-    public int startPcm(int samprate, int opmflag, int adpcmflag, int pcmbuf) {
+    public int startPcm(int sampleRate, int opmFlag, int adpcmFlag, int pcmBuf) {
         if (dousaMode != 0) {
             return X68Sound.SNDERR_ALREADYACTIVE;
         }
         dousaMode = 2;
 
-        useOpmFlag = opmflag;
-        useAdpcmFlag = adpcmflag;
+        useOpmFlag = opmFlag;
+        useAdpcmFlag = adpcmFlag;
         _betw = 5;
-        _pcmbuf = pcmbuf;
+        _pcmbuf = pcmBuf;
         _late = 200;
         _rev = (int) 1.0;
 
-        if (samprate == 44100) {
+        if (sampleRate == 44100) {
             Global.sampleRate = global.opmRate;
             global.OPMLPF_ROW = global.OPMLPF_ROW_44;
             global.OPMLOWPASS = Global.OPMLOWPASS_44;
-        } else if (samprate == 48000) {
+        } else if (sampleRate == 48000) {
             Global.sampleRate = global.opmRate;
             global.OPMLPF_ROW = global.OPMLPF_ROW_48;
             global.OPMLOWPASS = Global.OPMLOWPASS_48;
         } else {
-            Global.sampleRate = samprate;
+            Global.sampleRate = sampleRate;
         }
-        Global.waveOutSamp = samprate;
+        Global.waveOutSamp = sampleRate;
 
         makeTable();
         reset();
@@ -1816,7 +1809,7 @@ public class Opm {
         return waveAndTimerStart();
     }
 
-    public int setSamprate(int samprate) {
+    public int setSampleRate(int sampleRate) {
         if (dousaMode == 0) {
             return X68Sound.SNDERR_NOTACTIVE;
         }
@@ -1824,18 +1817,18 @@ public class Opm {
 
         free();
 
-        if (samprate == 44100) {
+        if (sampleRate == 44100) {
             Global.sampleRate = global.opmRate;
             global.OPMLPF_ROW = global.OPMLPF_ROW_44;
             global.OPMLOWPASS = Global.OPMLOWPASS_44;
-        } else if (samprate == 48000) {
+        } else if (sampleRate == 48000) {
             Global.sampleRate = global.opmRate;
             global.OPMLPF_ROW = global.OPMLPF_ROW_48;
             global.OPMLOWPASS = Global.OPMLOWPASS_48;
         } else {
-            Global.sampleRate = samprate;
+            Global.sampleRate = sampleRate;
         }
-        Global.waveOutSamp = samprate;
+        Global.waveOutSamp = sampleRate;
 
         makeTable();
         resetSamprate();
@@ -1865,8 +1858,6 @@ public class Opm {
         dousaMode = dousa_mode_bak;
         return waveAndTimerStart();
     }
-
-    //public NAudioWrap naudio = null;
 
     private int waveAndTimerStart() {
 
@@ -1948,10 +1939,10 @@ public class Opm {
         while (pcmBufPtr >= pcmBufSize) pcmBufPtr -= pcmBufSize;
         global.waveblk = 0;
         global.playingblk = 0;
-        // playingblk_next = playingblk+1;
-        for (int i = 0; i < global.N_waveblk; ++i) {
+//        playingblk_next = playingblk + 1;
+//        for (int i = 0; i < global.N_waveblk; ++i) {
 //            WinAPI.PostThreadMessage(Global.thread_id, Global.THREADMES_WAVEOUTDONE, (int)Ptr.Zero, IntPtr.Zero);
-        }
+//        }
 
 //        WinAPI.timeBeginPeriod(Global.TimerResolution);
 //        int usrctx = 0;
@@ -1984,23 +1975,23 @@ public class Opm {
     public void adpcmPoke(int data) {
         // original
         if ((data & 0x02) != 0) { // ADPCM playback begins
-            adpcm.adpcmReg &= 0x7F;
+            adpcm.adpcmReg &= 0x7f;
         } else if ((data & 0x01) != 0) { // Playback stops
             adpcm.adpcmReg |= 0x80;
             adpcm.reset();
         }
     }
 
-    public int ppiPeek() {
+    public int peekPpi() {
         return ppiReg;
     }
 
-    public void ppiPoke(int data) {
+    public void pokePpi(int data) {
         ppiReg = data;
         setAdpcmRate();
     }
 
-    public void ppiCtrl(int data) {
+    public void controlPpi(int data) {
         if ((data & 0x80) == 0) {
             if ((data & 0x01) != 0) {
                 ppiReg |= 1 << ((data >> 1) & 7);
@@ -2016,7 +2007,7 @@ public class Opm {
         if (adrs == 0x00) {
             if ((adpcm.adpcmReg & 0x80) == 0) { // ADPCM Playing
                 adpcm.dmaReg[0x00] |= 0x02;
-                return (int) (adpcm.dmaReg[0x00] | 0x01);
+                return adpcm.dmaReg[0x00] | 0x01;
             }
         }
         return adpcm.dmaReg[adrs];
@@ -2160,7 +2151,6 @@ public class Opm {
         adpcm.errIntProc = proc;
     }
 
-
     public int pcm8Out(int ch, byte[] adrsBuf, int adrsPtr, int mode, int len) {
         return pcm8[ch & (Global.PCM8_NCH - 1)].out(adrsBuf, adrsPtr, mode, len);
     }
@@ -2214,7 +2204,6 @@ public class Opm {
         waveFunc = func;
     }
 
-
     public void pushRegs() {
         opmRegNoBackup = opmRegNo;
     }
@@ -2222,7 +2211,6 @@ public class Opm {
     public void popRegs() {
         opmRegNo = opmRegNoBackup;
     }
-
 
     public void memReadFunc(Function<Integer, Integer> func) {
         global.memRead = Objects.requireNonNullElseGet(func, () -> Global::memReadDefault);

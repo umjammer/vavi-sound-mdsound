@@ -8,6 +8,7 @@ import mdsound.Instrument;
 import mdsound.chips.Pokey;
 
 
+/** Atari Pokey */
 public class PokeyInst extends Instrument.BaseInstrument {
 
     public static final int DefaultClockValue = 1789772;

@@ -125,8 +125,8 @@ public class Op {
     // limit   : 0         D1l     63          63          63          63
     // nextstat: DECAY     SUSTAIN SUSTAIN_MAX SUSTAIN_MAX RELEASE_MAX RELEASE_MAX
 
-    private int keyon;
-    private int csmkeyon;
+    private int keyOn;
+    private int csmKeyOn;
 
     public Op(Global global) {
         this.global = global;
@@ -161,7 +161,7 @@ public class Op {
         mul = 2;
         ame = 0;
 
-        noiseStep = (int) ((long) (1 << 26) * (long) global.opmRate / Global.sampleRate);
+        noiseStep = (int) ((1L << 26) * (long) global.opmRate / Global.sampleRate);
         setNFRQ(0);
         noiseValue = 1;
 
@@ -199,8 +199,8 @@ public class Op {
         xrAdd = statTbl[xrStat].add;
         xrLimit = statTbl[xrStat].limit;
 
-        keyon = 0;
-        csmkeyon = 0;
+        keyOn = 0;
+        csmKeyOn = 0;
 
         culcArStep();
         culcD1RStep();
@@ -217,7 +217,7 @@ public class Op {
     public void initSamprate() {
         lfoPitch = CULC_DELTA_T;
 
-        noiseStep = (int) ((long) (1 << 26) * (long) global.opmRate / Global.sampleRate);
+        noiseStep = (int) ((1L << 26) * (long) global.opmRate / Global.sampleRate);
         culcNoiseCycle();
 
         culcArStep();
@@ -393,7 +393,7 @@ public class Op {
     }
 
     public void keyON(int csm) {
-        if (keyon == 0) {
+        if (keyOn == 0) {
             if (xrStat >= RELEASE) {
                 // KEYON
                 t = 0;
@@ -421,24 +421,24 @@ public class Op {
             }
 
             if (csm == 0) {
-                keyon = 1;
-                csmkeyon = 0;
+                keyOn = 1;
+                csmKeyOn = 0;
             } else {
-                csmkeyon = 1;
+                csmKeyOn = 1;
             }
         }
     }
 
     public void keyOFF(int csm) {
-        if (keyon > 0 || csmkeyon > 0) {
+        if (keyOn > 0 || csmKeyOn > 0) {
 
             if (csm == 0) {
-                keyon = 0;
+                keyOn = 0;
             } else {
-                csmkeyon = 0;
+                csmKeyOn = 0;
             }
 
-            if (keyon == 0 && csmkeyon == 0) {
+            if (keyOn == 0 && csmKeyOn == 0) {
                 xrStat = RELEASE;
                 xrAnd = statTbl[xrStat].and;
                 xrCmp = statTbl[xrStat].cmp;

@@ -8,6 +8,7 @@ import mdsound.Instrument;
 import mdsound.chips.Rf5c68;
 
 
+/** Ricoh PCM for SYSTEM18,SYSTEM32 */
 public class Rf5C68Inst extends Instrument.BaseInstrument {
 
     public static final int MAX_CHIPS = 0x02;

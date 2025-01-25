@@ -30,13 +30,13 @@ public class X68Sound {
         global.mountMemory(mem);
     }
 
-    public int start(int samprate /* = 44100 */, int opmflag /* = 1 */, int adpcmflag /* = 1 */,
-                     int betw /* = 5 */, int pcmbuf /* = 5 */, int late /* = 200 */, double rev /* = 1.0 */) {
-        return opm.start(samprate, opmflag, adpcmflag, betw, pcmbuf, late, rev);
+    public int start(int sampleRate /* = 44100 */, int opmFlag /* = 1 */, int adpcmFlag /* = 1 */,
+                     int betw /* = 5 */, int pcmBuf /* = 5 */, int late /* = 200 */, double rev /* = 1.0 */) {
+        return opm.start(sampleRate, opmFlag, adpcmFlag, betw, pcmBuf, late, rev);
     }
 
-    public int sampRate(int samprate /* = 44100 */) {
-        return opm.setSamprate(samprate);
+    public int sampRate(int sampleRate /* = 44100 */) {
+        return opm.setSampleRate(sampleRate);
     }
 
     public int opmClock(int clock) {
@@ -55,8 +55,8 @@ public class X68Sound {
         opm.betwInt(proc);
     }
 
-    public int startPcm(int samprate /* = 44100 */, int opmflag /* = 1 */, int adpcmflag /* = 1 */, int pcmbuf /* = 5 */) {
-        return opm.startPcm(samprate, opmflag, adpcmflag, pcmbuf);
+    public int startPcm(int sampleRate /* = 44100 */, int opmFlag /* = 1 */, int adpcmFlag /* = 1 */, int pcmbuf /* = 5 */) {
+        return opm.startPcm(sampleRate, opmFlag, adpcmFlag, pcmbuf);
     }
 
     public int getPcm(short[] buf, int offset, int len) {
@@ -68,15 +68,15 @@ public class X68Sound {
     }
 
     public int opmPeek() {
-        return opm.opmPeek();
+        return opm.peekOpm();
     }
 
     public void opmReg(int no) {
-        opm.opmReg(no);
+        opm.setRegNo(no);
     }
 
     public void opmPoke(int data) {
-        opm.opmPoke(data);
+        opm.pokeOpm(data);
     }
 
     public void opmInt(Runnable proc) {
@@ -96,15 +96,15 @@ public class X68Sound {
     }
 
     public int ppiPeek() {
-        return opm.ppiPeek();
+        return opm.peekPpi();
     }
 
     public void ppiPoke(int data) {
-        opm.ppiPoke(data);
+        opm.pokePpi(data);
     }
 
     public void ppiCtrl(int data) {
-        opm.ppiCtrl(data);
+        opm.controlPpi(data);
     }
 
     public int dmaPeek(int adrs) {
@@ -128,8 +128,8 @@ public class X68Sound {
     }
 
     public void y(int no, int data) {
-        opm.opmReg(no);
-        opm.opmPoke(data);
+        opm.setRegNo(no);
+        opm.pokeOpm(data);
     }
 
     public void dmaInt(Runnable proc) {

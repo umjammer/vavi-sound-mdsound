@@ -298,7 +298,7 @@ public class Lfo {
     }
 
     public void calcAmValue(int ch) {
-        amValue[ch] = (((amTblValue * amd) >> 7) << ams[ch]) & 0x7FFFFFFF;
+        amValue[ch] = (((amTblValue * amd) >> 7) << ams[ch]) & 0x7fff_ffff;
     }
 
     public void calcAllPmValue() {
