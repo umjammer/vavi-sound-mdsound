@@ -85,10 +85,12 @@ public interface Instrument {
         }
     }
 
+    ServiceLoader<Instrument> serviceLoader = ServiceLoader.load(Instrument.class);
+
+    /** @return reused instance */
     @SuppressWarnings("unchecked")
     static <T extends Instrument> T getInstrument(Class<T> c) {
-        ServiceLoader<Instrument> loader = ServiceLoader.load(Instrument.class);
-        for (Instrument i : loader) {
+        for (Instrument i : serviceLoader) {
             if (i.getClass() == c) {
                 return (T) i;
             }
