@@ -5,11 +5,12 @@ import java.util.Map;
 
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
+import mdsound.Instrument.PcmEnabledInstrument;
 import mdsound.chips.ScdPcm;
 
 
 // RF5C164
-public class ScdPcmInst extends Instrument.BaseInstrument {
+public class ScdPcmInst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
     public static final int MAX_CHIPS = 0x02;
 
@@ -87,15 +88,18 @@ public class ScdPcmInst extends Instrument.BaseInstrument {
         chips[chipId].setMuteMask(0);
     }
 
+    /** @param extras 0: srcStartAddress */
+    @Override
+    public synchronized void writePcm(int chipId, byte[] buf, int offset, int length, Object... extras) {
+        int srcStartAdr = (int) extras[0];
+        chips[chipId].writeRam2(offset, length, buf, srcStartAdr);
+    }
+
     public void setRate(int chipId, int rate) {
         chips[chipId].setRate(rate);
     }
 
     // ----
-
-    public synchronized void writePcm(int chipId, int ramStartAdr, int ramDataLength, byte[] srcData, int srcStartAdr) {
-        chips[chipId].writeRam2(ramStartAdr, ramDataLength, srcData, srcStartAdr);
-    }
 
     public synchronized void writeMemory(int chipId, int adr, int data) {
         chips[chipId].writeMem(adr, data);

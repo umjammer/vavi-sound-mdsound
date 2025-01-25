@@ -5,10 +5,11 @@ import java.util.Map;
 
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
+import mdsound.Instrument.PcmEnabledInstrument;
 import mdsound.chips.K053260;
 
 
-public class K053260Inst extends Instrument.BaseInstrument {
+public class K053260Inst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
     public static final int MAX_CHIPS = 0x02;
     public static final int DefaultClockValue = 3579545;
@@ -74,10 +75,12 @@ public class K053260Inst extends Instrument.BaseInstrument {
 //        chips[chipId].setMuteMask(~ch); // TODO
     }
 
-    //----
-
-    public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
-        chips[chipId].writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
+    /** @param extras 0: srcStartAddress, 1: romSize */
+    @Override
+    public synchronized void writePcm(int chipId, byte[] buf, int offset, int length, Object... extras) {
+        int srcStartAdr = (int) extras[0];
+        int romSize = (int) extras[1];
+        chips[chipId].writeRom(romSize, offset, length, buf, srcStartAdr);
     }
 
     // ----

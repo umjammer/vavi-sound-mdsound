@@ -40,9 +40,9 @@ import static java.lang.System.getLogger;
  * <p>
  * Some other drivers (eg. bishi.c, bfm_sc4/5.c) also use ROM readback.
  */
-public class YmZ280b {
+public class YmZ280B {
 
-    private static final Logger logger = getLogger(YmZ280b.class.getName());
+    private static final Logger logger = getLogger(YmZ280B.class.getName());
 
     public interface Callback extends Consumer<Integer> {
     }
@@ -79,13 +79,13 @@ public class YmZ280b {
         private int playing;
 
         /** 1 if the key is on */
-        private int keyon;
+        private int keyOn;
         /** 1 if looping is enabled */
         private int looping;
         /** current playback mode */
         private int mode;
         /** frequency */
-        private int fnum;
+        private int fNum;
         /** output level */
         private int level;
         /** panning */
@@ -218,7 +218,7 @@ public class YmZ280b {
                         this.loopStep = step;
                     }
                     if (position >= this.loopEnd) {
-                        if (this.keyon != 0) {
+                        if (this.keyOn != 0) {
                             position = this.loopStart;
                             signal = this.loopSignal;
                             step = this.loopStep;
@@ -277,7 +277,7 @@ public class YmZ280b {
                     // next!
                     position += 2;
                     if (position >= this.loopEnd) {
-                        if (this.keyon != 0)
+                        if (this.keyOn != 0)
                             position = this.loopStart;
                     }
                     if (position >= this.stop) {
@@ -338,7 +338,7 @@ public class YmZ280b {
                     // next!
                     position += 4;
                     if (position >= this.loopEnd) {
-                        if (this.keyon != 0)
+                        if (this.keyOn != 0)
                             position = this.loopStart;
                     }
                     if (position >= this.stop) {
@@ -383,7 +383,7 @@ public class YmZ280b {
     /** current IRQ enable */
     private int irqEnable;
     /** key on enable */
-    private int keyonEnable;
+    private int keyOnEnable;
     /** external memory enable */
     private int extMemEnable;
     /** external memory prefetched data */
@@ -430,9 +430,9 @@ public class YmZ280b {
         double frequency;
         // compute the frequency
         if (voice.mode == 1)
-            frequency = this.masterClock * ((voice.fnum & 0x0ff) + 1) * (1.0 / 256.0);
+            frequency = this.masterClock * ((voice.fNum & 0x0ff) + 1) * (1.0 / 256.0);
         else
-            frequency = this.masterClock * ((voice.fnum & 0x1ff) + 1) * (1.0 / 256.0);
+            frequency = this.masterClock * ((voice.fNum & 0x1ff) + 1) * (1.0 / 256.0);
         voice.outputStep = (int) (frequency * (double) FRAC_ONE / this.rate);
     }
 
@@ -447,18 +447,18 @@ public class YmZ280b {
 
             switch (this.currentRegister & 0xe3) {
             case 0x00: // pitch low 8 bits
-                voice.fnum = (voice.fnum & 0x100) | (data & 0xff);
+                voice.fNum = (voice.fNum & 0x100) | (data & 0xff);
 
                 this.update_step(voice);
                 break;
 
             case 0x01: // pitch upper 1 bit, loop, key on, mode
-                voice.fnum = (voice.fnum & 0xff) | ((data & 0x01) << 8);
+                voice.fNum = (voice.fNum & 0xff) | ((data & 0x01) << 8);
                 voice.looping = (data & 0x10) >> 4;
                 if ((data & 0x60) == 0) data &= 0x7f; // ignore mode setting and set to same state as KON=0
                 else voice.mode = (data & 0x60) >> 5;
 
-                if (voice.keyon == 0 && (data & 0x80) != 0 && this.keyonEnable != 0) {
+                if (voice.keyOn == 0 && (data & 0x80) != 0 && this.keyOnEnable != 0) {
                     voice.playing = 1;
                     voice.position = voice.start;
                     voice.signal = voice.loopSignal = 0;
@@ -469,13 +469,13 @@ public class YmZ280b {
                     voice.irqSchedule = 0;
                 }
                 // new code from MAME 0.143u4
-                else if (voice.keyon != 0 && (data & 0x80) == 0) {
+                else if (voice.keyOn != 0 && (data & 0x80) == 0) {
                     voice.playing = 0;
 
                     // if update_irq_state_timer is set, cancel it.
                     voice.irqSchedule = 0;
                 }
-                voice.keyon = (data & 0x80) >> 7;
+                voice.keyOn = (data & 0x80) >> 7;
 
                 this.update_step(voice);
                 break;
@@ -589,20 +589,20 @@ public class YmZ280b {
 
                 this.updateIrqState();
 
-                if (this.keyonEnable != 0 && (data & 0x80) == 0) {
+                if (this.keyOnEnable != 0 && (data & 0x80) == 0) {
                     for (int i = 0; i < 8; i++) {
                         this.voices[i].playing = 0;
 
                         // if update_irq_state_timer is set, cancel it.
                         this.voices[i].irqSchedule = 0;
                     }
-                } else if (this.keyonEnable == 0 && (data & 0x80) != 0) {
+                } else if (this.keyOnEnable == 0 && (data & 0x80) != 0) {
                     for (int i = 0; i < 8; i++) {
-                        if (this.voices[i].keyon != 0 && this.voices[i].looping != 0)
+                        if (this.voices[i].keyOn != 0 && this.voices[i].looping != 0)
                             this.voices[i].playing = 1;
                     }
                 }
-                this.keyonEnable = (data & 0x80) >> 7;
+                this.keyOnEnable = (data & 0x80) >> 7;
                 break;
 
             default:
@@ -683,7 +683,7 @@ public class YmZ280b {
 
             // finish off the current sample
 
-            // interpolate */
+            // interpolate
             while (remaining > 0 && voice.outputPos < FRAC_ONE) {
                 int interpSample = ((prev * (FRAC_ONE - voice.outputPos)) + (curr * voice.outputPos)) >> FRAC_BITS;
 
@@ -853,17 +853,7 @@ public class YmZ280b {
     }
 
     public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData) {
-        if (this.regionSize != romSize) {
-            this.regionBase = new byte[romSize];
-            this.regionSize = romSize;
-            Arrays.fill(this.regionBase, 0, romSize, (byte) 0xff);
-        }
-        if (dataStart > romSize)
-            return;
-        if (dataStart + dataLength > romSize)
-            dataLength = romSize - dataStart;
-
-        System.arraycopy(romData, 0, this.regionBase, dataStart, dataLength);
+        writeRom(romSize, dataStart, dataLength, romData, 0);
     }
 
     public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddress) {

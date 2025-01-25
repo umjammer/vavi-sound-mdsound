@@ -113,14 +113,14 @@ public class Ym2203Inst extends Instrument.BaseInstrument {
 
     // TODO automatic wired, use annotation?
     public void setFMVolume(int vol, double ignored) {
-        if (chips[0] != null) chips[0].setVolumeFM(vol);
-        if (chips[1] != null) chips[1].setVolumeFM(vol);
+        chips[0].setVolumeFM(vol);
+        chips[1].setVolumeFM(vol);
     }
 
     // TODO automatic wired, use annotation?
     public void setPSGVolume(int vol, double ignored) {
-        if (chips[0] != null) chips[0].setVolumePSG(vol);
-        if (chips[1] != null) chips[1].setVolumePSG(vol);
+        chips[0].setVolumePSG(vol);
+        chips[1].setVolumePSG(vol);
     }
 
     // ----

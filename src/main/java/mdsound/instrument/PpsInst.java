@@ -3,10 +3,11 @@ package mdsound.instrument;
 import java.util.function.BiConsumer;
 
 import mdsound.Instrument;
+import mdsound.Instrument.PcmEnabledInstrument;
 import mdsound.chips.PPS;
 
 
-public class PpsInst extends Instrument.BaseInstrument {
+public class PpsInst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
     private final PPS[] chips = {new PPS(), new PPS()};
 
@@ -72,10 +73,9 @@ public class PpsInst extends Instrument.BaseInstrument {
         return chips[chipId].setParam(paramno, data);
     }
 
-    // ----
-
-    public synchronized void writePcm(int chipId, byte[] pcmData) {
-        chips[chipId].load(pcmData);
+    @Override
+    public synchronized void writePcm(int chipId, byte[] buf, int offset, int length, Object... extras) {
+        chips[chipId].load(buf);
     }
 }
 

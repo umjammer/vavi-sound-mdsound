@@ -430,7 +430,7 @@ Debug.printf("version is after 1.50, %04x", version);
         if (ByteUtil.readLeInt(vgmBuf, 0x30) != 0) {
             chip = new MDSound.Chip();
             chip.id = 0;
-            X68SoundYm2151Inst ym2151 = Instrument.getInstrument(X68SoundYm2151Inst.class);
+            X68kYm2151Inst ym2151 = Instrument.getInstrument(X68kYm2151Inst.class);
             chip.instrument = ym2151;
             chip.samplingRate = SamplingRate;
             chip.clock = ByteUtil.readLeInt(vgmBuf, 0x30);

@@ -76,9 +76,9 @@ import static java.lang.System.getLogger;
             not being addressed properly, causing pitch fluctuation.
    August 15, 2010 - Backport to MAME-style C from OpenMSX
 */
-public class YmF278b {
+public class YmF278B {
 
-    private static final Logger logger = getLogger(YmF278b.class.getName());
+    private static final Logger logger = getLogger(YmF278B.class.getName());
 
     /** standard clock for OPL4 */
     public static final int YMF278B_STD_CLOCK = 33868800;
@@ -1177,17 +1177,7 @@ public class YmF278b {
     }
 
     public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData) {
-        if (this.romSize != romSize) {
-            this.rom = new byte[romSize];
-            this.romSize = romSize;
-            Arrays.fill(this.rom, 0, romSize, (byte) 0xff);
-        }
-        if (dataStart > romSize)
-            return;
-        if (dataStart + dataLength > romSize)
-            dataLength = romSize - dataStart;
-
-        System.arraycopy(romData, 0, this.rom, dataStart, dataLength);
+        writeRom(romSize, dataStart, dataLength, romData, 0);
     }
 
     public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddress) {
@@ -1201,8 +1191,7 @@ public class YmF278b {
         if (dataStart + dataLength > romSize)
             dataLength = romSize - dataStart;
 
-        if (dataLength >= 0)
-            System.arraycopy(romData, srcStartAddress, this.rom, dataStart, dataLength);
+        System.arraycopy(romData, srcStartAddress, this.rom, dataStart, dataLength);
     }
 
     public void writeRam(int dataStart, int dataLength, byte[] ramData, int srcStartAddress) {

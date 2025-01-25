@@ -15,7 +15,7 @@ package mdsound.chips;
  * @author Olivier Galibert
  * @author Aaron Giles
  */
-public class Rf5c68 {
+public class Rf5C68 {
 
     private static final int NUM_CHANNELS = 8;
     private static final int STEAM_STEP = 0x800;
@@ -119,7 +119,7 @@ public class Rf5c68 {
     private int enable;
     private int dataSize;
     private byte[] data;
-    private final Rf5c68.MemStream memStream = new MemStream();
+    private final Rf5C68.MemStream memStream = new MemStream();
 
     public void update(int[][] outputs, int samples) {
         int[] left = outputs[0];

@@ -50,8 +50,9 @@ public class Ym3438Inst extends Instrument.BaseInstrument {
 
     @Override
     public synchronized int write(int chipId, int port, int adr, int data) {
-        writeInternal(chipId, 0 + (port & 1) * 2, adr);
-        writeInternal(chipId, 1 + (port & 1) * 2, data);
+        assert chipId < chips.length;
+        chips[chipId].write(0 + (port & 1) * 2, adr);
+        chips[chipId].write(1 + (port & 1) * 2, data);
         return 0;
     }
 
@@ -85,11 +86,6 @@ public class Ym3438Inst extends Instrument.BaseInstrument {
 
     @Override
     public void resetMask(int chipId, int ch) {
-    }
-
-    private void writeInternal(int chipId, int adr, int data) {
-        assert chipId < chips.length;
-        chips[chipId].write(adr, data);
     }
 }
 

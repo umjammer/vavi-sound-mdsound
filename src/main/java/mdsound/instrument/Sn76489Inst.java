@@ -83,16 +83,16 @@ public class Sn76489Inst extends Instrument.BaseInstrument implements PannableIn
         chips[chipId].setMute(mask[chipId]);
     }
 
+    @Override
+    public synchronized void setPan(int chipId, int data) {
+        chips[chipId].writeGGStereo(data);
+    }
+
     // ----
 
     public synchronized int[] readRegister() {
 //        return chips[0].registers;
         return new int[4];
-    }
-
-    @Override
-    public synchronized void setPan(int chipId, int data) {
-        chips[chipId].writeGGStereo(data);
     }
 
     // ----

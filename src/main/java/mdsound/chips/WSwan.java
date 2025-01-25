@@ -620,7 +620,7 @@ public class WSwan {
         case 0x91:
             // The volume adjustment here seems to be only for the built-in speaker, so
             // It seems that there is no problem if you make it recognize that headphones are connected.
-            this.ioRam[port] |= 0x80;
+            this.ioRam[port] |= (byte) 0x80;
             break;
         case 0x92:
         case 0x93:

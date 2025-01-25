@@ -87,10 +87,6 @@ public class NesInst extends Instrument.BaseInstrument {
         chips[chipId].setMuteMask(mask[chipId]);
     }
 
-    public void writeRam(int chipId, int dataStart, int dataLength, byte[] ramData) {
-        writeRam(chipId, dataStart, dataLength, ramData, 0);
-    }
-
     public void setEmuCore(int emulator) {
     }
 

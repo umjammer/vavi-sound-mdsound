@@ -25,11 +25,8 @@ public class Ym2612Inst extends Instrument.BaseInstrument {
     private final int[][] keyOn = {new int[6], new int[6]};
 
     public Ym2612Inst() {
-        //0..Main
-        visVolume = new int[][][] {
-                {{0, 0}},
-                {{0, 0}}
-        };
+        // 0..Main
+        visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
 
     @Override

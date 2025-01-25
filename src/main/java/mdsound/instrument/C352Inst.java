@@ -6,10 +6,11 @@ import java.util.Map;
 
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
+import mdsound.Instrument.PcmEnabledInstrument;
 import mdsound.chips.C352;
 
 
-public class C352Inst extends Instrument.BaseInstrument {
+public class C352Inst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
     public static final int MAX_CHIPS = 0x02;
 
@@ -82,12 +83,15 @@ public class C352Inst extends Instrument.BaseInstrument {
         chips[chipId].setMuteMask(muteMask);
     }
 
-    //----
-
-    public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
-        C352 chip = chips[chipId];
-        chip.writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
+    /** @param extras 0: srcStartAddress, 1: romSize */
+    @Override
+    public synchronized void writePcm(int chipId, byte[] buf, int offset, int length, Object... extras) {
+        int srcStartAdr = (int) extras[0];
+        int romSize = (int) extras[1];
+        chips[chipId].writeRom(romSize, offset, length, buf, srcStartAdr);
     }
+
+    //----
 
     public synchronized int[] readFlags(int chipId) {
         C352 chip = chips[chipId];

@@ -81,7 +81,7 @@ public class Ym2608Inst extends Instrument.BaseInstrument {
         for (int i = 0; i < 1; i++) {
             outputs[0][i] = buffer[i * 2 + 0];
             outputs[1][i] = buffer[i * 2 + 1];
-//            logger.log(Level.TRACE, "[%8d] : [%8d] [%d]\r".formatted(outputs[0][i], outputs[1][i],i));
+//logger.log(Level.TRACE, "[%8d] : [%8d] [%d]\r".formatted(outputs[0][i], outputs[1][i],i));
         }
 
         visVolume[chipId][0][0] = outputs[0][0];
@@ -149,25 +149,25 @@ public class Ym2608Inst extends Instrument.BaseInstrument {
 
     // TODO automatic wired, use annotation?
     public void setFMVolume(int vol, double ignored) {
-        if (chips[0] != null) chips[0].setVolumeFM(vol);
-        if (chips[1] != null) chips[1].setVolumeFM(vol);
+        chips[0].setVolumeFM(vol);
+        chips[1].setVolumeFM(vol);
     }
 
     // TODO automatic wired, use annotation?
     public void setPSGVolume(int vol, double ignored) {
-        if (chips[0] != null) chips[0].setVolumePSG(vol);
-        if (chips[1] != null) chips[1].setVolumePSG(vol);
+        chips[0].setVolumePSG(vol);
+        chips[1].setVolumePSG(vol);
     }
 
     // TODO automatic wired, use annotation?
     public void setRhythmVolume(int vol, double ignored) {
-        if (chips[0] != null) chips[0].setVolumeRhythmTotal(vol);
-        if (chips[1] != null) chips[1].setVolumeRhythmTotal(vol);
+        chips[0].setVolumeRhythmTotal(vol);
+        chips[1].setVolumeRhythmTotal(vol);
     }
 
     // TODO automatic wired, use annotation?
     public void setAdpcmVolume(int vol, double ignored) {
-        if (chips[0] != null) chips[0].setVolumeADPCM(vol);
-        if (chips[1] != null) chips[1].setVolumeADPCM(vol);
+        chips[0].setVolumeADPCM(vol);
+        chips[1].setVolumeADPCM(vol);
     }
 }
