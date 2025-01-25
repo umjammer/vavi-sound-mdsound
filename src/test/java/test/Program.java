@@ -802,9 +802,8 @@ Debug.printf("version is after 1.50, %04x", version);
             }
         }
 
-        chips = lstChip.toArray(MDSound.Chip[]::new);
-Debug.println("chips: " + chips.length);
-        mds.init(SamplingRate, SamplingBuffer, chips);
+Debug.println("chips: " + lstChip.size());
+        mds.init(SamplingRate, SamplingBuffer, lstChip);
     }
 
     public static void changeChipSampleRate(MDSound.Chip chip, int NewSmplRate) {
