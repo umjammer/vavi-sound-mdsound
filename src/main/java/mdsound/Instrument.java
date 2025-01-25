@@ -85,6 +85,36 @@ public interface Instrument {
         }
     }
 
+    interface AdpcmAEnabled {
+
+        void writeAdpcmA(int chipId, byte[] Buf);
+    }
+
+    interface AdpcmBEnabled {
+
+        void writeAdpcmB(int chipId, byte[] Buf);
+    }
+
+    interface AdpcmEnabledInstrument extends Instrument, AdpcmAEnabled, AdpcmBEnabled{
+
+    }
+
+    interface Pannable {
+
+        void setPan(int chipId, int data);
+    }
+
+    interface PannableInstrument extends Instrument, Pannable {
+    }
+
+    interface PcmEnabled {
+
+        void writePcm(int chipId, byte[] Buf, int offset, int length, Object... extras);
+    }
+
+    interface PcmEnabledInstrument extends Instrument, PcmEnabled {
+    }
+
     ServiceLoader<Instrument> serviceLoader = ServiceLoader.load(Instrument.class);
 
     /** @return reused instance */

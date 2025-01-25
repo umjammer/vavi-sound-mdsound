@@ -37,7 +37,11 @@ public class MDSound {
     }
 
     public <T extends Instrument> T inst(Class<T> clazz, int chipIndex) {
-        return clazz.cast(instruments.getOrDefault(clazz, null)[chipIndex]);
+        if (instruments.containsKey(clazz)) {
+            return clazz.cast(instruments.get(clazz)[chipIndex]);
+        } else {
+            return null;
+        }
     }
 
     private int[][] buffer = null;
@@ -161,6 +165,7 @@ public class MDSound {
     }
 
     public void init(int samplingRate, int samplingBuffer, Chip[] insts) {
+logger.log(Level.DEBUG, "insts: " + Arrays.toString(insts));
         synchronized (lockobj) {
             this.samplingRate = samplingRate;
             this.samplingBuffer = samplingBuffer;

@@ -1144,7 +1144,7 @@ Debug.println("eof: vgmAdr: " + vgmAdr + ", vgmBuf.length: " + vgmBuf.length + "
                     break;
 
                 case 0x8f:
-                    mds.inst(QSoundInst.class).writePcm((byte) 0, romSize, startAddress, bLen - 8, vgmBuf, vgmAdr + 15);
+                    mds.inst(QSoundInst.class).writePcm((byte) 0, vgmBuf, startAddress, bLen - 8, vgmAdr + 15, romSize);
                     break;
 
                 case 0x92:

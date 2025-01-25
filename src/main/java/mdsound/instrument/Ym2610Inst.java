@@ -5,10 +5,11 @@ import java.util.Map;
 
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
+import mdsound.Instrument.AdpcmEnabledInstrument;
 import mdsound.fmgen.Opna.OPNB;
 
 
-public class Ym2610Inst extends Instrument.BaseInstrument {
+public class Ym2610Inst extends Instrument.BaseInstrument implements AdpcmEnabledInstrument {
 
     public static final int DefaultClockValue = 8000000;
 
@@ -125,11 +126,13 @@ public class Ym2610Inst extends Instrument.BaseInstrument {
         return keyOn[chipId];
     }
 
+    @Override
     public synchronized void writeAdpcmA(int chipId, byte[] Buf) {
         assert chipId < chips.length;
         chips[chipId].setAdpcmA(Buf, Buf.length);
     }
 
+    @Override
     public synchronized void writeAdpcmB(int chipId, byte[] Buf) {
         assert chipId < chips.length;
         chips[chipId].setAdpcmB(Buf, Buf.length);

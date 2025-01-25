@@ -4,10 +4,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import mdsound.Instrument;
+import mdsound.Instrument.PannableInstrument;
 import mdsound.chips.Sn76489;
 
 
-public class Sn76489Inst extends Instrument.BaseInstrument {
+public class Sn76489Inst extends Instrument.BaseInstrument implements PannableInstrument {
 
     public static final int DefaultClockValue = 3579545;
     public static final int MAX_CHIPS = 2;
@@ -89,6 +90,7 @@ public class Sn76489Inst extends Instrument.BaseInstrument {
         return new int[4];
     }
 
+    @Override
     public synchronized void setPan(int chipId, int data) {
         chips[chipId].writeGGStereo(data);
     }
