@@ -12,8 +12,9 @@ package mdsound.chips;
  *   CHS 1999-01-09  Fixes new ym3812 emulation interface.
  *   CHS 1998-10-23  Mame streaming sound chip update
  *   EC  1998        Created Interface
+ * @see Opl
  */
-class Ym3812 {
+public class Ym3812 {
 
     private Opl opl;
 
