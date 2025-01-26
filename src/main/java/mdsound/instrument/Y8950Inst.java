@@ -11,6 +11,8 @@ import mdsound.chips.Y8950;
 
 public class Y8950Inst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
+    protected static final int CHIP_SAMPLING_MODE = 0;
+
     public static final int DefaultClockValue = 3579545;
     public static final int MAX_CHIPS = 0x02;
 
