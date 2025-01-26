@@ -16,13 +16,12 @@ public class X68Sound {
     public static final int SNDERR_DLL = -1;
     public static final int SNDERR_FUNC = -2;
 
-    Global global = null;
+    private Global global = Global.getInstance();
 
     public Opm opm;
 
     public X68Sound() {
-        global = new Global();
-        opm = new Opm(global);
+        opm = new Opm();
         global.opm = opm;
     }
 
@@ -116,15 +115,15 @@ public class X68Sound {
     }
 
     public void dmaPokeW(int adrs, int data) {
-        opm.dmaPoke(adrs, data >> 8);
-        opm.dmaPoke(adrs + 1, data);
+        opm.dmaPoke(adrs, (data >> 8) & 0xff);
+        opm.dmaPoke(adrs + 1, data & 0xff);
     }
 
     public void dmaPokeL(int adrs, int dataPtr) {
-        opm.dmaPoke(adrs, dataPtr >> 24);
-        opm.dmaPoke(adrs + 1, dataPtr >> 16);
-        opm.dmaPoke(adrs + 2, dataPtr >> 8);
-        opm.dmaPoke(adrs + 3, dataPtr);
+        opm.dmaPoke(adrs, (dataPtr >> 24) & 0xff);
+        opm.dmaPoke(adrs + 1, (dataPtr >> 16) & 0xff);
+        opm.dmaPoke(adrs + 2, (dataPtr >> 8) & 0xff);
+        opm.dmaPoke(adrs + 3, dataPtr & 0xff);
     }
 
     public void y(int no, int data) {

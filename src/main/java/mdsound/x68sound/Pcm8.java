@@ -11,7 +11,7 @@ public class Pcm8 {
 
     private static final Logger logger = getLogger(Pcm8.class.getName());
 
-    private final Global global;
+    private static final Global global = Global.getInstance();
 
     private int scale; //
     /** 16bit PCM data */
@@ -49,14 +49,13 @@ public class Pcm8 {
     /** 0: No chain operation 0x08: Array chain 0x0C: Link array chain */
     public int dmaOcr;
 
-    public Pcm8(Global global) {
-        this.global = global;
+    public Pcm8() {
         mode = 0x0008_0403;
         setMode(mode);
     }
 
     public void init() {
-        adpcmReg = 0xC7; // ADPCM operation stopped
+        adpcmReg = 0xc7; // ADPCM operation stopped
 
         scale = 0;
         pcm = 0;
@@ -78,7 +77,7 @@ public class Pcm8 {
         dmaOcr = 0;
     }
 
-    private void initSamprate() {
+    private void initSampleRate() {
         rateCounter = 0;
     }
 
@@ -170,19 +169,19 @@ public class Pcm8 {
         try {
             if (dmaMtc == 0) {
                 if ((dmaOcr & 0x08) != 0) { // Chaining Operation
-                    if ((dmaOcr & 0x04) == 0) { // Chaining Operation
+                    if ((dmaOcr & 0x04) == 0) { // Array Chain
                         if (dmaArrayChainSetNextMtcMar() != 0) {
-                            throw new IllegalStateException();
+                            throw new IllegalStateException("Array Chain Failed");
                         }
                     } else { // Link Array Chain
                         if (dmaLinkArrayChainSetNextMtcMar() != 0) {
-                            throw new IllegalStateException();
+                            throw new IllegalStateException("Link Array Chain Filed");
                         }
                     }
                 }
             }
         } catch (Exception e) {
-            logger.log(Level.ERROR, e.getMessage(), e);
+            logger.log(Level.TRACE, e.getMessage(), e);
         }
 
         return dmaLastValue;
@@ -208,7 +207,7 @@ public class Pcm8 {
         dltL = (dltL ^ sign) + (sign & 1);
         pcm += dltL;
 
-        if ((pcm + MAXPCMVAL) > (MAXPCMVAL * 2)) {
+        if (((pcm + MAXPCMVAL) & 0xffff_ffffL) > ((MAXPCMVAL * 2) & 0xffff_ffffL)) {
             if ((pcm + MAXPCMVAL) >= (MAXPCMVAL * 2)) {
                 pcm = MAXPCMVAL;
             } else {
@@ -219,7 +218,7 @@ public class Pcm8 {
         inpPcm = (pcm & -4) << (4 + 4);
 
         scale += Global.DCT[adpcm];
-        if (scale > 48) {
+        if ((scale & 0xffff_ffffL) > 48L) {
             if (scale >= 48) {
                 scale = 48;
             } else {
@@ -238,7 +237,7 @@ public class Pcm8 {
         pcm += pcm16 - pcm16Prev;
         pcm16Prev = pcm16;
 
-        if ((pcm + MAXPCMVAL) > (MAXPCMVAL * 2)) {
+        if (((pcm + MAXPCMVAL) & 0xffff_ffffL) > ((MAXPCMVAL * 2) & 0xffff_ffffL)) {
             if ((pcm + MAXPCMVAL) >= (MAXPCMVAL * 2)) {
                 pcm = MAXPCMVAL;
             } else {
@@ -261,13 +260,13 @@ public class Pcm8 {
                 dataH = dmaGetByte();
                 if (dataH == 0x8000_0000) {
                     rateCounter = 0;
-                    adpcmReg = 0xC7; // ADPCM stop
+                    adpcmReg = 0xc7; // ADPCM stop
                     return 0x8000_0000;
                 }
                 dataL = dmaGetByte();
                 if (dataL == 0x8000_0000) {
                     rateCounter = 0;
-                    adpcmReg = 0xC7; // ADPCM stop
+                    adpcmReg = 0xc7; // ADPCM stop
                     return 0x8000_0000;
                 }
                 pcm16_2pcm((short) ((dataH << 8) | dataL)); // A value is entered in OutPcm
@@ -276,21 +275,21 @@ public class Pcm8 {
                 data = dmaGetByte();
                 if (data == 0x8000_0000) {
                     rateCounter = 0;
-                    adpcmReg = 0xC7; // ADPCM stop
+                    adpcmReg = 0xc7; // ADPCM stop
                     return 0x8000_0000;
                 }
-                pcm16_2pcm((char) data); // A value is entered in InpPcm
+                pcm16_2pcm((byte) data); // A value is entered in InpPcm
             } else {
                 if (n1DataFlag == 0) { // If the next ADPCM data is not available
                     int N10Data; // (N1Data << 4) | N0Data
                     N10Data = dmaGetByte(); // DMA transfer (1 byte)
                     if (N10Data == 0x8000_0000) {
                         rateCounter = 0;
-                        adpcmReg = 0xC7; // ADPCM stop
+                        adpcmReg = 0xc7; // ADPCM stop
                         return 0x8000_0000;
                     }
-                    adpcm2pcm((byte) (N10Data & 0x0F)); // A value is entered in InpPcm
-                    n1Data = (N10Data >> 4) & 0x0F;
+                    adpcm2pcm((byte) (N10Data & 0x0f)); // A value is entered in InpPcm
+                    n1Data = (N10Data >> 4) & 0x0f;
                     n1DataFlag = 1;
                 } else {
                     adpcm2pcm((byte) n1Data); // A value is entered in InpPcm
@@ -317,13 +316,13 @@ public class Pcm8 {
                 dataH = dmaGetByte();
                 if (dataH == 0x8000_0000) {
                     rateCounter = 0;
-                    adpcmReg = 0xC7; // ADPCM stopped
+                    adpcmReg = 0xc7; // ADPCM stopped
                     return 0x8000_0000;
                 }
                 dataL = dmaGetByte();
                 if (dataL == 0x8000_0000) {
                     rateCounter = 0;
-                    adpcmReg = 0xC7; // ADPCM stopped
+                    adpcmReg = 0xc7; // ADPCM stopped
                     return 0x8000_0000;
                 }
                 pcm16_2pcm((short) ((dataH << 8) | dataL)); // A value is entered in OutPcm
@@ -332,21 +331,21 @@ public class Pcm8 {
                 data = dmaGetByte();
                 if (data == 0x8000_0000) {
                     rateCounter = 0;
-                    adpcmReg = 0xC7; // ADPCM stopped
+                    adpcmReg = 0xc7; // ADPCM stopped
                     return 0x8000_0000;
                 }
-                pcm16_2pcm((char) data); // A value is entered in InpPcm
+                pcm16_2pcm((byte) data); // A value is entered in InpPcm
             } else {
                 if (n1DataFlag == 0) { // If the next ADPCM data is not available
                     int N10Data; // (N1Data << 4) | N0Data
                     N10Data = dmaGetByte(); // DMA transfer (1 byte)
                     if (N10Data == 0x8000_0000) {
                         rateCounter = 0;
-                        adpcmReg = 0xC7; // ADPCM stopped
+                        adpcmReg = 0xc7; // ADPCM stopped
                         return 0x8000_0000;
                     }
-                    adpcm2pcm((byte) (N10Data & 0x0F)); // A value is entered in InpPcm
-                    n1Data = (N10Data >> 4) & 0x0F;
+                    adpcm2pcm((byte) (N10Data & 0x0f)); // A value is entered in InpPcm
+                    n1Data = (N10Data >> 4) & 0x0f;
                     n1DataFlag = 1;
                 } else {
                     adpcm2pcm((byte) n1Data); // A value is entered in InpPcm
@@ -373,7 +372,7 @@ public class Pcm8 {
         }
         adpcmReg = 0xC7; // ADPCM stopped
         dmaMtc = 0;
-        dmaMarBuf = adrsBuf;//Even if you assign it here, it will not be referenced anywhere
+        dmaMarBuf = adrsBuf; // Even if you assign it here, it will not be referenced anywhere
         dmaMarPtr = adrsPtr;
         setMode(mode);
         if ((mode & 3) != 0) {
@@ -439,7 +438,7 @@ public class Pcm8 {
             pcmKind = m;
             this.mode = (this.mode & 0xffff_00ff) | (m << 8);
         }
-        m = (mode) & 0xff;
+        m = mode & 0xff;
         if (m != 0xff) {
             m &= 3;
             if (m == 0) {

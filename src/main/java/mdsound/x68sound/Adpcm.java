@@ -11,7 +11,7 @@ public class Adpcm {
 
     private static final Logger logger = getLogger(Adpcm.class.getName());
 
-    private final Global global;
+    private static final Global global = Global.getInstance();
 
     //
     private int scale;
@@ -48,10 +48,6 @@ public class Adpcm {
     public int adpcmReg;
     public int[] dmaReg = new int[0x40];
     public int finishCounter;
-
-    public Adpcm(Global global) {
-        this.global = global;
-    }
 
     public void setAdpcmRate(int rate) {
         adpcmRate = Global.ADPCMRATEADDTBL[rate & 7];
@@ -145,14 +141,14 @@ public class Adpcm {
     public int dmaContinueSetNextMtcMar() {
         dmaReg[0x07] &= (0xff - 0x40); // CNT=0
 
-        dmaReg[0x0a] = dmaReg[0x1a]; // BTC . MTC
+        dmaReg[0x0a] = dmaReg[0x1a]; // BTC -> MTC
         dmaReg[0x0b] = dmaReg[0x1b];
-        dmaReg[0x0c] = dmaReg[0x1c]; // BAR . MAR
+        dmaReg[0x0c] = dmaReg[0x1c]; // BAR -> MAR
         dmaReg[0x0d] = dmaReg[0x1d];
         dmaReg[0x0e] = dmaReg[0x1e];
         dmaReg[0x0f] = dmaReg[0x1f];
 
-        dmaReg[0x29] = dmaReg[0x39]; // BFC . MFC
+        dmaReg[0x29] = dmaReg[0x39]; // BFC -> MFC
 
         if ((dmaReg[0x0a] | dmaReg[0x0b]) == 0) { // MTC == 0 ?
             dmaError(0x0d); // Count error (memory address/memory counter)
@@ -175,8 +171,8 @@ public class Adpcm {
             return 1;
         }
         --btc;
-        dmaReg[0x1a] = btc >> 8;
-        dmaReg[0x1b] = btc;
+        dmaReg[0x1a] = (btc >> 8) & 0xff;
+        dmaReg[0x1b] = btc & 0xff;
 
         int bar = dmaReg[0x1c] * 0x100_0000
                 + dmaReg[0x1d] * 0x1_0000
@@ -193,10 +189,10 @@ public class Adpcm {
             return 1;
         }
 //        dmaReg[0x1c] = Global.bswapl(bar);
-        dmaReg[0x1c] = bar >> 24;
-        dmaReg[0x1d] = bar >> 16;
-        dmaReg[0x1e] = bar >> 8;
-        dmaReg[0x1f] = bar;
+        dmaReg[0x1c] = (bar >> 24) & 0xff;
+        dmaReg[0x1d] = (bar >> 16) & 0xff;
+        dmaReg[0x1e] = (bar >> 8) & 0xff;
+        dmaReg[0x1f] = bar & 0xff;
 
         dmaReg[0x0c] = mem0; // MAR
         dmaReg[0x0d] = mem1;
@@ -238,10 +234,10 @@ public class Adpcm {
             return 1;
         }
         //dDmaReg[0x1C] = Global.bswapl(bar);
-        dmaReg[0x1c] = bar >> 24;
-        dmaReg[0x1d] = bar >> 16;
-        dmaReg[0x1e] = bar >> 8;
-        dmaReg[0x1f] = bar;
+        dmaReg[0x1c] = (bar >> 24) & 0xff;
+        dmaReg[0x1d] = (bar >> 16) & 0xff;
+        dmaReg[0x1e] = (bar >> 8) & 0xff;
+        dmaReg[0x1f] = bar & 0xff;
 
         dmaReg[0x0c] = mem0; // MAR
         dmaReg[0x0d] = mem1;
@@ -291,14 +287,14 @@ public class Adpcm {
         }
         dmaLastValue = mem;
         mar += MACTBL[(dmaReg[0x06] >> 2) & 3];
-        dmaReg[0x0c] = mar >> 24;
-        dmaReg[0x0d] = mar >> 16;
-        dmaReg[0x0e] = mar >> 8;
-        dmaReg[0x0f] = mar;
+        dmaReg[0x0c] = (mar >> 24) & 0xff;
+        dmaReg[0x0d] = (mar >> 16) & 0xff;
+        dmaReg[0x0e] = (mar >> 8) & 0xff;
+        dmaReg[0x0f] = mar & 0xff;
 
         --mtc;
-        dmaReg[0x0a] = mtc >> 8;
-        dmaReg[0x0b] = mtc;
+        dmaReg[0x0a] = (mtc >> 8) & 0xff;
+        dmaReg[0x0b] = mtc & 0xff;
 
         try {
             if (mtc == 0) {
@@ -328,7 +324,7 @@ public class Adpcm {
                 }
             }
         } catch (Exception e) {
-            logger.log(Level.ERROR, e.getMessage(), e);
+            logger.log(Level.TRACE, e.getMessage(), e);
         }
 
         return dmaLastValue;
@@ -350,7 +346,7 @@ public class Adpcm {
         dltL = (dltL ^ sign) + (sign & 1);
         pcm += dltL;
 
-        if ((pcm + MAX_PCM_VAL) > (MAX_PCM_VAL * 2)) {
+        if (((pcm + MAX_PCM_VAL) & 0xffff_ffffL) > ((MAX_PCM_VAL * 2) & 0xffff_ffffL)) {
             if ((pcm + MAX_PCM_VAL) >= (MAX_PCM_VAL * 2)) {
                 pcm = MAX_PCM_VAL;
             } else {
@@ -361,7 +357,7 @@ public class Adpcm {
         inpPcm = (pcm & -4) << (4 + 4);
 
         scale += Global.DCT[adpcm];
-        if (scale > 48) {
+        if ((scale & 0xffff_ffffL) > 48L) {
             if (scale >= 48) {
                 scale = 48;
             } else {
@@ -427,7 +423,7 @@ public class Adpcm {
         inpPcmPrev = inpPcm;
         outPcm = outInpPcm - outInpPcmPrev + outPcm - (outPcm >> 8) - (outPcm >> 9) - (outPcm >> 12);
         outInpPcmPrev = outInpPcm;
-        return (outPcm >> 9);
+        return outPcm >> 9;
     }
 }
 

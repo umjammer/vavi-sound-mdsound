@@ -2,7 +2,7 @@ package mdsound.x68sound;
 
 public class Lfo {
 
-    public Global global;
+    private static final Global global = Global.getInstance();
 
     private static final int SIZELFOTBL = 512; // 2^9
     private static final int SIZELFOTBL_BITS = 9;
@@ -23,13 +23,13 @@ public class Lfo {
     private static final int[] PMSSHL = new int[] {0, 0, 0, 0, 0, 0, 1, 2};
 
     /** 0, 1, 2, 4, 8, 16, 32, 32 */
-    private final int[] pmsmul = new int[Global.N_CH];
+    private final int[] pmsMul = new int[Global.N_CH];
     /** 0, 0, 0, 0, 0,  0,  1,  2 */
-    private final int[] pmsshl = new int[Global.N_CH];
+    private final int[] pmsShl = new int[Global.N_CH];
     /** Left shift count 31(0), 0(1), 1(2), 2(3) */
     private final int[] ams = new int[Global.N_CH];
     /** Pmd*Pmsmul[] */
-    private final int[] pmdPmsmul = new int[Global.N_CH];
+    private final int[] pmdPmsMul = new int[Global.N_CH];
     private int pmd;
     private int amd;
 
@@ -48,7 +48,7 @@ public class Lfo {
     /** Step value for LFO cycle fine adjustment counter (16 to 31) */
     private int lfoSmallCounterStep;
     /** LFO frequency setting value LFRQ */
-    private int lfrq;
+    private int lFrq;
     /** LFO wave form */
     private int lfoWaveForm;
 
@@ -56,21 +56,17 @@ public class Lfo {
     private final int[] pmValue = new int[Global.N_CH];
     private final int[] amValue = new int[Global.N_CH];
 
-    private final byte[] pmTbl0 = new byte[SIZELFOTBL];
-    private final byte[] pmTbl2 = new byte[SIZELFOTBL];
-    private final byte[] amTbl0 = new byte[SIZELFOTBL];
-    private final byte[] amTbl2 = new byte[SIZELFOTBL];
+    private final int[] pmTbl0 = new int[SIZELFOTBL]; // sbyte
+    private final int[] pmTbl2 = new int[SIZELFOTBL]; // sbyte
+    private final int[] amTbl0 = new int[SIZELFOTBL]; // byte
+    private final int[] amTbl2 = new int[SIZELFOTBL]; // byte
 
-    public Lfo(Global global) {
-        this.global = global;
-
-        int i;
-
-        for (i = 0; i < Global.N_CH; ++i) {
-            pmsmul[i] = 0;
-            pmsshl[i] = 0;
+    public Lfo() {
+        for (int i = 0; i < Global.N_CH; ++i) {
+            pmsMul[i] = 0;
+            pmsShl[i] = 0;
             ams[i] = 31;
-            pmdPmsmul[i] = 0;
+            pmdPmsMul[i] = 0;
 
             pmValue[i] = 0;
             amValue[i] = 0;
@@ -85,37 +81,36 @@ public class Lfo {
         lfoIdx = 0;
         lfoSmallCounter = 0;
         lfoSmallCounterStep = 0;
-        lfrq = 0;
+        lFrq = 0;
         lfoWaveForm = 0;
 
         pmTblValue = 0;
         amTblValue = 255;
 
         // PM Wave Form 0,3
-        for (i = 0; i <= 127; ++i) {
-            pmTbl0[i] = (byte) i;
-            pmTbl0[i + 128] = (byte) (i - 127);
-            pmTbl0[i + 256] = (byte) i;
-            pmTbl0[i + 384] = (byte) (i - 127);
+        for (int i = 0; i <= 127; ++i) {
+            pmTbl0[i] = i & 0xff;
+            pmTbl0[i + 128] = (i - 127) & 0xff;
+            pmTbl0[i + 256] = i & 0xff;
+            pmTbl0[i + 384] = (i - 127) & 0xff;
         }
         // AM Wave Form 0,3
-        for (i = 0; i <= 255; ++i) {
-            amTbl0[i] = (byte) (255 - i);
-            amTbl0[i + 256] = (byte) (255 - i);
-
+        for (int i = 0; i <= 255; ++i) {
+            amTbl0[i] = 255 - i;
+            amTbl0[i + 256] = 255 - i;
         }
 
         // PM Wave Form 2
-        for (i = 0; i <= 127; ++i) {
-            pmTbl2[i] = (byte) i;
-            pmTbl2[i + 128] = (byte) (127 - i);
-            pmTbl2[i + 256] = (byte) -i;
-            pmTbl2[i + 384] = (byte) (i - 127);
+        for (int i = 0; i <= 127; ++i) {
+            pmTbl2[i] = i & 0xff;
+            pmTbl2[i + 128] = (127 - i) & 0xff;
+            pmTbl2[i + 256] = (-i) & 0xff;
+            pmTbl2[i + 384] = (i - 127) & 0xff;
         }
         // AM Wave Form 2
-        for (i = 0; i <= 255; ++i) {
-            amTbl2[i] = (byte) (255 - i);
-            amTbl2[i + 256] = (byte) i;
+        for (int i = 0; i <= 255; ++i) {
+            amTbl2[i] = 255 - i;
+            amTbl2[i + 256] = i;
         }
     }
 
@@ -145,7 +140,7 @@ public class Lfo {
         // LfoTime is not reset!!
         lfoIdx = 0;
 
-        culcTblValue();
+        calcTblValue();
         calcAllPmValue();
         calcAllAmValue();
     }
@@ -155,10 +150,10 @@ public class Lfo {
     }
 
     public void setLFRQ(int n) {
-        lfrq = n & 255;
+        lFrq = n & 255;
 
-        lfoSmallCounterStep = 16 + (lfrq & 15);
-        int shift = 15 - (lfrq >> 4);
+        lfoSmallCounterStep = 16 + (lFrq & 15);
+        int shift = 15 - (lFrq >> 4);
         if (shift == 0) {
             shift = 1;
             lfoSmallCounterStep <<= 1;
@@ -171,14 +166,14 @@ public class Lfo {
 
     public void setPMDAMD(int n) {
         if ((n & 0x80) != 0) {
-            pmd = n & 0x7F;
+            pmd = n & 0x7f;
             int ch;
             for (ch = 0; ch < Global.N_CH; ++ch) {
-                pmdPmsmul[ch] = pmd * pmsmul[ch];
+                pmdPmsMul[ch] = pmd * pmsMul[ch];
             }
             calcAllPmValue();
         } else {
-            amd = n & 0x7F;
+            amd = n & 0x7f;
             calcAllAmValue();
         }
     }
@@ -186,16 +181,16 @@ public class Lfo {
     public void setWaveForm(int n) {
         lfoWaveForm = n & 3;
 
-        culcTblValue();
+        calcTblValue();
         calcAllPmValue();
         calcAllAmValue();
     }
 
     public void setPMSAMS(int ch, int n) {
         int pms = (n >> 4) & 7;
-        pmsmul[ch] = PMSMUL[pms];
-        pmsshl[ch] = PMSSHL[pms];
-        pmdPmsmul[ch] = pmd * pmsmul[ch];
+        pmsMul[ch] = PMSMUL[pms];
+        pmsShl[ch] = PMSSHL[pms];
+        pmdPmsMul[ch] = pmd * pmsMul[ch];
         calcPmValue(ch);
 
         ams[ch] = ((n & 3) - 1) & 31;
@@ -216,15 +211,15 @@ public class Lfo {
             lfoSmallCounter += lfoSmallCounterStep;
             switch (lfoWaveForm) {
             case 0: {
-                int idxadd = lfoSmallCounter >> 4;
-                lfoIdx = (lfoIdx + idxadd) & (SIZELFOTBL - 1);
+                int idxAdd = lfoSmallCounter >> 4;
+                lfoIdx = (lfoIdx + idxAdd) & (SIZELFOTBL - 1);
                 pmTblValue = pmTbl0[lfoIdx];
                 amTblValue = amTbl0[lfoIdx];
                 break;
             }
             case 1: {
-                int idxadd = lfoSmallCounter >> 4;
-                lfoIdx = (lfoIdx + idxadd) & (SIZELFOTBL - 1);
+                int idxAdd = lfoSmallCounter >> 4;
+                lfoIdx = (lfoIdx + idxAdd) & (SIZELFOTBL - 1);
                 if ((lfoIdx & (SIZELFOTBL / 2 - 1)) < SIZELFOTBL / 4) {
                     pmTblValue = 128;
                     amTblValue = 256;
@@ -235,8 +230,8 @@ public class Lfo {
             }
             break;
             case 2: {
-                int idxadd = lfoSmallCounter >> 4;
-                lfoIdx = (lfoIdx + idxadd + idxadd) & (SIZELFOTBL - 1);
+                int idxAdd = lfoSmallCounter >> 4;
+                lfoIdx = (lfoIdx + idxAdd + idxAdd) & (SIZELFOTBL - 1);
                 pmTblValue = pmTbl2[lfoIdx];
                 amTblValue = amTbl2[lfoIdx];
                 break;
@@ -263,7 +258,7 @@ public class Lfo {
         return amValue[ch];
     }
 
-    public void culcTblValue() {
+    public void calcTblValue() {
         switch (lfoWaveForm) {
         case 0:
             pmTblValue = pmTbl0[lfoIdx];
@@ -291,9 +286,9 @@ public class Lfo {
 
     public void calcPmValue(int ch) {
         if (pmTblValue >= 0) {
-            pmValue[ch] = ((pmTblValue * pmdPmsmul[ch]) >> (7 + 5)) << pmsshl[ch];
+            pmValue[ch] = ((pmTblValue * pmdPmsMul[ch]) >> (7 + 5)) << pmsShl[ch];
         } else {
-            pmValue[ch] = -((((-pmTblValue) * pmdPmsmul[ch]) >> (7 + 5)) << pmsshl[ch]);
+            pmValue[ch] = -((((-pmTblValue) * pmdPmsMul[ch]) >> (7 + 5)) << pmsShl[ch]);
         }
     }
 

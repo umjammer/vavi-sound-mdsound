@@ -50,8 +50,8 @@ public class SoundIocs {
      * @param data Data (0 to 255)
      */
     public void opmSet(int addr, int data) {
-        if (addr == 0x1B) {
-            opmReg1B = (opmReg1B & 0xC0) | (data & 0x3F);
+        if (addr == 0x1b) {
+            opmReg1B = (opmReg1B & 0xc0) | (data & 0x3f);
             data = opmReg1B;
         }
 
@@ -107,8 +107,8 @@ public class SoundIocs {
                 if (dmalen > 0xff00) { // The number of bytes that can be transferred at one time is 0xff00
                     dmalen = 0xff00;
                 }
-                x68Sound.dmaPokeL(0x1C, adpcmCotAdrs); // Set the next DMA transfer address in BAR
-                x68Sound.dmaPokeW(0x1A, dmalen); // Set the next DMA transfer byte count to BTC
+                x68Sound.dmaPokeL(0x1c, adpcmCotAdrs); // Set the next DMA transfer address in BAR
+                x68Sound.dmaPokeW(0x1a, dmalen); // Set the next DMA transfer byte count to BTC
                 adpcmCotAdrs += dmalen;
                 adpcmCotLen -= dmalen;
 
@@ -150,17 +150,17 @@ public class SoundIocs {
     private void setAdpcmMode(int mode, int ccr) {
         if (mode >= 0x0200) {
             mode -= 0x0200;
-            opmReg1B &= 0x7F; // ADPCM clock is 8MHz
+            opmReg1B &= 0x7f; // ADPCM clock is 8MHz
         } else {
             opmReg1B |= 0x80; // ADPCM clock is 4MHz
         }
         opmWait();
-        x68Sound.opmReg(0x1B);
+        x68Sound.opmReg(0x1b);
         opmWait();
         x68Sound.opmPoke(opmReg1B); // ADPCM clock setting (8 or 4MHz)
         int ppiReg;
-        ppiReg = (((mode >> 6) & 0x0C) | PANTBL[mode & 3]);
-        ppiReg |= (x68Sound.ppiPeek() & 0xF0);
+        ppiReg = (((mode >> 6) & 0x0c) | PANTBL[mode & 3]);
+        ppiReg |= (x68Sound.ppiPeek() & 0xf0);
         x68Sound.dmaPoke(0x07, ccr); // DMA transfer start
         x68Sound.ppiPoke(ppiReg); // Set sampling rate & PAN to PPI
     }
@@ -175,7 +175,7 @@ public class SoundIocs {
      */
     private void adpcmOutMain(int stat, int mode, int len, int adrs) {
         while (adpcmStat != 0) ; // Wait for DMA transfer to finish
-        adpcmStat = (stat + 2);
+        adpcmStat = stat + 2;
         x68Sound.dmaPoke(0x05, 0x32); // Set DMA OCR to no chain operation
 
         x68Sound.dmaPoke(0x00, 0xff); // Clear all bits in DMA CSR
@@ -217,11 +217,11 @@ public class SoundIocs {
         while (adpcmStat != 0) ; // Wait for DMA transfer to finish
 
         adpcmStat = 0x12;
-        x68Sound.dmaPoke(0x05, 0x3A); // Set DMA OCR to array chain operation
+        x68Sound.dmaPoke(0x05, 0x3a); // Set DMA OCR to array chain operation
 
         x68Sound.dmaPoke(0x00, 0xff); // Clear all bits in DMA CSR
-        x68Sound.dmaPokeL(0x1C, tblPtr); // Set the array chain table address in the DMA BAR
-        x68Sound.dmaPokeW(0x1A, cnt); // Set the number of array chain tables in the DMA BTC
+        x68Sound.dmaPokeL(0x1c, tblPtr); // Set the array chain table address in the DMA BAR
+        x68Sound.dmaPokeW(0x1a, cnt); // Set the number of array chain tables in the DMA BTC
         setAdpcmMode(mode, 0x88); // Set the sampling frequency and PAN and start DMA transfer
 
         x68Sound.adpcmPoke(0x02); // ADPCM playback begins
@@ -237,10 +237,10 @@ public class SoundIocs {
         while (adpcmStat != 0) ; // Wait for DMA transfer to finish
 
         adpcmStat = 0x22;
-        x68Sound.dmaPoke(0x05, 0x3E); // Set DMA OCR to link array chain operation
+        x68Sound.dmaPoke(0x05, 0x3e); // Set DMA OCR to link array chain operation
 
         x68Sound.dmaPoke(0x00, 0xff); // Clear all bits in DMA CSR
-        x68Sound.dmaPokeL(0x1C, tblPtr); // Set the link array chain table address in the DMA BAR
+        x68Sound.dmaPokeL(0x1c, tblPtr); // Set the link array chain table address in the DMA BAR
         setAdpcmMode(mode, 0x88); // Set the sampling frequency and PAN and start DMA transfer
 
         x68Sound.adpcmPoke(0x02); // ADPCM playback begins
@@ -270,8 +270,8 @@ public class SoundIocs {
         }
 
         x68Sound.dmaPoke(0x00, 0xff); // Clear all bits in DMA CSR
-        x68Sound.dmaPokeL(0x0C, adpcmCotAdrs); // Set the DMA transfer address in DMA MAR
-        x68Sound.dmaPokeW(0x0A, dmaLen); // Set the number of DMA transfer bytes in the DMA MTC
+        x68Sound.dmaPokeL(0x0c, adpcmCotAdrs); // Set the DMA transfer address in DMA MAR
+        x68Sound.dmaPokeW(0x0a, dmaLen); // Set the number of DMA transfer bytes in the DMA MTC
         adpcmCotAdrs += dmaLen;
         adpcmCotLen -= dmaLen;
         if (adpcmCotLen <= 0) {
@@ -281,11 +281,11 @@ public class SoundIocs {
             if (dmaLen > 0xff00) {
                 dmaLen = 0xff00;
             }
-            x68Sound.dmaPokeL(0x1C, adpcmCotAdrs); // Set the next DMA transfer address in BAR
-            x68Sound.dmaPokeW(0x1A, dmaLen); // Set the next DMA transfer byte count to BTC
+            x68Sound.dmaPokeL(0x1c, adpcmCotAdrs); // Set the next DMA transfer address in BAR
+            x68Sound.dmaPokeW(0x1a, dmaLen); // Set the next DMA transfer byte count to BTC
             adpcmCotAdrs += dmaLen;
             adpcmCotLen -= dmaLen;
-            setAdpcmMode(mode, 0xC8); // Set the DMA CNT bit to 1 to start DMA transfer.
+            setAdpcmMode(mode, 0xc8); // Set the DMA CNT bit to 1 to start DMA transfer.
         }
 
         x68Sound.adpcmPoke(0x02); // ADPCM playback begins
@@ -301,7 +301,7 @@ public class SoundIocs {
      * $32: Outputting with _iocs_adpcmcot
      */
     public int adpcmSns() {
-        return (adpcmStat & 0x7F);
+        return (adpcmStat & 0x7f);
     }
 
     /**
