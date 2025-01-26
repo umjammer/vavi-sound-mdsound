@@ -101,7 +101,7 @@ public class Pwm {
         this.fifoLTmp = 0;
         this.fifoRTmp = 0;
 
-        //loudness = 0;
+//        loudness = 0;
         setCycle(0);
         setInt(0);
     }

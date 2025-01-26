@@ -720,7 +720,7 @@ public class YmF262 {
 
         private static final int FREQ_MASK = (1 << FREQ_SH) - 1;
 
-        /** envelope output entries  */
+        // envelope output entries
         private static final int ENV_BITS = 10;
         private static final int ENV_LEN = 1 << ENV_BITS;
         private static final double ENV_STEP = 128.0 / ENV_LEN;
@@ -728,7 +728,7 @@ public class YmF262 {
         private static final int MAX_ATT_INDEX = (1 << (ENV_BITS - 1)) - 1; // 511
         private static final int MIN_ATT_INDEX = 0;
 
-        /** sinwave entries  */
+        // sin-wave entries
         private static final int SIN_BITS = 10;
         private static final int SIN_LEN = 1 << SIN_BITS;
         private static final int SIN_MASK = SIN_LEN - 1;
@@ -747,10 +747,10 @@ public class YmF262 {
                 -1, -1, -1, -1, -1, -1, -1, -1
         };
 
-        /** multiple table  */
         private static final int ML = 2;
+        /** multiple table  */
         private static final int[] mulTab = {
-                // 1/2, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,10,12,12,15,15
+                // 1/2, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 12, 12, 15, 15
                 (int) (0.50 * ML), (int) (1.00 * ML), (int) (2.00 * ML), (int) (3.00 * ML), (int) (4.00 * ML), (int) (5.00 * ML), (int) (6.00 * ML), (int) (7.00 * ML),
                 (int) (8.00 * ML), (int) (9.00 * ML), (int) (10.00 * ML), (int) (10.00 * ML), (int) (12.00 * ML), (int) (12.00 * ML), (int) (15.00 * ML), (int) (15.00 * ML)
         };
@@ -770,24 +770,29 @@ public class YmF262 {
 
         private static final int ENV_QUIET = TL_TAB_LEN >> 4;
 
-        /** sin waveform table in 'decibel' scale
-         * there are eight waveforms on Opl3 chips */
+        /**
+         * sin waveform table in 'decibel' scale
+         * there are eight waveforms on Opl3 chips
+         */
         private static final int[] sinTab = new int[SIN_LEN * 8];
 
-        /** LFO Amplitude Modulation table (verified on real YM3812)
-           27 output levels (triangle waveform); 1 level takes one of: 192, 256 or 448 samples
-
-           Length: 210 elements.
-
-            Each of the elements has to be repeated
-            exactly 64 times (on 64 consecutive samples).
-            The whole table takes: 64 * 210 = 13440 samples.
-
-            When AM = 1 data is used directly
-            When AM = 0 data is divided by 4 before being used (losing precision is important)
-        */
         private static final int LFO_AM_TAB_ELEMENTS = 210;
 
+        /**
+         * LFO Amplitude Modulation table (verified on real YM3812)
+         * <pre>
+         * 27 output levels (triangle waveform); 1 level takes one of: 192, 256 or 448 samples
+         *
+         * Length: 210 elements.
+         *
+         * Each of the elements has to be repeated
+         * exactly 64 times (on 64 consecutive samples).
+         * The whole table takes: 64 * 210 = 13440 samples.
+         *
+         * When AM = 1 data is used directly
+         * When AM = 0 data is divided by 4 before being used (losing precision is important)
+         * </pre>
+         */
         private static final int[] lfoAmTable = {
                 0, 0, 0, 0, 0, 0, 0,
                 1, 1, 1, 1,
