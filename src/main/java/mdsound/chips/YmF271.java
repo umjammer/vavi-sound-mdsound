@@ -74,7 +74,7 @@ public class YmF271 {
         public int srcNote, srcb;
 
         private int step;
-        private int stepPtr;
+        private long stepPtr;
 
         public int active;
         public int bits;
@@ -87,8 +87,8 @@ public class YmF271 {
         private int envDecay2Step;
         private int envReleaseStep;
 
-        private int feedbackModulation0;
-        private int feedbackModulation1;
+        private long feedbackModulation0;
+        private long feedbackModulation1;
 
         private int lfoPhase, lfoStep;
         private int lfoAmplitude;
@@ -103,10 +103,11 @@ public class YmF271 {
 
             if (this.waveForm == 7) {
                 // external waveform (PCM)
-                st = (2 * (this.fns | 2048)) * pow_table[this.block] * fs_frequency[this.fs];
+                st = (double) (2 * (this.fns | 2048)) * pow_table[this.block] * fs_frequency[this.fs];
                 st = st * multiple_table[this.multiple];
 
                 // LFO phase modulation
+                st *= this.lfoPhaseMod;
 
                 st /= 524288d / 65536; // pre-multiply with 65536
 
@@ -137,36 +138,36 @@ public class YmF271 {
         private void updateEnvelope() {
             switch (this.envState) {
                 case ENV_ATTACK -> {
-                this.volume += this.envAttackStep;
+                    this.volume += this.envAttackStep;
 
-                if (this.volume >= (255 << ENV_VOLUME_SHIFT)) {
-                    this.volume = (255 << ENV_VOLUME_SHIFT);
-                    this.envState = ENV_DECAY1;
+                    if (this.volume >= (255 << ENV_VOLUME_SHIFT)) {
+                        this.volume = (255 << ENV_VOLUME_SHIFT);
+                        this.envState = ENV_DECAY1;
+                    }
                 }
-            }
 
                 case ENV_DECAY1 -> {
-                int decayLevel = 255 - (this.decay1lvl << 4);
-                this.volume -= this.envDecay1Step;
+                    int decayLevel = 255 - (this.decay1lvl << 4);
+                    this.volume -= this.envDecay1Step;
 
-                if (!checkEnvelopeEnd() && (this.volume >> ENV_VOLUME_SHIFT) <= decayLevel) {
-                    this.envState = ENV_DECAY2;
+                    if (!checkEnvelopeEnd() && (this.volume >> ENV_VOLUME_SHIFT) <= decayLevel) {
+                        this.envState = ENV_DECAY2;
+                    }
                 }
-            }
 
                 case ENV_DECAY2 -> {
-                this.volume -= this.envDecay2Step;
-                checkEnvelopeEnd();
-            }
+                    this.volume -= this.envDecay2Step;
+                    checkEnvelopeEnd();
+                }
 
                 case ENV_RELEASE -> {
-                this.volume -= this.envReleaseStep;
-                checkEnvelopeEnd();
-            }
+                    this.volume -= this.envReleaseStep;
+                    checkEnvelopeEnd();
+                }
             }
         }
 
-        private void init(double[] lutLfo) {
+        private void initLfo(double[] lutLfo) {
             this.lfoPhase = 0;
             this.lfoAmplitude = 0;
             this.lfoPhaseMod = 0;
@@ -183,11 +184,11 @@ public class YmF271 {
             this.calculateStep();
         }
 
-        private int calculateOp(int inp) {
-            int env, slotOutput, slotInput = 0;
+        private long calculateOp(long inp) {
+            long env, slotOutput, slotInput = 0;
 
             this.updateEnvelope();
-            this.update();
+            this.updateLfo();
             env = calculateVolume();
 
             if (inp == OP_INPUT_FEEDBACK) {
@@ -199,7 +200,7 @@ public class YmF271 {
                 slotInput = (inp << (SIN_BITS - 2)) * modulationLevel[this.feedback];
             }
 
-            slotOutput = lutWaves[this.waveForm][((this.stepPtr + slotInput) >> 16) & SIN_MASK] & 0xffff;
+            slotOutput = lutWaves[this.waveForm][(int) (((this.stepPtr + slotInput) >> 16) & SIN_MASK)];
             slotOutput = (slotOutput * env) >> 16;
             this.stepPtr += this.step;
 
@@ -210,27 +211,19 @@ public class YmF271 {
             // Note: Actually every one of these stores only int (16.16 fixed point),
             //       but the calculations need long.
             int volume;
-            int envVolume;
-            int lfoVolume = 65536;
+            long envVolume;
 
-            switch (ams) {
-            case 0:
-                lfoVolume = 65536;
-                break; // 0dB
-            case 1:
-                lfoVolume = 65536 - ((lfoAmplitude * 33124) >> 16);
-                break; // 5.90625dB
-            case 2:
-                lfoVolume = 65536 - ((lfoAmplitude * 16742) >> 16);
-                break; // 11.8125dB
-            case 3:
-                lfoVolume = 65536 - ((lfoAmplitude * 4277) >> 16);
-                break; // 23.625dB
-            }
+            long lfoVolume = switch (ams) {
+                case 0 -> 65536; // 0dB
+                case 1 -> 65536 - ((lfoAmplitude * 33124L) >> 16); // 5.90625dB
+                case 2 -> 65536 - ((lfoAmplitude * 16742L) >> 16); // 11.8125dB
+                case 3 -> 65536 - ((lfoAmplitude * 4277L) >> 16);  // 23.625dB
+                default -> 65536;
+            };
 
             envVolume = (lutEnvVolume[255 - (this.volume >> ENV_VOLUME_SHIFT)] * lfoVolume) >> 16;
 
-            volume = (envVolume * lutTotalLevel[tl]) >> 16;
+            volume = (int) ((envVolume * lutTotalLevel[tl]) >> 16);
 
             return volume;
         }
@@ -260,20 +253,20 @@ public class YmF271 {
             }
 
             // init attack state
-            envAttackStep = (rate < 4) ? 0 : (int) (((255 - 0) / lutAr[rate]) * 65536.0);
             rate = getKeyScaledRate(ar * 2, keycode, keyScale);
+            envAttackStep = (rate < 4) ? 0 : (int) (((255d - 0) / lutAr[rate]) * 65536.0);
 
             // init decay1 state
-            envDecay1Step = (rate < 4) ? 0 : (int) (((255 - decay_level) / lutDc[rate]) * 65536.0);
             rate = getKeyScaledRate(decay1rate * 2, keycode, keyScale);
+            envDecay1Step = (rate < 4) ? 0 : (int) (((255d - decay_level) / lutDc[rate]) * 65536.0);
 
             // init decay2 state
-            envDecay2Step = (rate < 4) ? 0 : (int) (((255 - 0) / lutDc[rate]) * 65536.0);
             rate = getKeyScaledRate(decay2rate * 2, keycode, keyScale);
+            envDecay2Step = (rate < 4) ? 0 : (int) (((255d - 0) / lutDc[rate]) * 65536.0);
 
             // init release state
-            envReleaseStep = (rate < 4) ? 0 : (int) (((255 - 0) / lutAr[rate]) * 65536.0);
             rate = getKeyScaledRate(relrate * 4, keycode, keyScale);
+            envReleaseStep = (rate < 4) ? 0 : (int) (((255d - 0) / lutAr[rate]) * 65536.0);
 
             volume = (255 - 160) << ENV_VOLUME_SHIFT; // -60db
             envState = ENV_ATTACK;
@@ -291,46 +284,46 @@ public class YmF271 {
             for (int i = 0; i < length; i++) {
                 // loop
                 if ((this.stepPtr >> 16) > this.endAddr) {
-                    this.stepPtr = this.stepPtr - ((this.endAddr << 16) + this.loopAddr << 16);
+                    this.stepPtr = this.stepPtr - (((long) this.endAddr << 16) + (long) this.loopAddr << 16);
                     if ((this.stepPtr >> 16) > this.endAddr) {
                         // overflow
                         this.stepPtr &= 0xffff;
-                        this.stepPtr |= (this.loopAddr << 16);
+                        this.stepPtr |= ((long) this.loopAddr << 16);
                         if ((this.stepPtr >> 16) > this.endAddr) {
                             // still overflow? (triggers in rdft2, rarely)
                             this.stepPtr &= 0xffff;
-                            this.stepPtr |= (this.endAddr << 16);
+                            this.stepPtr |= ((long) this.endAddr << 16);
                         }
                     }
                 }
 
-                int sample;
+                short sample;
                 if (this.bits == 8) {
                     // 8bit
-                    sample = (readMemory.apply(this.startAddr + (this.stepPtr >> 16)) & 0xff) << 8;
+                    sample = (short) ((readMemory.apply((int) (this.startAddr + (this.stepPtr >> 16))) & 0xff) << 8);
                 } else {
                     // 12bit
                     if ((this.stepPtr & 0x10000) != 0)
-                        sample = (readMemory.apply(this.startAddr + (this.stepPtr >> 17) * 3 + 2) & 0xff) << 8
-                                | (readMemory.apply(this.startAddr + (this.stepPtr >> 17) * 3 + 1) << 4) & 0xf0;
+                        sample = (short) ((readMemory.apply((int) (this.startAddr + (this.stepPtr >> 17) * 3 + 2)) & 0xff) << 8
+                                | (readMemory.apply((int) (this.startAddr + (this.stepPtr >> 17) * 3 + 1)) << 4) & 0xf0);
                     else
-                        sample = (readMemory.apply(this.startAddr + (this.stepPtr >> 17) * 3) & 0xff) << 8
-                                | readMemory.apply(this.startAddr + (this.stepPtr >> 17) * 3 + 1) & 0xf0;
+                        sample = (short) ((readMemory.apply((int) (this.startAddr + (this.stepPtr >> 17) * 3)) & 0xff) << 8
+                                | readMemory.apply((int) (this.startAddr + (this.stepPtr >> 17) * 3 + 1)) & 0xf0);
                 }
 
                 this.updateEnvelope();
                 this.updateLfo();
 
-                int finalVolume = this.calculateVolume();
+                long finalVolume = this.calculateVolume();
 
-                int ch0Vol = ((finalVolume * lutAttenuation[this.ch0Level]) >> 16) & 0xffff;
-                int ch1Vol = ((finalVolume * lutAttenuation[this.ch1Level]) >> 16) & 0xffff;
+                long ch0Vol = ((finalVolume * lutAttenuation[this.ch0Level]) >> 16);
+                long ch1Vol = ((finalVolume * lutAttenuation[this.ch1Level]) >> 16);
 
-//                if (ch0Vol > 65536) ch0Vol = 65536;
-//                if (ch1Vol > 65536) ch1Vol = 65536;
+                if (ch0Vol > 65536) ch0Vol = 65536;
+                if (ch1Vol > 65536) ch1Vol = 65536;
 
-                mixP[ptrMixP++] += (sample * ch0Vol) >> 16;
-                mixP[ptrMixP++] += (sample * ch1Vol) >> 16;
+                mixP[ptrMixP++] += (int) ((sample * ch0Vol) >> 16);
+                mixP[ptrMixP++] += (int) ((sample * ch1Vol) >> 16);
 
                 // go to next step
                 this.stepPtr += this.step;
@@ -595,13 +588,13 @@ public class YmF271 {
     }
 
     /** calculates the output of one FM Operator */
-    private int calculateOp(int slotNum, int inp) {
+    private long calculateOp(int slotNum, long inp) {
         Slot slot = this.slots[slotNum];
         return slot.calculateOp(inp);
     }
 
-    private void setFeedback(int slotnum, int inp) {
-        Slot slot = this.slots[slotnum];
+    private void setFeedback(int slotNum, long inp) {
+        Slot slot = this.slots[slotNum];
         slot.feedbackModulation1 = (((inp << (SIN_BITS - 2)) * feedbackLevel[slot.feedback]) / 16);
     }
 
@@ -632,8 +625,8 @@ public class YmF271 {
 
                 if (this.slots[slot1].active != 0) {
                     for (int i = 0; i < samples; i++) {
-                        int output1 = 0, output2 = 0, output3 = 0, output4 = 0;
-                        int phaseMod1, phaseMod2, phaseMod3;
+                        long output1 = 0, output2 = 0, output3 = 0, output4 = 0;
+                        long phaseMod1, phaseMod2, phaseMod3;
                         switch (this.slots[slot1].algorithm) {
                         // <--------|
                         // +--[S1]--|--+--[S3]--+--[S2]--+--[S4]-.
@@ -831,14 +824,14 @@ public class YmF271 {
                             break;
                         }
 
-                        mixP[ptrMixp++] += ((output1 * lutAttenuation[this.slots[slot1].ch0Level]) +
-                                (output2 * lutAttenuation[this.slots[slot2].ch0Level]) +
-                                (output3 * lutAttenuation[this.slots[slot3].ch0Level]) +
-                                (output4 * lutAttenuation[this.slots[slot4].ch0Level])) >> 16;
-                        mixP[ptrMixp++] += ((output1 * lutAttenuation[this.slots[slot1].ch1Level]) +
-                                (output2 * lutAttenuation[this.slots[slot2].ch1Level]) +
-                                (output3 * lutAttenuation[this.slots[slot3].ch1Level]) +
-                                (output4 * lutAttenuation[this.slots[slot4].ch1Level])) >> 16;
+                        mixP[ptrMixp++] += (int) (((output1 * lutAttenuation[this.slots[slot1].ch0Level]) +
+                                                        (output2 * lutAttenuation[this.slots[slot2].ch0Level]) +
+                                                        (output3 * lutAttenuation[this.slots[slot3].ch0Level]) +
+                                                        (output4 * lutAttenuation[this.slots[slot4].ch0Level])) >> 16);
+                        mixP[ptrMixp++] += (int) (((output1 * lutAttenuation[this.slots[slot1].ch1Level]) +
+                                                        (output2 * lutAttenuation[this.slots[slot2].ch1Level]) +
+                                                        (output3 * lutAttenuation[this.slots[slot3].ch1Level]) +
+                                                        (output4 * lutAttenuation[this.slots[slot4].ch1Level])) >> 16);
                     }
                 }
                 break;
@@ -853,8 +846,8 @@ public class YmF271 {
                     mixP = this.mixBuffer;
                     if (this.slots[slot1].active != 0) {
                         for (int i = 0; i < samples; i++) {
-                            int output1 = 0, output3 = 0;
-                            int phaseMod1, phaseMod3;
+                            long output1 = 0, output3 = 0;
+                            long phaseMod1, phaseMod3;
                             switch (this.slots[slot1].algorithm & 3) {
                             // <--------|
                             // +--[S1]--|--+--[S3]-.
@@ -893,10 +886,10 @@ public class YmF271 {
                                 break;
                             }
 
-                            mixP[ptrMixp++] += ((output1 * lutAttenuation[this.slots[slot1].ch0Level]) +
-                                    (output3 * lutAttenuation[this.slots[slot3].ch0Level])) >> 16;
-                            mixP[ptrMixp++] += ((output1 * lutAttenuation[this.slots[slot1].ch1Level]) +
-                                    (output3 * lutAttenuation[this.slots[slot3].ch1Level])) >> 16;
+                            mixP[ptrMixp++] += (int) (((output1 * lutAttenuation[this.slots[slot1].ch0Level]) +
+                                                                (output3 * lutAttenuation[this.slots[slot3].ch0Level])) >> 16);
+                            mixP[ptrMixp++] += (int) (((output1 * lutAttenuation[this.slots[slot1].ch1Level]) +
+                                                                (output3 * lutAttenuation[this.slots[slot3].ch1Level])) >> 16);
                         }
                     }
                 }
@@ -912,8 +905,8 @@ public class YmF271 {
 
                 if (this.slots[slot1].active != 0) {
                     for (int i = 0; i < samples; i++) {
-                        int output1 = 0, output2 = 0, output3 = 0;
-                        int phaseMod1, phaseMod3;
+                        long output1 = 0, output2 = 0, output3 = 0;
+                        long phaseMod1, phaseMod3;
                         switch (this.slots[slot1].algorithm & 7) {
                         // <--------|
                         // +--[S1]--|--+--[S3]--+--[S2]-.
@@ -999,12 +992,12 @@ public class YmF271 {
                             break;
                         }
 
-                        mixP[ptrMixp++] += ((output1 * lutAttenuation[this.slots[slot1].ch0Level]) +
-                                (output2 * lutAttenuation[this.slots[slot2].ch0Level]) +
-                                (output3 * lutAttenuation[this.slots[slot3].ch0Level])) >> 16;
-                        mixP[ptrMixp++] += ((output1 * lutAttenuation[this.slots[slot1].ch1Level]) +
-                                (output2 * lutAttenuation[this.slots[slot2].ch1Level]) +
-                                (output3 * lutAttenuation[this.slots[slot3].ch1Level])) >> 16;
+                        mixP[ptrMixp++] += (int) (((output1 * lutAttenuation[this.slots[slot1].ch0Level]) +
+                                                        (output2 * lutAttenuation[this.slots[slot2].ch0Level]) +
+                                                        (output3 * lutAttenuation[this.slots[slot3].ch0Level])) >> 16);
+                        mixP[ptrMixp++] += (int) (((output1 * lutAttenuation[this.slots[slot1].ch1Level]) +
+                                                        (output2 * lutAttenuation[this.slots[slot2].ch1Level]) +
+                                                        (output3 * lutAttenuation[this.slots[slot3].ch1Level])) >> 16);
                     }
                 }
 
