@@ -1,6 +1,6 @@
-/**
+/*
  * Yamaha YMZ280B driver
- * <p>
+ *
  * by Aaron Giles
  */
 
@@ -16,7 +16,6 @@ import static java.lang.System.getLogger;
 
 /**
  * Yamaha YMZ280B driver
- * by Aaron Giles
  * <p>
  * YMZ280B 8-Channel PCMD8 PCM/ADPCM Decoder
  * <p>
@@ -24,12 +23,16 @@ import static java.lang.System.getLogger;
  * Voice data stored in external memory can be played back simultaneously for up to eight voices
  * Voice data format can be selected from 4-bit ADPCM, 8-bit PCM and 16-bit PCM
  * Controller of Voice data external memory
- * Up to 16M bytes of ROM or SRAM (x 8 bits, access time 150ms max) can be connected
- * Continuous access is possible
- * Loop playback between selective addresses is possible
+ * <pre>
+ *  Up to 16M bytes of ROM or SRAM (x 8 bits, access time 150ms max) can be connected
+ *  Continuous access is possible
+ *  Loop playback between selective addresses is possible
+ * </pre>
  * Voice data playback frequency control
- * 4-bit ADPCM ................ 0.172 to 44.1kHz in 256 steps
- * 8-bit PCM, 16-bit PCM ...... 0.172 to 88.2kHz in 512 steps
+ * <pre>
+ *  4-bit ADPCM ................ 0.172 to 44.1kHz in 256 steps
+ *  8-bit PCM, 16-bit PCM ...... 0.172 to 88.2kHz in 512 steps
+ * </pre>
  * 256 steps total level and 16 steps panpot can be set
  * Voice signal is output in stereo 16-bit 2's complement MSB-first format
  * <p>
@@ -39,6 +42,8 @@ import static java.lang.System.getLogger;
  * It also happens to be the only one using 16-bit PCM.
  * <p>
  * Some other drivers (eg. bishi.c, bfm_sc4/5.c) also use ROM readback.
+ *
+ * @author Aaron Giles
  */
 public class YmZ280B {
 
@@ -58,6 +63,9 @@ public class YmZ280B {
     /** struct describing a single playing ADPCM Voice */
     private static class Voice {
 
+        /** step size index shift table */
+        private static final int[] indexScale = {0x0e6, 0x0e6, 0x0e6, 0x0e6, 0x133, 0x199, 0x200, 0x266};
+
         /** lookup table for the precomputed difference */
         private static final int[] diffLookup = new int[16];
 
@@ -71,9 +79,6 @@ public class YmZ280B {
                 diffLookup[nib] = (nib & 0x08) != 0 ? -value : value;
             }
         }
-
-        /** step size index shift table */
-        private static final int[] indexScale = {0x0e6, 0x0e6, 0x0e6, 0x0e6, 0x133, 0x199, 0x200, 0x266};
 
         /*+ 1 if we are actively playing */
         private int playing;
@@ -123,9 +128,9 @@ public class YmZ280B {
         /** current fractional position */
         private int outputPos;
         /** last sample output */
-        private int lastSample;
+        private short lastSample;
         /** current sample target */
-        private int currSample;
+        private short currSample;
         /** 1 if the IRQ state is updated by timer */
         private int irqSchedule;
         /** used for muting */
@@ -150,6 +155,9 @@ public class YmZ280B {
          * general ADPCM decoding routine
          */
         private int generateAdpcm(byte[] base, int size, short[] buffer, int samples) {
+            int position = this.position;
+            int signal = this.signal;
+            int step = this.step;
             int ptrBuffer = 0;
 
             // two cases: first cases is non-looping
@@ -160,7 +168,7 @@ public class YmZ280B {
                     int val = readMemory(base, size, position / 2) >> ((~position & 1) << 2);
                     signal += (step * diffLookup[val & 15]) / 8;
 
-                    /* clamp to the maximum */
+                    // clamp to the maximum
                     if (signal > 32767)
                         signal = 32767;
                     else if (signal < -32768)
@@ -197,7 +205,6 @@ public class YmZ280B {
                     if (signal > 32767)
                         signal = 32767;
                     else if (signal < -32768)
-
                         signal = -32768;
 
                     // adjust the step size and clamp
@@ -234,6 +241,11 @@ public class YmZ280B {
                 }
             }
 
+            // update the parameters
+            this.position = position;
+            this.signal = signal;
+            this.step = step;
+
             return samples;
         }
 
@@ -241,6 +253,7 @@ public class YmZ280B {
          * general 8-bit PCM decoding routine
          */
         private int generatePcm8(byte[] base, int size, short[] buffer, int samples) {
+            int position = this.position;
             int val;
             int ptrBuffer = 0;
 
@@ -289,6 +302,9 @@ public class YmZ280B {
                 }
             }
 
+            // update the parameters
+            this.position = position;
+
             return samples;
         }
 
@@ -296,6 +312,7 @@ public class YmZ280B {
          * general 16-bit PCM decoding routine
          */
         private int generatePcm16(byte[] base, int size, short[] buffer, int samples) {
+            int position = this.position;
             int val;
             int ptrBuffer = 0;
 
@@ -308,7 +325,7 @@ public class YmZ280B {
                 while (samples != 0) {
                     // fetch the current value
                     //val = (short)((base[position / 2 + 1] << 8) + base[position / 2 + 0]);
-                    val = ((readMemory(base, size, position / 2 + 0) & 0xff) << 8) + (readMemory(base, size, position / 2 + 1) & 0xff);
+                    val = (short) (((readMemory(base, size, position / 2 + 0) & 0xff) << 8) + (readMemory(base, size, position / 2 + 1) & 0xff));
                     // Note: Last MAME updates say it's: ((position / 2 + 1) << 8) + (position / 2 + 0);
 
                     // output to the buffer, scaling by the volume
@@ -328,8 +345,8 @@ public class YmZ280B {
                 // loop while we still have samples to generate
                 while (samples != 0) {
                     // fetch the current value
-                    val = ((readMemory(base, size, position / 2 + 0) & 0xff) << 8)
-                            + (readMemory(base, size, position / 2 + 1) & 0xff);
+                    val = (short) (((readMemory(base, size, position / 2 + 0) & 0xff) << 8)
+                            + (readMemory(base, size, position / 2 + 1) & 0xff));
 
                     // output to the buffer, scaling by the volume
                     buffer[ptrBuffer++] = (short) val;
@@ -349,6 +366,9 @@ public class YmZ280B {
                     }
                 }
             }
+
+            // update the parameters
+            this.position = position;
 
             return samples;
         }
@@ -430,9 +450,9 @@ public class YmZ280B {
         double frequency;
         // compute the frequency
         if (voice.mode == 1)
-            frequency = this.masterClock * ((voice.fNum & 0x0ff) + 1) * (1.0 / 256.0);
+            frequency = this.masterClock * (double) ((voice.fNum & 0x0ff) + 1) * (1.0 / 256.0);
         else
-            frequency = this.masterClock * ((voice.fNum & 0x1ff) + 1) * (1.0 / 256.0);
+            frequency = this.masterClock * (double) ((voice.fNum & 0x1ff) + 1) * (1.0 / 256.0);
         voice.outputStep = (int) (frequency * (double) FRAC_ONE / this.rate);
     }
 
@@ -656,8 +676,8 @@ public class YmZ280B {
         for (int v = 0; v < 8; v++) {
 
             Voice voice = this.voices[v];
-            int prev = voice.lastSample;
-            int curr = voice.currSample;
+            short prev = voice.lastSample;
+            short curr = voice.currSample;
             short[] currData = this.scratch;
             int currDataP = 0;
             int[] lDest = lAcc;
@@ -685,7 +705,7 @@ public class YmZ280B {
 
             // interpolate
             while (remaining > 0 && voice.outputPos < FRAC_ONE) {
-                int interpSample = ((prev * (FRAC_ONE - voice.outputPos)) + (curr * voice.outputPos)) >> FRAC_BITS;
+                int interpSample = (((int) prev * (FRAC_ONE - voice.outputPos)) + ((int) curr * voice.outputPos)) >> FRAC_BITS;
 
                 lDest[destP] += interpSample * lVol;
                 rDest[destP] += interpSample * rVol;
@@ -721,14 +741,12 @@ public class YmZ280B {
             // if there are leftovers, ramp back to 0
             if (samplesLeft != 0) {
                 // note: samplesLeft bit 16 is set if the Voice was finished at the same time the function ended
-                int base;
-                int i, t;
 
                 samplesLeft &= 0xffff;
-                base = newSamples - samplesLeft;
-                t = (base == 0) ? curr : this.scratch[base - 1] & 0xffff;
+                int base = newSamples - samplesLeft;
+                int t = (base == 0) ? curr : this.scratch[base - 1] & 0xffff;
 
-                for (i = 0; i < samplesLeft; i++) {
+                for (int i = 0; i < samplesLeft; i++) {
                     if (t < 0) t = -((-t * 15) >> 4);
                     else if (t > 0) t = (t * 15) >> 4;
                     this.scratch[base + i] = (short) t;
@@ -746,13 +764,13 @@ public class YmZ280B {
 
             // advance forward one sample
             prev = curr;
-            curr = currData[currDataP++] & 0xffff;
+            curr = currData[currDataP++];
 
             // then sample-rate convert with linear interpolation
             while (remaining > 0) {
                 // interpolate
                 while (remaining > 0 && voice.outputPos < FRAC_ONE) {
-                    int interp_sample = ((prev * (FRAC_ONE - voice.outputPos)) + (curr * voice.outputPos)) >> FRAC_BITS;
+                    int interp_sample = (((int) prev * (FRAC_ONE - voice.outputPos)) + ((int) curr * voice.outputPos)) >> FRAC_BITS;
 
                     lDest[destP] += interp_sample * lVol;
                     rDest[destP] += interp_sample * rVol;
@@ -765,7 +783,7 @@ public class YmZ280B {
                 if (voice.outputPos >= FRAC_ONE) {
                     voice.outputPos -= FRAC_ONE;
                     prev = curr;
-                    curr = currData[currDataP++] & 0xffff;
+                    curr = currData[currDataP++];
                 }
             }
 
