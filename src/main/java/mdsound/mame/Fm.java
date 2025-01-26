@@ -1,5 +1,5 @@
 /*
- * File: Fm.c -- software implementation of Yamaha FM Sound generator
+ * software implementation of Yamaha FM Sound generator
  *
  * Copyright Jarek Burczynski (bujar at mame dot net)
  * Copyright Tatsuyuki Satoh , MultiArcadeMachineEmulator development
@@ -16,9 +16,11 @@ import dotnet4j.util.compat.QuadConsumer;
 import dotnet4j.util.compat.TriConsumer;
 
 
-/*
+/**
+ * Yamaha FM Sound generator.
+ * <p>
  * History:
- *
+ * <pre>
  * 2006-2008 Eke-Eke (Genesis Plus GX), MAME backport by R. Belmont.
  *  - implemented PG overflow, aka "detune bug" (Ariel, Comix Zone, Shaq Fu, Spiderman,...), credits to Nemesis
  *  - fixed SSG-EG support, credits to Nemesis and additional fixes from Alone Coder
@@ -104,6 +106,12 @@ import dotnet4j.util.compat.TriConsumer;
  * change ADPCM_SHIFT (10.8) missing bank change 0x4000-0xffff.
  * add ADPCM_SHIFT_MASK
  * change ADPCMA_DECODE_MIN/MAX.
+ * </pre>
+ *
+ * @author Jarek Burczynski
+ * @author Tatsuyuki Satoh
+ * @author MultiArcadeMachineEmulator development
+ * @version 1.4.2
  */
 public class Fm {
 

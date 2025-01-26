@@ -174,14 +174,16 @@ public class MDSound {
             return r.getItem1();
         }
 
-        public int total(double[] mul, int size) {
+        // TODO naming
+        public int volume1(double[] mul, int size) {
             if (this.instrument instanceof NesInst) this.volume = 0;
             int balance = this.getRegulationVolume(mul);
             //16384 = 0x4000 = short.MAXValue + 1
             return (int) ((((int) (16384.0 * Math.pow(10.0, 0 / 40.0)) * balance) >> 8) * mul[0]) / size;
         }
 
-        public void tVolume(double[] mul, double volumeMul) {
+        // TODO naming
+        public void volume2(double[] mul, double volumeMul) {
             if ((this.volumeBalance & 0x8000) != 0)
                 this.tVolumeBalance = (this.getRegulationVolume(mul) * (this.volumeBalance & 0x7fff) + 0x80) >> 8;
             else
@@ -221,13 +223,13 @@ logger.log(Level.WARNING, "no chips");
             int total = 0;
             double[] mul = new double[1];
             for (Chip chip : chips) {
-                total += chip.total(mul, chips.size());
+                total += chip.volume1(mul, chips.size());
             }
             // Calculate the multiple from the total volume value to the maximum volume
             volumeMul = 16384.0 / total;
             // Calculate the actual multiple from the volume value
             for (Chip chip : chips) {
-                chip.tVolume(mul, volumeMul);
+                chip.volume2(mul, volumeMul);
             }
 
             for (Chip chip : chips) {

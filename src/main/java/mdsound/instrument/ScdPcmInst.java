@@ -9,7 +9,9 @@ import mdsound.Instrument.PcmEnabledInstrument;
 import mdsound.chips.ScdPcm;
 
 
-// RF5C164
+/**
+ * RF5C164
+ */
 public class ScdPcmInst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
     public static final int MAX_CHIPS = 0x02;

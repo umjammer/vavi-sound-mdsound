@@ -9,8 +9,6 @@ package mdsound.chips;
 
 /**
  * Philips SAA1099 Sound driver
- * <p>
- * By Juergen Buchmueller and Manuel Abadia
  * <pre>
  * SAA1099 register layout:
  * ========================

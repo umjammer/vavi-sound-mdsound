@@ -1,3 +1,12 @@
+/*
+ * YAMAHA DELTA-T adpcm Sound emulation subroutine
+ * used by fmopl.c (Y8950Inst) and Fm.c (YM2608 and YM2610/B)
+ *
+ * Base program is YM2610 emulator by Hiromitsu Shioya.
+ * Written by Tatsuyuki Satoh
+ * Improvements by Jarek Burczynski (bujar at mame dot net)
+ */
+
 package mdsound.mame;
 
 import java.lang.System.Logger;
@@ -10,15 +19,9 @@ import static mdsound.mame.Fm.BaseChip.OUTD_CENTER;
 
 /**
  * YAMAHA DELTA-T adpcm Sound emulation subroutine
- * used by fmopl.c (Y8950Inst) and Fm.c (YM2608 and YM2610/B)
- *
- * Base program is YM2610 emulator by Hiromitsu Shioya.
- * Written by Tatsuyuki Satoh
- * Improvements by Jarek Burczynski (bujar at mame dot net)
- *
- *
+ * <p>
  * History:
- *
+ * <pre>
  * 03-08-2003 Jarek Burczynski:
  *  - fixed BRDY flag implementation.
  *
@@ -59,13 +62,18 @@ import static mdsound.mame.Fm.BaseChip.OUTD_CENTER;
  *
  * TODO:
  *      Check size of the address register on the other chips....
- *
- * Version 0.72
- *
+ * </pre>
+ * <p>
  * Sound chips that have this unit:
+ * <pre>
  * YM2608   OPNA
  * YM2610/B OPNB
  * Y8950    MSX AUDIO
+ * </pre>
+ *
+ * @author Tatsuyuki Satoh
+ * @author Jarek Burczynski
+ * @version 0.72
  */
 public class YmDeltaT {
 

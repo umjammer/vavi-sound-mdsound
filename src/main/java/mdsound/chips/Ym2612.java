@@ -26,6 +26,13 @@ import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import static java.lang.System.getLogger;
 
 
+/**
+ * Ym2612 (OPN) MAME
+ *
+ * @author Stéphane Dallongeville
+ * @author Maxim
+ * @author Blargg
+ */
 public class Ym2612 {
 
     private static final Logger logger = getLogger(Ym2612.class.getName());

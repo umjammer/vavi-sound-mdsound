@@ -11,18 +11,17 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.stream.IntStream;
 
+import mdsound.x68sound.Global;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertNotNull;
-
-import mdsound.x68sound.Global;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import test.Program;
 import vavi.util.Debug;
 import vavi.util.properties.annotation.Property;
 import vavi.util.properties.annotation.PropsEntity;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 /**
@@ -72,8 +71,15 @@ Debug.println(filename);
     @Test
     void test1() throws Exception {
 System.err.println("44: " + Global.OPMLOWPASS_44.length);
-System.err.println("48: " + Global.OPMLOWPASS_44.length);
-        assertNotNull(Global.OPMLOWPASS_44);
+System.err.println("48: " + Global.OPMLOWPASS_48.length);
+        assertEquals(441, Global.OPMLOWPASS_44.length);
+        assertEquals(64, Global.OPMLOWPASS_44[0].length);
+        assertEquals(-22, Global.OPMLOWPASS_44[1][3]);
+        assertEquals(-29, Global.OPMLOWPASS_44[439][60]);
+        assertEquals(96, Global.OPMLOWPASS_48.length);
+        assertEquals(64, Global.OPMLOWPASS_48[0].length);
+        assertEquals(-15, Global.OPMLOWPASS_48[3][3]);
+        assertEquals(-17, Global.OPMLOWPASS_48[93][60]);
     }
 
     /**

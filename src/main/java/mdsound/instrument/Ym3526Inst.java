@@ -10,6 +10,8 @@ import mdsound.chips.Ym3526;
 
 public class Ym3526Inst extends Instrument.BaseInstrument {
 
+    private static final int CHIP_SAMPLING_MODE = 0;
+
     public static final int DefaultClockValue = 3579545;
     public static final int MAX_CHIPS = 0x02;
 

@@ -19,7 +19,7 @@ public class Ym3812 {
     private Opl opl;
 
     /**
-     * Initialize YM3526 emulator(s).
+     * Initialize YM3812 emulator(s).
      *
      * @param clock is the chips clock in Hz
      * @param rate  is sampling rate
