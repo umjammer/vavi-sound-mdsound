@@ -75,8 +75,16 @@ public class NesInst extends Instrument.BaseInstrument {
         chips[chipId].stop();
     }
 
-    public void writeRam(int chipId, int dataStart, int dataLength, byte[] ramData) {
-        writeRam(chipId, dataStart, dataLength, ramData, 0);
+    @Override
+    public synchronized void setMask(int chipId, int ch) {
+        mask[chipId] |= 0x1 << ch;
+        chips[chipId].setMuteMask(mask[chipId]);
+    }
+
+    @Override
+    public synchronized void resetMask(int chipId, int ch) {
+        mask[chipId] &= ~(0x1 << ch);
+        chips[chipId].setMuteMask(mask[chipId]);
     }
 
     public void setEmuCore(int emulator) {
@@ -86,30 +94,16 @@ public class NesInst extends Instrument.BaseInstrument {
         chips[chipId].setChipOption();
     }
 
-    private void setMuteMask(int chipId, int muteMask) {
-        chips[chipId].setMuteMask(muteMask);
-    }
-
     // ----
-
-    public synchronized void setNESMask(int chipId, int ch) {
-        mask[chipId] |= 0x1 << ch;
-        setMuteMask(chipId, mask[chipId]);
-    }
 
     public synchronized void setFDSMask(int chipId) {
         mask[chipId] |= 0x20;
-        setMuteMask(chipId, mask[chipId]);
-    }
-
-    public synchronized void resetMask(int chipId, int ch) {
-        mask[chipId] &= ~(0x1 << ch);
-        setMuteMask(chipId, mask[chipId]);
+        chips[chipId].setMuteMask(mask[chipId]);
     }
 
     public synchronized void resetFDSMask(int chipId) {
         mask[chipId] &= ~0x20;
-        setMuteMask(chipId, mask[chipId]);
+        chips[chipId].setMuteMask(mask[chipId]);
     }
 
     public synchronized void writeRam(int chipId, int dataStart, int dataLength, byte[] ramData, int ramDataStartAdr) {

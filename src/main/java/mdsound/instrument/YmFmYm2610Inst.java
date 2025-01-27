@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2025 by Naohide Sano, All rights reserved.
+ *
+ * Programmed by Naohide Sano
+ */
+
 package mdsound.instrument;
 
 import java.util.HashMap;
@@ -5,11 +11,18 @@ import java.util.Map;
 
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
+import mdsound.Instrument.AdpcmEnabledInstrument;
 import vavi.sound.ymfm.Opn.Ym2610;
 import vavi.sound.ymfm.YmFm.VgmChip;
 
 
-public class YmFmYm2610Inst extends Instrument.BaseInstrument {
+/**
+ * Ym2610 (OPNB) YmFm version.
+ *
+ * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
+ * @version 0.00 2025-01-18 nsano initial version <br>
+ */
+public class YmFmYm2610Inst extends Instrument.BaseInstrument implements AdpcmEnabledInstrument {
 
     public static final int DefaultClockValue = 8000000;
 
@@ -99,12 +112,22 @@ public class YmFmYm2610Inst extends Instrument.BaseInstrument {
         chips[chipId] = null;
     }
 
-    private void setAdpcmA(int chipId, byte[] _adpcma, int _adpcma_size) {
+    @Override
+    public void setMask(int chipId, int ch) {
+    }
+
+    @Override
+    public void resetMask(int chipId, int ch) {
+    }
+
+    @Override
+    public void writeAdpcmA(int chipId, byte[] _adpcma) {
         assert chipId < chips.length;
 //        chips[chipId].setAdpcmA(_adpcma, _adpcma_size);
     }
 
-    private void setAdpcmB(int chipId, byte[] _adpcmb, int _adpcmb_size) {
+    @Override
+    public void writeAdpcmB(int chipId, byte[] _adpcmb) {
         assert chipId < chips.length;
 //        chips[chipId].setAdpcmB(_adpcmb, _adpcmb_size);
     }

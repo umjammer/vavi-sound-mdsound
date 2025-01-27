@@ -5,10 +5,13 @@ import java.util.Map;
 
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
+import mdsound.Instrument.PcmEnabledInstrument;
 import mdsound.chips.Y8950;
 
 
-public class Y8950Inst extends Instrument.BaseInstrument {
+public class Y8950Inst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
+
+    protected static final int CHIP_SAMPLING_MODE = 0;
 
     public static final int DefaultClockValue = 3579545;
     public static final int MAX_CHIPS = 0x02;
@@ -85,6 +88,24 @@ public class Y8950Inst extends Instrument.BaseInstrument {
         chips[chipId].stop();
     }
 
+    @Override
+    public void setMask(int chipId, int ch) {
+//        chips[chipId].setMuteMask(ch); // TODO
+    }
+
+    @Override
+    public void resetMask(int chipId, int ch) {
+//        chips[chipId].setMuteMask(~ch); // TODO
+    }
+
+    /** @param extras 0: srcStartAddress, 1: romSize */
+    @Override
+    public synchronized void writePcm(int chipId, byte[] romData, int dataStart, int dataLength, Object... extras) {
+        int srcStartAdr = (int) extras[0];
+        int romSize = (int) extras[1];
+        chips[chipId].writePcmRom(romSize, dataStart, dataLength, romData, srcStartAdr);
+    }
+
     public int readStatusPort(int chipId, int offset) {
         return read(chipId, 0);
     }
@@ -99,14 +120,6 @@ public class Y8950Inst extends Instrument.BaseInstrument {
 
     public void writePort(int chipId, int offset, int data) {
         chips[chipId].write(1 & 1, data);
-    }
-
-    public void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
-        writePcm(chipId, romSize, dataStart, dataLength, romData, 0);
-    }
-
-    public void setMuteMask(int chipId, int muteMask) {
-        chips[chipId].setMuteMask(muteMask);
     }
 
     private void doIrq(int irq) {
@@ -150,12 +163,6 @@ public class Y8950Inst extends Instrument.BaseInstrument {
     private void updateStream(int interval) {
         //stream_update(info.stream);
         chips[0].update(dummyBuf, 0);
-    }
-
-    //----
-
-    public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
-        chips[chipId].writePcmRom(romSize, dataStart, dataLength, romData, srcStartAdr);
     }
 
     //----

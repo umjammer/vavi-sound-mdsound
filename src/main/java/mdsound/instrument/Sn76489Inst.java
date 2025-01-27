@@ -4,10 +4,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 import mdsound.Instrument;
+import mdsound.Instrument.PannableInstrument;
 import mdsound.chips.Sn76489;
 
 
-public class Sn76489Inst extends Instrument.BaseInstrument {
+public class Sn76489Inst extends Instrument.BaseInstrument implements PannableInstrument {
 
     public static final int DefaultClockValue = 3579545;
     public static final int MAX_CHIPS = 2;
@@ -70,9 +71,21 @@ public class Sn76489Inst extends Instrument.BaseInstrument {
     public void stop(int chipId) {
     }
 
-    /** @param val mask */
-    private void setMute(int chipId, int val) {
-        chips[chipId].setMute(val);
+    @Override
+    public synchronized void setMask(int chipId, int ch) {
+        mask[chipId] &= ~ch;
+        chips[chipId].setMute(mask[chipId]);
+    }
+
+    @Override
+    public synchronized void resetMask(int chipId, int ch) {
+        mask[chipId] |= ch;
+        chips[chipId].setMute(mask[chipId]);
+    }
+
+    @Override
+    public synchronized void setPan(int chipId, int data) {
+        chips[chipId].writeGGStereo(data);
     }
 
     // ----
@@ -80,20 +93,6 @@ public class Sn76489Inst extends Instrument.BaseInstrument {
     public synchronized int[] readRegister() {
 //        return chips[0].registers;
         return new int[4];
-    }
-
-    public synchronized void setMask(int chipId, int ch) {
-        mask[chipId] &= ~ch;
-        setMute(chipId, mask[chipId]);
-    }
-
-    public synchronized void resetMask(int chipId, int ch) {
-        mask[chipId] |= ch;
-        setMute(chipId, mask[chipId]);
-    }
-
-    public synchronized void setPan(int chipId, int data) {
-        chips[chipId].writeGGStereo(data);
     }
 
     // ----

@@ -800,7 +800,7 @@ public class NpNesDmc {
             this.irq = false;
             //cpu.updateIRQ(NES_CPU::IRQD_DMC, false);
 
-            this.reg[adr - 0x4008] = (int) val;
+            this.reg[adr - 0x4008] = val;
             return true;
         }
 

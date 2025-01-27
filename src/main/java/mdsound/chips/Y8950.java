@@ -12,26 +12,25 @@ package mdsound.chips;
  * CHS 1999-01-09  Fixes new Ym3812 emulation interface.<br/>
  * CHS 1998-10-23  Mame streaming Sound chips update<br/>
  * EC  1998        Created Interface<br/>
+ * @see Opl
  */
 public class Y8950 {
 
-    private final byte CHIP_SAMPLING_MODE = 0;
-
     private Opl opl;
 
-    private void setDeltatStatus(int changeBits) {
+    private void setDeltaTStatus(int changeBits) {
         opl.setStatus(changeBits);
     }
 
-    private void resetDeltatStatus(int changeBits) {
+    private void resetDeltaTStatus(int changeBits) {
         opl.resetStatus(changeBits);
     }
 
     public void start(int clock, int rate) {
         // emulator create
         this.opl = new Opl(clock, rate, Opl.TYPE_Y8950);
-        opl.deltaT.statusSetHandler = this::setDeltatStatus;
-        opl.deltaT.statusResetHandler = this::resetDeltatStatus;
+        opl.deltaT.statusSetHandler = this::setDeltaTStatus;
+        opl.deltaT.statusResetHandler = this::resetDeltaTStatus;
     }
 
     public void stop() {

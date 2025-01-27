@@ -50,8 +50,9 @@ public class Ym3438Inst extends Instrument.BaseInstrument {
 
     @Override
     public synchronized int write(int chipId, int port, int adr, int data) {
-        writeInternal(chipId, 0 + (port & 1) * 2, adr);
-        writeInternal(chipId, 1 + (port & 1) * 2, data);
+        assert chipId < chips.length;
+        chips[chipId].writeBuffered(0 + (port & 1) * 2, adr);
+        chips[chipId].writeBuffered(1 + (port & 1) * 2, data);
         return 0;
     }
 
@@ -73,28 +74,18 @@ public class Ym3438Inst extends Instrument.BaseInstrument {
         chips[chipId].reset(0, 0);
     }
 
-    private void writeInternal(int chipId, int adr, int data) {
-        assert chipId < chips.length;
-        chips[chipId].write(adr, data);
-    }
-
-    public void setMute(int chipId, int mute) {
-        chips[chipId].setMuteMask(mute);
-    }
-
-    public void setMuteCh(int chipId, int ch, boolean mute) {
-        chips[chipId].setMute(ch, mute);
-    }
-
-    // ----
-
     // TODO 2612
+    @Override
     public synchronized void setMask(int chipId, int ch) {
         mask[chipId] |= 1 << ch;
         int mask = this.mask[chipId];
         if ((mask & 0b0010_0000) == 0) mask &= 0b1011_1111;
         else mask |= 0b0100_0000;
-        setMute(chipId, mask);
+        chips[chipId].setMuteMask(mask);
+    }
+
+    @Override
+    public void resetMask(int chipId, int ch) {
     }
 }
 

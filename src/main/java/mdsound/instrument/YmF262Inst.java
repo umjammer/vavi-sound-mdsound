@@ -76,8 +76,9 @@ public class YmF262Inst extends Instrument.BaseInstrument {
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        chips[chipId].write(((port * 0x100 + adr) & 0x100) != 0 ? 0x02 : 0x00, (port * 0x100 + adr));
-        chips[chipId].write(((port * 0x100 + adr) & 0x100) != 0 ? 0x03 : 0x01, data);
+        int adr_ = port * 0x100 + adr;
+        chips[chipId].write((adr_ & 0x100) != 0 ? 0x02 : 0x00, adr_ & 0xff);
+        chips[chipId].write((adr_ & 0x100) != 0 ? 0x03 : 0x01, data);
         return 0;
     }
 
@@ -93,6 +94,16 @@ public class YmF262Inst extends Instrument.BaseInstrument {
     @Override
     public void stop(int chipId) {
         chips[chipId].stop();
+    }
+
+    @Override
+    public void setMask(int chipId, int ch) {
+//        chips[chipId].setMuteMask(ch); // TODO
+    }
+
+    @Override
+    public void resetMask(int chipId, int ch) {
+//        chips[chipId].setMuteMask(~ch); // TODO
     }
 
     public void setEmuCore(int emulator) {
@@ -123,10 +134,6 @@ public class YmF262Inst extends Instrument.BaseInstrument {
 
     public void writeDataB(int chipId, int offset, int data) {
         chips[chipId].write(3, data);
-    }
-
-    public void setMuteMask(int chipId, int muteMask) {
-        chips[chipId].setMuteMask(muteMask);
     }
 
     private void irqHandler(int irq) {

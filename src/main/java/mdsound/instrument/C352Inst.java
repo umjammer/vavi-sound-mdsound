@@ -6,10 +6,11 @@ import java.util.Map;
 
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
+import mdsound.Instrument.PcmEnabledInstrument;
 import mdsound.chips.C352;
 
 
-public class C352Inst extends Instrument.BaseInstrument {
+public class C352Inst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
     public static final int MAX_CHIPS = 0x02;
 
@@ -70,24 +71,27 @@ public class C352Inst extends Instrument.BaseInstrument {
         chips[chipId].stop();
     }
 
-    public void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
-        writePcm(chipId, romSize, dataStart, dataLength, romData, 0);
-    }
-
-    public void setMuteMask(int chipId, int muteMask) {
+    @Override
+    public void setMask(int chipId, int ch) {
+        int muteMask = chips[chipId].getMuteMask() | ch;
         chips[chipId].setMuteMask(muteMask);
     }
 
-    public int getMuteMask(int chipId) {
-        return chips[chipId].getMuteMask();
+    @Override
+    public void resetMask(int chipId, int ch) {
+        int muteMask = chips[chipId].getMuteMask() & ~ch;
+        chips[chipId].setMuteMask(muteMask);
+    }
+
+    /** @param extras 0: srcStartAddress, 1: romSize */
+    @Override
+    public synchronized void writePcm(int chipId, byte[] buf, int offset, int length, Object... extras) {
+        int srcStartAdr = (int) extras[0];
+        int romSize = (int) extras[1];
+        chips[chipId].writeRom(romSize, offset, length, buf, srcStartAdr);
     }
 
     //----
-
-    public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
-        C352 chip = chips[chipId];
-        chip.writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
-    }
 
     public synchronized int[] readFlags(int chipId) {
         C352 chip = chips[chipId];

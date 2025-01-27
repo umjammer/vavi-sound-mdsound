@@ -2,7 +2,7 @@ package mdsound.x68sound;
 
 public class Op {
 
-    private final Global global;
+    private static final Global global = Global.getInstance();
 
     public static final int KEYON = -1;
     public static final int ATACK = 0;
@@ -116,8 +116,6 @@ public class Op {
         int and, cmp, add, limit;
     }
 
-    /** State Transition Table */
-    private final _StatTbl[] statTbl = new _StatTbl[RELEASE_MAX + 1];
     //           ATACK     DECAY   SUSTAIN     SUSTAIN_MAX RELEASE     RELEASE_MAX
     // and     :                               4097                    4097
     // cmp     :                               2048                    2048
@@ -125,12 +123,11 @@ public class Op {
     // limit   : 0         D1l     63          63          63          63
     // nextstat: DECAY     SUSTAIN SUSTAIN_MAX SUSTAIN_MAX RELEASE_MAX RELEASE_MAX
 
-    private int keyon;
-    private int csmkeyon;
+    /** State Transition Table */
+    private final _StatTbl[] statTbl = new _StatTbl[RELEASE_MAX + 1];
 
-    public Op(Global global) {
-        this.global = global;
-    }
+    private int keyOn;
+    private int csmKeyOn;
 
     public void init() {
         note = 5 * 12 + 8;
@@ -161,7 +158,7 @@ public class Op {
         mul = 2;
         ame = 0;
 
-        noiseStep = (int) ((long) (1 << 26) * (long) global.opmRate / Global.sampleRate);
+        noiseStep = (int) ((1L << 26) * (long) global.opmRate / Global.sampleRate);
         setNFRQ(0);
         noiseValue = 1;
 
@@ -199,36 +196,36 @@ public class Op {
         xrAdd = statTbl[xrStat].add;
         xrLimit = statTbl[xrStat].limit;
 
-        keyon = 0;
-        csmkeyon = 0;
+        keyOn = 0;
+        csmKeyOn = 0;
 
-        culcArStep();
-        culcD1RStep();
-        culcD2RStep();
-        culcRrStep();
-        culcPitch();
-        culcDt1Pitch();
+        calcArStep();
+        calcD1RStep();
+        calcD2RStep();
+        calcRrStep();
+        calcPitch();
+        calcDt1Pitch();
 
         // 2006.03.26 Added sam: to correct lfo update timing
         sinBf = 0;
         lfoLevelReCalc = true;
     }
 
-    public void initSamprate() {
+    public void initSampleRate() {
         lfoPitch = CULC_DELTA_T;
 
-        noiseStep = (int) ((long) (1 << 26) * (long) global.opmRate / Global.sampleRate);
+        noiseStep = (int) ((1L << 26) * (long) global.opmRate / Global.sampleRate);
         culcNoiseCycle();
 
-        culcArStep();
-        culcD1RStep();
-        culcD2RStep();
-        culcRrStep();
-        culcPitch();
-        culcDt1Pitch();
+        calcArStep();
+        calcD1RStep();
+        calcD2RStep();
+        calcRrStep();
+        calcPitch();
+        calcDt1Pitch();
     }
 
-    private void culcArStep() {
+    private void calcArStep() {
         if (ar != 0) {
             int ks = (ar << 1) + (kc >> (5 - this.ks));
             statTbl[ATACK].and = Global.XRTBL[ks].and;
@@ -250,7 +247,7 @@ public class Op {
         }
     }
 
-    private void culcD1RStep() {
+    private void calcD1RStep() {
         if (d1R != 0) {
             int ks = (d1R << 1) + (kc >> (5 - this.ks));
             statTbl[DECAY].and = Global.XRTBL[ks].and;
@@ -268,7 +265,7 @@ public class Op {
         }
     }
 
-    private void culcD2RStep() {
+    private void calcD2RStep() {
         if (d2R != 0) {
             int ks = (d2R << 1) + (kc >> (5 - this.ks));
             statTbl[SUSTAIN].and = Global.XRTBL[ks].and;
@@ -286,7 +283,7 @@ public class Op {
         }
     }
 
-    private void culcRrStep() {
+    private void calcRrStep() {
         int ks = (rr << 2) + 2 + (kc >> (5 - this.ks));
         statTbl[RELEASE].and = Global.XRTBL[ks].and;
         statTbl[RELEASE].cmp = Global.XRTBL[ks].and >> 1;
@@ -298,11 +295,11 @@ public class Op {
         }
     }
 
-    private void culcPitch() {
+    private void calcPitch() {
         pitch = (note << 6) + kf + dt2;
     }
 
-    private void culcDt1Pitch() {
+    private void calcDt1Pitch() {
         dt1Pitch = global.DT1TBL[(kc & 0xFC) + (dt1 & 3)];
         if ((dt1 & 0x04) != 0) {
             dt1Pitch = -dt1Pitch;
@@ -315,7 +312,7 @@ public class Op {
             fl = 31;
             flMask = 0;
         } else {
-            fl = (7 - n + 1 + 1);
+            fl = 7 - n + 1 + 1;
             flMask = -1;
         }
     }
@@ -325,24 +322,24 @@ public class Op {
         int note = kc & 15;
         this.note = ((kc >> 4) + 1) * 12 + note - (note >> 2);
         ++kc;
-        culcPitch();
-        culcDt1Pitch();
+        calcPitch();
+        calcDt1Pitch();
         lfoPitch = CULC_DELTA_T;
-        culcArStep();
-        culcD1RStep();
-        culcD2RStep();
-        culcRrStep();
+        calcArStep();
+        calcD1RStep();
+        calcD2RStep();
+        calcRrStep();
     }
 
     public void setKF(int n) {
         kf = (n & 255) >> 2;
-        culcPitch();
+        calcPitch();
         lfoPitch = CULC_DELTA_T;
     }
 
     public void setDT1MUL(int n) {
         dt1 = (n >> 4) & 7;
-        culcDt1Pitch();
+        calcDt1Pitch();
         mul = (n & 15) << 1;
         if (mul == 0) {
             mul = 1;
@@ -359,15 +356,15 @@ public class Op {
     public void setKSAR(int n) {
         ks = (n & 255) >> 6;
         ar = n & 31;
-        culcArStep();
-        culcD1RStep();
-        culcD2RStep();
-        culcRrStep();
+        calcArStep();
+        calcD1RStep();
+        calcD2RStep();
+        calcRrStep();
     }
 
     public void setAMED1R(int n) {
         d1R = n & 31;
-        culcD1RStep();
+        calcD1RStep();
         ame = 0;
         if ((n & 0x80) != 0) {
             ame = -1;
@@ -376,10 +373,10 @@ public class Op {
 
     public void setDT2D2R(int n) {
         dt2 = Global.DT2TBL[(n & 255) >> 6];
-        culcPitch();
+        calcPitch();
         lfoPitch = CULC_DELTA_T;
         d2R = n & 31;
-        culcD2RStep();
+        calcD2RStep();
     }
 
     public void setD1LRR(int n) {
@@ -389,11 +386,11 @@ public class Op {
         }
 
         rr = n & 15;
-        culcRrStep();
+        calcRrStep();
     }
 
     public void keyON(int csm) {
-        if (keyon == 0) {
+        if (keyOn == 0) {
             if (xrStat >= RELEASE) {
                 // KEYON
                 t = 0;
@@ -421,24 +418,24 @@ public class Op {
             }
 
             if (csm == 0) {
-                keyon = 1;
-                csmkeyon = 0;
+                keyOn = 1;
+                csmKeyOn = 0;
             } else {
-                csmkeyon = 1;
+                csmKeyOn = 1;
             }
         }
     }
 
     public void keyOFF(int csm) {
-        if (keyon > 0 || csmkeyon > 0) {
+        if (keyOn > 0 || csmKeyOn > 0) {
 
             if (csm == 0) {
-                keyon = 0;
+                keyOn = 0;
             } else {
-                csmkeyon = 0;
+                csmKeyOn = 0;
             }
 
-            if (keyon == 0 && csmkeyon == 0) {
+            if (keyOn == 0 && csmKeyOn == 0) {
                 xrStat = RELEASE;
                 xrAnd = statTbl[xrStat].and;
                 xrCmp = statTbl[xrStat].cmp;
@@ -537,17 +534,16 @@ public class Op {
             this.lfoPitch = lfoPitch;
         }
         t += deltaT;
-        short Sin = (global.SINTBL[(((t + out2Fb) >> Global.PRECISION_BITS)) & (Global.SIZESINTBL - 1)]);
+        short sin = (global.SINTBL[(((t + out2Fb) >> Global.PRECISION_BITS)) & (Global.SIZESINTBL - 1)]);
 
-        int lfolevelame = lfoLevel & ame;
-        if ((this.lfoLevel != lfolevelame || lfoLevelReCalc) && IS_ZERO_CLOSS(sinBf, Sin) != 0) {
-            alpha = global.ALPHATBL[Global.ALPHAZERO + tl - xrEl - lfolevelame];
-            this.lfoLevel = lfolevelame;
+        int lfoLevelAme = lfoLevel & ame;
+        if ((this.lfoLevel != lfoLevelAme || lfoLevelReCalc) && IS_ZERO_CLOSS(sinBf, sin) != 0) {
+            alpha = global.ALPHATBL[Global.ALPHAZERO + tl - xrEl - lfoLevelAme];
+            this.lfoLevel = lfoLevelAme;
             lfoLevelReCalc = false;
         }
-        int o = (alpha)
-                * (int) Sin;
-        sinBf = Sin;
+        int o = alpha * (int) sin;
+        sinBf = sin;
 
         //int o2 = (o+Inp_last) >> 1;
         //Out2Fb = (o+o) >> Fl;
@@ -571,13 +567,13 @@ public class Op {
         t += deltaT;
         short sin = (global.SINTBL[(((t + inp[0]) >> Global.PRECISION_BITS)) & (Global.SIZESINTBL - 1)]);
 
-        int lfolevelame = lfoLevel & ame;
-        if ((this.lfoLevel != lfolevelame || lfoLevelReCalc) && IS_ZERO_CLOSS(sinBf, sin) != 0) {
-            alpha = global.ALPHATBL[global.ALPHAZERO + tl - xrEl - lfolevelame];
-            this.lfoLevel = lfolevelame;
+        int lfoLevelAme = lfoLevel & ame;
+        if ((this.lfoLevel != lfoLevelAme || lfoLevelReCalc) && IS_ZERO_CLOSS(sinBf, sin) != 0) {
+            alpha = global.ALPHATBL[global.ALPHAZERO + tl - xrEl - lfoLevelAme];
+            this.lfoLevel = lfoLevelAme;
             lfoLevelReCalc = false;
         }
-        int o = (alpha) * (int) sin;
+        int o = alpha * (int) sin;
         sinBf = sin;
 
         out1[0] += o;
@@ -600,7 +596,7 @@ public class Op {
                 this.lfoLevel = lfoLevelAme;
                 lfoLevelReCalc = false;
             }
-            o = (alpha) * (int) sin;
+            o = alpha * (int) sin;
             sinBf = sin;
         } else {
             noiseCounter -= noiseStep;
@@ -615,7 +611,7 @@ public class Op {
                 this.lfoLevel = lfoLevelAme;
                 lfoLevelReCalc = false;
             }
-            o = (alpha) * noiseValue * Global.MAXSINVAL;
+            o = alpha * noiseValue * Global.MAXSINVAL;
         }
 
         out1[0] += o;

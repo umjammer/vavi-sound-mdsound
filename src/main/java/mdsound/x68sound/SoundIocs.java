@@ -10,14 +10,14 @@ public class SoundIocs {
     }
 
     /**
-     * 16bit値のバイトの並びを逆にして返す
+     * Returns the 16-bit value with the byte order reversed.
      */
     private static int bSwapW(int data) {
         return (data >> 8) + ((data & 0xff) << 8);
     }
 
     /**
-     * 32bit値のバイトの並びを逆にして返す
+     * Returns the reversed byte order of a 32-bit value.
      */
     private static int bSwapL(int adrs) {
         return (adrs >> 24) + ((adrs & 0xff0000) >> 8) + ((adrs & 0xff00) << 8) + ((adrs & 0xff) << 24);
@@ -28,7 +28,7 @@ public class SoundIocs {
      */
     private int adpcmStat = 0;
     /**
-     * OPM レジスタ $1B の内容
+     * Contents of OPM register $1B
      */
     private int opmReg1B = 0;
     private int dmaErrCode = 0;
@@ -37,21 +37,21 @@ public class SoundIocs {
     private int adpcmCotLen;
 
     /**
-     * OPMのBUSY待ち
+     * Waiting for OPM to finish
      */
     private void opmWait() {
         while ((x68Sound.opmPeek() & 0x80) != 0) ;
     }
 
     /**
-     * IOCS _OPMSET ($68) の処理
+     * Processing IOCS _OPMSET ($68)
      *
-     * @param addr OPMレジスタナンバー(0～255)
-     * @param data データ(0～255)
+     * @param addr OPM register number (0 to 255)
+     * @param data Data (0 to 255)
      */
     public void opmSet(int addr, int data) {
-        if (addr == 0x1B) {
-            opmReg1B = (opmReg1B & 0xC0) | (data & 0x3F);
+        if (addr == 0x1b) {
+            opmReg1B = (opmReg1B & 0xc0) | (data & 0x3f);
             data = opmReg1B;
         }
 
@@ -62,143 +62,143 @@ public class SoundIocs {
     }
 
     /**
-     * IOCS _OPMSNS ($69) の処理
+     * Processing IOCS _OPMSNS ($69)
      *
-     * @return bit 0 : タイマーAオーバーフローのとき1になる
-     * bit 1 : タイマーBオーバーフローのとき1になる
-     * bit 7 : 0ならばデータ書き込み可能
+     * @return bit 0: Becomes 1 when timer A overflows
+     *         bit 1: Becomes 1 when timer B overflows
+     *         bit 7: If it is 0, data can be written.
      */
     public int opmSns() {
         return x68Sound.opmPeek();
     }
 
-    public Runnable opmIntProc = null; // OPMのタイマー割り込み処理アドレス
+    public Runnable opmIntProc = null; // OPM timer interrupt processing address
 
     /**
-     * IOCS _OPMINTST ($6A) の処理
+     * Processing IOCS _OPMINTST ($6A)
      *
-     * @param addr 割り込み処理アドレス, 0のときは割り込み禁止
-     * @return 割り込みが設定された場合は 0
-     * 既に割り込みが設定されている場合はその割り込み処理アドレスを返す
+     * @param addr Interrupt processing address, 0 disables interrupts
+     * @return 0 if the interrupt is set
+     *         If an interrupt has already been set, the interrupt processing address is returned.
      */
     public Runnable opmIntSt(Runnable addr) {
-        if (addr == null) { // 引数が0の時は割り込みを禁止する
+        if (addr == null) { // If the argument is 0, interrupts are disabled.
             opmIntProc = null;
             x68Sound.opmInt(opmIntProc);
             return null;
         }
-        if (opmIntProc != null) { // 既に設定されている場合は、その処理アドレスを返す
+        if (opmIntProc != null) { // If it is already set, it returns the processing address.
             return opmIntProc;
         }
         opmIntProc = addr;
-        x68Sound.opmInt(opmIntProc); // OPMの割り込み処理アドレスを設定
+        x68Sound.opmInt(opmIntProc); // Set the OPM interrupt processing address
         return null;
     }
 
     /**
-     * DMA転送終了割り込み処理ルーチン
+     * DMA transfer end interrupt processing routine
      */
     private void dmaIntProc() {
-        if (adpcmStat == 0x32 && (x68Sound.dmaPeek(0x00) & 0x40) != 0) { // コンティニューモード時の処理
-            x68Sound.dmaPoke(0x00, 0x40); // BTCビットをクリア
+        if (adpcmStat == 0x32 && (x68Sound.dmaPeek(0x00) & 0x40) != 0) { // Processing in continue mode
+            x68Sound.dmaPoke(0x00, 0x40); // Clear BTC Bit
             if (adpcmCotLen > 0) {
                 int dmalen;
                 dmalen = adpcmCotLen;
-                if (dmalen > 0xff00) { // 1度に転送できるバイト数は0xff00
+                if (dmalen > 0xff00) { // The number of bytes that can be transferred at one time is 0xff00
                     dmalen = 0xff00;
                 }
-                x68Sound.dmaPokeL(0x1C, adpcmCotAdrs); // BARに次のDMA転送アドレスをセット
-                x68Sound.dmaPokeW(0x1A, dmalen); // BTCに次のDMA転送バイト数をセット
+                x68Sound.dmaPokeL(0x1c, adpcmCotAdrs); // Set the next DMA transfer address in BAR
+                x68Sound.dmaPokeW(0x1a, dmalen); // Set the next DMA transfer byte count to BTC
                 adpcmCotAdrs += dmalen;
                 adpcmCotLen -= dmalen;
 
-                x68Sound.dmaPoke(0x07, 0x48); // コンティニューオペレーション設定
+                x68Sound.dmaPoke(0x07, 0x48); // Continue Operation Settings
             }
             return;
         }
         if ((adpcmStat & 0x80) == 0) {
-            x68Sound.ppiCtrl(0x01); // ADPCM 右出力 OFF
-            x68Sound.ppiCtrl(0x03); // ADPCM 左出力 OFF
-            x68Sound.adpcmPoke(0x01); // ADPCM 再生動作停止
+            x68Sound.ppiCtrl(0x01); // ADPCM right output OFF
+            x68Sound.ppiCtrl(0x03); // ADPCM left output OFF
+            x68Sound.adpcmPoke(0x01); // ADPCM playback stopped
         }
         adpcmStat = 0;
-        x68Sound.dmaPoke(0x00, 0xff); // DMA CSR の全ビットをクリア
+        x68Sound.dmaPoke(0x00, 0xff); // Clear all bits in DMA CSR
     }
 
     /**
-     * DMAエラー割り込み処理ルーチン
+     * DMA error interrupt handling routine
      */
     private void dmaErrIntProc() {
-        dmaErrCode = x68Sound.dmaPeek(0x01); // エラーコードを DmaErrCode に保存
+        dmaErrCode = x68Sound.dmaPeek(0x01); // Save the error code in DmaErrCode
 
-        x68Sound.ppiCtrl(0x01); // ADPCM右出力OFF
-        x68Sound.ppiCtrl(0x03); // ADPCM左出力OFF
-        x68Sound.adpcmPoke(0x01); // ADPCM再生動作停止
+        x68Sound.ppiCtrl(0x01); // ADPCM right output OFF
+        x68Sound.ppiCtrl(0x03); // ADPCM left output OFF
+        x68Sound.adpcmPoke(0x01); // ADPCM playback stopped
 
         adpcmStat = 0;
-        x68Sound.dmaPoke(0x00, 0xff); // DMA CSR の全ビットをクリア
+        x68Sound.dmaPoke(0x00, 0xff); // Clear all bits in DMA CSR
     }
 
     private static final int[] PANTBL = {3, 1, 2, 0};
 
     /**
-     * サンプリング周波数とPANを設定してDMA転送を開始するルーチン
+     * Routine to set sampling frequency and PAN and start DMA transfer
      *
-     * @param mode サンプリング周波数 * 256 + PAN
-     * @param ccr  DMA CCR に書き込むデータ
+     * @param mode Sampling frequency * 256 + PAN
+     * @param ccr  Data to write to the DMA CCR
      */
     private void setAdpcmMode(int mode, int ccr) {
         if (mode >= 0x0200) {
             mode -= 0x0200;
-            opmReg1B &= 0x7F; // ADPCMのクロックは8MHz
+            opmReg1B &= 0x7f; // ADPCM clock is 8MHz
         } else {
-            opmReg1B |= 0x80; // ADPCMのクロックは4MHz
+            opmReg1B |= 0x80; // ADPCM clock is 4MHz
         }
         opmWait();
-        x68Sound.opmReg(0x1B);
+        x68Sound.opmReg(0x1b);
         opmWait();
-        x68Sound.opmPoke(opmReg1B); // ADPCMのクロック設定(8or4MHz)
+        x68Sound.opmPoke(opmReg1B); // ADPCM clock setting (8 or 4MHz)
         int ppiReg;
-        ppiReg = (((mode >> 6) & 0x0C) | PANTBL[mode & 3]);
-        ppiReg |= (x68Sound.ppiPeek() & 0xF0);
-        x68Sound.dmaPoke(0x07, ccr); // DMA転送開始
-        x68Sound.ppiPoke(ppiReg); // サンプリングレート＆PANをPPIに設定
+        ppiReg = (((mode >> 6) & 0x0c) | PANTBL[mode & 3]);
+        ppiReg |= (x68Sound.ppiPeek() & 0xf0);
+        x68Sound.dmaPoke(0x07, ccr); // DMA transfer start
+        x68Sound.ppiPoke(ppiReg); // Set sampling rate & PAN to PPI
     }
 
     /**
-     * adpcmOut のメインルーチン
+     * Main routine of adpcmOut
      *
-     * @param stat ADPCM を停止させずに続けて DMA 転送を行う場合は $80
-     *             DMA 転送終了後 ADPCM を停止させる場合は $00
-     * @param len  DMA 転送バイト数
-     * @param adrs DMA 転送アドレス
+     * @param stat $80 if you want to continue DMA transfers without stopping ADPCM
+     *             $00 to stop ADPCM after DMA transfer is completed
+     * @param len  DMA transfer bytes
+     * @param adrs DMA Transfer Address
      */
     private void adpcmOutMain(int stat, int mode, int len, int adrs) {
-        while (adpcmStat != 0) ; // DMA転送終了待ち
-        adpcmStat = (stat + 2);
-        x68Sound.dmaPoke(0x05, 0x32); // DMA OCR をチェイン動作なしに設定
+        while (adpcmStat != 0) ; // Wait for DMA transfer to finish
+        adpcmStat = stat + 2;
+        x68Sound.dmaPoke(0x05, 0x32); // Set DMA OCR to no chain operation
 
-        x68Sound.dmaPoke(0x00, 0xff); // DMA CSR の全ビットをクリア
-        x68Sound.dmaPokeL(0x0C, adrs); // DMA MAR にDMA転送アドレスをセット
-        x68Sound.dmaPokeW(0x0A, len); // DMA MTC にDMA転送バイト数をセット
-        setAdpcmMode(mode, 0x88); // サンプリング周波数とPANを設定してDMA転送開始
+        x68Sound.dmaPoke(0x00, 0xff); // Clear all bits in DMA CSR
+        x68Sound.dmaPokeL(0x0c, adrs); // Set the DMA transfer address in DMA MAR
+        x68Sound.dmaPokeW(0x0a, len); // Set the number of DMA transfer bytes in the DMA MTC
+        setAdpcmMode(mode, 0x88); // Set the sampling frequency and PAN and start DMA transfer
 
-        x68Sound.adpcmPoke(0x02); // ADPCM再生開始
+        x68Sound.adpcmPoke(0x02); // ADPCM playback begins
     }
 
     /**
-     * adpcmOut ($60) の処理
+     * Processing adpcmOut ($60)
      *
-     * @param addr ADPCM データアドレス
-     * @param mode サンプリング周波数 (0～4) * 256 + PAN (0～3)
-     * @param len  ADPCM データのバイト数
+     * @param addr ADPCM Data Address
+     * @param mode Sampling frequency (0 to 4) * 256 + PAN (0 to 3)
+     * @param len  Number of bytes of ADPCM data
      */
     public void adpcmOut(int addr, int mode, int len) {
         int dmaLen;
         int dmaAdrsPtr = addr;
-        while (adpcmStat != 0) ; // DMA転送終了待ち
-        while (len > 0x0000_FF00) { // ADPCMデータが0xff00バイト以上の場合は
-            dmaLen = 0x0000_FF00; // 0xff00バイトずつ複数回に分けてDMA転送を行う
+        while (adpcmStat != 0) ; // Wait for DMA transfer to finish
+        while (len > 0x0000_ff00) { // If the ADPCM data is 0xff00 bytes or more
+            dmaLen = 0x0000_ff00; // DMA transfer is performed in multiple increments of 0xff00 bytes each
             adpcmOutMain(0x80, mode, dmaLen, dmaAdrsPtr);
             dmaAdrsPtr += dmaLen;
             len -= dmaLen;
@@ -207,131 +207,131 @@ public class SoundIocs {
     }
 
     /**
-     * IOCS _ADPCMAOT ($62) の処理
+     * Processing IOCS_ADPCMAOT ($62)
      *
-     * @param tblPtr アレイチェインテーブルのアドレス
-     * @param mode   サンプリング周波数(0～4)*256+PAN(0～3)
-     * @param cnt    アレイチェインテーブルのブロック数
+     * @param tblPtr Array chain table address
+     * @param mode   Sampling frequency (0 to 4) * 256 + PAN (0 to 3)
+     * @param cnt    Number of blocks in the array chain table
      */
     public void adpcmAot(int tblPtr, int mode, int cnt) {
-        while (adpcmStat != 0) ; // DMA転送終了待ち
+        while (adpcmStat != 0) ; // Wait for DMA transfer to finish
 
         adpcmStat = 0x12;
-        x68Sound.dmaPoke(0x05, 0x3A); // DMA OCR をアレイチェイン動作に設定
+        x68Sound.dmaPoke(0x05, 0x3a); // Set DMA OCR to array chain operation
 
-        x68Sound.dmaPoke(0x00, 0xff); // DMA CSR の全ビットをクリア
-        x68Sound.dmaPokeL(0x1C, tblPtr); // DMA BAR にアレイチェインテーブルアドレスをセット
-        x68Sound.dmaPokeW(0x1A, cnt); // DMA BTC にアレイチェインテーブルの個数をセット
-        setAdpcmMode(mode, 0x88); // サンプリング周波数とPANを設定してDMA転送開始
+        x68Sound.dmaPoke(0x00, 0xff); // Clear all bits in DMA CSR
+        x68Sound.dmaPokeL(0x1c, tblPtr); // Set the array chain table address in the DMA BAR
+        x68Sound.dmaPokeW(0x1a, cnt); // Set the number of array chain tables in the DMA BTC
+        setAdpcmMode(mode, 0x88); // Set the sampling frequency and PAN and start DMA transfer
 
-        x68Sound.adpcmPoke(0x02); // ADPCM再生開始
+        x68Sound.adpcmPoke(0x02); // ADPCM playback begins
     }
 
     /**
-     * IOCS _ADPCMAOT ($64) の処理
+     * Processing IOCS_ADPCMAOT ($64)
      *
-     * @param tblPtr リンクアレイチェインテーブルのアドレス
-     * @param mode   サンプリング周波数 (0～4) * 256 + PAN (0～3)
+     * @param tblPtr Link array chain table address
+     * @param mode   Sampling frequency (0 to 4) * 256 + PAN (0 to 3)
      */
     public void adpcmLot(int tblPtr, int mode) {
-        while (adpcmStat != 0) ; // DMA転送終了待ち
+        while (adpcmStat != 0) ; // Wait for DMA transfer to finish
 
         adpcmStat = 0x22;
-        x68Sound.dmaPoke(0x05, 0x3E); // DMA OCR をリンクアレイチェイン動作に設定
+        x68Sound.dmaPoke(0x05, 0x3e); // Set DMA OCR to link array chain operation
 
-        x68Sound.dmaPoke(0x00, 0xff); // DMA CSR の全ビットをクリア
-        x68Sound.dmaPokeL(0x1C, tblPtr); // DMA BAR にリンクアレイチェインテーブルアドレスをセット
-        setAdpcmMode(mode, 0x88); // サンプリング周波数とPANを設定してDMA転送開始
+        x68Sound.dmaPoke(0x00, 0xff); // Clear all bits in DMA CSR
+        x68Sound.dmaPokeL(0x1c, tblPtr); // Set the link array chain table address in the DMA BAR
+        setAdpcmMode(mode, 0x88); // Set the sampling frequency and PAN and start DMA transfer
 
-        x68Sound.adpcmPoke(0x02); // ADPCM再生開始
+        x68Sound.adpcmPoke(0x02); // ADPCM playback begins
     }
 
     /**
-     * コンティニューモードを利用して ADPCM 出力を行うサンプル
-     * IOCS _ADPCMOUT と同じ処理を行うが、データバイト数が 0xff00 バイト以上でも
-     * すぐにリターンする。
+     * A sample that uses continue mode to output ADPCM
+     * Performs the same processing as IOCS_ADPCMOUT,
+     * but returns immediately even if the number of data bytes is 0xff00 or more.
      *
-     * @param addr ADPCMデータアドレス
-     * @param mode サンプリング周波数(0～4)*256+PAN(0～3)
-     * @param len  ADPCMデータのバイト数
+     * @param addr ADPCM Data Address
+     * @param mode Sampling frequency (0 to 4) * 256 + PAN (0 to 3)
+     * @param len  Number of bytes of ADPCM data
      */
     public void adpcmCot(int addr, int mode, int len) {
         int dmaLen;
         adpcmCotAdrs = addr;
         adpcmCotLen = len;
-        while (adpcmStat != 0) ; // DMA転送終了待ち
+        while (adpcmStat != 0) ; // Wait for DMA transfer to finish
         adpcmStat = 0x32;
 
-        x68Sound.dmaPoke(0x05, 0x32); // DMA OCR をチェイン動作なしに設定
+        x68Sound.dmaPoke(0x05, 0x32); // Set DMA OCR to no chain operation
 
         dmaLen = adpcmCotLen;
-        if (dmaLen > 0xff00) { // ADPCMデータが0xff00バイト以上の場合は
-            dmaLen = 0xff00; // 0xff00バイトずつ複数回に分けてDMA転送を行う
+        if (dmaLen > 0xff00) { // If the ADPCM data is 0xff00 bytes or more
+            dmaLen = 0xff00; // DMA transfer is performed in multiple increments of 0xff00 bytes each
         }
 
-        x68Sound.dmaPoke(0x00, 0xff); // DMA CSR の全ビットをクリア
-        x68Sound.dmaPokeL(0x0C, adpcmCotAdrs); // DMA MAR にDMA転送アドレスをセット
-        x68Sound.dmaPokeW(0x0A, dmaLen); // DMA MTC にDMA転送バイト数をセット
+        x68Sound.dmaPoke(0x00, 0xff); // Clear all bits in DMA CSR
+        x68Sound.dmaPokeL(0x0c, adpcmCotAdrs); // Set the DMA transfer address in DMA MAR
+        x68Sound.dmaPokeW(0x0a, dmaLen); // Set the number of DMA transfer bytes in the DMA MTC
         adpcmCotAdrs += dmaLen;
         adpcmCotLen -= dmaLen;
         if (adpcmCotLen <= 0) {
-            setAdpcmMode(mode, 0x88); // データバイト数が0xff00以下の場合は通常転送
+            setAdpcmMode(mode, 0x88); // If the number of data bytes is 0xff00 or less, normal transfer will occur.
         } else {
             dmaLen = adpcmCotLen;
             if (dmaLen > 0xff00) {
                 dmaLen = 0xff00;
             }
-            x68Sound.dmaPokeL(0x1C, adpcmCotAdrs); // BARに次のDMA転送アドレスをセット
-            x68Sound.dmaPokeW(0x1A, dmaLen); // BTCに次のDMA転送バイト数をセット
+            x68Sound.dmaPokeL(0x1c, adpcmCotAdrs); // Set the next DMA transfer address in BAR
+            x68Sound.dmaPokeW(0x1a, dmaLen); // Set the next DMA transfer byte count to BTC
             adpcmCotAdrs += dmaLen;
             adpcmCotLen -= dmaLen;
-            setAdpcmMode(mode, 0xC8); // DMA CNTビットを1にしてDMA転送開始
+            setAdpcmMode(mode, 0xc8); // Set the DMA CNT bit to 1 to start DMA transfer.
         }
 
-        x68Sound.adpcmPoke(0x02); // ADPCM再生開始
+        x68Sound.adpcmPoke(0x02); // ADPCM playback begins
     }
 
     /**
-     * IOCS _ADPCMSNS ($66) の処理
+     * Processing IOCS _ADPCMSNS ($66)
      *
-     * @return 0: 何もしていない
-     * $02: _iocs_adpcmout で出力中
-     * $12: _iocs_adpcmaot で出力中
-     * $22: _iocs_adpcmlot で出力中
-     * $32: _iocs_adpcmcot で出力中
+     * @return 0: it hasn't done anything.
+     * $02: Outputting with _iocs_adpcmout
+     * $12: Outputting with _iocs_adpcmaot
+     * $22: Outputting with _iocs_adpcmlot
+     * $32: Outputting with _iocs_adpcmcot
      */
     public int adpcmSns() {
-        return (adpcmStat & 0x7F);
+        return (adpcmStat & 0x7f);
     }
 
     /**
-     * IOCS _ADPCMMOD ($67) の処理
+     * Processing IOCS _ADPCMMOD ($67)
      *
-     * @param mode 0: ADPCM再生 終了
-     *             1: ADPCM再生 一時停止
-     *             2: ADPCM再生 再開
+     * @param mode 0: ADPCM Playback Stop
+     *             1: ADPCM Playback Pause
+     *             2: ADPCM Playback Resume
      */
     public void adpcmMod(int mode) {
         switch (mode) {
         case 0:
             adpcmStat = 0;
-            x68Sound.ppiCtrl(0x01); // ADPCM右出力OFF
-            x68Sound.ppiCtrl(0x03); // ADPCM左出力OFF
-            x68Sound.adpcmPoke(0x01); // ADPCM再生動作停止
-            x68Sound.dmaPoke(0x07, 0x10); // DMA SAB=1 (ソフトウェアアボート)
+            x68Sound.ppiCtrl(0x01); // ADPCM right output OFF
+            x68Sound.ppiCtrl(0x03); // ADPCM left output OFF
+            x68Sound.adpcmPoke(0x01); // ADPCM playback stopped
+            x68Sound.dmaPoke(0x07, 0x10); // DMA SAB=1 (Software Abort)
             break;
         case 1:
-            x68Sound.dmaPoke(0x07, 0x20); // DMA HLT=1 (ホルトオペレーション)
+            x68Sound.dmaPoke(0x07, 0x20); // DMA HLT=1 (Halt operation)
             break;
         case 2:
-            x68Sound.dmaPoke(0x07, 0x08); // DMA HLT=0 (ホルトオペレーション解除)
+            x68Sound.dmaPoke(0x07, 0x08); // DMA HLT=0 (Halt operation canceled)
             break;
         }
     }
 
     /**
-     * IOCSコールの初期化
-     * DMAの割り込みを設定する
+     * Initializing IOCS calls
+     * Set up DMA interrupts
      */
     public void init() {
         x68Sound.dmaInt(this::dmaIntProc);

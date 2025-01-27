@@ -8,6 +8,7 @@ import mdsound.Instrument;
 import mdsound.chips.Pokey;
 
 
+/** Atari Pokey */
 public class PokeyInst extends Instrument.BaseInstrument {
 
     public static final int DefaultClockValue = 1789772;
@@ -60,8 +61,14 @@ public class PokeyInst extends Instrument.BaseInstrument {
     public void stop(int chipId) {
     }
 
-    public void setMuteMask(int chipId, int muteMask) {
-        chips[chipId].setMuteMask(muteMask);
+    @Override
+    public void setMask(int chipId, int ch) {
+//        chips[chipId].setMuteMask(ch); // TODO
+    }
+
+    @Override
+    public void resetMask(int chipId, int ch) {
+//        chips[chipId].setMuteMask(~ch); // TODO
     }
 
     //----

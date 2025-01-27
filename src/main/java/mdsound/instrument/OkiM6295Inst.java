@@ -6,12 +6,13 @@ import java.util.function.BiConsumer;
 
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
+import mdsound.Instrument.PcmEnabledInstrument;
 import mdsound.MDSound;
 import mdsound.MDSound.Chip;
 import mdsound.chips.OkiM6295;
 
 
-public class OkiM6295Inst extends Instrument.BaseInstrument {
+public class OkiM6295Inst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
     public static final int MAX_CHIPS = 0x02;
 
@@ -73,8 +74,16 @@ public class OkiM6295Inst extends Instrument.BaseInstrument {
         chips[chipId].stop();
     }
 
-    public void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
-        writePcm(chipId, romSize, dataStart, dataLength, romData, 0);
+    @Override
+    public synchronized void setMask(int chipId, int ch) {
+        mask[chipId] |= ch;
+        setMuteMask(chipId, mask[chipId]);
+    }
+
+    @Override
+    public synchronized void resetMask(int chipId, int ch) {
+        mask[chipId] &= ~(int) ch;
+        setMuteMask(chipId, mask[chipId]);
     }
 
     private void setMuteMask(int chipId, int muteMask) {
@@ -85,29 +94,23 @@ public class OkiM6295Inst extends Instrument.BaseInstrument {
         chips[chipId].setCallback(samplingRate -> callbackFunc.accept(dataPtr, samplingRate));
     }
 
-    //----
-
-    public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
-        chips[chipId].writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
+    /** @param extras 0: srcStartAddress, 1: romSize */
+    @Override
+    public synchronized void writePcm(int chipId, byte[] buf, int offset, int length, Object... extras) {
+        int srcStartAdr = (int) extras[0];
+        int romSize = (int) extras[1];
+        chips[chipId].writeRom(romSize, offset, length, buf, srcStartAdr);
     }
+
+    //----
 
     public synchronized OkiM6295 getChip(int chipId) {
         return chips[chipId];
     }
 
-    public synchronized void setMask(int chipId, int ch) {
-        mask[chipId] |= ch;
-        setMuteMask(chipId, mask[chipId]);
-    }
-
     public synchronized OkiM6295.ChannelInfo getChInfo(int chipId) {
         OkiM6295 chip = chips[chipId];
         return chip.readChInfo();
-    }
-
-    public synchronized void resetMask(int chipId, int ch) {
-        mask[chipId] &= ~(int) ch;
-        setMuteMask(chipId, mask[chipId]);
     }
 
     //----

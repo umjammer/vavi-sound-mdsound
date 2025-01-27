@@ -18,19 +18,19 @@ import mdsound.mame.Fm.BaseChip;
 
 
 /**
- * History:
+ * Ym2612 (OPN) MAME
  * <p>
+ * History:
+ * <pre>
  * 2006~2012  Eke-Eke (Genesis Plus GX):
  * Huge thanks to Nemesis, lot of those fixes came from his tests on Sega Genesis hardware
  * More information at http://gendev.spritesmind.net/forum/viewtopic.php?t=386
- * <p>
- *  TODO:
- * <p>
- * - core documentation
- * - BUSY flag support
- * <p>
+ *
+ * TODO - core documentation
+ *      - BUSY flag support
+ * </pre>
  * CHANGELOG:
- * <p>
+ * <pre>
  * - fixed LFO implementation:
  * .added support for CH3 special mode: fixes various Sound effects (birds in Warlock, bug Sound in Aladdin...)
  * .inverted LFO AM waveform: fixes Spider-Man & Venom : Separation Anxiety (intro), California Games (surfing event)
@@ -46,50 +46,50 @@ import mdsound.mame.Fm.BaseChip;
  * - implemented accurate CSM mode emulation
  * - implemented accurate SSG-EG emulation (Asterix, Beavis&Butthead, Bubba'n Stix & many other games)
  * - implemented accurate address/data ports behavior
- * <p>
+ *
  * 06-23-2007 Zsolt Vasvari:
  * - changed the timing not to require the use of floating point calculations
- * <p>
+ *
  * 03-08-2003 Jarek Burczynski:
  * - fixed YM2608 initial values (after the reset)
  * - fixed flag and irqmask handling (YM2608)
  * - fixed BUFRDY flag handling (YM2608)
- * <p>
+ *
  * 14-06-2003 Jarek Burczynski:
  * - implemented all of the YM2608 status register flags
  * - implemented support for external memory read/write via YM2608
  * - implemented support for DeltaT memory limit register in YM2608 emulation
- * <p>
+ *
  * 22-05-2003 Jarek Burczynski:
  * - fixed LFO PM calculations (copy&paste bugfix)
- * <p>
+ *
  * 08-05-2003 Jarek Burczynski:
  * - fixed SSG support
- * <p>
+ *
  * 22-04-2003 Jarek Burczynski:
  * - implemented 100% correct LFO generator (verified on real YM2610 and YM2608)
- * <p>
+ *
  * 15-04-2003 Jarek Burczynski:
  * - added support for YM2608's register 0x110 - status mask
- * <p>
+ *
  * 01-12-2002 Jarek Burczynski:
  * - fixed register addressing in YM2608, YM2610, YM2610B chips. (verified on real YM2608)
  * The addressing patch used for early Neo-Geo games can be removed now.
- * <p>
+ *
  * 26-11-2002 Jarek Burczynski, Nicola Salmoria:
  * - recreated YM2608 ADPCM ROM using data from real YM2608's output which leads to:
  * - added emulation of YM2608 drums.
  * - output of YM2608 is two times lower now - same as YM2610 (verified on real YM2608)
- * <p>
+ *
  * 16-08-2002 Jarek Burczynski:
  * - binary exact Envelope Generator (verified on real YM2203);
  * identical to YM2151
  * - corrected 'off by one' error in feedback calculations (when feedback is off)
  * - corrected connection (algorithm) calculation (verified on real YM2203 and YM2610)
- * <p>
+ *
  * 18-12-2001 Jarek Burczynski:
  * - added SSG-EG support (verified on real YM2203)
- * <p>
+ *
  * 12-08-2001 Jarek Burczynski:
  * - corrected sin_tab and tl_tab data (verified on real chips)
  * - corrected feedback calculations (verified on real chips)
@@ -101,14 +101,14 @@ import mdsound.mame.Fm.BaseChip;
  * (Each FM channel is calculated as in other chips, but the output of the channel
  * gets shifted right by one *before* sending to accumulator. That was impossible to do
  * with previous implementation).
- * <p>
+ *
  * 23-07-2001 Jarek Burczynski, Nicola Salmoria:
  * - corrected YM2610 ADPCM type A algorithm and tables (verified on real chips)
- * <p>
+ *
  * 11-06-2001 Jarek Burczynski:
  * - corrected end of sample bug in ADPCMA_calc_cha().
  * Real YM2610 checks for equality between current and end addresses (only 20 LSB bits).
- * <p>
+ *
  * 08-12-98 hiro-shi:
  * rename AdpcmA . AdpcmB, AdpcmB . AdpcmA
  * move ROM limit check.(CALC_CH? . 2610Write1/2)
@@ -116,19 +116,24 @@ import mdsound.mame.Fm.BaseChip;
  * move ADPCM A/B end check.
  * AdpcmB repeat flag(no check)
  * change ADPCM volume rate (8.16) (32.48).
- * <p>
+ *
  * 09-12-98 hiro-shi:
  * change ADPCM volume. (8.16, 48.64)
  * replace Ym2610 ch0/3 (YM-2610B)
  * change ADPCM_SHIFT (10.8) missing bank change 0x4000-0xffff.
  * add ADPCM_SHIFT_MASK
  * change ADPCMA_DECODE_MIN/MAX.
- * <p>
+ * </pre>
  * comment of hiro-shi(Hiromitsu Shioya)
- *
+ * <pre>
  *  YM2610(B) = OPN-B
  *  YM2610  : Psg:3ch FM:4ch ADPCM(18.5KHz):6ch DeltaT ADPCM:1ch
  *  YM2610B : Psg:3ch FM:6ch ADPCM(18.5KHz):6ch DeltaT ADPCM:1ch
+ *  </pre>
+ *
+ * @author Jarek Burczynski
+ * @author Tatsuyuki Satoh
+ * @author MultiArcadeMachineEmulator development
  */
 public abstract class Fm2612 {
 

@@ -5,9 +5,6 @@
 
 package mdsound.fmgen;
 
-import mdsound.MDSound.Chip;
-import mdsound.fmvgen.Fmvgen.OpType;
-
 
 /**
  * FM Sound Generator - Core Unit

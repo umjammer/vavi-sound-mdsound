@@ -10,6 +10,8 @@ import mdsound.chips.Ym3526;
 
 public class Ym3526Inst extends Instrument.BaseInstrument {
 
+    private static final int CHIP_SAMPLING_MODE = 0;
+
     public static final int DefaultClockValue = 3579545;
     public static final int MAX_CHIPS = 0x02;
 
@@ -79,6 +81,16 @@ public class Ym3526Inst extends Instrument.BaseInstrument {
         chips[chipId].shutdown();
     }
 
+    @Override
+    public void setMask(int chipId, int ch) {
+//        chips[chipId].setMuteMask(ch); // TODO
+    }
+
+    @Override
+    public void resetMask(int chipId, int ch) {
+//        chips[chipId].setMuteMask(~ch); // TODO
+    }
+
     private final int[][] dummyBuf = {null, null};
 
     private void updateStream(/*, int interval */) {
@@ -110,10 +122,6 @@ public class Ym3526Inst extends Instrument.BaseInstrument {
 
     public void writePort(int chipId, int offset, byte data) {
         chips[chipId].write(1, data);
-    }
-
-    public void setMuteMask(int chipId, int muteMask) {
-        chips[chipId].setMuteMask(muteMask);
     }
 
     //----

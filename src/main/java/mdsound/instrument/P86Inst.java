@@ -1,10 +1,11 @@
 package mdsound.instrument;
 
 import mdsound.Instrument;
+import mdsound.Instrument.PcmEnabledInstrument;
 import mdsound.chips.P86;
 
 
-public class P86Inst extends Instrument.BaseInstrument {
+public class P86Inst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
     private final P86 chip = new P86();
 
@@ -49,9 +50,16 @@ public class P86Inst extends Instrument.BaseInstrument {
         // none
     }
 
-    // ----
+    @Override
+    public void setMask(int chipId, int ch) {
+    }
 
-    public synchronized void writePcm(int chipId, int address, int data, byte[] pcmData) {
-        chip.loadPcm(0, address, data, pcmData);
+    @Override
+    public void resetMask(int chipId, int ch) {
+    }
+
+    @Override
+    public synchronized void writePcm(int chipId, byte[] buf, int offset, int length, Object... extras) {
+        chip.loadPcm(0, 0, 0, buf);
     }
 }

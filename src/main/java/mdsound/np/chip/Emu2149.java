@@ -243,7 +243,7 @@ public class Emu2149 {
 
             if (reg > 15) return;
 
-            this.reg[reg] = (int) (val & 0xff);
+            this.reg[reg] = val & 0xff;
             switch (reg) {
             case 0:
             case 1:

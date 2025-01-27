@@ -8,9 +8,6 @@ import java.util.function.Supplier;
 /**
  * Yamaha 3812 emulator interface - MAME VERSION
  * <p>
- * CREATED BY
- * Ernesto Corvi
- * <p>
  * UPDATE LOG
  * JB  28-04-2002  Fixed simultaneous usage of all three different chips types.
  * Used real sample rate when resample filter is active.
@@ -18,14 +15,12 @@ import java.util.function.Supplier;
  * CHS 1999-01-09  Fixes new Ym3812 emulation interface.
  * CHS 1998-10-23  Mame streaming Sound chips update
  * EC  1998        Created Interface
- * <p>
- * NOTES
+ *
+ * @author Ernesto Corvi
  */
 public class Ym3526 {
 
-    private static final int CHIP_SAMPLING_MODE = 0;
-
-    public Opl chip;
+    private Opl chip;
 
     /*
      * File: fmopl.c - software implementation of FM Sound generator
@@ -90,9 +85,10 @@ public class Ym3526 {
      - fixed subscription range of attack/decay tables
 
 
-        To do:
-            add delay before key off in CSM mode (see CSMKeyControll)
+        TODO add delay before key off in CSM mode (see CSMKeyControll)
             verify volume of the FM part on the Y8950
+    *
+    * TODO vavi maybe the same code Opl.class
     */
     private static class Opl {
 
@@ -1692,8 +1688,6 @@ public class Ym3526 {
             return this.status >> 7;
         }
     }
-
-    private static final int MAX_OPL_CHIPS = 2;
 
     /**
      * Initialize YM3526 emulator(s).

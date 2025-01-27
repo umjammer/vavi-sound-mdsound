@@ -1,3 +1,25 @@
+/*
+	SN76489 emulation
+	by Maxim in 2001 and 2002
+	converted from my original Delphi implementation
+
+	I'm a C newbie so I'm sure there are loads of stupid things
+	in here which I'll come back to some day and redo
+
+	Includes:
+	- Super-high quality tone channel "oversampling" by calculating fractional positions on transitions
+	- Noise output pattern reverse engineered from actual SMS output
+	- Volume levels taken from actual SMS output
+
+	07/08/04  Charles MacDonald
+	Modified for use with SMS Plus:
+	- Added support for multiple PSG chips.
+	- Added reset/config/update routines.
+	- Added context management routines.
+	- Removed SN76489_GetValues().
+	- Removed some unused variables.
+*/
+
 package mdsound.chips;
 
 import java.lang.System.Logger;
@@ -6,6 +28,13 @@ import java.lang.System.Logger.Level;
 import static java.lang.System.getLogger;
 
 
+/**
+ * SN76489 Texas Instruments SCG (DSCG for Sega)
+ *
+ * @author Maxim
+ * @author Charles MacDonald
+ * @version 07/08/04
+ */
 public class Sn76489 {
 
     private static final Logger logger = getLogger(Sn76489.class.getName());

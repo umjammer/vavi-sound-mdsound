@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2025 by Naohide Sano, All rights reserved.
+ *
+ * Programmed by Naohide Sano
+ */
+
 package mdsound.instrument;
 
 import java.util.HashMap;
@@ -9,6 +15,12 @@ import vavi.sound.ymfm.Opm.Ym2151;
 import vavi.sound.ymfm.YmFm.VgmChip;
 
 
+/**
+ * Ym2151 (OPM) YmFm version.
+ *
+ * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
+ * @version 0.00 2025-01-18 nsano initial version <br>
+ */
 public class YmFmYm2151Inst extends Instrument.BaseInstrument {
 
     public static final int DefaultClockValue = 3579545;
@@ -85,6 +97,14 @@ public class YmFmYm2151Inst extends Instrument.BaseInstrument {
     @Override
     public void stop(int chipId) {
         chips[chipId] = null;
+    }
+
+    @Override
+    public void setMask(int chipId, int ch) {
+    }
+
+    @Override
+    public void resetMask(int chipId, int ch) {
     }
 
     //----

@@ -430,7 +430,7 @@ Debug.printf("version is after 1.50, %04x", version);
         if (ByteUtil.readLeInt(vgmBuf, 0x30) != 0) {
             chip = new MDSound.Chip();
             chip.id = 0;
-            X68SoundYm2151Inst ym2151 = Instrument.getInstrument(X68SoundYm2151Inst.class);
+            X68kYm2151Inst ym2151 = Instrument.getInstrument(X68kYm2151Inst.class);
             chip.instrument = ym2151;
             chip.samplingRate = SamplingRate;
             chip.clock = ByteUtil.readLeInt(vgmBuf, 0x30);
@@ -802,9 +802,8 @@ Debug.printf("version is after 1.50, %04x", version);
             }
         }
 
-        chips = lstChip.toArray(MDSound.Chip[]::new);
-Debug.println("chips: " + chips.length);
-        mds.init(SamplingRate, SamplingBuffer, chips);
+Debug.println("chips: " + lstChip.size());
+        mds.init(SamplingRate, SamplingBuffer, lstChip);
     }
 
     public static void changeChipSampleRate(MDSound.Chip chip, int NewSmplRate) {
@@ -1144,7 +1143,7 @@ Debug.println("eof: vgmAdr: " + vgmAdr + ", vgmBuf.length: " + vgmBuf.length + "
                     break;
 
                 case 0x8f:
-                    mds.inst(QSoundInst.class).writePcm((byte) 0, romSize, startAddress, bLen - 8, vgmBuf, vgmAdr + 15);
+                    mds.inst(QSoundInst.class).writePcm((byte) 0, vgmBuf, startAddress, bLen - 8, vgmAdr + 15, romSize);
                     break;
 
                 case 0x92:

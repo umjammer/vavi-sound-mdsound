@@ -5,11 +5,12 @@ import java.util.Map;
 
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
+import mdsound.Instrument.PcmEnabledInstrument;
 import mdsound.chips.MultiPCM;
 
 
 // TODO check SHIFT in all classes
-public class MultiPcmInst extends Instrument.BaseInstrument {
+public class MultiPcmInst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
     public static final int MAX_CHIPS = 0x02;
 
@@ -64,14 +65,14 @@ public class MultiPcmInst extends Instrument.BaseInstrument {
         chips[chipId].stop();
     }
 
-    // MAME/M1 access functions
-
-    public void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
-        writePcm(chipId, romSize, dataStart, dataLength, romData, 0);
+    @Override
+    public void setMask(int chipId, int ch) {
+//        chips[chipId].setMuteMask(ch); // TODO
     }
 
-    public void setMuteMask(int chipId, int muteMask) {
-        chips[chipId].setMuteMask(muteMask);
+    @Override
+    public void resetMask(int chipId, int ch) {
+//        chips[chipId].setMuteMask(~ch); // TODO
     }
 
     // ----
@@ -90,8 +91,12 @@ public class MultiPcmInst extends Instrument.BaseInstrument {
         }
     }
 
-    public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
-        chips[chipId].writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
+    /** @param extras 0: srcStartAddress, 1: romSize */
+    @Override
+    public synchronized void writePcm(int chipId, byte[] buf, int offset, int length, Object... extras) {
+        int srcStartAdr = (int) extras[0];
+        int romSize = (int) extras[1];
+        chips[chipId].writeRom(romSize, offset, length, buf, srcStartAdr);
     }
 
     public synchronized MultiPCM getChip(int chipId) {

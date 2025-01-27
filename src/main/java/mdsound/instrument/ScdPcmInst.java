@@ -5,11 +5,14 @@ import java.util.Map;
 
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
+import mdsound.Instrument.PcmEnabledInstrument;
 import mdsound.chips.ScdPcm;
 
 
-// RF5C164
-public class ScdPcmInst extends Instrument.BaseInstrument {
+/**
+ * RF5C164
+ */
+public class ScdPcmInst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
     public static final int MAX_CHIPS = 0x02;
 
@@ -77,27 +80,28 @@ public class ScdPcmInst extends Instrument.BaseInstrument {
     public void stop(int chipId) {
     }
 
+    @Override
+    public synchronized void setMask(int chipId, int ch) {
+        chips[chipId].setMuteMask(1);
+    }
+
+    @Override
+    public synchronized void resetMask(int chipId, int ch) {
+        chips[chipId].setMuteMask(0);
+    }
+
+    /** @param extras 0: srcStartAddress */
+    @Override
+    public synchronized void writePcm(int chipId, byte[] buf, int offset, int length, Object... extras) {
+        int srcStartAdr = (int) extras[0];
+        chips[chipId].writeRam2(offset, length, buf, srcStartAdr);
+    }
+
     public void setRate(int chipId, int rate) {
         chips[chipId].setRate(rate);
     }
 
-    public void writePcm(int chipId, int dataStart, int dataLength, byte[] ramData) {
-        writePcm(chipId, dataStart, dataLength, ramData, 0);
-    }
-
-    private void setMuteMask(int chipId, int muteMask) {
-        chips[chipId].setMuteMask(muteMask);
-    }
-
-    public void setMuteCh(int chipId, int ch, int mute) {
-        chips[chipId].setMuteCh(ch, mute);
-    }
-
     // ----
-
-    public synchronized void writePcm(int chipId, int ramStartAdr, int ramDataLength, byte[] srcData, int srcStartAdr) {
-        chips[chipId].writeRam2(ramStartAdr, ramDataLength, srcData, srcStartAdr);
-    }
 
     public synchronized void writeMemory(int chipId, int adr, int data) {
         chips[chipId].writeMem(adr, data);
@@ -105,14 +109,6 @@ public class ScdPcmInst extends Instrument.BaseInstrument {
 
     public synchronized int[][] readVolumes(int chipId) {
         return volumes[chipId];
-    }
-
-    public synchronized void setMask(int chipId, int ch) {
-        setMuteMask(chipId, 1);
-    }
-
-    public synchronized void resetMask(int chipId, int ch) {
-        setMuteMask(chipId, 0);
     }
 
     public synchronized ScdPcm getChip(int chipId) {

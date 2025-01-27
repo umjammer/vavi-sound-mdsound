@@ -92,6 +92,14 @@ public class Vrc6Inst extends Instrument.BaseInstrument {
         chips[chipId].reset();
     }
 
+    @Override
+    public void setMask(int chipId, int ch) {
+    }
+
+    @Override
+    public void resetMask(int chipId, int ch) {
+    }
+
     private static int limit(int v, int max, int min) {
         return v > max ? max : Math.max(v, min);
     }

@@ -47,7 +47,7 @@ mdsound.instrument.Vrc6Inst
 mdsound.instrument.WSwanInst
 mdsound.instrument.X1_010Inst
 mdsound.instrument.X68kMPcmInst
-mdsound.instrument.X68SoundYm2151Inst
+mdsound.instrument.X68kYm2151Inst
 mdsound.instrument.Y8950Inst
 mdsound.instrument.Ym2151Inst
 mdsound.instrument.Ym2203Inst
@@ -63,3 +63,4 @@ mdsound.instrument.YmFmYm2203Inst
 mdsound.instrument.YmFmYm2608Inst
 mdsound.instrument.YmFmYm2610Inst
 mdsound.instrument.YmFmYm2151Inst
+mdsound.instrument.MameYm3812Inst

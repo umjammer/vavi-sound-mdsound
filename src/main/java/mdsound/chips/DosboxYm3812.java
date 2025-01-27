@@ -38,8 +38,10 @@ import java.util.function.Consumer;
  */
 public class DosboxYm3812 {
 
-    private static final int EC_DBOPL = 0x00; // DosBox OPL (AdLibEmu)
-    private static final int EC_MAME = 0x01; // YM3826 core from MAME
+    /** DosBox OPL (AdLibEmu) ... uses {@link Opl} */
+    private static final int EC_DBOPL = 0x00;
+    /** YM3826 core from MAME ... no impl here */
+    private static final int EC_MAME = 0x01;
 
     private int EMU_CORE = 0x00;
 
@@ -55,14 +57,13 @@ public class DosboxYm3812 {
         }
     }
 
-    private Opl chip;
+    private Opl opl;
 
     private static class Opl {
 
         private static final int NUM_CHANNELS = 9;
 
         private static final int MAXOPERATORS = (NUM_CHANNELS * 2);
-
 
         private static final double FL05 = 0.5;
         private static final double FL2 = 2.0;
@@ -98,15 +99,16 @@ public class DosboxYm3812 {
         private static final int ARC_FEEDBACK = 0xc0;
         private static final int ARC_WAVE_SEL = 0xe0;
 
-        private static final int ARC_SECONDSET = 0x100; // second Operator set for Opl3
-
+        // second Operator set for Opl3
+        private static final int ARC_SECONDSET = 0x100;
 
         private static final int OP_ACT_OFF = 0x00;
-        private static final int OP_ACT_NORMAL = 0x01; // regular channel activated (bitmasked)
-        private static final int OP_ACT_PERC = 0x02; // percussion channel activated (bitmasked)
+        // regular channel activated (bitmasked)
+        private static final int OP_ACT_NORMAL = 0x01;
+        // percussion channel activated (bitmasked)
+        private static final int OP_ACT_PERC = 0x02;
 
         private static final int BLOCKBUF_SIZE = 512;
-
 
         // vibrato constants
         private static final int VIBTAB_SIZE = 8;
@@ -117,30 +119,30 @@ public class DosboxYm3812 {
         private static final double TREM_FREQ = 3.7; // tremolo at 3.7hz
 
         // frequency multiplicator lookup table
-        private static final double[] frqmul_tab = new double[] {
+        private static final double[] frqMulTab = {
                 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 12, 12, 15, 15
         };
 
         // map a register base to a modulator Operator number or Operator number
-        private static final int[] regBase2modOp = new int[] {
+        private static final int[] regBase2ModOp = {
                 0, 1, 2, 0, 1, 2, 0, 0, 3, 4, 5, 3, 4, 5, 0, 0, 6, 7, 8, 6, 7, 8
         };
 
 
         // map a channel number to the register offset of the modulator (=register base)
-        private static final int[] modulatorbase = new int[] {
+        private static final int[] modulatorBase = {
                 0, 1, 2,
                 8, 9, 10,
                 16, 17, 18
         };
 
-        private static final int[] regbase2op = new int[] {
+        private static final int[] regBase2Op = {
                 0, 1, 2, 9, 10, 11, 0, 0, 3, 4, 5, 12, 13, 14, 0, 0, 6, 7, 8, 15, 16, 17
         };
 
         // vibrato value tables (used per-Operator)
-        private final int[] vibval_var1 = new int[BLOCKBUF_SIZE];
-        private final int[] vibval_var2 = new int[BLOCKBUF_SIZE];
+        private final int[] vibValVar1 = new int[BLOCKBUF_SIZE];
+        private final int[] vibValVar2 = new int[BLOCKBUF_SIZE];
 
         private interface OpFuncs extends Consumer<Opl.Op> {
         }
@@ -167,7 +169,6 @@ public class DosboxYm3812 {
          * channel.
          */
         private static class Op {
-            private static final short[] wavTable = new short[WAVEPREC * 3]; // wave form table
 
             // vibrato/tremolo tables
             private static final int[] vibTable = new int[VIBTAB_SIZE];
@@ -179,22 +180,22 @@ public class DosboxYm3812 {
             // vibrato/trmolo value table pointers
             // moved to adlib_getsample
 
-            // key scale level lookup table
-            private static final double[] ksLMul = new double[] {
-                    0.0, 0.5, 0.25, 1.0     // . 0, 3, 1.5, 6 dB/oct
+            /** key scale level lookup table */
+            private static final double[] ksLMul = {
+                    0.0, 0.5, 0.25, 1.0     // -> 0, 3, 1.5, 6 dB/oct
             };
 
             // calculated frequency multiplication values (depend on sampling rate)
-            //static double frqmul[16]; // moved to Opl
+            //static double frqMul[16]; // moved to Opl
 
-            // key scale levels
-            private static final int[][] ksLev = new int[][] {
+            /** key scale levels */
+            private static final int[][] ksLev = {
                     new int[16], new int[16], new int[16], new int[16],
                     new int[16], new int[16], new int[16], new int[16]
             };
 
-            // start of the waveform
-            private static final int[] waveform = new int[] {
+            // start of the waveForm
+            private static final int[] waveForm = {
                     WAVEPREC,
                     WAVEPREC >> 1,
                     WAVEPREC,
@@ -205,8 +206,8 @@ public class DosboxYm3812 {
                     WAVEPREC << 1
             };
 
-            // length of the waveform as mask
-            private static final int[] waveMask = new int[] {
+            // length of the waveForm as mask
+            private static final int[] waveMask = {
                     WAVEPREC - 1,
                     WAVEPREC - 1,
                     (WAVEPREC >> 1) - 1,
@@ -218,7 +219,7 @@ public class DosboxYm3812 {
             };
 
             // where the first entry resides
-            private static final int[] wavestart = new int[] {
+            private static final int[] waveStart = {
                     0,
                     WAVEPREC >> 1,
                     0,
@@ -230,22 +231,27 @@ public class DosboxYm3812 {
             };
 
             // envelope generator function constants
-            private static final double[] attackConst = new double[] {
+            private static final double[] attackConst = {
                     1 / 2.82624,
                     1 / 2.25280,
                     1 / 1.88416,
                     1 / 1.59744
             };
 
-            private static final double[] decrelconst = new double[] {
+            private static final double[] decRelConst = {
                     1 / 39.28064,
                     1 / 31.41608,
                     1 / 26.17344,
                     1 / 22.44608
             };
 
+            private static final Random rand = new Random();
+
+            private static final short[] wavTable = new short[WAVEPREC * 3]; // wave form table
+
             static {
                 // create vibrato table
+                //
                 vibTable[0] = 8;
                 vibTable[1] = 4;
                 vibTable[2] = 0;
@@ -257,8 +263,8 @@ public class DosboxYm3812 {
 
                 for (int i = 0; i < BLOCKBUF_SIZE; i++) vibValConst[i] = 0;
 
-
                 // create tremolo table
+                //
                 for (int i = 0; i < 14; i++) tremTableInt[i] = i - 13; // upwards (13 to 26 . -0.5/6 to 0)
                 for (int i = 14; i < 41; i++) tremTableInt[i] = -i + 14; // downwards (26 to 0 . 0 to -1/6)
                 for (int i = 41; i < 53; i++) tremTableInt[i] = i - 40 - 26; // upwards (1 to 12 . -1/6 to -0.5/6)
@@ -275,16 +281,16 @@ public class DosboxYm3812 {
                 //
                 for (int i = 0; i < BLOCKBUF_SIZE; i++) tremValConst[i] = FIXEDPT;
 
-
-                // create waveform tables
+                // create waveForm tables
+                //
                 for (int i = 0; i < (WAVEPREC >> 1); i++) {
                     wavTable[(i << 1) + WAVEPREC] = (short) (16384 * Math.sin((double) ((i << 1)) * Math.PI * 2 / WAVEPREC));
                     wavTable[(i << 1) + 1 + WAVEPREC] = (short) (16384 * Math.sin((double) ((i << 1) + 1) * Math.PI * 2 / WAVEPREC));
                     wavTable[i] = wavTable[(i << 1) + WAVEPREC];
                     // alternative: (zero-less)
-//                        wavtable[(i << 1) + WAVEPREC] = (short) (16384 * sin((double) ((i << 2) + 1) * PI / WAVEPREC));
-//                        wavtable[(i << 1) + 1 + WAVEPREC] = (short) (16384 * sin((double) ((i << 2) + 3) * PI / WAVEPREC));
-//                        wavtable[i] = wavtable[(i << 1) - 1 + WAVEPREC];
+//                    wavTable[(i << 1) + WAVEPREC] = (short) (16384 * Math.sin((double) ((i << 2) + 1) * Math.PI / WAVEPREC));
+//                    wavTable[(i << 1) + 1 + WAVEPREC] = (short) (16384 * Math.sin((double) ((i << 2) + 3) * Math.PI / WAVEPREC));
+//                    wavTable[i] = wavtable[(i << 1) - 1 + WAVEPREC];
                 }
                 for (int i = 0; i < (WAVEPREC >> 3); i++) {
                     wavTable[i + (WAVEPREC << 1)] = (short) (wavTable[i + (WAVEPREC >> 3)] - 16384);
@@ -292,6 +298,7 @@ public class DosboxYm3812 {
                 }
 
                 // key scale level table verified ([table in book]*8/3)
+                //
                 ksLev[7][0] = 0;
                 ksLev[7][1] = 24;
                 ksLev[7][2] = 32;
@@ -311,206 +318,10 @@ public class DosboxYm3812 {
                 }
             }
 
-            private static final Random rand = new Random();
-
-            private static void advanceDrums(Opl.Op op_pt1, int vib1, Opl.Op op_pt2, int vib2, Opl.Op op_pt3, int vib3, int generatorAdd) {
-                int c1 = op_pt1.tcount / FIXEDPT;
-                int c3 = op_pt3.tcount / FIXEDPT;
-                int phasebit = (((c1 & 0x88) ^ ((c1 << 5) & 0x80)) | ((c3 ^ (c3 << 2)) & 0x20)) != 0 ? 0x02 : 0x00;
-
-                int noisebit = rand.nextInt() & 1;
-
-                int snare_phase_bit = (((op_pt1.tcount / FIXEDPT) / 0x100) & 1);
-
-                // Hihat
-                int inttm = (phasebit << 8) | (0x34 << (phasebit ^ (noisebit << 1)));
-                op_pt1.wfPos = inttm * FIXEDPT; // waveform position
-                // advance waveform time
-                op_pt1.tcount += op_pt1.tinc;
-                op_pt1.tcount += op_pt1.tinc * vib1 / FIXEDPT;
-                op_pt1.generatorPos += generatorAdd;
-
-                // Snare
-                inttm = ((1 + snare_phase_bit) ^ noisebit) << 8;
-                op_pt2.wfPos = inttm * FIXEDPT; // waveform position
-                // advance waveform time
-                op_pt2.tcount += op_pt2.tinc;
-                op_pt2.tcount += op_pt2.tinc * vib2 / FIXEDPT;
-                op_pt2.generatorPos += generatorAdd;
-
-                // Cymbal
-                inttm = (1 + phasebit) << 8;
-                op_pt3.wfPos = inttm * FIXEDPT; // waveform position
-                // advance waveform time
-                op_pt3.tcount += op_pt3.tinc;
-                op_pt3.tcount += op_pt3.tinc * vib3 / FIXEDPT;
-                op_pt3.generatorPos += generatorAdd;
-            }
-
-            private void advance(int vib, int generatorAdd) {
-                wfPos = tcount; // waveform position
-
-                // advance waveform time
-                tcount += tinc;
-                tcount += tinc * vib / FIXEDPT;
-
-                generatorPos += generatorAdd;
-            }
-
-            private void changeDecayRate(int decayRate, double recipSamp) {
-                // decaymul should be 1.0 when decayRate==0
-                if (decayRate != 0) {
-                    int steps;
-
-                    double f = -7.4493 * decrelconst[tOff & 3] * recipSamp;
-                    decaymul = Math.pow(FL2, f * Math.pow(FL2, decayRate + (tOff >> 2)));
-                    steps = (decayRate * 4 + tOff) >> 2;
-                    env_step_d = (1 << (steps <= 12 ? 12 - steps : 0)) - 1;
-                } else {
-                    decaymul = 1.0;
-                    env_step_d = 0;
-                }
-            }
-
-            private void changeReleaseRate(int releaseRate, double recipSamp) {
-                // releasemul should be 1.0 when releaseRate==0
-                if (releaseRate != 0) {
-                    int steps;
-
-                    double f = -7.4493 * decrelconst[tOff & 3] * recipSamp;
-                    releasemul = Math.pow(FL2, f * Math.pow(FL2, releaseRate + (tOff >> 2)));
-                    steps = (releaseRate * 4 + tOff) >> 2;
-                    envStepR = (1 << (steps <= 12 ? 12 - steps : 0)) - 1;
-                } else {
-                    releasemul = 1.0;
-                    envStepR = 0;
-                }
-            }
-
-            private void changeSustainLevel(int sustainLevel) {
-                // sustainLevel should be 0.0 when sustainLevel==15 (max)
-                if (sustainLevel < 15) {
-                    this.sustainLevel = Math.pow(FL2, (double) sustainLevel * (-FL05));
-                } else {
-                    this.sustainLevel = 0.0;
-                }
-            }
-
-            private void changeWaveForm(int regBase, byte[] waveSel) {
-                // waveform selection
-                curWMask = waveMask[waveSel[regBase]];
-                curWForm = wavTable;
-                curWFormPtr = waveform[waveSel[regBase]];
-                // (might need to be adapted to waveform type here...)
-            }
-
-            private void changeKeepSustain(boolean susKeep) {
-                if (opState == OF_TYPE_SUS) {
-                    if (!susKeep)
-                        opState = OF_TYPE_SUS_NOKEEP;
-                } else if (opState == OF_TYPE_SUS_NOKEEP) {
-                    if (susKeep)
-                        opState = OF_TYPE_SUS;
-                }
-            }
-
-            // enable/disable vibrato/tremolo LFO effects
-            private void changeVibrato(int regBase, byte[] adlibReg) {
-                vibrato = (adlibReg[ARC_TVS_KSR_MUL + regBase] & 0x40) != 0;
-                tremolo = (adlibReg[ARC_TVS_KSR_MUL + regBase] & 0x80) != 0;
-            }
-
-            // change amount of self-feedback
-            private void changeFeedback(int feedback) {
-                if (feedback != 0)
-                    mfbi = (int) (Math.pow(FL2, (feedback >> 1) + 8));
-                else
-                    mfbi = 0;
-            }
-
-            private void changeFrequency(int chanBase, int regBase, byte[] adlibReg, double[] frqMul, double recipSamp) {
-                // frequency
-                int frn = (((adlibReg[ARC_KON_BNUM + chanBase]) & 3) << 8) + (adlibReg[ARC_FREQ_NUM + chanBase] & 0xff);
-                // block number/octave
-                int oct = (adlibReg[ARC_KON_BNUM + chanBase] >> 2) & 7;
-                freq_high = (frn >> 7) & 7;
-
-                // keysplit
-                int noteSel = (adlibReg[8] >> 6) & 1;
-                tOff = ((frn >> 9) & (noteSel ^ 1)) | ((frn >> 8) & noteSel);
-                tOff += (oct << 1);
-
-                // envelope scaling (KSR)
-                if ((adlibReg[ARC_TVS_KSR_MUL + regBase] & 0x10) == 0) tOff >>= 2;
-
-                // 20+a0+b0:
-                tinc = (int) ((((double) (frn << oct)) * frqMul[adlibReg[ARC_TVS_KSR_MUL + regBase] & 15]));
-                // 40+a0+b0:
-                double volIn = (double) (adlibReg[ARC_KSL_OUTLEV + regBase] & 63) +
-                        ksLMul[(adlibReg[ARC_KSL_OUTLEV + regBase] & 0xff) >> 6] * ksLev[oct][frn >> 6];
-                vol = Math.pow(FL2, volIn * -0.125 - 14);
-
-                // Operator frequency changed, care about features that depend on it
-                changeAttackRate((adlibReg[ARC_ATTR_DECR + regBase] & 0xff) >> 4, recipSamp);
-                changeDecayRate(adlibReg[ARC_ATTR_DECR + regBase] & 15, recipSamp);
-                changeReleaseRate(adlibReg[ARC_SUSL_RELR + regBase] & 15, recipSamp);
-            }
-
-            private void enableOperator(int regbase, int act_type, byte[] wave_sel) {
-                // check if this is really an off-on transition
-                if (act_state == OP_ACT_OFF) {
-                    int wselbase = regbase;
-                    if (wselbase >= ARC_SECONDSET)
-                        wselbase -= (ARC_SECONDSET - 22); // second set starts at 22
-
-                    tcount = wavestart[wave_sel[wselbase] & 0xff] * FIXEDPT;
-
-                    // start with attack mode
-                    opState = OF_TYPE_ATT;
-                    act_state |= act_type;
-                }
-            }
-
-            private void disableOperator(int act_type) {
-                // check if this is really an on-off transition
-                if (act_state != OP_ACT_OFF) {
-                    act_state &= (~act_type);
-                    if (act_state == OP_ACT_OFF) {
-                        if (opState != OF_TYPE_OFF)
-                            opState = OF_TYPE_REL;
-                    }
-                }
-            }
-
-            private void reset() {
-                this.opState = OF_TYPE_OFF;
-                this.act_state = OP_ACT_OFF;
-                this.amp = 0.0;
-                this.stepAmp = 0.0;
-                this.vol = 0.0;
-                this.tcount = 0;
-                this.tinc = 0;
-                this.tOff = 0;
-                this.curWMask = waveMask[0];
-                this.curWForm = wavTable;
-                this.curWFormPtr = waveform[0];
-                this.freq_high = 0;
-
-                this.generatorPos = 0;
-                this.curEnvStep = 0;
-                this.envStepA = 0;
-                this.env_step_d = 0;
-                this.envStepR = 0;
-                this.stepSkipPosA = 0;
-                this.envStepSkipA = 0;
-            }
-
-            private static final int[] stepSkipMask = new int[] {0xff, 0xfe, 0xee, 0xba, 0xaa};
-
             /** current output/last output (used for feedback) */
-            private int cval, lastcval;
-            /** time (position in waveform) and time increment */
-            private int tcount, wfPos, tinc;
+            private int cVal, lastCVal;
+            /** time (position in waveForm) and time increment */
+            private int tCount, wfPos, tInc;
             /** and amplification (envelope) */
             private double amp, stepAmp;
             /** volume */
@@ -522,20 +333,20 @@ public class DosboxYm3812 {
             /** attack rate function coefficients */
             private double a0, a1, a2, a3;
             /** decay/release rate functions */
-            private double decaymul, releasemul;
+            private double decayMul, releaseMul;
             /** current state of Operator (attack/decay/sustain/release/off) */
             private int opState;
             private int tOff;
             /** highest three bits of the frequency, used for vibrato calculations */
-            private int freq_high;
-            /** start of selected waveform */
+            private int freqHigh;
+            /** start of selected waveForm */
             private short[] curWForm;
-            /** start of selected waveform */
+            /** start of selected waveForm */
             private int curWFormPtr;
-            /** mask for selected waveform */
+            /** mask for selected waveForm */
             private int curWMask;
             /** activity state (regular, percussion) */
-            private int act_state;
+            private int actState;
             /** keep sustain level when decay finished */
             private boolean susKeep;
             /** vibrato/tremolo enable bits */
@@ -554,138 +365,78 @@ public class DosboxYm3812 {
             /** bitmask that determines if a step is skipped (respective bit is zero then) */
             private int envStepSkipA;
 
-            // output level is sustained, mode changes only when Operator is turned off (.release)
-            // or when the keep-sustained bit is turned off (.sustain_nokeep)
-            private void output(int modulator, int trem) {
-                if (this.opState != OF_TYPE_OFF) {
-                    int i;
-                    this.lastcval = this.cval;
-                    i = (this.wfPos + modulator) / FIXEDPT;
+            public void reset() {
+                this.opState = OF_TYPE_OFF;
+                this.actState = OP_ACT_OFF;
+                this.amp = 0.0;
+                this.stepAmp = 0.0;
+                this.vol = 0.0;
+                this.tCount = 0;
+                this.tInc = 0;
+                this.tOff = 0;
+                this.curWMask = waveMask[0];
+                this.curWForm = wavTable;
+                this.curWFormPtr = waveForm[0];
+                this.freqHigh = 0;
 
-                    // wform: -16384 to 16383 (0x4000)
-                    // trem :  32768 to 65535 (0x10000)
-                    // step_amp: 0.0 to 1.0
-                    // vol  : 1/2^14 to 1/2^29 (/0x4000; /1../0x8000)
-
-                    this.cval = (int) (this.stepAmp * this.vol * this.curWForm[this.curWFormPtr + (i & this.curWMask)] * trem / 16.0);
-                }
+                this.generatorPos = 0;
+                this.curEnvStep = 0;
+                this.envStepA = 0;
+                this.env_step_d = 0;
+                this.envStepR = 0;
+                this.stepSkipPosA = 0;
+                this.envStepSkipA = 0;
             }
 
-            // no action, Operator is off
-            private void off() {
+            public static void advanceDrums(Opl.Op op1, int vib1, Opl.Op op2, int vib2, Opl.Op op3, int vib3, int generatorAdd) {
+                int c1 = op1.tCount / FIXEDPT;
+                int c3 = op3.tCount / FIXEDPT;
+                int phaseBit = (((c1 & 0x88) ^ ((c1 << 5) & 0x80)) | ((c3 ^ (c3 << 2)) & 0x20)) != 0 ? 0x02 : 0x00;
+
+                int noiseBit = rand.nextInt() & 1;
+
+                int snare_phase_bit = (((op1.tCount / FIXEDPT) / 0x100) & 1);
+
+                // Hihat
+                int inttm = (phaseBit << 8) | (0x34 << (phaseBit ^ (noiseBit << 1)));
+                op1.wfPos = inttm * FIXEDPT; // waveForm position
+                // advance waveForm time
+                op1.tCount += op1.tInc;
+                op1.tCount += op1.tInc * vib1 / FIXEDPT;
+                op1.generatorPos += generatorAdd;
+
+                // Snare
+                inttm = ((1 + snare_phase_bit) ^ noiseBit) << 8;
+                op2.wfPos = inttm * FIXEDPT; // waveForm position
+                // advance waveForm time
+                op2.tCount += op2.tInc;
+                op2.tCount += op2.tInc * vib2 / FIXEDPT;
+                op2.generatorPos += generatorAdd;
+
+                // Cymbal
+                inttm = (1 + phaseBit) << 8;
+                op3.wfPos = inttm * FIXEDPT; // waveForm position
+                // advance waveForm time
+                op3.tCount += op3.tInc;
+                op3.tCount += op3.tInc * vib3 / FIXEDPT;
+                op3.generatorPos += generatorAdd;
             }
 
-            // output level is sustained, mode changes only when Operator is turned off (.release)
-            // or when the keep-sustained bit is turned off (.sustain_nokeep)
-            private void sustain() {
-                int num_steps_add = this.generatorPos / FIXEDPT; // number of (standardized) samples
-                int ct;
-                for (ct = 0; ct < num_steps_add; ct++) {
-                    this.curEnvStep++;
-                }
-                this.generatorPos -= num_steps_add * FIXEDPT;
+            public void advance(int vib, int generatorAdd) {
+                wfPos = tCount; // waveForm position
+
+                // advance waveForm time
+                tCount += tInc;
+                tCount += tInc * vib / FIXEDPT;
+
+                generatorPos += generatorAdd;
             }
 
-            // Operator in release mode, if output level reaches zero the Operator is turned off
-            private void release() {
-                int num_steps_add;
-                int ct;
+            private static final int[] stepSkipMask = new int[] {0xff, 0xfe, 0xee, 0xba, 0xaa};
 
-                // ??? boundary?
-                if (this.amp > 0.00000001) {
-                    // release phase
-                    this.amp *= this.releasemul;
-                }
-
-                num_steps_add = this.generatorPos / FIXEDPT; // number of (standardized) samples
-                for (ct = 0; ct < num_steps_add; ct++) {
-                    this.curEnvStep++; // sample counter
-                    if ((this.curEnvStep & this.envStepR) == 0) {
-                        if (this.amp <= 0.00000001) {
-                            // release phase finished, turn off this Operator
-                            this.amp = 0.0;
-                            if (this.opState == OF_TYPE_REL) {
-                                this.opState = OF_TYPE_OFF;
-                            }
-                        }
-                        this.stepAmp = this.amp;
-                    }
-                }
-                this.generatorPos -= num_steps_add * FIXEDPT;
-            }
-
-            // Operator in decay mode, if sustain level is reached the output level is either
-            // kept (sustain level keep enabled) or the Operator is switched into release mode
-            private void decay() {
-
-                if (this.amp > this.sustainLevel) {
-                    // decay phase
-                    this.amp *= this.decaymul;
-                }
-
-                int numStepsAdd = this.generatorPos / FIXEDPT; // number of (standardized) samples
-                for (int ct = 0; ct < numStepsAdd; ct++) {
-                    this.curEnvStep++;
-                    if ((this.curEnvStep & this.env_step_d) == 0) {
-                        if (this.amp <= this.sustainLevel) {
-                            // decay phase finished, sustain level reached
-                            if (this.susKeep) {
-                                // keep sustain level (until turned off)
-                                this.opState = OF_TYPE_SUS;
-                                this.amp = this.sustainLevel;
-                            } else {
-                                // next: release phase
-                                this.opState = OF_TYPE_SUS_NOKEEP;
-                            }
-                        }
-                        this.stepAmp = this.amp;
-                    }
-                }
-                this.generatorPos -= numStepsAdd * FIXEDPT;
-            }
-
-            // Operator in attack mode, if full output level is reached,
-            // the Operator is switched into decay mode
-            private void attack() {
-
-                this.amp = ((this.a3 * this.amp + this.a2) * this.amp + this.a1) * this.amp + this.a0;
-
-                int numStepsAdd = this.generatorPos / FIXEDPT; // number of (standardized) samples
-                for (int ct = 0; ct < numStepsAdd; ct++) {
-                    this.curEnvStep++; // next sample
-                    if ((this.curEnvStep & this.envStepA) == 0) { // check if next step already reached
-                        if (this.amp > 1.0) {
-                            // attack phase finished, next: decay
-                            this.opState = OF_TYPE_DEC;
-                            this.amp = 1.0;
-                            this.stepAmp = 1.0;
-                        }
-                        this.stepSkipPosA <<= 1;
-                        if (this.stepSkipPosA == 0) this.stepSkipPosA = 1;
-                        if ((this.stepSkipPosA & this.envStepSkipA) != 0) { // check if required to skip next step
-                            this.stepAmp = this.amp;
-                        }
-                    }
-                }
-                this.generatorPos -= numStepsAdd * FIXEDPT;
-            }
-
-            private void checkEgAttack() {
-                if (((this.curEnvStep + 1) & this.envStepA) == 0) {
-                    // check if next step already reached
-                    if (this.a0 >= 1.0) {
-                        // attack phase finished, next: decay
-                        this.opState = OF_TYPE_DEC;
-                        this.amp = 1.0;
-                        this.stepAmp = 1.0;
-                    }
-                }
-            }
-
-            private void changeAttackRate(int attackRate, double recipSamp) {
+            public void changeAttackRate(int attackRate, double recIpSamp) {
                 if (attackRate != 0) {
-
-                    double f = Math.pow(FL2, (double) attackRate + (tOff >> 2) - 1) * attackConst[tOff & 3] * recipSamp;
+                    double f = Math.pow(FL2, (double) attackRate + (tOff >> 2) - 1) * attackConst[tOff & 3] * recIpSamp;
                     // attack rate coefficients
                     a0 = 0.0377 * f;
                     a1 = 10.73 * f + 1;
@@ -715,9 +466,263 @@ public class DosboxYm3812 {
                     envStepSkipA = 0;
                 }
             }
+
+            public void changeDecayRate(int decayRate, double recIpSamp) {
+                // decayMul should be 1.0 when decayRate==0
+                if (decayRate != 0) {
+                    double f = -7.4493 * decRelConst[tOff & 3] * recIpSamp;
+                    decayMul = Math.pow(FL2, f * Math.pow(FL2, decayRate + (tOff >> 2)));
+                    int steps = (decayRate * 4 + tOff) >> 2;
+                    env_step_d = (1 << (steps <= 12 ? 12 - steps : 0)) - 1;
+                } else {
+                    decayMul = 1.0;
+                    env_step_d = 0;
+                }
+            }
+
+            public void changeReleaseRate(int releaseRate, double recIpSamp) {
+                // releaseMul should be 1.0 when releaseRate==0
+                if (releaseRate != 0) {
+                    int steps;
+
+                    double f = -7.4493 * decRelConst[tOff & 3] * recIpSamp;
+                    releaseMul = Math.pow(FL2, f * Math.pow(FL2, releaseRate + (tOff >> 2)));
+                    steps = (releaseRate * 4 + tOff) >> 2;
+                    envStepR = (1 << (steps <= 12 ? 12 - steps : 0)) - 1;
+                } else {
+                    releaseMul = 1.0;
+                    envStepR = 0;
+                }
+            }
+
+            public void changeSustainLevel(int sustainLevel) {
+                // sustainLevel should be 0.0 when sustainLevel==15 (max)
+                if (sustainLevel < 15) {
+                    this.sustainLevel = Math.pow(FL2, (double) sustainLevel * (-FL05));
+                } else {
+                    this.sustainLevel = 0.0;
+                }
+            }
+
+            public void changeKeepSustain(boolean susKeep) {
+                if (opState == OF_TYPE_SUS) {
+                    if (!susKeep)
+                        opState = OF_TYPE_SUS_NOKEEP;
+                } else if (opState == OF_TYPE_SUS_NOKEEP) {
+                    if (susKeep)
+                        opState = OF_TYPE_SUS;
+                }
+            }
+
+            public void changeWaveForm(int regBase, byte[] waveSel) {
+                // waveForm selection
+                curWMask = waveMask[waveSel[regBase]];
+                curWForm = wavTable;
+                curWFormPtr = waveForm[waveSel[regBase]];
+                // (might need to be adapted to waveForm type here...)
+            }
+
+            // enable/disable vibrato/tremolo LFO effects
+            public void changeVibrato(int regBase, byte[] adlibReg) {
+                this.vibrato = (adlibReg[ARC_TVS_KSR_MUL + regBase] & 0x40) != 0;
+                this.tremolo = (adlibReg[ARC_TVS_KSR_MUL + regBase] & 0x80) != 0;
+            }
+
+            // change amount of self-feedback
+            public void changeFeedback(int feedback) {
+                if (feedback != 0)
+                    mfbi = (int) (Math.pow(FL2, (feedback >> 1) + 8));
+                else
+                    mfbi = 0;
+            }
+
+            public void changeFrequency(int chanBase, int regBase, byte[] adlibReg, double[] frqMul, double recipSamp) {
+                // frequency
+                int frn = (((adlibReg[ARC_KON_BNUM + chanBase]) & 3) << 8) + (adlibReg[ARC_FREQ_NUM + chanBase] & 0xff);
+                // block number/octave
+                int oct = (adlibReg[ARC_KON_BNUM + chanBase] >> 2) & 7;
+                freqHigh = (frn >> 7) & 7;
+
+                // keysplit
+                int noteSel = (adlibReg[8] >> 6) & 1;
+                tOff = ((frn >> 9) & (noteSel ^ 1)) | ((frn >> 8) & noteSel);
+                tOff += (oct << 1);
+
+                // envelope scaling (KSR)
+                if ((adlibReg[ARC_TVS_KSR_MUL + regBase] & 0x10) == 0) tOff >>= 2;
+
+                // 20+a0+b0:
+                tInc = (int) ((((double) (frn << oct)) * frqMul[adlibReg[ARC_TVS_KSR_MUL + regBase] & 15]));
+                // 40+a0+b0:
+                double volIn = (double) (adlibReg[ARC_KSL_OUTLEV + regBase] & 63) +
+                        ksLMul[(adlibReg[ARC_KSL_OUTLEV + regBase] & 0xff) >> 6] * ksLev[oct][frn >> 6];
+                vol = Math.pow(FL2, volIn * -0.125 - 14);
+
+                // Operator frequency changed, care about features that depend on it
+                changeAttackRate((adlibReg[ARC_ATTR_DECR + regBase] & 0xff) >> 4, recipSamp);
+                changeDecayRate(adlibReg[ARC_ATTR_DECR + regBase] & 15, recipSamp);
+                changeReleaseRate(adlibReg[ARC_SUSL_RELR + regBase] & 15, recipSamp);
+            }
+
+            public void enable(int regBase, int act_type, byte[] wave_sel) {
+                // check if this is really an off-on transition
+                if (actState == OP_ACT_OFF) {
+                    int wselbase = regBase;
+                    if (wselbase >= ARC_SECONDSET)
+                        wselbase -= (ARC_SECONDSET - 22); // second set starts at 22
+
+                    tCount = waveStart[wave_sel[wselbase] & 0xff] * FIXEDPT;
+
+                    // start with attack mode
+                    opState = OF_TYPE_ATT;
+                    actState |= act_type;
+                }
+            }
+
+            public void disable(int act_type) {
+                // check if this is really an on-off transition
+                if (actState != OP_ACT_OFF) {
+                    actState &= (~act_type);
+                    if (actState == OP_ACT_OFF) {
+                        if (opState != OF_TYPE_OFF)
+                            opState = OF_TYPE_REL;
+                    }
+                }
+            }
+
+            /**
+             * output level is sustained, mode changes only when Operator is turned off (.release)
+             * or when the keep-sustained bit is turned off (.sustain_nokeep)
+             */
+            public void output(int modulator, int trem) {
+                if (this.opState != OF_TYPE_OFF) {
+                    this.lastCVal = this.cVal;
+                    int i = (this.wfPos + modulator) / FIXEDPT;
+
+                    // wform: -16384 to 16383 (0x4000)
+                    // trem :  32768 to 65535 (0x10000)
+                    // step_amp: 0.0 to 1.0
+                    // vol  : 1/2^14 to 1/2^29 (/0x4000; /1../0x8000)
+
+                    this.cVal = (int) (this.stepAmp * this.vol * this.curWForm[this.curWFormPtr + (i & this.curWMask)] * trem / 16.0);
+                }
+            }
+
+            /** no action, Operator is off */
+            public void off() {
+            }
+
+            /**
+             * Operator in attack mode, if full output level is reached,
+             * the Operator is switched into decay mode
+             */
+            public void attack() {
+                this.amp = ((this.a3 * this.amp + this.a2) * this.amp + this.a1) * this.amp + this.a0;
+
+                int numStepsAdd = this.generatorPos / FIXEDPT; // number of (standardized) samples
+                for (int ct = 0; ct < numStepsAdd; ct++) {
+                    this.curEnvStep++; // next sample
+                    if ((this.curEnvStep & this.envStepA) == 0) { // check if next step already reached
+                        if (this.amp > 1.0) {
+                            // attack phase finished, next: decay
+                            this.opState = OF_TYPE_DEC;
+                            this.amp = 1.0;
+                            this.stepAmp = 1.0;
+                        }
+                        this.stepSkipPosA <<= 1;
+                        if (this.stepSkipPosA == 0) this.stepSkipPosA = 1;
+                        if ((this.stepSkipPosA & this.envStepSkipA) != 0) { // check if required to skip next step
+                            this.stepAmp = this.amp;
+                        }
+                    }
+                }
+                this.generatorPos -= numStepsAdd * FIXEDPT;
+            }
+
+            /**
+             * Operator in decay mode, if sustain level is reached the output level is either
+             * kept (sustain level keep enabled) or the Operator is switched into release mode
+             */
+            public void decay() {
+                if (this.amp > this.sustainLevel) {
+                    // decay phase
+                    this.amp *= this.decayMul;
+                }
+
+                int numStepsAdd = this.generatorPos / FIXEDPT; // number of (standardized) samples
+                for (int ct = 0; ct < numStepsAdd; ct++) {
+                    this.curEnvStep++;
+                    if ((this.curEnvStep & this.env_step_d) == 0) {
+                        if (this.amp <= this.sustainLevel) {
+                            // decay phase finished, sustain level reached
+                            if (this.susKeep) {
+                                // keep sustain level (until turned off)
+                                this.opState = OF_TYPE_SUS;
+                                this.amp = this.sustainLevel;
+                            } else {
+                                // next: release phase
+                                this.opState = OF_TYPE_SUS_NOKEEP;
+                            }
+                        }
+                        this.stepAmp = this.amp;
+                    }
+                }
+                this.generatorPos -= numStepsAdd * FIXEDPT;
+            }
+
+            /**
+             * output level is sustained, mode changes only when Operator is turned off (.release)
+             * or when the keep-sustained bit is turned off (.sustain_nokeep)
+             */
+            public void sustain() {
+                int numStepsAdd = this.generatorPos / FIXEDPT; // number of (standardized) samples
+                int ct;
+                for (ct = 0; ct < numStepsAdd; ct++) {
+                    this.curEnvStep++;
+                }
+                this.generatorPos -= numStepsAdd * FIXEDPT;
+            }
+
+            // Operator in release mode, if output level reaches zero the Operator is turned off
+            public void release() {
+                // ??? boundary?
+                if (this.amp > 0.00000001) {
+                    // release phase
+                    this.amp *= this.releaseMul;
+                }
+
+                int numStepsAdd = this.generatorPos / FIXEDPT; // number of (standardized) samples
+                for (int ct = 0; ct < numStepsAdd; ct++) {
+                    this.curEnvStep++; // sample counter
+                    if ((this.curEnvStep & this.envStepR) == 0) {
+                        if (this.amp <= 0.00000001) {
+                            // release phase finished, turn off this Operator
+                            this.amp = 0.0;
+                            if (this.opState == OF_TYPE_REL) {
+                                this.opState = OF_TYPE_OFF;
+                            }
+                        }
+                        this.stepAmp = this.amp;
+                    }
+                }
+                this.generatorPos -= numStepsAdd * FIXEDPT;
+            }
+
+            public void checkEgAttack() {
+                if (((this.curEnvStep + 1) & this.envStepA) == 0) {
+                    // check if next step already reached
+                    if (this.a0 >= 1.0) {
+                        // attack phase finished, next: decay
+                        this.opState = OF_TYPE_DEC;
+                        this.amp = 1.0;
+                        this.stepAmp = 1.0;
+                    }
+                }
+            }
         }
 
         // per-chips variables
+
         private final Opl.Op[] ops = new Opl.Op[MAXOPERATORS];
         private final int[] muteChn = new int[NUM_CHANNELS + 5];
         private final int chipClock;
@@ -729,39 +734,36 @@ public class DosboxYm3812 {
         private int oplAddr;
         // adlib register set
         private final byte[] adlibReg = new byte[256];
-        // waveform selection
+        // waveForm selection
         private final byte[] waveSel = new byte[22];
 
         // vibrato/tremolo increment/counter
         private int vibtabPos;
         private final int vibtabAdd;
-        private int tremtabPos;
-        private final int tremtabAdd;
+        private int tremTabPos;
+        private final int tremTabAdd;
 
-        // should be a chips parameter
+        /** should be a chips parameter */
         private final int generatorAdd;
 
         // inverse of sampling rate
-        private final double recipSamp;
+        private final double recIpSamp;
         private final double[] frqMul = new double[16];
 
-        // stream update handler
+        /** stream update handler */
         private final UpdateHandler updateHandler;
-        // stream update parameter
-        private final DosboxYm3812 updateParam;
 
-        Opl(int clock, int sampleRate, UpdateHandler updateHandler, DosboxYm3812 param) {
+        Opl(int clock, int sampleRate, UpdateHandler updateHandler) {
 
             this.chipClock = clock;
             this.intSampleRate = sampleRate;
             this.updateHandler = updateHandler;
-            this.updateParam = param;
 
             this.generatorAdd = (int) (intFreqU(this.chipClock) * FIXEDPT / this.intSampleRate);
 
-            this.recipSamp = 1.0 / (double) this.intSampleRate;
+            this.recIpSamp = 1.0 / (double) this.intSampleRate;
             for (int i = 15; i >= 0; i--) {
-                this.frqMul[i] = frqmul_tab[i] * intFreqU(this.chipClock) / (double) WAVEPREC * (double) FIXEDPT * this.recipSamp;
+                this.frqMul[i] = frqMulTab[i] * intFreqU(this.chipClock) / (double) WAVEPREC * (double) FIXEDPT * this.recIpSamp;
             }
 
             // vibrato at ~6.1 ?? (opl3 docs say 6.1, opl4 docs say 6.0, Y8950 docs say 6.4)
@@ -769,27 +771,21 @@ public class DosboxYm3812 {
             this.vibtabPos = 0;
 
             // tremolo at 3.7hz
-            this.tremtabAdd = (int) ((double) TREMTAB_SIZE * TREM_FREQ * FIXEDPT_LFO / (double) this.intSampleRate);
-            this.tremtabPos = 0;
+            this.tremTabAdd = (int) ((double) TREMTAB_SIZE * TREM_FREQ * FIXEDPT_LFO / (double) this.intSampleRate);
+            this.tremTabPos = 0;
         }
 
-        private void stop() {
+        public void stop() {
         }
 
-        private void reset() {
-            int i;
-            Opl.Op op;
+        public void reset() {
 
-            //memset(this.adlibreg, 0x00, sizeof(this.adlibreg));
-            //memset(this.Op, 0x00, sizeof(Op) * MAXOPERATORS);
-            //memset(this.wave_sel, 0x00, sizeof(this.wave_sel));
             Arrays.fill(this.adlibReg, (byte) 0);
-            for (int ind = 0; ind < this.ops.length; ind++) this.ops[ind] = new Opl.Op();
+            for (int ind = 0; ind < this.ops.length; ind++) this.ops[ind] = new Op();
             Arrays.fill(this.waveSel, (byte) 0);
 
-            for (i = 0; i < MAXOPERATORS; i++) {
-                op = this.ops[i];
-                op.reset();
+            for (int i = 0; i < MAXOPERATORS; i++) {
+                this.ops[i].reset();
             }
 
             this.status = 0;
@@ -797,14 +793,14 @@ public class DosboxYm3812 {
             this.oplAddr = 0;
         }
 
-        private void writeIO(int addr, int val) {
+        public void write(int addr, int val) {
             if ((addr & 1) != 0)
-                write(this.oplAddr, val);
+                writeInternal(this.oplAddr, val);
             else
                 this.oplAddr = val;
         }
 
-        private void write(int idx, int val) {
+        private void writeInternal(int idx, int val) {
             int secondSet = idx & 0x100;
             this.adlibReg[idx] = (byte) val;
 
@@ -837,18 +833,18 @@ public class DosboxYm3812 {
                 int num = idx & 7;
                 int base = (idx - ARC_TVS_KSR_MUL) & 0xff;
                 if ((num < 6) && (base < 22)) {
-                    int modOp = regBase2modOp[secondSet != 0 ? (base + 22) : base];
+                    int modOp = regBase2ModOp[secondSet != 0 ? (base + 22) : base];
                     int regBase = base + secondSet;
                     int chanBase = secondSet != 0 ? (modOp - 18 + ARC_SECONDSET) : modOp;
 
                     // change tremolo/vibrato and sustain keeping of this Operator
-                    Opl.Op po = this.ops[modOp + ((num < 3) ? 0 : 9)];
-                    po.changeKeepSustain((this.adlibReg[ARC_TVS_KSR_MUL + regBase] & 0x20) > 0);
-                    po.changeVibrato(regBase, this.adlibReg);
+                    Op op = this.ops[modOp + ((num < 3) ? 0 : 9)];
+                    op.changeKeepSustain((this.adlibReg[ARC_TVS_KSR_MUL + regBase] & 0x20) > 0);
+                    op.changeVibrato(regBase, this.adlibReg);
 
                     // change frequency calculations of this Operator as
                     // key scale rate and frequency multiplicator can be changed
-                    po.changeFrequency(chanBase, base, this.adlibReg, this.frqMul, this.recipSamp);
+                    op.changeFrequency(chanBase, base, this.adlibReg, this.frqMul, this.recIpSamp);
                 }
             }
             break;
@@ -858,13 +854,13 @@ public class DosboxYm3812 {
                 int num = idx & 7;
                 int base = (idx - ARC_KSL_OUTLEV) & 0xff;
                 if ((num < 6) && (base < 22)) {
-                    int modOp = regBase2modOp[secondSet != 0 ? (base + 22) : base];
+                    int modOp = regBase2ModOp[secondSet != 0 ? (base + 22) : base];
                     int chanBase = secondSet != 0 ? (modOp - 18 + ARC_SECONDSET) : modOp;
 
                     // change frequency calculations of this Operator as
                     // key scale level and output rate can be changed
-                    Opl.Op op = this.ops[modOp + ((num < 3) ? 0 : 9)];
-                    op.changeFrequency(chanBase, base, this.adlibReg, this.frqMul, this.recipSamp);
+                    Op op = this.ops[modOp + ((num < 3) ? 0 : 9)];
+                    op.changeFrequency(chanBase, base, this.adlibReg, this.frqMul, this.recIpSamp);
                 }
             }
             break;
@@ -877,9 +873,9 @@ public class DosboxYm3812 {
                     int regBase = base + secondSet;
 
                     // change attack rate and decay rate of this Operator
-                    Opl.Op po = this.ops[regbase2op[secondSet != 0 ? (base + 22) : base]];
-                    po.changeAttackRate((this.adlibReg[ARC_ATTR_DECR + regBase] & 0xff) >> 4, this.recipSamp);
-                    po.changeDecayRate(this.adlibReg[ARC_ATTR_DECR + regBase] & 15, this.recipSamp);
+                    Op op = this.ops[regBase2Op[secondSet != 0 ? (base + 22) : base]];
+                    op.changeAttackRate((this.adlibReg[ARC_ATTR_DECR + regBase] & 0xff) >> 4, this.recIpSamp);
+                    op.changeDecayRate(this.adlibReg[ARC_ATTR_DECR + regBase] & 15, this.recIpSamp);
                 }
             }
             break;
@@ -889,12 +885,12 @@ public class DosboxYm3812 {
                 int num = idx & 7;
                 int base = (idx - ARC_SUSL_RELR) & 0xff;
                 if ((num < 6) && (base < 22)) {
-                    int regbase = base + secondSet;
+                    int regBase = base + secondSet;
 
                     // change sustain level and release rate of this Operator
-                    Opl.Op po = this.ops[regbase2op[secondSet != 0 ? (base + 22) : base]];
-                    po.changeReleaseRate(this.adlibReg[ARC_SUSL_RELR + regbase] & 15, this.recipSamp);
-                    po.changeSustainLevel((this.adlibReg[ARC_SUSL_RELR + regbase] & 0xff) >> 4);
+                    Op op = this.ops[regBase2Op[secondSet != 0 ? (base + 22) : base]];
+                    op.changeReleaseRate(this.adlibReg[ARC_SUSL_RELR + regBase] & 15, this.recIpSamp);
+                    op.changeSustainLevel((this.adlibReg[ARC_SUSL_RELR + regBase] & 0xff) >> 4);
                 }
             }
             break;
@@ -903,13 +899,13 @@ public class DosboxYm3812 {
                 int base = (idx - ARC_FREQ_NUM) & 0xff;
                 if (base < 9) {
                     int opBase = secondSet != 0 ? (base + 18) : base;
-                    // regbase of modulator:
-                    int modBase = modulatorbase[base] + secondSet;
+                    // regBase of modulator:
+                    int modBase = modulatorBase[base] + secondSet;
 
                     int chanBase = base + secondSet;
 
-                    this.ops[opBase].changeFrequency(chanBase, modBase, this.adlibReg, this.frqMul, this.recipSamp);
-                    this.ops[opBase + 9].changeFrequency(chanBase, modBase + 3, this.adlibReg, this.frqMul, this.recipSamp);
+                    this.ops[opBase].changeFrequency(chanBase, modBase, this.adlibReg, this.frqMul, this.recIpSamp);
+                    this.ops[opBase + 9].changeFrequency(chanBase, modBase + 3, this.adlibReg, this.frqMul, this.recIpSamp);
                 }
             }
             break;
@@ -919,37 +915,37 @@ public class DosboxYm3812 {
                 if (idx == ARC_PERC_MODE) {
 
                     if ((val & 0x30) == 0x30) { // BassDrum active
-                        this.ops[6].enableOperator(16, OP_ACT_PERC, this.waveSel);
-                        this.ops[6].changeFrequency(6, 16, this.adlibReg, this.frqMul, this.recipSamp);
-                        this.ops[6 + 9].enableOperator(16 + 3, OP_ACT_PERC, this.waveSel);
-                        this.ops[6 + 9].changeFrequency(6, 16 + 3, this.adlibReg, this.frqMul, this.recipSamp);
+                        this.ops[6].enable(16, OP_ACT_PERC, this.waveSel);
+                        this.ops[6].changeFrequency(6, 16, this.adlibReg, this.frqMul, this.recIpSamp);
+                        this.ops[6 + 9].enable(16 + 3, OP_ACT_PERC, this.waveSel);
+                        this.ops[6 + 9].changeFrequency(6, 16 + 3, this.adlibReg, this.frqMul, this.recIpSamp);
                     } else {
-                        this.ops[6].disableOperator(OP_ACT_PERC);
-                        this.ops[6 + 9].disableOperator(OP_ACT_PERC);
+                        this.ops[6].disable(OP_ACT_PERC);
+                        this.ops[6 + 9].disable(OP_ACT_PERC);
                     }
                     if ((val & 0x28) == 0x28) { // Snare active
-                        this.ops[16].enableOperator(17 + 3, OP_ACT_PERC, this.waveSel);
-                        this.ops[16].changeFrequency(7, 17 + 3, this.adlibReg, this.frqMul, this.recipSamp);
+                        this.ops[16].enable(17 + 3, OP_ACT_PERC, this.waveSel);
+                        this.ops[16].changeFrequency(7, 17 + 3, this.adlibReg, this.frqMul, this.recIpSamp);
                     } else {
-                        this.ops[16].disableOperator(OP_ACT_PERC);
+                        this.ops[16].disable(OP_ACT_PERC);
                     }
                     if ((val & 0x24) == 0x24) { // TomTom active
-                        this.ops[8].enableOperator(18, OP_ACT_PERC, this.waveSel);
-                        this.ops[8].changeFrequency(8, 18, this.adlibReg, this.frqMul, this.recipSamp);
+                        this.ops[8].enable(18, OP_ACT_PERC, this.waveSel);
+                        this.ops[8].changeFrequency(8, 18, this.adlibReg, this.frqMul, this.recIpSamp);
                     } else {
-                        this.ops[8].disableOperator(OP_ACT_PERC);
+                        this.ops[8].disable(OP_ACT_PERC);
                     }
                     if ((val & 0x22) == 0x22) { // Cymbal active
-                        this.ops[8 + 9].enableOperator(18 + 3, OP_ACT_PERC, this.waveSel);
-                        this.ops[8 + 9].changeFrequency(8, 18 + 3, this.adlibReg, this.frqMul, this.recipSamp);
+                        this.ops[8 + 9].enable(18 + 3, OP_ACT_PERC, this.waveSel);
+                        this.ops[8 + 9].changeFrequency(8, 18 + 3, this.adlibReg, this.frqMul, this.recIpSamp);
                     } else {
-                        this.ops[8 + 9].disableOperator(OP_ACT_PERC);
+                        this.ops[8 + 9].disable(OP_ACT_PERC);
                     }
                     if ((val & 0x21) == 0x21) { // Hihat active
-                        this.ops[7].enableOperator(17, OP_ACT_PERC, this.waveSel);
-                        this.ops[7].changeFrequency(7, 17, this.adlibReg, this.frqMul, this.recipSamp);
+                        this.ops[7].enable(17, OP_ACT_PERC, this.waveSel);
+                        this.ops[7].changeFrequency(7, 17, this.adlibReg, this.frqMul, this.recIpSamp);
                     } else {
-                        this.ops[7].disableOperator(OP_ACT_PERC);
+                        this.ops[7].disable(OP_ACT_PERC);
                     }
 
                     break;
@@ -958,25 +954,25 @@ public class DosboxYm3812 {
                 int base = (idx - ARC_KON_BNUM) & 0xff;
                 if (base < 9) {
                     int opBase = secondSet != 0 ? (base + 18) : base;
-                    // regbase of modulator:
-                    int modBase = modulatorbase[base] + secondSet;
+                    // regBase of modulator:
+                    int modBase = modulatorBase[base] + secondSet;
 
                     if ((val & 32) != 0) {
                         // Operator switched on
-                        this.ops[opBase].enableOperator(modBase, OP_ACT_NORMAL, this.waveSel); // modulator (if 2op)
-                        this.ops[opBase + 9].enableOperator(modBase + 3, OP_ACT_NORMAL, this.waveSel); // carrier (if 2op)
+                        this.ops[opBase].enable(modBase, OP_ACT_NORMAL, this.waveSel); // modulator (if 2op)
+                        this.ops[opBase + 9].enable(modBase + 3, OP_ACT_NORMAL, this.waveSel); // carrier (if 2op)
                     } else {
                         // Operator switched off
-                        this.ops[opBase].disableOperator(OP_ACT_NORMAL);
-                        this.ops[opBase + 9].disableOperator(OP_ACT_NORMAL);
+                        this.ops[opBase].disable(OP_ACT_NORMAL);
+                        this.ops[opBase + 9].disable(OP_ACT_NORMAL);
                     }
 
                     int chanBase = base + secondSet;
 
                     // change frequency calculations of modulator and carrier (2op) as
                     // the frequency of the channel has changed
-                    this.ops[opBase].changeFrequency(chanBase, modBase, this.adlibReg, this.frqMul, this.recipSamp);
-                    this.ops[opBase + 9].changeFrequency(chanBase, modBase + 3, this.adlibReg, this.frqMul, this.recipSamp);
+                    this.ops[opBase].changeFrequency(chanBase, modBase, this.adlibReg, this.frqMul, this.recIpSamp);
+                    this.ops[opBase + 9].changeFrequency(chanBase, modBase + 3, this.adlibReg, this.frqMul, this.recIpSamp);
                 }
             }
             break;
@@ -996,9 +992,9 @@ public class DosboxYm3812 {
                 int base = (idx - ARC_WAVE_SEL) & 0xff;
                 if ((num < 6) && (base < 22)) {
                     if ((this.adlibReg[0x01] & 0x20) != 0) {
-                        // wave selection enabled, change waveform
+                        // wave selection enabled, change waveForm
                         this.waveSel[base] = (byte) (val & 3);
-                        Opl.Op po = this.ops[regBase2modOp[base] + ((num < 3) ? 0 : 9)];
+                        Op po = this.ops[regBase2ModOp[base] + ((num < 3) ? 0 : 9)];
                         po.changeWaveForm(base, this.waveSel);
                     }
                 }
@@ -1009,15 +1005,15 @@ public class DosboxYm3812 {
             }
         }
 
-        private int readReg(int port) {
+        public int read(int port) {
             if ((port & 1) == 0) {
-                return status | 6;
+                return this.status | 6;
             }
             return 0xff;
         }
 
-        private void writeIndex(int port, byte val) {
-            oplIndex = val;
+        public void writeIndex(int port, byte val) {
+            this.oplIndex = val;
         }
 
         // be careful with this
@@ -1035,48 +1031,40 @@ public class DosboxYm3812 {
         private final int[] vibLut = new int[BLOCKBUF_SIZE];
         private final int[] tremLut = new int[BLOCKBUF_SIZE];
 
-        private void getSample(int[][] sndPtr, int numSamples) {
-
+        private void update(int[][] sndPtr, int numSamples) {
             int endSamples;
 
             int[] outBufL = sndPtr[0];
             int[] outBufR = sndPtr[1];
 
             // vibrato/tremolo lookup tables (Global, to possibly be used by all operators)
-            //int[] vib_lut = new int[BLOCKBUF_SIZE];
-            //int[] trem_lut = new int[BLOCKBUF_SIZE];
 
-            int samplesToProcess = numSamples;
-
-            int curSmp;
             int vibTShift;
-            int numChannels = NUM_CHANNELS;
+            int maxChannels = NUM_CHANNELS;
 
             int[] vibVal1, vibVal2, vibVal3, vibVal4;
             int[] tremVal1, tremVal2, tremVal3, tremVal4;
 
-            if (samplesToProcess == 0) {
-                for (int curCh = 0; curCh < numChannels; curCh++) {
+            if (numSamples == 0) {
+                for (int curCh = 0; curCh < maxChannels; curCh++) {
                     if ((this.adlibReg[ARC_PERC_MODE] & 0x20) != 0 && (curCh >= 6 && curCh < 9))
                         continue;
 
-                    Opl.Op[] cPtr = this.ops;
-                    int cPtrPtr = curCh;
+                    int opP = curCh;
 
-                    if (cPtr[cPtrPtr + 0].opState == OF_TYPE_ATT)
-                        cPtr[cPtrPtr + 0].checkEgAttack();
-                    if (cPtr[cPtrPtr + 9].opState == OF_TYPE_ATT)
-                        cPtr[cPtrPtr + 9].checkEgAttack();
+                    if (this.ops[opP + 0].opState == OF_TYPE_ATT)
+                        this.ops[opP + 0].checkEgAttack();
+                    if (this.ops[opP + 9].opState == OF_TYPE_ATT)
+                        this.ops[opP + 9].checkEgAttack();
                 }
 
                 return;
             }
 
-            for (curSmp = 0; curSmp < samplesToProcess; curSmp += endSamples) {
-                endSamples = samplesToProcess - curSmp;
+            for (int curSmp = 0; curSmp < numSamples; curSmp += endSamples) {
+                endSamples = numSamples - curSmp;
                 //if (endSamples>BLOCKBUF_SIZE) endSamples = BLOCKBUF_SIZE;
 
-                //memset(outBufL, 0, endSamples * sizeof(int));
                 for (int ind = 0; ind < endSamples; ind++) {
                     outBufL[ind] = 0;
                     outBufR[ind] = 0;
@@ -1089,198 +1077,194 @@ public class DosboxYm3812 {
                     this.vibtabPos += this.vibtabAdd;
                     if (this.vibtabPos / FIXEDPT_LFO >= VIBTAB_SIZE)
                         this.vibtabPos -= VIBTAB_SIZE * FIXEDPT_LFO;
-                    vibLut[i] = Opl.Op.vibTable[this.vibtabPos / FIXEDPT_LFO] >> vibTShift; // 14cents (14/100 of a semitone) or 7cents
+                    vibLut[i] = Op.vibTable[this.vibtabPos / FIXEDPT_LFO] >> vibTShift; // 14cents (14/100 of a semitone) or 7cents
 
                     // cycle through tremolo table
-                    this.tremtabPos += this.tremtabAdd;
-                    if (this.tremtabPos / FIXEDPT_LFO >= TREMTAB_SIZE)
-                        this.tremtabPos -= TREMTAB_SIZE * FIXEDPT_LFO;
+                    this.tremTabPos += this.tremTabAdd;
+                    if (this.tremTabPos / FIXEDPT_LFO >= TREMTAB_SIZE)
+                        this.tremTabPos -= TREMTAB_SIZE * FIXEDPT_LFO;
                     if ((this.adlibReg[ARC_PERC_MODE] & 0x80) != 0)
-                        tremLut[i] = Opl.Op.tremTable[this.tremtabPos / FIXEDPT_LFO];
+                        tremLut[i] = Op.tremTable[this.tremTabPos / FIXEDPT_LFO];
                     else
-                        tremLut[i] = Opl.Op.tremTable[TREMTAB_SIZE + this.tremtabPos / FIXEDPT_LFO];
+                        tremLut[i] = Op.tremTable[TREMTAB_SIZE + this.tremTabPos / FIXEDPT_LFO];
                 }
 
                 if ((this.adlibReg[ARC_PERC_MODE] & 0x20) != 0) {
                     if ((this.muteChn[NUM_CHANNELS + 0]) == 0) {
                         // BassDrum
-                        Opl.Op[] pos = this.ops;
-                        int posP = 6;
+                        int opP = 6;
                         if ((this.adlibReg[ARC_FEEDBACK + 6] & 1) != 0) {
                             // additive synthesis
-                            if (pos[posP + 9].opState != OF_TYPE_OFF) {
-                                if (pos[posP + 9].vibrato) {
-                                    vibVal1 = vibval_var1;
+                            if (this.ops[opP + 9].opState != OF_TYPE_OFF) {
+                                if (this.ops[opP + 9].vibrato) {
+                                    vibVal1 = vibValVar1;
                                     for (int i = 0; i < endSamples; i++)
-                                        vibVal1[i] = (int) ((vibLut[i] * pos[posP + 9].freq_high / 8) * FIXEDPT * VIBFAC);
+                                        vibVal1[i] = (int) ((vibLut[i] * this.ops[opP + 9].freqHigh / 8) * FIXEDPT * VIBFAC);
                                 } else
-                                    vibVal1 = Opl.Op.vibValConst;
-                                if (pos[posP + 9].tremolo)
+                                    vibVal1 = Op.vibValConst;
+                                if (this.ops[opP + 9].tremolo)
                                     tremVal1 = tremLut; // tremolo enabled, use table
                                 else
-                                    tremVal1 = Opl.Op.tremValConst;
+                                    tremVal1 = Op.tremValConst;
 
                                 // calculate channel output
                                 for (int i = 0; i < endSamples; i++) {
-                                    int chanval;
 
-                                    pos[posP + 9].advance(vibVal1[i], this.generatorAdd);
-                                    opFuncs[pos[posP + 9].opState].accept(pos[posP + 9]);
-                                    pos[posP + 9].output(0, tremVal1[i]);
+                                    this.ops[opP + 9].advance(vibVal1[i], this.generatorAdd);
+                                    opFuncs[this.ops[opP + 9].opState].accept(this.ops[opP + 9]);
 
-                                    chanval = pos[posP + 9].cval * 2;
-                                    outChannelValue(0, outBufL, outBufR, i, chanval);
+                                    this.ops[opP + 9].output(0, tremVal1[i]);
+                                    int chanVal = this.ops[opP + 9].cVal * 2;
+
+                                    outChannelValue(0, outBufL, outBufR, i, chanVal);
                                 }
                             }
                         } else {
                             // frequency modulation
-                            if ((pos[posP + 9].opState != OF_TYPE_OFF) || (pos[posP + 0].opState != OF_TYPE_OFF)) {
-                                if ((pos[posP + 0].vibrato) && (pos[posP + 0].opState != OF_TYPE_OFF)) {
-                                    vibVal1 = vibval_var1;
+                            if ((this.ops[opP + 9].opState != OF_TYPE_OFF) || (this.ops[opP + 0].opState != OF_TYPE_OFF)) {
+                                if ((this.ops[opP + 0].vibrato) && (this.ops[opP + 0].opState != OF_TYPE_OFF)) {
+                                    vibVal1 = vibValVar1;
                                     for (int i = 0; i < endSamples; i++)
-                                        vibVal1[i] = (int) ((vibLut[i] * pos[posP + 0].freq_high / 8) * FIXEDPT * VIBFAC);
+                                        vibVal1[i] = (int) ((vibLut[i] * this.ops[opP + 0].freqHigh / 8) * FIXEDPT * VIBFAC);
                                 } else
-                                    vibVal1 = Opl.Op.vibValConst;
-                                if ((pos[posP + 9].vibrato) && (pos[posP + 9].opState != OF_TYPE_OFF)) {
-                                    vibVal2 = vibval_var2;
+                                    vibVal1 = Op.vibValConst;
+                                if ((this.ops[opP + 9].vibrato) && (this.ops[opP + 9].opState != OF_TYPE_OFF)) {
+                                    vibVal2 = vibValVar2;
                                     for (int i = 0; i < endSamples; i++)
-                                        vibVal2[i] = (int) ((vibLut[i] * pos[posP + 9].freq_high / 8) * FIXEDPT * VIBFAC);
+                                        vibVal2[i] = (int) ((vibLut[i] * this.ops[opP + 9].freqHigh / 8) * FIXEDPT * VIBFAC);
                                 } else
-                                    vibVal2 = Opl.Op.vibValConst;
-                                if (pos[posP + 0].tremolo)
+                                    vibVal2 = Op.vibValConst;
+                                if (this.ops[opP + 0].tremolo)
                                     tremVal1 = tremLut; // tremolo enabled, use table
                                 else
-                                    tremVal1 = Opl.Op.tremValConst;
-                                if (pos[posP + 9].tremolo)
+                                    tremVal1 = Op.tremValConst;
+                                if (this.ops[opP + 9].tremolo)
                                     tremVal2 = tremLut; // tremolo enabled, use table
                                 else
-                                    tremVal2 = Opl.Op.tremValConst;
+                                    tremVal2 = Op.tremValConst;
 
                                 // calculate channel output
                                 for (int i = 0; i < endSamples; i++) {
-                                    int chanval;
+                                    this.ops[opP + 0].advance(vibVal1[i], this.generatorAdd);
+                                    opFuncs[this.ops[opP + 0].opState].accept(this.ops[opP + 0]);
 
-                                    pos[posP + 0].advance(vibVal1[i], this.generatorAdd);
-                                    opFuncs[pos[posP + 0].opState].accept(pos[posP + 0]);
-                                    pos[posP + 0].output((pos[posP + 0].lastcval + pos[posP + 0].cval) * pos[posP + 0].mfbi / 2, tremVal1[i]);
+                                    this.ops[opP + 0].output((this.ops[opP + 0].lastCVal + this.ops[opP + 0].cVal) * this.ops[opP + 0].mfbi / 2, tremVal1[i]);
 
-                                    pos[posP + 9].advance(vibVal2[i], this.generatorAdd);
-                                    opFuncs[pos[posP + 9].opState].accept(pos[posP + 9]);
-                                    pos[posP + 9].output(pos[posP + 0].cval * FIXEDPT, tremVal2[i]);
+                                    this.ops[opP + 9].advance(vibVal2[i], this.generatorAdd);
+                                    opFuncs[this.ops[opP + 9].opState].accept(this.ops[opP + 9]);
 
-                                    chanval = pos[posP + 9].cval * 2;
-                                    outChannelValue(0, outBufL, outBufR, i, chanval);
+                                    this.ops[opP + 9].output(this.ops[opP + 0].cVal * FIXEDPT, tremVal2[i]);
+
+                                    int chanVal = this.ops[opP + 9].cVal * 2;
+
+                                    outChannelValue(0, outBufL, outBufR, i, chanVal);
                                 }
                             }
                         }
                     }   // end if (! Muted)
 
-                    //TomTom (j=8)
+                    // TomTom (j=8)
                     if ((this.muteChn[NUM_CHANNELS + 2]) == 0 && this.ops[8].opState != OF_TYPE_OFF) {
-                        Opl.Op[] cPtr = this.ops;
-                        int cPtrPtr = 8;
-                        if (cPtr[cPtrPtr + 0].vibrato) {
-                            vibVal3 = vibval_var1;
+                        int opP = 8;
+                        if (this.ops[opP + 0].vibrato) {
+                            vibVal3 = vibValVar1;
                             for (int i = 0; i < endSamples; i++)
-                                vibVal3[i] = (int) ((vibLut[i] * cPtr[cPtrPtr + 0].freq_high / 8) * FIXEDPT * VIBFAC);
+                                vibVal3[i] = (int) ((vibLut[i] * this.ops[opP + 0].freqHigh / 8) * FIXEDPT * VIBFAC);
                         } else
-                            vibVal3 = Opl.Op.vibValConst;
+                            vibVal3 = Op.vibValConst;
 
-                        if (cPtr[cPtrPtr + 0].tremolo)
+                        if (this.ops[opP + 0].tremolo)
                             tremVal3 = tremLut; // tremolo enabled, use table
                         else
-                            tremVal3 = Opl.Op.tremValConst;
+                            tremVal3 = Op.tremValConst;
 
                         // calculate channel output
                         for (int i = 0; i < endSamples; i++) {
-                            int chanval;
+                            this.ops[opP + 0].advance(vibVal3[i], this.generatorAdd);
+                            opFuncs[this.ops[opP + 0].opState].accept(this.ops[opP + 0]); //TomTom
 
-                            cPtr[cPtrPtr + 0].advance(vibVal3[i], this.generatorAdd);
-                            opFuncs[cPtr[cPtrPtr + 0].opState].accept(cPtr[cPtrPtr + 0]); //TomTom
-                            cPtr[cPtrPtr + 0].output(0, tremVal3[i]);
-                            chanval = cPtr[cPtrPtr + 0].cval * 2;
-                            outChannelValue(0, outBufL, outBufR, i, chanval);
+                            this.ops[opP + 0].output(0, tremVal3[i]);
+                            int chanVal = this.ops[opP + 0].cVal * 2;
+
+                            outChannelValue(0, outBufL, outBufR, i, chanVal);
                         }
                     }
 
-                    //Snare/Hihat (j=7), Cymbal (j=8)
+                    // Snare/Hihat (j=7), Cymbal (j=8)
                     if ((this.ops[7].opState != OF_TYPE_OFF) || (this.ops[16].opState != OF_TYPE_OFF) ||
                             (this.ops[17].opState != OF_TYPE_OFF)) {
-                        Opl.Op[] pos = this.ops;
                         int posP = 7;
-                        if ((pos[posP + 0].vibrato) && (pos[posP + 0].opState != OF_TYPE_OFF)) {
-                            vibVal1 = vibval_var1;
+                        if ((this.ops[posP + 0].vibrato) && (this.ops[posP + 0].opState != OF_TYPE_OFF)) {
+                            vibVal1 = vibValVar1;
                             for (int i = 0; i < endSamples; i++)
-                                vibVal1[i] = (int) ((vibLut[i] * pos[posP + 0].freq_high / 8.) * FIXEDPT * VIBFAC);
+                                vibVal1[i] = (int) ((vibLut[i] * this.ops[posP + 0].freqHigh / 8.) * FIXEDPT * VIBFAC);
                         } else
-                            vibVal1 = Opl.Op.vibValConst;
-                        if ((pos[posP + 9].vibrato) && (pos[posP + 9].opState == OF_TYPE_OFF)) {
-                            vibVal2 = vibval_var2;
+                            vibVal1 = Op.vibValConst;
+                        if ((this.ops[posP + 9].vibrato) && (this.ops[posP + 9].opState == OF_TYPE_OFF)) {
+                            vibVal2 = vibValVar2;
                             for (int i = 0; i < endSamples; i++)
-                                vibVal2[i] = (int) ((vibLut[i] * pos[posP + 9].freq_high / 8.) * FIXEDPT * VIBFAC);
+                                vibVal2[i] = (int) ((vibLut[i] * this.ops[posP + 9].freqHigh / 8.) * FIXEDPT * VIBFAC);
                         } else
-                            vibVal2 = Opl.Op.vibValConst;
+                            vibVal2 = Op.vibValConst;
 
-                        if (pos[posP + 0].tremolo)
+                        if (this.ops[posP + 0].tremolo)
                             tremVal1 = tremLut; // tremolo enabled, use table
                         else
-                            tremVal1 = Opl.Op.tremValConst;
-                        if (pos[posP + 9].tremolo)
+                            tremVal1 = Op.tremValConst;
+                        if (this.ops[posP + 9].tremolo)
                             tremVal2 = tremLut; // tremolo enabled, use table
                         else
-                            tremVal2 = Opl.Op.tremValConst;
+                            tremVal2 = Op.tremValConst;
 
-                        pos = this.ops;
                         posP = 8;
-                        if ((pos[posP + 9].vibrato) && (pos[posP + 9].opState == OF_TYPE_OFF)) {
-                            vibVal4 = vibval_var2;
+                        if ((this.ops[posP + 9].vibrato) && (this.ops[posP + 9].opState == OF_TYPE_OFF)) {
+                            vibVal4 = vibValVar2;
                             for (int i = 0; i < endSamples; i++)
-                                vibVal4[i] = (int) ((vibLut[i] * pos[posP + 9].freq_high / 8.) * FIXEDPT * VIBFAC);
+                                vibVal4[i] = (int) ((vibLut[i] * this.ops[posP + 9].freqHigh / 8.) * FIXEDPT * VIBFAC);
                         } else
-                            vibVal4 = Opl.Op.vibValConst;
+                            vibVal4 = Op.vibValConst;
 
-                        if (pos[posP + 9].tremolo) tremVal4 = tremLut; // tremolo enabled, use table
-                        else tremVal4 = Opl.Op.tremValConst;
+                        if (this.ops[posP + 9].tremolo) tremVal4 = tremLut; // tremolo enabled, use table
+                        else tremVal4 = Op.tremValConst;
 
                         // calculate channel output
-                        pos = this.ops; // set pos to something useful (else it stays at Op[8])
-                        posP = 0;
                         for (int i = 0; i < endSamples; i++) {
-                            int chanval;
-
-                            Opl.Op.advanceDrums(this.ops[7], vibVal1[i], this.ops[7 + 9], vibVal2[i], this.ops[8 + 9], vibVal4[i], this.generatorAdd);
+                            Op.advanceDrums(this.ops[7], vibVal1[i], this.ops[7 + 9], vibVal2[i], this.ops[8 + 9], vibVal4[i], this.generatorAdd);
 
                             if ((this.muteChn[NUM_CHANNELS + 4]) == 0) {
                                 opFuncs[this.ops[7].opState].accept(this.ops[7]); // Hihat
+
                                 this.ops[7].output(0, tremVal1[i]);
                             } else
-                                this.ops[7].cval = 0;
+                                this.ops[7].cVal = 0;
 
                             if ((this.muteChn[NUM_CHANNELS + 1]) == 0) {
                                 opFuncs[this.ops[7 + 9].opState].accept(this.ops[7 + 9]); // Snare
+
                                 this.ops[7 + 9].output(0, tremVal2[i]);
                             } else
-                                this.ops[7 + 9].cval = 0;
+                                this.ops[7 + 9].cVal = 0;
 
                             if ((this.muteChn[NUM_CHANNELS + 3]) == 0) {
                                 opFuncs[this.ops[8 + 9].opState].accept(this.ops[8 + 9]); // Cymbal
+
                                 this.ops[8 + 9].output(0, tremVal4[i]);
                             } else
-                                this.ops[8 + 9].cval = 0;
+                                this.ops[8 + 9].cVal = 0;
 
                             // fix panning of the snare -Valley Bell
-                            chanval = (this.ops[7].cval + this.ops[7 + 9].cval) * 2;
-                            outChannelValue(7, outBufL, outBufR, i, chanval);
+                            int chanVal = (this.ops[7].cVal + this.ops[7 + 9].cVal) * 2;
 
-                            chanval = this.ops[8 + 9].cval * 2;
-                            outChannelValue(8, outBufL, outBufR, i, chanval);
+                            outChannelValue(7, outBufL, outBufR, i, chanVal);
 
+                            chanVal = this.ops[8 + 9].cVal * 2;
+
+                            outChannelValue(8, outBufL, outBufR, i, chanVal);
                         }
                     }
                 }
 
-                for (int curCh = numChannels - 1; curCh >= 0; curCh--) {
-                    int k;
+                for (int curCh = maxChannels - 1; curCh >= 0; curCh--) {
 
                     if (this.muteChn[curCh] != 0)
                         continue;
@@ -1288,101 +1272,102 @@ public class DosboxYm3812 {
                     // skip drum/percussion operators
                     if ((this.adlibReg[ARC_PERC_MODE] & 0x20) != 0 && (curCh >= 6) && (curCh < 9)) continue;
 
-                    k = curCh;
-                    Opl.Op[] ops = this.ops;
-                    int posP = curCh;
+                    int k = curCh;
+                    int opP = curCh;
 
                     // check for FM/AM
                     if ((this.adlibReg[ARC_FEEDBACK + k] & 1) != 0) {
                         // 2op additive synthesis
-                        if ((ops[posP + 9].opState == OF_TYPE_OFF) && (ops[posP + 0].opState == OF_TYPE_OFF))
+                        if ((this.ops[opP + 9].opState == OF_TYPE_OFF) && (this.ops[opP + 0].opState == OF_TYPE_OFF))
                             continue;
-                        if ((ops[posP + 0].vibrato) && (ops[posP + 0].opState != OF_TYPE_OFF)) {
-                            vibVal1 = vibval_var1;
+                        if ((this.ops[opP + 0].vibrato) && (this.ops[opP + 0].opState != OF_TYPE_OFF)) {
+                            vibVal1 = vibValVar1;
                             for (int i = 0; i < endSamples; i++)
-                                vibVal1[i] = (int) ((vibLut[i] * ops[posP + 0].freq_high / 8.) * FIXEDPT * VIBFAC);
+                                vibVal1[i] = (int) ((vibLut[i] * this.ops[opP + 0].freqHigh / 8.) * FIXEDPT * VIBFAC);
                         } else
-                            vibVal1 = Opl.Op.vibValConst;
-                        if ((ops[posP + 9].vibrato) && (ops[posP + 9].opState != OF_TYPE_OFF)) {
-                            vibVal2 = vibval_var2;
+                            vibVal1 = Op.vibValConst;
+                        if ((this.ops[opP + 9].vibrato) && (this.ops[opP + 9].opState != OF_TYPE_OFF)) {
+                            vibVal2 = vibValVar2;
                             for (int i = 0; i < endSamples; i++)
-                                vibVal2[i] = (int) ((vibLut[i] * ops[posP + 9].freq_high / 8.) * FIXEDPT * VIBFAC);
+                                vibVal2[i] = (int) ((vibLut[i] * this.ops[opP + 9].freqHigh / 8.) * FIXEDPT * VIBFAC);
                         } else
-                            vibVal2 = Opl.Op.vibValConst;
-                        if (ops[posP + 0].tremolo)
+                            vibVal2 = Op.vibValConst;
+                        if (this.ops[opP + 0].tremolo)
                             tremVal1 = tremLut; // tremolo enabled, use table
                         else
-                            tremVal1 = Opl.Op.tremValConst;
-                        if (ops[posP + 9].tremolo)
+                            tremVal1 = Op.tremValConst;
+                        if (this.ops[opP + 9].tremolo)
                             tremVal2 = tremLut; // tremolo enabled, use table
                         else
-                            tremVal2 = Opl.Op.tremValConst;
+                            tremVal2 = Op.tremValConst;
 
                         // calculate channel output
                         for (int i = 0; i < endSamples; i++) {
-                            int chanval;
-
                             // carrier1
-                            ops[posP + 0].advance(vibVal1[i], this.generatorAdd);
-                            opFuncs[ops[posP + 0].opState].accept(ops[posP + 0]);
-                            ops[posP + 0].output((ops[posP + 0].lastcval + ops[posP + 0].cval) * ops[posP + 0].mfbi / 2, tremVal1[i]);
+                            this.ops[opP + 0].advance(vibVal1[i], this.generatorAdd);
+                            opFuncs[this.ops[opP + 0].opState].accept(this.ops[opP + 0]);
+
+                            this.ops[opP + 0].output((this.ops[opP + 0].lastCVal + this.ops[opP + 0].cVal) * this.ops[opP + 0].mfbi / 2, tremVal1[i]);
 
                             // carrier2
-                            ops[posP + 9].advance(vibVal2[i], this.generatorAdd);
-                            opFuncs[ops[posP + 9].opState].accept(ops[posP + 9]);
-                            ops[posP + 9].output(0, tremVal2[i]);
+                            this.ops[opP + 9].advance(vibVal2[i], this.generatorAdd);
+                            opFuncs[this.ops[opP + 9].opState].accept(this.ops[opP + 9]);
 
-                            chanval = ops[posP + 9].cval + ops[posP + 0].cval;
-                            outChannelValue(0, outBufL, outBufR, i, chanval);
+                            this.ops[opP + 9].output(0, tremVal2[i]);
+
+                            int chanVal = this.ops[opP + 9].cVal + this.ops[opP + 0].cVal;
+
+                            outChannelValue(0, outBufL, outBufR, i, chanVal);
                         }
                     } else {
                         // 2op frequency modulation
-                        if ((ops[posP + 9].opState == OF_TYPE_OFF) && (ops[posP + 0].opState == OF_TYPE_OFF))
+                        if ((this.ops[opP + 9].opState == OF_TYPE_OFF) && (this.ops[opP + 0].opState == OF_TYPE_OFF))
                             continue;
-                        if ((ops[posP + 0].vibrato) && (ops[posP + 0].opState != OF_TYPE_OFF)) {
-                            vibVal1 = vibval_var1;
+                        if ((this.ops[opP + 0].vibrato) && (this.ops[opP + 0].opState != OF_TYPE_OFF)) {
+                            vibVal1 = vibValVar1;
                             for (int i = 0; i < endSamples; i++)
-                                vibVal1[i] = (int) ((vibLut[i] * ops[posP + 0].freq_high / 8.) * FIXEDPT * VIBFAC);
+                                vibVal1[i] = (int) ((vibLut[i] * this.ops[opP + 0].freqHigh / 8.) * FIXEDPT * VIBFAC);
                         } else
-                            vibVal1 = Opl.Op.vibValConst;
-                        if ((ops[posP + 9].vibrato) && (ops[posP + 9].opState != OF_TYPE_OFF)) {
-                            vibVal2 = vibval_var2;
+                            vibVal1 = Op.vibValConst;
+                        if ((this.ops[opP + 9].vibrato) && (this.ops[opP + 9].opState != OF_TYPE_OFF)) {
+                            vibVal2 = vibValVar2;
                             for (int i = 0; i < endSamples; i++)
-                                vibVal2[i] = (int) ((vibLut[i] * ops[posP + 9].freq_high / 8.) * FIXEDPT * VIBFAC);
+                                vibVal2[i] = (int) ((vibLut[i] * this.ops[opP + 9].freqHigh / 8.) * FIXEDPT * VIBFAC);
                         } else
-                            vibVal2 = Opl.Op.vibValConst;
-                        if (ops[posP + 0].tremolo)
+                            vibVal2 = Op.vibValConst;
+                        if (this.ops[opP + 0].tremolo)
                             tremVal1 = tremLut; // tremolo enabled, use table
                         else
-                            tremVal1 = Opl.Op.tremValConst;
-                        if (ops[posP + 9].tremolo)
+                            tremVal1 = Op.tremValConst;
+                        if (this.ops[opP + 9].tremolo)
                             tremVal2 = tremLut; // tremolo enabled, use table
                         else
-                            tremVal2 = Opl.Op.tremValConst;
+                            tremVal2 = Op.tremValConst;
 
                         // calculate channel output
                         for (int i = 0; i < endSamples; i++) {
-                            int chanval;
-
                             // modulator
-                            ops[posP + 0].advance(vibVal1[i], this.generatorAdd);
-                            opFuncs[ops[posP + 0].opState].accept(ops[posP + 0]);
-                            ops[posP + 0].output((ops[posP + 0].lastcval + ops[posP + 0].cval) * ops[posP + 0].mfbi / 2, tremVal1[i]);
+                            this.ops[opP + 0].advance(vibVal1[i], this.generatorAdd);
+                            opFuncs[this.ops[opP + 0].opState].accept(this.ops[opP + 0]);
+
+                            this.ops[opP + 0].output((this.ops[opP + 0].lastCVal + this.ops[opP + 0].cVal) * this.ops[opP + 0].mfbi / 2, tremVal1[i]);
 
                             // carrier
-                            ops[posP + 9].advance(vibVal2[i], this.generatorAdd);
-                            opFuncs[ops[posP + 9].opState].accept(ops[posP + 9]);
-                            ops[posP + 9].output(ops[posP + 0].cval * FIXEDPT, tremVal2[i]);
+                            this.ops[opP + 9].advance(vibVal2[i], this.generatorAdd);
+                            opFuncs[this.ops[opP + 9].opState].accept(this.ops[opP + 9]);
 
-                            chanval = ops[posP + 9].cval;
-                            outChannelValue(0, outBufL, outBufR, i, chanval);
+                            this.ops[opP + 9].output(this.ops[opP + 0].cVal * FIXEDPT, tremVal2[i]);
+
+                            int chanVal = this.ops[opP + 9].cVal;
+
+                            outChannelValue(0, outBufL, outBufR, i, chanVal);
                         }
                     }
                 }
 
                 // convert to 16bit samples
-//                    for (i=0;i<endSamples;i++)
-//                        clipit16(outBufL[i],sndPtr++);
+//                for (i=0;i<endSamples;i++)
+//                    clipit16(outBufL[i],sndPtr++);
             }
         }
 
@@ -1399,7 +1384,7 @@ public class DosboxYm3812 {
         case EC_MAME:
             break;
         case EC_DBOPL:
-            chip = new Opl(clock & 0x7fff_ffff, rate, updatehandler, this);
+            opl = new Opl(clock & 0x7fff_ffff, rate, updatehandler);
             break;
         }
     }
@@ -1409,7 +1394,7 @@ public class DosboxYm3812 {
         case EC_MAME:
             break;
         case EC_DBOPL:
-            chip.getSample(outputs, samples);
+            opl.update(outputs, samples);
             break;
         }
     }
@@ -1419,7 +1404,7 @@ public class DosboxYm3812 {
         case EC_MAME:
             break;
         case EC_DBOPL:
-            chip.stop();
+            opl.stop();
             break;
         }
     }
@@ -1429,7 +1414,7 @@ public class DosboxYm3812 {
         case EC_MAME:
             break;
         case EC_DBOPL:
-            chip.reset();
+            opl.reset();
             break;
         }
     }
@@ -1438,7 +1423,7 @@ public class DosboxYm3812 {
         switch (EMU_CORE) {
         case EC_MAME:
         case EC_DBOPL:
-            return chip.readReg(offset & 0x01);
+            return opl.read(offset & 0x01);
         default:
             return 0x00;
         }
@@ -1449,7 +1434,7 @@ public class DosboxYm3812 {
         case EC_MAME:
             break;
         case EC_DBOPL:
-            chip.writeIO(offset & 1, data);
+            opl.write(offset & 1, data);
             break;
         }
     }
@@ -1459,7 +1444,7 @@ public class DosboxYm3812 {
         case EC_MAME:
             break;
         case EC_DBOPL:
-            chip.setMuteMask(muteMask);
+            opl.setMuteMask(muteMask);
             break;
         }
     }

@@ -1,13 +1,25 @@
+/*
+ * GPLv3
+ *
+ * https://github.com/kuma4649/MDSound
+ */
+
 package mdsound.instrument;
 
 import java.util.function.Function;
 
 import dotnet4j.io.Stream;
 import mdsound.Instrument;
+import mdsound.Instrument.AdpcmAEnabled;
 import mdsound.fmvgen.OPNA2;
 
 
-public class Ym2609Inst extends Instrument.BaseInstrument {
+/**
+ * A virtual instrument.
+ *
+ * @see "https://ja.wikipedia.org/wiki/%E6%A2%85%E6%9C%AC%E7%AB%9C"
+ */
+public class Ym2609Inst extends Instrument.BaseInstrument implements AdpcmAEnabled {
 
     public static final int DefaultClockValue = 8000000;
 
@@ -99,24 +111,18 @@ public class Ym2609Inst extends Instrument.BaseInstrument {
     public void stop(int chipId) {
     }
 
-    private void setFMVolume(int chipId, int db) {
-        assert chipId < chips.length;
-        chips[chipId].setVolumeFM(db);
+    @Override
+    public void setMask(int chipId, int ch) {
     }
 
-    private void setPSGVolume(int chipId, int db) {
-        assert chipId < chips.length;
-        chips[chipId].setVolumePSG(db);
+    @Override
+    public void resetMask(int chipId, int ch) {
     }
 
-    private void setRhythmVolume(int chipId, int db) {
+    @Override
+    public synchronized void writeAdpcmA(int chipId, byte[] Buf) {
         assert chipId < chips.length;
-        chips[chipId].setVolumeRhythmTotal(db);
-    }
-
-    private void setAdpcmVolume(int chipId, int db) {
-        assert chipId < chips.length;
-        chips[chipId].setVolumeADPCM(db);
+        chips[chipId].setAdpcmA(Buf, Buf.length);
     }
 
     //----
@@ -128,32 +134,27 @@ public class Ym2609Inst extends Instrument.BaseInstrument {
         return keyOn[chipId];
     }
 
-    public synchronized void writeAdpcmA(int chipId, byte[] Buf) {
-        assert chipId < chips.length;
-        chips[chipId].setAdpcmA(Buf, Buf.length);
-    }
-
     // TODO automatic wired, use annotation?
     public void setFMVolume(int vol, double ignored) {
-        setFMVolume(0, vol);
-        setFMVolume(1, vol);
+        chips[0].setVolumeFM(vol);
+        chips[1].setVolumeFM(vol);
     }
 
     // TODO automatic wired, use annotation?
     public void setPSGVolume(int vol, double ignored) {
-        setPSGVolume(0, vol);
-        setPSGVolume(1, vol);
+        chips[0].setVolumePSG(vol);
+        chips[1].setVolumePSG(vol);
     }
 
     // TODO automatic wired, use annotation?
     public void setRhythmVolume(int vol, double ignored) {
-        setRhythmVolume(0, vol);
-        setRhythmVolume(1, vol);
+        chips[0].setVolumeRhythmTotal(vol);
+        chips[1].setVolumeRhythmTotal(vol);
     }
 
     // TODO automatic wired, use annotation?
     public void setAdpcmVolume(int vol, double ignored) {
-        setAdpcmVolume(0, vol);
-        setAdpcmVolume(1, vol);
+        chips[0].setVolumeADPCM(vol);
+        chips[1].setVolumeADPCM(vol);
     }
 }

@@ -54,6 +54,14 @@ public class X68kMPcmInst extends Instrument.BaseInstrument {
         chips[chipId].unmount();
     }
 
+    @Override
+    public void setMask(int chipId, int ch) {
+    }
+
+    @Override
+    public void resetMask(int chipId, int ch) {
+    }
+
     public void keyOn(int chipId, int ch) {
         chips[chipId].keyOn(ch);
     }

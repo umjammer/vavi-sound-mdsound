@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2025 by Naohide Sano, All rights reserved.
+ *
+ * Programmed by Naohide Sano
+ */
+
 package mdsound.instrument;
 
 import java.util.HashMap;
@@ -9,6 +15,12 @@ import vavi.sound.ymfm.Opn.Ym2203;
 import vavi.sound.ymfm.YmFm.VgmChip;
 
 
+/**
+ * Ym2203 (OPN) YmFm version.
+ *
+ * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
+ * @version 0.00 2025-01-18 nsano initial version <br>
+ */
 public class YmFmYm2203Inst extends Instrument.BaseInstrument {
 
     public static final int DefaultClockValue = 3000000;
@@ -91,7 +103,14 @@ public class YmFmYm2203Inst extends Instrument.BaseInstrument {
         chips[chipId] = null;
     }
 
-    private void setMute(int chipId, int val) {
+    @Override
+    public void setMask(int chipId, int ch) {
+        assert chipId < chips.length;
+//        chips[chipId].setChannelMask(val);
+    }
+
+    @Override
+    public void resetMask(int chipId, int ch) {
         assert chipId < chips.length;
 //        chips[chipId].setChannelMask(val);
     }

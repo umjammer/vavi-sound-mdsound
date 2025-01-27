@@ -6,10 +6,11 @@ import java.util.List;
 import java.util.Map;
 
 import mdsound.Instrument;
+import mdsound.Instrument.PannableInstrument;
 import mdsound.chips.Sn76496;
 
 
-public class Sn76496Inst extends Instrument.BaseInstrument {
+public class Sn76496Inst extends Instrument.BaseInstrument implements PannableInstrument {
 
     public static final int DefaultClockValue = 3579545;
 
@@ -97,8 +98,17 @@ public class Sn76496Inst extends Instrument.BaseInstrument {
         chips.get(chipId).stop();
     }
 
+    @Override
+    public void setMask(int chipId, int ch) {
+    }
+
+    @Override
+    public void resetMask(int chipId, int ch) {
+    }
+
     // ----
 
+    @Override
     public synchronized void setPan(int chipId, int data) {
         assert chipId < chips.size();
         chips.get(chipId).writeStereo(0, data);

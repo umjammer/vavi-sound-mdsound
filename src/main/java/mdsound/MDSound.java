@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
@@ -29,15 +30,24 @@ public class MDSound {
     private int[][] streamBufs = null;
     public DacControl dacControl = null;
 
-    private Chip[] chips = null;
-    private final Map<Class<? extends Instrument>, Instrument[]> instruments = new HashMap<>();
+    private List<Chip> chips = null;
+
+    public MDSound.Chip getChipInfo(Class<? extends Instrument> inst) {
+        return chips.stream().filter(c -> c.instrument.getClass() == inst).findFirst().orElse(null);
+    }
+
+    private final Map<Class<? extends Instrument>, List<Instrument>> instruments = new HashMap<>();
 
     public <T extends Instrument> T inst(Class<T> clazz) {
         return inst(clazz, 0);
     }
 
     public <T extends Instrument> T inst(Class<T> clazz, int chipIndex) {
-        return clazz.cast(instruments.getOrDefault(clazz, null)[chipIndex]);
+        if (instruments.containsKey(clazz)) {
+            return clazz.cast(instruments.get(clazz).get(chipIndex));
+        } else {
+            throw new NoSuchElementException(clazz.getName());
+        }
     }
 
     private int[][] buffer = null;
@@ -82,6 +92,7 @@ public class MDSound {
     }
 
     public static class Chip {
+
         public interface AdditionalUpdate extends QuadConsumer<Chip, Integer, int[][], Integer> {
         }
         public interface SetVolume extends BiConsumer<Integer, Double> {
@@ -150,84 +161,95 @@ public class MDSound {
             int n = (((int) (16384.0 * Math.pow(10.0, this.volume / 40.0)) * this.tVolumeBalance) >> 8);
             this.tVolume = Math.max(Math.min((int) (n * volumeMul), Short.MAX_VALUE), Short.MIN_VALUE);
         }
+
+        // default, 0x80, 1
+        // UPD7759, 0x11E, 1
+        // SCSP, 0x20, 8
+        // VSU, 0x100, 1
+        // ES5503, 0x40, 8
+        // ES5506, 0x20, 16
+        private int getRegulationVolume(double[] mul) {
+            var r = instrument.getRegulationVolume();
+            mul[0] = r.getItem2();
+            return r.getItem1();
+        }
+
+        // TODO naming
+        public int volume1(double[] mul, int size) {
+            if (this.instrument instanceof NesInst) this.volume = 0;
+            int balance = this.getRegulationVolume(mul);
+            //16384 = 0x4000 = short.MAXValue + 1
+            return (int) ((((int) (16384.0 * Math.pow(10.0, 0 / 40.0)) * balance) >> 8) * mul[0]) / size;
+        }
+
+        // TODO naming
+        public void volume2(double[] mul, double volumeMul) {
+            if ((this.volumeBalance & 0x8000) != 0)
+                this.tVolumeBalance = (this.getRegulationVolume(mul) * (this.volumeBalance & 0x7fff) + 0x80) >> 8;
+            else
+                this.tVolumeBalance = this.volumeBalance;
+            int n = (((int) (16384.0 * Math.pow(10.0, this.volume / 40.0)) * this.tVolumeBalance) >> 8);
+            this.tVolume = Math.max(Math.min((int) (n * volumeMul), Short.MAX_VALUE), Short.MIN_VALUE);
+        }
     }
 
     public MDSound() {
         this(DefaultSamplingRate, DefaultSamplingBuffer, null);
     }
 
-    public MDSound(int samplingRate, int samplingBuffer, Chip[] insts) {
+    public MDSound(int samplingRate, int samplingBuffer, List<Chip> insts) {
         init(samplingRate, samplingBuffer, insts);
     }
 
-    public void init(int samplingRate, int samplingBuffer, Chip[] insts) {
+    public void init(int samplingRate, int samplingBuffer, List<Chip> chips) {
         synchronized (lockobj) {
             this.samplingRate = samplingRate;
             this.samplingBuffer = samplingBuffer;
-            this.chips = insts;
+            this.chips = chips;
 
             buffer = new int[][] {new int[1], new int[1]};
             streamBufs = new int[][] {new int[0x100], new int[0x100]};
 
             incFlag = false;
 
-            if (insts == null) return;
+            if (chips == null) {
+logger.log(Level.WARNING, "no chips");
+                return;
+            }
 
             instruments.clear();
 
             // Calculate the actual multiple from the volume value
             int total = 0;
             double[] mul = new double[1];
-            for (Chip inst : insts) {
-                if (inst.instrument instanceof NesInst) inst.volume = 0;
-                int balance = getRegulationVolume(inst, mul);
-                //16384 = 0x4000 = short.MAXValue + 1
-                total += (int) ((((int) (16384.0 * Math.pow(10.0, 0 / 40.0)) * balance) >> 8) * mul[0]) / insts.length;
+            for (Chip chip : chips) {
+                total += chip.volume1(mul, chips.size());
             }
             // Calculate the multiple from the total volume value to the maximum volume
             volumeMul = 16384.0 / total;
             // Calculate the actual multiple from the volume value
-            for (Chip inst : insts) {
-                if ((inst.volumeBalance & 0x8000) != 0)
-                    inst.tVolumeBalance = (getRegulationVolume(inst, mul) * (inst.volumeBalance & 0x7fff) + 0x80) >> 8;
-                else
-                    inst.tVolumeBalance = inst.volumeBalance;
-                int n = (((int) (16384.0 * Math.pow(10.0, inst.volume / 40.0)) * inst.tVolumeBalance) >> 8);
-                inst.tVolume = Math.max(Math.min((int) (n * volumeMul), Short.MAX_VALUE), Short.MIN_VALUE);
+            for (Chip chip : chips) {
+                chip.volume2(mul, volumeMul);
             }
 
-            for (Chip inst : insts) {
-                inst.samplingRate = inst.instrument.start(inst.id, inst.samplingRate, inst.clock, inst.option);
-                inst.instrument.reset(inst.id);
+            for (Chip chip : chips) {
+                chip.samplingRate = chip.instrument.start(chip.id, chip.samplingRate, chip.clock, chip.option);
+                chip.instrument.reset(chip.id);
 
-                if (instruments.containsKey(inst.instrument.getClass())) {
-                    List<Instrument> lst = new ArrayList<>(Arrays.asList(instruments.get(inst.instrument.getClass())));
-                    lst.add(inst.instrument);
-                    instruments.put(inst.instrument.getClass(), lst.toArray(Instrument[]::new));
+                if (instruments.containsKey(chip.instrument.getClass())) {
+                    instruments.get(chip.instrument.getClass()).add(chip.instrument);
                 } else {
-                    instruments.put(inst.instrument.getClass(), new Instrument[] {inst.instrument});
+                    instruments.put(chip.instrument.getClass(), new ArrayList<>(List.of(chip.instrument)));
                 }
 
-                setupResampler(inst);
+                setupResampler(chip);
             }
-instruments.forEach((k, v) -> logger.log(Level.DEBUG, "instrument: " + k.getSimpleName().replace("Inst", "") + ": chips: " + Arrays.stream(v).map(Instrument::getName).collect(Collectors.joining(", ", "[", "]"))));
+instruments.forEach((k, v) -> logger.log(Level.DEBUG, "instrument: " + k.getSimpleName().replace("Inst", "") + ": chips: " + v.stream().map(Instrument::getName).collect(Collectors.joining(", ", "[", "]"))));
 
             dacControl = new DacControl(samplingRate, this);
 
-            instruments.values().forEach(is -> Arrays.stream(is).forEach(Instrument::init));
+            instruments.values().forEach(is -> is.forEach(Instrument::init));
         }
-    }
-
-    // default, 0x80, 1
-    // UPD7759, 0x11E, 1
-    // SCSP, 0x20, 8
-    // VSU, 0x100, 1
-    // ES5503, 0x40, 8
-    // ES5506, 0x20, 16
-    private static int getRegulationVolume(Chip inst, double[] mul) {
-        var r = inst.instrument.getRegulationVolume();
-        mul[0] = r.getItem2();
-        return r.getItem1();
     }
 
     public String getDebugMsg() {
@@ -337,8 +359,8 @@ logger.log(Level.TRACE, "[%d] %+04d, %+04d".formatted(i, a[0], b[0]));
 
 int CC = 0;
 static int INTERVAL = 1024;
-    private void resampleChipStream(Chip[] insts, int[][] retSample, int length) {
-        if (insts == null || insts.length < 1) {
+    private void resampleChipStream(List<Chip> insts, int[][] retSample, int length) {
+        if (insts == null || insts.isEmpty()) {
 logger.log(Level.WARNING, "no insts");
             return;
         }
@@ -695,7 +717,7 @@ CC++;
             }
 
 //logger.log(Level.TRACE, "mds: %02x".formatted(data)); // ok
-            instruments.get(i)[chipIndex].write(chipId, port, adr, data);
+            instruments.get(i).get(chipIndex).write(chipId, port, adr, data);
         }
     }
 
@@ -717,7 +739,7 @@ CC++;
 //#region VisVolume
 
     public Set<Instrument> getFirstInstruments() {
-        return instruments.values().stream().map(is -> is[0]).collect(Collectors.toSet());
+        return instruments.values().stream().map(is -> is.get(0)).collect(Collectors.toSet());
     }
 
     /**
@@ -760,4 +782,3 @@ CC++;
         }
     }
 }
-

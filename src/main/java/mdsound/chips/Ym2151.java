@@ -1025,12 +1025,12 @@ public class Ym2151 {
 
                 if ((v & 0x10) != 0) { // reset timer A irq flag
                     int oldstate = this.status & 3;
-                    this.status &= 0xfffffffe;
+                    this.status &= 0xffff_fffe;
                 }
 
                 if ((v & 0x20) != 0) { // reset timer B irq flag
                     int oldstate = this.status & 3;
-                    this.status &= 0xfffffffd;
+                    this.status &= 0xffff_fffd;
                 }
 
                 if ((v & 0x02) != 0) { // load and start timer B
@@ -1259,14 +1259,12 @@ public class Ym2151 {
     public void stop() {
     }
 
-    /*
-     * Reset chips number 'n'.
+    /**
+     * Reset chip.
      */
     public void reset() {
-        int i;
-
         // initialize hardware registers
-        for (i = 0; i < 32; i++) {
+        for (int i = 0; i < 32; i++) {
             //memset(&this.oper[i], '\0', sizeof(Operator));
             if (this.oper[i] == null) this.oper[i] = new Operator();
             this.oper[i].volume = MAX_ATT_INDEX;
@@ -1307,7 +1305,7 @@ public class Ym2151 {
 
         write_reg(0x1b, 0); // only because of CT1, CT2 output pins */
         write_reg(0x18, 0); // set LFO frequency */
-        for (i = 0x20; i < 0x100; i++) { // set the operators */
+        for (int i = 0x20; i < 0x100; i++) { // set the operators */
             write_reg(i, 0);
         }
     }

@@ -2,10 +2,11 @@ package mdsound.instrument;
 
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
+import mdsound.Instrument.PcmEnabledInstrument;
 import mdsound.chips.CtrQsound;
 
 
-public class CtrQSoundInst extends Instrument.BaseInstrument {
+public class CtrQSoundInst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
     public static final int DefaultClockValue = 4000000;
     public static final int MAX_CHIPS = 0x02;
@@ -70,35 +71,30 @@ public class CtrQSoundInst extends Instrument.BaseInstrument {
     public void stop(int chipId) {
     }
 
-    public void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
-        writePcm(chipId, romSize, dataStart, dataLength, romData, 0);
-    }
-
-    private void setMuteMask(int chipId, int muteMask) {
-        assert chipId < MAX_CHIPS;
-        chips[chipId].setMuteMask(muteMask);
-    }
-
-    private void writeData(int chipId, byte address, int data) {
-        chips[chipId].writeData(address, data);
-    }
-
-    //----
-
+    @Override
     public synchronized void setMask(int chipId, int ch) {
-        ch = (1 << ch);
-        mask[chipId] |= ch;
-        setMuteMask(chipId, mask[chipId]);
+        assert chipId < MAX_CHIPS;
+        mask[chipId] |= (1 << ch);
+        chips[chipId].setMuteMask(mask[chipId]);
     }
 
+    @Override
     public synchronized void resetMask(int chipId, int ch) {
-        ch = (1 << ch);
-        mask[chipId] &= ~ch;
-        setMuteMask(chipId, mask[chipId]);
+        assert chipId < MAX_CHIPS;
+        mask[chipId] &= ~(1 << ch);
+        chips[chipId].setMuteMask(mask[chipId]);
     }
 
-    public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddress) {
-        chips[chipId].writeRom(romSize, dataStart, dataLength, romData, srcStartAddress);
+    /** @param extras 0: srcStartAddress, 1: romSize */
+    @Override
+    public synchronized void writePcm(int chipId, byte[] buf, int offset, int length, Object... extras) {
+        int srcStartAddress = (int) extras[0];
+        int romSize = (int) extras[1];
+        chips[chipId].writeRom(romSize, offset, length, buf, srcStartAddress);
+    }
+
+    public void writeData(int chipId, byte address, int data) {
+        chips[chipId].writeData(address, data);
     }
 
     //----

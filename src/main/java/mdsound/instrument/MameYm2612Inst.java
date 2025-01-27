@@ -51,8 +51,9 @@ public class MameYm2612Inst extends Instrument.BaseInstrument {
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        writeInternal(chipId, 0 + (port & 1) * 2, adr);
-        writeInternal(chipId, 1 + (port & 1) * 2, data);
+        assert chipId < MAX_CHIPS;
+        chips[chipId].write(0 + (port & 1) * 2, adr);
+        chips[chipId].write(1 + (port & 1) * 2, data);
         return 0;
     }
 
@@ -71,21 +72,19 @@ public class MameYm2612Inst extends Instrument.BaseInstrument {
         chips[chipId] = null;
     }
 
-    private void setMute(int chipId, int mask) {
+    // TODO 2612
+    @Override
+    public synchronized void setMask(int chipId, int ch) {
         assert chipId < MAX_CHIPS;
-        chips[chipId].setMuteMask(mask);
+        mask[chipId] |= 1 << ch;
+        chips[chipId].setMuteMask(mask[chipId]);
     }
-
-    private void writeInternal(int chipId, int adr, int data) {
-        assert chipId < MAX_CHIPS;
-        chips[chipId].write(adr, data);
-    }
-
-    // ----
 
     // TODO 2612
-    public synchronized void setMask(int chipId, int ch) {
-        mask[chipId] |= 1 << ch;
-        setMute(chipId, mask[chipId]);
+    @Override
+    public synchronized void resetMask(int chipId, int ch) {
+        assert chipId < MAX_CHIPS;
+        mask[chipId] &= ~(1 << ch);
+        chips[chipId].setMuteMask(mask[chipId]);
     }
 }

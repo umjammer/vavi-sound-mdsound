@@ -5,10 +5,11 @@ import java.util.Map;
 
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
+import mdsound.Instrument.PcmEnabledInstrument;
 import mdsound.chips.YmF271;
 
 
-public class YmF271Inst extends Instrument.BaseInstrument {
+public class YmF271Inst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
     public static final int DefaultClockValue = 16934400;
     public static final int MAX_CHIPS = 0x10;
@@ -37,28 +38,24 @@ public class YmF271Inst extends Instrument.BaseInstrument {
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
         assert chipId < MAX_CHIPS;
-        YmF271 chip = chips[chipId];
-        return chip.start(clock);
+        return chips[chipId].start(clock);
     }
 
     @Override
     public int read(int chipId, int adr) {
-        YmF271 chip = chips[chipId];
-        return chip.read(adr);
+        return chips[chipId].read(adr);
     }
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        YmF271 chip = chips[chipId];
-        chip.write((port << 1) | 0x00, adr & 0xff);
-        chip.write((port << 1) | 0x01, data & 0xff);
+        chips[chipId].write((port << 1) | 0x00, adr);
+        chips[chipId].write((port << 1) | 0x01, data);
         return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        YmF271 chip = chips[chipId];
-        chip.update(outputs, samples);
+        chips[chipId].update(outputs, samples);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
@@ -66,25 +63,27 @@ public class YmF271Inst extends Instrument.BaseInstrument {
 
     @Override
     public void stop(int chipId) {
-        YmF271 chip = chips[chipId];
-        chip.stop();
+        chips[chipId].stop();
     }
 
-    public void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
-        writePcm(chipId, romSize, dataStart, dataLength, romData ,0);
+    @Override
+    public void setMask(int chipId, int ch) {
+//        chips[chipId].setMuteMask(ch); // TODO
     }
 
-    public void setMuteMask(int chipId, int muteMask) {
-        YmF271 chip = chips[chipId];
-        chip.setMuteMask(muteMask);
+    @Override
+    public void resetMask(int chipId, int ch) {
+//        chips[chipId].setMuteMask(~ch); // TODO
+    }
+
+    @Override
+    public synchronized void writePcm(int chipId, byte[] buf, int offset, int length, Object... extras) {
+        int srcStartAdr = (int) extras[0];
+        int romSize = (int) extras[1];
+        chips[chipId].writeRom(romSize, offset, length, buf, srcStartAdr);
     }
 
     //----
-
-    public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
-        YmF271 chip = chips[chipId];
-        chip.writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
-    }
 
     public synchronized YmF271 getChip(int chipId) {
         return chips[chipId];

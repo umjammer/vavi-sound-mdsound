@@ -47,6 +47,12 @@ public interface Instrument {
     /** */
     void stop(int chipId);
 
+    /** */
+    void setMask(int chipId, int ch);
+
+    /** */
+    void resetMask(int chipId, int ch);
+
     //
 
     Tuple<Integer, Double> getRegulationVolume();
@@ -79,10 +85,42 @@ public interface Instrument {
         }
     }
 
+    interface AdpcmAEnabled {
+
+        void writeAdpcmA(int chipId, byte[] Buf);
+    }
+
+    interface AdpcmBEnabled {
+
+        void writeAdpcmB(int chipId, byte[] Buf);
+    }
+
+    interface AdpcmEnabledInstrument extends Instrument, AdpcmAEnabled, AdpcmBEnabled{
+
+    }
+
+    interface Pannable {
+
+        void setPan(int chipId, int data);
+    }
+
+    interface PannableInstrument extends Instrument, Pannable {
+    }
+
+    interface PcmEnabled {
+
+        void writePcm(int chipId, byte[] Buf, int offset, int length, Object... extras);
+    }
+
+    interface PcmEnabledInstrument extends Instrument, PcmEnabled {
+    }
+
+    ServiceLoader<Instrument> serviceLoader = ServiceLoader.load(Instrument.class);
+
+    /** @return reused instance */
     @SuppressWarnings("unchecked")
     static <T extends Instrument> T getInstrument(Class<T> c) {
-        ServiceLoader<Instrument> loader = ServiceLoader.load(Instrument.class);
-        for (Instrument i : loader) {
+        for (Instrument i : serviceLoader) {
             if (i.getClass() == c) {
                 return (T) i;
             }

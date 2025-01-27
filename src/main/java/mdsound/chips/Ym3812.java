@@ -12,13 +12,14 @@ package mdsound.chips;
  *   CHS 1999-01-09  Fixes new ym3812 emulation interface.
  *   CHS 1998-10-23  Mame streaming sound chip update
  *   EC  1998        Created Interface
+ * @see Opl
  */
-class Ym3812 {
+public class Ym3812 {
 
     private Opl opl;
 
     /**
-     * Initialize YM3526 emulator(s).
+     * Initialize YM3812 emulator(s).
      *
      * @param clock is the chips clock in Hz
      * @param rate  is sampling rate

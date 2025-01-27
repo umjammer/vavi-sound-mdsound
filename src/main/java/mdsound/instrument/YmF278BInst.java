@@ -7,14 +7,15 @@ import java.util.function.Function;
 import dotnet4j.io.Stream;
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
-import mdsound.chips.YmF278b;
+import mdsound.Instrument.PcmEnabledInstrument;
+import mdsound.chips.YmF278B;
 
 
-public class YmF278BInst extends Instrument.BaseInstrument {
+public class YmF278BInst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
     public static final int MAX_CHIPS = 0x10;
 
-    private final YmF278b[] chips = {new YmF278b(), new YmF278b()};
+    private final YmF278B[] chips = {new YmF278B(), new YmF278B()};
 
     @Override
     public String getName() {
@@ -83,19 +84,25 @@ public class YmF278BInst extends Instrument.BaseInstrument {
         chips[chipId].stop();
     }
 
-    public void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData) {
-        writePcm(chipId, romSize, dataStart, dataLength, romData, 0);
+    @Override
+    public void setMask(int chipId, int ch) {
+//        chips[chipId].setMuteMask(fm, wf); // TODO
     }
 
-    public void setMuteMask(int chipId, int muteMaskFM, int muteMaskWT) {
-        chips[chipId].setMuteMask(muteMaskFM, muteMaskWT);
+    @Override
+    public void resetMask(int chipId, int ch) {
+//        chips[chipId].setMuteMask(fm, wf); // TODO
+    }
+
+    /** @param extras 0: srcStartAddress, 1: romSize */
+    @Override
+    public synchronized void writePcm(int chipId, byte[] romData, int dataStart, int dataLength, Object... extras) {
+        int srcStartAdr = (int) extras[0];
+        int romSize = (int) extras[1];
+        chips[chipId].writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
     }
 
     //----
-
-    public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
-        chips[chipId].writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
-    }
 
     public synchronized void writeRam(int chipId, int RAMSize, int dataStart, int dataLength, byte[] ramData, int srcStartAdr) {
         chips[chipId].writeRam(dataStart, dataLength, ramData, srcStartAdr);

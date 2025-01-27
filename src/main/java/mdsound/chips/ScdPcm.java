@@ -1,13 +1,21 @@
+/*
+ * PCM RF5C164 emulator
+ *
+ * This source is a part of Gens project
+ * Written by Stéphane Dallongeville (gens@consolemul.com)
+ *
+ * Copyright (c) 2002 by Stéphane Dallongeville
+ */
+
 package mdsound.chips;
 
 import mdsound.MDSound;
 
 
 /**
- * PcmChip.
+ * RF5C164
  *
- * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
- * @version 0.00 2022-07-08 nsano initial version <br>
+ * @author Stéphane Dallongeville
  */
 public class ScdPcm {
 
@@ -330,10 +338,6 @@ public class ScdPcm {
     public void setMuteMask(int muteMask) {
         for (byte curChn = 0; curChn < 8; curChn++)
             this.channels[curChn].muted = (muteMask >> curChn) & 0x01;
-    }
-
-    public void setMuteCh(int ch, int mute) {
-        this.channels[ch].muted = mute & 0x1;
     }
 
     public Channel getChannel(int ch) {

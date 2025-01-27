@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2025 by Naohide Sano, All rights reserved.
+ *
+ * Programmed by Naohide Sano
+ */
+
 package mdsound.instrument;
 
 import java.util.HashMap;
@@ -5,30 +11,24 @@ import java.util.Map;
 
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
-import mdsound.chips.Saa1099;
+import mdsound.chips.Ym3812;
 
 
-public class Saa1099Inst extends Instrument.BaseInstrument {
+/**
+ * Ym3812 (OPL2) Mame version.
+ *
+ * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
+ * @version 0.00 2025-01-26 nsano initial version <br>
+ */
+public class MameYm3812Inst extends Instrument.BaseInstrument {
 
     public static final int MAX_CHIPS = 0x02;
-    public static final int DefaultClockValue = 8000000;
+    public static final int DefaultClockValue = 3579545;
 
-    private final Saa1099[] chips = {new Saa1099(), new Saa1099()};
+    private final Ym3812[] chips = {new Ym3812(), new Ym3812()};
 
-    private final int[] mask = {0, 0};
-
-    public Saa1099Inst() {
+    public MameYm3812Inst() {
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
-    }
-
-    @Override
-    public String getName() {
-        return "SAA1099";
-    }
-
-    @Override
-    public String getShortName() {
-        return "SAA";
     }
 
     @Override
@@ -37,20 +37,38 @@ public class Saa1099Inst extends Instrument.BaseInstrument {
     }
 
     @Override
+    public String getName() {
+        return "YM3812mame";
+    }
+
+    @Override
+    public String getShortName() {
+        return "OPL2";
+    }
+
+    @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
         assert chipId < MAX_CHIPS;
-        return chips[chipId].start(clock);
+
+        int rate = (clock & 0x7fff_ffff) / 72;
+        if ((CHIP_SAMPLING_MODE == 0x01 && rate < CHIP_SAMPLE_RATE) || CHIP_SAMPLING_MODE == 0x02)
+            rate = CHIP_SAMPLE_RATE;
+
+        chips[chipId].start(clock, rate);
+
+        return rate;
     }
 
     @Override
     public int read(int chipId, int adr) {
-        throw new UnsupportedOperationException();
+        return chips[chipId].read(adr);
     }
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        chips[chipId].writeControl(0, adr);
-        chips[chipId].write(0, data);
+        assert chipId < MAX_CHIPS;
+        chips[chipId].write(0, adr);
+        chips[chipId].write(1, data);
         return 0;
     }
 
@@ -64,25 +82,24 @@ public class Saa1099Inst extends Instrument.BaseInstrument {
 
     @Override
     public void stop(int chipId) {
+        chips[chipId].stop();
     }
 
     @Override
-    public synchronized void setMask(int chipId, int ch) {
-        mask[chipId] |= ch;
-        chips[chipId].setMuteMask(mask[chipId]);
+    public void setMask(int chipId, int ch) {
+//        chips[chipId].setMuteMask(ch); // TODO
     }
 
     @Override
-    public synchronized void resetMask(int chipId, int ch) {
-        mask[chipId] &= ~ch;
-        chips[chipId].setMuteMask(mask[chipId]);
+    public void resetMask(int chipId, int ch) {
+//        chips[chipId].setMuteMask(~ch); // TODO
     }
 
     //----
 
     @Override
     public Tuple<Integer, Double> getRegulationVolume() {
-        return new Tuple<>(0x100, 1d);
+        return new Tuple<>(0x100, 2d);
     }
 
     @Override
@@ -91,8 +108,8 @@ public class Saa1099Inst extends Instrument.BaseInstrument {
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
-            case "NAME" -> result.put(getName(), "SAA1099");
-            case "FAMILY" -> result.put(getName(), "Philips");
+            case "NAME" -> result.put(getName(), "YM3812");
+            case "FAMILY" -> result.put(getName(), "Yamaha FM");
             case "VERSION" -> result.put(getName(), "1.0");
             case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
         }

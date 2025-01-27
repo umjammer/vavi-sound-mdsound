@@ -74,7 +74,7 @@ public class YmF271 {
         public int srcNote, srcb;
 
         private int step;
-        private int stepPtr;
+        private long stepPtr;
 
         public int active;
         public int bits;
@@ -87,12 +87,12 @@ public class YmF271 {
         private int envDecay2Step;
         private int envReleaseStep;
 
-        private int feedbackModulation0;
-        private int feedbackModulation1;
+        private long feedbackModulation0;
+        private long feedbackModulation1;
 
         private int lfoPhase, lfoStep;
         private int lfoAmplitude;
-        private double lfoPhasemod;
+        private double lfoPhaseMod;
 
         private static final double[] multiple_table = new double[] {0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
         private static final double[] pow_table = new double[] {128, 256, 512, 1024, 2048, 4096, 8192, 16384, 0.5, 1, 2, 4, 8, 16, 32, 64};
@@ -103,11 +103,11 @@ public class YmF271 {
 
             if (this.waveForm == 7) {
                 // external waveform (PCM)
-                st = (2 * (this.fns | 2048)) * pow_table[this.block] * fs_frequency[this.fs];
+                st = (double) (2 * (this.fns | 2048)) * pow_table[this.block] * fs_frequency[this.fs];
                 st = st * multiple_table[this.multiple];
 
                 // LFO phase modulation
-                st *= this.lfoPhasemod;
+                st *= this.lfoPhaseMod;
 
                 st /= 524288d / 65536; // pre-multiply with 65536
 
@@ -115,10 +115,10 @@ public class YmF271 {
             } else {
                 // internal waveform (FM)
                 st = (double) (2 * this.fns) * pow_table[this.block];
-                st = st * multiple_table[this.multiple] * (double) (SIN_LEN);
+                st = st * multiple_table[this.multiple] * (double) SIN_LEN;
 
                 // LFO phase modulation
-                st *= this.lfoPhasemod;
+                st *= this.lfoPhaseMod;
 
                 st /= 536870912d / 65536; // pre-multiply with 65536
 
@@ -135,65 +135,60 @@ public class YmF271 {
             return false;
         }
 
-        @SuppressFBWarnings("SF_SWITCH_NO_DEFAULT")
         private void updateEnvelope() {
             switch (this.envState) {
-            case ENV_ATTACK: {
-                this.volume += this.envAttackStep;
+                case ENV_ATTACK -> {
+                    this.volume += this.envAttackStep;
 
-                if (this.volume >= (255 << ENV_VOLUME_SHIFT)) {
-                    this.volume = (255 << ENV_VOLUME_SHIFT);
-                    this.envState = ENV_DECAY1;
+                    if (this.volume >= (255 << ENV_VOLUME_SHIFT)) {
+                        this.volume = (255 << ENV_VOLUME_SHIFT);
+                        this.envState = ENV_DECAY1;
+                    }
                 }
-                break;
-            }
 
-            case ENV_DECAY1: {
-                int decayLevel = 255 - (this.decay1lvl << 4);
-                this.volume -= this.envDecay1Step;
+                case ENV_DECAY1 -> {
+                    int decayLevel = 255 - (this.decay1lvl << 4);
+                    this.volume -= this.envDecay1Step;
 
-                if (!checkEnvelopeEnd() && (this.volume >> ENV_VOLUME_SHIFT) <= decayLevel) {
-                    this.envState = ENV_DECAY2;
+                    if (!checkEnvelopeEnd() && (this.volume >> ENV_VOLUME_SHIFT) <= decayLevel) {
+                        this.envState = ENV_DECAY2;
+                    }
                 }
-                break;
-            }
 
-            case ENV_DECAY2: {
-                this.volume -= this.envDecay2Step;
-                checkEnvelopeEnd();
-                break;
-            }
+                case ENV_DECAY2 -> {
+                    this.volume -= this.envDecay2Step;
+                    checkEnvelopeEnd();
+                }
 
-            case ENV_RELEASE: {
-                this.volume -= this.envReleaseStep;
-                checkEnvelopeEnd();
-                break;
-            }
+                case ENV_RELEASE -> {
+                    this.volume -= this.envReleaseStep;
+                    checkEnvelopeEnd();
+                }
             }
         }
 
-        private void init(double[] lutLfo) {
+        private void initLfo(double[] lutLfo) {
             this.lfoPhase = 0;
             this.lfoAmplitude = 0;
-            this.lfoPhasemod = 0;
+            this.lfoPhaseMod = 0;
 
             this.lfoStep = (int) ((((double) LFO_LENGTH * lutLfo[this.lfoFreq]) / 44100.0) * 256.0);
         }
 
-        private void update() {
+        private void updateLfo() {
             this.lfoPhase += this.lfoStep;
 
             this.lfoAmplitude = lutALfo[this.lfoWave][(this.lfoPhase >> LFO_SHIFT) & (LFO_LENGTH - 1)];
-            this.lfoPhasemod = lutPlfo[this.lfoWave][this.pms][(this.lfoPhase >> LFO_SHIFT) & (LFO_LENGTH - 1)];
+            this.lfoPhaseMod = lutPLfo[this.lfoWave][this.pms][(this.lfoPhase >> LFO_SHIFT) & (LFO_LENGTH - 1)];
 
             this.calculateStep();
         }
 
-        private int calculateOp(int inp) {
-            int env, slotOutput, slotInput = 0;
+        private long calculateOp(long inp) {
+            long env, slotOutput, slotInput = 0;
 
             this.updateEnvelope();
-            this.update();
+            this.updateLfo();
             env = calculateVolume();
 
             if (inp == OP_INPUT_FEEDBACK) {
@@ -205,39 +200,30 @@ public class YmF271 {
                 slotInput = (inp << (SIN_BITS - 2)) * modulationLevel[this.feedback];
             }
 
-            slotOutput = lutWaves[this.waveForm][((this.stepPtr + slotInput) >> 16) & SIN_MASK] & 0xffff;
+            slotOutput = lutWaves[this.waveForm][(int) (((this.stepPtr + slotInput) >> 16) & SIN_MASK)];
             slotOutput = (slotOutput * env) >> 16;
             this.stepPtr += this.step;
 
             return slotOutput;
         }
 
-        @SuppressFBWarnings("SF_SWITCH_NO_DEFAULT")
         private int calculateVolume() {
             // Note: Actually every one of these stores only int (16.16 fixed point),
             //       but the calculations need long.
             int volume;
-            int envVolume;
-            int lfoVolume = 65536;
+            long envVolume;
 
-            switch (ams) {
-            case 0:
-                lfoVolume = 65536;
-                break; // 0dB
-            case 1:
-                lfoVolume = 65536 - ((lfoAmplitude * 33124) >> 16);
-                break; // 5.90625dB
-            case 2:
-                lfoVolume = 65536 - ((lfoAmplitude * 16742) >> 16);
-                break; // 11.8125dB
-            case 3:
-                lfoVolume = 65536 - ((lfoAmplitude * 4277) >> 16);
-                break; // 23.625dB
-            }
+            long lfoVolume = switch (ams) {
+                case 0 -> 65536; // 0dB
+                case 1 -> 65536 - ((lfoAmplitude * 33124L) >> 16); // 5.90625dB
+                case 2 -> 65536 - ((lfoAmplitude * 16742L) >> 16); // 11.8125dB
+                case 3 -> 65536 - ((lfoAmplitude * 4277L) >> 16);  // 23.625dB
+                default -> 65536;
+            };
 
             envVolume = (lutEnvVolume[255 - (this.volume >> ENV_VOLUME_SHIFT)] * lfoVolume) >> 16;
 
-            volume = (envVolume * lutTotalLevel[tl]) >> 16;
+            volume = (int) ((envVolume * lutTotalLevel[tl]) >> 16);
 
             return volume;
         }
@@ -250,7 +236,7 @@ public class YmF271 {
 
             this.calculateStep();
             initEnvelope(lutAr, lutDc);
-            this.init(lutLfo);
+            this.initLfo(lutLfo);
             this.feedbackModulation0 = 0;
             this.feedbackModulation1 = 0;
         }
@@ -267,20 +253,20 @@ public class YmF271 {
             }
 
             // init attack state
-            rate = getKeyscaledRate(ar * 2, keycode, keyScale);
-            envAttackStep = (rate < 4) ? 0 : (int) (((255 - 0) / lutAr[rate]) * 65536.0);
+            rate = getKeyScaledRate(ar * 2, keycode, keyScale);
+            envAttackStep = (rate < 4) ? 0 : (int) (((255d - 0) / lutAr[rate]) * 65536.0);
 
             // init decay1 state
-            rate = getKeyscaledRate(decay1rate * 2, keycode, keyScale);
-            envDecay1Step = (rate < 4) ? 0 : (int) (((255 - decay_level) / lutDc[rate]) * 65536.0);
+            rate = getKeyScaledRate(decay1rate * 2, keycode, keyScale);
+            envDecay1Step = (rate < 4) ? 0 : (int) (((255d - decay_level) / lutDc[rate]) * 65536.0);
 
             // init decay2 state
-            rate = getKeyscaledRate(decay2rate * 2, keycode, keyScale);
-            envDecay2Step = (rate < 4) ? 0 : (int) (((255 - 0) / lutDc[rate]) * 65536.0);
+            rate = getKeyScaledRate(decay2rate * 2, keycode, keyScale);
+            envDecay2Step = (rate < 4) ? 0 : (int) (((255d - 0) / lutDc[rate]) * 65536.0);
 
             // init release state
-            rate = getKeyscaledRate(relrate * 4, keycode, keyScale);
-            envReleaseStep = (rate < 4) ? 0 : (int) (((255 - 0) / lutAr[rate]) * 65536.0);
+            rate = getKeyScaledRate(relrate * 4, keycode, keyScale);
+            envReleaseStep = (rate < 4) ? 0 : (int) (((255d - 0) / lutAr[rate]) * 65536.0);
 
             volume = (255 - 160) << ENV_VOLUME_SHIFT; // -60db
             envState = ENV_ATTACK;
@@ -298,46 +284,46 @@ public class YmF271 {
             for (int i = 0; i < length; i++) {
                 // loop
                 if ((this.stepPtr >> 16) > this.endAddr) {
-                    this.stepPtr = this.stepPtr - ((this.endAddr << 16) + this.loopAddr << 16);
+                    this.stepPtr = this.stepPtr - (((long) this.endAddr << 16) + (long) this.loopAddr << 16);
                     if ((this.stepPtr >> 16) > this.endAddr) {
                         // overflow
                         this.stepPtr &= 0xffff;
-                        this.stepPtr |= (this.loopAddr << 16);
+                        this.stepPtr |= ((long) this.loopAddr << 16);
                         if ((this.stepPtr >> 16) > this.endAddr) {
                             // still overflow? (triggers in rdft2, rarely)
                             this.stepPtr &= 0xffff;
-                            this.stepPtr |= (this.endAddr << 16);
+                            this.stepPtr |= ((long) this.endAddr << 16);
                         }
                     }
                 }
 
-                int sample;
+                short sample;
                 if (this.bits == 8) {
                     // 8bit
-                    sample = (readMemory.apply(this.startAddr + (this.stepPtr >> 16)) & 0xff) << 8;
+                    sample = (short) ((readMemory.apply((int) (this.startAddr + (this.stepPtr >> 16))) & 0xff) << 8);
                 } else {
                     // 12bit
                     if ((this.stepPtr & 0x10000) != 0)
-                        sample = (readMemory.apply(this.startAddr + (this.stepPtr >> 17) * 3 + 2) & 0xff) << 8
-                                | (readMemory.apply(this.startAddr + (this.stepPtr >> 17) * 3 + 1) << 4) & 0xf0;
+                        sample = (short) ((readMemory.apply((int) (this.startAddr + (this.stepPtr >> 17) * 3 + 2)) & 0xff) << 8
+                                | (readMemory.apply((int) (this.startAddr + (this.stepPtr >> 17) * 3 + 1)) << 4) & 0xf0);
                     else
-                        sample = (readMemory.apply(this.startAddr + (this.stepPtr >> 17) * 3) & 0xff) << 8
-                                | readMemory.apply(this.startAddr + (this.stepPtr >> 17) * 3 + 1) & 0xf0;
+                        sample = (short) ((readMemory.apply((int) (this.startAddr + (this.stepPtr >> 17) * 3)) & 0xff) << 8
+                                | readMemory.apply((int) (this.startAddr + (this.stepPtr >> 17) * 3 + 1)) & 0xf0);
                 }
 
                 this.updateEnvelope();
-                this.update();
+                this.updateLfo();
 
-                int finalVolume = this.calculateVolume();
+                long finalVolume = this.calculateVolume();
 
-                int ch0Vol = ((finalVolume * lutAttenuation[this.ch0Level]) >> 16) & 0xffff;
-                int ch1Vol = ((finalVolume * lutAttenuation[this.ch1Level]) >> 16) & 0xffff;
+                long ch0Vol = ((finalVolume * lutAttenuation[this.ch0Level]) >> 16);
+                long ch1Vol = ((finalVolume * lutAttenuation[this.ch1Level]) >> 16);
 
-//                if (ch0Vol > 65536) ch0Vol = 65536;
-//                if (ch1Vol > 65536) ch1Vol = 65536;
+                if (ch0Vol > 65536) ch0Vol = 65536;
+                if (ch1Vol > 65536) ch1Vol = 65536;
 
-                mixP[ptrMixP++] += (sample * ch0Vol) >> 16;
-                mixP[ptrMixP++] += (sample * ch1Vol) >> 16;
+                mixP[ptrMixP++] += (int) ((sample * ch0Vol) >> 16);
+                mixP[ptrMixP++] += (int) ((sample * ch1Vol) >> 16);
 
                 // go to next step
                 this.stepPtr += this.step;
@@ -512,7 +498,7 @@ public class YmF271 {
 
     // lookup tables
     private static final short[][] lutWaves = new short[8][];
-    private static final double[][][] lutPlfo = {new double[8][], new double[8][], new double[8][], new double[8][]};
+    private static final double[][][] lutPLfo = {new double[8][], new double[8][], new double[8][], new double[8][]};
     private static final int[][] lutALfo = new int[4][];
     private final double[] lutAr = new double[64];
     private final double[] lutDc = new double[64];
@@ -554,7 +540,7 @@ public class YmF271 {
 
     private int[] mixBuffer;
 
-    private static int getKeyscaledRate(int rate, int keyCode, int keyScale) {
+    private static int getKeyScaledRate(int rate, int keyCode, int keyScale) {
         int newRate = rate + RKS_Table[keyCode][keyScale];
 
         if (newRate > 63) {
@@ -602,13 +588,13 @@ public class YmF271 {
     }
 
     /** calculates the output of one FM Operator */
-    private int calculateOp(int slotNum, int inp) {
+    private long calculateOp(int slotNum, long inp) {
         Slot slot = this.slots[slotNum];
         return slot.calculateOp(inp);
     }
 
-    private void setFeedback(int slotnum, int inp) {
-        Slot slot = this.slots[slotnum];
+    private void setFeedback(int slotNum, long inp) {
+        Slot slot = this.slots[slotNum];
         slot.feedbackModulation1 = (((inp << (SIN_BITS - 2)) * feedbackLevel[slot.feedback]) / 16);
     }
 
@@ -639,8 +625,8 @@ public class YmF271 {
 
                 if (this.slots[slot1].active != 0) {
                     for (int i = 0; i < samples; i++) {
-                        int output1 = 0, output2 = 0, output3 = 0, output4 = 0;
-                        int phaseMod1, phaseMod2, phaseMod3;
+                        long output1 = 0, output2 = 0, output3 = 0, output4 = 0;
+                        long phaseMod1, phaseMod2, phaseMod3;
                         switch (this.slots[slot1].algorithm) {
                         // <--------|
                         // +--[S1]--|--+--[S3]--+--[S2]--+--[S4]-.
@@ -838,14 +824,14 @@ public class YmF271 {
                             break;
                         }
 
-                        mixP[ptrMixp++] += ((output1 * lutAttenuation[this.slots[slot1].ch0Level]) +
-                                (output2 * lutAttenuation[this.slots[slot2].ch0Level]) +
-                                (output3 * lutAttenuation[this.slots[slot3].ch0Level]) +
-                                (output4 * lutAttenuation[this.slots[slot4].ch0Level])) >> 16;
-                        mixP[ptrMixp++] += ((output1 * lutAttenuation[this.slots[slot1].ch1Level]) +
-                                (output2 * lutAttenuation[this.slots[slot2].ch1Level]) +
-                                (output3 * lutAttenuation[this.slots[slot3].ch1Level]) +
-                                (output4 * lutAttenuation[this.slots[slot4].ch1Level])) >> 16;
+                        mixP[ptrMixp++] += (int) (((output1 * lutAttenuation[this.slots[slot1].ch0Level]) +
+                                                        (output2 * lutAttenuation[this.slots[slot2].ch0Level]) +
+                                                        (output3 * lutAttenuation[this.slots[slot3].ch0Level]) +
+                                                        (output4 * lutAttenuation[this.slots[slot4].ch0Level])) >> 16);
+                        mixP[ptrMixp++] += (int) (((output1 * lutAttenuation[this.slots[slot1].ch1Level]) +
+                                                        (output2 * lutAttenuation[this.slots[slot2].ch1Level]) +
+                                                        (output3 * lutAttenuation[this.slots[slot3].ch1Level]) +
+                                                        (output4 * lutAttenuation[this.slots[slot4].ch1Level])) >> 16);
                     }
                 }
                 break;
@@ -860,8 +846,8 @@ public class YmF271 {
                     mixP = this.mixBuffer;
                     if (this.slots[slot1].active != 0) {
                         for (int i = 0; i < samples; i++) {
-                            int output1 = 0, output3 = 0;
-                            int phaseMod1, phaseMod3;
+                            long output1 = 0, output3 = 0;
+                            long phaseMod1, phaseMod3;
                             switch (this.slots[slot1].algorithm & 3) {
                             // <--------|
                             // +--[S1]--|--+--[S3]-.
@@ -900,10 +886,10 @@ public class YmF271 {
                                 break;
                             }
 
-                            mixP[ptrMixp++] += ((output1 * lutAttenuation[this.slots[slot1].ch0Level]) +
-                                    (output3 * lutAttenuation[this.slots[slot3].ch0Level])) >> 16;
-                            mixP[ptrMixp++] += ((output1 * lutAttenuation[this.slots[slot1].ch1Level]) +
-                                    (output3 * lutAttenuation[this.slots[slot3].ch1Level])) >> 16;
+                            mixP[ptrMixp++] += (int) (((output1 * lutAttenuation[this.slots[slot1].ch0Level]) +
+                                                                (output3 * lutAttenuation[this.slots[slot3].ch0Level])) >> 16);
+                            mixP[ptrMixp++] += (int) (((output1 * lutAttenuation[this.slots[slot1].ch1Level]) +
+                                                                (output3 * lutAttenuation[this.slots[slot3].ch1Level])) >> 16);
                         }
                     }
                 }
@@ -919,8 +905,8 @@ public class YmF271 {
 
                 if (this.slots[slot1].active != 0) {
                     for (int i = 0; i < samples; i++) {
-                        int output1 = 0, output2 = 0, output3 = 0;
-                        int phaseMod1, phaseMod3;
+                        long output1 = 0, output2 = 0, output3 = 0;
+                        long phaseMod1, phaseMod3;
                         switch (this.slots[slot1].algorithm & 7) {
                         // <--------|
                         // +--[S1]--|--+--[S3]--+--[S2]-.
@@ -1006,12 +992,12 @@ public class YmF271 {
                             break;
                         }
 
-                        mixP[ptrMixp++] += ((output1 * lutAttenuation[this.slots[slot1].ch0Level]) +
-                                (output2 * lutAttenuation[this.slots[slot2].ch0Level]) +
-                                (output3 * lutAttenuation[this.slots[slot3].ch0Level])) >> 16;
-                        mixP[ptrMixp++] += ((output1 * lutAttenuation[this.slots[slot1].ch1Level]) +
-                                (output2 * lutAttenuation[this.slots[slot2].ch1Level]) +
-                                (output3 * lutAttenuation[this.slots[slot3].ch1Level])) >> 16;
+                        mixP[ptrMixp++] += (int) (((output1 * lutAttenuation[this.slots[slot1].ch0Level]) +
+                                                        (output2 * lutAttenuation[this.slots[slot2].ch0Level]) +
+                                                        (output3 * lutAttenuation[this.slots[slot3].ch0Level])) >> 16);
+                        mixP[ptrMixp++] += (int) (((output1 * lutAttenuation[this.slots[slot1].ch1Level]) +
+                                                        (output2 * lutAttenuation[this.slots[slot2].ch1Level]) +
+                                                        (output3 * lutAttenuation[this.slots[slot3].ch1Level])) >> 16);
                     }
                 }
 
@@ -1039,8 +1025,8 @@ public class YmF271 {
         }
     }
 
-    private void writeRegister(int slotnum, int reg, int data) {
-        Slot slot = this.slots[slotnum];
+    private void writeRegister(int slotNum, int reg, int data) {
+        Slot slot = this.slots[slotNum];
 
         switch (reg) {
         case 0x0:
@@ -1219,13 +1205,13 @@ public class YmF271 {
     }
 
     private void writePcm(int address, int data) {
-        int slotnum = pcmTab[address & 0xf];
+        int slotNum = pcmTab[address & 0xf];
         Slot slot;
-        if (slotnum == -1) {
+        if (slotNum == -1) {
 //logger.log(Level.TRACE, "ymf271_write_pcm invalid slot %02X %02X".formatted(address, data));
             return;
         }
-        slot = this.slots[slotnum];
+        slot = this.slots[slotNum];
 
         switch ((address >> 4) & 0xf) {
         case 0x0:
@@ -1428,7 +1414,7 @@ public class YmF271 {
             return this.status;
 
         case 0x1:
-            // statusreg 2
+            // statusReg 2
             return 0;
 
         case 0x2: {
@@ -1454,7 +1440,7 @@ public class YmF271 {
             lutWaves[i] = new short[SIN_LEN];
 
         for (int i = 0; i < 4 * 8; i++)
-            lutPlfo[i >> 3][i & 7] = new double[LFO_LENGTH];
+            lutPLfo[i >> 3][i & 7] = new double[LFO_LENGTH];
 
         for (int i = 0; i < 4; i++)
             lutALfo[i] = new int[LFO_LENGTH];
@@ -1489,45 +1475,35 @@ public class YmF271 {
 
         for (int i = 0; i < LFO_LENGTH; i++) {
             int triWave;
-            double ftriWave, fsawWave;
+            double fTriWave, fSawWave;
             double[] pLfo = new double[4];
 
             // LFO phase modulation
             pLfo[0] = 0;
 
-            fsawWave = ((i % (LFO_LENGTH / 2)) * PLFO_MAX) / (double) ((LFO_LENGTH / 2) - 1);
-            pLfo[1] = (i < (LFO_LENGTH / 2)) ? fsawWave : fsawWave - PLFO_MAX;
+            fSawWave = ((i % (LFO_LENGTH / 2)) * PLFO_MAX) / (double) ((LFO_LENGTH / 2) - 1);
+            pLfo[1] = (i < (LFO_LENGTH / 2)) ? fSawWave : fSawWave - PLFO_MAX;
 
             pLfo[2] = (i < (LFO_LENGTH / 2)) ? PLFO_MAX : PLFO_MIN;
 
-            ftriWave = ((i % (LFO_LENGTH / 4)) * PLFO_MAX) / (double) (LFO_LENGTH / 4);
+            fTriWave = ((i % (LFO_LENGTH / 4)) * PLFO_MAX) / (double) (LFO_LENGTH / 4);
             switch (i / (LFO_LENGTH / 4)) {
-            case 0:
-                pLfo[3] = ftriWave;
-                break;
-            case 1:
-                pLfo[3] = PLFO_MAX - ftriWave;
-                break;
-            case 2:
-                pLfo[3] = 0 - ftriWave;
-                break;
-            case 3:
-                pLfo[3] = 0 - (PLFO_MAX - ftriWave);
-                break;
-            default:
-                pLfo[3] = 0; // assert(0);
-                break;
+            case 0 -> pLfo[3] = fTriWave;
+            case 1 -> pLfo[3] = PLFO_MAX - fTriWave;
+            case 2 -> pLfo[3] = 0 - fTriWave;
+            case 3 -> pLfo[3] = 0 - (PLFO_MAX - fTriWave);
+            default -> pLfo[3] = 0; // assert false;
             }
 
             for (int j = 0; j < 4; j++) {
-                lutPlfo[j][0][i] = Math.pow(2.0, 0.0);
-                lutPlfo[j][1][i] = Math.pow(2.0, (3.378 * pLfo[j]) / 1200.0);
-                lutPlfo[j][2][i] = Math.pow(2.0, (5.0646 * pLfo[j]) / 1200.0);
-                lutPlfo[j][3][i] = Math.pow(2.0, (6.7495 * pLfo[j]) / 1200.0);
-                lutPlfo[j][4][i] = Math.pow(2.0, (10.1143 * pLfo[j]) / 1200.0);
-                lutPlfo[j][5][i] = Math.pow(2.0, (20.1699 * pLfo[j]) / 1200.0);
-                lutPlfo[j][6][i] = Math.pow(2.0, (40.1076 * pLfo[j]) / 1200.0);
-                lutPlfo[j][7][i] = Math.pow(2.0, (79.307 * pLfo[j]) / 1200.0);
+                lutPLfo[j][0][i] = Math.pow(2.0, 0.0);
+                lutPLfo[j][1][i] = Math.pow(2.0, (3.378 * pLfo[j]) / 1200.0);
+                lutPLfo[j][2][i] = Math.pow(2.0, (5.0646 * pLfo[j]) / 1200.0);
+                lutPLfo[j][3][i] = Math.pow(2.0, (6.7495 * pLfo[j]) / 1200.0);
+                lutPLfo[j][4][i] = Math.pow(2.0, (10.1143 * pLfo[j]) / 1200.0);
+                lutPLfo[j][5][i] = Math.pow(2.0, (20.1699 * pLfo[j]) / 1200.0);
+                lutPLfo[j][6][i] = Math.pow(2.0, (40.1076 * pLfo[j]) / 1200.0);
+                lutPLfo[j][7][i] = Math.pow(2.0, (79.307 * pLfo[j]) / 1200.0);
             }
 
             // LFO amplitude modulation
@@ -1599,7 +1575,7 @@ public class YmF271 {
             lutWaves[i] = null;
         }
         for (int i = 0; i < 4 * 8; i++) {
-            lutPlfo[i >> 3][i & 7] = null;
+            lutPLfo[i >> 3][i & 7] = null;
         }
 
         for (int i = 0; i < 4; i++) {
@@ -1628,17 +1604,7 @@ public class YmF271 {
     }
 
     public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData) {
-        if (this.memSize != romSize) {
-            this.memBase = new byte[romSize];
-            this.memSize = romSize;
-            Arrays.fill(this.memBase, 0, romSize, (byte) 0xff);
-        }
-        if (dataStart > romSize)
-            return;
-        if (dataStart + dataLength > romSize)
-            dataLength = romSize - dataStart;
-
-        System.arraycopy(romData, 0, this.memBase, dataStart, dataLength);
+        writeRom(romSize, dataStart, dataLength, romData, 0);
     }
 
     public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAddress) {

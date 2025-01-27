@@ -5,14 +5,16 @@ import java.util.Map;
 
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
-import mdsound.chips.Rf5c68;
+import mdsound.Instrument.PcmEnabledInstrument;
+import mdsound.chips.Rf5C68;
 
 
-public class Rf5C68Inst extends Instrument.BaseInstrument {
+/** Ricoh PCM for SYSTEM18,SYSTEM32 */
+public class Rf5C68Inst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
     public static final int MAX_CHIPS = 0x02;
 
-    private final Rf5c68[] chips = {new Rf5c68(), new Rf5c68()};
+    private final Rf5C68[] chips = {new Rf5C68(), new Rf5C68()};
 
     @Override
     public String getName() {
@@ -63,34 +65,31 @@ public class Rf5C68Inst extends Instrument.BaseInstrument {
         chips[chipId].stop();
     }
 
-    public void writeRam(int chipId, int dataStart, int dataLength, byte[] ramData) {
-        chips[chipId].writeRam(dataStart, dataLength, ramData);
+    @Override
+    public synchronized void setMask(int chipId, int ch) {
+        chips[chipId].setMuteMask(1);
     }
 
-    private void setMuteMask(int chipId, int muteMask) {
-        chips[chipId].setMuteMask(muteMask);
+    @Override
+    public synchronized void resetMask(int chipId, int ch) {
+        chips[chipId].setMuteMask(0);
+    }
+
+    /** @param extras 0: srcStartAddress */
+    @Override
+    public synchronized void writePcm(int chipId, byte[] buf, int offset, int length, Object... extras) {
+        int srcStartAddress = (int) extras[0];
+        chips[chipId].writeRam(offset, length, buf, srcStartAddress);
     }
 
     //----
-
-    public synchronized void writePcm(int chipId, int ramStartAdr, int ramDataLength, byte[] srcData, int srcStartAdr) {
-        chips[chipId].writeRam(ramStartAdr, ramDataLength, srcData, srcStartAdr);
-    }
 
     public synchronized void writeMemory(int chipId, int adr, int data) {
         chips[chipId].writeMemory(adr, data);
     }
 
-    public synchronized Rf5c68 getChip(int chipId) {
+    public synchronized Rf5C68 getChip(int chipId) {
         return chips[chipId];
-    }
-
-    public synchronized void setMask(int chipId, int ch) {
-        setMuteMask(chipId, 1);
-    }
-
-    public synchronized void resetMask(int chipId, int ch) {
-        setMuteMask(chipId, 0);
     }
 
     //----

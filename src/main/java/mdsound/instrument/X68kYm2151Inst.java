@@ -7,7 +7,7 @@ import mdsound.x68sound.X68Sound;
 import mdsound.x68sound.SoundIocs;
 
 
-public class X68SoundYm2151Inst extends Instrument.BaseInstrument {
+public class X68kYm2151Inst extends Instrument.BaseInstrument {
 
     /** X68000 clock */
     public static final int DefaultClockValue = 4000000;
@@ -27,7 +27,7 @@ public class X68SoundYm2151Inst extends Instrument.BaseInstrument {
 
     @Override
     public String getName() {
-        return "YM2151x68sound";
+        return "YM2151x68k";
     }
 
     @Override
@@ -86,6 +86,14 @@ public class X68SoundYm2151Inst extends Instrument.BaseInstrument {
         assert chipId < chips.length;
         chips[chipId].free();
         soundIocs[chipId] = null;
+    }
+
+    @Override
+    public void setMask(int chipId, int ch) {
+    }
+
+    @Override
+    public void resetMask(int chipId, int ch) {
     }
 
     public void update(int chipId, int[][] outputs, int samples, BiConsumer<Runnable, Boolean> oneFrameProc) {

@@ -69,6 +69,16 @@ public class K051649Inst extends Instrument.BaseInstrument {
     public void stop(int chipId) {
     }
 
+    @Override
+    public void setMask(int chipId, int ch) {
+//        chips[chipId].setMuteMask(ch); // TODO
+    }
+
+    @Override
+    public void resetMask(int chipId, int ch) {
+//        chips[chipId].setMuteMask(~ch); // TODO
+    }
+
     //
     public void writeWaveform(int chipId, int offset, int data) {
         chips[chipId].writeWaveForm(offset, data);
@@ -107,10 +117,6 @@ public class K051649Inst extends Instrument.BaseInstrument {
         // reading the test register sets it to $ff!
         setTest(chipId, offset, 0xff);
         return 0xff;
-    }
-
-    public void setMuteMask(int chipId, int muteMask) {
-        chips[chipId].setMuteMask(muteMask);
     }
 
     //----

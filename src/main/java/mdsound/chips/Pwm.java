@@ -101,7 +101,7 @@ public class Pwm {
         this.fifoLTmp = 0;
         this.fifoRTmp = 0;
 
-        //loudness = 0;
+//        loudness = 0;
         setCycle(0);
         setInt(0);
     }
@@ -110,13 +110,13 @@ public class Pwm {
     // TODO Fix Chilly Willy's new scaling algorithm.
     private void recalcScale() {
         this.offset = (this.cycle / 2) + 1;
-        this.scale = (0x7f_ff00 / this.offset);
+        this.scale = 0x7f_ff00 / this.offset;
     }
 //#endif
 
     private void setCycle(int cycle) {
         cycle--;
-        this.cycle = (cycle & 0xfff);
+        this.cycle = cycle & 0xfff;
         this.cycleCnt = this.cycles;
 
 //#if CHILLY_WILLY_SCALE

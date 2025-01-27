@@ -76,6 +76,14 @@ public class Ym2151Inst extends Instrument.BaseInstrument {
     public void stop(int chipId) {
     }
 
+    @Override
+    public void setMask(int chipId, int ch) {
+    }
+
+    @Override
+    public void resetMask(int chipId, int ch) {
+    }
+
     // ----
 
     public synchronized int[] readKeyOn(int chipId) {
