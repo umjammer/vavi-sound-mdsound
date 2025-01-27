@@ -7,7 +7,6 @@ import java.util.StringJoiner;
 import java.util.function.Function;
 
 import mdsound.Common;
-import vavi.util.StringUtil;
 
 import static java.lang.System.getLogger;
 
@@ -242,14 +241,14 @@ public class MultiPCM {
         private int[] scale;
 
         private int stepP() {
-            this.phase += this.phaseStep & 0xffff;
+            this.phase = (this.phase + this.phaseStep) & 0xffff;
             int p = this.table[((this.phase & 0xffff) >> LFO_SHIFT) & 0xff];
             p = this.scale[p];
             return p << (TL_SHIFT - LFO_SHIFT);
         }
 
         private int stepA() {
-            this.phase += this.phaseStep & 0xffff;
+            this.phase = (this.phase + this.phaseStep) & 0xffff;
             int p = this.table[((this.phase & 0xffff) >> LFO_SHIFT) & 0xff];
             p = this.scale[p];
             return p << (TL_SHIFT - LFO_SHIFT);
@@ -326,7 +325,7 @@ public class MultiPCM {
                 this.rr = rom[address + 10] & 0xf;
                 this.krs = (rom[address + 10] >> 4) & 0xf;
                 this.am = rom[address + 11] & 0x0f;
-logger.log(Level.DEBUG, "address: %06x%n%s%n%s".formatted(address, StringUtil.getDump(rom, address, 16), this));
+//logger.log(Level.DEBUG, "address: %06x%n%s%n%s".formatted(address, StringUtil.getDump(rom, address, 16), this));
             }
 
             @Override
@@ -718,7 +717,7 @@ logger.log(Level.DEBUG, "sega_banking: %02x".formatted(offset));
             length = this.romSize - offset;
 
         System.arraycopy(data, srcStartAddress, this.rom, offset, length);
-logger.log(Level.DEBUG, "offset: %06x, length: %06x, whole: %06x, %08x, %06x".formatted(offset, length, romSize, romMask, srcStartAddress));
+//logger.log(Level.DEBUG, "offset: %06x, length: %06x, whole: %06x, %08x, %06x".formatted(offset, length, romSize, romMask, srcStartAddress));
     }
 
     public void setMuteMask(int muteMask) {
