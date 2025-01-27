@@ -7,12 +7,9 @@ import mdsound.chips.WSwan;
 
 public class WSwanInst extends Instrument.BaseInstrument {
 
-    public static final int DefaultClockValue = 3072000;
+    public static final int DefaultClockValue = WSwan.DEFAULT_CLOCK;
 
-    private int masterClock = DefaultClockValue;
-    private int sampleRate = 44100;
-
-    private final WSwan[] chips = {new WSwan(DefaultClockValue), new WSwan(DefaultClockValue)};
+    private final WSwan[] chips = {new WSwan(), new WSwan()};
 
     private final int[] mask = {0, 0};
 
@@ -37,9 +34,7 @@ public class WSwanInst extends Instrument.BaseInstrument {
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        chips[chipId].init(samplingRate, clock);
-        sampleRate = samplingRate;
-        masterClock = clock;
+        chips[chipId].init(clock);
 
         return samplingRate;
     }
@@ -51,14 +46,9 @@ public class WSwanInst extends Instrument.BaseInstrument {
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        chips[chipId].writeAudioPort(adr + 0x80, data);
+        chips[chipId].write((adr + 0x80) & 0xff, data & 0xff);
         return 0;
     }
-
-    private double sampleCounter = 0;
-    // TODO is thread safe?
-    private final int[][] frm = {new int[1], new int[1]};
-    private final int[][] before = {new int[1], new int[1]};
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
@@ -66,29 +56,7 @@ public class WSwanInst extends Instrument.BaseInstrument {
             outputs[0][i] = 0;
             outputs[1][i] = 0;
 
-            sampleCounter += (masterClock / 128.0) / sampleRate;
-            int upc = (int) sampleCounter;
-            while (sampleCounter >= 1) {
-                chips[chipId].update(1, frm);
-
-                outputs[0][i] += frm[0][0];
-                outputs[1][i] += frm[1][0];
-
-                sampleCounter -= 1.0;
-            }
-
-            if (upc != 0) {
-                outputs[0][i] /= upc;
-                outputs[1][i] /= upc;
-                before[0][i] = outputs[0][i];
-                before[1][i] = outputs[1][i];
-            } else {
-                outputs[0][i] = before[0][i];
-                outputs[1][i] = before[1][i];
-            }
-
-            outputs[0][i] <<= 2;
-            outputs[1][i] <<= 2;
+            chips[chipId].update(samples, outputs);
         }
 
         visVolume[chipId][0][0] = outputs[0][0];
@@ -116,6 +84,8 @@ public class WSwanInst extends Instrument.BaseInstrument {
         chips[chipId].writeRam(adr, data);
     }
 
+    //----
+
     public void setVolume(int vol) {
         // TODO
 //        c.volume = Math.max(Math.min(vol, 20), -192);
@@ -124,8 +94,6 @@ public class WSwanInst extends Instrument.BaseInstrument {
 //        //16384 = 0x4000 = short.MAXValue + 1
 //        c.tVolume = Math.max(Math.min((int) (n * volumeMul), Short.MAX_VALUE), Short.MIN_VALUE);
     }
-
-    //----
 
     @Override
     public Tuple<Integer, Double> getRegulationVolume() {

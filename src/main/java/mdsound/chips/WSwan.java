@@ -11,6 +11,8 @@ import java.util.Arrays;
  */
 public class WSwan {
 
+    public static final int DEFAULT_CLOCK = 3072000;
+
     /**
      * Initial I/O values
      */
@@ -332,9 +334,9 @@ public class WSwan {
     /** Ratio */
     private static class RatioCounter {
         /** counter increment */
-        private int inc;
+        private long inc;
         /** current value */
-        private int val;
+        private long val;
 
         private void setRatio(int mul, int div) {
             this.inc = ((mul << 20) + div / 2) / div;
@@ -353,7 +355,7 @@ public class WSwan {
         }
 
         private int getVal() {
-            return this.val >> 20;
+            return (int) (this.val >> 20);
         }
 
         private void mask() {
@@ -382,16 +384,14 @@ public class WSwan {
     private int sampleRate;
     private float ratEmul;
 
-    public WSwan(int masterClock) {
-        clock = masterClock;
-        sampleRate = clock / 128;
+    public WSwan() {
+        this.clock = DEFAULT_CLOCK;
+        sampleRate = this.clock / 128;
     }
 
-    public static final int DEFAULT_CLOCK = 3072000;
-
-    public void init(int sampleRate, int masterClock) {
-        clock = masterClock;
-        this.sampleRate = clock / 128;
+    public void init(int clock) {
+        this.clock = clock;
+        this.sampleRate = this.clock / 128;
 
         // actual size is 64 KB, but the audio chips can only access 16 KB
         this.internalRam = new byte[0x4000];
@@ -419,7 +419,7 @@ public class WSwan {
         this.blankTimer.reset();
 
         for (int i = 0x80; i < 0xc9; i++)
-            writeAudioPort(i, initialIoValue[i]);
+            write(i, initialIoValue[i]);
     }
 
     public void stop() {
@@ -448,7 +448,42 @@ public class WSwan {
             0b0000_0001_0000_0000
     };
 
-    public void update(int length, int[][] buffer) {
+    private double sampleCounter = 0;
+    private final int[][] frm = {new int[1], new int[1]};
+    private final int[][] before = {new int[1], new int[1]};
+
+    public void update(int length, int[][] outputs) {
+        for (int i = 0; i < length; i++) {
+            outputs[0][i] = 0;
+            outputs[1][i] = 0;
+
+            sampleCounter += (this.clock / 128.0) / sampleRate;
+            int upc = (int) sampleCounter;
+            while (sampleCounter >= 1) {
+                updateInternal(1, frm);
+
+                outputs[0][i] += frm[0][0];
+                outputs[1][i] += frm[1][0];
+
+                sampleCounter -= 1.0;
+            }
+
+            if (upc != 0) {
+                outputs[0][i] /= upc;
+                outputs[1][i] /= upc;
+                before[0][i] = outputs[0][i];
+                before[1][i] = outputs[1][i];
+            } else {
+                outputs[0][i] = before[0][i];
+                outputs[1][i] = before[1][i];
+            }
+
+            outputs[0][i] <<= 2;
+            outputs[1][i] <<= 2;
+        }
+    }
+
+    private void updateInternal(int length, int[][] buffer) {
         int[] bufL = buffer[0];
         int[] bufR = buffer[1];
         for (int i = 0; i < length; i++) {
@@ -526,7 +561,7 @@ public class WSwan {
         }
     }
 
-    public void writeAudioPort(int port, int value) {
+    public void write(int port, int value) {
         int i;
         float freq;
 
@@ -602,7 +637,7 @@ public class WSwan {
             // In terms of HBlank (256 cycles) intervals,
             //　8192/256 = 32
             // So, the interval is 32[HBlank]*(n+1).
-            this.sweepTime = (short) (((value + 1) << 5) & 0xffff);
+            this.sweepTime = ((value + 1) << 5) & 0xffff;
             this.sweepCount = this.sweepTime;
             break;
         case 0x8E:
@@ -646,13 +681,13 @@ public class WSwan {
         if (this.sweepStep != 0 && (this.ioRam[SNDMOD] & 0x40) != 0) {
             if (this.sweepCount < 0) {
                 this.sweepCount = this.sweepTime;
-                this.sweepFreq += this.sweepStep;
+                this.sweepFreq = (this.sweepFreq + this.sweepStep) & 0xffff;
                 this.sweepFreq &= 0x7ff;
 
                 float freq = 1.0f / (2048 - this.sweepFreq);
                 this.audios[2].delta = (int) (freq * this.ratEmul);
             }
-            this.sweepCount--;
+            this.sweepCount = (this.sweepCount - 1) & 0xffff;
         }
     }
 
