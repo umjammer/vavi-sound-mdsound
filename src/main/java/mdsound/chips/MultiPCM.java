@@ -671,8 +671,8 @@ logger.log(Level.DEBUG, "address: %06x%n%s%n%s".formatted(address, StringUtil.ge
         case 0x10:  // 1 MB banking (Sega Model 1)
 logger.log(Level.DEBUG, "sega_banking: %02x".formatted(offset));
             this.sega_banking = 1;
-            this.bankL = (data << 20) | 0x00_0000;
-            this.bankR = (data << 20) | 0x08_0000;
+            this.bankR = (data << 20) | 0x00_0000;
+            this.bankL = (data << 20) | 0x08_0000;
             break;
         case 0x11:  // 512 KB banking - low bank (Sega Multi 32)
 logger.log(Level.DEBUG, "sega_banking: %02x".formatted(offset));
