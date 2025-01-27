@@ -148,16 +148,13 @@ public class YmF262 {
      * YmF262 MAME version
      *
      * @author Jarek Burczynski
-     */
+    */
     public static class Opl3 implements Opl {
 
         public interface TimerHandler extends BiConsumer<Integer, Integer> {
         }
 
         public interface IrqHandler extends Consumer<Integer> {
-        }
-
-        public interface UpdateHandler extends Runnable {
         }
 
         public static class Channel {
@@ -1030,7 +1027,7 @@ public class YmF262 {
         /**
          * stream update handler
          */
-        protected Opl3.UpdateHandler updateHandler;
+        protected UpdateHandler updateHandler;
 
         /**
          * chips type
@@ -1649,7 +1646,7 @@ public class YmF262 {
             this.irqHandler = irqHandler;
         }
 
-        private void setUpdateHandler(Opl3.UpdateHandler updateHandler) {
+        private void setUpdateHandler(UpdateHandler updateHandler) {
             this.updateHandler = updateHandler;
         }
 
@@ -2689,8 +2686,8 @@ public class YmF262 {
             /** waveForm precision (10 bits) */
             private static final int WAVEPREC = 1024;
 
-            /** start of the waveform */
-            private static final int[] waveform = {
+            /** start of the waveForm */
+            private static final int[] waveForm = {
                     WAVEPREC,
                     WAVEPREC >> 1,
                     WAVEPREC,
@@ -2739,7 +2736,7 @@ public class YmF262 {
             private static final short[] wavTable = new short[WAVEPREC * 3];
 
             static {
-                // create waveform tables
+                // create waveForm tables
                 for (int i = 0; i < (WAVEPREC >> 1); i++) {
                     wavTable[(i << 1) + WAVEPREC] = (short) (16384 * Math.sin((double) (i << 1) * Math.PI * 2 / WAVEPREC));
                     wavTable[(i << 1) + 1 + WAVEPREC] = (short) (16384 * Math.sin((double) ((i << 1) + 1) * Math.PI * 2 / WAVEPREC));
@@ -2855,11 +2852,18 @@ public class YmF262 {
 
                 // Cymbal
                 inttm = (1 + phaseBit) << 8;
+                op3.wfPos = inttm * FIXEDPT; // waveForm position
+                // advance waveForm time
+                op3.tCount += op3.tInc;
+                op3.tCount += op3.tInc * vib3 / FIXEDPT;
+                op3.generatorPos += generatorAdd;
+            }
+
             private void disable(int act_type) {
                 // check if this is really an on-off transition
-                if (this.act_state != OP_ACT_OFF) {
-                    this.act_state &= ~act_type;
-                    if (this.act_state == OP_ACT_OFF) {
+                if (this.actState != OP_ACT_OFF) {
+                    this.actState &= ~act_type;
+                    if (this.actState == OP_ACT_OFF) {
                         if (this.opState != OF_TYPE_OFF)
                             this.opState = OF_TYPE_REL;
                     }
@@ -2867,13 +2871,13 @@ public class YmF262 {
             }
 
             private void checkEgAttack() {
-                if (((this.cur_env_step + 1) & this.envStepA) == 0) {
+                if (((this.curEnvStep + 1) & this.envStepA) == 0) {
                     // check if next step already reached
                     if (this.a0 >= 1.0) {
                         // attack phase finished, next: decay
                         this.opState = OF_TYPE_DEC;
                         this.amp = 1.0;
-                        this.step_amp = 1.0;
+                        this.stepAmp = 1.0;
                     }
                 }
             }
@@ -2889,10 +2893,10 @@ public class YmF262 {
 
                     // wform: -16384 to 16383 (0x4000)
                     // trem :  32768 to 65535 (0x10000)
-                    // step_amp: 0.0 to 1.0
+                    // stepAmp: 0.0 to 1.0
                     // vol  : 1/2^14 to 1/2^29 (/0x4000; /1../0x8000)
 
-                    cVal = (int) (step_amp * vol * wavTable[ptrCur_wForm + (i & cur_wMask)] * trem / 16.0);
+                    cVal = (int) (stepAmp * vol * wavTable[curWFormPtr + (i & curWMask)] * trem / 16.0);
                 }
             }
 
@@ -2905,11 +2909,11 @@ public class YmF262 {
              * or when the keep-sustained bit is turned off (.sustain_nokeep)
              */
             private void sustain() {
-                int num_steps_add = generator_pos / FIXEDPT; // number of (standardized) samples
+                int num_steps_add = generatorPos / FIXEDPT; // number of (standardized) samples
                 for (int ct = 0; ct < num_steps_add; ct++) {
-                    cur_env_step++;
+                    curEnvStep++;
                 }
-                generator_pos -= num_steps_add * FIXEDPT;
+                generatorPos -= num_steps_add * FIXEDPT;
             }
 
             /** Operator in release mode, if output level reaches zero the Operator is turned off */
@@ -2920,10 +2924,10 @@ public class YmF262 {
                     amp *= releaseMul;
                 }
 
-                int num_steps_add = generator_pos / FIXEDPT; // number of (standardized) samples
+                int num_steps_add = generatorPos / FIXEDPT; // number of (standardized) samples
                 for (int ct = 0; ct < num_steps_add; ct++) {
-                    cur_env_step++; // sample counter
-                    if ((cur_env_step & envStepR) == 0) {
+                    curEnvStep++; // sample counter
+                    if ((curEnvStep & envStepR) == 0) {
                         if (amp <= 0.00000001) {
                             // release phase finished, turn off this Operator
                             amp = 0.0;
@@ -2931,10 +2935,10 @@ public class YmF262 {
                                 opState = OF_TYPE_OFF;
                             }
                         }
-                        step_amp = amp;
+                        stepAmp = amp;
                     }
                 }
-                generator_pos -= num_steps_add * FIXEDPT;
+                generatorPos -= num_steps_add * FIXEDPT;
             }
 
             /**
@@ -2942,18 +2946,21 @@ public class YmF262 {
              * kept (sustain level keep enabled) or the Operator is switched into release mode
              */
             private void decay() {
+                int num_steps_add;
+                int ct;
+
                 if (amp > sustainLevel) {
                     // decay phase
                     amp *= decayMul;
                 }
 
-                int num_steps_add = generator_pos / FIXEDPT; // number of (standardized) samples
-                for (int ct = 0; ct < num_steps_add; ct++) {
-                    cur_env_step++;
-                    if ((cur_env_step & envStepD) == 0) {
+                num_steps_add = generatorPos / FIXEDPT; // number of (standardized) samples
+                for (ct = 0; ct < num_steps_add; ct++) {
+                    curEnvStep++;
+                    if ((curEnvStep & envStepD) == 0) {
                         if (amp <= sustainLevel) {
                             // decay phase finished, sustain level reached
-                            if (sus_keep) {
+                            if (susKeep) {
                                 // keep sustain level (until turned off)
                                 opState = OF_TYPE_SUS;
                                 amp = sustainLevel;
@@ -2962,10 +2969,10 @@ public class YmF262 {
                                 opState = OF_TYPE_SUS_NOKEEP;
                             }
                         }
-                        step_amp = amp;
+                        stepAmp = amp;
                     }
                 }
-                generator_pos -= num_steps_add * FIXEDPT;
+                generatorPos -= num_steps_add * FIXEDPT;
             }
 
             /**
@@ -2975,41 +2982,41 @@ public class YmF262 {
             private void attack() {
                 amp = ((a3 * amp + a2) * amp + a1) * amp + a0;
 
-                int num_steps_add = generator_pos / FIXEDPT; // number of (standardized) samples
+                int num_steps_add = generatorPos / FIXEDPT; // number of (standardized) samples
                 for (int ct = 0; ct < num_steps_add; ct++) {
-                    cur_env_step++; // next sample
-                    if ((cur_env_step & envStepA) == 0) { // check if next step already reached
+                    curEnvStep++; // next sample
+                    if ((curEnvStep & envStepA) == 0) { // check if next step already reached
                         if (amp > 1.0) {
                             // attack phase finished, next: decay
                             opState = OF_TYPE_DEC;
                             amp = 1.0;
-                            step_amp = 1.0;
+                            stepAmp = 1.0;
                         }
                         step_skip_pos_a <<= 1;
                         if (step_skip_pos_a == 0) step_skip_pos_a = 1;
                         if ((step_skip_pos_a & envStepSkipA) != 0) { // check if required to skip next step
-                            step_amp = amp;
+                            stepAmp = amp;
                         }
                     }
                 }
-                generator_pos -= num_steps_add * FIXEDPT;
+                generatorPos -= num_steps_add * FIXEDPT;
             }
 
             private void changeWaveform(int regBase, int[] wave_sel) {
 //#if defined(OPLTYPE_IS_OPL3)
                 if (regBase >= ARC_SECONDSET) regBase -= (ARC_SECONDSET - 22); // second set starts at 22
 //#endif
-                // waveform selection
-                cur_wMask = waveMask[wave_sel[regBase]];
-                //op_pt.cur_wform = wavTable[waveform[this.wave_sel[regBase]]];
-                ptrCur_wForm = waveform[wave_sel[regBase]];
-                // (might need to be adapted to waveform type here...)
+                // waveForm selection
+                curWMask = waveMask[wave_sel[regBase]];
+                //op_pt.cur_wform = wavTable[waveForm[this.wave_sel[regbase]]];
+                curWFormPtr = waveForm[wave_sel[regBase]];
+                // (might need to be adapted to waveForm type here...)
             }
 
             private void enable(int regBase, int act_type, int[] wave_sel) {
                 // check if this is really an off-on transition
-                if (act_state == OP_ACT_OFF) {
                     int wselbase = regBase;
+                if (actState == OP_ACT_OFF) {
                     if (wselbase >= ARC_SECONDSET)
                         wselbase -= (ARC_SECONDSET - 22); // second set starts at 22
 
@@ -3017,12 +3024,12 @@ public class YmF262 {
 
                     // start with attack mode
                     opState = OF_TYPE_ATT;
-                    act_state |= act_type;
+                    actState |= act_type;
                 }
             }
 
             private void advance(int vib, int generator_add) {
-                wfPos = tCount; // waveform position
+                wfPos = tCount; // waveForm position
 
                 // advance waveForm time
                 tCount += tInc;
@@ -3097,16 +3104,16 @@ public class YmF262 {
                 }
             }
 
-            public void changeSustainLevel(int sustainLevel) {
-                // sustainLevel should be 0.0 when sustainLevel == 15 (max)
-                if (sustainLevel < 15) {
-                    this.sustainLevel = Math.pow(FL2, (double) sustainLevel * (-FL05));
+            private void changeSustainLevel(int sustainlevel) {
+                // sustainlevel should be 0.0 when sustainlevel == 15 (max)
+                if (sustainlevel < 15) {
+                    this.sustainLevel = Math.pow(FL2, (double) sustainlevel * (-FL05));
                 } else {
                     this.sustainLevel = 0.0;
                 }
             }
 
-            public void changeKeepSustain(boolean susKeep) {
+            private void changeKeepSustain(boolean susKeep) {
                 if (opState == OF_TYPE_SUS) {
                     if (!susKeep)
                         opState = OF_TYPE_SUS_NOKEEP;
@@ -3116,19 +3123,8 @@ public class YmF262 {
                 }
             }
 
-            public void changeWaveform(int regBase, int[] waveSel) {
-//#if defined(OPLTYPE_IS_OPL3)
-                if (regBase >= ARC_SECONDSET) regBase -= (ARC_SECONDSET - 22); // second set starts at 22
-//#endif
-                // waveForm selection
-                curWMask = waveMask[waveSel[regBase]];
-                //op_pt.cur_wform = wavTable[waveForm[this.waveSel[regBase]]];
-                curWFormPtr = waveForm[waveSel[regBase]];
-                // (might need to be adapted to waveForm type here...)
-            }
-
             /** enable/disable vibrato/tremolo LFO effects */
-            public void changeVibrato(int regBase, byte[] adlibReg) {
+            public void changeVibrato(int regBase, int[] adlibReg) {
                 this.vibrato = (adlibReg[ARC_TVS_KSR_MUL + regBase] & 0x40) != 0;
                 this.tremolo = (adlibReg[ARC_TVS_KSR_MUL + regBase] & 0x80) != 0;
             }
@@ -3140,36 +3136,6 @@ public class YmF262 {
                 else
                     mfbi = 0;
             }
-
-            private void reset() {
-                this.opState = OF_TYPE_OFF;
-                this.act_state = OP_ACT_OFF;
-                this.amp = 0.0;
-                this.step_amp = 0.0;
-                this.vol = 0.0;
-                this.tCount = 0;
-                this.tInc = 0;
-                this.tOff = 0;
-                this.cur_wMask = Operator.waveMask[0];
-                this.ptrCur_wForm = Operator.waveform[0];
-                this.freqHigh = 0;
-
-                this.generator_pos = 0;
-                this.cur_env_step = 0;
-                this.envStepA = 0;
-                this.envStepD = 0;
-                this.envStepR = 0;
-                this.step_skip_pos_a = 0;
-                this.envStepSkipA = 0;
-
-                this.is4op = false;
-                this.is4OpAttached = false;
-                this.leftPan = 1;
-                this.rightPan = 1;
-            }
-        }
-
-        public interface UpdateHandler extends Runnable {
         }
 
         // vibrato/tremolo tables */
@@ -3181,7 +3147,7 @@ public class YmF262 {
 
         // vibrato value tables (used per-Operator) */
         private static final int[] vibValVar1 = new int[BLOCKBUF_SIZE];
-        private static final int[] vibval_var2 = new int[BLOCKBUF_SIZE];
+        private static final int[] vibvalVar2 = new int[BLOCKBUF_SIZE];
 
         // key scale level lookup table */
         private static final double[] kslMul = {
@@ -3189,7 +3155,7 @@ public class YmF262 {
         };
 
         // frequency multiplicator lookup table */
-        private static final double[] frqMul_tab = {
+        private static final double[] frqMulTab = {
                 0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 12, 12, 15, 15
         };
 
@@ -3208,7 +3174,7 @@ public class YmF262 {
         };
 
         // map a register base to a modulator Operator number or Operator number */
-        private static final int[] regbase2modop = {
+        private static final int[] regBase2Modop = {
                 0, 1, 2, 0, 1, 2, 0, 0, 3, 4, 5, 3, 4, 5, 0, 0, 6, 7, 8, 6, 7, 8, // first set
                 18, 19, 20, 18, 19, 20, 0, 0, 21, 22, 23, 21, 22, 23, 0, 0, 24, 25, 26, 24, 25, 26 // second set
         };
@@ -3217,8 +3183,7 @@ public class YmF262 {
                 18, 19, 20, 27, 28, 29, 0, 0, 21, 22, 23, 30, 31, 32, 0, 0, 24, 25, 26, 33, 34, 35 // second set
         };
 
-
-        private static final double[] decrelConst = {
+        private static final double[] decRelConst = {
                 1 / 39.28064,
                 1 / 31.41608,
                 1 / 26.17344,
@@ -3227,10 +3192,10 @@ public class YmF262 {
 
         // per-chips variables
 
-        // adlib register set (including second set) */
+        /** adlib register set (including second set) */
         private final int[] adlibReg = new int[512];
 
-        // waveform selection */
+        /** waveForm selection */
         private final int[] waveSel = new int[44];
 
         private final Operator[] ops = new Operator[MAXOPERATORS];
@@ -3375,7 +3340,7 @@ public class YmF262 {
 
         private void writeInternal(int idx, int val) {
             int secondSet = idx & 0x100;
-            this.adlibReg[idx] = (byte) val;
+            this.adlibReg[idx] = val;
 
             switch (idx & 0xf0) {
             case ARC_CONTROL:
@@ -3438,9 +3403,9 @@ public class YmF262 {
                     // key scale rate and frequency multiplicator can be changed
                     if ((this.adlibReg[0x105] & 1) != 0 && (this.ops[modOp].is4OpAttached)) {
                         // Operator uses frequency of channel
-                        op.changeFrequency(chanBase - 3, regBase, this.adlibReg, this.frqMul, this.recIpSamp);
+                        changeFrequency(chanBase - 3, regBase, op);
                     } else {
-                        op.changeFrequency(chanBase, regBase, this.adlibReg, this.frqMul, this.recIpSamp);
+                        changeFrequency(chanBase, regBase, op);
                     }
                 }
             }
@@ -3492,8 +3457,8 @@ public class YmF262 {
 
                     // change sustain level and release rate of this Operator
                     Operator op = this.ops[regBase2op[secondSet != 0 ? (base + 22) : base]];
-                    op.changeReleaseRate(adlibReg[ARC_SUSL_RELR + regbase] & 15, this.recIpSamp);
-                    op.changeSustainLevel(adlibReg[ARC_SUSL_RELR + regbase] >> 4);
+                    op.changeReleaseRate(adlibReg[ARC_SUSL_RELR + regBase] & 15, this.recIpSamp);
+                    op.changeSustainLevel(adlibReg[ARC_SUSL_RELR + regBase] >> 4);
                 }
             }
             break;
@@ -3511,7 +3476,7 @@ public class YmF262 {
                     changeFrequency(chanBase, modBase, this.ops[opBase]);
                     changeFrequency(chanBase, modBase + 3, this.ops[opBase + 9]);
                     // for 4op channels all four operators are modified to the frequency of the channel
-                    if ((this.adlibReg[0x105] & 1) != 0 && this.ops[secondSet != 0 ? (base + 18) : base].is4op) {
+                    if ((this.adlibReg[0x105] & 1) != 0 && this.ops[secondSet != 0 ? (base + 18) : base].is4Op) {
                         changeFrequency(chanBase, modBase + 8, this.ops[opBase + 3]);
                         changeFrequency(chanBase, modBase + 3 + 8, this.ops[opBase + 3 + 9]);
                     }
@@ -3772,48 +3737,48 @@ public class YmF262 {
                     this.vibTabPos += this.vibTabAdd;
                     if (this.vibTabPos / FIXEDPT_LFO >= VIBTAB_SIZE)
                         this.vibTabPos -= VIBTAB_SIZE * FIXEDPT_LFO;
-                    vibLut[i] = Operator.vibTable[this.vibTabPos / FIXEDPT_LFO] >> vibTShift; // 14cents (14/100 of a semitone) or 7cents
+                    vibLut[i] = vibTable[this.vibTabPos / FIXEDPT_LFO] >> vibTShift; // 14cents (14/100 of a semitone) or 7cents
 
                     // cycle through tremolo table
                     this.tremTabPos += this.tremTabAdd;
                     if (this.tremTabPos / FIXEDPT_LFO >= TREMTAB_SIZE)
                         this.tremTabPos -= TREMTAB_SIZE * FIXEDPT_LFO;
                     if ((this.adlibReg[ARC_PERC_MODE] & 0x80) != 0)
-                        tremLut[i] = Operator.tremTable[this.tremTabPos / FIXEDPT_LFO];
+                        tremLut[i] = tremTable[this.tremTabPos / FIXEDPT_LFO];
                     else
-                        tremLut[i] = Operator.tremTable[TREMTAB_SIZE + this.tremTabPos / FIXEDPT_LFO];
+                        tremLut[i] = tremTable[TREMTAB_SIZE + this.tremTabPos / FIXEDPT_LFO];
                 }
 
                 if ((this.adlibReg[ARC_PERC_MODE] & 0x20) != 0) {
                     if ((this.muteChn[NUM_CHANNELS + 0]) == 0) {
                         // BassDrum
-                        int opP = 6;
+                        ccPtr = 6;
                         if ((this.adlibReg[ARC_FEEDBACK + 6] & 1) != 0) {
                             // additive synthesis
-                            if (this.ops[opP + 9].opState != OF_TYPE_OFF) {
-                                if (this.ops[opP + 9].vibrato) {
+                            if (this.ops[ccPtr + 9].opState != OF_TYPE_OFF) {
+                                if (this.ops[ccPtr + 9].vibrato) {
                                     vibVal1 = vibValVar1;
                                     for (int i = 0; i < endSamples; i++)
-                                        vibVal1[i] = (vibLut[i] * this.ops[opP + 9].freqHigh / 8) * FIXEDPT * VIBFAC;
+                                        vibVal1[i] = (vibLut[i] * this.ops[ccPtr + 9].freqHigh / 8) * FIXEDPT * VIBFAC;
                                 } else
-                                    vibVal1 = Operator.vibValConst;
-                                if (this.ops[opP + 9].tremolo)
+                                    vibVal1 = vibValConst;
+                                if (this.ops[ccPtr + 9].tremolo)
                                     tremVal1 = tremLut; // tremolo enabled, use table
                                 else
-                                    tremVal1 = Operator.tremValConst;
+                                    tremVal1 = tremValConst;
 
                                 // calculate channel output
                                 for (int i = 0; i < endSamples; i++) {
 
-                                    this.ops[opP + 9].advance(vibVal1[i], this.generatorAdd);
-                                    opFuncs[this.ops[opP + 9].opState].accept(this.ops[opP + 9]);
+                                    this.ops[ccPtr + 9].advance(vibVal1[i], this.generatorAdd);
+                                    opFuncs[this.ops[ccPtr + 9].opState].accept(this.ops[ccPtr + 9]);
 
-                                    this.ops[opP + 9].output(0, tremVal1[i]);
-                                    int chanVal = this.ops[opP + 9].cVal * 2;
+                                    this.ops[ccPtr + 9].output(0, tremVal1[i]);
+                                    int chanVal = this.ops[ccPtr + 9].cVal * 2;
 
                                     if ((this.adlibReg[0x105] & 1) != 0) {
-                                        outBufL[i] += chanVal * this.ops[opP].leftPan;
-                                        outBufR[i] += chanVal * this.ops[opP].rightPan;
+                                        outBufL[i] += chanVal * this.ops[ccPtr].leftPan;
+                                        outBufR[i] += chanVal * this.ops[ccPtr].rightPan;
                                     } else {
                                         outBufL[i] += chanVal;
                                         outBufR[i] += chanVal;
@@ -3828,21 +3793,21 @@ public class YmF262 {
                                     for (int i = 0; i < endSamples; i++)
                                         vibVal1[i] = (vibLut[i] * this.ops[ccPtr + 0].freqHigh / 8) * FIXEDPT * VIBFAC;
                                 } else
+                                    vibVal1 = vibValConst;
                                 if ((this.ops[ccPtr + 9].vibrato) && (this.ops[ccPtr + 9].opState != OF_TYPE_OFF)) {
-                                    vibVal1 = Operator.vibValConst;
-                                    vibVal2 = vibValVar2;
+                                    vibVal2 = vibvalVar2;
                                     for (int i = 0; i < endSamples; i++)
                                         vibVal2[i] = (vibLut[i] * this.ops[ccPtr + 9].freqHigh / 8) * FIXEDPT * VIBFAC;
                                 } else
+                                    vibVal2 = vibValConst;
                                 if (this.ops[ccPtr + 0].tremolo)
-                                    vibVal2 = Operator.vibValConst;
                                     tremVal1 = tremLut; // tremolo enabled, use table
                                 else
+                                    tremVal1 = tremValConst;
                                 if (this.ops[ccPtr + 9].tremolo)
-                                    tremVal1 = Operator.tremValConst;
                                     tremVal2 = tremLut; // tremolo enabled, use table
                                 else
-                                    tremVal2 = Operator.tremValConst;
+                                    tremVal2 = tremValConst;
 
                                 // calculate channel output
                                 for (int i = 0; i < endSamples; i++) {
@@ -3879,12 +3844,12 @@ public class YmF262 {
                             for (int i = 0; i < endSamples; i++)
                                 vibVal3[i] = (vibLut[i] * op.freqHigh / 8) * FIXEDPT * VIBFAC;
                         } else
-                            vibVal3 = Operator.vibValConst;
+                            vibVal3 = vibValConst;
 
                         if (op.tremolo)
                             tremVal3 = tremLut; // tremolo enabled, use table
                         else
-                            tremVal3 = Operator.tremValConst;
+                            tremVal3 = tremValConst;
 
                         // calculate channel output
                         for (int i = 0; i < endSamples; i++) {
@@ -3913,35 +3878,35 @@ public class YmF262 {
                             for (int i = 0; i < endSamples; i++)
                                 vibVal1[i] = (vibLut[i] * op.freqHigh / 8) * FIXEDPT * VIBFAC;
                         } else
+                            vibVal1 = vibValConst;
                         Operator cPtr9 = this.ops[7 + 9];
                         if ((cPtr9.vibrato) && (cPtr9.opState == OF_TYPE_OFF)) {
-                            vibVal1 = Operator.vibValConst;
-                            vibVal2 = vibValVar2;
+                            vibVal2 = vibvalVar2;
                             for (int i = 0; i < endSamples; i++)
                                 vibVal2[i] = (vibLut[i] * cPtr9.freqHigh / 8) * FIXEDPT * VIBFAC;
                         } else
-                            vibVal2 = Operator.vibValConst;
+                            vibVal2 = vibValConst;
 
                         if (op.tremolo)
                             tremVal1 = tremLut; // tremolo enabled, use table
                         else
+                            tremVal1 = tremValConst;
                         if (cPtr9.tremolo)
-                            tremVal1 = Operator.tremValConst;
                             tremVal2 = tremLut; // tremolo enabled, use table
                         else
-                            tremVal2 = Operator.tremValConst;
+                            tremVal2 = tremValConst;
 
                         op = this.ops[8];
                         cPtr9 = this.ops[8 + 9];
                         if ((cPtr9.vibrato) && (cPtr9.opState == OF_TYPE_OFF)) {
-                            vibVal4 = vibValVar2;
+                            vibVal4 = vibvalVar2;
                             for (int i = 0; i < endSamples; i++)
                                 vibVal4[i] = (vibLut[i] * cPtr9.freqHigh / 8) * FIXEDPT * VIBFAC;
                         } else
-                            vibVal4 = Operator.vibValConst;
+                            vibVal4 = vibValConst;
 
                         if (cPtr9.tremolo) tremVal4 = tremLut; // tremolo enabled, use table
-                        else tremVal4 = Operator.tremValConst;
+                        else tremVal4 = tremValConst;
 
                         // calculate channel output
                         op = this.ops[0]; // set op to something useful (else it stays at Op[8])
@@ -4026,11 +3991,11 @@ public class YmF262 {
                                         for (int i = 0; i < endSamples; i++)
                                             vibVal1[i] = (vibLut[i] * op.freqHigh / 8) * FIXEDPT * VIBFAC;
                                     } else
-                                        vibVal1 = Operator.vibValConst;
+                                        vibVal1 = vibValConst;
                                     if (op.tremolo)
                                         tremVal1 = tremLut; // tremolo enabled, use table
                                     else
-                                        tremVal1 = Operator.tremValConst;
+                                        tremVal1 = tremValConst;
 
                                     // calculate channel output
                                     for (int i = 0; i < endSamples; i++) {
@@ -4055,15 +4020,15 @@ public class YmF262 {
                                         for (int i = 0; i < endSamples; i++)
                                             vibVal1[i] = (vibLut[i] * this.ops[ccPtr + 9].freqHigh / 8) * FIXEDPT * VIBFAC;
                                     } else
+                                        vibVal1 = vibValConst;
                                     if (this.ops[ccPtr + 9].tremolo)
-                                        vibVal1 = Operator.vibValConst;
                                         tremVal1 = tremLut; // tremolo enabled, use table
                                     else
+                                        tremVal1 = tremValConst;
                                     if (this.ops[ccPtr + 3].tremolo)
-                                        tremVal1 = Operator.tremValConst;
                                         tremVal2 = tremLut; // tremolo enabled, use table
                                     else
-                                        tremVal2 = Operator.tremValConst;
+                                        tremVal2 = tremValConst;
 
                                     // calculate channel output
                                     for (int i = 0; i < endSamples; i++) {
@@ -4090,7 +4055,7 @@ public class YmF262 {
                                     if (this.ops[ccPtr + 3 + 9].tremolo)
                                         tremVal1 = tremLut; // tremolo enabled, use table
                                     else
-                                        tremVal1 = Operator.tremValConst;
+                                        tremVal1 = tremValConst;
 
                                     // calculate channel output
                                     for (int i = 0; i < endSamples; i++) {
@@ -4116,11 +4081,11 @@ public class YmF262 {
                                         for (int i = 0; i < endSamples; i++)
                                             vibVal1[i] = (vibLut[i] * this.ops[ccPtr + 0].freqHigh / 8) * FIXEDPT * VIBFAC;
                                     } else
+                                        vibVal1 = vibValConst;
                                     if (this.ops[ccPtr + 0].tremolo)
-                                        vibVal1 = Operator.vibValConst;
                                         tremVal1 = tremLut; // tremolo enabled, use table
                                     else
-                                        tremVal1 = Operator.tremValConst;
+                                        tremVal1 = tremValConst;
 
                                     // calculate channel output
                                     for (int i = 0; i < endSamples; i++) {
@@ -4145,19 +4110,19 @@ public class YmF262 {
                                         for (int i = 0; i < endSamples; i++)
                                             vibVal1[i] = (vibLut[i] * this.ops[ccPtr + 9].freqHigh / 8) * FIXEDPT * VIBFAC;
                                     } else
+                                        vibVal1 = vibValConst;
                                     if (this.ops[ccPtr + 9].tremolo)
-                                        vibVal1 = Operator.vibValConst;
                                         tremVal1 = tremLut; // tremolo enabled, use table
                                     else
+                                        tremVal1 = tremValConst;
                                     if (this.ops[ccPtr + 3].tremolo)
-                                        tremVal1 = Operator.tremValConst;
                                         tremVal2 = tremLut; // tremolo enabled, use table
                                     else
+                                        tremVal2 = tremValConst;
                                     if (this.ops[ccPtr + 3 + 9].tremolo)
-                                        tremVal2 = Operator.tremValConst;
                                         tremVal3 = tremLut; // tremolo enabled, use table
                                     else
-                                        tremVal3 = Operator.tremValConst;
+                                        tremVal3 = tremValConst;
 
                                     // calculate channel output
                                     for (int i = 0; i < endSamples; i++) {
@@ -4194,21 +4159,21 @@ public class YmF262 {
                             for (int i = 0; i < endSamples; i++)
                                 vibVal1[i] = (vibLut[i] * this.ops[ccPtr + 0].freqHigh / 8) * FIXEDPT * VIBFAC;
                         } else
+                            vibVal1 = vibValConst;
                         if ((this.ops[ccPtr + 9].vibrato) && (this.ops[ccPtr + 9].opState != OF_TYPE_OFF)) {
-                            vibVal1 = Operator.vibValConst;
-                            vibVal2 = vibValVar2;
+                            vibVal2 = vibvalVar2;
                             for (int i = 0; i < endSamples; i++)
                                 vibVal2[i] = (vibLut[i] * this.ops[ccPtr + 9].freqHigh / 8) * FIXEDPT * VIBFAC;
                         } else
+                            vibVal2 = vibValConst;
                         if (this.ops[ccPtr + 0].tremolo)
-                            vibVal2 = Operator.vibValConst;
                             tremVal1 = tremLut; // tremolo enabled, use table
                         else
+                            tremVal1 = tremValConst;
                         if (this.ops[ccPtr + 9].tremolo)
-                            tremVal1 = Operator.tremValConst;
                             tremVal2 = tremLut; // tremolo enabled, use table
                         else
-                            tremVal2 = Operator.tremValConst;
+                            tremVal2 = tremValConst;
 
                         // calculate channel output
                         for (int i = 0; i < endSamples; i++) {
@@ -4235,7 +4200,7 @@ public class YmF262 {
                             }
                         }
                     } else {
-                        if (op.is4op) { // this is more correct
+                        if (op.is4Op) { // this is more correct
                             if ((this.adlibReg[ARC_FEEDBACK + k + 3] & 1) != 0) {
                                 // FM-AM-style synthesis ((op1[fb] * op2) + (op3 * op4))
                                 if ((this.ops[ccPtr + 0].opState != OF_TYPE_OFF) || (this.ops[ccPtr + 9].opState != OF_TYPE_OFF)) {
@@ -4246,7 +4211,7 @@ public class YmF262 {
                                     } else
                                         vibVal1 = vibValConst;
                                     if ((this.ops[ccPtr + 9].vibrato) && (this.ops[ccPtr + 9].opState != OF_TYPE_OFF)) {
-                                        vibVal2 = vibval_var2;
+                                        vibVal2 = vibvalVar2;
                                         for (int i = 0; i < endSamples; i++)
                                             vibVal2[i] = (vibLut[i] * this.ops[ccPtr + 9].freqHigh / 8) * FIXEDPT * VIBFAC;
                                     } else
@@ -4258,7 +4223,7 @@ public class YmF262 {
                                     if (this.ops[ccPtr + 9].tremolo)
                                         tremVal2 = tremLut; // tremolo enabled, use table
                                     else
-                                        tremVal2 = Operator.tremValConst;
+                                        tremVal2 = tremValConst;
 
                                     // calculate channel output
                                     for (int i = 0; i < endSamples; i++) {
@@ -4285,11 +4250,11 @@ public class YmF262 {
                                     if (this.ops[ccPtr + 3].tremolo)
                                         tremVal1 = tremLut; // tremolo enabled, use table
                                     else
+                                        tremVal1 = tremValConst;
                                     if (this.ops[ccPtr + 3 + 9].tremolo)
-                                        tremVal1 = Operator.tremValConst;
                                         tremVal2 = tremLut; // tremolo enabled, use table
                                     else
-                                        tremVal2 = Operator.tremValConst;
+                                        tremVal2 = tremValConst;
 
                                     // calculate channel output
                                     for (int i = 0; i < endSamples; i++) {
@@ -4322,27 +4287,27 @@ public class YmF262 {
                                     } else
                                         vibVal1 = vibValConst;
                                     if ((this.ops[ccPtr + 9].vibrato) && (this.ops[ccPtr + 9].opState != OF_TYPE_OFF)) {
-                                        vibVal2 = vibValVar2;
+                                        vibVal2 = vibvalVar2;
                                         for (int i = 0; i < endSamples; i++)
                                             vibVal2[i] = (vibLut[i] * this.ops[ccPtr + 9].freqHigh / 8) * FIXEDPT * VIBFAC;
                                     } else
+                                        vibVal2 = vibValConst;
                                     if (this.ops[ccPtr + 0].tremolo)
-                                        vibVal2 = Operator.vibValConst;
                                         tremVal1 = tremLut; // tremolo enabled, use table
                                     else
+                                        tremVal1 = tremValConst;
                                     if (this.ops[ccPtr + 9].tremolo)
-                                        tremVal1 = Operator.tremValConst;
                                         tremVal2 = tremLut; // tremolo enabled, use table
                                     else
+                                        tremVal2 = tremValConst;
                                     if (this.ops[ccPtr + 3].tremolo)
-                                        tremVal2 = Operator.tremValConst;
                                         tremVal3 = tremLut; // tremolo enabled, use table
                                     else
+                                        tremVal3 = tremValConst;
                                     if (this.ops[ccPtr + 3 + 9].tremolo)
-                                        tremVal3 = Operator.tremValConst;
                                         tremVal4 = tremLut; // tremolo enabled, use table
                                     else
-                                        tremVal4 = Operator.tremValConst;
+                                        tremVal4 = tremValConst;
 
                                     // calculate channel output
                                     for (int i = 0; i < endSamples; i++) {
@@ -4383,21 +4348,21 @@ public class YmF262 {
                             for (int i = 0; i < endSamples; i++)
                                 vibVal1[i] = (vibLut[i] * this.ops[ccPtr + 0].freqHigh / 8) * FIXEDPT * VIBFAC;
                         } else
+                            vibVal1 = vibValConst;
                         if ((this.ops[ccPtr + 9].vibrato) && (this.ops[ccPtr + 9].opState != OF_TYPE_OFF)) {
-                            vibVal1 = Operator.vibValConst;
-                            vibVal2 = vibValVar2;
+                            vibVal2 = vibvalVar2;
                             for (int i = 0; i < endSamples; i++)
                                 vibVal2[i] = (vibLut[i] * this.ops[ccPtr + 9].freqHigh / 8) * FIXEDPT * VIBFAC;
                         } else
+                            vibVal2 = vibValConst;
                         if (this.ops[ccPtr + 0].tremolo)
-                            vibVal2 = Operator.vibValConst;
                             tremVal1 = tremLut; // tremolo enabled, use table
                         else
+                            tremVal1 = tremValConst;
                         if (this.ops[ccPtr + 9].tremolo)
-                            tremVal1 = Operator.tremValConst;
                             tremVal2 = tremLut; // tremolo enabled, use table
                         else
-                            tremVal2 = Operator.tremValConst;
+                            tremVal2 = tremValConst;
 
                         // calculate channel output
                         for (int i = 0; i < endSamples; i++) {
