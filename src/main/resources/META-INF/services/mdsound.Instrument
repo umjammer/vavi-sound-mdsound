@@ -63,4 +63,6 @@ mdsound.instrument.YmFmYm2203Inst
 mdsound.instrument.YmFmYm2608Inst
 mdsound.instrument.YmFmYm2610Inst
 mdsound.instrument.YmFmYm2151Inst
+mdsound.instrument.SimpleYm3438Inst
 mdsound.instrument.MameYm3812Inst
+mdsound.instrument.VaviYm3438Inst
