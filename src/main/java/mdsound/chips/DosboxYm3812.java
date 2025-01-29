@@ -536,32 +536,32 @@ public class DosboxYm3812 {
                     mfbi = 0;
             }
 
-            public void changeFrequency(int chanBase, int regBase, byte[] adlibReg, double[] frqMul, double recipSamp) {
+            public void changeFrequency(int chanBase, int regBase, byte[] adlibReg, double[] frqMul, double recIpSamp) {
                 // frequency
                 int frn = (((adlibReg[ARC_KON_BNUM + chanBase]) & 3) << 8) + (adlibReg[ARC_FREQ_NUM + chanBase] & 0xff);
                 // block number/octave
                 int oct = (adlibReg[ARC_KON_BNUM + chanBase] >> 2) & 7;
-                freqHigh = (frn >> 7) & 7;
+                this.freqHigh = (frn >> 7) & 7;
 
                 // keysplit
                 int noteSel = (adlibReg[8] >> 6) & 1;
-                tOff = ((frn >> 9) & (noteSel ^ 1)) | ((frn >> 8) & noteSel);
-                tOff += (oct << 1);
+                this.tOff = ((frn >> 9) & (noteSel ^ 1)) | ((frn >> 8) & noteSel);
+                this.tOff += (oct << 1);
 
                 // envelope scaling (KSR)
-                if ((adlibReg[ARC_TVS_KSR_MUL + regBase] & 0x10) == 0) tOff >>= 2;
+                if ((adlibReg[ARC_TVS_KSR_MUL + regBase] & 0x10) == 0) this.tOff >>= 2;
 
                 // 20+a0+b0:
                 tInc = (int) ((((double) (frn << oct)) * frqMul[adlibReg[ARC_TVS_KSR_MUL + regBase] & 15]));
                 // 40+a0+b0:
                 double volIn = (double) (adlibReg[ARC_KSL_OUTLEV + regBase] & 63) +
                         ksLMul[(adlibReg[ARC_KSL_OUTLEV + regBase] & 0xff) >> 6] * ksLev[oct][frn >> 6];
-                vol = Math.pow(FL2, volIn * -0.125 - 14);
+                this.vol = Math.pow(FL2, volIn * -0.125 - 14);
 
                 // Operator frequency changed, care about features that depend on it
-                changeAttackRate((adlibReg[ARC_ATTR_DECR + regBase] & 0xff) >> 4, recipSamp);
-                changeDecayRate(adlibReg[ARC_ATTR_DECR + regBase] & 15, recipSamp);
-                changeReleaseRate(adlibReg[ARC_SUSL_RELR + regBase] & 15, recipSamp);
+                this.changeAttackRate((adlibReg[ARC_ATTR_DECR + regBase] & 0xff) >> 4, recIpSamp);
+                this.changeDecayRate(adlibReg[ARC_ATTR_DECR + regBase] & 15, recIpSamp);
+                this.changeReleaseRate(adlibReg[ARC_SUSL_RELR + regBase] & 15, recIpSamp);
             }
 
             public void enable(int regBase, int act_type, byte[] wave_sel) {

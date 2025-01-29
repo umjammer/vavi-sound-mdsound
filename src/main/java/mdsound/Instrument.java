@@ -104,6 +104,7 @@ public interface Instrument {
         void setPan(int chipId, int data);
     }
 
+    // TODO gross
     interface PannableInstrument extends Instrument, Pannable {
     }
 

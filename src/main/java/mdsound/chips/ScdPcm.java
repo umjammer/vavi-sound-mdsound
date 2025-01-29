@@ -299,11 +299,15 @@ public class ScdPcm {
         }
 
         for (int j = 0; j < length; j++) {
-            bufL[j] = MDSound.limit(bufL[j], Short.MAX_VALUE, Short.MIN_VALUE);
-            bufR[j] = MDSound.limit(bufR[j], Short.MAX_VALUE, Short.MIN_VALUE);
+            bufL[j] = limit(bufL[j], Short.MAX_VALUE, Short.MIN_VALUE);
+            bufR[j] = limit(bufR[j], Short.MAX_VALUE, Short.MIN_VALUE);
         }
 
         return 0;
+    }
+
+    private static int limit(int v, int max, int min) {
+        return Math.min(max, Math.max(v, min));
     }
 
     public void start(int clock) {
