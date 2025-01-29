@@ -3,91 +3,94 @@
         Copyright (C) by cisc 1998, 2003.
 ------------------------------------------------------------------------------
 
-【概要】
-	C++ による FM/PSG 音源の実装です。
+[Overview]
 
-	AY8910, YM2203, YM2151, YM2608, YM2610 相当のインターフェースも
-	実装してあります。
+  This is an implementation of an FM/PSG sound source written in C++.
 
+  It also implements interfaces equivalent to AY8910, YM2203, YM2151, YM2608, and YM2610.
 
-【使い方】
-	(TODO:中身を書く)
+[Usage]
 
-【注意】
-	以前のバージョンから幾分手を加えました。インターフェースは
-	いじっていないつもりですが、何かしらのバグが隠れているかもしれません。
+  (TODO:Write contents)
 
-	YM2610 は動作チェックすらしていません。
+[Caution]
 
-	線形補完モード(interpolation)は廃止されました。
-	Init() の引数仕様は変わっていませんが、interpolation = true にしても
-	動作は変わりません。
+  This version has been slightly modified from the previous version.
+  I don't think I've changed the interface, but there may be some hidden bugs.
 
-	OPNA::Init/SetRate で与えるチップクロックの値の仕様が
-	以前の M88 に搭載されていたバージョンと異なっています．
+  I haven't even checked the operation of the YM2610.
 
+  Linear interpolation mode has been discontinued.
+  The argument specifications for Init() have not changed,
+  but the operation will not change even if you set interpolation = true.
 
-【著作権、免責規定】
+  The specifications for the chip clock value given by OPNA::Init/SetRate
+  are different from the version installed in previous M88s.
 
-	・本ソースコードは作者(cisc@retropc.net) が著作権を所有しています。
+[Copyright, Disclaimer]
 
-	・本ソースコードはあるがままに提供されるものであり，
-	  暗黙及び明示的な保証を一切含みません．
+- The author (cisc@retropc.net) owns the copyright of this source code.
 
-	・本ソースコードを利用したこと，利用しなかったこと，
-	  利用できなかったことに関して生じたあるいは生じると予測される
-	  損害について，作者は一切責任を負いません．
+- This source code is provided as is, without any explicit or implicit warranty.
 
-	・本ソースコードは，以下の制限を満たす限り自由に改変・組み込み・
-	  配布・利用することができます．
+- The author assumes no responsibility for any damages incurred or expected to occur as a result of using,
+  not using, or being unable to use this source code.
 
-	  1. 本ソフトの由来(作者, 著作権)を明記すること.
-	  2. 配布する際にはフリーソフトとすること．
-	  3. 改変したソースコードを配布する際は改変内容を明示すること.
-	  4. ソースコードを配布する際にはこのテキストを一切改変せずに
-	     そのまま添付すること．
+- This source code may be freely modified, incorporated, distributed, and used,
+  as long as the following restrictions are met.
 
-	・公開の際に作者への連絡を頂ければ幸いです．
+  1. The origin of this software (author, copyright) must be clearly stated.
+  2. When distributing, it must be free software.
+  3. When distributing modified source code, the changes must be clearly stated.
+  4. When distributing the source code, this text must be included as is, without any modifications.
 
-	・商用ソフト(シェアウェア含む) に本ソースコードの一部，または
-	  全部を組み込む際には，事前に作者の合意を得る必要があります．
+- We would appreciate it if you could contact the author when releasing it.
 
+- When incorporating all or part of this source code into commercial software (including shareware),
+  you must obtain the author's consent in advance.
 
-【変更点】
-008	030902	・出力サンプリングレートの設定を、チップ元来の合成サンプ
-                  リングレートと異なる設定にするとエンベロープがおかしく
-                  なる問題を修正。
+[Changes]
 
-007a	030608	・領域外アクセスがあったのを修正 (Thanks to ＰＩ．様)
+008 030902
+ - Fixed the problem that envelopes become strange when the output sampling rate is set to a different value
+   than the chip's original synthesis sampling rate.
 
-007	030607	・再現性の向上
-		・OPN: SSG-EG のサポート
-		・線形補完の廃止
-		・asm 版の廃止
-		・マルチスレッドフリーになった？
+007a 030608
+ - Fixed out-of-bounds access (Thanks to PI.)
 
-006	010330	・再現性に関していくらか手直し(正弦波，出力タイミング等)
+007 030607
+ - Improved reproducibility
+ - OPN: Support for SSG-EG
+ - Abolition of linear interpolation
+ - Abolition of asm version
+ - Multi-thread free now?
 
-005	010317	・OPN: FM 音源の合成周波数が出力周波数よりも低いときに，
-		  補完を使うと音痴になる/音がまともに出なくなる問題を修正.
-		・FM: 補完を使わない時の精度を上げてみる．
-		  問題が起きたら fmgeninl.h の FM_RATIOBITS を 8 に戻すと吉．
+006 010330
+ - Some tweaks to reproducibility (sine wave, output timing, etc.)
 
-004a	010311	・OPM: ノイズをそこそこ聞けるレベル(？)まで修正.
-		・OPNA/OPM: FM_USE_CALC2 廃止.
-		・デグレ修正, なんのために cvs で管理しているんだか…(T-T
-		  OPNB: ADPCMB ROM マスク作成ミス.
-		  OPNB: ADPCMA ステータスフラグ関係の挙動修復.
-		  OPM: LFO パラメータの初期化を忘れていたのを修正.
+005 010317
+ - OPN: Fixed the problem that the sound becomes tone-deaf/does not sound properly when using interpolation
+   when the synthesis frequency of the FM sound source is lower than the output frequency.
+ - FM: Try to improve the accuracy when not using interpolation. If problems occur,
+   try changing FM_RATIOBITS in fmgeninl.h back to 8.
 
-003	010124	・OPNA/OPM： 実際には補完前の値を出力していたバグを修正.
+004a 010311
+ - OPM: Fixed noise to a level where it can be heard.
+ - OPNA/OPM: Abolished FM_USE_CALC2.
+ - Fixed regressions, I wonder why they're managed in cvs... (T-T
+   - OPNB: Mistake in creating ADPCMB ROM mask.
+   - OPNB: Repaired behavior related to ADPCMA status flags.
+   - OPM: Fixed forgetting to initialize LFO parameters.
 
-002	010123	・合成周波数が出力周波数より低いときでも補間が効くようにする.
-		・OPN: 補間時にプリスケーラの設定を変更したときに音化けする
-		  バグを修正.
-		・OPNA/B: LFO が効かないバグを修正.
+003 010124
+ - OPNA/OPM: Fixed bug that actually output the value before interpolation.
 
-001 	000928	・初期バージョン
+002 010123
+ - Make interpolation effective even when the synthesis frequency is lower than the output frequency.
+ - OPN: Fixed bug that caused garbled sound when changing prescaler settings during interpolation.
+ - OPNA/B: Fixed bug that caused LFO not to work.
 
+001 000928
+ - Initial version
 
 $Id: readme.txt,v 1.1 2003/06/07 08:25:20 cisc Exp $

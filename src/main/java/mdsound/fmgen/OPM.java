@@ -1,3 +1,9 @@
+/*
+ * FM Sound Generator
+ *
+ * Copyright (C) cisc 1998, 2001.
+ */
+
 package mdsound.fmgen;
 
 import java.util.Random;
@@ -6,9 +12,9 @@ import static mdsound.fmgen.Fmgen.limit;
 
 
 /**
- * A sound source unit that produces a sound similar to OPM(?)
- * <p>
- * YM2151: works
+ * A sound source unit that produces a sound similar to YM2151 (OPM)
+ *
+ * @author cisc
  */
 public class OPM extends Timer {
 

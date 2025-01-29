@@ -1,32 +1,35 @@
 /*
- * FM Sound Generator
- * Copyright (C) cisc 1998, 2001.
+ * FM Sound Generator - Core Unit
+ *
+ * Copyright (C) cisc 1998, 2003.
  */
 
 package mdsound.fmgen;
 
 
 /**
- * FM Sound Generator - Core Unit
- * Copyright (C) cisc 1998, 2003.
- * <p>
- * $Id: Fmgen.cpp,v 1.49 2003/09/02 14:51:04 cisc Exp $
- * <p>
- * reference:
+ * FM Sound Generator - Core Unit.
+ *
+ * <h4>reference:</h4>
  * FM Sound generator for MPcm.A.MPcm.E., written by Tatsuyuki Satoh.
- * <p>
- * Mystery:
+ *
+ * <h4>Mystery:</h4>
  * OPNB CSM mode (I don't really understand the specifications)
- * <p>
- * limit:
+ *
+ * <h4>limit:</h4>
  * - When using SSGEC with AR!=31, the waveform may differ from the actual one.
- * <p>
- * Acknowledgements:
+ *
+ * <h4>Acknowledgements:</h4>
+ * <pre>
  * Tatsuyuki Satoh-san(Fm.c)
  * Hiromitsu Shioya-san(ADPCM-A)
  * DMP-SOFT.-san(OPNB)
  * KAJA-san(test program)
  * thank everyone who has provided us with various advice and support on message boards, etc.
+ * </pre>
+ *
+ * @author cisc
+ * @version $Id: Fmgen.cpp,v 1.49 2003/09/02 14:51:04 cisc Exp $
  */
 public class Fmgen {
 
@@ -51,7 +54,7 @@ public class Fmgen {
     public static final int FM_SINEPRESIS = 2;
     public static final int FM_OPSINBITS = 10;
     public static final int FM_OPSINENTS = 1 << FM_OPSINBITS;
-    // eg の count のシフト値
+    // eg shift value of count
     public static final int FM_EGCBITS = 18;
     public static final int FM_LFOCBITS = 14;
     public static final int FM_PGBITS = 9;

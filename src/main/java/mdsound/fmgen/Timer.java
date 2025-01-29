@@ -1,6 +1,17 @@
+/*
+ * FM Sound Generator
+ *
+ * Copyright (C) cisc 1998, 2001.
+ */
+
 package mdsound.fmgen;
 
 
+/**
+ * Timer.
+ *
+ * @author cisc
+ */
 public abstract class Timer {
 
     public void reset() {
@@ -67,12 +78,12 @@ public abstract class Timer {
         regTa[addr & 1] = data & 0xff;
         tmp = (regTa[0] << 2) + (regTa[1] & 3);
         timerA = (1024 - tmp) * timerStep;
-//        logger.log(Level.TRACE, "Timer A = %d   %d us".formatted(tmp, timerA >> 16));
+//logger.log(Level.TRACE, "Timer A = %d   %d us".formatted(tmp, timerA >> 16));
     }
 
     protected void setTimerB(int data) {
         timerB = (256 - (data & 0xff)) * timerStep;
-//        logger.log(Level.TRACE, "Timer B = %d   %d us".formatted(data, timerB >> 12));
+//logger.log(Level.TRACE, "Timer B = %d   %d us".formatted(data, timerB >> 12));
     }
 
     protected void setTimerControl(int data) {
