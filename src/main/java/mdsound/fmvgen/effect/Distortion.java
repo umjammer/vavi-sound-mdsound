@@ -1,9 +1,20 @@
+/*
+ * https://web.archive.org/web/20210116062027/https://vstcpp.wpblog.jp/?p=1426
+ */
 
 package mdsound.fmvgen.effect;
 
+
 /**
- * Filter Class
- * @see "https://vstcpp.wpblog.jp/?page_id=728"
+ * Overdrive distortion is an effect that distorts the sound by amplifying the input signal
+ * after cutting out unnecessary low-frequency sounds, and clipping anything that exceeds
+ * the maximum amplitude. Overdrive and distortion are generally distinguished only by the
+ * amount of amplification, so they will be treated together here. The descriptions of fuzz,
+ * overdrive, and distortion seem to vary depending on the book or website, but here we will
+ * define overdrive distortion as an input signal that is filtered, amplified, and clipped.
+ *
+ * @author twitter:@vstcpp
+ * @see "https://web.archive.org/web/20210116062027/https://vstcpp.wpblog.jp/?p=1426"
  */
 public class Distortion {
 

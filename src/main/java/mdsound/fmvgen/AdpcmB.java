@@ -1,5 +1,8 @@
-package mdsound.fmvgen;
+/*
+ * https://github.com/kuma4649/MDSound
+ */
 
+package mdsound.fmvgen;
 
 import mdsound.fmvgen.effect.ReversePhase;
 
@@ -73,6 +76,8 @@ public class AdpcmB {
     private final int efcCh;
     private final int num;
 
+    private final ReversePhase reversePhase = ReversePhase.getInstance();
+
     public AdpcmB(int num, Fmvgen.Effects effects, int efcCh) {
         this.num = num;
         this.effects = effects;
@@ -106,8 +111,8 @@ public class AdpcmB {
                     effects.hpflpf.mix(efcCh, sL, sR);
                     effects.compressor.mix(efcCh, sL, sR);
 
-                    sL[0] = (int) (sL[0] * panL) * ReversePhase.adpcm[num][0];
-                    sR[0] = (int) (sR[0] * panR) * ReversePhase.adpcm[num][1];
+                    sL[0] = (int) (sL[0] * panL) * reversePhase.adpcm[num][0];
+                    sR[0] = (int) (sR[0] * panR) * reversePhase.adpcm[num][1];
                     int revSampleL = (int) (sL[0] * effects.reverb.sendLevel[efcCh]);
                     int revSampleR = (int) (sR[0] * effects.reverb.sendLevel[efcCh]);
                     dest[ptrDest + 0] += sL[0];
@@ -132,8 +137,8 @@ public class AdpcmB {
                     effects.hpflpf.mix(efcCh, sL, sR);
                     effects.compressor.mix(efcCh, sL, sR);
 
-                    sL[0] = (int) (sL[0] * panL) * ReversePhase.adpcm[num][0];
-                    sR[0] = (int) (sR[0] * panR) * ReversePhase.adpcm[num][1];
+                    sL[0] = (int) (sL[0] * panL) * reversePhase.adpcm[num][0];
+                    sR[0] = (int) (sR[0] * panR) * reversePhase.adpcm[num][1];
                     int revSampleL = (int) (sL[0] * effects.reverb.sendLevel[efcCh]);
                     int revSampleR = (int) (sR[0] * effects.reverb.sendLevel[efcCh]);
                     dest[ptrDest + 0] += sL[0];
@@ -165,8 +170,8 @@ stop:
                     effects.hpflpf.mix(efcCh, sL, sR);
                     effects.compressor.mix(efcCh, sL, sR);
 
-                    sL[0] = (int) (sL[0] * panL) * ReversePhase.adpcm[num][0];
-                    sR[0] = (int) (sR[0] * panR) * ReversePhase.adpcm[num][1];
+                    sL[0] = (int) (sL[0] * panL) * reversePhase.adpcm[num][0];
+                    sR[0] = (int) (sR[0] * panR) * reversePhase.adpcm[num][1];
                     int revSampleL = (int) (sL[0] * effects.reverb.sendLevel[efcCh]);
                     int revSampleR = (int) (sR[0] * effects.reverb.sendLevel[efcCh]);
                     dest[ptrDest + 0] += sL[0];

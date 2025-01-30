@@ -1,3 +1,7 @@
+/*
+ * https://github.com/kuma4649/MDSound
+ */
+
 package mdsound.fmvgen;
 
 import java.io.IOException;
@@ -40,6 +44,8 @@ public class OPNA2 extends Opna.OPNABase {
     protected byte prescale;
 
     public Effects effects;
+
+    private final ReversePhase reversePhase = ReversePhase.getInstance();
 
     private static class Rhythm {
         /** pan */
@@ -520,8 +526,8 @@ public class OPNA2 extends Opna.OPNABase {
 
                         sL[0] = sL[0] & maskL;
                         sR[0] = sR[0] & maskR;
-                        sL[0] *= ReversePhase.rhythm[i][0];
-                        sR[0] *= ReversePhase.rhythm[i][1];
+                        sL[0] *= reversePhase.rhythm[i][0];
+                        sR[0] *= reversePhase.rhythm[i][1];
                         int revSampleL = (int) (sL[0] * effects.reverb.sendLevel[r.efcCh]);
                         int revSampleR = (int) (sR[0] * effects.reverb.sendLevel[r.efcCh]);
                         buffer[dest + 0] += sL[0];

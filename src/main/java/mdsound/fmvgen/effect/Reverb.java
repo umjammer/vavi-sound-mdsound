@@ -1,5 +1,9 @@
+/*
+ * https://github.com/kuma4649/MDSound
+ */
 
 package mdsound.fmvgen.effect;
+
 
 public class Reverb {
 
@@ -43,10 +47,10 @@ public class Reverb {
             sendLevel[ch] = 0;
             return;
         }
-        // SendLevel[ch] = 1.0 / (2 << Math.max(Math.min((15 - n), 15), 0));
+        //sendLevel[ch] = 1.0 / (2 << Math.max(Math.min((15 - n), 15), 0));
         n = Math.max(Math.min(n, 15), 0);
         sendLevel[ch] = 1.0 * sl[n];
-        // logger.log(Level.TRACE, "%d %d".formatted(ch, SendLevel[ch]));
+//logger.log(Level.TRACE, "%d %d".formatted(ch, SendLevel[ch]));
     }
 
     private static final double[] sl = {

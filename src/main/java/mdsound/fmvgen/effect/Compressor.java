@@ -1,10 +1,16 @@
+/*
+ * https://web.archive.org/web/20200612094435/https://vstcpp.wpblog.jp/?p=1939
+ */
 
 package mdsound.fmvgen.effect;
 
+
 /**
- * Filter Class
+ * A compressor is an effector that adjusts the volume
+ * according to the sound pressure of the input audio.
  *
- * @see "https://vstcpp.wpblog.jp/?p=1939"
+ * @author twitter:@vstcpp
+ * @see "https://web.archive.org/web/20200612094435/https://vstcpp.wpblog.jp/?p=1939"
  */
 public class Compressor {
 

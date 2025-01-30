@@ -1,20 +1,31 @@
+/*
+ * https://web.archive.org/web/20200810215827/http://vstcpp.wpblog.jp/?p=1505
+ */
+
 package mdsound.fmvgen.effect;
 
+
+/**
+ * RingBuffer.
+ *
+ * @author twitter:@vstcpp
+ * @see "https://web.archive.org/web/20200810215827/http://vstcpp.wpblog.jp/?p=1505"
+ */
 public class RingBuffer {
 
     /** Read Position */
-    private int rpos;
+    private int rPos;
     /** Write position */
-    private int wpos;
+    private int wPos;
     /** Internal Buffer */
     private final float[] buf;
     private final int rbSize;
 
     /** Perform initialization */
-    public RingBuffer(int clock, float RB/* = 4.0f*/) {
+    public RingBuffer(int clock, float RB /* = 4.0f */) {
         rbSize = (int) (clock * RB);
-        rpos = 0;
-        wpos = (int) (rbSize / 2.0); // Set it to about half the buffer size for now.
+        rPos = 0;
+        wPos = (int) (rbSize / 2.0); // Set it to about half the buffer size for now.
 
         buf = new float[rbSize];
     }
@@ -33,17 +44,17 @@ public class RingBuffer {
         }
 
         // Set the write position to be the interval away from the read position
-        wpos = (rpos + interval) % rbSize;
+        wPos = (rPos + interval) % rbSize;
     }
 
     /**
-     * A function to read data from the internal buffer at read position {@link #rpos}
-     * @param pos Relative to the read position {@link #rpos}
+     * A function to read data from the internal buffer at read position {@link #rPos}
+     * @param pos Relative to the read position {@link #rPos}
      * (The relative position (pos) is used for effects such as chorus and pitch shifter.)
      */
     public float read(int pos/* = 0*/) {
-        // Calculate the actual read position from the read position (rpos) and relative position (pos).
-        int tmp = rpos + pos;
+        // Calculate the actual read position from the read position (rPos) and relative position (pos).
+        int tmp = rPos + pos;
         while (tmp < 0) {
             tmp += rbSize;
         }
@@ -54,20 +65,20 @@ public class RingBuffer {
     }
 
     /**
-     * A function that writes data to the internal buffer at write position {@link #wpos}.
+     * A function that writes data to the internal buffer at write position {@link #wPos}.
      */
     public void write(float in_) {
-        // Write a value to the write position (wpos)
-        buf[wpos] = in_;
+        // Write a value to the write position (wPos)
+        buf[wPos] = in_;
     }
 
     /**
-     * A function that advances the read position {@link #rpos}
-     * and write position {@link #wpos} of the internal buffer by one.
+     * A function that advances the read position {@link #rPos}
+     * and write position {@link #wPos} of the internal buffer by one.
      */
     public void update() {
-        // Advances the internal buffer's read position (rpos) and write position (wpos) by one.
-        rpos = (rpos + 1) % rbSize;
-        wpos = (wpos + 1) % rbSize;
+        // Advances the internal buffer's read position (rPos) and write position (wPos) by one.
+        rPos = (rPos + 1) % rbSize;
+        wPos = (wPos + 1) % rbSize;
     }
 }

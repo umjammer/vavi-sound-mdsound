@@ -1,12 +1,20 @@
+/*
+ * https://web.archive.org/web/20200918125433/https://vstcpp.wpblog.jp/?page_id=728
+ */
 
 package mdsound.fmvgen.effect;
 
+
 /**
- * Filter Class
+ * A high-pass filter is a filter that passes only audio with
+ * a frequency above the cutoff frequency.
  *
- * @see "https://vstcpp.wpblog.jp/?page_id=728"
+ * A low-pass filter is a filter that only passes audio below its cutoff frequency.
+ *
+ * @see "https://web.archive.org/web/20200918125433/https://vstcpp.wpblog.jp/?page_id=728"
  */
 public class HPFLPF {
+
     // Effector parameters
     private final int clock;
 

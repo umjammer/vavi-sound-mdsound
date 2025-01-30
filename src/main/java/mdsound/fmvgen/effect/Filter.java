@@ -1,6 +1,20 @@
+/*
+ * https://web.archive.org/web/20200918144534/https://vstcpp.wpblog.jp/?page_id=523
+ */
 
 package mdsound.fmvgen.effect;
 
+
+/**
+ * Filter.
+ *
+ * @author twitter:@vstcpp
+ * @see "https://web.archive.org/web/20200918144534/https://vstcpp.wpblog.jp/?page_id=523"
+ * @see "Audio-EQ-Cookbook; https://www.musicdsp.org/files/Audio-EQ-Cookbook.txt by MusicDSP"
+ * @see "C++ class implementation of RBJ Filters; www.musicdsp.org/files/CFxRbjFilter.h by MusicDSP"
+ * @see "How to make a BiQuad filter; https://www.g200kg.com/jp/docs/makingeffects/78743dea3f70c8c2f081b7d5187402ec75e6a6b8.html by g200kg"
+ * @see "Biquad filter; https://ufcpp.net/study/digital_filter/biquad.html by ++C++;// Unidentified Flight C"
+ */
 class Filter {
 
     public final static float convInt = 21474.83647f;

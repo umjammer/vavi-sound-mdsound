@@ -1,3 +1,7 @@
+/*
+ * https://github.com/kuma4649/MDSound
+ */
+
 package mdsound.fmvgen;
 
 import mdsound.fmgen.Fmgen;
@@ -33,6 +37,7 @@ public class FM6 {
     public int waveType = 0;
     public int waveCh = 0;
     public int waveCounter = 0;
+    private final ReversePhase reversePhase = ReversePhase.getInstance();
 
     protected int[] lfoTable = new int[8];
     private final Effects effects;
@@ -368,8 +373,8 @@ public class FM6 {
             effects.chorus.mix(efcStartCh + 0, l, r);
             effects.hpflpf.mix(efcStartCh + 0, l, r);
             effects.compressor.mix(efcStartCh + 0, l, r);
-            buf[0] = (int) ((dest[0] >> 1) * l[0] * panL[0]) * ReversePhase.fm[num][0][0];
-            buf[1] = (int) ((dest[0] & 0x1) * r[0] * panR[0]) * ReversePhase.fm[num][0][1];
+            buf[0] = (int) ((dest[0] >> 1) * l[0] * panL[0]) * reversePhase.fm[num][0][0];
+            buf[1] = (int) ((dest[0] & 0x1) * r[0] * panR[0]) * reversePhase.fm[num][0][1];
             buf[2] = (int) (buf[0] * effects.reverb.sendLevel[efcStartCh + 0]);
             buf[3] = (int) (buf[1] * effects.reverb.sendLevel[efcStartCh + 0]);
         }
@@ -382,8 +387,8 @@ public class FM6 {
             effects.chorus.mix(efcStartCh + 1, l, r);
             effects.hpflpf.mix(efcStartCh + 1, l, r);
             effects.compressor.mix(efcStartCh + 1, l, r);
-            l[0] = (int) ((dest[1] >> 1) * l[0] * panL[1]) * ReversePhase.fm[num][1][0];
-            r[0] = (int) ((dest[1] & 0x1) * r[0] * panR[1]) * ReversePhase.fm[num][1][1];
+            l[0] = (int) ((dest[1] >> 1) * l[0] * panL[1]) * reversePhase.fm[num][1][0];
+            r[0] = (int) ((dest[1] & 0x1) * r[0] * panR[1]) * reversePhase.fm[num][1][1];
             buf[0] += l[0];
             buf[1] += r[0];
             buf[2] += (int) (l[0] * effects.reverb.sendLevel[efcStartCh + 1]);
@@ -398,8 +403,8 @@ public class FM6 {
             effects.chorus.mix(efcStartCh + 2, l, r);
             effects.hpflpf.mix(efcStartCh + 2, l, r);
             effects.compressor.mix(efcStartCh + 2, l, r);
-            l[0] = (int) ((dest[2] >> 1) * l[0] * panL[2]) * ReversePhase.fm[num][2][0];
-            r[0] = (int) ((dest[2] & 0x1) * r[0] * panR[2]) * ReversePhase.fm[num][2][1];
+            l[0] = (int) ((dest[2] >> 1) * l[0] * panL[2]) * reversePhase.fm[num][2][0];
+            r[0] = (int) ((dest[2] & 0x1) * r[0] * panR[2]) * reversePhase.fm[num][2][1];
             buf[0] += l[0];
             buf[1] += r[0];
             buf[2] += (int) (l[0] * effects.reverb.sendLevel[efcStartCh + 2]);
@@ -414,8 +419,8 @@ public class FM6 {
             effects.chorus.mix(efcStartCh + 3, l, r);
             effects.hpflpf.mix(efcStartCh + 3, l, r);
             effects.compressor.mix(efcStartCh + 3, l, r);
-            l[0] = (int) ((dest[3] >> 1) * l[0] * panL[3]) * ReversePhase.fm[num][3][0];
-            r[0] = (int) ((dest[3] & 0x1) * r[0] * panR[3]) * ReversePhase.fm[num][3][1];
+            l[0] = (int) ((dest[3] >> 1) * l[0] * panL[3]) * reversePhase.fm[num][3][0];
+            r[0] = (int) ((dest[3] & 0x1) * r[0] * panR[3]) * reversePhase.fm[num][3][1];
             buf[0] += l[0];
             buf[1] += r[0];
             buf[2] += (int) (l[0] * effects.reverb.sendLevel[efcStartCh + 3]);
@@ -430,8 +435,8 @@ public class FM6 {
             effects.chorus.mix(efcStartCh + 4, l, r);
             effects.hpflpf.mix(efcStartCh + 4, l, r);
             effects.compressor.mix(efcStartCh + 4, l, r);
-            l[0] = (int) ((dest[4] >> 1) * l[0] * panL[4]) * ReversePhase.fm[num][4][0];
-            r[0] = (int) ((dest[4] & 0x1) * r[0] * panR[4]) * ReversePhase.fm[num][4][1];
+            l[0] = (int) ((dest[4] >> 1) * l[0] * panL[4]) * reversePhase.fm[num][4][0];
+            r[0] = (int) ((dest[4] & 0x1) * r[0] * panR[4]) * reversePhase.fm[num][4][1];
             buf[0] += l[0];
             buf[1] += r[0];
             buf[2] += (int) (l[0] * effects.reverb.sendLevel[efcStartCh + 4]);
@@ -446,8 +451,8 @@ public class FM6 {
             effects.chorus.mix(efcStartCh + 5, l, r);
             effects.hpflpf.mix(efcStartCh + 5, l, r);
             effects.compressor.mix(efcStartCh + 5, l, r);
-            l[0] = (int) ((dest[5] >> 1) * l[0] * panL[5]) * ReversePhase.fm[num][5][0];
-            r[0] = (int) ((dest[5] & 0x1) * r[0] * panR[5]) * ReversePhase.fm[num][5][1];
+            l[0] = (int) ((dest[5] >> 1) * l[0] * panL[5]) * reversePhase.fm[num][5][0];
+            r[0] = (int) ((dest[5] & 0x1) * r[0] * panR[5]) * reversePhase.fm[num][5][1];
             buf[0] += l[0];
             buf[1] += r[0];
             buf[2] += (int) (l[0] * effects.reverb.sendLevel[efcStartCh + 5]);
@@ -465,8 +470,8 @@ public class FM6 {
             effects.distortion.mix(efcStartCh + 0, l, r);
             effects.chorus.mix(efcStartCh + 0, l, r);
             effects.hpflpf.mix(efcStartCh + 0, l, r);
-            buf[0] = (int) ((dest[0] >> 1) * l[0] * panL[0]) * ReversePhase.fm[num][0][0];
-            buf[1] = (int) ((dest[0] & 0x1) * r[0] * panR[0]) * ReversePhase.fm[num][0][1];
+            buf[0] = (int) ((dest[0] >> 1) * l[0] * panL[0]) * reversePhase.fm[num][0][0];
+            buf[1] = (int) ((dest[0] & 0x1) * r[0] * panR[0]) * reversePhase.fm[num][0][1];
             buf[2] = (int) (buf[0] * effects.reverb.sendLevel[efcStartCh + 0]);
             buf[3] = (int) (buf[1] * effects.reverb.sendLevel[efcStartCh + 0]);
         }
@@ -477,8 +482,8 @@ public class FM6 {
             effects.distortion.mix(efcStartCh + 1, l, r);
             effects.chorus.mix(efcStartCh + 1, l, r);
             effects.hpflpf.mix(efcStartCh + 1, l, r);
-            l[0] = (int) ((dest[1] >> 1) * l[0] * panL[1]) * ReversePhase.fm[num][1][0];
-            r[0] = (int) ((dest[1] & 0x1) * r[0] * panR[1]) * ReversePhase.fm[num][1][1];
+            l[0] = (int) ((dest[1] >> 1) * l[0] * panL[1]) * reversePhase.fm[num][1][0];
+            r[0] = (int) ((dest[1] & 0x1) * r[0] * panR[1]) * reversePhase.fm[num][1][1];
             buf[0] += l[0];
             buf[1] += r[0];
             buf[2] += (int) (l[0] * effects.reverb.sendLevel[efcStartCh + 1]);
@@ -491,8 +496,8 @@ public class FM6 {
             effects.distortion.mix(efcStartCh + 2, l, r);
             effects.chorus.mix(efcStartCh + 2, l, r);
             effects.hpflpf.mix(efcStartCh + 2, l, r);
-            l[0] = (int) ((dest[2] >> 1) * l[0] * panL[2]) * ReversePhase.fm[num][2][0];
-            r[0] = (int) ((dest[2] & 0x1) * r[0] * panR[2]) * ReversePhase.fm[num][2][1];
+            l[0] = (int) ((dest[2] >> 1) * l[0] * panL[2]) * reversePhase.fm[num][2][0];
+            r[0] = (int) ((dest[2] & 0x1) * r[0] * panR[2]) * reversePhase.fm[num][2][1];
             buf[0] += l[0];
             buf[1] += r[0];
             buf[2] += (int) (l[0] * effects.reverb.sendLevel[efcStartCh + 2]);
@@ -505,8 +510,8 @@ public class FM6 {
             effects.distortion.mix(efcStartCh + 3, l, r);
             effects.chorus.mix(efcStartCh + 3, l, r);
             effects.hpflpf.mix(efcStartCh + 3, l, r);
-            l[0] = (int) ((dest[3] >> 1) * l[0] * panL[3]) * ReversePhase.fm[num][3][0];
-            r[0] = (int) ((dest[3] & 0x1) * r[0] * panR[3]) * ReversePhase.fm[num][3][1];
+            l[0] = (int) ((dest[3] >> 1) * l[0] * panL[3]) * reversePhase.fm[num][3][0];
+            r[0] = (int) ((dest[3] & 0x1) * r[0] * panR[3]) * reversePhase.fm[num][3][1];
             buf[0] += l[0];
             buf[1] += r[0];
             buf[2] += (int) (l[0] * effects.reverb.sendLevel[efcStartCh + 3]);
@@ -519,8 +524,8 @@ public class FM6 {
             effects.distortion.mix(efcStartCh + 4, l, r);
             effects.chorus.mix(efcStartCh + 4, l, r);
             effects.hpflpf.mix(efcStartCh + 4, l, r);
-            l[0] = (int) ((dest[4] >> 1) * l[0] * panL[4]) * ReversePhase.fm[num][4][0];
-            r[0] = (int) ((dest[4] & 0x1) * r[0] * panR[4]) * ReversePhase.fm[num][4][1];
+            l[0] = (int) ((dest[4] >> 1) * l[0] * panL[4]) * reversePhase.fm[num][4][0];
+            r[0] = (int) ((dest[4] & 0x1) * r[0] * panR[4]) * reversePhase.fm[num][4][1];
             buf[0] += l[0];
             buf[1] += r[0];
             buf[2] += (int) (l[0] * effects.reverb.sendLevel[efcStartCh + 4]);
@@ -533,8 +538,8 @@ public class FM6 {
             effects.distortion.mix(efcStartCh + 5, l, r);
             effects.chorus.mix(efcStartCh + 5, l, r);
             effects.hpflpf.mix(efcStartCh + 5, l, r);
-            l[0] = (int) ((dest[5] >> 1) * l[0] * panL[5]) * ReversePhase.fm[num][5][0];
-            r[0] = (int) ((dest[5] & 0x1) * r[0] * panR[5]) * ReversePhase.fm[num][5][1];
+            l[0] = (int) ((dest[5] >> 1) * l[0] * panL[5]) * reversePhase.fm[num][5][0];
+            r[0] = (int) ((dest[5] & 0x1) * r[0] * panR[5]) * reversePhase.fm[num][5][1];
             buf[0] += l[0];
             buf[1] += r[0];
             buf[2] += (int) (l[0] * effects.reverb.sendLevel[efcStartCh + 5]);
