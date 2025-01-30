@@ -1,3 +1,6 @@
+/*
+ * https://github.com/kuma4649/MDSound
+ */
 
 package mdsound;
 
@@ -8,7 +11,6 @@ import java.util.ServiceLoader;
 import dotnet4j.util.compat.Tuple;
 
 
-// TODO read
 public interface Instrument {
 
     /** for view */
