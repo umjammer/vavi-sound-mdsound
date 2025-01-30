@@ -1,3 +1,9 @@
+/*
+ * NSFPlay/NFSPlug project by Brezza.
+ *
+ * https://web.archive.org/web/20160301201825/http://www.pokipoki.org/dsa/
+ */
+
 package mdsound.np;
 
 import java.util.Random;
@@ -42,7 +48,7 @@ public class NpNesDmc {
 
     private final Random rnd = new Random();
 
-    private final int[][][][] tndTable; // [2][16][16][128];
+    private int[][][][] tndTable; // [2][16][16][128];
 
     private final int[] option = new int[10]; // OPT_END];
     private int mask;

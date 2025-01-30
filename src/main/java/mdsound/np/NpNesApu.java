@@ -1,13 +1,58 @@
+/*
+ MAME/MESS NES APU CORE
+
+ Based on the Nofrendo/Nosefart NES N2A03 sound emulation core written by
+ Matthew Conte (matt@conte.com) and redesigned for use in MAME/MESS by
+ Who Wants to Know? (wwtk@mail.com)
+
+ This core is written with the advise and consent of Matthew Conte and is
+ released under the GNU Public License.  This core is freely avaiable for
+ use in any freeware project, subject to the following terms:
+
+ Any modifications to this code must be duly noted in the source and
+ approved by Matthew Conte and myself prior to public submission.
+
+ timing notes:
+ master = 21477270
+ 2A03 clock = master/12
+ sequencer = master/89490 or CPU/7457
+
+ ---
+
+ NES_APU.C
+
+ Actual NES APU interface.
+
+ LAST MODIFIED 02/29/2004
+
+ - Based on Matthew Conte's Nofrendo/Nosefart core and redesigned to
+ use MAME system calls and to enable multiple APUs.  Sound at this
+ point should be just about 100% accurate, though I cannot tell for
+ certain as yet.
+
+ A queue interface is also available for additional speed.  However,
+ the implementation is not yet 100% (DPCM sounds are inaccurate),
+ so it is disabled by default.
+
+ ---
+
+ BUGFIXES:
+
+ - Various bugs concerning the DPCM channel fixed. (Oliver Achten)
+ - Fixed $4015 read behaviour. (Oliver Achten)
+ */
+
 package mdsound.np;
 
 
-//
-// NES 2A03
-//
-// Ported from NSFPlay 2.2 to VGMPlay (including C++ . C conversion)
-// by Valley Bell on 24 September 2013
-// Updated to NSFPlay 2.3 on 26 September 2013
-// (Note: Encoding is UTF-8)
+/**
+ * NES 2A03
+ *
+ * @version Ported from NSFPlay 2.2 to VGMPlay (including C++ -> C conversion) by Valley Bell on 24 September 2013<br/>
+ *          Updated to NSFPlay 2.3 on 26 September 2013
+ * @author Matthew Conte
+ * @author Valley Bell
+ */
 public class NpNesApu {
 
     // Master Clock: 21477272 (NTSC)

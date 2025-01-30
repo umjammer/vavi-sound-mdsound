@@ -1,3 +1,14 @@
+/*
+ * fmopl.c        -- 1999,2000 written by Tatsuyuki Satoh (MAME development).
+ * fmopl.c(fixed) -- (C) 2002 Jarek Burczynski.
+ * s_opl.c        -- 2001 written by Mamiya (NEZplug development).
+ * Fmgen.cpp      -- 1999,2000 written by cisc.
+ * fmpac.ill      -- 2000 created by NARUTO.
+ * MSX-Datapack
+ * YMU757 data sheet
+ * YM2143 data sheet
+ */
+
 package mdsound.np.chip;
 
 import java.util.Arrays;
@@ -53,7 +64,7 @@ import java.util.Arrays;
  */
 public class Emu2413 {
 
-    /* opll */
+    /** opll */
     static class Opll {
 
         public enum Tone {
@@ -67,7 +78,7 @@ public class Emu2413 {
             _281B
         }
 
-        /* slot */
+        /** slot */
         static class Slot {
 
             private static int DB_POS(double x) {

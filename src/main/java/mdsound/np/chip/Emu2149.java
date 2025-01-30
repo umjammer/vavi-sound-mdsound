@@ -1,6 +1,27 @@
+/*
+ * emu2149 v1.42
+ * https://github.com/digital-sound-antiques/emu2149
+ * Copyright (C) 2001-2022 Mitsutaka Okazaki
+ *
+ * This source refers to the following documents. The author would like to thank all the authors who have
+ * contributed to the writing of them.
+ * - psg.vhd        -- 2000 written by Kazuhiro Tsujikawa.
+ * - s_fme7.c       -- 1999,2000 written by Mamiya (NEZplug).
+ * - ay8910.c       -- 1998-2001 Author unknown (MAME).
+ * - MSX-Datapack   -- 1991 ASCII Corp.
+ * - AY-3-8910 data sheet
+ */
+
 package mdsound.np.chip;
 
+
+/**
+ * A YM2149 (aka PSG) emulator.
+ *
+ * @author Mitsutaka Okazaki
+ */
 public class Emu2149 {
+
     private static final int VOL_DEFAULT = 1;
     private static final int VOL_YM2149 = 0;
     private static final int VOL_AY_3_8910 = 1;
@@ -13,11 +34,12 @@ public class Emu2149 {
     };
 
     static class Psg {
+
         private static int PSG_MASK_CH(int x) {
             return (1 << (x));
         }
 
-        /* Volume Table */
+        /** Volume Table */
         int[] volTbl;
 
         private final int[] reg = new int[0x20];
@@ -158,7 +180,7 @@ public class Emu2149 {
             incr = (this.baseCount >> GETA_BITS);
             this.baseCount &= (1 << GETA_BITS) - 1;
 
-            /* Envelope */
+            // Envelope
             this.envCount += incr;
             while (this.envCount >= 0x10000 && this.envFreq != 0) {
                 if (this.envPause == 0) {

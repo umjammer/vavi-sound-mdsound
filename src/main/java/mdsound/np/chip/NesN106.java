@@ -1,3 +1,9 @@
+/*
+ * NSFPlay/NFSPlug project by Brezza.
+ *
+ * https://web.archive.org/web/20160301201825/http://www.pokipoki.org/dsa/
+ */
+
 package mdsound.np.chip;
 
 import java.lang.System.Logger;
@@ -6,6 +12,7 @@ import java.util.Arrays;
 import java.util.function.Consumer;
 
 import mdsound.np.Device.SoundChip;
+import mdsound.np.chip.DeviceInfo;
 import mdsound.np.chip.DeviceInfo.BasicTrackInfo;
 
 import static java.lang.System.getLogger;

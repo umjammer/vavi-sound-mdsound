@@ -1,15 +1,17 @@
+/*
+ * NSFPlay/NFSPlug project by Brezza.
+ *
+ * https://web.archive.org/web/20160301201825/http://www.pokipoki.org/dsa/
+ */
+
 package mdsound.np;
 
 //
 // Excerpt from filter.h
 //
 //
-
-
 //  dcf.SetParam(270,(*config)["HPF"]); // DCFilter
 //  lpf.SetParam(4700.0,(*config)["LPF"]); // Filter
-
-
 public class DCFilter {
 
     private double r, c;

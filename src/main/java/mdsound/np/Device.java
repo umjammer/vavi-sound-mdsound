@@ -1,3 +1,9 @@
+/*
+ * NSFPlay/NFSPlug project by Brezza.
+ *
+ * https://web.archive.org/web/20160301201825/http://www.pokipoki.org/dsa/
+ */
+
 package mdsound.np;
 
 import java.util.ArrayList;
@@ -6,6 +12,7 @@ import java.util.function.Consumer;
 
 
 public interface Device {
+
     void reset();
 
     boolean write(int adr, int val, int id);
@@ -23,6 +30,7 @@ public interface Device {
     void setOption(int id, int val);
 
     interface Renderable extends Device {
+
         /**
          * Audio Rendering
          *
@@ -43,8 +51,9 @@ public interface Device {
      * Audio synthesis chip
      */
     interface SoundChip extends Renderable {
+
         /**
-         * Soundchip clocked by M2 (NTSC = ~1.789MHz)
+         * Sound chip clocked by M2 (NTSC = ~1.789MHz)
          */
         @Override void tick(int clocks);
 
@@ -87,6 +96,7 @@ public interface Device {
     }
 
     class Bus implements Device {
+
         protected List<Device> vd = new ArrayList<>();
 
         /**
@@ -97,7 +107,6 @@ public interface Device {
          */
         @Override
         public void reset() {
-
             for (Device it : vd)
                 it.reset();
         }

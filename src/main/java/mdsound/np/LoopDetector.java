@@ -1,58 +1,50 @@
+/*
+ * NSFPlay/NFSPlug project by Brezza.
+ *
+ * https://web.archive.org/web/20160301201825/http://www.pokipoki.org/dsa/
+ */
+
 package mdsound.np;
 
 
-public class LoopDetector implements Device {
+public interface LoopDetector extends Device {
 
     @Override
-    public void reset() {
-        throw new UnsupportedOperationException();
-    }
+    void reset();
 
     @Override
-    public boolean write(int adr, int val, int id/* = 0*/) {
-        throw new UnsupportedOperationException();
-    }
+    boolean write(int adr, int val, int id /* = 0 */);
 
-    public boolean isLooped(int time_in_ms, int match_second, int match_interval) {
-        throw new UnsupportedOperationException();
-    }
+    boolean isLooped(int time_in_ms, int match_second, int match_interval);
 
     @Override
-    public boolean read(int adr, int[] val, int id/* = 0*/) {
-        throw new UnsupportedOperationException();
-    }
+    boolean read(int adr, int[] val, int id /* = 0 */);
 
-    public int getLoopStart() {
-        throw new UnsupportedOperationException();
-    }
+    int getLoopStart();
 
-    public int getLoopEnd() {
-        throw new UnsupportedOperationException();
-    }
+    int getLoopEnd();
 
-    public boolean isEmpty() {
-        throw new UnsupportedOperationException();
-    }
+    boolean isEmpty();
 
     @Override
-    public void setOption(int id, int val) {
+    default void setOption(int id, int val) {
         throw new UnsupportedOperationException();
     }
 
-    public static class BasicDetector extends LoopDetector {
+    class BasicDetector implements LoopDetector {
         protected int bufSize, bufMask;
         protected int[] streamBuf;
         protected int[] timeBuf;
         protected int bIdx;
         // bIdx last time checked
         protected int bLast;
-        protected int wspeed;
+        protected int wSpeed;
         protected int currentTime;
         protected int loopStart, loopEnd;
         protected boolean empty;
 
-        public BasicDetector(int bufbits/* = 16*/) {
-            bufSize = 1 << bufbits;
+        public BasicDetector(int bufBits /* = 16 */) {
+            bufSize = 1 << bufBits;
             bufMask = bufSize - 1;
             streamBuf = new int[bufSize];
             timeBuf = new int[bufSize];
@@ -66,7 +58,7 @@ public class LoopDetector implements Device {
             }
 
             currentTime = 0;
-            wspeed = 0;
+            wSpeed = 0;
 
             bIdx = 0;
             bLast = 0;
@@ -85,10 +77,11 @@ public class LoopDetector implements Device {
         }
 
         @Override
-        public boolean read(int a, int[] b, int id/* = 0*/) {
+        public boolean read(int a, int[] b, int id /* = 0 */) {
             return false;
         }
 
+        @Override
         public boolean isLooped(int time_in_ms, int match_second, int match_interval) {
             int i, j;
             int match_size, match_length;
@@ -100,13 +93,13 @@ public class LoopDetector implements Device {
 
             if (bIdx <= bLast)
                 return false;
-            if (wspeed != 0)
-                wspeed = (wspeed + bIdx - bLast) / 2;
+            if (wSpeed != 0)
+                wSpeed = (wSpeed + bIdx - bLast) / 2;
             else
-                wspeed = bIdx - bLast; // first time
+                wSpeed = bIdx - bLast; // first time
             bLast = bIdx;
 
-            match_size = wspeed * match_second / match_interval;
+            match_size = wSpeed * match_second / match_interval;
             match_length = bufSize - match_size;
 
             if (match_length < 0)
@@ -131,30 +124,27 @@ public class LoopDetector implements Device {
             return false;
         }
 
+        @Override
         public int getLoopStart() {
             return loopStart;
         }
 
+        @Override
         public int getLoopEnd() {
             return loopEnd;
         }
 
+        @Override
         public boolean isEmpty() {
             return empty;
         }
     }
 
-    public static class NESDetector extends BasicDetector {
-        public NESDetector(int bufbits) {
-            super(bufbits);
-        }
+    class NESDetector extends BasicDetector {
 
-        private static final byte[] maskAPU = {
-                (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff,
-                (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff,
-                (byte) 0xff, 0x00, (byte) 0xff, (byte) 0xff,
-                0x3f, 0x00, (byte) 0x8f, (byte) 0xf8
-        };
+        public NESDetector(int bufBits) {
+            super(bufBits);
+        }
 
         @Override
         public boolean write(int adr, int val, int id) {
@@ -162,18 +152,18 @@ public class LoopDetector implements Device {
                             || (0x4015 == adr)
                             || (0x4017 == adr)
                             || (0x9000 <= adr && adr <= 0x9002) // Vrc6Inst
-                            || (0xA000 <= adr && adr <= 0xA002)
-                            || (0xB000 <= adr && adr <= 0xB002)
+                            || (0xa000 <= adr && adr <= 0xa002)
+                            || (0xb000 <= adr && adr <= 0xb002)
                             || (0x9010 == adr) // VRC7
                             || (0x9030 == adr)
                             || (0x4040 <= adr && adr <= 0x4092) // FDS
                             || (0x4800 == adr) // N163
-                            || (0xF800 == adr)
+                            || (0xf800 == adr)
                             || (0x5000 <= adr && adr <= 0x5007) // MMC5
                             || (0x5010 == adr)
                             || (0x5011 == adr)
-                            || (0xC000 == adr) // 5B
-                            || (0xE000 == adr)
+                            || (0xc000 == adr) // 5B
+                            || (0xe000 == adr)
             ) {
                 return super.write(adr, val, id);
             }
@@ -182,12 +172,13 @@ public class LoopDetector implements Device {
         }
     }
 
-    private static class NESDetectorEx extends LoopDetector {
-        public static final byte[] maskAPU = {
-                (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff,
-                (byte) 0xff, (byte) 0xff, (byte) 0xff, (byte) 0xff,
-                (byte) 0xff, 0x00, (byte) 0xff, (byte) 0xff,
-                0x3f, 0x00, (byte) 0x8f, (byte) 0xf8
+    class NESDetectorEx implements LoopDetector {
+
+        private static final int[] maskAPU = {
+                0xff, 0xff, 0xff, 0xff,
+                0xff, 0xff, 0xff, 0xff,
+                0xff, 0x00, 0xff, 0xff,
+                0x3f, 0x00, 0x8f, 0xf8
         };
 
         protected enum Ins {
@@ -202,12 +193,13 @@ public class LoopDetector implements Device {
         protected int n106Addr;
         protected int loopStart, m_loop_end;
 
+        private static final int[] bufsize_table = new int[] {
+                15, 15, 15, 15, 15, // SQR0, SQR1, TRI, NOIZ, DPCM
+                14, 14, 14, 14,// N106[0-3]
+                14, 14, 14, 14 // N106[4-7]
+        };
+
         public NESDetectorEx() {
-            int[] bufsize_table = new int[] {
-                    15, 15, 15, 15, 15, // SQR0, SQR1, TRI, NOIZ, DPCM
-                    14, 14, 14, 14,// N106[0-3]
-                    14, 14, 14, 14 // N106[4-7]
-            };
             for (int i = 0; i < 13; i++)
                 ld[i] = new BasicDetector(bufsize_table[i]);
         }
@@ -220,6 +212,7 @@ public class LoopDetector implements Device {
             }
         }
 
+        @Override
         public boolean isLooped(int time_in_ms, int match_second, int match_interval) {
             boolean all_empty = true, all_looped = true;
             for (int i = 0; i < 13; i++) {
@@ -266,14 +259,17 @@ public class LoopDetector implements Device {
             return false;
         }
 
+        @Override
         public int getLoopStart() {
             return loopStart;
         }
 
+        @Override
         public int getLoopEnd() {
             return m_loop_end;
         }
 
+        @Override
         public boolean isEmpty() {
             boolean ret = true;
             for (int i = 0; i < 13; i++)
