@@ -51,8 +51,8 @@ public class OPM extends Timer {
     private final Fmgen.Channel4[] ch = new Fmgen.Channel4[8];
     private final Fmgen.Channel4.Chip chip = new Fmgen.Channel4.Chip();
 
-    private static final int[][] amTable = new int[][] {new int[OPM_LFOENTS], new int[OPM_LFOENTS], new int[OPM_LFOENTS], new int[OPM_LFOENTS]};
-    private static final int[][] pmTable = new int[][] {new int[OPM_LFOENTS], new int[OPM_LFOENTS], new int[OPM_LFOENTS], new int[OPM_LFOENTS]};
+    private static final int[][] amTable = {new int[OPM_LFOENTS], new int[OPM_LFOENTS], new int[OPM_LFOENTS], new int[OPM_LFOENTS]};
+    private static final int[][] pmTable = {new int[OPM_LFOENTS], new int[OPM_LFOENTS], new int[OPM_LFOENTS], new int[OPM_LFOENTS]};
 
     private static final Random rand = new Random();
 

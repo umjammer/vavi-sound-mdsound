@@ -701,7 +701,7 @@ public class Ay8910 {
     // internal state
     private PsgType type;
     private int streams;
-    private int ioports;
+    private int ioPorts;
     //(int)8 ready;
     private int active;
     private int register_latch;
@@ -725,17 +725,19 @@ public class Ay8910 {
     private final int[] volEnabled = new int[NUM_CHANNELS];
     private YmParam param;
     private YmParam paramEnv;
-    private final int[][] volTable = new int[][] {
+    private final int[][] volTable = {
             new int[16], new int[16], new int[16]
     };
-    private final int[][] envTable = new int[][] {
+    private final int[][] envTable = {
             new int[32], new int[32], new int[32]
     };
 //#if ENABLE_CUSTOM_OUTPUTS
 //    int[] vol3DTable = new int[8 * 32 * 32 * 32];
 //#endif
-    private int flags; /** Flags */
-    private final int[] resLoad = new int[3]; /** Load on channel in ohms */
+    /** Flags */
+    private int flags;
+    /** Load on channel in ohms */
+    private final int[] resLoad = new int[3];
 
     private final int[] stereoMask = new int[NUM_CHANNELS];
     private final int[] muteMask = new int[NUM_CHANNELS];
@@ -1018,34 +1020,34 @@ public class Ay8910 {
         case AY8930:
             this.type = PsgType.AY;
             this.streams = 3;
-            this.ioports = 2;
+            this.ioPorts = 2;
             break;
         case AY8912:
             this.type = PsgType.AY;
             this.streams = 3;
-            this.ioports = 1;
+            this.ioPorts = 1;
             break;
         case AY8913:
             this.type = PsgType.AY;
             this.streams = 3;
-            this.ioports = 0;
+            this.ioPorts = 0;
             break;
         case YM2149:
         case YM3439:
             this.type = PsgType.YM;
             this.streams = 3;
-            this.ioports = 2;
+            this.ioPorts = 2;
             break;
         case YMZ284:
         case YMZ294:
             this.type = PsgType.YM;
             this.streams = 1;
-            this.ioports = 0;
+            this.ioPorts = 0;
             break;
         default:
             this.type = ((chipType & 0xF0) == 0x00) ? PsgType.AY : PsgType.YM;
             this.streams = 3;
-            this.ioports = 2;
+            this.ioPorts = 2;
             break;
         }
 

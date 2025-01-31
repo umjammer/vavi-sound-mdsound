@@ -92,8 +92,8 @@ public class Fmgen {
         };
         //   3   6,      12      30       60       240      420  / 720
         // 1.000963
-        // lfofref[level * max * wave];
-        // pre = lfofref[level][pms * wave >> 8];
+        //lfofref[level * max * wave];
+        //pre = lfofref[level][pms * wave >> 8];
         int[][] amt = {
                 new int[] {31, 6, 4, 3}, // OPNA
                 new int[] {31, 2, 1, 0} // OPM
@@ -105,13 +105,13 @@ public class Fmgen {
                 for (int j = 0; j < FM_LFOENTS; j++) {
                     double v = Math.pow(2.0, pmb * (2 * j - FM_LFOENTS + 1) / (FM_LFOENTS - 1));
                     double w = 0.6 * pmb * Math.sin(2 * j * 3.14159265358979323846 / FM_LFOENTS) + 1;
-                    //pmtable[type][i][j] = int(0x10000 * (v - 1));
-                    //if (type == 0)
-                    pmTable[type][i][j] = (int) (0x10000 * (w - 1));
-                    //else
-                    //     pmtable[type][i][j] = int(0x10000 * (v - 1));
+                    //pmTable[type][i][j] = int(0x10000 * (v - 1));
+//                    if (type == 0)
+                        pmTable[type][i][j] = (int) (0x10000 * (w - 1));
+//                    else
+//                        pmTable[type][i][j] = int(0x10000 * (v - 1));
 
-                    //logger.log(Level.TRACE, "pmtable[%d][%d][%.2x] = %5d  %7.5f %7.5f".formatted(type, i, j, pmtable[type][i][j], v, w));
+//logger.log(Level.TRACE, "pmTable[%d][%d][%.2x] = %5d  %7.5f %7.5f".formatted(type, i, j, pmTable[type][i][j], v, w));
                 }
             }
             for (int i = 0; i < 4; i++) {
@@ -234,27 +234,27 @@ public class Fmgen {
             public static final int[][][][] ssgEnvTable = {
                     {
                            {{1, 1}, {1, 1}, {1, 1}}, // 08
-                           {{0, 1}, {1, 1}, {1, 1}} // 08 56~
+                           {{0, 1}, {1, 1}, {1, 1}}  // 08 56~
                     },
                     {
                            {{0, 1}, {2, 0}, {2, 0}}, // 09
-                           {{0, 1}, {2, 0}, {2, 0}} // 09
+                           {{0, 1}, {2, 0}, {2, 0}}  // 09
                     },
                     {
                            {{1, -1}, {0, 1}, {1, -1}}, // 10
-                           {{0, 1}, {1, -1}, {0, 1}} // 10 60~
+                           {{0, 1}, {1, -1}, {0, 1}}   // 10 60~
                     },
                     {
                            {{1, -1}, {0, 0}, {0, 0}}, // 11
-                           {{0, 1}, {0, 0}, {0, 0}}      // 11 60~
+                           {{0, 1}, {0, 0}, {0, 0}}   // 11 60~
                     },
                     {
                            {{2, -1}, {2, -1}, {2, -1}}, // 12
-                           {{1, -1}, {2, -1}, {2, -1}} // 12 56~
+                           {{1, -1}, {2, -1}, {2, -1}}  // 12 56~
                     },
                     {
                            {{1, -1}, {0, 0}, {0, 0}}, // 13
-                           {{1, -1}, {0, 0}, {0, 0}} // 13
+                           {{1, -1}, {0, 0}, {0, 0}}  // 13
                     },
                     {
                            {{0, 1}, {1, -1}, {0, 1}}, // 14
@@ -365,7 +365,7 @@ public class Fmgen {
             // Tables
 
             private final int[] rateTable = new int[16];
-            private final int[][] multable = {new int[16], new int[16], new int[16], new int[16]};
+            private final int[][] mulTable = {new int[16], new int[16], new int[16], new int[16]};
 
             public int dbgOpOut;
             public int dbgPgOut;
@@ -424,8 +424,8 @@ public class Fmgen {
                     p++;
                 }
 
-                // for (i=0; i<13*256; i++)
-                //  logger.log(Level.TRACE, "%4d, %d, %d".formatted(i, cltable[i*2], cltable[i*2+1]));
+//for (i=0; i<13*256; i++)
+// logger.log(Level.TRACE, "%4d, %d, %d".formatted(i, cltable[i*2], cltable[i*2+1]));
 
                 // Creating a Sign Table
                 double log2 = Math.log(2.0);
@@ -433,7 +433,7 @@ public class Fmgen {
                     double r = (i * 2 + 1) * Math.PI / FM_OPSINENTS;
                     double q = -256 * Math.log(Math.sin(r)) / log2;
                     int s = (int) (Math.floor(q + 0.5)) + 1;
-                    //  logger.log(Level.TRACE, "%d, %d".formatted(s, cltable[s * 2] / 8));
+//logger.log(Level.TRACE, "%d, %d".formatted(s, cltable[s * 2] / 8));
                     sineTable[i] = s * 2;
                     sineTable[FM_OPSINENTS / 2 + i] = s * 2 + 1;
                 }

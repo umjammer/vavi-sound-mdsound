@@ -55,14 +55,14 @@ import java.util.function.Consumer;
  sounds, 3 two-Operator melody sounds and 5 rhythm sounds (with four operators).
  5. 8 selectable waveforms.
  6. 4-channel Sound output.
- 7. YMF262 compabile DAC (YAC512) is available.
- 8. LFO for vibrato and tremolo effedts.
- 9. 2 programable timers.
+ 7. YMF262 compatible DAC (YAC512) is available.
+ 8. LFO for vibrato and tremolo effects.
+ 9. 2 programmable timers.
  10. Shorter register access time compared with YM3812.
  11. 5V single supply silicon gate CMOS process.
  12. 24 Pin SOP Package (YMF262-MPcm), 48 Pin SQFP Package (YMF262-S).
 
- differences between OPL2 and Opl3 not documented in Yamaha datahasheets:
+ differences between OPL2 and Opl3 not documented in Yamaha datasheets:
  - sinus table is a little different: the negative part is off by one...
 
  - in order to enable selection of four different waveforms on OPL2
@@ -82,6 +82,7 @@ import java.util.function.Consumer;
  - YMF262 does not support CSM mode
  * </pre>
  *
+ * @author Ken Silverman (AdLibEmu)
  * @author Jarek Burczynski
  * @version 0.2
  */
@@ -2427,7 +2428,7 @@ public class YmF262 {
                 this.calcChannel(this.channels[16]);
                 this.calcChannel(this.channels[17]);
 
-                // accumulator register set //#1
+                // accumulator register set #1
                 a = this.chanOut[0] & this.pan[0];
                 b = this.chanOut[0] & this.pan[1];
                 c = this.chanOut[0] & this.pan[2];
