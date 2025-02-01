@@ -59,10 +59,10 @@ public class K051649 {
         return channelList[ch];
     }
 
-    /* Global Sound parameters */
+    // Global Sound parameters
     private int mClock, rate;
 
-    /* mixer tables and internal buffers */
+    // mixer tables and internal buffers
     private short[] mixerTable;
     private int mixerTablePtr;
     private short[] mixerLookup;
@@ -73,18 +73,18 @@ public class K051649 {
     private int curReg;
     private int test;
 
-    /* build a table to divide by the number of voices */
+    /** build a table to divide by the number of voices */
     private void makeMixerTable(int voices) {
         int count = voices * 256;
 
-        /* allocate memory */
+        // allocate memory
         this.mixerTable = new short[2 * count];
         this.mixerTablePtr = 0;
 
-        /* find the middle of the table */
+        // find the middle of the table
         this.mixerLookupPtr = count;
 
-        /* fill in the table - 16 bit case */
+        // fill in the table - 16 bit case
         for (int i = 0; i < count; i++) {
             int val = i * DEF_GAIN * 16 / voices;
             if (val > 32768) val = 32768;
@@ -93,7 +93,7 @@ public class K051649 {
         }
     }
 
-    /* generate Sound to the mix buffer */
+    /** generate Sound to the mix buffer */
     public void update(int[][] outputs, int samples) {
         Channel[] voice = this.channelList;
         int[] buffer = outputs[0];
@@ -113,8 +113,8 @@ public class K051649 {
                 byte[] w = voice[j].waveRam; // 19991207.CAB
                 int v = voice[j].volume * voice[j].key;
                 int c = voice[j].counter;
-                /* Amuse source:  Cab suggests this method gives greater resolution */
-                /* Sean Young 20010417: the formula is really: f = clock/(16*(f+1)) */
+                // Amuse source:  Cab suggests this method gives greater resolution
+                // Sean Young 20010417: the formula is really: f = clock/(16*(f+1))
                 int step = (int) (((long) this.mClock * (1 << FREQ_BITS)) / (float) ((voice[j].frequency + 1) * 16 * (this.rate / 32)) + 0.5);
 
                 mix = this.mixerBuffer;
@@ -144,14 +144,14 @@ public class K051649 {
     }
 
     public int start(int clock) {
-        /* get stream channels */
-        this.mClock = clock & 0x7FFF_FFFF;
+        // get stream channels
+        this.mClock = clock & 0x7fff_ffff;
         this.rate = this.mClock / 16;
 
-        /* allocate a buffer to mix into - 1 second's worth should be more than enough */
+        // allocate a buffer to mix into - 1 second's worth should be more than enough
         this.mixerBuffer = new short[this.rate];
 
-        /* build the mixer table */
+        // build the mixer table
         makeMixerTable(5);
 
         for (int curChn = 0; curChn < 5; curChn++)
@@ -184,45 +184,81 @@ public class K051649 {
             // channel 5 shares waveram with channel 4
             this.channelList[3].waveRam[offset & 0x1f] = (byte) data;
             this.channelList[4].waveRam[offset & 0x1f] = (byte) data;
-        } else
-            this.channelList[offset >> 5].waveRam[offset & 0x1f] = (byte) data;
+        } else {
+            int ch = offset >> 5;
+            if (ch < this.channelList.length) {
+                this.channelList[offset >> 5].waveRam[offset & 0x1f] = (byte) data;
+            }
+        }
     }
 
     public int readWaveForm(int offset) {
+        int ch;
         // test-register bits 6/7 expose the internal counter
         if ((this.test & 0xc0) != 0) {
             //stream_update(this.stream);
 
-            if (offset >= 0x60)
-                offset += this.channelList[3 + (this.test >> 6 & 1)].counter >> FREQ_BITS;
-            else if ((this.test & 0x40) != 0)
-                offset += this.channelList[offset >> 5].counter >> FREQ_BITS;
+            if (offset >= 0x60) {
+                ch = 3 + (this.test >> 6 & 1);
+                if (ch < this.channelList.length) {
+                    offset += (this.channelList[ch].counter >> FREQ_BITS);
+                }
+            } else if ((this.test & 0x40) != 0) {
+                ch = offset >> 5;
+                if (ch < this.channelList.length) {
+                    offset += (this.channelList[ch].counter >> FREQ_BITS);
+                }
+            }
         }
-        return this.channelList[offset >> 5].waveRam[offset & 0x1f] & 0xff;
+
+        ch = offset >> 5;
+        if (ch < this.channelList.length) {
+            return this.channelList[ch].waveRam[offset & 0x1f] & 0xff;
+        }
+        return 0;
     }
 
     public void writeWaveFormK05239(int offset, int data) {
-        // waveram is read-only?
+        // waveRam is read-only?
         if ((this.test & 0x40) != 0)
             return;
 
-        this.channelList[offset >> 5].waveRam[offset & 0x1f] = (byte) data;
+        //stream_update(this.stream);
+        int ch = offset >> 5;
+        if (ch < this.channelList.length) {
+            this.channelList[ch].waveRam[offset & 0x1f] = (byte) data;
+        }
     }
 
     public int readWaveFormK05239(int offset) {
+        int ch;
         // test-register bit 6 exposes the internal counter
         if ((this.test & 0x40) != 0) {
-            offset += this.channelList[offset >> 5].counter >> FREQ_BITS;
+            ch = offset >> 5;
+            if (ch < this.channelList.length) {
+                offset += (this.channelList[ch].counter >> FREQ_BITS);
+            }
         }
-        return this.channelList[offset >> 5].waveRam[offset & 0x1f] & 0xff;
+        ch = offset >> 5;
+        if (ch < this.channelList.length) {
+            return this.channelList[ch].waveRam[offset & 0x1f] & 0xff;
+        }
+        return 0;
     }
 
     public void writeVolume(int offset, int data) {
-        this.channelList[offset & 0x7].volume = data & 0xf;
+        int ch = offset & 0x7;
+        if (ch < this.channelList.length) {
+            this.channelList[ch].volume = data & 0xf;
+        }
     }
 
     public void writeFrequency(int offset, int data) {
-        Channel chn = this.channelList[offset >> 1];
+        Channel chn;
+
+        int ch = offset >> 1;
+        if (ch >= this.channelList.length) return;
+        chn = this.channelList[ch];
 
         // test-register bit 5 resets the internal counter
         if ((this.test & 0x20) != 0)
@@ -232,10 +268,10 @@ public class K051649 {
 
         // update frequency
         if ((offset & 1) != 0)
-            chn.frequency = (chn.frequency & 0x0FF) | (((data & 0xff) << 8) & 0xF00);
+            chn.frequency = (chn.frequency & 0x0ff) | (((data & 0xff) << 8) & 0xf00);
         else
-            chn.frequency = (chn.frequency & 0xF00) | ((data & 0xff) << 0);
-        chn.counter &= 0xffFF_0000; // Valley Bell: Behaviour according to openMSX
+            chn.frequency = (chn.frequency & 0xf00) | ((data & 0xff) << 0);
+        chn.counter &= 0xffff_0000; // Valley Bell: Behaviour according to openMSX
     }
 
     public void writeKeyOnOff(int offset, int data) {
@@ -280,7 +316,7 @@ public class K051649 {
     }
 
     public void setMuteMask(int muteMask) {
-        for (byte curChn = 0; curChn < 5; curChn++)
+        for (int curChn = 0; curChn < 5; curChn++)
             this.channelList[curChn].muted = (muteMask >> curChn) & 0x01;
     }
 
