@@ -389,8 +389,8 @@ if ((CC % INTERVAL) == 0) {
             smpFrc = getFriction(inPosNext);
             inPre = fp2i_floor(inPosNext);
             if (smpFrc != 0) {
-                tempSmpL += curBufL[inPre] * smpFrc;
-                tempSmpR += curBufR[inPre] * smpFrc;
+                tempSmpL += curBufL[limit(inPre, curBufL.length, 0)] * smpFrc;
+                tempSmpR += curBufR[limit(inPre, curBufL.length, 0)] * smpFrc;
                 smpCnt += smpFrc;
             }
 
@@ -407,8 +407,8 @@ if ((CC % INTERVAL) == 0) {
             tempSample[1][outPos] = tempSmpR / smpCnt;
         }
 
-        inst.lSmpl[0] = curBufL[inPre];
-        inst.lSmpl[1] = curBufR[inPre];
+        inst.lSmpl[0] = curBufL[limit(inPre, curBufL.length, 0)];
+        inst.lSmpl[1] = curBufR[limit(inPre, curBufL.length, 0)];
         inst.smpP += length;
         inst.smpLast = inst.smpNext;
     }
