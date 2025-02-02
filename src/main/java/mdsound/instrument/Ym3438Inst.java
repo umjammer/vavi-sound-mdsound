@@ -5,6 +5,7 @@ import mdsound.chips.Ym3438Const;
 import mdsound.chips.Ym3438;
 
 
+// nuked YM3438 OPN2 (cmos) (YM2612 variant)
 public class Ym3438Inst extends Instrument.BaseInstrument {
 
     private final Ym3438[] chips = {new Ym3438(), new Ym3438()};

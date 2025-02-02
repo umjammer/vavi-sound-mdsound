@@ -90,11 +90,11 @@ public class ScdPcmInst extends Instrument.BaseInstrument implements PcmEnabledI
         chips[chipId].setMuteMask(0);
     }
 
-    /** @param extras 0: srcStartAddress */
+    /** @param extras 0: srcOffset */
     @Override
     public synchronized void writePcm(int chipId, byte[] buf, int offset, int length, Object... extras) {
-        int srcStartAdr = (int) extras[0];
-        chips[chipId].writeRam2(offset, length, buf, srcStartAdr);
+        int srcOffset = (int) extras[0];
+        chips[chipId].writeRam2(offset, length, buf, srcOffset);
     }
 
     public void setRate(int chipId, int rate) {

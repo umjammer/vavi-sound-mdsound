@@ -94,12 +94,12 @@ public class YmF278BInst extends Instrument.BaseInstrument implements PcmEnabled
 //        chips[chipId].setMuteMask(fm, wf); // TODO
     }
 
-    /** @param extras 0: srcStartAddress, 1: romSize */
+    /** @param extras 0: srcOffset, 1: romSize */
     @Override
-    public synchronized void writePcm(int chipId, byte[] romData, int dataStart, int dataLength, Object... extras) {
-        int srcStartAdr = (int) extras[0];
+    public synchronized void writePcm(int chipId, byte[] buf, int offset, int length, Object... extras) {
+        int srcOffset = (int) extras[0];
         int romSize = (int) extras[1];
-        chips[chipId].writeRom(romSize, dataStart, dataLength, romData, srcStartAdr);
+        chips[chipId].writeRom(romSize, offset, length, buf, srcOffset);
     }
 
     //----

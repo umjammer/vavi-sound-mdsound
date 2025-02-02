@@ -69,8 +69,8 @@ public class PpsInst extends Instrument.BaseInstrument implements PcmEnabledInst
         chips[chipId].play(al, bh, bl);
     }
 
-    public boolean setParam(int chipId, int paramno, int data) {
-        return chips[chipId].setParam(paramno, data);
+    public boolean setParam(int chipId, int paramNo, int data) {
+        return chips[chipId].setParam(paramNo, data);
     }
 
     @Override

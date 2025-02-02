@@ -6,6 +6,7 @@
 
 package mdsound.instrument;
 
+import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument.BaseInstrument;
 import mdsound.chips.Emu2413;
 
@@ -85,5 +86,10 @@ public class Emu2413Inst extends BaseInstrument {
 
     @Override
     public void reset(int chipId) {
+    }
+
+    @Override
+    public Tuple<Integer, Double> getRegulationVolume() {
+        return new Tuple<>(0x200 /* 0x155 */, 0.5);
     }
 }

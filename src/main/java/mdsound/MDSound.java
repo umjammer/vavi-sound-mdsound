@@ -73,7 +73,7 @@ public class MDSound {
         public static final String MAIN_TAG = "MAIN";
 
         {
-            setVolumes.put(MAIN_TAG, this::setDefaultSetVolume);
+            setVolumes.put(MAIN_TAG, this::setDefaultVolume);
         }
 
         public int id = 0;
@@ -119,12 +119,12 @@ public class MDSound {
 
         public SetVolume mainWrappedSetVolume(SetVolume setVolume) {
             return (i, d) -> {
-                setDefaultSetVolume(i, d);
+                setDefaultVolume(i, d);
                 setVolume.accept(i, d);
             };
         }
 
-        private void setDefaultSetVolume(int vol, double volumeMul) {
+        private void setDefaultVolume(int vol, double volumeMul) {
             this.volume = Math.max(Math.min(vol, 20), -192);
             int n = (((int) (16384.0 * Math.pow(10.0, this.volume / 40.0)) * this.tVolumeBalance) >> 8);
             this.tVolume = Math.max(Math.min((int) (n * volumeMul), Short.MAX_VALUE), Short.MIN_VALUE);

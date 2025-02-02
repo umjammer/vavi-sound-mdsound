@@ -46,11 +46,11 @@ class Resampler {
         return Math.min(max, Math.max(v, min));
     }
 
-    private static int getfriction(int x) {
+    private static int getFriction(int x) {
         return x & FIXPNT_MASK;
     }
 
-    private static int getnfriction(int x) {
+    private static int getnFriction(int x) {
         return (FIXPNT_FACT - (x)) & FIXPNT_MASK;
     }
 
@@ -124,7 +124,7 @@ static int INTERVAL = 1024;
     private int[] curBufR;
     private int inBase;
     private int inPos;
-    private int InPosNext;
+    private int inPosNext;
     private int outPos;
     private int smpFrc; // Sample Friction
     private int inPre = 0;
@@ -135,7 +135,7 @@ static int INTERVAL = 1024;
     private int tempS32L;
     private int tempS32R;
     private int smpCnt; // must be signed, else I'm getting calculation errors
-    private int CurSmpl;
+    private int curSmpl;
     private int chipSmpRate;
 
     private int mul;
@@ -242,9 +242,9 @@ if ((CC % INTERVAL) == 0) {
             } else {
                 tempS32L = curBufL[0x00];
                 tempS32R = curBufR[0x00];
-                for (CurSmpl = 0x01; CurSmpl < smpCnt; CurSmpl++) {
-                    tempS32L += curBufL[CurSmpl];
-                    tempS32R += curBufR[CurSmpl];
+                for (curSmpl = 0x01; curSmpl < smpCnt; curSmpl++) {
+                    tempS32L += curBufL[curSmpl];
+                    tempS32R += curBufR[curSmpl];
                 }
                 tempSample[0][0] = limit(((tempS32L * mul) >> 15) / smpCnt, 0x7fff, -0x8000);
                 tempSample[1][0] = limit(((tempS32R * mul) >> 15) / smpCnt, 0x7fff, -0x8000);
@@ -297,7 +297,7 @@ if ((CC % INTERVAL) == 0) {
 
             inPre = fp2i_floor(inPos);
             inNow = fp2i_ceil(inPos);
-            smpFrc = getfriction(inPos);
+            smpFrc = getFriction(inPos);
 
             // linear interpolation
             tempSmpL = (curBufL[inPre] * (FIXPNT_FACT - smpFrc)) +
@@ -369,13 +369,13 @@ if ((CC % INTERVAL) == 0) {
         inPosL = (long) FIXPNT_FACT * inst.smpP * chipSmpRate / samplingRate;
         // I'm adding 1.0 to avoid negative indexes
         inBase = (int) (FIXPNT_FACT + (inPosL - inst.smpLast * FIXPNT_FACT));
-        InPosNext = inBase;
+        inPosNext = inBase;
         for (outPos = 0x00; outPos < length; outPos++) {
-            inPos = InPosNext;
-            InPosNext = inBase + (int) (((long) FIXPNT_FACT * (outPos + 1) * chipSmpRate) / samplingRate);
+            inPos = inPosNext;
+            inPosNext = inBase + (int) (((long) FIXPNT_FACT * (outPos + 1) * chipSmpRate) / samplingRate);
 
             // first frictional Sample
-            smpFrc = getnfriction(inPos);
+            smpFrc = getnFriction(inPos);
             if (smpFrc != 0) {
                 inPre = fp2i_floor(inPos);
                 tempSmpL = curBufL[inPre] * smpFrc;
@@ -386,8 +386,8 @@ if ((CC % INTERVAL) == 0) {
             smpCnt = smpFrc;
 
             // last frictional Sample
-            smpFrc = getfriction(InPosNext);
-            inPre = fp2i_floor(InPosNext);
+            smpFrc = getFriction(inPosNext);
+            inPre = fp2i_floor(inPosNext);
             if (smpFrc != 0) {
                 tempSmpL += curBufL[inPre] * smpFrc;
                 tempSmpR += curBufR[inPre] * smpFrc;
