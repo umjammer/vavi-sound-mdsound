@@ -1066,22 +1066,7 @@ public class Ay8910 {
         }
     }
 
-//    private int device_start_ay8910_mame(DEV_INFO retDevInf) {
-//        Ay8910 chips;
-//        DEV_DATA devData;
-//        int rate;
-//
-//        rate = ay8910_start(chips, cfg._genCfg.clock, cfg.chipType, cfg.chipFlags);
-//        if (chips == null)
-//            return 0xff;
-//
-//        devData = (DEV_DATA) chips;
-//        devData.chipInf = chips;
-//        INIT_DEVINF(retDevInf, devData, rate, devDef_AY8910_MAME);
-//        return 0x00;
-//    }
-
-    public int init(int clock, int ay_type, int ay_flags) {
+    public int start(int clock, int ay_type, int ay_flags) {
 
         this.smpRateFunc = null;
 
