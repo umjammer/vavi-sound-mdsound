@@ -12,6 +12,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import mdsound.Instrument;
 import mdsound.chips.Ym3438;
+import mdsound.chips.Ym3438Const;
 
 import static uk.co.omgdrv.simplevgm.fm.MdFmProvider.FM_STATUS_BUSY_BIT_MASK;
 
@@ -49,7 +50,7 @@ public class VaviYm3438Inst extends Instrument.BaseInstrument {
 
     @Override
     public String getName() {
-        return "YM3438vavi";
+        return "YM3438vavi(" + Ym3438Const.chip_type + ")";
     }
 
     @Override

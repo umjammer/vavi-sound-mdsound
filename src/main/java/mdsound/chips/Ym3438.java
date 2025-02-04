@@ -1048,11 +1048,11 @@ public class Ym3438 {
         }
 
         if (rate != 0) {
-            this.rateRatio = ((144 * rate) << 10) / clock; // RSM_FRAC) / clock);
+            this.rateRatio = (int) (((144L * rate) << 10) / clock); // RSM_FRAC) / clock);
         } else {
             this.rateRatio = rateRatio;
         }
-//logger.log(Level.TRACE, "rateRatio%d rate%d clock%d".formatted(this.rateRatio,rate,clock));
+//logger.log(Level.TRACE, "rateRatio: %d, rate: %d, clock: %d".formatted(this.rateRatio,rate,clock));
     }
 
     public void setChipType(Type type) {
@@ -1283,8 +1283,6 @@ logger.log(Level.INFO, "chip_type: " + chip_type);
 
     // ----
 
-    // TODO chips implementation (above) works, fuck is following.
-
     // https://github.com/vgmrips/vgmplay-legacy/blob/master/VGMPlay/chips/ym3438.c#L1433
 
     private static class Opn2WriteBuf {
@@ -1310,7 +1308,7 @@ logger.log(Level.INFO, "chip_type: " + chip_type);
 
     public void writeBuffered(int port, int data) {
         if ((this.writeBuf[this.writeBufLast].port & 0x04) != 0) {
-            this.write(this.writeBuf[this.writeBufLast].port & 0X03,
+            this.write(this.writeBuf[this.writeBufLast].port & 0x03,
                     this.writeBuf[this.writeBufLast].data);
 
             this.writeBufCur = (this.writeBufLast + 1) % 2048; // OPN_WRITEBUF_SIZE;
@@ -1364,7 +1362,7 @@ logger.log(Level.INFO, "chip_type: " + chip_type);
                     this.writeBuf[this.writeBufCur].port &= 0x03;
                     this.write(this.writeBuf[this.writeBufCur].port,
                             this.writeBuf[this.writeBufCur].data);
-                    this.writeBufCur = (this.writeBufCur + 1) % 2048;// OPN_WRITEBUF_SIZE;
+                    this.writeBufCur = (this.writeBufCur + 1) % 2048; // OPN_WRITEBUF_SIZE;
                 }
                 this.writeBufSampleCnt++;
             }

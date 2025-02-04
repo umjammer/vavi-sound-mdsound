@@ -24,7 +24,7 @@ public class Ym3438Inst extends Instrument.BaseInstrument {
 
     @Override
     public String getName() {
-        return "YM3438" + type.name();
+        return "YM3438" + Ym3438Const.chip_type;
     }
 
     @Override
@@ -78,11 +78,11 @@ public class Ym3438Inst extends Instrument.BaseInstrument {
     // TODO 2612
     @Override
     public synchronized void setMask(int chipId, int ch) {
-        mask[chipId] |= 1 << ch;
-        int mask = this.mask[chipId];
-        if ((mask & 0b0010_0000) == 0) mask &= 0b1011_1111;
-        else mask |= 0b0100_0000;
-        chips[chipId].setMuteMask(mask);
+//        mask[chipId] |= 1 << ch;
+//        int mask = this.mask[chipId];
+//        if ((mask & 0b0010_0000) == 0) mask &= 0b1011_1111;
+//        else mask |= 0b0100_0000;
+//        chips[chipId].setMuteMask(mask);
     }
 
     @Override
