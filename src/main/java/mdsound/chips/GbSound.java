@@ -1,6 +1,9 @@
-// license:BSD-3-Clause
-// copyright-holders:Wilbert Pol, Anthony Kruize
-// thanks-to:Shay Green
+/*
+ * license:BSD-3-Clause
+ *
+ * copyright-holders: Wilbert Pol, Anthony Kruize
+ * thanks-to: Shay Green
+ */
 
 package mdsound.chips;
 
@@ -53,6 +56,8 @@ package mdsound.chips;
  * - Perform more tests on real hardware to understand when changes to the noise divisor
  * and shift kick in.
  * - Optimize the channel update methods.
+ *
+ * @author Anthony Kruize (trandor@labyrinth.net.au)
  */
 public class GbSound {
 
@@ -60,18 +65,19 @@ public class GbSound {
         private static final int RC_SHIFT = 16;
 
         /** counter increment */
-        private int inc;
+        private long inc;
         /** current value */
-        private int value;
+        private long value;
 
-        private void setRatio(int mul, int div) {
+        private void setRatio(long mul, long div) {
             this.inc = ((mul << RC_SHIFT) + div / 2) / div;
         }
 
-        private int update() {
+        private long update() {
             this.value += this.inc;
-            int cycles = this.value >> RC_SHIFT;
-            this.value &= ((1 << RC_SHIFT) - 1);
+            long cycles = this.value >> RC_SHIFT;
+            this.value &= ((1L << RC_SHIFT) - 1);
+
             return cycles;
         }
     }
@@ -122,18 +128,18 @@ public class GbSound {
     private static final int FRAME_CYCLES = 8192;
 
     /** Represents wave duties of 12.5%, 25%, 50% and 75% */
-    private static final int[][] waveDutyTable = new int[][] {
-            new int[] {-1, -1, -1, -1, -1, -1, -1, 1},
-            new int[] {1, -1, -1, -1, -1, -1, -1, 1},
-            new int[] {1, -1, -1, -1, -1, 1, 1, 1},
-            new int[] {-1, 1, 1, 1, 1, 1, 1, -1}
+    private static final int[][] waveDutyTable = {
+            {-1, -1, -1, -1, -1, -1, -1, 1},
+            {1, -1, -1, -1, -1, -1, -1, 1},
+            {1, -1, -1, -1, -1, 1, 1, 1},
+            {-1, 1, 1, 1, 1, 1, 1, -1}
     };
 
     // TYPE DEFINITIONS
 
     public static class Sound {
 
-        private static final int[] divisor = new int[] {8, 16, 32, 48, 64, 80, 96, 112};
+        private static final int[] divisor = {8, 16, 32, 48, 64, 80, 96, 112};
 
         // Common
         public int[] registers = new int[5];
@@ -144,7 +150,7 @@ public class GbSound {
         private boolean lengthCounting;
         public boolean lengthEnabled;
         // Mode 1, 2, 3
-        private int cyclesLeft;
+        private long cyclesLeft;
         public int duty;
         // Mode 1, 2, 4
         private boolean envelopeEnabled;
@@ -165,7 +171,7 @@ public class GbSound {
         // Mode 3
         public int level;
         private int offset;
-        private int dutyCount;
+        private long dutyCount;
         private int currentSample;
         private boolean sampleReading;
         // Mode 4
@@ -188,7 +194,7 @@ public class GbSound {
             this.sweepNegModeUsed = (this.sweepDirection < 0);
             newFrequency = this.frequency + this.sweepDirection * (this.frequency >> this.sweepShift);
 
-            if (newFrequency > 0x7FF) {
+            if (newFrequency > 0x7ff) {
                 this.on = false;
             }
 
@@ -242,7 +248,7 @@ public class GbSound {
             return ((this.channel != 3) ? (this.registers[2] & 0xf8) : (this.registers[0] & 0x80)) != 0;
         }
 
-        private void updateSquareChannel(int cycles) {
+        private void updateSquareChannel(long cycles) {
             if (this.on) {
                 // compensate for leftover cycles
                 if (this.cyclesLeft > 0) {
@@ -257,10 +263,10 @@ public class GbSound {
                         cycles = 0;
                     } else {
                         cycles -= 4;
-                        this.frequencyCounter = (this.frequencyCounter + 1) & 0x7FF;
+                        this.frequencyCounter = (this.frequencyCounter + 1) & 0x7ff;
                         if (this.frequencyCounter == 0) {
                             this.dutyCount = (this.dutyCount + 1) & 0x07;
-                            this.signal = waveDutyTable[this.duty][this.dutyCount];
+                            this.signal = waveDutyTable[this.duty][(int) this.dutyCount];
 
                             // Reload frequency counter
                             this.frequencyCounter = this.frequency;
@@ -270,7 +276,7 @@ public class GbSound {
             }
         }
 
-        private void updateWaveChannel(int cycles, int mode, int boostWaveCh, int[] registers) {
+        private void updateWaveChannel(long cycles, int mode, int boostWaveCh, int[] registers) {
             if (on) {
                 // compensate for leftover cycles
                 if (cyclesLeft > 0) {
@@ -298,7 +304,7 @@ public class GbSound {
                             sampleReading = true;
                             if (mode == MODE_CGB04)
                                 offset = (offset + 1) & 0x1f;
-                            currentSample = registers[AUD3W0 + (offset / 2)];
+                            currentSample = registers[AUD3W0 + (offset / 2)] - 0x80;
                             if ((offset & 0x01) == 0) {
                                 currentSample >>= 4;
                             }
@@ -307,7 +313,7 @@ public class GbSound {
 
                                 currentSample <<= 1;
 
-                            signal = level != 0 ? currentSample / (1 << (level - 1)) : 0;
+                            signal = level != 0 ? currentSample / (1 << ((level - 0x80) - 1)) : 0;
 
                             // Reload frequency counter
                             frequencyCounter = frequency;
@@ -317,7 +323,7 @@ public class GbSound {
             }
         }
 
-        private void updateNoiseChannel(int cycles) {
+        private void updateNoiseChannel(long cycles) {
             while (cycles > 0) {
                 if (cycles < cyclesLeft) {
                     if (on) {
@@ -337,20 +343,21 @@ public class GbSound {
                     // Using a Polynomial Counter (aka Linear Feedback Shift Register)
                     // Mode 4 has a 15 bit counter so we need to shift the
                     // bits around accordingly
-                    int feedback = ((noiseLfsr >> 1) ^ noiseLfsr) & 1;
-                    noiseLfsr = (noiseLfsr >> 1) | (feedback << 14);
+                    int feedback = (((noiseLfsr >> 1) ^ noiseLfsr) & 1) & 0xffff;
+                    noiseLfsr = ((noiseLfsr >> 1) | (feedback << 14)) & 0xffff;
                     if (noiseShort) {
-                        noiseLfsr = (noiseLfsr & ~(1 << 6)) | (feedback << 6);
+                        noiseLfsr = ((noiseLfsr & ~(1 << 6)) | (feedback << 6)) & 0xffff;
                     }
                     signal = (noiseLfsr & 1) != 0 ? -1 : 1;
                 }
             }
         }
 
-        private int noisePeriodCycles() {
-            return divisor[this.registers[3] & 7] << (this.registers[3] >> 4);
+        private long noisePeriodCycles() {
+            return (long) divisor[this.registers[3] & 7] << (this.registers[3] >> 4);
         }
 
+        // NR10
         private void sweep(int data, int oldData) {
             this.registers[0] = data;
             this.sweepShift = data & 0x7;
@@ -361,13 +368,14 @@ public class GbSound {
             }
         }
 
-        private void initializeHiFrequency(int data, int cycles) {
+        // NR14
+        private void initializeHiFrequency(int data, long cycles) {
             this.registers[4] = data;
 
             boolean lengthWasEnabled = this.lengthEnabled;
 
             this.lengthEnabled = (data & 0x40) != 0;
-            this.frequency = ((this.registers[NR14] & 0x7) << 8) | this.registers[3];
+            this.frequency = (((this.registers[NR14] & 0x7) << 8) | this.registers[3]) & 0xffff;
 
             if (!lengthWasEnabled && (cycles & FRAME_CYCLES) == 0 && this.lengthCounting) {
                 if (this.lengthEnabled) {
@@ -385,7 +393,7 @@ public class GbSound {
                 this.signal = 0;
                 this.length = this.registers[1] & 0x3f; // VGM log fix -Valley Bell
                 this.lengthCounting = true;
-                this.frequency = ((this.registers[4] & 0x7) << 8) | this.registers[3];
+                this.frequency = (((this.registers[4] & 0x7) << 8) | this.registers[3]) & 0xffff;
                 this.frequencyCounter = this.frequency;
                 this.cyclesLeft = 0;
                 this.dutyCount = 0;
@@ -403,12 +411,13 @@ public class GbSound {
             } else {
                 // This condition may not be correct
                 if (!this.sweepEnabled) {
-                    this.frequency = ((this.registers[4] & 0x7) << 8) | this.registers[3];
+                    this.frequency = (((this.registers[4] & 0x7) << 8) | this.registers[3]) & 0xffff;
                 }
             }
         }
 
-        private void initializeHiFrequency2(int data, int cycles) {
+        // NR24
+        private void initializeHiFrequency2(int data, long cycles) {
             this.registers[4] = data;
 
             boolean lengthWasEnabled = this.lengthEnabled;
@@ -426,7 +435,7 @@ public class GbSound {
                 this.envelopeEnabled = true;
                 this.envelopeValue = this.registers[2] >> 4;
                 this.envelopeCount = this.envelopeTime;
-                this.frequency = ((this.registers[4] & 0x7) << 8) | this.registers[3];
+                this.frequency = (((this.registers[4] & 0x7) << 8) | this.registers[3]) & 0xffff;
                 this.frequencyCounter = this.frequency;
                 this.cyclesLeft = 0;
                 this.dutyCount = 0;
@@ -442,11 +451,12 @@ public class GbSound {
                     this.tickLength();
                 }
             } else {
-                this.frequency = ((this.registers[4] & 0x7) << 8) | this.registers[3];
+                this.frequency = (((this.registers[4] & 0x7) << 8) | this.registers[3]) & 0xffff;
             }
         }
 
-        private void initializeHiFrequency3(int data, int cycles, int mode) {
+        // NR34
+        private void initializeHiFrequency3(int data, long cycles, int mode) {
             this.registers[4] = data;
 
             boolean lengthWasEnabled = this.lengthEnabled;
@@ -469,7 +479,7 @@ public class GbSound {
                 this.dutyCount = 0;
                 this.length = this.registers[1]; // VGM log fix -Valley Bell
                 this.lengthCounting = true;
-                this.frequency = ((this.registers[4] & 0x7) << 8) | this.registers[3];
+                this.frequency = (((this.registers[4] & 0x7) << 8) | this.registers[3]) & 0xffff;
                 this.frequencyCounter = this.frequency;
                 // There is a tiny bit of delay in starting up the wave channel(?)
                 //
@@ -487,7 +497,7 @@ public class GbSound {
                     this.tickLength();
                 }
             } else {
-                this.frequency = ((this.registers[4] & 0x7) << 8) | this.registers[3];
+                this.frequency = (((this.registers[4] & 0x7) << 8) | this.registers[3]) & 0xffff;
             }
         }
 
@@ -498,14 +508,14 @@ public class GbSound {
             if (this.offset < 8) {
                 this.registers[AUD3W0] = this.registers[AUD3W0 + (this.offset / 2)];
             } else {
-                int i;
-                for (i = 0; i < 4; i++) {
+                for (int i = 0; i < 4; i++) {
                     this.registers[AUD3W0 + i] = this.registers[AUD3W0 + ((this.offset / 2) & ~0x03) + i];
                 }
             }
         }
 
-        private void initializeHiFrequency4(int data, int cycles) {
+        // NR44
+        private void initializeHiFrequency4(int data, long cycles) {
             this.registers[4] = data;
 
             boolean length_was_enabled = this.lengthEnabled;
@@ -540,6 +550,7 @@ public class GbSound {
             }
         }
 
+        // NR12
         private void envelope(int data) {
             this.registers[2] = data;
             this.envelopeValue = data >> 4;
@@ -563,7 +574,7 @@ public class GbSound {
         public int mode3Right;
         public int mode4Left;
         public int mode4Right;
-        private int cycles;
+        private long cycles;
         private boolean waveRamLocked;
 
         private void setData(int data) {
@@ -633,7 +644,7 @@ public class GbSound {
             // Only enabling the frequency line breaks blarggs's Sound test //#5
             // This condition may not be correct
             if (!this.sound1.sweepEnabled) {
-                this.sound1.frequency = ((this.sound1.registers[4] & 0x7) << 8) | this.sound1.registers[3];
+                this.sound1.frequency = (((this.sound1.registers[4] & 0x7) << 8) | this.sound1.registers[3]) & 0xffff;
             }
             break;
         case NR14: // Frequency hi / Initialize (R/W)
@@ -660,7 +671,7 @@ public class GbSound {
             break;
         case NR23: // Frequency lo (R/W)
             this.sound2.registers[3] = data;
-            this.sound2.frequency = ((this.sound2.registers[4] & 0x7) << 8) | this.sound2.registers[3];
+            this.sound2.frequency = (((this.sound2.registers[4] & 0x7) << 8) | this.sound2.registers[3]) & 0xffff;
             break;
         case NR24: // Frequency hi / Initialize (R/W)
             this.sound2.initializeHiFrequency2(data, this.controller.cycles);
@@ -684,7 +695,7 @@ public class GbSound {
             break;
         case NR33: // Frequency lo (W)
             this.sound3.registers[3] = data;
-            this.sound3.frequency = ((this.sound3.registers[4] & 0x7) << 8) | this.sound3.registers[3];
+            this.sound3.frequency = (((this.sound3.registers[4] & 0x7) << 8) | this.sound3.registers[3]) & 0xffff;
             break;
         case NR34: // Frequency hi / Initialize (W)
             this.sound3.initializeHiFrequency3(data, this.controller.cycles, this.mode);
@@ -815,23 +826,23 @@ public class GbSound {
         }
     }
 
-    private void updateState(int cycles) {
+    private void updateState(long cycles) {
         if (this.controller.on == 0)
             return;
 
-        int oldCycles = this.controller.cycles;
+        long oldCycles = this.controller.cycles;
         this.controller.cycles += cycles;
 
         if ((oldCycles / FRAME_CYCLES) != (this.controller.cycles / FRAME_CYCLES)) {
             // Left over cycles in current frame
-            int cyclesCurrentFrame = FRAME_CYCLES - (oldCycles & (FRAME_CYCLES - 1));
+            long cyclesCurrentFrame = FRAME_CYCLES - (oldCycles & (FRAME_CYCLES - 1));
 
             updateSounds(cyclesCurrentFrame);
 
             cycles -= cyclesCurrentFrame;
 
             // Switch to next frame
-            switch ((this.controller.cycles / FRAME_CYCLES) & 0x07) {
+            switch (((int) (this.controller.cycles / FRAME_CYCLES) & 0x07)) {
             case 0:
                 // length
                 this.tickLengthSounds();
@@ -871,7 +882,7 @@ public class GbSound {
         this.sound4.tickLength();
     }
 
-    void updateSounds(int cycles) {
+    void updateSounds(long cycles) {
         this.sound1.updateSquareChannel(cycles);
         this.sound2.updateSquareChannel(cycles);
         this.sound3.updateWaveChannel(cycles, this.mode, this.boostWaveCh, this.registers);
@@ -907,9 +918,9 @@ public class GbSound {
         }
     }
 
-    private static final int[] readMask = new int[] {
-            0x80, 0x3F, 0x00, 0xff, 0xBF, 0xff, 0x3F, 0x00, 0xff, 0xBF, 0x7F, 0xff, 0x9F, 0xff, 0xBF, 0xff,
-            0xff, 0x00, 0x00, 0xBF, 0x00, 0x00, 0x70, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
+    private static final int[] readMask = {
+            0x80, 0x3f, 0x00, 0xff, 0xbf, 0xff, 0x3f, 0x00, 0xff, 0xbf, 0x7f, 0xff, 0x9f, 0xff, 0xbf, 0xff,
+            0xff, 0x00, 0x00, 0xbf, 0x00, 0x00, 0x70, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff, 0xff,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
             0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
     };
