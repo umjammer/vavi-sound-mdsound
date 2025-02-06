@@ -3,9 +3,10 @@ package mdsound.chips;
 import java.util.Arrays;
 import java.util.function.Consumer;
 
-import mdsound.np.NpNesApu;
-import mdsound.np.NpNesDmc;
 import mdsound.np.NpNesFds;
+import mdsound.np.chip.NesApu;
+import mdsound.np.chip.NesDmc;
+import mdsound.np.chip.NesFds;
 
 
 /**
@@ -44,10 +45,17 @@ public class Nes {
     private int dmcVolume = 0;
     private int fdsVolume = 0;
 
-    private NpNesApu chipApu;
-    private NpNesDmc chipDmc;
-    private NpNesFds chipFds;
+    private final NesApu chipApu;
+    private final NesDmc chipDmc;
+    private final NesFds chipFds;
     private byte[] memory;
+
+    public Nes() {
+        chipApu = new NesApu();
+        chipDmc = new NesDmc();
+        chipFds = new NesFds();
+        chipDmc.dmc.nes_apu = chipApu.apu;
+    }
 
     private static int nesOptions = 0x8000;
 
@@ -75,13 +83,11 @@ public class Nes {
 //                    break;
 //            }
 
-        if (this.chipFds != null) {
-            for (int curSmpl = 0x00; curSmpl < samples; curSmpl++) {
-                this.chipFds.render(bufferF);
-                outputs[0][curSmpl] += (short) ((limit(bufferF[0], 0x7fff, -0x8000) * fdsVolume) >> 14);
-                outputs[1][curSmpl] += (short) ((limit(bufferF[1], 0x7fff, -0x8000) * fdsVolume) >> 14);
-                if (listener != null) listener.accept(new int[] {-1, -1, Math.abs(bufferF[0]), -1, -1, -1, -1, -1});
-            }
+        for (int curSmpl = 0x00; curSmpl < samples; curSmpl++) {
+            this.chipFds.render(bufferF);
+            outputs[0][curSmpl] += (short) ((limit(bufferF[0], 0x7fff, -0x8000) * fdsVolume) >> 14);
+            outputs[1][curSmpl] += (short) ((limit(bufferF[1], 0x7fff, -0x8000) * fdsVolume) >> 14);
+            if (listener != null) listener.accept(new int[] {-1, -1, Math.abs(bufferF[0]), -1, -1, -1, -1, -1});
         }
     }
 
@@ -93,21 +99,19 @@ public class Nes {
         boolean enableFDS = ((clock >> 31) & 0x01) != 0;
         clock &= 0x7fff_ffff;
 
-        this.chipApu = new NpNesApu(clock, rate);
+        chipApu.apu.init(clock, rate);
 
-        this.chipDmc = new NpNesDmc(clock, rate);
+        chipDmc.dmc.init(clock, rate);
 
-        this.chipDmc.setAPU(this.chipApu);
+        this.chipDmc.dmc.setAPU(this.chipApu.apu);
 
         this.memory = new byte[0x8000];
         Arrays.fill(this.memory, (byte) 0);
-        this.chipDmc.setMemory(this.memory, -0x8000);
+        this.chipDmc.dmc.setMemory(this.memory, -0x8000);
 
         if (enableFDS) {
-            this.chipFds = new NpNesFds(clock, rate);
+            chipFds.fds.init(clock, rate);
             // If it returns NULL, that's okay.
-        } else {
-            this.chipFds = null;
         }
         setChipOption();
     }
@@ -116,16 +120,12 @@ public class Nes {
         if (this.memory != null) {
             this.memory = null;
         }
-        this.chipApu = null;
-        this.chipDmc = null;
-        this.chipFds = null;
     }
 
     public void reset() {
         this.chipApu.reset();
         this.chipDmc.reset();
-        if (this.chipFds != null)
-            this.chipFds.reset();
+        this.chipFds.reset();
     }
 
     public void write(int offset, int data) {
@@ -135,8 +135,6 @@ public class Nes {
             this.chipDmc.write(0x4000 | offset, data);
             break;
         case 0x20: // FDS register
-            if (this.chipFds == null)
-                break;
             if (offset == 0x3F)
                 this.chipFds.write(0x4023, data);
             else
@@ -144,8 +142,6 @@ public class Nes {
             break;
         case 0x40: // FDS wave RAM
         case 0x60:
-            if (this.chipFds == null)
-                break;
             this.chipFds.write(0x4000 | offset, data);
             break;
         }
@@ -192,20 +188,15 @@ public class Nes {
     }
 
     public int[] readApu() {
-        if (this.chipApu == null) return null;
-        return this.chipApu.reg;
+        return this.chipApu.apu.reg;
     }
 
     public int[] readDmc() {
-        if (this.chipDmc == null) return null;
-
-        return this.chipDmc.reg;
+        return this.chipDmc.dmc.reg;
     }
 
     public NpNesFds readDds() {
-        if (this.chipFds == null) return null;
-
-        return this.chipFds;
+        return this.chipFds.fds;
     }
 
     private void nes_set_option(int options) {
@@ -226,33 +217,28 @@ public class Nes {
 //#endif
 //            case EC_NSFPLAY:
             // shared APU/DMC options
-            for (curOpt = 0; curOpt < 2; curOpt++) {
-                this.chipApu.setOption(curOpt, (nesOptions >> curOpt) & 0x01);
-                this.chipDmc.setOption(curOpt, (nesOptions >> curOpt) & 0x01);
-            }
-            // APU-only options
-            for (; curOpt < 4; curOpt++)
-                this.chipApu.setOption(curOpt - 2 + 2, (nesOptions >> curOpt) & 0x01);
-            // DMC-only options
-            for (; curOpt < 10; curOpt++)
-                this.chipDmc.setOption(curOpt - 4 + 2, (nesOptions >> curOpt) & 0x01);
+        for (curOpt = 0; curOpt < 2; curOpt++) {
+            this.chipApu.setOption(curOpt, (nesOptions >> curOpt) & 0x01);
+            this.chipDmc.setOption(curOpt, (nesOptions >> curOpt) & 0x01);
+        }
+        // APU-only options
+        for (; curOpt < 4; curOpt++)
+            this.chipApu.setOption(curOpt - 2 + 2, (nesOptions >> curOpt) & 0x01);
+        // DMC-only options
+        for (; curOpt < 10; curOpt++)
+            this.chipDmc.setOption(curOpt - 4 + 2, (nesOptions >> curOpt) & 0x01);
 //            break;
 //    }
-        if (this.chipFds != null) {
-            // FDS options
-            // I skip the Cutoff frequency here, since it's not a boolean value.
-            for (curOpt = 12; curOpt < 14; curOpt++)
-                this.chipFds.setOption(curOpt - 12 + 1, (nesOptions >> curOpt) & 0x01);
-        }
+        // FDS options
+        // I skip the Cutoff frequency here, since it's not a boolean value.
+        for (curOpt = 12; curOpt < 14; curOpt++)
+            this.chipFds.setOption(curOpt - 12 + 1, (nesOptions >> curOpt) & 0x01);
     }
 
     public void setMuteMask(int muteMask) {
-        if (this.chipApu != null)
-            this.chipApu.setMask((muteMask & 0x03) >> 0);
-        if (this.chipDmc != null)
-            this.chipDmc.setMask((muteMask & 0x1C) >> 2);
-        if (this.chipFds != null)
-            this.chipFds.setMask((muteMask & 0x20) >> 5);
+        this.chipApu.setMask((muteMask & 0x03) >> 0);
+        this.chipDmc.setMask((muteMask & 0x1C) >> 2);
+        this.chipFds.setMask((muteMask & 0x20) >> 5);
     }
 
     private Consumer<int[]> listener;

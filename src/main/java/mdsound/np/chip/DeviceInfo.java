@@ -1,11 +1,20 @@
+/*
+ * NSFPlay/NFSPlug project by Brezza.
+ *
+ * https://web.archive.org/web/20160301201825/http://www.pokipoki.org/dsa/
+ */
+
 package mdsound.np.chip;
 
+
 public class DeviceInfo {
+
     public DeviceInfo clone() {
         return null;
     }
 
     public static class TrackInfo extends DeviceInfo {
+
         public DeviceInfo clone() {
             return null;
         }
@@ -69,7 +78,7 @@ public class DeviceInfo {
             }
         }
 
-        public int bufmax;
+        public int bufMax;
 
         public int index;
 
@@ -77,15 +86,15 @@ public class DeviceInfo {
 
         public InfoBuffer(int max /* = 60 * 10 */) {
             index = 0;
-            bufmax = max;
-            buffer = new Pair[bufmax];
-            for (int i = 0; i < bufmax; i++) {
+            bufMax = max;
+            buffer = new Pair[bufMax];
+            for (int i = 0; i < bufMax; i++) {
                 buffer[i] = new Pair(0, null);
             }
         }
 
         public void Clear() {
-            for (int i = 0; i < bufmax; i++) {
+            for (int i = 0; i < bufMax; i++) {
                 buffer[i].first = 0;
                 buffer[i].second = null;
             }
@@ -95,15 +104,15 @@ public class DeviceInfo {
             if (di != null) {
                 buffer[index].first = pos;
                 buffer[index].second = di.clone();
-                index = (index + 1) % bufmax;
+                index = (index + 1) % bufMax;
             }
         }
 
         public DeviceInfo getInfo(int pos) {
             if (pos == -1)
-                return buffer[(index + bufmax - 1) % bufmax].second;
+                return buffer[(index + bufMax - 1) % bufMax].second;
 
-            for (int i = (index + bufmax - 1) % bufmax; i != index; i = (i + bufmax - 1) % bufmax)
+            for (int i = (index + bufMax - 1) % bufMax; i != index; i = (i + bufMax - 1) % bufMax)
                 if (buffer[i].first <= pos)
                     return buffer[i].second;
 

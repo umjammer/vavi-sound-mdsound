@@ -140,14 +140,14 @@ public class NesInst extends Instrument.BaseInstrument {
         if (ds[7] != -1) np_nes_vrc7_volume = ds[7];
     };
 
-    public static int np_nes_apu_volume;
-    public static int np_nes_dmc_volume;
-    public static int np_nes_fds_volume;
-    public static int np_nes_fme7_volume;
-    public static int np_nes_mmc5_volume;
-    public static int np_nes_n106_volume;
-    public static int np_nes_vrc6_volume;
-    public static int np_nes_vrc7_volume;
+    public int np_nes_apu_volume;
+    public int np_nes_dmc_volume;
+    public int np_nes_fds_volume;
+    public int np_nes_fme7_volume;
+    public int np_nes_mmc5_volume;
+    public int np_nes_n106_volume;
+    public int np_nes_vrc6_volume;
+    public int np_nes_vrc7_volume;
 
     public static class DMC extends NesInst {
         @Override

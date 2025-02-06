@@ -1,24 +1,34 @@
+/*
+ * https://github.com/kuma4649/MDSound
+ */
 
 package mdsound.fmvgen.effect;
 
+
 public class ReversePhase {
 
-    public static int[][][] ssg;
-    public static int[][][] fm;
-    public static int[][] rhythm;
-    public static int[][] adpcmA;
-    public static int[][] adpcm;
+    public final int[][][] ssg;
+    public final int[][][] fm;
+    public final int[][] rhythm;
+    public final int[][] adpcmA;
+    public final int[][] adpcm;
 
-    static {
+    private static final ReversePhase instance = new ReversePhase();
+
+    public static ReversePhase getInstance() {
+        return instance;
+    }
+
+    private ReversePhase() {
         ssg = new int[][][] {
-                new int[][] {new int[2], new int[2], new int[2]},
-                new int[][] {new int[2], new int[2], new int[2]},
-                new int[][] {new int[2], new int[2], new int[2]},
-                new int[][] {new int[2], new int[2], new int[2]}
+                {new int[2], new int[2], new int[2]},
+                {new int[2], new int[2], new int[2]},
+                {new int[2], new int[2], new int[2]},
+                {new int[2], new int[2], new int[2]}
         };
         fm = new int[][][] {
-                new int[][] {new int[2], new int[2], new int[2], new int[2], new int[2], new int[2]},
-                new int[][] {new int[2], new int[2], new int[2], new int[2], new int[2], new int[2]}
+                {new int[2], new int[2], new int[2], new int[2], new int[2], new int[2]},
+                {new int[2], new int[2], new int[2], new int[2], new int[2], new int[2]}
         };
         rhythm = new int[][] {new int[2], new int[2], new int[2], new int[2], new int[2], new int[2]};
         adpcmA = new int[][] {new int[2], new int[2], new int[2], new int[2], new int[2], new int[2]};

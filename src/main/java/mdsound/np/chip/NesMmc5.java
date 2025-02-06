@@ -1,3 +1,9 @@
+/*
+ * NSFPlay/NFSPlug project by Brezza.
+ *
+ * https://web.archive.org/web/20160301201825/http://www.pokipoki.org/dsa/
+ */
+
 package mdsound.np.chip;
 
 import java.util.function.Consumer;
@@ -9,6 +15,7 @@ import mdsound.np.cpu.Km6502;
 
 
 public class NesMmc5 implements SoundChip {
+
     public static final double DEFAULT_CLOCK = 1789772.0;
     public static final int DEFAULT_RATE = 44100;
 
@@ -16,22 +23,22 @@ public class NesMmc5 implements SoundChip {
         NONLINEAR_MIXER, PHASE_REFRESH, END
     }
 
-    protected int[] option = new int[(int) OPT.END.ordinal()];
+    protected int[] option = new int[OPT.END.ordinal()];
     protected int mask;
-    protected int[][] sm = new int[][] {new int[3], new int[3]}; // stereo panning
+    protected int[][] sm = {new int[3], new int[3]}; // stereo panning
     protected byte[] ram = new byte[0x6000 - 0x5c00];
     protected byte[] reg = new byte[8];
-    protected byte[] mReg = new byte[2];
-    // PCM channel
-    public byte pcm;
-    // PCM channel
+    protected int[] mReg = new int[2];
+    /** PCM channel */
+    public int pcm;
+    /** PCM channel */
     public boolean pcmMode;
-    // PCM channel reads need CPU access
+    /** PCM channel reads need CPU access */
     protected Km6502 cpu;
 
-    // frequency divider
+    /** frequency divider */
     protected int[] sCounter = new int[2];
-    // phase counter
+    /** phase counter */
     protected int[] sPhase = new int[2];
 
     protected int[] duty = new int[2];
@@ -56,7 +63,7 @@ public class NesMmc5 implements SoundChip {
     protected double clock, rate;
     protected int[] squareTable = new int[32];
     protected int[] pcmTable = new int[256];
-    protected BasicTrackInfo[] trkInfo = new BasicTrackInfo[3];
+    protected BasicTrackInfo[] trackInfo = new BasicTrackInfo[3];
 
     public NesMmc5() {
         cpu = null;
@@ -165,11 +172,11 @@ public class NesMmc5 implements SoundChip {
         }
     }
 
-    private static final short[][] sqrTbl = new short[][] {
-            new short[] {0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            new short[] {0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-            new short[] {0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0},
-            new short[] {1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
+    private static final int[][] sqrTbl = {
+            {0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+            {0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0},
+            {1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
     };
 
     private int calcSqr(int i, int clocks) {
@@ -257,27 +264,27 @@ public class NesMmc5 implements SoundChip {
         return 2;
     }
 
-    public static final byte[] length_table = new byte[] {
-            0x0A, (byte) 0xFE,
+    public static final int[] length_table = {
+            0x0a, 0xfe,
             0x14, 0x02,
             0x28, 0x04,
             0x50, 0x06,
-            (byte) 0xA0, 0x08,
-            0x3C, 0x0A,
-            0x0E, 0x0C,
-            0x1A, 0x0E,
-            0x0C, 0x10,
+            0xa0, 0x08,
+            0x3c, 0x0a,
+            0x0e, 0x0c,
+            0x1a, 0x0e,
+            0x0c, 0x10,
             0x18, 0x12,
             0x30, 0x14,
             0x60, 0x16,
-            (byte) 0xC0, 0x18,
-            0x48, 0x1A,
-            0x10, 0x1C,
-            0x20, 0x1E
+            0xc0, 0x18,
+            0x48, 0x1a,
+            0x10, 0x1c,
+            0x20, 0x1e
     };
 
     @Override
-    public boolean write(int adr, int val, int id /*= 0*/) {
+    public boolean write(int adr, int val, int id /* = 0 */) {
         int ch;
 
         if ((0x5c00 <= adr) && (adr < 0x5ff0)) {
@@ -328,7 +335,7 @@ public class NesMmc5 implements SoundChip {
         case 0x5011:
             if (!pcmMode) {
                 val &= 0xff;
-                if (val != 0) pcm = (byte) val;
+                if (val != 0) pcm = val;
             }
             break;
 
@@ -342,11 +349,11 @@ public class NesMmc5 implements SoundChip {
             break;
 
         case 0x5205:
-            mReg[0] = (byte) val;
+            mReg[0] = val;
             break;
 
         case 0x5206:
-            mReg[1] = (byte) val;
+            mReg[1] = val;
             break;
 
         default:
@@ -357,20 +364,19 @@ public class NesMmc5 implements SoundChip {
     }
 
     @Override
-    public boolean read(int adr, int[] val, int id/* = 0*/) {
+    public boolean read(int adr, int[] val, int id /* = 0 */) {
         // in PCM read mode, reads from $8000-$C000 automatically load the PCM output
         if (pcmMode && (0x8000 <= adr) && (adr < 0xC000) && cpu != null) {
             pcmMode = false; // prevent recursive entry
             int[] pcm_read = new int[] { 0 };
             cpu.read(adr, pcm_read, id);
-            pcm_read[0] &= 0xff;
             if (pcm_read[0] != 0)
-                pcm = (byte) pcm_read[0];
+                pcm = pcm_read[0];
             pcmMode = true;
         }
 
         if ((0x5000 <= adr) && (adr < 0x5008)) {
-            val[0] = reg[adr & 0x7];
+            val[0] = reg[adr & 0x7] & 0xff;
             return true;
         } else if (adr == 0x5015) {
             val[0] = (enable[1] ? 2 : 0) | (enable[0] ? 1 : 0);
@@ -378,13 +384,13 @@ public class NesMmc5 implements SoundChip {
         }
 
         if ((0x5c00 <= adr) && (adr < 0x5ff0)) {
-            val[0] = ram[adr & 0x3ff];
+            val[0] = ram[adr & 0x3ff] & 0xff;
             return true;
         } else if (adr == 0x5205) {
             val[0] = (mReg[0] * mReg[1]) & 0xff;
             return true;
         } else if (adr == 0x5206) {
-            val[0] = (mReg[0] * mReg[1]) >> 8;
+            val[0] = ((mReg[0] * mReg[1]) & 0xff00) >> 8;
             return true;
         }
 
@@ -392,42 +398,42 @@ public class NesMmc5 implements SoundChip {
     }
 
     @Override
-    public void setStereoMix(int trk, int mixL, int mixR) {
-        if (trk < 0) return;
-        if (trk > 2) return;
-        sm[0][trk] = mixL;
-        sm[1][trk] = mixR;
+    public void setStereoMix(int track, int mixL, int mixR) {
+        if (track < 0) return;
+        if (track > 2) return;
+        sm[0][track] = mixL;
+        sm[1][track] = mixR;
     }
 
-    public TrackInfo getTrackInfo(int trk) {
-        //assert(trk < 3);
+    public TrackInfo getTrackInfo(int track) {
+        assert track < 3;
 
-        if (trk < 2) { // square
-            trkInfo[trk]._freq = freq[trk];
-            if (freq[trk] != 0)
-                trkInfo[trk].freq = clock / 16 / (freq[trk] + 1);
+        if (track < 2) { // square
+            trackInfo[track]._freq = freq[track];
+            if (freq[track] != 0)
+                trackInfo[track].freq = clock / 16 / (freq[track] + 1);
             else
-                trkInfo[trk].freq = 0;
+                trackInfo[track].freq = 0;
 
-            trkInfo[trk].output = out[trk];
-            trkInfo[trk].maxVolume = 15;
-            trkInfo[trk].volume = volume[trk] + (envelopeDisable[trk] ? 0 : 0x10);
-            trkInfo[trk].key = (envelopeDisable[trk] ? (volume[trk] > 0) : (envelopeCounter[trk] > 0));
-            trkInfo[trk].tone = duty[trk];
+            trackInfo[track].output = out[track];
+            trackInfo[track].maxVolume = 15;
+            trackInfo[track].volume = volume[track] + (envelopeDisable[track] ? 0 : 0x10);
+            trackInfo[track].key = (envelopeDisable[track] ? (volume[track] > 0) : (envelopeCounter[track] > 0));
+            trackInfo[track].tone = duty[track];
         } else { // pcm
-            trkInfo[trk]._freq = 0;
-            trkInfo[trk].freq = 0;
-            trkInfo[trk].output = out[2];
-            trkInfo[trk].maxVolume = 255;
-            trkInfo[trk].volume = pcm;
-            trkInfo[trk].key = false;
-            trkInfo[trk].tone = pcmMode ? 1 : 0;
+            trackInfo[track]._freq = 0;
+            trackInfo[track].freq = 0;
+            trackInfo[track].output = out[2];
+            trackInfo[track].maxVolume = 255;
+            trackInfo[track].volume = pcm;
+            trackInfo[track].key = false;
+            trackInfo[track].tone = pcmMode ? 1 : 0;
         }
 
-        return trkInfo[trk];
+        return trackInfo[track];
     }
 
-    // pcm read mode requires CPU read access
+    /** pcm read mode requires CPU read access */
     public void setCPU(Km6502 cpu) {
         this.cpu = cpu;
     }

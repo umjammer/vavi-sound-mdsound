@@ -1,3 +1,8 @@
+/*
+ * NSFPlay/NFSPlug project by Brezza.
+ *
+ * https://web.archive.org/web/20160301201825/http://www.pokipoki.org/dsa/
+ */
 
 package mdsound.np;
 

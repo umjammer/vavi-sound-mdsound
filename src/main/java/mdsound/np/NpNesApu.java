@@ -1,13 +1,58 @@
+/*
+ MAME/MESS NES APU CORE
+
+ Based on the Nofrendo/Nosefart NES N2A03 sound emulation core written by
+ Matthew Conte (matt@conte.com) and redesigned for use in MAME/MESS by
+ Who Wants to Know? (wwtk@mail.com)
+
+ This core is written with the advise and consent of Matthew Conte and is
+ released under the GNU Public License.  This core is freely avaiable for
+ use in any freeware project, subject to the following terms:
+
+ Any modifications to this code must be duly noted in the source and
+ approved by Matthew Conte and myself prior to public submission.
+
+ timing notes:
+ master = 21477270
+ 2A03 clock = master/12
+ sequencer = master/89490 or CPU/7457
+
+ ---
+
+ NES_APU.C
+
+ Actual NES APU interface.
+
+ LAST MODIFIED 02/29/2004
+
+ - Based on Matthew Conte's Nofrendo/Nosefart core and redesigned to
+ use MAME system calls and to enable multiple APUs.  Sound at this
+ point should be just about 100% accurate, though I cannot tell for
+ certain as yet.
+
+ A queue interface is also available for additional speed.  However,
+ the implementation is not yet 100% (DPCM sounds are inaccurate),
+ so it is disabled by default.
+
+ ---
+
+ BUGFIXES:
+
+ - Various bugs concerning the DPCM channel fixed. (Oliver Achten)
+ - Fixed $4015 read behaviour. (Oliver Achten)
+ */
+
 package mdsound.np;
 
 
-//
-// NES 2A03
-//
-// Ported from NSFPlay 2.2 to VGMPlay (including C++ . C conversion)
-// by Valley Bell on 24 September 2013
-// Updated to NSFPlay 2.3 on 26 September 2013
-// (Note: Encoding is UTF-8)
+/**
+ * NES 2A03
+ *
+ * @version Ported from NSFPlay 2.2 to VGMPlay (including C++ -> C conversion) by Valley Bell on 24 September 2013<br/>
+ *          Updated to NSFPlay 2.3 on 26 September 2013
+ * @author Matthew Conte
+ * @author Valley Bell
+ */
 public class NpNesApu {
 
     // Master Clock: 21477272 (NTSC)
@@ -22,8 +67,8 @@ public class NpNesApu {
         UNMUTE_ON_RESET,
         NONLINEAR_MIXER,
         PHASE_REFRESH,
-        DUTY_SWAP,
-        END
+        DUTY_SWAP;
+        static final int END = values().length;
     }
 
     enum SQR {
@@ -33,7 +78,7 @@ public class NpNesApu {
     }
 
     // Various options
-    private final int[] option = new int[OPT.END.ordinal()];
+    private final int[] option = new int[OPT.END];
     private int mask;
     public final int[][] sm = {new int[2], new int[2]};
 
@@ -80,7 +125,7 @@ public class NpNesApu {
         int shifted = this.freq[i] >> this.sweepAmount[i];
         if (i == 0 && this.sweepMode[i]) shifted += 1;
         this.sFreq[i] = this.freq[i] + (this.sweepMode[i] ? -shifted : shifted);
-//logger.log(Level.TRACE, "shifted[%d] = %d (%d >> %d)".formatted(i,shifted,this.freq[i],this.sweep_amount[i]));
+//logger.log(Level.TRACE, "shifted[%d] = %d (%d >> %d)".formatted(i, shifted, this.freq[i], this.sweep_amount[i]));
     }
 
     public void sequenceFrame(int s) {
@@ -117,14 +162,14 @@ public class NpNesApu {
                     --this.lengthCounter[i];
 
                 if (this.sweepEnable[i]) {
-                    //logger.log(Level.TRACE, "Clock sweep: %d".formatted(i));
+//logger.log(Level.TRACE, "Clock sweep: %d".formatted(i));
 
                     --this.sweepDiv[i];
                     if (this.sweepDiv[i] <= 0) {
                         sweepSqr(i); // calculate new sweep target
 
-                        //logger.log(Level.TRACE, "sweep_div[%d] (0/%d)".formatted(i,this.sweep_div_period[i]));
-                        //logger.log(Level.TRACE, "freq[%d]=%d > sFreq[%d]=%d".formatted(i,this.freq[i],i,this.sFreq[i]));
+//logger.log(Level.TRACE, "sweep_div[%d] (0/%d)".formatted(i, this.sweep_div_period[i]));
+//logger.log(Level.TRACE, "freq[%d]=%d > sFreq[%d]=%d".formatted(i, this.freq[i], i, this.sFreq[i]));
 
                         if (this.freq[i] >= 8 && this.sFreq[i] < 0x800 && this.sweepAmount[i] > 0) { // update frequency if appropriate
                             this.freq[i] = Math.max(this.sFreq[i], 0);
@@ -132,7 +177,7 @@ public class NpNesApu {
                         }
                         this.sweepDiv[i] = this.sweepDivPeriod[i] + 1;
 
-                        //logger.log(Level.TRACE, "freq[%d]=%d".formatted(i,this.freq[i]));
+//logger.log(Level.TRACE, "freq[%d]=%d".formatted(i, this.freq[i]));
                     }
 
                     if (this.sweepWrite[i]) {
@@ -151,15 +196,13 @@ public class NpNesApu {
     };
 
     private int calcSqr(int i, int clocks) {
-        int ret = 0;
-
         this.sCounter[i] += clocks;
         while (this.sCounter[i] > this.freq[i]) {
             this.sPhase[i] = (this.sPhase[i] + 1) & 15;
             this.sCounter[i] -= (this.freq[i] + 1);
         }
 
-        //int ret = 0;
+        int ret = 0;
         if (this.lengthCounter[i] > 0 &&
                 this.freq[i] >= 8 &&
                 this.sFreq[i] < 0x800
@@ -262,12 +305,11 @@ public class NpNesApu {
         b[1] = m[0] * this.sm[1][0];
         b[1] += m[1] * this.sm[1][1];
         b[1] >>= 7 - 3; // see above
-
+//System.err.println("b[0] = " + b[0] + ", b[1] = " + b[1]);
         return 2;
     }
 
     public void reset() {
-        int i;
         this.gClock = 0;
         this.mask = 0;
 
@@ -285,21 +327,21 @@ public class NpNesApu {
         this.envelopeCounter[0] = 0;
         this.envelopeCounter[1] = 0;
 
-        for (i = 0x4000; i < 0x4008; i++)
+        for (int i = 0x4000; i < 0x4008; i++)
             write(i, 0);
 
         write(0x4015, 0);
         if (this.option[OPT.UNMUTE_ON_RESET.ordinal()] != 0)
             write(0x4015, 0x0f);
 
-        for (i = 0; i < 2; i++)
+        for (int i = 0; i < 2; i++)
             this.out[i] = 0;
 
         setRate(this.rate);
     }
 
     public void setOption(int id, int val) {
-        if (id < OPT.END.ordinal()) this.option[id] = val;
+        if (id < OPT.END) this.option[id] = val;
     }
 
     public void setClock(double c) {
@@ -344,13 +386,12 @@ public class NpNesApu {
     };
 
     public boolean write(int adr, int val) {
-        int ch;
 
         if (0x4000 <= adr && adr < 0x4008) {
 //logger.log(Level.TRACE, "$%04X = %02X".formatted(adr, val));
 
             adr &= 0xf;
-            ch = adr >> 2;
+            int ch = adr >> 2;
             switch (adr) {
             case 0x0:
             case 0x4:
@@ -421,7 +462,7 @@ public class NpNesApu {
         return false;
     }
 
-    public NpNesApu(int clock, int rate) {
+    public void init(int clock, int rate) {
         this.setClock(clock);
         this.setRate(rate);
         this.option[OPT.UNMUTE_ON_RESET.ordinal()] = 1;

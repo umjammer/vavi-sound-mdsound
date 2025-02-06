@@ -73,6 +73,7 @@ public class K053260 {
         private int bank;
         private int volume;
         private int play;
+        private int dir;
         private int pan;
         private int pos;
         private int loop;
@@ -88,6 +89,7 @@ public class K053260 {
             this.bank = 0;
             this.volume = 0;
             this.play = 0;
+            this.dir = 0;
             this.pan = 0;
             this.pos = 0;
             this.loop = 0;
@@ -155,7 +157,7 @@ public class K053260 {
 
                 this.size = romSize - channelStart;
             }
-//logger.log(Level.TRACE, "K053260: Sample Start = %06x, Sample End = %06x, Sample rate = %04x, PPCM = %s".formatted(channelStart, channelEnd, this.rate, this.ppcm ? "yes" : "no"));
+//logger.log(Level.TRACE, "K053260: Sample Start = %06x, Sample End = %06x, Sample rate = %04x, PPCM = %s".formatted(channelStart, channelEnd, this.rate, this.pPcm ? "yes" : "no"));
         }
     }
 
@@ -200,18 +202,19 @@ public class K053260 {
     private static final int MAXOUT = 0x8000;
     private static final int MINOUT = -0x8000;
 
-    private static final byte[] dpcmcnv = new byte[] {0, 1, 2, 4, 8, 16, 32, 64, -128, -64, -32, -16, -8, -4, -2, -1};
+    private static final byte[] dPcmCnv = new byte[] {0, 1, 2, 4, 8, 16, 32, 64, -128, -64, -32, -16, -8, -4, -2, -1};
     private final int[] lVol = new int[4];
     private final int[] rVol = new int[4];
     private final int[] play = new int[4];
+    private final int[] dir = new int[4];
     private final int[] loop = new int[4];
-    private final int[] ppcm = new int[4];
+    private final int[] pPcm = new int[4];
     //byte[] rom = new byte[4];
     private final int[] ptrRom = new int[4];
     private final int[] delta = new int[4];
     private final int[] end = new int[4];
     private final int[] pos = new int[4];
-    private final byte[] ppcmData = new byte[4];
+    private final byte[] pPcmData = new byte[4];
 
     public void reset() {
         for (int i = 0; i < 4; i++) {
@@ -234,10 +237,11 @@ public class K053260 {
             end[i] = this.channels[i].size;
             pos[i] = this.channels[i].pos;
             play[i] = this.channels[i].play;
+            dir[i] = this.channels[i].dir;
             loop[i] = this.channels[i].loop;
-            ppcm[i] = this.channels[i].ppcm;
-            ppcmData[i] = (byte) this.channels[i].ppcmData;
-            if (ppcm[i] != 0)
+            pPcm[i] = this.channels[i].ppcm;
+            pPcmData[i] = (byte) this.channels[i].ppcmData;
+            if (pPcm[i] != 0)
                 delta[i] /= 2;
         }
 
@@ -251,7 +255,7 @@ public class K053260 {
                     /* see if we're done */
                     if ((pos[i] >> BASE_SHIFT) >= end[i]) {
 
-                        ppcmData[i] = 0;
+                        pPcmData[i] = 0;
                         if (loop[i] != 0)
                             pos[i] = 0;
                         else {
@@ -259,28 +263,29 @@ public class K053260 {
                             continue;
                         }
                     }
+                    int position = pos[i] >> BASE_SHIFT;
 
                     byte d;
-                    if (ppcm[i] != 0) { // Packed PCM
+                    if (pPcm[i] != 0) { // Packed PCM
                         // we only update the signal if we're starting or a real Sound sample has gone by
                         // this is all due to the dynamic sample rate conversion
                         if (pos[i] == 0 || ((pos[i] ^ (pos[i] - delta[i])) & 0x8000) == 0x8000) {
                             int newData;
                             if ((pos[i] & 0x8000) != 0) {
-                                newData = ((this.rom[ptrRom[i] + (pos[i] >> BASE_SHIFT)]) >> 4) & 0x0f; // high nybble
+                                newData = ((this.rom[ptrRom[i] + ((dir[i] > 0) ? -position : position)]) >> 4) & 0x0f; // high nybble
                             } else {
-                                newData = ((this.rom[ptrRom[i] + (pos[i] >> BASE_SHIFT)])) & 0x0f; // low nybble
+                                newData = ((this.rom[ptrRom[i] + ((dir[i] > 0) ? -position : position)])) & 0x0f; // low nybble
                             }
 
-                            ppcmData[i] += dpcmcnv[newData];
+                            pPcmData[i] += dPcmCnv[newData];
                         }
 
 
-                        d = ppcmData[i];
+                        d = pPcmData[i];
 
                         pos[i] += delta[i];
                     } else { // PCM
-                        d = this.rom[ptrRom[i] + (pos[i] >> BASE_SHIFT)];
+                        d = this.rom[ptrRom[i] + ((dir[i] > 0) ? -position : position)];
 
                         pos[i] += delta[i];
                     }
@@ -302,7 +307,7 @@ public class K053260 {
                 continue;
             this.channels[i].pos = pos[i];
             this.channels[i].play = play[i];
-            this.channels[i].ppcmData = ppcmData[i];
+            this.channels[i].ppcmData = pPcmData[i];
         }
     }
 
@@ -328,7 +333,7 @@ public class K053260 {
         initDeltaTable(rate, clock);
 
         // setup SH1 timer if necessary
-        //if ( this.intf.irq )
+        //if (this.intf.irq)
         // device.machine().scheduler().timer_pulse( attotime::from_hz(device.clock()) * 32, this.intf.irq, "this.intf.irq" );
 
         for (int i = 0; i < 4; i++)
@@ -344,7 +349,7 @@ public class K053260 {
     public void write(int offset, int data) {
 
         if (offset > 0x2f) {
-            //logger.log(Level.TRACE, "K053260: Writing past registers\n");
+//logger.log(Level.TRACE, "K053260: Writing past registers\n");
             return;
         }
 
@@ -355,6 +360,7 @@ public class K053260 {
             int t = this.regs[offset] ^ data;
 
             for (int c = 0; c < 4; c++) {
+                this.channels[c].dir = (data & (16 << c)) != 0 ? 1 : 0;
                 if ((t & (1 << c)) != 0) {
                     if ((data & (1 << c)) != 0) {
                         this.channels[c].play = 1;
@@ -386,7 +392,7 @@ public class K053260 {
         }
 
         switch (offset) {
-        case 0x2a: // loop, ppcm
+        case 0x2a: // loop, pPcm
             for (int c = 0; c < 4; c++)
                 this.channels[c].loop = (data & (1 << c)) != 0 ? 1 : 0;
 

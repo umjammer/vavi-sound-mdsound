@@ -75,11 +75,11 @@ public class Rf5C68Inst extends Instrument.BaseInstrument implements PcmEnabledI
         chips[chipId].setMuteMask(0);
     }
 
-    /** @param extras 0: srcStartAddress */
+    /** @param extras 0: srcOffset */
     @Override
     public synchronized void writePcm(int chipId, byte[] buf, int offset, int length, Object... extras) {
-        int srcStartAddress = (int) extras[0];
-        chips[chipId].writeRam(offset, length, buf, srcStartAddress);
+        int srcOffset = (int) extras[0];
+        chips[chipId].writeRam(offset, length, buf, srcOffset);
     }
 
     //----

@@ -426,7 +426,7 @@ public class FrmMain extends JFrame {
 
         lblInterrupt.setText(app.sm.getInterrupt() ? "Enable" : "Disable");
 
-        lblDebug.setText(app.mds.getDebugMsg());
+//        lblDebug.setText(app.mds.getDebugMsg()); // TODO vavi
     }
 
     private void frmMainShown(WindowEvent ev) {

@@ -1,8 +1,17 @@
+/*
+ * https://web.archive.org/web/20200702131730/https://vstcpp.wpblog.jp/?p=1417
+ */
+
 package mdsound.fmvgen.effect;
 
-//
-// 3-band equalizer (https://vstcpp.wpblog.jp/?p=1417)
-//
+
+/**
+ * A 3-band equalizer is an effector that amplifies
+ * the low, mid, and high frequencies of the input audio.
+ *
+ * @author twitter:@vstcpp
+ * @see "https://web.archive.org/web/20200702131730/https://vstcpp.wpblog.jp/?p=1417"
+ */
 public class Eq3band {
     private float fL, fR;
     private int sampleRate = 44100;

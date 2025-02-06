@@ -518,7 +518,7 @@ public class Ym2151 {
             8, 8, 9, 10, 11, 12, 13, 14, 16, 17, 19, 20, 22, 22, 22, 22
     };
 
-    private static final int[] phaseinc_rom = {
+    private static final int[] phaseInc_rom = {
             1299, 1300, 1301, 1302, 1303, 1304, 1305, 1306, 1308, 1309, 1310, 1311, 1313, 1314, 1315, 1316,
             1318, 1319, 1320, 1321, 1322, 1323, 1324, 1325, 1327, 1328, 1329, 1330, 1332, 1333, 1334, 1335,
             1337, 1338, 1339, 1340, 1341, 1342, 1343, 1344, 1346, 1347, 1348, 1349, 1351, 1352, 1353, 1354,
@@ -609,7 +609,7 @@ public class Ym2151 {
     };
 
     // these variables stay here for speedup purposes only
-    private final RInt[] chanout = new RInt[] {new RInt(), new RInt(), new RInt(), new RInt(), new RInt(), new RInt(), new RInt(), new RInt()};
+    private final RInt[] chanOut = new RInt[] {new RInt(), new RInt(), new RInt(), new RInt(), new RInt(), new RInt(), new RInt(), new RInt()};
     // Phase Modulation input for operators 2,3,4
     private final RInt m2 = new RInt();
     private final RInt c1 = new RInt();
@@ -688,12 +688,7 @@ public class Ym2151 {
     }
 
     private void init_chip_tables() {
-        int i, j;
-        double mult, phaseinc, Hz;
-        double scaler;
-        double pom;
-
-        scaler = ((double) this.clock / 64.0) / ((double) this.sampfreq);
+        double scaler = ((double) this.clock / 64.0) / ((double) this.sampfreq);
 //logger.log(Level.TRACE, "scaler    = %20.15f".formatted(scaler));
 
         // this loop calculates Hertz values for notes from c-0 to b-7
@@ -701,46 +696,46 @@ public class Ym2151 {
         // i*100/64/1200 is equal to i/768
 
         // real chips works with 10 bits fixed point values (10.10)
-        mult = (1 << (FREQ_SH - 10)); // -10 because phaseinc_rom table values are already in 10.10 format
+        double mult = (1 << (FREQ_SH - 10)); // -10 because phaseInc_rom table values are already in 10.10 format
 
-        for (i = 0; i < 768; i++) {
+        for (int i = 0; i < 768; i++) {
             // 3.4375 Hz is note A; C# is 4 semitones higher
-            Hz = 1000;
+            double Hz = 1000;
 
-            phaseinc = phaseinc_rom[i]; // real chips phase increment
+            double phaseinc = phaseInc_rom[i]; // real chips phase increment
             phaseinc *= scaler; // adjust
 
             // octave 2 - reference octave
             this.freq[768 + 2 * 768 + i] = ((int) (phaseinc * mult)) & 0xffff_ffc0; // adjust to X.10 fixed point
             // octave 0 and octave 1
-            for (j = 0; j < 2; j++) {
+            for (int j = 0; j < 2; j++) {
                 this.freq[768 + j * 768 + i] = (this.freq[768 + 2 * 768 + i] >> (2 - j)) & 0xffff_ffc0; /* adjust to X.10 fixed point */
             }
             // octave 3 to 7
-            for (j = 3; j < 8; j++) {
+            for (int j = 3; j < 8; j++) {
                 this.freq[768 + j * 768 + i] = this.freq[768 + 2 * 768 + i] << (j - 2);
             }
         }
 
         // octave -1 (all equal to: oct 0, _KC_00_, _KF_00_)
-        for (i = 0; i < 768; i++) {
+        for (int i = 0; i < 768; i++) {
             this.freq[0 * 768 + i] = this.freq[1 * 768 + 0];
         }
 
         // octave 8 and 9 (all equal to: oct 7, _KC_14_, _KF_63_)
-        for (j = 8; j < 10; j++) {
-            for (i = 0; i < 768; i++) {
+        for (int j = 8; j < 10; j++) {
+            for (int i = 0; i < 768; i++) {
                 this.freq[768 + j * 768 + i] = this.freq[768 + 8 * 768 - 1];
             }
         }
 
         mult = (1 << FREQ_SH);
-        for (j = 0; j < 4; j++) {
-            for (i = 0; i < 32; i++) {
-                Hz = ((double) dt1_tab[j * 32 + i] * ((double) this.clock / 64.0)) / (double) (1 << 20);
+        for (int j = 0; j < 4; j++) {
+            for (int i = 0; i < 32; i++) {
+                double Hz = ((double) dt1_tab[j * 32 + i] * ((double) this.clock / 64.0)) / (double) (1 << 20);
 
                 // calculate phase increment
-                phaseinc = (Hz * SIN_LEN) / (double) this.sampfreq;
+                double phaseinc = (Hz * SIN_LEN) / (double) this.sampfreq;
 
                 // positive and negative values
                 this.dt1_freq[(j + 0) * 32 + i] = (int) (phaseinc * mult);
@@ -759,23 +754,23 @@ public class Ym2151 {
         // calculate timers' deltas
         // User's Manual pages 15,16
         mult = (1 << TIMER_SH);
-        for (i = 0; i < 1024; i++) {
+        for (int i = 0; i < 1024; i++) {
             // ASG 980324: changed to compute both tim_A_tab and timer_A_time
-            pom = ((double) 64 * (1024 - i) / this.clock);
+            double pom = ((double) 64 * (1024 - i) / this.clock);
             // number of samples that timer period takes (fixed point)
             this.tim_A_tab[i] = (int) (pom * (double) this.sampfreq * mult);
         }
-        for (i = 0; i < 256; i++) {
+        for (int i = 0; i < 256; i++) {
             // ASG 980324: changed to compute both tim_B_tab and timer_B_time
-            pom = ((double) 1024 * (256 - i) / this.clock);
+            double pom = ((double) 1024 * (256 - i) / this.clock);
             // number of samples that timer period takes (fixed point)
             this.tim_B_tab[i] = (int) (pom * (double) this.sampfreq * mult);
         }
 
         // calculate noise periods table
         scaler = ((double) this.clock / 64.0) / ((double) this.sampfreq);
-        for (i = 0; i < 32; i++) {
-            j = (i != 31 ? i : 30); // rate 30 and 31 are the same
+        for (int i = 0; i < 32; i++) {
+            int j = (i != 31 ? i : 30); // rate 30 and 31 are the same
             j = 32 - j;
             j = (int) (65536.0 / (j * 32.0)); // number of samples per one shift of the shift register
             this.noise_tab[i] = (int) (j * 64 * scaler);
@@ -792,7 +787,7 @@ public class Ym2151 {
 
         // MEM is simply one sample delay
 
-//logger.log(Level.TRACE, "v:%d c1:%d mem:%d c2:%d m2:%d chanout[cha]:%d".formatted(v, c1.v, mem.v, c2.v, m2.v, chanout[cha]));
+//logger.log(Level.TRACE, "v:%d c1:%d mem:%d c2:%d m2:%d chanOut[cha]:%d".formatted(v, c1.v, mem.v, c2.v, m2.v, chanOut[cha]));
 
         switch (v & 7) {
         case 0:
@@ -835,7 +830,7 @@ public class Ym2151 {
             // M2---C2-+
             // MEM: not used
             om1.connect = c1;
-            oc1.connect = chanout[cha];
+            oc1.connect = chanOut[cha];
             om2.connect = c2;
             om1.mem_connect = mem; // store it anywhere where it will not be used
             break;
@@ -845,8 +840,8 @@ public class Ym2151 {
             // M1-+-MEM---M2-+-OUT
             //    +----C2----+
             om1.connect = null; // special mark
-            oc1.connect = chanout[cha];
-            om2.connect = chanout[cha];
+            oc1.connect = chanOut[cha];
+            om2.connect = chanOut[cha];
             om1.mem_connect = m2;
             break;
 
@@ -856,8 +851,8 @@ public class Ym2151 {
             //      C2-+
             // MEM: not used
             om1.connect = c1;
-            oc1.connect = chanout[cha];
-            om2.connect = chanout[cha];
+            oc1.connect = chanOut[cha];
+            om2.connect = chanOut[cha];
             om1.mem_connect = mem; // store it anywhere where it will not be used
             break;
 
@@ -867,9 +862,9 @@ public class Ym2151 {
             // M2-+
             // C2-+
             // MEM: not used*/
-            om1.connect = chanout[cha];
-            oc1.connect = chanout[cha];
-            om2.connect = chanout[cha];
+            om1.connect = chanOut[cha];
+            oc1.connect = chanOut[cha];
+            om2.connect = chanOut[cha];
             om1.mem_connect = mem; // store it anywhere where it will not be used
             break;
         }
@@ -897,17 +892,14 @@ public class Ym2151 {
             op[opPtr + 3].KEY_OFF(~1);
     }
 
-    private void refresh_EG(Operator[] opBuf, int opPtr) {
-        int kc;
-        int v;
-
+    private static void refresh_EG(Operator[] opBuf, int opPtr) {
         Operator op = opBuf[opPtr];
 
-        kc = op.kc;
+        int kc = op.kc;
 
         // = 32 + 2*RATE + RKS = max 126
 
-        v = kc >> op.ks;
+        int v = kc >> op.ks;
         if ((op.ar + v) < 32 + 62) {
             op.eg_sh_ar = eg_rate_shift[op.ar + v];
             op.eg_sel_ar = eg_rate_select[op.ar + v];
@@ -1237,8 +1229,6 @@ public class Ym2151 {
      * @param rate  is sampling rate
      */
     public void init(int clock, int rate) {
-        int chn;
-
         this.clock = clock;
         this.sampfreq = rate != 0 ? rate : 44100; // avoid division by 0 in init_chip_tables()
         init_chip_tables();
@@ -1247,13 +1237,13 @@ public class Ym2151 {
 
         this.eg_timer_add = (int) ((1 << EG_SH) * (clock / 64.0) / this.sampfreq);
         this.eg_timer_overflow = (3) * (1 << EG_SH);
-        //logger.log(Level.TRACE, "YM2151[init] eg_timer_add=%8x eg_timer_overflow=%8x".formatted(this.eg_timer_add, this.eg_timer_overflow));
+//logger.log(Level.TRACE, "YM2151[init] eg_timer_add=%8x eg_timer_overflow=%8x".formatted(this.eg_timer_add, this.eg_timer_overflow));
 
         this.tim_A = 0;
         this.tim_B = 0;
-        for (chn = 0; chn < 8; chn++)
+        for (int chn = 0; chn < 8; chn++)
             this.muted[chn] = 0x00;
-        //logger.log(Level.TRACE, "YM2151[init] clock=%i sampfreq=%i".formatted(this.clock, this.sampfreq));
+//logger.log(Level.TRACE, "YM2151[init] clock=%i sampfreq=%i".formatted(this.clock, this.sampfreq));
     }
 
     public void stop() {
@@ -1319,7 +1309,7 @@ public class Ym2151 {
             return;
 
         m2.v = c1.v = c2.v = mem.v = 0;
-        op = this.oper[chan * 4]; /* M1 */
+        op = this.oper[chan * 4]; // M1
         Operator[] opBuf = this.oper;
         int opPtr = chan * 4;
 
@@ -1361,34 +1351,31 @@ public class Ym2151 {
 
         env = opBuf[opPtr + 3].volumeCalc(am); // C2
         if (env < ENV_QUIET) {
-            chanout[chan].v += opBuf[opPtr + 3].opCalc(env, c2.v);
-//logger.log(Level.TRACE, "chanout[chan]:%d env:%d c2:%d".formatted(chanout[chan].v, env, c2.v));
+            chanOut[chan].v += opBuf[opPtr + 3].opCalc(env, c2.v);
+//logger.log(Level.TRACE, "chanOut[chan]:%d env:%d c2:%d".formatted(chanOut[chan].v, env, c2.v));
         }
-        if (chanout[chan].v > 16384) chanout[chan].v = 16384;
-        else if (chanout[chan].v < -16384) chanout[chan].v = -16384;
+        if (chanOut[chan].v > 16384) chanOut[chan].v = 16384;
+        else if (chanOut[chan].v < -16384) chanOut[chan].v = -16384;
 
-        /* M1 */
+        // M1
         op.mem_value = mem.v;
     }
 
     private void calcChannel7() {
-        Operator op;
-        int env;
-        int am = 0;
-
         if (this.muted[7] != 0)
             return;
 
         m2.v = c1.v = c2.v = mem.v = 0;
-        op = this.oper[7 * 4]; // M1 */
+        Operator op = this.oper[7 * 4]; // M1 */
         Operator[] opBuf = this.oper;
         int opPtr = 7 * 4;
 
         op.mem_connect.v = op.mem_value; // restore delayed sample (MEM) value to m2 or c2 */
 
+        int am = 0;
         if (op.ams != 0)
             am = this.lfa << (op.ams - 1);
-        env = op.volumeCalc(am);
+        int env = op.volumeCalc(am);
 //logger.log(Level.TRACE, "1:env:%d ENV_QUIET:%d Op.tl:%d Op.volume:%d Op.state:%d Psg.eg_cnt:%d Psg.eg_timer_add:%d Psg.eg_timer_overflow:%d".formatted(
 // env, ENV_QUIET, Op.tl, Op.volume, Op.state, Psg.eg_cnt, Psg.eg_timer_add, Psg.eg_timer_overflow));
         int out = op.fbOutPrev + op.fbOutCurr;
@@ -1427,13 +1414,13 @@ public class Ym2151 {
             noiseout = 0;
             if (env < 0x3ff)
                 noiseout = (env ^ 0x3ff) * 2; // range of the YM2151 noise output is -2044 to 2040 */
-            chanout[7].v += ((this.noise_rng & 0x10000) != 0 ? noiseout : -noiseout); // bit 16 . output
+            chanOut[7].v += ((this.noise_rng & 0x10000) != 0 ? noiseout : -noiseout); // bit 16 . output
         } else {
             if (env < ENV_QUIET)
-                chanout[7].v += opBuf[opPtr + 3].opCalc(env, c2.v);
+                chanOut[7].v += opBuf[opPtr + 3].opCalc(env, c2.v);
         }
-        if (chanout[7].v > 16384) chanout[7].v = 16384;
-        else if (chanout[7].v < -16384) chanout[7].v = -16384;
+        if (chanOut[7].v > 16384) chanOut[7].v = 16384;
+        else if (chanOut[7].v < -16384) chanOut[7].v = -16384;
         // M1
         op.mem_value = mem.v;
     }
@@ -1643,9 +1630,6 @@ public class Ym2151 {
         */
 
     private void advance_eg() {
-        Operator op;
-        int i;
-
         this.eg_timer += this.eg_timer_add;
 
         while (this.eg_timer >= this.eg_timer_overflow) {
@@ -1654,10 +1638,10 @@ public class Ym2151 {
             this.eg_cnt++;
 
             /* envelope generator */
-            op = this.oper[0]; /* CH 0 M1 */
+            Operator op = this.oper[0]; /* CH 0 M1 */
             Operator[] opBuf = this.oper;
             int opPtr = 0;
-            i = 32;
+            int i = 32;
             do {
                 switch (op.state) {
                 case EG_ATT: // attack phase */
@@ -1716,12 +1700,6 @@ public class Ym2151 {
     }
 
     private void advance() {
-        Operator op;
-        Operator[] opBuf;
-        int opPtr;
-        int i;
-        int a, p;
-
         /* LFO */
         if ((this.test & 2) != 0)
             this.lfo_phase = 0;
@@ -1736,13 +1714,14 @@ public class Ym2151 {
             }
         }
 
-        i = this.lfo_phase;
+        int a, p;
+        int i = this.lfo_phase;
         // calculate LFO AM and PM waveform value (all verified on real chips, except for noise algorithm which is impossible to analyse)
         switch (this.lfo_wsel) {
         case 0:
-            // saw */
-            // AM: 255 down to 0 */
-            // PM: 0 to 127, -127 to 0 (at PMD=127: LFP = 0 to 126, -126 to 0) */
+            // saw
+            // AM: 255 down to 0
+            // PM: 0 to 127, -127 to 0 (at PMD=127: LFP = 0 to 126, -126 to 0)
             a = 255 - i;
             if (i < 128)
                 p = i;
@@ -1750,9 +1729,9 @@ public class Ym2151 {
                 p = i - 255;
             break;
         case 1:
-            // square */
-            // AM: 255, 0 */
-            // PM: 128,-128 (LFP = exactly +PMD, -PMD) */
+            // square
+            // AM: 255, 0
+            // PM: 128,-128 (LFP = exactly +PMD, -PMD)
             if (i < 128) {
                 a = 255;
                 p = 128;
@@ -1762,9 +1741,9 @@ public class Ym2151 {
             }
             break;
         case 2:
-            /* triangle */
-            /* AM: 255 down to 1 step -2; 0 up to 254 step +2 */
-            /* PM: 0 to 126 step +2, 127 to 1 step -2, 0 to -126 step -2, -127 to -1 step +2*/
+            // triangle
+            // AM: 255 down to 1 step -2; 0 up to 254 step +2
+            // PM: 0 to 126 step +2, 127 to 1 step -2, 0 to -126 step -2, -127 to -1 step +2*/
             if (i < 128)
                 a = 255 - (i * 2);
             else
@@ -1785,8 +1764,8 @@ public class Ym2151 {
             // the real algorithm is unknown !!!
             // We just use a snapshot of data from real chips
 
-            /* AM: range 0 to 255    */
-            /* PM: range -128 to 127 */
+            // AM: range 0 to 255
+            // PM: range -128 to 127
 
             a = lfo_noise_waveform[i];
             p = a - 128;
@@ -1811,9 +1790,9 @@ public class Ym2151 {
         }
 
         // phase generator
-        op = this.oper[0]; // CH 0 M1
-        opBuf = this.oper;
-        opPtr = 0;
+        Operator op = this.oper[0]; // CH 0 M1
+        Operator[] opBuf = this.oper;
+        int opPtr = 0;
         i = 8;
         do {
             if (op.pms != 0) { // only when phase modulation from LFO is enabled for this channel
@@ -1869,7 +1848,7 @@ public class Ym2151 {
                 } while (i != 0);
                 this.csm_req = 1;
             } else { // KEY OFF
-                op = this.oper[0]; /* CH 0 M1 */
+                op = this.oper[0]; // CH 0 M1
                 opBuf = this.oper;
                 opPtr = 0;
                 i = 32;
@@ -1908,14 +1887,14 @@ public class Ym2151 {
         for (int i = 0; i < length; i++) {
             advance_eg();
 
-            chanout[0].v = 0;
-            chanout[1].v = 0;
-            chanout[2].v = 0;
-            chanout[3].v = 0;
-            chanout[4].v = 0;
-            chanout[5].v = 0;
-            chanout[6].v = 0;
-            chanout[7].v = 0;
+            chanOut[0].v = 0;
+            chanOut[1].v = 0;
+            chanOut[2].v = 0;
+            chanOut[3].v = 0;
+            chanOut[4].v = 0;
+            chanOut[5].v = 0;
+            chanOut[6].v = 0;
+            chanOut[7].v = 0;
 
             calcChannel(0);
             calcChannel(1);
@@ -1926,26 +1905,26 @@ public class Ym2151 {
             calcChannel(6);
             calcChannel7();
 
-            int outl = chanout[0].v & this.pan[0];
-            int outr = chanout[0].v & this.pan[1];
-            outl += chanout[1].v & this.pan[2];
-            outr += chanout[1].v & this.pan[3];
-            outl += chanout[2].v & this.pan[4];
-            outr += chanout[2].v & this.pan[5];
-            outl += chanout[3].v & this.pan[6];
-            outr += chanout[3].v & this.pan[7];
-            outl += chanout[4].v & this.pan[8];
-            outr += chanout[4].v & this.pan[9];
-            outl += chanout[5].v & this.pan[10];
-            outr += chanout[5].v & this.pan[11];
-            outl += chanout[6].v & this.pan[12];
-            outr += chanout[6].v & this.pan[13];
-            outl += chanout[7].v & this.pan[14];
-            outr += chanout[7].v & this.pan[15];
+            int outl = chanOut[0].v & this.pan[0];
+            int outr = chanOut[0].v & this.pan[1];
+            outl += chanOut[1].v & this.pan[2];
+            outr += chanOut[1].v & this.pan[3];
+            outl += chanOut[2].v & this.pan[4];
+            outr += chanOut[2].v & this.pan[5];
+            outl += chanOut[3].v & this.pan[6];
+            outr += chanOut[3].v & this.pan[7];
+            outl += chanOut[4].v & this.pan[8];
+            outr += chanOut[4].v & this.pan[9];
+            outl += chanOut[5].v & this.pan[10];
+            outr += chanOut[5].v & this.pan[11];
+            outl += chanOut[6].v & this.pan[12];
+            outr += chanOut[6].v & this.pan[13];
+            outl += chanOut[7].v & this.pan[14];
+            outr += chanOut[7].v & this.pan[15];
 
             outl >>= FINAL_SH;
             outr >>= FINAL_SH;
-            //logger.log(Level.TRACE, "%d %d".formatted(outl, outr));
+//logger.log(Level.TRACE, "%d %d".formatted(outl, outr));
             bufL[i] = (short) outl;
             bufR[i] = (short) outr;
 
@@ -1962,7 +1941,7 @@ public class Ym2151 {
                         //if ((!oldstate) && (Psg.IrqHandler)) (*Psg.IrqHandler)(this.device, 1);
                     }
                     if ((this.irq_enable & 0x80) != 0)
-                        this.csm_req = 2; // request KEY ON / KEY OFF sequence */
+                        this.csm_req = 2; // request KEY ON / KEY OFF sequence
                 }
             }
             advance();

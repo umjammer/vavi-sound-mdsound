@@ -1,3 +1,6 @@
+/*
+ * https://github.com/kuma4649/MDSound
+ */
 
 package mdsound;
 
@@ -8,7 +11,6 @@ import java.util.ServiceLoader;
 import dotnet4j.util.compat.Tuple;
 
 
-// TODO read
 public interface Instrument {
 
     /** for view */
@@ -104,17 +106,19 @@ public interface Instrument {
         void setPan(int chipId, int data);
     }
 
+    // TODO gross
     interface PannableInstrument extends Instrument, Pannable {
     }
 
     interface PcmEnabled {
 
-        void writePcm(int chipId, byte[] Buf, int offset, int length, Object... extras);
+        void writePcm(int chipId, byte[] buf, int offset, int length, Object... extras);
     }
 
     interface PcmEnabledInstrument extends Instrument, PcmEnabled {
     }
 
+    /** for reuse instances */
     ServiceLoader<Instrument> serviceLoader = ServiceLoader.load(Instrument.class);
 
     /** @return reused instance */
@@ -125,6 +129,7 @@ public interface Instrument {
                 return (T) i;
             }
         }
+        assert false : "not found: " + c;
         return null;
     }
 }

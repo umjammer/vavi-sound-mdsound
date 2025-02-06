@@ -1,9 +1,16 @@
+/*
+ * NSFPlay/NFSPlug project by Brezza.
+ *
+ * https://web.archive.org/web/20160301201825/http://www.pokipoki.org/dsa/
+ */
+
 package mdsound.np.chip;
 
 import java.util.function.Consumer;
 
 import mdsound.Common;
 import mdsound.Instrument;
+import mdsound.chips.Nes;
 import mdsound.np.Device;
 import mdsound.np.Device.SoundChip;
 import mdsound.np.NpNesDmc;
@@ -11,10 +18,15 @@ import mdsound.np.NpNesDmc;
 
 public class NesDmc implements SoundChip {
 
-    public NpNesDmc dmc = new NpNesDmc(Common.NsfClock, Instrument.BaseInstrument.CHIP_SAMPLE_RATE);
+    public NpNesDmc dmc;
+
+    public NesDmc() {
+        dmc = new NpNesDmc();
+        dmc.init(Common.NsfClock, Instrument.BaseInstrument.CHIP_SAMPLE_RATE);
+    }
 
     @Override
-    public boolean read(int adr, int[] val, int id/* = 0*/) {
+    public boolean read(int adr, int[] val, int id /* = 0 */) {
         return dmc.read(adr, val);
     }
 

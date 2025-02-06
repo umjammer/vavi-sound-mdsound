@@ -1,3 +1,7 @@
+/*
+ * https://github.com/kuma4649/MDSound
+ */
+
 package mdsound.fmvgen;
 
 import java.util.Arrays;
@@ -19,8 +23,9 @@ public class PSG2 extends mdsound.fmgen.PSG {
     private int userDefCounter = 0;
     private final BiFunction<Integer, Integer, Integer>[] tblGetSample;
     private final int num;
-    protected double ncountDbl;
-    private static final double ncountDiv = 32.0;
+    protected double nCountDbl;
+    private static final double nCountDiv = 32.0;
+    private final ReversePhase reversePhase = ReversePhase.getInstance();
 
     {
         List<BiFunction<Integer, Integer, Integer>> a = Arrays.asList(
@@ -194,8 +199,8 @@ public class PSG2 extends mdsound.fmgen.PSG {
                                 effects.hpflpf.mix(efcStartCh + k, l, r);
                                 l[0] = (panpot[k] & 2) != 0 ? l[0] : 0;
                                 r[0] = (panpot[k] & 1) != 0 ? r[0] : 0;
-                                l[0] *= ReversePhase.ssg[num][k][0];
-                                r[0] *= ReversePhase.ssg[num][k][1];
+                                l[0] *= reversePhase.ssg[num][k][0];
+                                r[0] *= reversePhase.ssg[num][k][1];
                                 revSampleL += (int) (l[0] * effects.reverb.sendLevel[efcStartCh + k] * 0.6);
                                 revSampleR += (int) (r[0] * effects.reverb.sendLevel[efcStartCh + k] * 0.6);
                                 sampleL += l[0];
@@ -226,10 +231,10 @@ public class PSG2 extends mdsound.fmgen.PSG {
                         revSampleR = 0;
                         sample = 0;
                         for (int j = 0; j < (1 << overSampling); j++) {
-                            noise = noiseTable[((int) ncountDbl >> (noiseShift + overSampling + 6) & (noiseTableSize - 1))]
-                                    >> ((int) ncountDbl >> (noiseShift + overSampling + 1));
+                            noise = noiseTable[((int) nCountDbl >> (noiseShift + overSampling + 6) & (noiseTableSize - 1))]
+                                    >> ((int) nCountDbl >> (noiseShift + overSampling + 1));
 
-                            ncountDbl += ((double) nPeriod / ((reg[6] & 0x20) != 0 ? ncountDiv : 1.0));
+                            nCountDbl += ((double) nPeriod / ((reg[6] & 0x20) != 0 ? nCountDiv : 1.0));
 
                             for (int k = 0; k < 3; k++) {
                                 sample = tblGetSample[duty[k]].apply(k, oLevel[k]);
@@ -248,8 +253,8 @@ public class PSG2 extends mdsound.fmgen.PSG {
                                 effects.compressor.mix(efcStartCh + k, l, r);
                                 l[0] = (panpot[k] & 2) != 0 ? l[0] : 0;
                                 r[0] = (panpot[k] & 1) != 0 ? r[0] : 0;
-                                l[0] *= ReversePhase.ssg[num][k][0];
-                                r[0] *= ReversePhase.ssg[num][k][1];
+                                l[0] *= reversePhase.ssg[num][k][0];
+                                r[0] *= reversePhase.ssg[num][k][1];
                                 revSampleL += (int) (l[0] * effects.reverb.sendLevel[efcStartCh + k] * 0.6);
                                 revSampleR += (int) (r[0] * effects.reverb.sendLevel[efcStartCh + k] * 0.6);
                                 sampleL += l[0];
@@ -294,9 +299,9 @@ public class PSG2 extends mdsound.fmgen.PSG {
                                 eCount |= (1 << (envShift + 5 + overSampling));
                             eCount &= (1 << (envShift + 6 + overSampling)) - 1;
                         }
-                        noise = noiseTable[((int) ncountDbl >> (noiseShift + overSampling + 6) & (noiseTableSize - 1))]
-                                >> ((int) ncountDbl >> (noiseShift + overSampling + 1));
-                        ncountDbl += (nPeriod / ((reg[6] & 0x20) != 0 ? ncountDiv : 1.0));
+                        noise = noiseTable[((int) nCountDbl >> (noiseShift + overSampling + 6) & (noiseTableSize - 1))]
+                                >> ((int) nCountDbl >> (noiseShift + overSampling + 1));
+                        nCountDbl += (nPeriod / ((reg[6] & 0x20) != 0 ? nCountDiv : 1.0));
 
                         for (int k = 0; k < 3; k++) {
                             int lv = (p[k] == null ? env : oLevel[k]);
@@ -316,8 +321,8 @@ public class PSG2 extends mdsound.fmgen.PSG {
                             effects.compressor.mix(efcStartCh + k, l, r);
                             l[0] = (panpot[k] & 2) != 0 ? l[0] : 0;
                             r[0] = (panpot[k] & 1) != 0 ? r[0] : 0;
-                            l[0] *= ReversePhase.ssg[num][k][0];
-                            r[0] *= ReversePhase.ssg[num][k][1];
+                            l[0] *= reversePhase.ssg[num][k][0];
+                            r[0] *= reversePhase.ssg[num][k][1];
                             revSampleL += (int) (l[0] * effects.reverb.sendLevel[efcStartCh + k] * 0.6);
                             revSampleR += (int) (r[0] * effects.reverb.sendLevel[efcStartCh + k] * 0.6);
                             sampleL += l[0];

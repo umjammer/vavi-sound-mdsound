@@ -1,3 +1,7 @@
+/*
+ * https://github.com/kuma4649/MDSound
+ */
+
 package mdsound.fmvgen;
 
 import java.lang.System.Logger;
@@ -36,7 +40,7 @@ public class Fmvgen extends Fmgen {
             chorus = new Chorus(clock, MaxCh);
             ep3band = new Eq3band(clock);
             hpflpf = new HPFLPF(clock, MaxCh);
-            reversePhase = new ReversePhase();
+            reversePhase = ReversePhase.getInstance();
             compressor = new Compressor(clock, MaxCh);
         }
     }
@@ -63,7 +67,7 @@ public class Fmvgen extends Fmgen {
 
     // Operator
     public static class Operator {
-        public static final byte[] notetable = {
+        public static final byte[] noteTable = {
                 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 3, 3, 3,
                 4, 4, 4, 4, 4, 4, 4, 5, 6, 7, 7, 7, 7, 7, 7, 7,
                 8, 8, 8, 8, 8, 8, 8, 9, 10, 11, 11, 11, 11, 11, 11, 11,
@@ -74,7 +78,7 @@ public class Fmvgen extends Fmgen {
                 28, 28, 28, 28, 28, 28, 28, 29, 30, 31, 31, 31, 31, 31, 31, 31,
         };
 
-        public static final byte[] dttable = {
+        public static final byte[] dtTable = {
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 4, 4, 4, 4,
@@ -93,7 +97,7 @@ public class Fmvgen extends Fmgen {
                 -16, -16, -18, -20, -22, -24, -26, -28, -32, -34, -38, -40, -44, -44, -44, -44,
         };
 
-        public static final byte[][] decaytable1 = {
+        public static final byte[][] decayTable1 = {
                 {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0},
                 {1, 1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 1, 1, 1},
                 {1, 1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 1, 1, 1},
@@ -128,11 +132,11 @@ public class Fmvgen extends Fmgen {
                 {16, 16, 16, 16, 16, 16, 16, 16}, {16, 16, 16, 16, 16, 16, 16, 16}
         };
 
-        public static final int[] decaytable2 = {
+        public static final int[] decayTable2 = {
                 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2047, 2047, 2047, 2047, 2047
         };
 
-        public static final byte[][] attacktable = {
+        public static final byte[][] attackTable = {
                 {-1, -1, -1, -1, -1, -1, -1, -1}, {-1, -1, -1, -1, -1, -1, -1, -1},
                 {4, 4, 4, 4, 4, 4, 4, 4}, {4, 4, 4, 4, 4, 4, 4, 4},
                 {4, 4, 4, 4, 4, 4, 4, 4}, {4, 4, 4, 4, 4, 4, 4, 4},
@@ -167,7 +171,7 @@ public class Fmvgen extends Fmgen {
                 {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0}
         };
 
-        public static final int[][][][] ssgenvtable = {
+        public static final int[][][][] ssgEnvTable = {
                 {
                         {new int[] {1, 1}, new int[] {1, 1}, new int[] {1, 1}},      // 08
                         {new int[] {0, 1}, new int[] {1, 1}, new int[] {1, 1}}      // 08 56~
@@ -380,12 +384,10 @@ public class Fmvgen extends Fmgen {
             //double q = -256 * Math.log(Math.sin(r)) / log2;
             //int s = (int)((int)(Math.floor(q + 0.5)) + 1);
 //logger.log(Level.TRACE, "%d, %d".formatted(s, cltable[s * 2] / 8));
-//logger.log(Level.TRACE, "%6d , %6d , %6d , %4X , %4X".formatted(
-// s
-// , cltable[s * 2]
-// , ((s * 2) % 2 == 0 ? 1 : -1) * (4095 - Math.abs((s * 2) / 2))
-// , ((s * 2) % 2 == 0 ? 1 : -1) * (4095 - Math.abs((s * 2) / 2))
-// , ((s * 2 + 1 ) % 2 == 0 ? 1 : -1) * (4095 - Math.abs((s * 2+1) / 2))
+//logger.log(Level.TRACE, "%6d , %6d , %6d , %4X , %4X".formatted(s, cltable[s * 2],
+// ((s * 2) % 2 == 0 ? 1 : -1) * (4095 - Math.abs((s * 2) / 2)),
+// ((s * 2) % 2 == 0 ? 1 : -1) * (4095 - Math.abs((s * 2) / 2)),
+// ((s * 2 + 1 ) % 2 == 0 ? 1 : -1) * (4095 - Math.abs((s * 2+1) / 2))
 // ));
             for (int j = 0; j < 12; j++) {
                 Fmvgen.waveReset(j, 0);
@@ -407,7 +409,7 @@ public class Fmvgen extends Fmgen {
             if (paramChanged) {
                 paramChanged = false;
                 // PG Part
-                pgDiff = (dp + dttable[detune + bn]) * chip.getMulValue(detune2, multiple);
+                pgDiff = (dp + dtTable[detune + bn]) * chip.getMulValue(detune2, multiple);
                 pgDiffLfo = pgDiff >> 11;
 
                 // EG Part
@@ -435,7 +437,7 @@ public class Fmvgen extends Fmgen {
                     int m = ar >= ((ssgType == 8 || ssgType == 12) ? 56 : 60) ? 1 : 0;
 
                     //assert(0 <= ssg_phase_ && ssg_phase_ <= 2);
-                    int[] table = ssgenvtable[ssgType & 7][m][ssgPhase];
+                    int[] table = ssgEnvTable[ssgType & 7][m][ssgPhase];
 
                     ssgOffset = table[0] * 0x200;
                     ssgVector = table[1];
@@ -461,7 +463,7 @@ public class Fmvgen extends Fmgen {
                     int m = ar >= ((ssgType == 8 || ssgType == 12) ? 56 : 60) ? 1 : 0;
 
                     //assert(0 <= ssg_phase_ && ssg_phase_ <= 2);
-                    int[] table = ssgenvtable[ssgType & 7][m][ssgPhase];
+                    int[] table = ssgEnvTable[ssgType & 7][m][ssgPhase];
 
                     ssgOffset = table[0] * 0x200;
                     ssgVector = table[1];
@@ -545,7 +547,7 @@ public class Fmvgen extends Fmgen {
         /** Block/F-Num */
         public void setFNum(int f) {
             dp = (f & 2047) << ((f >> 11) & 7);
-            bn = notetable[(f >> 7) & 127];
+            bn = noteTable[(f >> 7) & 127];
             paramChanged = true;
         }
 
@@ -572,7 +574,7 @@ public class Fmvgen extends Fmgen {
 
         public void setEGRate(int rate) {
             egRate = rate;
-            egCountDiff = decaytable2[rate / 4] * chip.getRatio();
+            egCountDiff = decayTable2[rate / 4] * chip.getRatio();
         }
 
         /** EG Calculation */
@@ -580,7 +582,7 @@ public class Fmvgen extends Fmgen {
             egCount = (2047 * 3) << FM_RATIOBITS; // This shortcut reduces reproducibility
 
             if (egPhase == EGPhase.Attack) {
-                int c = attacktable[egRate][egCurveCount & 7];
+                int c = attackTable[egRate][egCurveCount & 7];
                 if (c >= 0) {
                     egLevel -= 1 + (egLevel >> c);
                     if (egLevel <= 0)
@@ -589,12 +591,12 @@ public class Fmvgen extends Fmgen {
                 egUpdate();
             } else {
                 if (ssgType == 0) {
-                    egLevel += decaytable1[egRate][egCurveCount & 7];
+                    egLevel += decayTable1[egRate][egCurveCount & 7];
                     if (egLevel >= egLevelOnNextPhase)
                         shiftPhase(egPhase.next());
                     egUpdate();
                 } else {
-                    egLevel += 4 * decaytable1[egRate][egCurveCount & 7];
+                    egLevel += 4 * decayTable1[egRate][egCurveCount & 7];
                     if (egLevel >= egLevelOnNextPhase) {
                         egUpdate();
                         switch (egPhase) {

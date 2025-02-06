@@ -11,84 +11,85 @@ this is a fork of [MDsound](https://github.com/kuma4649/MDSound)
 
 ### Status
 
-| name                        | common name | type  | status | comment                  | sample                                                                                                                       |
-|-----------------------------|-------------|-------|:------:|--------------------------|------------------------------------------------------------------------------------------------------------------------------|
-| YM2612 (mame-A)             | OPN2        | FM    |   ✅️   | mame:dallongeville+green | Puyo Puyo/09 - Sticker.vgz                                                                                                   |
-| YM2612 (mame-B)             | OPN2        | FM    |   ✅️   | mame:burczynski          | Puyo Puyo/09 - Sticker.vgz                                                                                                   |
-| YM3438                      | OPN2 (cmos) | FM    |   🚧   | nukeykt                  |                                                                                                                              |
-| YM3438 (simple)             | OPN2 (cmos) | FM    |   🚧   | nukeykt                  |                                                                                                                              |
-| YM2151 (mame)               | OPM         | FM    |   ✅️   | mame                     | Out_Run_(Arcade)/01 Magical Sound Shower.vgz                                                                                 |
-| YM2151 (fmgen)              | OPM         | FM    |   ✅️   | fmgen                    | ditto                                                                                                                        |
-| YM2151 (x68sound)           | OPM         | FM    |   ✅️   | x68sound                 | ditto                                                                                                                        |
-| YM2203                      | OPN         | FM    |   ✅    | fmgen                    | Space_Harrier_(Hang-On)/02 Theme.vgz                                                                                         |
-| YM2608                      | OPNA        | FM    |   ✅    | fmgen                    | mucom88.mub<br/>Touhou_Reiiden_~_Highly_Responsive_to_Prayers._(NEC_PC-9801)/01 A Sacred Lot.vgz                             |
-| YM2610/B                    | OPNB        | FM    |   ✅    | fmgen                    |                                                                                                                              |
-| YM2413                      | OPLL        | FM    |   ✅    | okaxaki                  |                                                                                                                              |
-| YM3526                      | OPL         | FM    |   ✅    | burczynski               |                                                                                                                              |
-| YM3812 (dosbox)<sup>*</sup> | OPL2        | FM    |   ✅    | dosbox                   | Out_Zone_(Toaplan_1)/05 Soldier a GoGo (Chapter 4).vgz                                                                       |
-| YM3812 (mame)               | OPL2        | FM    |   ✅    | burczynski               | Out_Zone_(Toaplan_1)/05 Soldier a GoGo (Chapter 4).vgz                                                                       |
-| Y8950                       | OPL2+ADPCM  | FM    |   ✅    | mame                     | Impact_MuSiX_Disk_#2_(MSX2)/04 Moment for Morricone.vgz                                                                      |
-| YMF262 (dosbox)<sup>*</sup> | OPL3        | FM    |   🚧   | dosbox                   | Touhou_Koumakyou_~_the_Embodiment_of_Scarlet_Devil._(IBM_PC_AT)/05 Tomboyish Girl in Love (Stage 2 Boss - Cirno's Theme).vgz |
-| YMF262 (mame)<sup>*</sup>   | OPL3        | FM    |  ✅ 🚧  | mame                     | Touhou_Koumakyou_~_the_Embodiment_of_Scarlet_Devil._(IBM_PC_AT)/05 Tomboyish Girl in Love (Stage 2 Boss - Cirno's Theme).vgz |
-| YMF278B                     | OPL4        | FM    |   ✅    | galibert                 |                                                                                                                              |
-| YmF271                      |             | FM    |   ✅    |                          | Desert_War_(Jaleco_Mega_System_32)/08 Destruction Mission.vgz                                                                |
-| YmZ280B                     |             | FM    |   ✅    |                          | Guwange_(Cave_68000)/03 Falling Cherry Blossoms.vgz                                                                          |
-| RF5C164                     | ScdPcm      | PCM   |   ✅    |                          | Sonic CD (Mega CD)/01 - Palmtree Panic Zone Past.vgz                                                                         |
-| RF5C68                      | RF5C        | PCM   |   ✅    |                          | Michael_Jackson's_Moonwalker_(Sega_System_18)/04 Smooth Criminal (Round 2).vgz                                               |
-| C140                        | C140        | PCM   |   ✅    | mame                     | Dragon_Saber_-_After_Story_of_Dragon_Spirit_(Namco_System_2)/04 Submerged City (Stage 1).vgz                                 |
-| C352                        | C352        | PCM   |   ✅️   |                          | Ridge_Racer_(Namco_System_22)/03 Rare Hero (Sanodigy mix).vgz                                                                |
-| OKIM6258                    | OKI65       | PCM   |   ✅️   |                          | Akumajo_Dracula_(Sharp_X68000)/02 Black Mass (Opening).vgz                                                                   |
-| MPCM (OKIM6258)             | MPCM        | PCM   |        | mndrv                    |                                                                                                                              |
-| OKIM6295                    | OKI69       | PCM   |   ✅    | mame                     | Street_Fighter_II_-_Champion_Edition_(CP_System)/05 Japan (Ryu) I.vgz                                                        |
-| SEGAPCM                     | SEGAPCM     | PCM   |   ✅️   |                          | Out_Run_(Arcade)/01 Magical Sound Shower.vgz                                                                                 |
-| K005289                     | K005        | PCM   |  n/a️  | mame                     |                                                                                                                              |
-| K051649                     | K051        | PCM   |   ✅️   | mame                     | Salamander_(MSX)/02 Power of Anger.vgz                                                                                       |
-| K053260                     | K053        | PCM   |   ✅️   | mame                     | Sunset_Riders_(Konami_Sunset_Riders)/05 Shoot-out at the Sunset Ranch (1, 5, 8 Stage BGM).vgz                                |
-| K054539                     | K054        | PCM   |   ✅️   | mame                     | X-Men_(Arcade)/05 Here Comes The Hero (Stage 1).vgz                                                                          |
-| QSound<sup>*</sup>          |             | PCM   |   ✅    |                          | Street_Fighter_EX_(ZN-1)/04 Rising Dragoon.vgz                                                                               |
-| QSound (ctr)                |             | PCM   |   ✅    |                          | Street_Fighter_EX_(ZN-1)/04 Rising Dragoon.vgz                                                                               |
-| PWM                         | PWM         | PCM   |   ✅    |                          | Virtua_Fighter_(Sega_32X)/04 Theme of Jacky.vgz                                                                              |
-| MultiPcm                    |             | PCM   |   ✅    |                          |                                                                                                                              |
-| WSwan                       |             | PCM   |   ✅    |                          | Final_Fantasy_(Bandai_WonderSwan_Color)/02 Prelude.vgz                                                                       |
-| NES_DMC                     |             | PCM   |        |                          |                                                                                                                              |
-| PPZ8                        | PPZ8        | PCM   |        |                          |                                                                                                                              |
-| PPS                         | PPS         | PCM   |        |                          |                                                                                                                              |
-| PC-9801-86                  | P86         | PCM   |        |                          |                                                                                                                              |
-| HuC6280 (has FM-like)       | HuC6        | WTS   |   ✅    |                          | Street_Fighter_II'_-_Champion_Edition_(TG-16)/04 Ryu.vgz                                                                     |
-| K051649                     | K051        | WTS   |   ✅    |                          | opllssg_demo_vgm/GIMICNRT.vgm                                                                                                |
-| NES_FDS (has FM-like)       |             | WTS   |        |                          |                                                                                                                              |
-| SN76489                     | DSCG        | PSG   |   ✅    | nicola                   | Thexder_(IBM_PCjr,_Tandy_1000)/02 Thexder Theme \[IBM PCjr].vgz                                                              |
-| SN76496                     |             | PSG   |   ✅    | nicola                   | ditto                                                                                                                        |
-| AY8910                      |             | PSG   |   ✅    | libvgm                   | opllssg_demo_vgm/CS3.vgm                                                                                                     |
-| AY8910 (mame)               |             | PSG   |   ✅    | mame                     | NRTDRV_Demo_Songs_(NEC_PC-8801)/14 Perfume - Electro World.vgz                                                               |
-| Ga20                        |             | PSG?  |   ✅    | mame                     | R-Type_Leo_(Irem_M92)/02 Paradise Planet (Area 1).vgz                                                                        |
-| Pokey                       |             | PSG?  |   ✅    | mame                     | Xevious_(Atari_5200)/01 Start ~ Main BGM.vgz                                                                                 |
-| Saa1099                     |             | PSG?  |   ✅    |                          | Creative_Music_System_Demo_Songs_(IBM_PC_XT_AT)/02 Top of the World (The Carpenters, A Song for You).vgz                     |
-| NES_APU                     |             | PSG   |   🚧   |                          |                                                                                                                              |
-| YM2609                      | OPNA2       | Other |        |                          |                                                                                                                              |
-| AY8910-2                    | PSG2        | Other |        | fmvgen                   |                                                                                                                              |
-| Dmg                         |             |       |   🚧   |                          |                                                                                                                              |
-| Vrc6                        |             |       |        |                          |                                                                                                                              |
-| X1_010                      |             |       |        |                          |                                                                                                                              |
+| name                  | common name | type  | status | origin                   | sample                                                                                                                       |
+|-----------------------|-------------|-------|:------:|--------------------------|------------------------------------------------------------------------------------------------------------------------------|
+| YM2612 (mame-A) gens? | OPN2        | FM    |   ✅️   | mame:dallongeville+green | Puyo Puyo/09 - Sticker.vgz                                                                                                   |
+| YM2612 (mame-B)       | OPN2        | FM    |   ✅️   | mame:burczynski          | ditto                                                                                                                        |
+| YM3438                | OPN2 (cmos) | FM    |   ✅️   | nukeyktA+bufA            | ditto                                                                                                                        |
+| YM3438 (simple)       | OPN2 (cmos) | FM    |   ✅️   | nukeyktB+bufB            | ditto                                                                                                                        |
+| YM3438 (vavi)         | OPN2 (cmos) | FM    |   ✅️   | nukeyktA+bufB            | ditto                                                                                                                        |
+| YM2151 (mame)         | OPM         | FM    |   ✅️   | mame                     | Out_Run_(Arcade)/01 Magical Sound Shower.vgz                                                                                 |
+| YM2151 (fmgen)        | OPM         | FM    |   ✅️   | fmgen                    | ditto                                                                                                                        |
+| YM2151 (x68sound)     | OPM         | FM    |   ✅️   | x68sound                 | ditto                                                                                                                        |
+| YM2151 (ymfm)         | OPM         | FM    |   ✅️   | ymfm                     | ditto                                                                                                                        |
+| YM2203                | OPN         | FM    |   ✅    | fmgen                    | Space_Harrier_(Hang-On)/02 Theme.vgz                                                                                         |
+| YM2203 (ymfm)         | OPN         | FM    |   ✅    | ymfm                     | ditto                                                                                                                        |
+| YM2608                | OPNA        | FM    |   ✅    | fmgen                    | mucom88.mub<br/>Touhou_Reiiden_~_Highly_Responsive_to_Prayers._(NEC_PC-9801)/01 A Sacred Lot.vgz                             |
+| YM2608 (ymfm)         | OPNA        | FM    |   ✅    | ymfm                     | ditto                                                                                                                        |
+| YM2610/B              | OPNB        | FM    |   ✅    | fmgen                    | F-1_Grand_Prix_Part_II_(Arcade)/01 Truth.vgz                                                                                 |
+| YM2610 (ymfm)         | OPNB        | FM    |   ✅    | ymfm                     | ditto                                                                                                                        |
+| YM2413                | OPLL        | FM    |   ✅    | okaxaki                  | opllssg_demo_vgm/nrt6.vgm                                                                                                    |
+| YM2413 (emu)          | OPLL        | FM    |   ✅    | okaxaki                  | ditto                                                                                                                        |
+| YM3526                | OPL         | FM    |   ✅    | oldmame:burczynski       | Terra Cresta - 02 - Theme of Terracresta.vgm                                                                                 |
+| YM3812 (dosbox)       | OPL2        | FM    |   ✅    | dosbox                   | Out_Zone_(Toaplan_1)/05 Soldier a GoGo (Chapter 4).vgz                                                                       |
+| YM3812 (mame)         | OPL2        | FM    |   ✅    | oldmame:burczynski       | ditto                                                                                                                        |
+| Y8950                 | OPL2+ADPCM  | FM    |   ✅    | oldmame:burczynski       | Impact_MuSiX_Disk_#2_(MSX2)/04 Moment for Morricone.vgz                                                                      |
+| YMF262 (dosbox)       | OPL3        | FM    |  ✅ 🚧  | dosbox                   | Touhou_Koumakyou_~_the_Embodiment_of_Scarlet_Devil._(IBM_PC_AT)/05 Tomboyish Girl in Love (Stage 2 Boss - Cirno's Theme).vgz |
+| YMF262 (mame)         | OPL3        | FM    |   ✅    | mame                     | ditto                                                                                                                        |
+| YMF262 (nuked)        | OPL3        | FM    |   🚧   | nukeykt                  | ditto                                                                                                                        |
+| YMF262 (cozendey)     | OPL3        | FM    |  ✅ 🚧  | cozendey                 | ditto                                                                                                                        |
+| YMF262 (ymfm)         | OPL3        | FM    |   ✅    | ymfm                     | ditto                                                                                                                        |
+| YMF278B               | OPL4        | FM    |   ✅    | galibert                 | MoonDriver_Demo_(MSX2+)/05 encounter the unknown environment.vgz                                                             |
+| YMF271                | OPX         | FM    |   ✅    |                          | Desert_War_(Jaleco_Mega_System_32)/08 Destruction Mission.vgz                                                                |
+| YMZ280B               |             | FM    |   ✅    |                          | Guwange_(Cave_68000)/03 Falling Cherry Blossoms.vgz                                                                          |
+| RF5C164               | ScdPcm      | PCM   |   ✅    |                          | Sonic CD (Mega CD)/01 - Palmtree Panic Zone Past.vgz                                                                         |
+| RF5C68                | RF5C        | PCM   |   ✅    |                          | Michael_Jackson's_Moonwalker_(Sega_System_18)/04 Smooth Criminal (Round 2).vgz                                               |
+| C140                  | C140        | PCM   |   ✅    | mame                     | Dragon_Saber_-_After_Story_of_Dragon_Spirit_(Namco_System_2)/04 Submerged City (Stage 1).vgz                                 |
+| C352                  | C352        | PCM   |   ✅️   |                          | Ridge_Racer_(Namco_System_22)/03 Rare Hero (Sanodigy mix).vgz                                                                |
+| OKIM6258              | OKI65       | PCM   |   ✅️   |                          | Akumajo_Dracula_(Sharp_X68000)/02 Black Mass (Opening).vgz                                                                   |
+| MPCM (OKIM6258)       | MPCM        | PCM   |        | mndrv                    |                                                                                                                              |
+| OKIM6295              | OKI69       | PCM   |   ✅    | mame                     | Street_Fighter_II_-_Champion_Edition_(CP_System)/05 Japan (Ryu) I.vgz                                                        |
+| SEGAPCM               | SEGAPCM     | PCM   |   ✅️   |                          | Out_Run_(Arcade)/01 Magical Sound Shower.vgz                                                                                 |
+| K005289               | K005        | PCM   |  n/a️  | mame                     |                                                                                                                              |
+| K051649               | K051        | PCM   |   ✅️   | mame                     | Salamander_(MSX)/02 Power of Anger.vgz                                                                                       |
+| K053260               | K053        | PCM   |   ✅️   | mame                     | Sunset_Riders_(Konami_Sunset_Riders)/05 Shoot-out at the Sunset Ranch (1, 5, 8 Stage BGM).vgz                                |
+| K054539               | K054        | PCM   |   ✅️   | mame                     | X-Men_(Arcade)/05 Here Comes The Hero (Stage 1).vgz                                                                          |
+| QSound                |             | PCM   |   ✅    |                          | Street_Fighter_EX_(ZN-1)/04 Rising Dragoon.vgz                                                                               |
+| QSound (ctr)          |             | PCM   |   ✅    |                          | ditto                                                                                                                        |
+| PWM                   | PWM         | PCM   |   ✅    |                          | Virtua_Fighter_(Sega_32X)/04 Theme of Jacky.vgz                                                                              |
+| MultiPcm              |             | PCM   |   ✅    |                          | Daytona_USA_(Sega_Model_2)/03 The King of Speed.vgz                                                                          |
+| WSwan                 |             | PCM   |   ✅    |                          | Final_Fantasy_(Bandai_WonderSwan_Color)/02 Prelude.vgz                                                                       |
+| NES_DMC               |             | PCM   |        |                          |                                                                                                                              |
+| PPZ8                  | PPZ8        | PCM   |        |                          |                                                                                                                              |
+| PPS                   | PPS         | PCM   |        |                          |                                                                                                                              |
+| PC-9801-86            | P86         | PCM   |        |                          |                                                                                                                              |
+| HuC6280 (has FM-like) | HuC6        | WTS   |   ✅    |                          | Street_Fighter_II'_-_Champion_Edition_(TG-16)/04 Ryu.vgz                                                                     |
+| K051649               | K051        | WTS   |   ✅    |                          | opllssg_demo_vgm/GIMICNRT.vgm                                                                                                |
+| NES_FDS (has FM-like) |             | WTS   |        |                          |                                                                                                                              |
+| SN76489               | DSCG        | PSG   |   ✅    | nicola                   | Thexder_(IBM_PCjr,_Tandy_1000)/02 Thexder Theme \[IBM PCjr].vgz                                                              |
+| SN76496               |             | PSG   |   ✅    | nicola                   | ditto                                                                                                                        |
+| AY8910                |             | PSG   |   ✅    | libvgm                   | opllssg_demo_vgm/CS3.vgm                                                                                                     |
+| AY8910 (mame)         |             | PSG   |   ✅    | mame                     | NRTDRV_Demo_Songs_(NEC_PC-8801)/14 Perfume - Electro World.vgz                                                               |
+| Ga20                  |             | PSG?  |   ✅    | mame                     | R-Type_Leo_(Irem_M92)/02 Paradise Planet (Area 1).vgz                                                                        |
+| Pokey                 |             | PSG?  |   ✅    | mame                     | Xevious_(Atari_5200)/01 Start ~ Main BGM.vgz                                                                                 |
+| Saa1099               |             | PSG?  |   ✅    |                          | Creative_Music_System_Demo_Songs_(IBM_PC_XT_AT)/02 Top of the World (The Carpenters, A Song for You).vgz                     |
+| NES_APU               |             | PSG   |   🚧   |                          |                                                                                                                              |
+| YM2609                | OPNA2       | Other |        |                          |                                                                                                                              |
+| AY8910-2              | PSG2        | Other |        | fmvgen                   |                                                                                                                              |
+| Dmg                   |             |       |   ✅    |                          | Beatmania_GB2_Gatcha_Mix_(Game_Boy,_Color)/11 Friends.vgz                                                                    |
+| Vrc6                  |             |       |        |                          |                                                                                                                              |
+| X1_010                |             |       |        |                          |                                                                                                                              |
+| YM2149                |             | PSG   |   🥚   | np:okaxaki               |                                                                                                                              |
+| YM2143                | OPLL        | FM    |   🥚   | np:okaxaki               |                                                                                                                              |
+| Gigatron              |             |       |        |                          |                                                                                                                              |
+| MPCMPP                |             | PCM   |        |                          |                                                                                                                              |
+| PCM8PP                |             | PCM   |        |                          |                                                                                                                              |
+| MSM5232               |             |       |   🥚   |                          |                                                                                                                              |
+| ES5503                |             |       |   ✅    |                          | Space_Fox_(Apple_IIgs)/01 Title.vgz                                                                                          |
+| ES5505                |             |       |   🥚   |                          |                                                                                                                              |
+| μPD7759               |             | ADPCM |   🥚   |                          |                                                                                                                              |
 
 <sub>* WTS ... [wavetable synthesis](https://ja.wikipedia.org/wiki/%E6%B3%A2%E5%BD%A2%E3%83%A1%E3%83%A2%E3%83%AA%E9%9F%B3%E6%BA%90)</sub><br/>
-<sub>* YM3812 ... switched internally (TODO separate instrument)</sub><br/>
-<sub>* QSound ... unused (TODO settings)</sub>
-
-#### Settings
-
-| chip              | setting                      |
-|-------------------|------------------------------|
-| YM2151 (mame)     | YM2151Type.UseEmu[0] = true  |
-| YM2151 (fmgen)    | YM2151Type.UseEmu[1] = true  |
-| YM2151 (x68sound) | YM2151Type.UseEmu[2] = true  |
-| YM2151 (ymfm)     | YM2151Type.UseEmu[3] = true  |
-| YM2203 (ymfm)     | YM2203Type.UseEmu[1] = true  |
-| YM2162 (mame-A)   | YM2612Type.UseEmu[0] = true  |
-| YM2162 (nuked)    | YM2612Type.UseEmu[1] = true  |
-| YM2162 (mame-B)   | YM2612Type.UseEmu[2] = true  |
-| SN76496           | SN76496Type.UseEmu[0] = treu |
-| SN76489           | SN76496Type.UseEmu[1] = treu |
 
 ## Install
 
@@ -108,6 +109,7 @@ this is a fork of [MDsound](https://github.com/kuma4649/MDSound)
 * https://github.com/vampirefrog/fmtoy
 * https://github.com/nukeykt/Nuked-OPN2
 * https://en.wikipedia.org/wiki/Advanced_Multimedia_Supplements (QSound related)
+* https://github.com/Gnzdream/NsfPlayer
 
 ## TODO
 
@@ -115,13 +117,18 @@ this is a fork of [MDsound](https://github.com/kuma4649/MDSound)
  * javax.sound.sampled.spi, javax.sound.midi.spi
  * debug
    * ymf262 (dosbox) no ssg? or so small
+   * ymf262 (nuked) no sound
+   * ymf262 (cozendey) some notes lacked? sampling related?
    * ~~y8950 rhythm only?~~
    * ~~YM2151 (x68sound) noise (05 Japan (Ryu) I.vgz)~~
    * ~~YmF271 mostly~~
-   * YM3438 (unlabeled, nuke) no sound
+   * ~~YM3438 (nuke) no sound chip impl works (vavi), but buffered writing not works~~
    * ~~multipcm mostly~~
    * ~~wswan noise only~~
    * ~~pwn laud noise~~
+ * libvgm says
+   * ym3812 dosbox is better than mame
+   * ym2612 nuked uses a lot of cpu
 
 ---
 
@@ -164,9 +171,9 @@ PCM sound source
 
 Waveform memory sound source
 
-- HuC6280 (FM-like individual ownership) HuC6
+- HuC6280 (has FM-like) HuC6
 - K051649 K051
-- NES_FDS (FM-like individual ownership)
+- NES_FDS (has FM-like)
 
 PSG sound source
 

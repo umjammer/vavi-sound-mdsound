@@ -1,3 +1,7 @@
+/*
+ * https://github.com/kuma4649/MDSound
+ */
+
 package mdsound.fmvgen;
 
 import mdsound.fmgen.Opna.OPNABase;
@@ -7,6 +11,8 @@ import mdsound.fmvgen.effect.ReversePhase;
 public class AdpcmA {
 
     public OPNA2 parent = null;
+
+    private final ReversePhase reversePhase = ReversePhase.getInstance();
 
     static class Channel {
         /** pan L */
@@ -169,8 +175,8 @@ public class AdpcmA {
                         effects.hpflpf.mix(revStartCh + i, sampleL, sampleR);
                         effects.compressor.mix(revStartCh + i, sampleL, sampleR);
 
-                        sampleL[0] = (int) (sampleL[0] * r.panL) * ReversePhase.adpcmA[i][0];
-                        sampleR[0] = (int) (sampleR[0] * r.panR) * ReversePhase.adpcmA[i][1];
+                        sampleL[0] = (int) (sampleL[0] * r.panL) * reversePhase.adpcmA[i][0];
+                        sampleR[0] = (int) (sampleR[0] * r.panR) * reversePhase.adpcmA[i][1];
                         buffer[dest + 0] += sampleL[0];
                         buffer[dest + 1] += sampleR[0];
                         revSampleL += (int) (sampleL[0] * effects.reverb.sendLevel[revStartCh + i] * 0.6);

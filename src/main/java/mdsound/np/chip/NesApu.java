@@ -1,3 +1,9 @@
+/*
+ * NSFPlay/NFSPlug project by Brezza.
+ *
+ * https://web.archive.org/web/20160301201825/http://www.pokipoki.org/dsa/
+ */
+
 package mdsound.np.chip;
 
 import java.util.function.Consumer;
@@ -10,10 +16,15 @@ import mdsound.np.NpNesApu;
 
 public class NesApu implements SoundChip {
 
-    public NpNesApu apu = new NpNesApu(Common.NsfClock, Instrument.BaseInstrument.CHIP_SAMPLE_RATE);
+    public NpNesApu apu;
+
+    public NesApu() {
+        apu = new NpNesApu();
+        apu.init(Common.NsfClock, Instrument.BaseInstrument.CHIP_SAMPLE_RATE);
+    }
 
     @Override
-    public boolean read(int adr, int[] val, int id /*= 0*/) {
+    public boolean read(int adr, int[] val, int id /* = 0 */) {
         return apu.read(adr, val);
     }
 
@@ -60,7 +71,7 @@ public class NesApu implements SoundChip {
     }
 
     @Override
-    public boolean write(int adr, int val, int id/* = 0*/) {
+    public boolean write(int adr, int val, int id /* = 0 */) {
         return apu.write(adr, val);
     }
 

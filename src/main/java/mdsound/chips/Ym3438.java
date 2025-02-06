@@ -219,6 +219,14 @@ public class Ym3438 {
     private final int[] oldSamples = new int[2];
     private final int[] samples = new int[2];
 
+    public boolean isWriteAddrEn() {
+        return this.writeAEn != 0;
+    }
+
+    public boolean isWriteDataEn() {
+        return this.writeDEn != 0;
+    }
+
     private void doIO() {
         this.writeAEn = (this.writeA & 0x03) == 0x01 ? 1 : 0;
         this.writeDEn = (this.writeD & 0x03) == 0x01 ? 1 : 0;
@@ -1040,11 +1048,11 @@ public class Ym3438 {
         }
 
         if (rate != 0) {
-            this.rateRatio = ((144 * rate) << 10) / clock; // RSM_FRAC) / clock);
+            this.rateRatio = (int) (((144L * rate) << 10) / clock); // RSM_FRAC) / clock);
         } else {
             this.rateRatio = rateRatio;
         }
-//logger.log(Level.TRACE, "rateRatio%d rate%d clock%d".formatted(this.rateRatio,rate,clock));
+//logger.log(Level.TRACE, "rateRatio: %d, rate: %d, clock: %d".formatted(this.rateRatio,rate,clock));
     }
 
     public void setChipType(Type type) {
@@ -1248,7 +1256,7 @@ logger.log(Level.INFO, "chip_type: " + chip_type);
         return this.timerAOverflowFlag | this.timerBOverflowFlag;
     }
 
-    private int read(int port) {
+    public int read(int port) {
         if ((port & 3) == 0 || chip_type == Type.asic) {
             if (this.modeTest21[6] != 0) {
                 // Read test data
@@ -1275,6 +1283,8 @@ logger.log(Level.INFO, "chip_type: " + chip_type);
 
     // ----
 
+    // https://github.com/vgmrips/vgmplay-legacy/blob/master/VGMPlay/chips/ym3438.c#L1433
+
     private static class Opn2WriteBuf {
         private long time;
         private int port;
@@ -1297,15 +1307,12 @@ logger.log(Level.INFO, "chip_type: " + chip_type);
     }
 
     public void writeBuffered(int port, int data) {
-        long time1, time2;
-        long skip;
-
         if ((this.writeBuf[this.writeBufLast].port & 0x04) != 0) {
-            this.write(this.writeBuf[this.writeBufLast].port & 0X03,
+            this.write(this.writeBuf[this.writeBufLast].port & 0x03,
                     this.writeBuf[this.writeBufLast].data);
 
             this.writeBufCur = (this.writeBufLast + 1) % 2048; // OPN_WRITEBUF_SIZE;
-            skip = this.writeBuf[this.writeBufLast].time - this.writeBufSampleCnt;
+            long skip = this.writeBuf[this.writeBufLast].time - this.writeBufSampleCnt;
             this.writeBufSampleCnt = this.writeBuf[this.writeBufLast].time;
             while (skip-- != 0) {
                 this.clock(dmyBuffer);
@@ -1314,8 +1321,8 @@ logger.log(Level.INFO, "chip_type: " + chip_type);
 
         this.writeBuf[this.writeBufLast].port = (port & 0x03) | 0x04;
         this.writeBuf[this.writeBufLast].data = data;
-        time1 = this.writeBufLastTime + 15; // OPN_WRITEBUF_DELAY;
-        time2 = this.writeBufSampleCnt;
+        long time1 = this.writeBufLastTime + 15; // OPN_WRITEBUF_DELAY;
+        long time2 = this.writeBufSampleCnt;
 
         if (time1 < time2) {
             time1 = time2;
@@ -1327,15 +1334,12 @@ logger.log(Level.INFO, "chip_type: " + chip_type);
     }
 
     public void update(int[] buf) {
-        int i;
-        int mute;
-
         while (this.sampleCnt >= this.rateRatio) {
             this.oldSamples[0] = this.samples[0];
             this.oldSamples[1] = this.samples[1];
             this.samples[0] = this.samples[1] = 0;
-            for (i = 0; i < 24; i++) {
-                mute = switch (this.cycles >> 2) {
+            for (int i = 0; i < 24; i++) {
+                int mute = switch (this.cycles >> 2) {
                     case 0 -> this.mute[1]; // Ch 2
                     case 1 -> this.mute[5 + this.dacEn]; // Ch 6, DAC
                     case 2 -> this.mute[3]; // Ch 4
@@ -1358,7 +1362,7 @@ logger.log(Level.INFO, "chip_type: " + chip_type);
                     this.writeBuf[this.writeBufCur].port &= 0x03;
                     this.write(this.writeBuf[this.writeBufCur].port,
                             this.writeBuf[this.writeBufCur].data);
-                    this.writeBufCur = (this.writeBufCur + 1) % 2048;// OPN_WRITEBUF_SIZE;
+                    this.writeBufCur = (this.writeBufCur + 1) % 2048; // OPN_WRITEBUF_SIZE;
                 }
                 this.writeBufSampleCnt++;
             }
@@ -1381,6 +1385,8 @@ logger.log(Level.INFO, "chip_type: " + chip_type);
 //logger.log(Level.TRACE, "bl%d br%d this.oldSamples[0]%d this.samples[0]%d".formatted(buf[0], buf[1], this.oldSamples[0], this.samples[0]));
         this.sampleCnt += 1 << 10; // RSM_FRAC;
     }
+
+    // ----
 
     public void setOptions(int flags) {
 logger.log(Level.INFO, "flag: " + flags);
@@ -1407,7 +1413,7 @@ logger.log(Level.INFO, "flag: " + flags);
         }
     }
 
-    public void setMute(int ch, boolean mute) {
-        this.mute[ch & 0x7] = mute ? 1 : 0;
-    }
+//    public void setMute(int ch, boolean mute) {
+//        this.mute[ch & 0x7] = mute ? 1 : 0;
+//    }
 }

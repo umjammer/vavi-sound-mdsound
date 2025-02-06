@@ -1,3 +1,9 @@
+/*
+ * NSFPlay/NFSPlug project by Brezza.
+ *
+ * https://web.archive.org/web/20160301201825/http://www.pokipoki.org/dsa/
+ */
+
 package mdsound.np.memory;
 
 import java.util.Arrays;
@@ -86,7 +92,7 @@ public class NesBank implements Device {
         }
 
         if (0 <= bankSwitch[adr >> 12] && 0x8000 <= adr && adr < 0x10000) {
-            val[0] = image[bank[bankSwitch[adr >> 12]] + (adr & 0xfff)];
+            val[0] = image[bank[bankSwitch[adr >> 12]] + (adr & 0xfff)] & 0xff;
             return true;
         }
 
@@ -97,7 +103,7 @@ public class NesBank implements Device {
             }
 
             if (0 <= bankSwitch[adr >> 12] && 0x6000 <= adr && adr < 0x8000) {
-                val[0] = image[bank[bankSwitch[adr >> 12]] + (adr & 0xfff)];
+                val[0] = image[bank[bankSwitch[adr >> 12]] + (adr & 0xfff)] & 0xff;
                 return true;
             }
         }

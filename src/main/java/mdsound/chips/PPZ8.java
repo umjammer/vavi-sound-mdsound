@@ -36,6 +36,7 @@ public class PPZ8 {
     private int volume;
 
     public static class Channel {
+        public int startAddress;
         public int loopStartOffset;
         public int loopEndOffset;
         public boolean playing;
@@ -140,7 +141,8 @@ public class PPZ8 {
         chWk[al].num = num;
 
         if (pcmData[bank] != null) {
-            chWk[al].ptr = (pcmData[bank][num * 0x12 + 32] & 0xff)
+            chWk[al].ptr =
+                      (pcmData[bank][num * 0x12 +     32] & 0xff)
                     + (pcmData[bank][num * 0x12 + 1 + 32] & 0xff) * 0x100
                     + (pcmData[bank][num * 0x12 + 2 + 32] & 0xff) * 0x1_0000
                     + (pcmData[bank][num * 0x12 + 3 + 32] & 0xff) * 0x10_00000
@@ -152,35 +154,37 @@ public class PPZ8 {
                     + (pcmData[bank][num * 0x12 + 4 + 32] & 0xff)
                     + (pcmData[bank][num * 0x12 + 5 + 32] & 0xff) * 0x100
                     + (pcmData[bank][num * 0x12 + 6 + 32] & 0xff) * 0x1_0000
-                    + (pcmData[bank][num * 0x12 + 7 + 32] & 0xff) * 0x10_00000
-            ;
+                    + (pcmData[bank][num * 0x12 + 7 + 32] & 0xff) * 0x10_00000;
             if (chWk[al].end >= pcmData[bank].length) {
                 chWk[al].end = pcmData[bank].length - 1;
             }
 
+            chWk[al].startAddress = chWk[al].ptr;
 
             chWk[al].loopStartOffset = chWk[al]._loopStartOffset;
             if (chWk[al]._loopStartOffset == -1) {
-                chWk[al].loopStartOffset = 0
-                        + (pcmData[bank][num * 0x12 + 8 + 32] & 0xff)
-                        + (pcmData[bank][num * 0x12 + 9 + 32] & 0xff) * 0x100
+                chWk[al].loopStartOffset =
+                          (pcmData[bank][num * 0x12 +  8 + 32] & 0xff)
+                        + (pcmData[bank][num * 0x12 +  9 + 32] & 0xff) * 0x100
                         + (pcmData[bank][num * 0x12 + 10 + 32] & 0xff) * 0x10_000
                         + (pcmData[bank][num * 0x12 + 11 + 32] & 0xff) * 0x100_0000;
             }
             chWk[al].loopEndOffset = chWk[al]._loopEndOffset;
             if (chWk[al]._loopEndOffset == -1) {
-                chWk[al].loopEndOffset = 0
-                        + (pcmData[bank][num * 0x12 + 12 + 32] & 0xff)
+                chWk[al].loopEndOffset =
+                          (pcmData[bank][num * 0x12 + 12 + 32] & 0xff)
                         + (pcmData[bank][num * 0x12 + 13 + 32] & 0xff) * 0x100
                         + (pcmData[bank][num * 0x12 + 14 + 32] & 0xff) * 0x10_000
                         + (pcmData[bank][num * 0x12 + 15 + 32] & 0xff) * 0x100_0000;
             }
-            if (chWk[al].loopStartOffset == 0xffff && chWk[al].loopEndOffset == 0xffff) {
+            if (chWk[al].loopStartOffset == 0xffff) {
                 chWk[al].loopStartOffset = -1;
                 chWk[al].loopEndOffset = -1;
             }
+            if (chWk[al].loopStartOffset == -1 || chWk[al].loopEndOffset == 0xffff) chWk[al].loopEndOffset = -1;
 
-            chWk[al].srcFrequency = chWk[al]._srcFrequency;
+            // Seems unnecessary?
+//            chWk[al].srcFrequency = chWk[al]._srcFrequency;
         }
 
         interrupt = false;
@@ -293,6 +297,7 @@ public class PPZ8 {
             chWk[al]._loopStartOffset = -1;
             chWk[al]._loopEndOffset = -1;
         }
+        if (chWk[al]._loopEndOffset == 0xffff) chWk[al]._loopEndOffset = -1;
     }
 
     /**
@@ -387,9 +392,16 @@ public class PPZ8 {
                 chWk[i].ptr += (int) chWk[i].delta;
                 chWk[i].delta -= (int) chWk[i].delta;
 
+                // When the loop end position is reached, it returns to the loop start position.
+                if (chWk[i].loopEndOffset != -1 && chWk[i].ptr >= chWk[i].startAddress + chWk[i].loopEndOffset) {
+                    chWk[i].ptr -= chWk[i].loopEndOffset - chWk[i].loopStartOffset;
+                }
+
+                // When the end of the data is reached, it returns to the loop start position.
+                // If no loop is specified, playback ends.
                 if (chWk[i].ptr >= chWk[i].end) {
                     if (chWk[i].loopStartOffset != -1) {
-                        chWk[i].ptr -= chWk[i].loopEndOffset - chWk[i].loopStartOffset;
+                        chWk[i].ptr -= (chWk[i].end - chWk[i].startAddress - chWk[i].loopStartOffset);
                     } else {
                         chWk[i].playing = false;
                     }
@@ -428,17 +440,17 @@ public class PPZ8 {
         // Tone table conversion
         long size2 = 0;
         for (int i = 0; i < instCount; i++) {
-            int startaddress = ((pcmData[bank][i * 4 + 0x10] & 0xff) + (pcmData[bank][i * 4 + 0x11] & 0xff) * 0x100) << (5 + 1);
+            int startAddress = ((pcmData[bank][i * 4 + 0x10] & 0xff) + (pcmData[bank][i * 4 + 0x11] & 0xff) * 0x100) << (5 + 1);
             int size = (((pcmData[bank][i * 4 + 0x12] & 0xff) + (pcmData[bank][i * 4 + 0x13] & 0xff) * 0x100)
                     - ((pcmData[bank][i * 4 + 0x10] & 0xff) + (pcmData[bank][i * 4 + 0x11] & 0xff) * 0x100) + 1)
                     << (5 + 1);// endAdr - startAdr
             size2 += size;
             short rate = 16000; // 16kHz
 
-            o.add((byte) startaddress);
-            o.add((byte) (startaddress >> 8));
-            o.add((byte) (startaddress >> 16));
-            o.add((byte) (startaddress >> 24));
+            o.add((byte) startAddress);
+            o.add((byte) (startAddress >> 8));
+            o.add((byte) (startAddress >> 16));
+            o.add((byte) (startAddress >> 24));
             o.add((byte) size);
             o.add((byte) (size >> 8));
             o.add((byte) (size >> 16));

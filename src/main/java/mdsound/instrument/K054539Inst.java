@@ -89,12 +89,12 @@ public class K054539Inst extends Instrument.BaseInstrument implements PcmEnabled
         if (gain >= 0) chips[chipId].setGain(channel, gain);
     }
 
-    /** @param extras 0: srcStartAddress, 1: romSize */
+    /** @param extras 0: srcOffset, 1: romSize */
     @Override
     public synchronized void writePcm(int chipId, byte[] buf, int offset, int length, Object... extras) {
-        int srcStartAdr = (int) extras[0];
+        int srcOffset = (int) extras[0];
         int romSize = (int) extras[1];
-        chips[chipId].writeRom(romSize, offset, length, buf, srcStartAdr);
+        chips[chipId].writeRom(romSize, offset, length, buf, srcOffset);
     }
 
     //----

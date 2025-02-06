@@ -1,10 +1,20 @@
+/*
+ * https://web.archive.org/web/20200810210111/https://vstcpp.wpblog.jp/?p=1797
+ */
 
 package mdsound.fmvgen.effect;
 
+
 /**
- * Chorus Flanger implementation example
+ * A chorus flanger is an effect that adds thickness to the sound
+ * by mixing a pitch-shifted sound with the input signal.
+ * There is no clear difference between a chorus and a flanger,
+ * and they are called different names depending on the size of the pitch shift.
+ * A chorus has little pitch shift and just adds thickness to the input signal,
+ * while a flanger has a larger pitch shift and is like adding a jet sound to the input signal.
  *
- * @see "https://vstcpp.wpblog.jp/?p=1797"
+ * @author twitter:@vstcpp
+ * @see "https://web.archive.org/web/20200810210111/https://vstcpp.wpblog.jp/?p=1797"
  */
 public class Chorus {
 
@@ -14,6 +24,7 @@ public class Chorus {
     private int currentCh = 0;
 
     public static class ChInfo {
+
         public boolean sw;
 
         /** Chorus effect level. Between 0.0 and 1.0 */
@@ -69,9 +80,9 @@ public class Chorus {
     }
 
     /**
-     * 線形補間関数
-     * v1とv2を割合tで線形補間する。tは0.0～1.0の範囲とする
-     * tが0.0の時v1の値となり、tが1.0の時v2の値となる
+     * Linear Interpolation Function
+     * Linearly interpolate v1 and v2 with the ratio t, where t is in the range 0.0 to 1.0.
+     * When t is 0.0, it is the value of v1, and when t is 1.0, it is the value of v2.
      */
     private static float lerp(float v1, float v2, float t) {
         return (1.0f - t) * v1 + t * v2;
@@ -92,40 +103,40 @@ public class Chorus {
         ChInfo ci = chInfo[ch];
         float finL = inL[0] / 21474.83647f;
         float finR = inR[0] / 21474.83647f;
-        float speed = (2.0f * 3.14159265f * ci.rate) / clock; // 揺らぎのスピード。角速度ωと同じ。
+        float speed = (2.0f * 3.14159265f * ci.rate) / clock; // The speed of fluctuation. It is the same as the angular velocity ω.
 
-        // inL[]、inR[]、outL[]、outR[]はそれぞれ入力信号と出力信号のバッファ(左右)
-        // wavelenghtはバッファのサイズ、サンプリング周波数は44100Hzとする
+        // inL[], inR[], outL[], and outR[] are the input and output signal buffers (left and right) respectively.
+        // wavelenght is the buffer size, and the sampling frequency is 44100Hz.
 
-        // 入力信号にコーラスかける
-        // 角度θに角速度を加える
+        // Apply chorus to the input signal
+        // Add the angular velocity to the angle θ
         ci.theta += speed;
 
-        // 読み込み位置を揺らす量を計算
-        // sin()関数の結果にdepthを掛ける
+        // Calculate the amount to shake the read position
+        // Multiply the result of the sin() function by depth
         float a = (float) (Math.sin(ci.theta) * ci.depth);
 
-        // 読み込み位置を揺らした際の前後の整数値を取得(あとで線形補間するため)
+        // Get integer values before and after the read position is swayed (for linear interpolation later)
         int p1 = (int) a;
         int p2 = (int) (a + 1);
 
-        // 前後の整数値から読み込み位置の値を線形補間で割り出す
+        // The value of the read position is calculated by linear interpolation from the integer values before and after
         float lerpL1 = lerp(ci.ringBufL.read(p1), ci.ringBufL.read(p2), a - (float) p1);
         float lerpR1 = lerp(ci.ringBufR.read(p1), ci.ringBufR.read(p2), a - (float) p1);
 
-        // 入力信号にディレイ信号を混ぜる
+        // Mix the delayed signal with the input signal
         float tmpL = (1.0f - ci.mix) * finL + ci.mix * lerpL1;
         float tmpR = (1.0f - ci.mix) * finR + ci.mix * lerpR1;
 
-        // ディレイ信号として入力信号とフィードバック信号をリングバッファに書き込み
+        // Write the input signal and feedback signal to a ring buffer as a delayed signal.
         ci.ringBufL.write((1.0f - ci.feedback) * finL + ci.feedback * tmpL);
         ci.ringBufR.write((1.0f - ci.feedback) * finR + ci.feedback * tmpR);
 
-        // リングバッファの状態を更新する
+        // Update the state of the ring buffer
         ci.ringBufL.update();
         ci.ringBufR.update();
 
-        // 出力信号に書き込む
+        // Write to output signal
         finL = tmpL;
         finR = tmpR;
 

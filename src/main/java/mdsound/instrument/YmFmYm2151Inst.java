@@ -110,11 +110,6 @@ public class YmFmYm2151Inst extends Instrument.BaseInstrument {
     //----
 
     @Override
-    public Tuple<Integer, Double> getRegulationVolume() {
-        return new Tuple<>(0x100, 1d);
-    }
-
-    @Override
     public Map<String, Object> getView(String key, Map<String, Object> args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {

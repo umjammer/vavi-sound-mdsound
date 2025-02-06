@@ -1,3 +1,13 @@
+/*
+ * - You are free to modify this source, make the modified versions public,
+ *   incorporate it into self-made software, and distribute that software.
+ *   There is no need to report this to m_puusan.
+ * - m_puusan assumes no responsibility for any damages (including loss of profits
+ *   or data, or other monetary losses) arising from the use or inability to use this software.
+ *
+ * http://mpuusan.web.fc2.com/x68sound/index.htm
+ */
+
 package mdsound.x68sound;
 
 import java.util.function.BiConsumer;
@@ -5,6 +15,11 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 
+/**
+ * X68Sound.
+ *
+ * @author m_puusan
+ */
 public class X68Sound {
 
     public static final int SNDERR_PCMOUT = -1;

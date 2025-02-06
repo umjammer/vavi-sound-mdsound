@@ -50,6 +50,9 @@ import java.util.function.Consumer;
  * <p>
  * Additions by Maxim:
  * - per-channel panning
+ *
+ * @author Mitsutaka Okazaki
+ * @version 0.61
  */
 public class Ym2413 {
 

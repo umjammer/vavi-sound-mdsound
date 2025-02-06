@@ -1,8 +1,7 @@
 /*
  * OPN/A/B interface with ADPCM support
- * Copyright (C) cisc 1998, 2003.
  *
- * $Id: Opna.h,v 1.33 2003/06/12 13:14:37 cisc Exp $
+ * Copyright (C) cisc 1998, 2003.
  */
 
 package mdsound.fmgen;
@@ -27,6 +26,9 @@ import static mdsound.fmgen.Fmgen.limit;
 
 /**
  * A sound source unit that produces a sound similar to OPN/OPNA.
+ *
+ * @author cisc
+ * @version $Id: Opna.h,v 1.33 2003/06/12 13:14:37 cisc Exp $
  */
 public class Opna {
 

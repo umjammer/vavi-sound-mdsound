@@ -1,6 +1,48 @@
+/*
+The MIT License (MIT)
+
+Copyright (c) 2001-2022 Mitsutaka Okazaki
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+ */
+
 package mdsound.np.chip;
 
+
+/**
+ * A YM2149 (aka PSG) emulator.
+ * <pre>
+ * This source refers to the following documents. The author would like to thank all the authors who have
+ * contributed to the writing of them.
+ * - psg.vhd        -- 2000 written by Kazuhiro Tsujikawa.
+ * - s_fme7.c       -- 1999,2000 written by Mamiya (NEZplug).
+ * - ay8910.c       -- 1998-2001 Author unknown (MAME).
+ * - MSX-Datapack   -- 1991 ASCII Corp.
+ * - AY-3-8910 data sheet
+ * </pre>
+ *
+ * @version v1.42
+ * @author Mitsutaka Okazaki
+ * @see "https://github.com/digital-sound-antiques/emu2149"
+ */
 public class Emu2149 {
+
     private static final int VOL_DEFAULT = 1;
     private static final int VOL_YM2149 = 0;
     private static final int VOL_AY_3_8910 = 1;
@@ -13,11 +55,12 @@ public class Emu2149 {
     };
 
     static class Psg {
+
         private static int PSG_MASK_CH(int x) {
             return (1 << (x));
         }
 
-        /* Volume Table */
+        /** Volume Table */
         int[] volTbl;
 
         private final int[] reg = new int[0x20];
@@ -158,7 +201,7 @@ public class Emu2149 {
             incr = (this.baseCount >> GETA_BITS);
             this.baseCount &= (1 << GETA_BITS) - 1;
 
-            /* Envelope */
+            // Envelope
             this.envCount += incr;
             while (this.envCount >= 0x10000 && this.envFreq != 0) {
                 if (this.envPause == 0) {

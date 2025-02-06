@@ -1,3 +1,9 @@
+/*
+ * NSFPlay/NFSPlug project by Brezza.
+ *
+ * https://web.archive.org/web/20160301201825/http://www.pokipoki.org/dsa/
+ */
+
 package mdsound.np.chip;
 
 import java.util.function.Consumer;
@@ -15,7 +21,7 @@ public class NesFme7 implements SoundChip {
     // clock divider
     protected int divider;
     protected double clock, rate;
-    protected BasicTrackInfo[] tarckInfo = new BasicTrackInfo[5];
+    protected BasicTrackInfo[] trackInfo = new BasicTrackInfo[5];
 
     protected static final int DIVIDER = 8 * 2;
     public static final double DEFAULT_CLOCK = 1789772.0;
@@ -44,23 +50,23 @@ public class NesFme7 implements SoundChip {
     @Override
     public void reset() {
         for (int i = 0; i < 16; ++i) { // blank all registers
-            write(0xC000, i);
-            write(0xE000, 0);
+            write(0xc000, i);
+            write(0xe000, 0);
         }
-        write(0xC000, 0x07); // disable all tones
-        write(0xE000, 0x3F);
+        write(0xc000, 0x07); // disable all tones
+        write(0xe000, 0x3f);
 
         divider = 0;
         emu2149.psg.reset();
     }
 
     @Override
-    public boolean write(int adress, int value, int id/*=0*/) {
-        if (adress == 0xC000) {
+    public boolean write(int address, int value, int id /* = 0 */) {
+        if (address == 0xc000) {
             emu2149.psg.writeIO(0, value);
             return true;
         }
-        if (adress == 0xE000) {
+        if (address == 0xe000) {
             emu2149.psg.writeIO(1, value);
             return true;
         } else
@@ -69,8 +75,8 @@ public class NesFme7 implements SoundChip {
 
     /** @param value OUT */
     @Override
-    public boolean read(int adress, int[] value, int id/* = 0*/) {
-        value[0] = emu2149.psg.readReg(adress);
+    public boolean read(int address, int[] value, int id /* = 0 */) {
+        value[0] = emu2149.psg.readReg(address);
         return false;
     }
 
@@ -115,55 +121,55 @@ public class NesFme7 implements SoundChip {
     }
 
     public DeviceInfo.TrackInfo getTrackInfo(int track) {
-        //assert(track < 5);
+        assert track < 5;
 
         Emu2149.Psg psg = emu2149.psg;
         if (track < 3) {
-            tarckInfo[track]._freq = psg.freq[track];
+            trackInfo[track]._freq = psg.freq[track];
             if (psg.freq[track] != 0)
-                tarckInfo[track].freq = psg.clk / 32.0 / psg.freq[track];
+                trackInfo[track].freq = psg.clk / 32.0 / psg.freq[track];
             else
-                tarckInfo[track].freq = 0;
+                trackInfo[track].freq = 0;
 
-            tarckInfo[track].output = psg.cout[track];
-            tarckInfo[track].maxVolume = 15;
-            tarckInfo[track].volume = psg.volume[track] >> 1;
-            tarckInfo[track].key = ((~(psg.tMask[track])) & 1) != 0;
-            tarckInfo[track].tone = (psg.tMask[track] != 0 ? 2 : 0) + (psg.nMask[track] != 0 ? 1 : 0);
+            trackInfo[track].output = psg.cout[track];
+            trackInfo[track].maxVolume = 15;
+            trackInfo[track].volume = psg.volume[track] >> 1;
+            trackInfo[track].key = ((~(psg.tMask[track])) & 1) != 0;
+            trackInfo[track].tone = (psg.tMask[track] != 0 ? 2 : 0) + (psg.nMask[track] != 0 ? 1 : 0);
         } else if (track == 3) { // envelope
-            tarckInfo[track]._freq = psg.envFreq;
+            trackInfo[track]._freq = psg.envFreq;
             if (psg.envFreq != 0)
-                tarckInfo[track].freq = psg.clk / 512.0 / psg.envFreq;
+                trackInfo[track].freq = psg.clk / 512.0 / psg.envFreq;
             else
-                tarckInfo[track].freq = 0;
+                trackInfo[track].freq = 0;
 
             if (psg.envContinue != 0 && psg.envAlternate != 0 && psg.envHold == 0) { // triangle wave
-                tarckInfo[track].freq *= 0.5f; // sounds an octave down
+                trackInfo[track].freq *= 0.5f; // sounds an octave down
             }
 
-            tarckInfo[track].output = psg.volTbl[psg.envPtr];
-            tarckInfo[track].maxVolume = 0;
-            tarckInfo[track].volume = 0;
-            tarckInfo[track].key = (((psg.volume[0] | psg.volume[1] | psg.volume[2]) & 32) != 0);
-            tarckInfo[track].tone =
+            trackInfo[track].output = psg.volTbl[psg.envPtr];
+            trackInfo[track].maxVolume = 0;
+            trackInfo[track].volume = 0;
+            trackInfo[track].key = (((psg.volume[0] | psg.volume[1] | psg.volume[2]) & 32) != 0);
+            trackInfo[track].tone =
                     (psg.envContinue != 0 ? 8 : 0) |
                     (psg.envAttack != 0 ? 4 : 0) |
                     (psg.envAlternate != 0 ? 2 : 0) |
                     (psg.envHold != 0 ? 1 : 0);
         } else if (track == 4) { // noise
-            tarckInfo[track]._freq = psg.noiseFreq >> 1;
-            if (tarckInfo[track]._freq > 0)
-                tarckInfo[track].freq = psg.clk / 16.0 / psg.noiseFreq;
+            trackInfo[track]._freq = psg.noiseFreq >> 1;
+            if (trackInfo[track]._freq > 0)
+                trackInfo[track].freq = psg.clk / 16.0 / psg.noiseFreq;
             else
-                tarckInfo[track].freq = 0;
+                trackInfo[track].freq = 0;
 
-            tarckInfo[track].output = psg.noiseSeed & 1;
-            tarckInfo[track].maxVolume = 0;
-            tarckInfo[track].volume = 0;
-            tarckInfo[track].key = false;
-            tarckInfo[track].tone = 0;
+            trackInfo[track].output = psg.noiseSeed & 1;
+            trackInfo[track].maxVolume = 0;
+            trackInfo[track].volume = 0;
+            trackInfo[track].key = false;
+            trackInfo[track].tone = 0;
         }
-        return tarckInfo[track];
+        return trackInfo[track];
     }
 
     @Override

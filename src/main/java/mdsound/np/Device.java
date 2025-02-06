@@ -1,3 +1,9 @@
+/*
+ * NSFPlay/NFSPlug project by Brezza.
+ *
+ * https://web.archive.org/web/20160301201825/http://www.pokipoki.org/dsa/
+ */
+
 package mdsound.np;
 
 import java.util.ArrayList;
@@ -6,6 +12,7 @@ import java.util.function.Consumer;
 
 
 public interface Device {
+
     void reset();
 
     boolean write(int adr, int val, int id);
@@ -23,6 +30,7 @@ public interface Device {
     void setOption(int id, int val);
 
     interface Renderable extends Device {
+
         /**
          * Audio Rendering
          *
@@ -43,8 +51,9 @@ public interface Device {
      * Audio synthesis chip
      */
     interface SoundChip extends Renderable {
+
         /**
-         * Soundchip clocked by M2 (NTSC = ~1.789MHz)
+         * Sound chip clocked by M2 (NTSC = ~1.789MHz)
          */
         @Override void tick(int clocks);
 
@@ -87,6 +96,7 @@ public interface Device {
     }
 
     class Bus implements Device {
+
         protected List<Device> vd = new ArrayList<>();
 
         /**
@@ -97,7 +107,6 @@ public interface Device {
          */
         @Override
         public void reset() {
-
             for (Device it : vd)
                 it.reset();
         }
@@ -127,7 +136,7 @@ public interface Device {
          * The order of calls is equal to the order in which the devices were installed.
          */
         @Override
-        public boolean write(int adr, int val, int id/* = 0*/) {
+        public boolean write(int adr, int val, int id /* = 0 */) {
             boolean ret = false;
             for (Device it : vd)
                 ret |= it.write(adr, val);
@@ -142,7 +151,7 @@ public interface Device {
          * The return value is the logical OR of the return values of valid devices (the Read method returns true).
          */
         @Override
-        public boolean read(int adr, int[] val, int id/* = 0*/) {
+        public boolean read(int adr, int[] val, int id /* = 0 */) {
             boolean ret = false;
             int[] vtmp = new int[] { 0 };
 
@@ -194,7 +203,7 @@ public interface Device {
          * The process ends when a device that was successfully read from is found.
          */
         @Override
-        public boolean read(int adr, int[] val, int id/* = 0*/) {
+        public boolean read(int adr, int[] val, int id /* = 0 */) {
             val[0] = 0;
             for (Device it : vd) {
                 if (it.read(adr, val)) return true;

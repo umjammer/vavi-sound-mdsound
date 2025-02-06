@@ -1,4 +1,8 @@
-// $Id: file.h,v 1.6 1999/11/26 10:14:09 cisc Exp $
+/*
+ * FM Sound Generator
+ *
+ * Copyright (C) cisc 1998, 2001.
+ */
 
 package mdsound.fmgen;
 
@@ -15,6 +19,11 @@ import dotnet4j.io.SeekOrigin;
 import static java.lang.System.getLogger;
 
 
+/**
+ * FileIO.
+ *
+ * @version $Id: file.h,v 1.6 1999/11/26 10:14:09 cisc Exp $
+ */
 public class FileIO {
 
     private static final Logger logger = getLogger(FileIO.class.getName());

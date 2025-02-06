@@ -1,7 +1,16 @@
+/*
+ * FM Sound Generator
+ *
+ * Copyright (C) cisc 1998, 2001.
+ */
+
 package mdsound.fmgen;
+
 
 /**
  * A sound source unit that produces sounds similar to Psg.
+ *
+ * @author cisc
  */
 public class PSG {
 

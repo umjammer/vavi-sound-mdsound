@@ -6,11 +6,11 @@ package mdsound.chips;
  *
  * @author Ernesto Corvi
  * @version
- *   JB  28-04-2002  Fixed simultaneous usage of all three different chip types.
- *                   Used real sample rate when resample filter is active.
- *   AAT 12-28-2001  Protected Y8950 from accessing unmapped port and keyboard handlers.
- *   CHS 1999-01-09  Fixes new ym3812 emulation interface.
- *   CHS 1998-10-23  Mame streaming sound chip update
+ *   JB  28-04-2002  Fixed simultaneous usage of all three different chip types.<br/>
+ *                   Used real sample rate when resample filter is active.<br/>
+ *   AAT 12-28-2001  Protected Y8950 from accessing unmapped port and keyboard handlers.<br/>
+ *   CHS 1999-01-09  Fixes new ym3812 emulation interface.<br/>
+ *   CHS 1998-10-23  Mame streaming sound chip update<br/>
  *   EC  1998        Created Interface
  * @see Opl
  */
