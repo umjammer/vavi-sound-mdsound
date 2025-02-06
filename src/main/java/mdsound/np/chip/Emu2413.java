@@ -1,17 +1,28 @@
 /*
- * fmopl.c        -- 1999,2000 written by Tatsuyuki Satoh (MAME development).
- * fmopl.c(fixed) -- (C) 2002 Jarek Burczynski.
- * s_opl.c        -- 2001 written by Mamiya (NEZplug development).
- * Fmgen.cpp      -- 1999,2000 written by cisc.
- * fmpac.ill      -- 2000 created by NARUTO.
- * MSX-Datapack
- * YMU757 data sheet
- * YM2143 data sheet
+The MIT License (MIT)
+
+Copyright (c) 2001-2019 Mitsutaka Okazaki
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
  */
 
 package mdsound.np.chip;
-
-import java.util.Arrays;
 
 
 /**
@@ -60,7 +71,7 @@ import java.util.Arrays;
  *    YM2143 data sheet
  * </pre>
  * @author Mitsutaka Okazaki
- * @version 2001
+ * @version 0.61
  */
 public class Emu2413 {
 
@@ -110,7 +121,7 @@ public class Emu2413 {
 
             // for Phase Generator (PG)
 
-            /** Wavetable */
+            /** Wave table */
             private int[] sinTbl;
             /** Phase */
             private int phase;
@@ -122,19 +133,19 @@ public class Emu2413 {
             // for Envelope Generator (EG)
 
             /** F-Number */
-            private int fnum;
-            /** Bsynchronized */
+            private int fNum;
+            /** B-synchronized */
             private int block;
             /** Current volume */
             private int volume;
-            /** Sustine 1 = ON, 0 = OFF */
-            private int sustine;
+            /** Sustain 1 = ON, 0 = OFF */
+            private int sustain;
             /** Total Level + Key scale level*/
             private int tll;
             /** Key scale offset (Rks) */
             private int rks;
             /** Current state */
-            private int egMode;
+            private EgState egMode;
             /** Phase */
             private int egPhase;
             /** Phase increment amount */
@@ -146,7 +157,7 @@ public class Emu2413 {
              * Calc Parameters
              */
             private int calcEgDPhase() {
-                return (EgState.valueOf(this.egMode)).calcEgDPhase(this);
+                return this.egMode.calcEgDPhase(this);
             }
 
             /**
@@ -160,15 +171,15 @@ public class Emu2413 {
             private static final int SLOT_CYM = 17;
 
             private void updatePg() {
-                this.dPhase = dphaseTable[this.fnum][this.block][this.patch.ml];
+                this.dPhase = dphaseTable[this.fNum][this.block][this.patch.ml];
             }
 
             private void updateTll() {
-                this.tll = (this.type == 0) ? tllTable[this.fnum >> 5][this.block][this.patch.tl][this.patch.kl] : tllTable[this.fnum >> 5][this.block][this.volume][this.patch.kl];
+                this.tll = (this.type == 0) ? tllTable[this.fNum >> 5][this.block][this.patch.tl][this.patch.kl] : tllTable[this.fNum >> 5][this.block][this.volume][this.patch.kl];
             }
 
             private void updateRks() {
-                this.rks = rksTable[this.fnum >> 8][this.block][this.patch.kr];
+                this.rks = rksTable[this.fNum >> 8][this.block][this.patch.kr];
             }
 
             private void updateWf() {
@@ -189,30 +200,28 @@ public class Emu2413 {
 
             /** Slot key on  */
             private void slotOn() {
-                this.egMode = EgState.ATTACK.ordinal();
+                this.egMode = EgState.ATTACK;
                 this.egPhase = 0;
                 this.phase = 0;
                 this.updateEg();
             }
 
-            /** Slot key on without reseting the phase */
+            /** Slot key on without resetting the phase */
             private void slotOn2() {
-                this.egMode = EgState.ATTACK.ordinal();
+                this.egMode = EgState.ATTACK;
                 this.egPhase = 0;
                 this.updateEg();
             }
 
             /* Slot key off */
             private void slotOff() {
-                if (this.egMode == EgState.ATTACK.ordinal())
+                if (this.egMode == EgState.ATTACK)
                     this.egPhase = expandBits(AR_ADJUST_TABLE[highBits(this.egPhase, EG_DP_BITS - EG_BITS)], EG_BITS, EG_DP_BITS);
-                this.egMode = EgState.RELEASE.ordinal();
+                this.egMode = EgState.RELEASE;
                 this.updateEg();
             }
 
-            /**
-             Initializing
-             */
+            /** Initializing */
             private void OPLL_SLOT_reset(int type) {
                 this.type = type;
                 this.sinTbl = Opll.waveForm[0];
@@ -221,13 +230,13 @@ public class Emu2413 {
                 this.output[0] = 0;
                 this.output[1] = 0;
                 this.feedback = 0;
-                this.egMode = EgState.FINISH.ordinal();
+                this.egMode = EgState.FINISH;
                 this.egPhase = Opll.EG_DP_WIDTH;
                 this.egDPhase = 0;
                 this.rks = 0;
                 this.tll = 0;
-                this.sustine = 0;
-                this.fnum = 0;
+                this.sustain = 0;
+                this.fNum = 0;
                 this.block = 0;
                 this.volume = 0;
                 this.pgOut = 0;
@@ -244,13 +253,13 @@ public class Emu2413 {
                 this.volume = volume;
             }
 
-            /** CARRIOR */
+            /** CARRIER */
             private int calcCar(int fm) {
                 if (this.egOut >= (DB_MUTE - 1)) {
                     //logger.log(Level.TRACE, "calc_slot_car: output over");
                     this.output[0] = 0;
                 } else {
-                    //logger.log(Level.TRACE, "calc_slot_car: this.egout %d".formatted(this.egout));
+                    //logger.log(Level.TRACE, "calc_slot_car: this.egOut %d".formatted(this.egOut));
                     this.output[0] = db2linTable[this.sinTbl[(this.pgOut + wave2_8pi(fm)) & (PG_WIDTH - 1)] + this.egOut];
                 }
 
@@ -304,9 +313,9 @@ public class Emu2413 {
                 if (this.egOut >= (DB_MUTE - 1))
                     return 0;
                 else if ((
-                        /* the same as fmopl.c */
+                        // the same as fmopl.c
                         ((bit(pgout_hh, PG_BITS - 8) ^ bit(pgout_hh, PG_BITS - 1)) | bit(pgout_hh, PG_BITS - 7)) ^
-                                /* different from fmopl.c */
+                                // different from fmopl.c
                                 (bit(this.pgOut, PG_BITS - 7) & ~bit(this.pgOut, PG_BITS - 5))) != 0
                 )
                     dbout = DB_NEG(3.0);
@@ -323,9 +332,9 @@ public class Emu2413 {
                 if (this.egOut >= (DB_MUTE - 1))
                     return 0;
                 else if ((
-                        /* the same as fmopl.c */
+                        // the same as fmopl.c
                         ((bit(this.pgOut, PG_BITS - 8) ^ bit(this.pgOut, PG_BITS - 1)) | bit(this.pgOut, PG_BITS - 7)) ^
-                                /* different from fmopl.c */
+                                // different from fmopl.c
                                 (bit(pgout_cym, PG_BITS - 7) & ((~bit(pgout_cym, PG_BITS - 5)) & 1))) != 0
                 ) {
                     if (noise != 0)
@@ -354,10 +363,10 @@ public class Emu2413 {
                 this.pgOut = highBits(this.phase, DP_BASE_BITS);
             }
 
-            /* dB to Liner table */
+            /** dB to Liner table */
             private static final int[] db2linTable = new int[(DB_MUTE + DB_MUTE) * 2];
 
-            /* Table for dB(0 -- (1<<DB_BITS)-1) to Liner(0 -- DB2LIN_AMP_WIDTH) */
+            /** Table for dB(0 -- (1<<DB_BITS)-1) to Liner(0 -- DB2LIN_AMP_WIDTH) */
             static {
                 for (int i = 0; i < DB_MUTE + DB_MUTE; i++) {
                     db2linTable[i] = (int) ((double) ((1 << DB2LIN_AMP_BITS) - 1) * Math.pow(10, -(double) i * DB_STEP / 20));
@@ -367,7 +376,7 @@ public class Emu2413 {
             }
         }
 
-        /* Mask */
+        /** Mask */
         public static int maskCh(int x) {
             return 1 << x;
         }
@@ -386,8 +395,8 @@ public class Emu2413 {
         private int opllTime;
         private int opllStep;
         private int prev, next;
-        private final int[] sprev = new int[2];
-        private final int[] snext = new int[2];
+        private final int[] sPrev = new int[2];
+        private final int[] sNext = new int[2];
         private final int[] pan = new int[16];
 
         /** Register */
@@ -411,16 +420,16 @@ public class Emu2413 {
         private final int[] patchNumber = new int[9];
         private final int[] keyStatus = new int[9];
 
-        /* Slot */
+        /** Slot */
         final Slot[] slot = new Slot[18];
 
-        /* Voice data */
+        /** Voice data */
         private final Slot.Patch[][] patch = {
-                new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2]
-                , new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2]
-                , new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2]
-                , new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2]
-                , new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2]
+                new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2],
+                new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2],
+                new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2],
+                new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2],
+                new Slot.Patch[2], new Slot.Patch[2], new Slot.Patch[2]
         };
         /** flag for check patch update */
         private final int[] patchUpdate = new int[2];
@@ -435,7 +444,7 @@ public class Emu2413 {
             return this.slot[(x << 1) | 1];
         }
 
-        /* Channel key on */
+        /** Channel key on */
         private void keyOn(int i) {
             if (this.slotOnFlag[i * 2] == 0)
                 this.mod(i).slotOn();
@@ -444,7 +453,7 @@ public class Emu2413 {
             this.keyStatus[i] = 1;
         }
 
-        /* Channel key off */
+        /** Channel key off */
         private void keyOff(int i) {
             if (this.slotOnFlag[i * 2 + 1] != 0)
                 this.car(i).slotOff();
@@ -507,11 +516,11 @@ public class Emu2413 {
             this.car(i).patch = this.patch[num][1];
         }
 
-        /** Set sustine parameter */
+        /** Set sustain parameter */
         private void setSustine(int c, int sustine) {
-            this.car(c).sustine = sustine;
+            this.car(c).sustain = sustine;
             if (this.mod(c).type != 0)
-                this.mod(c).sustine = sustine;
+                this.mod(c).sustain = sustine;
         }
 
         /** Volume : 6bit ( Volume register << 2 ) */
@@ -521,8 +530,8 @@ public class Emu2413 {
 
         /** Set F-Number ( fNum : 9bit ) */
         private void setFNumber(int c, int fnum) {
-            this.car(c).fnum = fnum;
-            this.mod(c).fnum = fnum;
+            this.car(c).fNum = fnum;
+            this.mod(c).fNum = fnum;
         }
 
         /** Set Bsynchronized data (block : 3bit ) */
@@ -535,14 +544,14 @@ public class Emu2413 {
         private void updateRhythmMode() {
             if ((this.patchNumber[6] & 0x10) != 0) {
                 if ((this.slotOnFlag[Slot.SLOT_BD2] | (this.reg[0x0e] & 0x20)) == 0) {
-                    this.slot[Slot.SLOT_BD1].egMode = EgState.FINISH.ordinal();
-                    this.slot[Slot.SLOT_BD2].egMode = EgState.FINISH.ordinal();
+                    this.slot[Slot.SLOT_BD1].egMode = EgState.FINISH;
+                    this.slot[Slot.SLOT_BD2].egMode = EgState.FINISH;
                     this.setPatch(6, this.reg[0x36] >> 4);
                 }
             } else if ((this.reg[0x0e] & 0x20) != 0) {
                 this.patchNumber[6] = 16;
-                this.slot[Slot.SLOT_BD1].egMode = EgState.FINISH.ordinal();
-                this.slot[Slot.SLOT_BD2].egMode = EgState.FINISH.ordinal();
+                this.slot[Slot.SLOT_BD1].egMode = EgState.FINISH;
+                this.slot[Slot.SLOT_BD2].egMode = EgState.FINISH;
                 this.slot[Slot.SLOT_BD1].setSlotPatch(this.patch[16][0]);
                 this.slot[Slot.SLOT_BD2].setSlotPatch(this.patch[16][1]);
             }
@@ -550,15 +559,15 @@ public class Emu2413 {
             if ((this.patchNumber[7] & 0x10) != 0) {
                 if (!((this.slotOnFlag[Slot.SLOT_HH] != 0 && this.slotOnFlag[Slot.SLOT_SD] != 0) || (this.reg[0x0e] & 0x20) != 0)) {
                     this.slot[Slot.SLOT_HH].type = 0;
-                    this.slot[Slot.SLOT_HH].egMode = EgState.FINISH.ordinal();
-                    this.slot[Slot.SLOT_SD].egMode = EgState.FINISH.ordinal();
+                    this.slot[Slot.SLOT_HH].egMode = EgState.FINISH;
+                    this.slot[Slot.SLOT_SD].egMode = EgState.FINISH;
                     this.setPatch(7, this.reg[0x37] >> 4);
                 }
             } else if ((this.reg[0x0e] & 0x20) != 0) {
                 this.patchNumber[7] = 17;
                 this.slot[Slot.SLOT_HH].type = 1;
-                this.slot[Slot.SLOT_HH].egMode = EgState.FINISH.ordinal();
-                this.slot[Slot.SLOT_SD].egMode = EgState.FINISH.ordinal();
+                this.slot[Slot.SLOT_HH].egMode = EgState.FINISH;
+                this.slot[Slot.SLOT_SD].egMode = EgState.FINISH;
                 this.slot[Slot.SLOT_HH].setSlotPatch(this.patch[17][0]);
                 this.slot[Slot.SLOT_SD].setSlotPatch(this.patch[17][1]);
             }
@@ -566,15 +575,15 @@ public class Emu2413 {
             if ((this.patchNumber[8] & 0x10) != 0) {
                 if (!((this.slotOnFlag[Slot.SLOT_CYM] != 0 && this.slotOnFlag[Slot.SLOT_TOM] != 0) || (this.reg[0x0e] & 0x20) != 0)) {
                     this.slot[Slot.SLOT_TOM].type = 0;
-                    this.slot[Slot.SLOT_TOM].egMode = EgState.FINISH.ordinal();
-                    this.slot[Slot.SLOT_CYM].egMode = EgState.FINISH.ordinal();
+                    this.slot[Slot.SLOT_TOM].egMode = EgState.FINISH;
+                    this.slot[Slot.SLOT_CYM].egMode = EgState.FINISH;
                     this.setPatch(8, this.reg[0x38] >> 4);
                 }
             } else if ((this.reg[0x0e] & 0x20) != 0) {
                 this.patchNumber[8] = 18;
                 this.slot[Slot.SLOT_TOM].type = 1;
-                this.slot[Slot.SLOT_TOM].egMode = EgState.FINISH.ordinal();
-                this.slot[Slot.SLOT_CYM].egMode = EgState.FINISH.ordinal();
+                this.slot[Slot.SLOT_TOM].egMode = EgState.FINISH;
+                this.slot[Slot.SLOT_CYM].egMode = EgState.FINISH;
                 this.slot[Slot.SLOT_TOM].setSlotPatch(this.patch[18][0]);
                 this.slot[Slot.SLOT_CYM].setSlotPatch(this.patch[18][1]);
             }
@@ -701,12 +710,12 @@ public class Emu2413 {
             for (int i = 0; i < 14; i++) {
                 this.pan[i] = 2;
             }
-            this.sprev[0] = this.sprev[1] = 0;
-            this.snext[0] = this.snext[1] = 0;
+            this.sPrev[0] = this.sPrev[1] = 0;
+            this.sNext[0] = this.sNext[1] = 0;
 //#endif
         }
 
-        /* Force Refresh (When external program changes some parameters). */
+        /** Force Refresh (When external program changes some parameters). */
         public void forceRefresh() {
             for (int i = 0; i < 9; i++)
                 this.setPatch(i, this.patchNumber[i]);
@@ -768,14 +777,14 @@ public class Emu2413 {
         private static void calc_envelope(Slot slot, int lfo) {
             int egout;
 
-            switch (EgState.valueOf(slot.egMode)) {
+            switch (slot.egMode) {
             case ATTACK:
                 egout = AR_ADJUST_TABLE[highBits(slot.egPhase, EG_DP_BITS - EG_BITS)];
                 slot.egPhase += slot.egDPhase;
                 if ((EG_DP_WIDTH & slot.egPhase) != 0 || (slot.patch.ar == 15)) {
                     egout = 0;
                     slot.egPhase = 0;
-                    slot.egMode = EgState.DECAY.ordinal();
+                    slot.egMode = EgState.DECAY;
                     slot.updateEg();
                 }
                 break;
@@ -786,11 +795,11 @@ public class Emu2413 {
                 if (slot.egPhase >= sl[slot.patch.sl]) {
                     if ((slot.patch.eg) != 0) {
                         slot.egPhase = sl[slot.patch.sl];
-                        slot.egMode = EgState.SUSHOLD.ordinal();
+                        slot.egMode = EgState.SUSHOLD;
                         slot.updateEg();
                     } else {
                         slot.egPhase = sl[slot.patch.sl];
-                        slot.egMode = EgState.SUSTINE.ordinal();
+                        slot.egMode = EgState.SUSTAIN;
                         slot.updateEg();
                     }
                 }
@@ -799,17 +808,17 @@ public class Emu2413 {
             case SUSHOLD:
                 egout = highBits(slot.egPhase, EG_DP_BITS - EG_BITS);
                 if (slot.patch.eg == 0) {
-                    slot.egMode = EgState.SUSTINE.ordinal();
+                    slot.egMode = EgState.SUSTAIN;
                     slot.updateEg();
                 }
                 break;
 
-            case SUSTINE:
+            case SUSTAIN:
             case RELEASE:
                 egout = highBits(slot.egPhase, EG_DP_BITS - EG_BITS);
                 slot.egPhase += slot.egDPhase;
                 if (egout >= (1 << EG_BITS)) {
-                    slot.egMode = EgState.FINISH.ordinal();
+                    slot.egMode = EgState.FINISH;
                     egout = (1 << EG_BITS) - 1;
                 }
                 break;
@@ -818,7 +827,7 @@ public class Emu2413 {
                 egout = highBits(slot.egPhase, EG_DP_BITS - EG_BITS);
                 slot.egPhase += slot.egDPhase;
                 if (egout >= (1 << EG_BITS)) {
-                    slot.egMode = EgState.ATTACK.ordinal();
+                    slot.egMode = EgState.ATTACK;
                     egout = (1 << EG_BITS) - 1;
                     slot.updateEg();
                 }
@@ -837,7 +846,7 @@ public class Emu2413 {
                 egout = EG2DB(egout + slot.tll) + lfo;
             else {
                 egout = EG2DB(egout + slot.tll);
-                //logger.log(Level.TRACE, "egout %d slot.tll %d (e_int32)(EG_STEP/DB_STEP) %d".formatted(egout, slot.tll, (int)(EG_STEP / DB_STEP)));
+//logger.log(Level.TRACE, "egOut %d slot.tll %d (e_int32)(EG_STEP/DB_STEP) %d".formatted(egOut, slot.tll, (int) (EG_STEP / DB_STEP)));
             }
 
             if (egout >= DB_MUTE)
@@ -859,37 +868,37 @@ public class Emu2413 {
             }
 
             for (i = 0; i < 6; i++)
-                if ((this.mask & maskCh(i)) == 0 && (this.car(i).egMode != EgState.FINISH.ordinal()))
+                if ((this.mask & maskCh(i)) == 0 && (this.car(i).egMode != EgState.FINISH))
                     inst += this.car(i).calcCar(this.mod(i).calcMod());
 
-            /* CH6 */
+            // CH6
             if (this.patchNumber[6] <= 15) {
-                if ((this.mask & maskCh(6)) == 0 && (this.car(6).egMode != EgState.FINISH.ordinal()))
+                if ((this.mask & maskCh(6)) == 0 && (this.car(6).egMode != EgState.FINISH))
                     inst += this.car(6).calcCar(this.mod(6).calcMod());
             } else {
-                if ((this.mask & MASK_BD) == 0 && (this.car(6).egMode != EgState.FINISH.ordinal()))
+                if ((this.mask & MASK_BD) == 0 && (this.car(6).egMode != EgState.FINISH))
                     perc += this.car(6).calcCar(this.mod(6).calcMod());
             }
 
-            /* CH7 */
+            // CH7
             if (this.patchNumber[7] <= 15) {
-                if ((this.mask & maskCh(7)) == 0 && (this.car(7).egMode != EgState.FINISH.ordinal()))
+                if ((this.mask & maskCh(7)) == 0 && (this.car(7).egMode != EgState.FINISH))
                     inst += this.car(7).calcCar(this.mod(7).calcMod());
             } else {
-                if ((this.mask & MASK_HH) == 0 && (this.mod(7).egMode != EgState.FINISH.ordinal()))
+                if ((this.mask & MASK_HH) == 0 && (this.mod(7).egMode != EgState.FINISH))
                     perc += this.mod(7).calcHat(this.car(8).pgOut, this.noiseSeed & 1);
-                if ((this.mask & MASK_SD) == 0 && (this.car(7).egMode != EgState.FINISH.ordinal()))
+                if ((this.mask & MASK_SD) == 0 && (this.car(7).egMode != EgState.FINISH))
                     perc -= this.car(7).calcSnare(this.noiseSeed & 1);
             }
 
-            /* CH8 */
+            // CH8
             if (this.patchNumber[8] <= 15) {
-                if ((this.mask & maskCh(8)) == 0 && (this.car(8).egMode != EgState.FINISH.ordinal()))
+                if ((this.mask & maskCh(8)) == 0 && (this.car(8).egMode != EgState.FINISH))
                     inst += this.car(8).calcCar(this.mod(8).calcMod());
             } else {
-                if ((this.mask & MASK_TOM) == 0 && (this.mod(8).egMode != EgState.FINISH.ordinal()))
+                if ((this.mask & MASK_TOM) == 0 && (this.mod(8).egMode != EgState.FINISH))
                     perc += this.mod(8).calcTom();
-                if ((this.mask & MASK_CYM) == 0 && (this.car(8).egMode != EgState.FINISH.ordinal()))
+                if ((this.mask & MASK_CYM) == 0 && (this.car(8).egMode != EgState.FINISH))
                     perc -= this.car(8).calcCym(this.mod(7).pgOut);
             }
             // end if (! this.vrc7_mode)
@@ -927,13 +936,9 @@ public class Emu2413 {
             return ret;
         }
 
-        /**
-         I/O Ctrl
-         */
+        /** I/O Ctrl */
         private void writeReg(int reg, int data) {
-            //logger.log(Level.TRACE, "OPLL_writeReg:reg:%d:data:%d".formatted(reg,data));
-
-            int i, v, ch;
+//logger.log(Level.TRACE, "OPLL_writeReg:reg:%d:data:%d".formatted(reg,data));
 
             data = data & 0xff;
             reg = reg & 0x3f;
@@ -946,7 +951,7 @@ public class Emu2413 {
                 this.patch[0][0].eg = (data >> 5) & 1;
                 this.patch[0][0].kr = (data >> 4) & 1;
                 this.patch[0][0].ml = (data) & 15;
-                for (i = 0; i < 9; i++) {
+                for (int i = 0; i < 9; i++) {
                     if (this.patchNumber[i] == 0) {
                         this.mod(i).updatePg();
                         this.mod(i).updateRks();
@@ -961,7 +966,7 @@ public class Emu2413 {
                 this.patch[0][1].eg = (data >> 5) & 1;
                 this.patch[0][1].kr = (data >> 4) & 1;
                 this.patch[0][1].ml = (data) & 15;
-                for (i = 0; i < 9; i++) {
+                for (int i = 0; i < 9; i++) {
                     if (this.patchNumber[i] == 0) {
                         this.car(i).updatePg();
                         this.car(i).updateRks();
@@ -973,7 +978,7 @@ public class Emu2413 {
             case 0x02:
                 this.patch[0][0].kl = (data >> 6) & 3;
                 this.patch[0][0].tl = (data) & 63;
-                for (i = 0; i < 9; i++) {
+                for (int i = 0; i < 9; i++) {
                     if (this.patchNumber[i] == 0) {
                         this.mod(i).updateTll();
                     }
@@ -985,7 +990,7 @@ public class Emu2413 {
                 this.patch[0][1].wf = (data >> 4) & 1;
                 this.patch[0][0].wf = (data >> 3) & 1;
                 this.patch[0][0].fb = (data) & 7;
-                for (i = 0; i < 9; i++) {
+                for (int i = 0; i < 9; i++) {
                     if (this.patchNumber[i] == 0) {
                         this.mod(i).updateWf();
                         this.car(i).updateWf();
@@ -996,7 +1001,7 @@ public class Emu2413 {
             case 0x04:
                 this.patch[0][0].ar = (data >> 4) & 15;
                 this.patch[0][0].dr = (data) & 15;
-                for (i = 0; i < 9; i++) {
+                for (int i = 0; i < 9; i++) {
                     if (this.patchNumber[i] == 0) {
                         this.mod(i).updateEg();
                     }
@@ -1006,7 +1011,7 @@ public class Emu2413 {
             case 0x05:
                 this.patch[0][1].ar = (data >> 4) & 15;
                 this.patch[0][1].dr = (data) & 15;
-                for (i = 0; i < 9; i++) {
+                for (int i = 0; i < 9; i++) {
                     if (this.patchNumber[i] == 0) {
                         this.car(i).updateEg();
                     }
@@ -1016,7 +1021,7 @@ public class Emu2413 {
             case 0x06:
                 this.patch[0][0].sl = (data >> 4) & 15;
                 this.patch[0][0].rr = (data) & 15;
-                for (i = 0; i < 9; i++) {
+                for (int i = 0; i < 9; i++) {
                     if (this.patchNumber[i] == 0) {
                         this.mod(i).updateEg();
                     }
@@ -1026,7 +1031,7 @@ public class Emu2413 {
             case 0x07:
                 this.patch[0][1].sl = (data >> 4) & 15;
                 this.patch[0][1].rr = (data) & 15;
-                for (i = 0; i < 9; i++) {
+                for (int i = 0; i < 9; i++) {
                     if (this.patchNumber[i] == 0) {
                         this.car(i).updateEg();
                     }
@@ -1080,7 +1085,7 @@ public class Emu2413 {
             case 0x16:
             case 0x17:
             case 0x18:
-                ch = reg - 0x10;
+                int ch = reg - 0x10;
                 this.setFNumber(ch, data + ((this.reg[0x20 + ch] & 1) << 8));
                 this.mod(ch).updateAll();
                 this.car(ch).updateAll();
@@ -1118,8 +1123,8 @@ public class Emu2413 {
             case 0x36:
             case 0x37:
             case 0x38:
-                i = (data >> 4) & 15;
-                v = data & 15;
+                int i = (data >> 4) & 15;
+                int v = data & 15;
                 if ((this.reg[0x0e] & 0x20) != 0 && (reg >= 0x36)) {
                     switch (reg) {
                     case 0x37:
@@ -1151,7 +1156,7 @@ public class Emu2413 {
                 this.adr = val;
         }
 
-        /* STEREO MODE (OPT) */
+        /** STEREO MODE (OPT) */
         private void setPan(int ch, int pan) {
             this.pan[ch & 15] = pan & 3;
         }
@@ -1169,34 +1174,34 @@ public class Emu2413 {
             }
 
             for (int i = 0; i < 6; i++)
-                if ((this.mask & maskCh(i)) == 0 && (this.car(i).egMode != EgState.FINISH.ordinal()))
+                if ((this.mask & maskCh(i)) == 0 && (this.car(i).egMode != EgState.FINISH))
                     b[this.pan[i]] += this.car(i).calcCar(this.mod(i).calcMod());
 
             if (this.patchNumber[6] <= 15) {
-                if ((this.mask & maskCh(6)) == 0 && (this.car(6).egMode != EgState.FINISH.ordinal()))
+                if ((this.mask & maskCh(6)) == 0 && (this.car(6).egMode != EgState.FINISH))
                     b[this.pan[6]] += this.car(6).calcCar(this.mod(6).calcMod());
             } else {
-                if ((this.mask & MASK_BD) == 0 && (this.car(6).egMode != EgState.FINISH.ordinal()))
+                if ((this.mask & MASK_BD) == 0 && (this.car(6).egMode != EgState.FINISH))
                     b[this.pan[9]] += this.car(6).calcCar(this.mod(6).calcMod());
             }
 
             if (this.patchNumber[7] <= 15) {
-                if ((this.mask & maskCh(7)) == 0 && (this.car(7).egMode != EgState.FINISH.ordinal()))
+                if ((this.mask & maskCh(7)) == 0 && (this.car(7).egMode != EgState.FINISH))
                     b[this.pan[7]] += this.car(7).calcCar(this.mod(7).calcMod());
             } else {
-                if ((this.mask & MASK_HH) == 0 && (this.mod(7).egMode != EgState.FINISH.ordinal()))
+                if ((this.mask & MASK_HH) == 0 && (this.mod(7).egMode != EgState.FINISH))
                     r[this.pan[10]] += this.mod(7).calcHat(this.car(8).pgOut, this.noiseSeed & 1);
-                if ((this.mask & MASK_SD) == 0 && (this.car(7).egMode != EgState.FINISH.ordinal()))
+                if ((this.mask & MASK_SD) == 0 && (this.car(7).egMode != EgState.FINISH))
                     r[this.pan[11]] -= this.car(7).calcSnare(this.noiseSeed & 1);
             }
 
             if (this.patchNumber[8] <= 15) {
-                if ((this.mask & maskCh(8)) == 0 && (this.car(8).egMode != EgState.FINISH.ordinal()))
+                if ((this.mask & maskCh(8)) == 0 && (this.car(8).egMode != EgState.FINISH))
                     b[this.pan[8]] += this.car(8).calcCar(this.mod(8).calcMod());
             } else {
-                if ((this.mask & MASK_TOM) == 0 && (this.mod(8).egMode != EgState.FINISH.ordinal()))
+                if ((this.mask & MASK_TOM) == 0 && (this.mod(8).egMode != EgState.FINISH))
                     r[this.pan[12]] += this.mod(8).calcTom();
-                if ((this.mask & MASK_CYM) == 0 && (this.car(8).egMode != EgState.FINISH.ordinal()))
+                if ((this.mask & MASK_CYM) == 0 && (this.car(8).egMode != EgState.FINISH))
                     r[this.pan[13]] -= this.car(8).calcCym(this.mod(7).pgOut);
             }
 
@@ -1212,16 +1217,16 @@ public class Emu2413 {
 
             while (this.realStep > this.opllTime) {
                 this.opllTime += this.opllStep;
-                this.sprev[0] = this.snext[0];
-                this.sprev[1] = this.snext[1];
-                calcStereo(this.snext);
+                this.sPrev[0] = this.sNext[0];
+                this.sPrev[1] = this.sNext[1];
+                calcStereo(this.sNext);
             }
 
             this.opllTime -= this.realStep;
-            out[0] = (int) (((double) this.snext[0] * (this.opllStep - this.opllTime)
-                    + (double) this.sprev[0] * this.opllTime) / this.opllStep);
-            out[1] = (int) (((double) this.snext[1] * (this.opllStep - this.opllTime)
-                    + (double) this.sprev[1] * this.opllTime) / this.opllStep);
+            out[0] = (int) (((double) this.sNext[0] * (this.opllStep - this.opllTime)
+                    + (double) this.sPrev[0] * this.opllTime) / this.opllStep);
+            out[1] = (int) (((double) this.sNext[1] * (this.opllStep - this.opllTime)
+                    + (double) this.sPrev[1] * this.opllTime) / this.opllStep);
         }
 
         private static final int OPLL_TONE_NUM = 8;
@@ -1460,7 +1465,7 @@ public class Emu2413 {
         private static final int TL_BITS = 6;
         private static final int TL_MUTE = (1 << TL_BITS);
 
-        /* Dynamic range of sustine level */
+        /* Dynamic range of sustain level */
         private static final double SL_STEP = 3.0;
         private static final int SL_BITS = 4;
         private static final int SL_MUTE = (1 << SL_BITS);
@@ -1582,13 +1587,13 @@ public class Emu2413 {
                 int calcEgDPhase(Slot slot) {
                     return 0;
                 }
-            }, SUSTINE {
+            }, SUSTAIN {
                 int calcEgDPhase(Slot slot) {
                     return dPhaseDRTable[slot.patch.rr][slot.rks];
                 }
             }, RELEASE {
                 int calcEgDPhase(Slot slot) {
-                    if (slot.sustine != 0)
+                    if (slot.sustain != 0)
                         return dPhaseDRTable[5][slot.rks];
                     else if (slot.patch.eg != 0)
                         return dPhaseDRTable[slot.patch.rr][slot.rks];
@@ -1605,10 +1610,6 @@ public class Emu2413 {
                 }
             };
             abstract int calcEgDPhase(Slot slot);
-
-            static EgState valueOf(int v) {
-                return Arrays.stream(values()).filter(e -> e.ordinal() == v).findFirst().get();
-            }
         }
 
         /** Phase incR table for Attack */
@@ -1647,7 +1648,7 @@ public class Emu2413 {
             if (d == 0)
                 return (DB_MUTE - 1);
             else
-                return Math.min(-(int) (20.0 * Math.log10(d) / DB_STEP), DB_MUTE - 1); // 0 -- 127 */
+                return Math.min(-(int) (20.0 * Math.log10(d) / DB_STEP), DB_MUTE - 1); // 0 -- 127
         }
 
         /** Sin Table */
@@ -1681,19 +1682,19 @@ public class Emu2413 {
         /** Table for Pitch Modulator */
         private void makePmTable() {
             for (int i = 0; i < PM_PG_WIDTH; i++)
-//                pmtable[i] = (e_int32) ((double) PM_AMP * pow (2, (double) PM_DEPTH * sin (2.0 * PI * i / PM_PG_WIDTH) / 1200));
+//                pmTable[i] = (e_int32) ((double) PM_AMP * pow (2, (double) PM_DEPTH * sin (2.0 * PI * i / PM_PG_WIDTH) / 1200));
                 pmTable[i] = (int) ((double) PM_AMP * Math.pow(2, PM_DEPTH * saw(2.0 * Math.PI * i / PM_PG_WIDTH) / 1200));
         }
 
         /** Table for Amp Modulator */
         private void makeAmTable() {
             for (int i = 0; i < AM_PG_WIDTH; i++)
-//                amtable[i] = (e_int32) ((double) AM_DEPTH / 2 / DB_STEP * (1.0 + sin (2.0 * PI * i / PM_PG_WIDTH)));
+//                amTable[i] = (e_int32) ((double) AM_DEPTH / 2 / DB_STEP * (1.0 + sin (2.0 * PI * i / PM_PG_WIDTH)));
                 amTable[i] = (int) (AM_DEPTH / 2 / DB_STEP * (1.0 + saw(2.0 * Math.PI * i / PM_PG_WIDTH)));
         }
 
         /** Phase increment counter table */
-        private void makeDphaseTable() {
+        private void makeDPhaseTable() {
             int[] mlTable = {
                     1, 1 * 2, 2 * 2, 3 * 2, 4 * 2, 5 * 2, 6 * 2, 7 * 2, 8 * 2, 9 * 2, 10 * 2, 10 * 2, 12 * 2, 12 * 2, 15 * 2, 15 * 2
             };
@@ -1769,7 +1770,7 @@ public class Emu2413 {
 //#endif
 
         /** Rate Table for Attack */
-        private void makeDphaseARTable() {
+        private void makeDPhaseARTable() {
 
             for (int ar = 0; ar < 16; ar++)
                 for (int rks = 0; rks < 16; rks++) {
@@ -1889,8 +1890,8 @@ public class Emu2413 {
         }
 
         private void internalRefresh() {
-            makeDphaseTable();
-            makeDphaseARTable();
+            makeDPhaseTable();
+            makeDPhaseARTable();
             makeDPhaseDRTable();
             pmDPhase = adjustRate((int) (PM_SPEED * PM_DP_WIDTH / (clk / 72d)));
             amDPhase = adjustRate((int) (AM_SPEED * AM_DP_WIDTH / (clk / 72d)));

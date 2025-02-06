@@ -143,7 +143,7 @@ public class NesVrc7 implements SoundChip {
     }
 
     @Override
-    public boolean read(int adr, int[] val, int id/* = 0*/) {
+    public boolean read(int adr, int[] val, int id /* = 0 */) {
         return false;
     }
 

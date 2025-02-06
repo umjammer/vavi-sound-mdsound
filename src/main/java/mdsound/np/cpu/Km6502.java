@@ -6,10 +6,13 @@
 
 package mdsound.np.cpu;
 
+import java.lang.System.Logger;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import mdsound.np.Device;
+
+import static java.lang.System.getLogger;
 
 
 /**
@@ -25,6 +28,8 @@ import mdsound.np.Device;
  * @author Mamiya (mamiya@proc.org.tohoku.ac.jp)
  */
 public class Km6502 implements Device {
+
+    private static final Logger logger = getLogger(Km6502.class.getName());
 
     /** Accumulator */
     public int a;
@@ -97,9 +102,9 @@ public class Km6502 implements Device {
     public static final int T_FLAG = 0;
 
     private static final int BASE_OF_ZERO = 0x0000;
-    private static final int VEC_RESET = 0xffFC;
-    private static final int VEC_NMI = 0xffFA;
-    private static final int VEC_INT = 0xffFE;
+    private static final int VEC_RESET = 0xfffc;
+    private static final int VEC_NMI = 0xfffa;
+    private static final int VEC_INT = 0xfffe;
     private static final int VEC_BRK = VEC_INT;
     private static final int IRQ_INIT = IRQ.INIT.v;
     private static final int IRQ_RESET = IRQ.RESET.v;
@@ -165,8 +170,8 @@ public class Km6502 implements Device {
         (byte) 0x81, (byte) 0x81,
     };
 
-    public int FLAG_NZ(int w) {
-        return fl_table[w & 0xff] & 0xff;
+    public byte FLAG_NZ(int w) {
+        return fl_table[w & 0xff];
     }
 
     public int FLAG_NZC(int w) {
@@ -179,12 +184,12 @@ public class Km6502 implements Device {
 
     public int KI_READWORD(int adr) {
         int ret = K_READ(adr);
-        return ret + (K_READ((adr + 1) & 0xffff) << 8);
+        return (ret + ((K_READ(adr + 1) & 0xffff) << 8)) & 0xffff;
     }
 
     public int KI_READWORDZP(int adr) {
         int ret = K_READ(BASE_OF_ZERO + adr);
-        return ret + (K_READ(BASE_OF_ZERO + ((adr + 1) & 0xff)) << 8);
+        return (ret + (K_READ(BASE_OF_ZERO + ((adr + 1) & 0xff)) << 8)) & 0xffff;
     }
 
     public int KAI_IMM() {
@@ -286,29 +291,31 @@ public class Km6502 implements Device {
 
     public int KA_INDY_() {
         int adr = KAI_INDY();
-        if (((adr) & 0xff) == 0xff)
+        if ((adr & 0xff) == 0xff)
             KI_ADDCLOCK(1); // page break
         return adr;
     }
 
     public void KM_ALUADDER(int src) {
         int w = this.a + src + (this.p & C_FLAG);
-        this.p &= ~(int) (N_FLAG | V_FLAG | Z_FLAG | C_FLAG);
+        this.p &= ~(N_FLAG | V_FLAG | Z_FLAG | C_FLAG);
         this.p += FLAG_NZC(w) + ((((~this.a ^ src) & (this.a ^ w)) >> 1) & V_FLAG);
-        this.a = (w) & 0xff;
+        p &= 0xff;
+        this.a = (w & 0xff);
     }
 
     public void KM_ALUADDER_D(int src) {
-        int wl = (this.a & 0x0F) + (src & 0x0F) + (this.p & C_FLAG);
+        int wl = (this.a & 0x0f) + (src & 0x0f) + (this.p & C_FLAG);
         int w = this.a + src + (this.p & C_FLAG);
-        this.p &= ~(int) C_FLAG;
+        this.p &= ~C_FLAG;
         if (wl > 0x9)
             w += 0x6;
-        if (w > 0x9F) {
+        if (w > 0x9f) {
             this.p += C_FLAG;
             w += 0x60;
         }
-        this.a = (w) & 0xff;
+        this.p &= 0xff;
+        this.a = (w & 0xff);
         KI_ADDCLOCK(1);
     }
 
@@ -330,92 +337,106 @@ public class Km6502 implements Device {
 
     public void KM_CMP(int src) {
         int w = this.a + (src ^ 0xff) + 1;
-        this.p &= ~(int) (N_FLAG | Z_FLAG | C_FLAG);
+        this.p &= ~(N_FLAG | Z_FLAG | C_FLAG);
         this.p += FLAG_NZC(w);
+        this.p &= 0xff;
     }
 
     public void KM_CPX(int src) {
         int w = this.x + (src ^ 0xff) + 1;
-        this.p &= ~(int) (N_FLAG | Z_FLAG | C_FLAG);
+        this.p &= ~(N_FLAG | Z_FLAG | C_FLAG);
         this.p += FLAG_NZC(w);
+        this.p &= 0xff;
     }
 
     public void KM_CPY(int src) {
         int w = this.y + (src ^ 0xff) + 1;
-        this.p &= ~(int) (N_FLAG | Z_FLAG | C_FLAG);
+        this.p &= ~(N_FLAG | Z_FLAG | C_FLAG);
         this.p += FLAG_NZC(w);
+        this.p &= 0xff;
     }
 
     public void KM_BIT(int src) {
         int w = this.a & src;
-        this.p &= ~(int) (N_FLAG | V_FLAG | Z_FLAG);
+        this.p &= ~(N_FLAG | V_FLAG | Z_FLAG);
         this.p += (src & (N_FLAG | V_FLAG)) + (w != 0 ? 0 : Z_FLAG);
+        this.p &= 0xff;
     }
 
     public void KM_AND(int src) {
         this.a &= src;
-        this.p &= ~(int) (N_FLAG | Z_FLAG);
+        this.p &= ~(N_FLAG | Z_FLAG);
         this.p += FLAG_NZ(this.a);
+        this.p &= 0xff;
     }
 
     public void KM_ORA(int src) {
         this.a |= src;
-        this.p &= ~(int) (N_FLAG | Z_FLAG);
+        this.p &= ~(N_FLAG | Z_FLAG);
         this.p += FLAG_NZ(this.a);
+        this.p &= 0xff;
     }
 
     public void KM_EOR(int src) {
         this.a ^= src;
-        this.p &= ~(int) (N_FLAG | Z_FLAG);
+        this.p &= ~(N_FLAG | Z_FLAG);
         this.p += FLAG_NZ(this.a);
+        this.p &= 0xff;
     }
 
     public int KM_DEC(int des) {
         int w = des - 1;
-        this.p &= ~(int) (N_FLAG | Z_FLAG);
+        this.p &= ~(N_FLAG | Z_FLAG);
         this.p += FLAG_NZ(w);
-        return (w) & 0xff;
+        this.p &= 0xff;
+        return w & 0xff;
     }
 
     public int KM_INC(int des) {
         int w = des + 1;
-        this.p &= ~(int) (N_FLAG | Z_FLAG);
+        this.p &= ~(N_FLAG | Z_FLAG);
         this.p += FLAG_NZ(w);
-        return (w) & 0xff;
+        this.p &= 0xff;
+        return w & 0xff;
     }
 
     public int KM_ASL(int des) {
         int w = des << 1;
-        this.p &= ~(int) (N_FLAG | Z_FLAG | C_FLAG);
+        this.p &= ~(N_FLAG | Z_FLAG | C_FLAG);
         this.p += FLAG_NZ(w) + ((des >> 7)/* & C_FLAG */);
-        return (w) & 0xff;
+        this.p &= 0xff;
+        return w & 0xff;
     }
 
     public int KM_LSR(int des) {
         int w = des >> 1;
-        this.p &= ~(int) (N_FLAG | Z_FLAG | C_FLAG);
+        this.p &= ~(N_FLAG | Z_FLAG | C_FLAG);
         this.p += FLAG_NZ(w) + (des & C_FLAG);
+        this.p &= 0xff;
         return w;
     }
 
     public int KM_LD(int src) {
-        this.p &= ~(int) (N_FLAG | Z_FLAG);
+        this.p &= ~(N_FLAG | Z_FLAG);
         this.p += FLAG_NZ(src);
+        this.p &= 0xff;
         return src;
     }
 
     public int KM_ROL(int des) {
         int w = (des << 1) + (this.p & C_FLAG);
-        this.p &= ~(int) (N_FLAG | Z_FLAG | C_FLAG);
-        this.p += FLAG_NZ(w) + ((des >> 7)/* & C_FLAG */);
-        return (w) & 0xff;
+        this.p &= ~(N_FLAG | Z_FLAG | C_FLAG);
+        this.p += FLAG_NZ(w) + ((des >> 7) /* & C_FLAG */);
+        this.p &= 0xff;
+        return w & 0xff;
     }
 
     public int KM_ROR(int des) {
         int w = (des >> 1) + ((this.p & C_FLAG) << 7);
-        this.p &= ~(int) (N_FLAG | Z_FLAG | C_FLAG);
+        this.p &= ~(N_FLAG | Z_FLAG | C_FLAG);
         this.p += FLAG_NZ(w) + (des & C_FLAG);
-        return (w) & 0xff;
+        this.p &= 0xff;
+        return w & 0xff;
     }
 
     public void KM_BRA(int rel) {
@@ -633,22 +654,22 @@ public class Km6502 implements Device {
 
     // --- CLC ---
     public void opCode18() { // 18 - CLC
-        this.p &= ~(int) C_FLAG;
+        this.p &= ~C_FLAG;
     }
 
     // CLD
     public void opCodeD8() { // D8 - CLD
-        this.p &= ~(int) D_FLAG;
+        this.p &= ~D_FLAG;
     }
 
     // CLI
     public void opCode58() { // 58 - CLI
-        this.p &= ~(int) I_FLAG;
+        this.p &= ~I_FLAG;
     }
 
     // CLV
     public void opCodeB8() { // B8 - CLV
-        this.p &= ~(int) V_FLAG;
+        this.p &= ~V_FLAG;
     }
 
     // CMP
@@ -1382,7 +1403,7 @@ public class Km6502 implements Device {
     public int KM_SLO(int src) {
         int w = (src << 1) & 0xff;
         this.a |= w;
-        this.p &= (~(int) (N_FLAG | Z_FLAG | C_FLAG));
+        this.p &= (~(N_FLAG | Z_FLAG | C_FLAG));
         this.p |= FLAG_NZ(this.a);
         this.p |= (src >> 7) & C_FLAG;
         return w;
@@ -1436,7 +1457,7 @@ public class Km6502 implements Device {
     public int KM_RLA(int src) {
         int w = ((src << 1) | (this.p & C_FLAG)) & 0xff;
         this.a &= w;
-        this.p &= ~(int) (N_FLAG | Z_FLAG | C_FLAG);
+        this.p &= ~(N_FLAG | Z_FLAG | C_FLAG);
         this.p |= FLAG_NZ(this.a);
         this.p |= (src >> 7) & C_FLAG;
         return w;
@@ -1490,7 +1511,7 @@ public class Km6502 implements Device {
     public int KM_SRE(int src) {
         int w = (src >> 1) & 0xff;
         this.a ^= w;
-        this.p &= ~(int) (N_FLAG | Z_FLAG | C_FLAG);
+        this.p &= ~(N_FLAG | Z_FLAG | C_FLAG);
         this.p |= FLAG_NZ(this.a);
         this.p |= src & C_FLAG;
         return w;
@@ -1544,7 +1565,7 @@ public class Km6502 implements Device {
     // rotate right, ADC result
     public int KM_RRA(int src) {
         int w = ((src >> 1) | ((this.p & C_FLAG) << 7)) & 0xff;
-        this.p &= ~(int) (C_FLAG);
+        this.p &= ~(C_FLAG);
         this.p |= src & C_FLAG;
         KMI_ADC(w);
         return w;
@@ -1701,7 +1722,7 @@ public class Km6502 implements Device {
     public void KM_LAX(int src) {
         this.a = src;
         this.x = src;
-        this.p &= ~(int) (N_FLAG | Z_FLAG);
+        this.p &= ~(N_FLAG | Z_FLAG);
         this.p |= FLAG_NZ(src);
     }
 
@@ -1805,7 +1826,7 @@ public class Km6502 implements Device {
     public void opCode0B() {
         int adr = KA_IMM();
         this.a = (this.a & K_READ(adr)) & 0xff;
-        this.p &= ~(int) (N_FLAG | Z_FLAG | C_FLAG);
+        this.p &= ~(N_FLAG | Z_FLAG | C_FLAG);
         this.p |= FLAG_NZ(this.a);
         this.p |= (this.a >> 7); /* C_FLAG */
     }
@@ -1813,7 +1834,7 @@ public class Km6502 implements Device {
     public void opCode2B() {
         int adr = KA_IMM();
         this.a = (this.a & K_READ(adr)) & 0xff;
-        this.p &= ~(int) (N_FLAG | Z_FLAG | C_FLAG);
+        this.p &= ~(N_FLAG | Z_FLAG | C_FLAG);
         this.p |= FLAG_NZ(this.a);
         this.p |= (this.a >> 7) & C_FLAG;
     }
@@ -1823,7 +1844,7 @@ public class Km6502 implements Device {
     public void opCode8B() {
         int adr = KA_IMM();
         this.a = (this.x & K_READ(adr)) & 0xff;
-        this.p &= ~(int) (N_FLAG | Z_FLAG);
+        this.p &= ~(N_FLAG | Z_FLAG);
         this.p |= FLAG_NZ(this.a);
     }
 
@@ -1833,7 +1854,7 @@ public class Km6502 implements Device {
         int adr = KA_IMM();
         int res = (this.a & K_READ(adr)) & 0xff;
         this.a = res >> 1;
-        this.p &= ~(int) (N_FLAG | Z_FLAG | C_FLAG);
+        this.p &= ~(N_FLAG | Z_FLAG | C_FLAG);
         this.p |= FLAG_NZ(this.a);
         this.p |= (res & C_FLAG);
     }
@@ -1844,7 +1865,7 @@ public class Km6502 implements Device {
         int adr = KA_IMM();
         int res = (this.a & K_READ(adr)) & 0xff;
         this.a = (res >> 1) + ((this.p & C_FLAG) << 7);
-        this.p &= ~(int) (N_FLAG | V_FLAG | Z_FLAG | C_FLAG);
+        this.p &= ~(N_FLAG | V_FLAG | Z_FLAG | C_FLAG);
         this.p |= FLAG_NZ(this.a);
         this.p |= (res ^ (res >> 1)) & V_FLAG;
         this.p |= (res >> 7) & C_FLAG;
@@ -1857,7 +1878,7 @@ public class Km6502 implements Device {
         this.s &= (K_READ(adr)) & 0xff;
         this.a = this.s;
         this.x = this.s;
-        this.p &= ~(int) (N_FLAG | Z_FLAG);
+        this.p &= ~(N_FLAG | Z_FLAG);
         this.p |= FLAG_NZ(this.a);
     }
 
@@ -1867,7 +1888,7 @@ public class Km6502 implements Device {
         int adr = KA_IMM();
         int res = (this.a & this.x) - (K_READ(adr) & 0xff);
         this.x = (res) & 0xff;
-        this.p &= ~(int) (N_FLAG | Z_FLAG | C_FLAG);
+        this.p &= ~(N_FLAG | Z_FLAG | C_FLAG);
         this.p |= FLAG_NZ(this.x);
         this.p |= (res <= 0xff) ? C_FLAG : 0;
     }
@@ -1905,9 +1926,12 @@ public class Km6502 implements Device {
 
     /* BS - allowing illegal opCode implementation */
 
+//int CC;
     public void K_OPEXEC() {
         int opCode = this.lastCode = K_READ(KAI_IMM());
         KI_ADDCLOCK(cl_table[opCode]);
+//if (CC++ < 300) { logger.log(Level.DEBUG, "pc: %04x: op: %02x".formatted(pc, opCode)); }
+//else { System.exit(0); }
         switch (opCode) {
         case 0x00:
             opCode00();
@@ -2809,7 +2833,7 @@ public class Km6502 implements Device {
                 this.s = 0xff;
                 this.p = Z_FLAG | R_FLAG | I_FLAG;
                 this.iRequest = 0;
-                this.iMask = ~(int) 0;
+                this.iMask = ~0;
                 KI_ADDCLOCK(7);
                 return;
             } else if ((this.iRequest & IRQ_RESET) != 0) {
@@ -2820,13 +2844,13 @@ public class Km6502 implements Device {
                 this.p = Z_FLAG | R_FLAG | I_FLAG;
                 this.pc = KI_READWORD(VEC_RESET);
                 this.iRequest = 0;
-                this.iMask = ~(int) 0;
+                this.iMask = ~0;
             } else if ((this.iRequest & IRQ_NMI) != 0) {
                 KM_PUSH((this.pc >> 8) & 0xff);
                 KM_PUSH((this.pc) & 0xff);
                 KM_PUSH(this.p | R_FLAG | B_FLAG);
                 this.p = (this.p & ~T_FLAG) | I_FLAG; // 6502 bug
-                this.iRequest &= ~(int) (IRQ_NMI | IRQ_BRK);
+                this.iRequest &= ~(IRQ_NMI | IRQ_BRK);
                 this.pc = KI_READWORD(VEC_NMI);
                 KI_ADDCLOCK(7);
             } else if ((this.iRequest & IRQ_BRK) != 0) {
@@ -2834,7 +2858,7 @@ public class Km6502 implements Device {
                 KM_PUSH((this.pc) & 0xff);
                 KM_PUSH(this.p | R_FLAG | B_FLAG);
                 this.p = (this.p & ~T_FLAG) | I_FLAG; // 6502 bug
-                this.iRequest &= ~(int) IRQ_BRK;
+                this.iRequest &= ~IRQ_BRK;
                 this.pc = KI_READWORD(VEC_BRK);
                 KI_ADDCLOCK(7);
             } else if ((this.p & I_FLAG) != 0) {
@@ -2844,7 +2868,7 @@ public class Km6502 implements Device {
                 KM_PUSH((this.pc) & 0xff);
                 KM_PUSH((this.p | R_FLAG) & ~B_FLAG);
                 this.p = (this.p & ~T_FLAG) | I_FLAG; // 6502 bug
-                this.iRequest &= ~(int) IRQ_INT;
+                this.iRequest &= ~IRQ_INT;
                 this.pc = KI_READWORD(VEC_INT);
                 KI_ADDCLOCK(7);
             }
@@ -2853,11 +2877,13 @@ public class Km6502 implements Device {
     }
 
     protected int intAddress;
-    protected boolean breaked;
+    protected boolean broken;
     protected int clockPerFrame;
     protected int clockOfFrame;
     protected int frameQuarter;
     protected int breakPoint;
+    protected int irqs;
+    protected boolean enableIrq;
     protected Device bus;
 
     public double NES_BASECYCLES;
@@ -2885,9 +2911,15 @@ public class Km6502 implements Device {
         "BEQ", "SBC", "kil", "isc", "nop", "SBC", "INC", "isc", "SED", "SBC", "nop", "isc", "nop", "SBC", "INC", "isc" // 0xF-
     };
 
-    public Km6502(double clock /* =DEFAULT_CLOCK */) {
+    public Km6502(boolean enableIRQ) {
+        this(enableIRQ, DEFAULT_CLOCK);
+    }
+
+    public Km6502(boolean enableIRQ, double clock /* = DEFAULT_CLOCK */) {
         NES_BASECYCLES = clock;
         bus = null;
+        irqs = 0;
+        enableIrq = enableIRQ;
     }
 
     private void writeByte(int adr, int val) {
@@ -2901,24 +2933,24 @@ public class Km6502 implements Device {
     }
 
     public void startup(int address) {
-        breaked = false;
+        broken = false;
         this.pc = 0x4100;
         breakPoint = this.pc + 3;
         this.p = 0x26; // IRZ
-                          // assert(bus);
+        assert bus != null;
         bus.write(this.pc + 0, 0x20, 0); // JSR
         bus.write(this.pc + 1, address & 0xff, 0);
-        bus.write(this.pc + 2, address >> 8, 0);
+        bus.write(this.pc + 2, (address & 0xff00) >> 8, 0);
         bus.write(this.pc + 3, 0x4c, 0); // JMP 04103H
         bus.write(this.pc + 4, breakPoint & 0xff, 0);
-        bus.write(this.pc + 5, breakPoint >> 8, 0);
+        bus.write(this.pc + 5, (breakPoint & 0xff00) >> 8, 0);
     }
 
     public int exec(int clock) {
         this.clock = 0;
 
         while (this.clock < clock) {
-            if (!breaked) {
+            if (!broken) {
 //logger.log(Level.TRACE, "PC: 0x%04X".formatted(this.PC));
 
 //                int tpc = this.pc;
@@ -2947,7 +2979,7 @@ public class Km6502 implements Device {
 //                logger.log(Level.TRACE, "On");
 
                 if (this.pc == breakPoint)
-                    breaked = true;
+                    broken = true;
             } else {
                 if ((clockOfFrame >> 16) < clock)
                     this.clock = (clockOfFrame >> 16) + 1;
@@ -2955,9 +2987,9 @@ public class Km6502 implements Device {
                     this.clock = clock;
             }
 
-            // フレームクロックに到達
+            // Frame Clock Reached
             if ((clockOfFrame >> 16) < this.clock) {
-                if (breaked) {
+                if (broken) {
                     // if (log_cpu!=null)
                     // log_cpu.Play();
 
@@ -3029,15 +3061,16 @@ public class Km6502 implements Device {
         this.s = 0xff;
         this.pc = breakPoint = 0xffff;
         this.illegal = 0;
-        breaked = false;
+        broken = false;
+        irqs = 0;
         exec();
     }
 
     public void start(int startAdr,
                       int intAdr,
                       double intFreq /* = 60.0 */,
-                      int a /* = 0 */,
-                      int x /* = 0 */,
+                      int song /* = 0 */,
+                      int region /* = 0 */,
                       int y /* = 0 */) {
         // Interrupt address setting
         intAddress = intAdr;
@@ -3046,15 +3079,17 @@ public class Km6502 implements Device {
 
         // count clock quarters
         frameQuarter = 3;
+        irqs = 0;
 
-// log_cpu.Init(a, x);
 
-        this.a = a;
-        this.x = x;
+// log_cpu.Init(song, region);
+
+        this.a = song;
+        this.x = region;
         this.y = y;
         startup(startAdr);
 
-        for (int i = 0; (i < (NES_BASECYCLES / intFreq)) && !breaked; i++, exec()) {
+        for (int i = 0; (i < (NES_BASECYCLES / intFreq)) && !broken; i++, exec()) {
 //#if TRACE
 //            int tpc = this.pc;
 //            int[][] tb = new int[3][1];
@@ -3063,15 +3098,15 @@ public class Km6502 implements Device {
 //            bus.read((tpc + 2) & 0xffFF, tb[2]);
 //            logger.log(Level.TRACE, "%04x: A=%02x X=%02x Y=%02x P=%02x S=%02x %s > ".formatted(
 //                              this.pc,
-//                              this.a,
-//                              this.x,
+//                              this.song,
+//                              this.region,
 //                              this.y,
 //                              this.p,
 //                              this.s,
 //                              this.iRequest != 0 ? 'I' : 'i'));
 //#endif
             if (this.pc == breakPoint) {
-                breaked = true;
+                broken = true;
             }
         }
 
@@ -3081,5 +3116,24 @@ public class Km6502 implements Device {
     @Override
     public void setOption(int id, int val) {
         throw new UnsupportedOperationException();
+    }
+
+    public void updateIRQ(IRQDevices device, boolean irq) {
+        if (!enableIrq) return;
+        int mask = 1 << device.ordinal();
+        irqs &= ~mask;
+        if (irq) irqs |= mask;
+        if (irqs != 0) {
+            this.iRequest |= IRQ_INT;
+        } else {
+            this.iRequest &= ~IRQ_INT;
+        }
+    }
+
+    public enum IRQDevices {
+        IRQD_FRAME,
+        IRQD_DMC,
+        IRQD_NSF2;
+        static final int IRQD_COUNT = values().length;
     }
 }

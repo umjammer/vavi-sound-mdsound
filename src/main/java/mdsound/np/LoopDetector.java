@@ -255,7 +255,7 @@ public interface LoopDetector extends Device {
         }
 
         @Override
-        public boolean read(int a, int[] b, int id/* = 0*/) {
+        public boolean read(int a, int[] b, int id /* = 0 */) {
             return false;
         }
 

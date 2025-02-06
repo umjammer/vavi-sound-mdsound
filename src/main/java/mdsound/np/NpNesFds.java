@@ -9,8 +9,13 @@ package mdsound.np;
 import java.util.Arrays;
 
 
-// Ported from NSFPlay 2.3 to VGMPlay (including C++ . C conversion)
-// by Valley Bell on 26 September 2013
+/**
+ * NpNesFds.
+ *
+ * @author Brezza
+ * @author Valley Bell
+ * @version Ported from NSFPlay 2.3 to VGMPlay (including C++ . C conversion) by Valley Bell on 26 September 2013
+ */
 public class NpNesFds {
 
     public static final double DEFAULT_CLOCK = 1789772.0;
@@ -49,20 +54,20 @@ public class NpNesFds {
 
     private double rate, clock;
     private int mask;
-    // stereo mix
+    /** stereo mix */
     private final int[] sm = new int[2];
-    // current output
-    private int fout;
+    /** current output */
+    private int fOut;
     private final int[] option = new int[OPT.END.ordinal()];
 
     private boolean masterIo;
     public int masterVol;
-    // for trackinfo
+    /** for track info */
     public int lastFreq;
-    // for trackinfo
+    /** for track info */
     public int lastVol;
 
-    // two wavetables
+    /** two wave tables */
     public int[][] wave = {new int[64], new int[64]};
     public int[] freq = new int[2];
     private int[] phase = new int[2];
@@ -81,7 +86,7 @@ public class NpNesFds {
     public final int[] envOut = new int[2];
     public int masterEnvSpeed;
 
-    // 1-pole RC lowpass filter
+    // 1-pole RC low-pass filter
     private int rcAccum;
     private int rcK;
     private int rcL;
@@ -212,7 +217,7 @@ public class NpNesFds {
             end_pos = this.phase[TG.TMOD.ordinal()] >> 16;
 
             // wrap the phase to the 64-step table (+ 16 bit accumulator)
-            this.phase[TG.TMOD.ordinal()] = this.phase[TG.TMOD.ordinal()] & 0x3FFFFF;
+            this.phase[TG.TMOD.ordinal()] = this.phase[TG.TMOD.ordinal()] & 0x3f_ffff;
 
             // execute all clocked steps
             for (p = start_pos; p < end_pos; ++p) {
@@ -238,7 +243,7 @@ public class NpNesFds {
                 // multiply pos by gain,
                 // shift off 4 bits but with odd "rounding" behaviour
                 int temp = pos * this.envOut[EG.EMOD.ordinal()];
-                int rem = temp & 0x0F;
+                int rem = temp & 0x0f;
                 temp >>= 4;
                 if ((rem > 0) && ((temp & 0x80) == 0)) {
                     if (pos < 0) temp -= 1;
@@ -252,17 +257,17 @@ public class NpNesFds {
                 // multiply result by pitch,
                 // shift off 6 bits, round to nearest
                 temp = this.freq[TG.TWAV.ordinal()] * temp;
-                rem = temp & 0x3F;
+                rem = temp & 0x3f;
                 temp >>= 6;
                 if (rem >= 32) temp += 1;
 
                 mod = temp;
             }
 
-            // advance wavetable position
+            // advance wave table position
             int f = this.freq[TG.TWAV.ordinal()] + mod;
             this.phase[TG.TWAV.ordinal()] = this.phase[TG.TWAV.ordinal()] + (clocks * f);
-            this.phase[TG.TWAV.ordinal()] = this.phase[TG.TWAV.ordinal()] & 0x3FFFFF; // wrap
+            this.phase[TG.TWAV.ordinal()] = this.phase[TG.TWAV.ordinal()] & 0x3f_ffff; // wrap
 
             // store for trackinfo
             this.lastFreq = f;
@@ -274,7 +279,7 @@ public class NpNesFds {
 
         // final output
         if (!this.wavWrite)
-            this.fout = this.wave[TG.TWAV.ordinal()][(this.phase[TG.TWAV.ordinal()] >> 16) & 0x3F] * volOut;
+            this.fOut = this.wave[TG.TWAV.ordinal()][(this.phase[TG.TWAV.ordinal()] >> 16) & 0x3F] * volOut;
 
         // NOTE: during wav_halt, the unit still outputs (at phase 0)
         // and volume can affect it if the first sample is nonzero.
@@ -282,7 +287,7 @@ public class NpNesFds {
         // effect (vol envelope does not seem to run, but am unsure)
         // but this implementation is very close to correct
 
-        // store for trackinfo
+        // store for track info
         this.lastVol = volOut;
     }
 
@@ -296,9 +301,9 @@ public class NpNesFds {
         tick(clocks);
         this.tickLast = this.tickCount.value();
 
-        v = this.fout * MASTER[this.masterVol] >> 8;
+        v = this.fOut * MASTER[this.masterVol] >> 8;
 
-        // lowpass RC filter
+        // low-pass RC filter
         rc_out = ((this.rcAccum * this.rcK) + (v * this.rcL)) >> RC_BITS;
         this.rcAccum = rc_out;
         v = rc_out;
@@ -315,9 +320,9 @@ public class NpNesFds {
         //int clocks;
         int v, rc_out, m;
 
-        v = this.fout * MASTER[this.masterVol] >> 8;
+        v = this.fOut * MASTER[this.masterVol] >> 8;
 
-        // lowpass RC filter
+        // low-pass RC filter
         rc_out = ((this.rcAccum * this.rcK) + (v * this.rcL)) >> RC_BITS;
         this.rcAccum = rc_out;
         v = rc_out;
@@ -334,13 +339,13 @@ public class NpNesFds {
         // $4023 master I/O enable/disable
         if (adr == 0x4023) {
             this.masterIo = ((val & 2) != 0);
-            if (!this.masterIo) this.fout = 0; // KUMA: I want to stop it!
+            if (!this.masterIo) this.fOut = 0; // KUMA: I want to stop it!
             return true;
         }
 
         if (!this.masterIo)
             return false;
-        if (adr < 0x4040 || adr > 0x408A)
+        if (adr < 0x4040 || adr > 0x408a)
             return false;
 
         if (adr < 0x4080) { // $4040-407F wave table write
@@ -349,22 +354,22 @@ public class NpNesFds {
             return true;
         }
 
-        switch (adr & 0x00FF) {
+        switch (adr & 0x00ff) {
         case 0x80: // $4080 volume envelope
             this.envDisable[EG.EVOL.ordinal()] = (val & 0x80) != 0;
             this.envMode[EG.EVOL.ordinal()] = (val & 0x40) != 0;
             this.envTimer[EG.EVOL.ordinal()] = 0;
-            this.envSpeed[EG.EVOL.ordinal()] = val & 0x3F;
+            this.envSpeed[EG.EVOL.ordinal()] = val & 0x3f;
             if (this.envDisable[EG.EVOL.ordinal()])
                 this.envOut[EG.EVOL.ordinal()] = this.envSpeed[EG.EVOL.ordinal()];
             return true;
         case 0x81: // $4081 ---
             return false;
         case 0x82: // $4082 wave frequency low
-            this.freq[TG.TWAV.ordinal()] = (this.freq[TG.TWAV.ordinal()] & 0xF00) | val;
+            this.freq[TG.TWAV.ordinal()] = (this.freq[TG.TWAV.ordinal()] & 0xf00) | val;
             return true;
         case 0x83: // $4083 wave frequency high / enables
-            this.freq[TG.TWAV.ordinal()] = (this.freq[TG.TWAV.ordinal()] & 0x0FF) | ((val & 0x0F) << 8);
+            this.freq[TG.TWAV.ordinal()] = (this.freq[TG.TWAV.ordinal()] & 0x0ff) | ((val & 0x0f) << 8);
             this.wavHalt = (val & 0x80) != 0;
             this.envHalt = (val & 0x40) != 0;
             if (this.wavHalt)
@@ -378,33 +383,33 @@ public class NpNesFds {
             this.envDisable[EG.EMOD.ordinal()] = (val & 0x80) != 0;
             this.envMode[EG.EMOD.ordinal()] = (val & 0x40) != 0;
             this.envTimer[EG.EMOD.ordinal()] = 0;
-            this.envSpeed[EG.EMOD.ordinal()] = val & 0x3F;
+            this.envSpeed[EG.EMOD.ordinal()] = val & 0x3f;
             if (this.envDisable[EG.EMOD.ordinal()])
                 this.envOut[EG.EMOD.ordinal()] = this.envSpeed[EG.EMOD.ordinal()];
             return true;
         case 0x85: // $4085 mod position
             this.modPos = val & 0x7F;
             // not hardware accurate., but prevents detune due to cycle inaccuracies
-            // (notably in Bio Miracle Bokutte Upa)
+            // (notably in "Bio Miracle Bokutte Upa")
             if (this.option[OPT.RESET_4085.ordinal()] != 0)
                 this.phase[TG.TMOD.ordinal()] = this.modWritePos << 16;
             return true;
         case 0x86: // $4086 mod frequency low
-            this.freq[TG.TMOD.ordinal()] = (this.freq[TG.TMOD.ordinal()] & 0xF00) | val;
+            this.freq[TG.TMOD.ordinal()] = (this.freq[TG.TMOD.ordinal()] & 0xf00) | val;
             return true;
         case 0x87: // $4087 mod frequency high / enable
-            this.freq[TG.TMOD.ordinal()] = (this.freq[TG.TMOD.ordinal()] & 0x0FF) | ((val & 0x0F) << 8);
+            this.freq[TG.TMOD.ordinal()] = (this.freq[TG.TMOD.ordinal()] & 0x0ff) | ((val & 0x0f) << 8);
             this.modHalt = ((val & 0x80) != 0);
             if (this.modHalt)
-                this.phase[TG.TMOD.ordinal()] = this.phase[TG.TMOD.ordinal()] & 0x3F0000; // reset accumulator phase
+                this.phase[TG.TMOD.ordinal()] = this.phase[TG.TMOD.ordinal()] & 0x3f_0000; // reset accumulator phase
             return true;
         case 0x88: // $4088 mod table write
             if (this.modHalt) {
                 // writes to current playback position (there is no direct way to set phase)
-                this.wave[TG.TMOD.ordinal()][(this.phase[TG.TMOD.ordinal()] >> 16) & 0x3F] = val & 0x7F;
-                this.phase[TG.TMOD.ordinal()] = (this.phase[TG.TMOD.ordinal()] + 0x010000) & 0x3FFFFF;
-                this.wave[TG.TMOD.ordinal()][(this.phase[TG.TMOD.ordinal()] >> 16) & 0x3F] = val & 0x7F;
-                this.phase[TG.TMOD.ordinal()] = (this.phase[TG.TMOD.ordinal()] + 0x010000) & 0x3FFFFF;
+                this.wave[TG.TMOD.ordinal()][(this.phase[TG.TMOD.ordinal()] >> 16) & 0x3f] = val & 0x7f;
+                this.phase[TG.TMOD.ordinal()] = (this.phase[TG.TMOD.ordinal()] + 0x01_0000) & 0x3f_ffff;
+                this.wave[TG.TMOD.ordinal()][(this.phase[TG.TMOD.ordinal()] >> 16) & 0x3f] = val & 0x7f;
+                this.phase[TG.TMOD.ordinal()] = (this.phase[TG.TMOD.ordinal()] + 0x01_0000) & 0x3f_ffff;
                 this.modWritePos = this.phase[TG.TMOD.ordinal()] >> 16; // used by OPT_4085_RESET
             }
             return true;
@@ -415,7 +420,7 @@ public class NpNesFds {
         case 0x8A: // $408A envelope speed
             this.masterEnvSpeed = val;
             // haven't tested whether this register resets phase on hardware,
-            // but this ensures my inplementation won't spam envelope clocks
+            // but this ensures my implementation won't spam envelope clocks
             // if this value suddenly goes low.
             this.envTimer[EG.EMOD.ordinal()] = 0;
             this.envTimer[EG.EVOL.ordinal()] = 0;
@@ -448,7 +453,7 @@ public class NpNesFds {
         return false;
     }
 
-    public NpNesFds(int clock, int rate) {
+    public void init(int clock, int rate) {
 
         this.option[OPT.CUTOFF.ordinal()] = 2000;
         this.option[OPT.RESET_4085.ordinal()] = 0;

@@ -12,7 +12,6 @@ import java.util.Arrays;
 import java.util.function.Consumer;
 
 import mdsound.np.Device.SoundChip;
-import mdsound.np.chip.DeviceInfo;
 import mdsound.np.chip.DeviceInfo.BasicTrackInfo;
 
 import static java.lang.System.getLogger;
@@ -23,7 +22,7 @@ public class NesN106 implements SoundChip {
     private static final Logger logger = getLogger(NesN106.class.getName());
 
     public static class TrackInfo extends BasicTrackInfo {
-        public int wavelen;
+        public int waveLen;
         public short[] wave = new short[256];
 
         public DeviceInfo clone() {
@@ -35,7 +34,7 @@ public class NesN106 implements SoundChip {
             ti.freq = freq;
             ti.key = key;
             ti.tone = tone;
-            ti.wavelen = wavelen;
+            ti.waveLen = waveLen;
             ti.wave = new short[256];
             System.arraycopy(wave, 0, ti.wave, 0, ti.wave.length);
             return ti;
@@ -46,16 +45,16 @@ public class NesN106 implements SoundChip {
     public static final int DEFAULT_RATE = 44100;
 
     public enum OPT {
-        SERIAL,
-        END
+        SERIAL;
+        static final int END = values().length;
     }
 
     protected double rate, clock;
     protected int mask;
     protected int[][] sm = new int[][] {new int[8], new int[8]}; // stereo mix
-    protected int[] fout = new int[8]; // current output
+    protected int[] fOut = new int[8]; // current output
     protected TrackInfo[] trkInfo = new TrackInfo[8];
-    protected int[] option = new int[(int) OPT.END.ordinal()];
+    protected int[] option = new int[(int) OPT.END];
 
     protected boolean master_disable;
     protected int[] reg = new int[0x80]; // all state is contained here
@@ -97,7 +96,7 @@ public class NesN106 implements SoundChip {
             t.maxVolume = 15;
             t.volume = 0;
             t._freq = 0;
-            t.wavelen = 0;
+            t.waveLen = 0;
             t.tone = -1;
             t.output = 0;
             t.key = false;
@@ -106,14 +105,14 @@ public class NesN106 implements SoundChip {
             t.maxVolume = 15;
             t.volume = getVol(channel);
             t._freq = getFreq(channel);
-            t.wavelen = getLen(channel);
+            t.waveLen = getLen(channel);
             t.tone = getOff(channel);
-            t.output = fout[channel];
+            t.output = fOut[channel];
 
             t.key = (t.volume > 0) && (t._freq > 0);
-            t.freq = ((double) (t._freq) * clock) / (double) (15 * 65536 * channels * t.wavelen);
+            t.freq = ((double) (t._freq) * clock) / (double) (15 * 65536 * channels * t.waveLen);
             t.halt = getChannels() > trk;
-            for (int i = 0; i < t.wavelen; ++i)
+            for (int i = 0; i < t.waveLen; ++i)
                 t.wave[i] = (short) getSample((i + t.tone) & 0xff);
         }
 
@@ -160,7 +159,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
 
     @Override
     public void setOption(int id, int val) {
-        if (id < OPT.END.ordinal()) option[id] = val;
+        if (id < OPT.END) option[id] = val;
     }
 
     @Override
@@ -175,7 +174,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
         renderClock = 0;
         renderSubClock = 0;
 
-        for (int i = 0; i < 8; ++i) fout[i] = 0;
+        for (int i = 0; i < 8; ++i) fOut[i] = 0;
 
         write(0xE000, 0x00); // master disable off
         write(0xF800, 0x80); // select $00 with auto-increment
@@ -203,18 +202,18 @@ logger.log(Level.ERROR, e.getMessage(), e);
             int vol = getVol(channel);
 
             // accumulate 24-bit phase
-            phase = (phase + freq) & 0x00FFFFFF;
+            phase = (phase + freq) & 0x00ff_ffff;
 
             // wrap phase if wavelength exceeded
-            int hilen = len << 16;
-            while (phase >= hilen) phase -= hilen;
+            int hiLen = len << 16;
+            while (phase >= hiLen) phase -= hiLen;
 
             // write back phase
             setPhase(phase, channel);
 
             // fetch sample (note: N163 output is centred at 8, and inverted w.r.t 2A03)
             int sample = 8 - getSample(((phase >> 16) + off) & 0xff);
-            fout[channel] = sample * vol;
+            fOut[channel] = sample * vol;
 
             // cycle to next channel every 15 clocks
             tickClock -= 15;
@@ -241,8 +240,8 @@ logger.log(Level.ERROR, e.getMessage(), e);
             while (clocks > 0) {
                 int c = 7 - renderChannel;
                 if (0 == ((mask >> c) & 1)) {
-                    b[0] += fout[c] * sm[0][c];
-                    b[1] += fout[c] * sm[1][c];
+                    b[0] += fOut[c] * sm[0][c];
+                    b[1] += fOut[c] * sm[1][c];
                 }
 
                 ++renderSubClock;
@@ -268,8 +267,8 @@ logger.log(Level.ERROR, e.getMessage(), e);
         } else { // just mix all channels
             for (int i = (8 - channels); i < 8; ++i) {
                 if (0 == ((mask >> (7 - i)) & 1)) {
-                    b[0] += fout[i] * sm[0][i];
-                    b[1] += fout[i] * sm[1][i];
+                    b[0] += fOut[i] * sm[0][i];
+                    b[1] += fOut[i] * sm[1][i];
                 }
             }
 
@@ -356,25 +355,25 @@ logger.log(Level.ERROR, e.getMessage(), e);
     private int getLen(int channel) {
         // 6-bit<<3 length stored obscurely in channel reg 4
         channel = channel << 3;
-        return 256 - (reg[0x44 + channel] & 0xFC);
+        return 256 - (reg[0x44 + channel] & 0xfc);
     }
 
     private int getVol(int channel) {
         // 4-bit volume stored in channel reg 7
         channel = channel << 3;
-        return reg[0x47 + channel] & 0x0F;
+        return reg[0x47 + channel] & 0x0f;
     }
 
     private int getSample(int index) {
         // every sample becomes 2 samples in regs
         return (index & 1) != 0 ?
-                ((reg[index >> 1] >> 4) & 0x0F) :
-                (reg[index >> 1] & 0x0F);
+                ((reg[index >> 1] >> 4) & 0x0f) :
+                (reg[index >> 1] & 0x0f);
     }
 
     private int getChannels() {
         // 3-bit channel count stored in reg 0x7F
-        return ((reg[0x7F] >> 4) & 0x07) + 1;
+        return ((reg[0x7f] >> 4) & 0x07) + 1;
     }
 
     private void setPhase(int phase, int channel) {

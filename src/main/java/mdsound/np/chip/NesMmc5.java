@@ -30,7 +30,7 @@ public class NesMmc5 implements SoundChip {
     protected byte[] reg = new byte[8];
     protected int[] mReg = new int[2];
     /** PCM channel */
-    public byte pcm;
+    public int pcm;
     /** PCM channel */
     public boolean pcmMode;
     /** PCM channel reads need CPU access */
@@ -335,7 +335,7 @@ public class NesMmc5 implements SoundChip {
         case 0x5011:
             if (!pcmMode) {
                 val &= 0xff;
-                if (val != 0) pcm = (byte) val;
+                if (val != 0) pcm = val;
             }
             break;
 
@@ -370,9 +370,8 @@ public class NesMmc5 implements SoundChip {
             pcmMode = false; // prevent recursive entry
             int[] pcm_read = new int[] { 0 };
             cpu.read(adr, pcm_read, id);
-            pcm_read[0] &= 0xff;
             if (pcm_read[0] != 0)
-                pcm = (byte) pcm_read[0];
+                pcm = pcm_read[0];
             pcmMode = true;
         }
 

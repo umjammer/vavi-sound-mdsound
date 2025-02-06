@@ -18,7 +18,12 @@ import mdsound.np.NpNesDmc;
 
 public class NesDmc implements SoundChip {
 
-    public NpNesDmc dmc = new NpNesDmc(Common.NsfClock, Instrument.BaseInstrument.CHIP_SAMPLE_RATE);
+    public NpNesDmc dmc;
+
+    public NesDmc() {
+        dmc = new NpNesDmc();
+        dmc.init(Common.NsfClock, Instrument.BaseInstrument.CHIP_SAMPLE_RATE);
+    }
 
     @Override
     public boolean read(int adr, int[] val, int id /* = 0 */) {

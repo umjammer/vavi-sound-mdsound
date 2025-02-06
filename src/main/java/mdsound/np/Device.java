@@ -136,7 +136,7 @@ public interface Device {
          * The order of calls is equal to the order in which the devices were installed.
          */
         @Override
-        public boolean write(int adr, int val, int id/* = 0*/) {
+        public boolean write(int adr, int val, int id /* = 0 */) {
             boolean ret = false;
             for (Device it : vd)
                 ret |= it.write(adr, val);
@@ -151,7 +151,7 @@ public interface Device {
          * The return value is the logical OR of the return values of valid devices (the Read method returns true).
          */
         @Override
-        public boolean read(int adr, int[] val, int id/* = 0*/) {
+        public boolean read(int adr, int[] val, int id /* = 0 */) {
             boolean ret = false;
             int[] vtmp = new int[] { 0 };
 
@@ -203,7 +203,7 @@ public interface Device {
          * The process ends when a device that was successfully read from is found.
          */
         @Override
-        public boolean read(int adr, int[] val, int id/* = 0*/) {
+        public boolean read(int adr, int[] val, int id /* = 0 */) {
             val[0] = 0;
             for (Device it : vd) {
                 if (it.read(adr, val)) return true;

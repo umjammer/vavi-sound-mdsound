@@ -16,10 +16,15 @@ import mdsound.np.NpNesFds;
 
 public class NesFds implements SoundChip {
 
-    public NpNesFds fds = new NpNesFds(Common.NsfClock, Instrument.BaseInstrument.CHIP_SAMPLE_RATE);
+    public NpNesFds fds;
+
+    public NesFds() {
+        fds = new NpNesFds();
+        fds.init(Common.NsfClock, Instrument.BaseInstrument.CHIP_SAMPLE_RATE);
+    }
 
     @Override
-    public boolean read(int adr, int[] val, int id/* = 0*/) {
+    public boolean read(int adr, int[] val, int id /* = 0 */) {
         return fds.read(adr, val);
     }
 

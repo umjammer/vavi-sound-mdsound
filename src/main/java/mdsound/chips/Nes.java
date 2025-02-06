@@ -3,9 +3,10 @@ package mdsound.chips;
 import java.util.Arrays;
 import java.util.function.Consumer;
 
-import mdsound.np.NpNesApu;
-import mdsound.np.NpNesDmc;
 import mdsound.np.NpNesFds;
+import mdsound.np.chip.NesApu;
+import mdsound.np.chip.NesDmc;
+import mdsound.np.chip.NesFds;
 
 
 /**
@@ -44,16 +45,16 @@ public class Nes {
     private int dmcVolume = 0;
     private int fdsVolume = 0;
 
-    private final NpNesApu chipApu;
-    private final NpNesDmc chipDmc;
-    private final NpNesFds chipFds;
+    private final NesApu chipApu;
+    private final NesDmc chipDmc;
+    private final NesFds chipFds;
     private byte[] memory;
 
     public Nes() {
-        chipApu = new NpNesApu();
-        chipDmc = new NpNesDmc();
-        chipFds = new NpNesFds();
-        chipDmc.nes_apu = chipApu;
+        chipApu = new NesApu();
+        chipDmc = new NesDmc();
+        chipFds = new NesFds();
+        chipDmc.dmc.nes_apu = chipApu.apu;
     }
 
     private static int nesOptions = 0x8000;
@@ -98,18 +99,18 @@ public class Nes {
         boolean enableFDS = ((clock >> 31) & 0x01) != 0;
         clock &= 0x7fff_ffff;
 
-        chipApu.init(clock, rate);
+        chipApu.apu.init(clock, rate);
 
-        chipDmc.init(clock, rate);
+        chipDmc.dmc.init(clock, rate);
 
-        this.chipDmc.setAPU(this.chipApu);
+        this.chipDmc.dmc.setAPU(this.chipApu.apu);
 
         this.memory = new byte[0x8000];
         Arrays.fill(this.memory, (byte) 0);
-        this.chipDmc.setMemory(this.memory, -0x8000);
+        this.chipDmc.dmc.setMemory(this.memory, -0x8000);
 
         if (enableFDS) {
-            chipFds.init(clock, rate);
+            chipFds.fds.init(clock, rate);
             // If it returns NULL, that's okay.
         }
         setChipOption();
@@ -187,15 +188,15 @@ public class Nes {
     }
 
     public int[] readApu() {
-        return this.chipApu.reg;
+        return this.chipApu.apu.reg;
     }
 
     public int[] readDmc() {
-        return this.chipDmc.reg;
+        return this.chipDmc.dmc.reg;
     }
 
     public NpNesFds readDds() {
-        return this.chipFds;
+        return this.chipFds.fds;
     }
 
     private void nes_set_option(int options) {

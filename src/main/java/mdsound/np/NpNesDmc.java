@@ -8,16 +8,20 @@ package mdsound.np;
 
 import java.util.Random;
 
+import mdsound.np.cpu.Km6502;
+import mdsound.np.cpu.Km6502.IRQDevices;
 
-// Ported from NSFPlay to VGMPlay (including C++ . C conversion)
-// by Valley Bell on 25 September 2013
-// Updated to NSFPlay 2.3 on 26 September 2013
-// (Note: Encoding is UTF-8)
-//
-// Ported the source code of NSFPlay tag2.4 2021/08/14
-//
-// https://github.com/bbbradsmith/nsfplay/releases/tag/2.4
-//
+
+/**
+ * NpNesDmc.
+ *
+ * @author Brezza
+ * @author Valley Bell
+ * @version Ported the source code of NSFPlay tag2.4 2021/08/14
+ *          Updated to NSFPlay 2.3 on 26 September 2013
+ *          Ported from NSFPlay to VGMPlay (including C++ . C conversion) by Valley Bell on 25 September 2013
+ * @see "https://github.com/bbbradsmith/nsfplay/releases/tag/2.4"
+ */
 public class NpNesDmc {
 
     public NpNesApu nes_apu = null;
@@ -60,7 +64,7 @@ public class NpNesDmc {
     private byte[] memory;
     private int ptrMemory;
     private final int[] out = new int[3];
-    private int daddress;
+    private int dAddress;
     private int dLength;
     private final int[] data = new int[1];
     private boolean empty;
@@ -120,8 +124,8 @@ public class NpNesDmc {
     private boolean frameIrq;
     private boolean frameIrqEnable;
 
-//    /** IRQ needs CPU access */
-//    public NES_CPU cpu;
+    /** IRQ needs CPU access */
+    public Km6502 cpu;
 
     private final Counter tickCount = new Counter();
     private int tickLast;
@@ -221,7 +225,7 @@ public class NpNesDmc {
 
         if (s == 0 && (this.frameSequenceSteps == 4)) {
             if (this.frameIrqEnable) this.frameIrq = true;
-            //cpu.updateIRQ(NES_CPU::IRQD_FRAME, frame_irq & frame_irq_enable);
+            if (this.cpu != null) this.cpu.updateIRQ(IRQDevices.IRQD_FRAME, this.frameIrq & this.frameIrqEnable);
         }
 
         // 240hz clock
@@ -392,26 +396,26 @@ public class NpNesDmc {
 
             if (this.data[0] <= 0x100) { // shift register is empty
                 if (this.dLength > 0) {
-                    this.data[0] = this.memory[this.daddress + this.ptrMemory] & 0xff;
-                    //cpu.StealCycles(4); // DMC read takes 3 or 4 CPU cycles, usually 4
+                    this.data[0] = this.memory[this.dAddress + this.ptrMemory] & 0xff;
+                    //cpu.stealCycles(4); // DMC read takes 3 or 4 CPU cycles, usually 4
                     // (checking for the 3-cycle case would require sub-instruction emulation)
                     this.data[0] &= 0xff; // read 8 bits
                     if (this.option[OPT.DPCM_REVERSE.ordinal()] != 0) this.data[0] = BitReverse[this.data[0]];
-                    this.data[0] |= 0x10000; // use an extra bit to signal end of data
+                    this.data[0] |= 0x1_0000; // use an extra bit to signal end of data
                     this.empty = false;
-                    this.daddress = ((this.daddress + 1) & 0xffFF) | 0x8000;
+                    this.dAddress = ((this.dAddress + 1) & 0xffff) | 0x8000;
                     --this.dLength;
                     if (this.dLength == 0) {
                         if ((this.mode & 1) != 0) { // looped DPCM = auto-reload
-                            this.daddress = ((this.adrReg << 6) | 0xC000);
+                            this.dAddress = ((this.adrReg << 6) | 0xc000);
                             this.dLength = (this.lenReg << 4) + 1;
                         } else if ((this.mode & 2) != 0) { // IRQ and not looped
                             this.irq = true;
-                            //cpu.updateIRQ(NES_CPU::IRQD_DMC, true);
+                            if (this.cpu != null) this.cpu.updateIRQ(IRQDevices.IRQD_DMC, true);
                         }
                     }
                 } else {
-                    this.data[0] = 0x10000; // DMC will do nothing
+                    this.data[0] = 0x1_0000; // DMC will do nothing
                     this.empty = true;
                 }
             }
@@ -439,27 +443,27 @@ public class NpNesDmc {
 
             if (this.data[0] <= 0x100) { // shift register is empty
                 if (this.dLength > 0) {
-                    this.orgMemory.read(this.daddress, this.data);
-                    //this.data = this.memory[this.daddress + this.ptrMemory];
+                    this.orgMemory.read(this.dAddress, this.data);
+                    //this.data = this.memory[this.dAddress + this.ptrMemory];
                     //cpu.StealCycles(4); // DMC read takes 3 or 4 CPU cycles, usually 4
                     // (checking for the 3-cycle case would require sub-instruction emulation)
                     this.data[0] &= 0xff; // read 8 bits
                     if (this.option[OPT.DPCM_REVERSE.ordinal()] != 0) this.data[0] = BitReverse[this.data[0]];
-                    this.data[0] |= 0x10000; // use an extra bit to signal end of data
+                    this.data[0] |= 0x1_0000; // use an extra bit to signal end of data
                     this.empty = false;
-                    this.daddress = ((this.daddress + 1) & 0xffFF) | 0x8000;
+                    this.dAddress = ((this.dAddress + 1) & 0xffff) | 0x8000;
                     --this.dLength;
                     if (this.dLength == 0) {
                         if ((this.mode & 1) != 0) { // looped DPCM = auto-reload
-                            this.daddress = ((this.adrReg << 6) | 0xC000);
+                            this.dAddress = ((this.adrReg << 6) | 0xc000);
                             this.dLength = (this.lenReg << 4) + 1;
                         } else if ((this.mode & 2) != 0) { // IRQ and not looped
                             this.irq = true;
-                            //cpu.UpdateIRQ(NES_CPU::IRQD_DMC, true);
+                            if (this.cpu != null) this.cpu.updateIRQ(IRQDevices.IRQD_DMC, true);
                         }
                     }
                 } else {
-                    this.data[0] = 0x10000; // DMC will do nothing
+                    this.data[0] = 0x1_0000; // DMC will do nothing
                     this.empty = true;
                 }
             }
@@ -706,7 +710,7 @@ public class NpNesDmc {
         this.frameSequenceCount = 0;
         this.frameSequenceSteps = 4;
         this.frameSequenceStep = 0;
-        //cpu.updateIRQ(NES_CPU::IRQD_FRAME, false);
+        if (this.cpu != null) this.cpu.updateIRQ(IRQDevices.IRQD_FRAME, false);
 
         for (int i = 0; i < 0x0f; i++)
             write(0x4008 + i, 0);
@@ -716,7 +720,7 @@ public class NpNesDmc {
         write(0x4015, 0x00);
         if (this.option[OPT.UNMUTE_ON_RESET.ordinal()] != 0)
             write(0x4015, 0x0f);
-        //cpu.updateIRQ(NES_CPU::IRQD_DMC, false);
+        if (this.cpu != null) this.cpu.updateIRQ(IRQDevices.IRQD_DMC, false);
 
         this.out[0] = this.out[1] = this.out[2] = 0;
         this.damp = 0;
@@ -729,7 +733,7 @@ public class NpNesDmc {
         this.adrReg = 0;
         this.dLength = 0;
         this.lenReg = 0;
-        this.daddress = 0;
+        this.dAddress = 0;
         this.noise = 1;
         this.noiseTap = (1 << 1);
         if (this.option[OPT.RANDOMIZE_NOISE.ordinal()] != 0) {
@@ -787,7 +791,7 @@ public class NpNesDmc {
 
             if (!this.enable[0]) {
                 this.lengthCounter[0] = 0;
-                //this.tphase = 0; // TODO KUMA When it stops, I want the output to be 0
+                //this.tPhase = 0; // TODO KUMA When it stops, I want the output to be 0
             }
             if (!this.enable[1]) {
                 this.lengthCounter[1] = 0;
@@ -795,26 +799,26 @@ public class NpNesDmc {
 
             if ((val & 16) != 0 && this.dLength == 0) {
                 //this.enable[2] = this.active = true;
-                this.daddress = (0xC000 | (this.adrReg << 6));
+                this.dAddress = (0xC000 | (this.adrReg << 6));
                 this.dLength = (this.lenReg << 4) + 1;
                 //this.irq = false;
             } else if ((val & 16) == 0) {
                 this.dLength = 0;
-                //.enable[2] = this.active = false;
+                //this.enable[2] = this.active = false;
             }
 
             this.irq = false;
-            //cpu.updateIRQ(NES_CPU::IRQD_DMC, false);
+            if (this.cpu != null) this.cpu.updateIRQ(IRQDevices.IRQD_DMC, false);
 
             this.reg[adr - 0x4008] = val;
             return true;
         }
 
         if (adr == 0x4017) {
-            //logger.log(Level.TRACE, "4017 = %02X".formatted(val));
+//logger.log(Level.TRACE, "4017 = %02X".formatted(val));
             this.frameIrqEnable = ((val & 0x40) != 0x40);
             if (this.frameIrqEnable) this.frameIrq = false;
-            //cpu.updateIRQ(NES_CPU::IRQD_FRAME, false);
+            if (this.cpu != null) this.cpu.updateIRQ(IRQDevices.IRQD_FRAME, false);
 
             this.frameSequenceCount = 0;
             if ((val & 0x80) != 0) {
@@ -833,7 +837,7 @@ public class NpNesDmc {
 
         this.reg[adr - 0x4008] = val & 0xff;
 
-        //logger.log(Level.TRACE, "$%04X %02X".formatted(adr, val));
+//logger.log(Level.TRACE, "$%04X %02X".formatted(adr, val));
 
         switch (adr) {
 
@@ -892,7 +896,7 @@ public class NpNesDmc {
             this.mode = (val >> 6) & 3;
             if ((this.mode & 2) == 0) {
                 this.irq = false;
-                //cpu.UpdateIRQ(NES_CPU::IRQD_DMC, false);
+                if (this.cpu != null) this.cpu.updateIRQ(IRQDevices.IRQD_DMC, false);
             }
             this.dFreq = freqTable[this.pal][val & 15];
             break;
@@ -932,7 +936,7 @@ public class NpNesDmc {
             ;
 
             this.frameIrq = false;
-            //cpu.updateIRQ(NES_CPU::IRQD_FRAME, false);
+            if (this.cpu != null) this.cpu.updateIRQ(IRQDevices.IRQD_FRAME, false);
             return true;
         } else if (0x4008 <= adr && adr <= 0x4014) {
             val[0] |= this.reg[adr - 0x4008];
@@ -941,7 +945,7 @@ public class NpNesDmc {
             return false;
     }
 
-    public NpNesDmc(int clock, int rate) {
+    public void init(int clock, int rate) {
 
 //        this.setClock(DEFAULT_CLOCK);
 //        this.setRate(DEFAULT_RATE);
