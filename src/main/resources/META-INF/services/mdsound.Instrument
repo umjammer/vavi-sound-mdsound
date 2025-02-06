@@ -66,8 +66,11 @@ mdsound.instrument.YmFmYm2151Inst
 mdsound.instrument.SimpleYm3438Inst
 mdsound.instrument.MameYm3812Inst
 mdsound.instrument.VaviYm3438Inst
+mdsound.instrument.NukedYmF262Inst
 mdsound.instrument.Emu2413Inst
 mdsound.instrument.Es5503Inst
 mdsound.instrument.Es5505Inst
 mdsound.instrument.GigatronInst
 mdsound.instrument.Msm5232Inst
+mdsound.instrument.CozYmF262Inst
+mdsound.instrument.YmFmYmF262Inst

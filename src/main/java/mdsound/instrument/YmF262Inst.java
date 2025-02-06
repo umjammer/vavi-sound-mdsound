@@ -1,5 +1,6 @@
 package mdsound.instrument;
 
+import java.lang.System.Logger;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -7,17 +8,19 @@ import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
 import mdsound.chips.YmF262;
 
+import static java.lang.System.getLogger;
+
 
 public class YmF262Inst extends Instrument.BaseInstrument {
+
+    private static final Logger logger = getLogger(YmF262Inst.class.getName());
 
     public static final int DefaultClockValue = 14318180;
     public static final int MAX_CHIPS = 0x02;
 
     private final YmF262[] chips = {new YmF262(), new YmF262()};
 
-    // TODO separate into each instrument
-//    private int emuCore = YmF262.EC_DBOPL;
-    private int emuCore = YmF262.EC_MAME;
+    private int emuCore = YmF262.EC_DBOPL;
 
     public YmF262Inst() {
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
@@ -46,26 +49,9 @@ public class YmF262Inst extends Instrument.BaseInstrument {
         if ((CHIP_SAMPLING_MODE == 0x01 && rate < CHIP_SAMPLE_RATE) || CHIP_SAMPLING_MODE == 0x02)
             rate = CHIP_SAMPLE_RATE;
 
-        //chip.intf = device.static_config ? (final ymf262_interface) device.static_config : dummy;
-        //chip.intf = dummy;
-        //chip.device = device;
-
-        // stream system initialize
+        if (option.length > 0) emuCore = (int) option[0];
         chips[chipId].start(emuCore, clock, rate, this::updateHandler);
 
-        if (emuCore == YmF262.EC_MAME) {
-//            assert_always(chip.chips != NULL, "Error creating YMF262 chips");
-
-//            chip.stream = stream_create(device,0,4,rate,chip,ymf262_stream_update);
-
-            // YMF262 setup
-//            ymf262_set_timer_handler(chip.chips, timer_handler_262, chip);
-//            ymf262_set_irq_handler(chip.chips, IRQHandler_262, chip);
-//            ymf262_set_update_handler(chip.chips, _stream_update, chip);
-//
-//            chip.timer[0] = timer_alloc(device.machine, timer_callback_262_0, chip);
-//            chip.timer[1] = timer_alloc(device.machine, timer_callback_262_1, chip);
-        }
         return rate;
     }
 

@@ -90,16 +90,16 @@ public class YmF262 {
 
 //    private static final boolean OPLTYPE_IS_OPL3 = true;
 
-    /** DosBox OPL (AdLibEmu) ... uses {@link Opl2} */
+    /** DosBox OPL (AdLibEmu) ... uses {@link AdlibOpl3} */
     public static final int EC_DBOPL = 0x00;
-    /** YMF262 core from MAME ... uses {@link Opl3}  */
+    /** YMF262 core from MAME ... uses {@link MameOpl3}  */
     public static final int EC_MAME = 0x01;
 
     public interface UpdateHandler extends Runnable {
     }
 
     /** common chip operation */
-    private interface Opl {
+    private interface Opl3 {
         void update(int[][] buffers, int length);
         void stop();
         void reset();
@@ -108,41 +108,41 @@ public class YmF262 {
         void setMuteMask(int muteMask);
     }
 
-    private Opl opl;
+    private Opl3 opl3;
 
     public void start(int emuCore, int clock, int rate, UpdateHandler updateHandler) {
         switch (emuCore) {
         case EC_MAME:
-            opl = new Opl3(clock, rate, Opl3.OPL3_TYPE_YMF262);
+            opl3 = new MameOpl3(clock, rate, MameOpl3.OPL3_TYPE_YMF262);
             break;
         case EC_DBOPL:
-            opl = new Opl2(clock, rate, updateHandler);
+            opl3 = new AdlibOpl3(clock, rate, updateHandler);
             break;
         }
     }
 
     public void stop() {
-        opl.stop();
+        opl3.stop();
     }
 
     public void reset() {
-        opl.reset();
+        opl3.reset();
     }
 
     public int read(int offset) {
-        return opl.read(offset & 0x03);
+        return opl3.read(offset & 0x03);
     }
 
     public void write(int offset, int data) {
-        opl.write(offset & 3, data);
+        opl3.write(offset & 3, data);
     }
 
     public void update(int[][] outputs, int samples) {
-        opl.update(outputs, samples);
+        opl3.update(outputs, samples);
     }
 
     public void setMuteMask(int muteMask) {
-        opl.setMuteMask(muteMask);
+        opl3.setMuteMask(muteMask);
     }
 
     /**
@@ -150,7 +150,7 @@ public class YmF262 {
      *
      * @author Jarek Burczynski
     */
-    public static class Opl3 implements Opl {
+    public static class MameOpl3 implements Opl3 {
 
         public interface TimerHandler extends BiConsumer<Integer, Integer> {
         }
@@ -491,7 +491,7 @@ public class YmF262 {
                 }
 
                 public static class Connect {
-                    public Opl3 opl3 = null;
+                    public MameOpl3 opl3 = null;
                     public int index = 0;
 
                     public void setValue(int value) {
@@ -1451,15 +1451,15 @@ public class YmF262 {
 
                 sinTab[7 * SIN_LEN + i] = x;
 
-//logger.log(Level.TRACE, "YMF262.C: sin1[%4i]= %4i (tl_tab value=%5i)".formatted(i, sin_tab[1*SIN_LEN+i], tl_tab[sin_tab[1*SIN_LEN+i]]));
-//logger.log(Level.TRACE, "YMF262.C: sin2[%4i]= %4i (tl_tab value=%5i)".formatted(i, sin_tab[2*SIN_LEN+i], tl_tab[sin_tab[2*SIN_LEN+i]]));
-//logger.log(Level.TRACE, "YMF262.C: sin3[%4i]= %4i (tl_tab value=%5i)".formatted(i, sin_tab[3*SIN_LEN+i], tl_tab[sin_tab[3*SIN_LEN+i]]));
-//logger.log(Level.TRACE, "YMF262.C: sin4[%4i]= %4i (tl_tab value=%5i)".formatted(i, sin_tab[4*SIN_LEN+i], tl_tab[sin_tab[4*SIN_LEN+i]]));
-//logger.log(Level.TRACE, "YMF262.C: sin5[%4i]= %4i (tl_tab value=%5i)".formatted(i, sin_tab[5*SIN_LEN+i], tl_tab[sin_tab[5*SIN_LEN+i]]));
-//logger.log(Level.TRACE, "YMF262.C: sin6[%4i]= %4i (tl_tab value=%5i)".formatted(i, sin_tab[6*SIN_LEN+i], tl_tab[sin_tab[6*SIN_LEN+i]]));
-//logger.log(Level.TRACE, "YMF262.C: sin7[%4i]= %4i (tl_tab value=%5i)".formatted(i, sin_tab[7*SIN_LEN+i], tl_tab[sin_tab[7*SIN_LEN+i]]));
+//logger.log(Level.TRACE, "sin1[%4i]= %4i (tl_tab value=%5i)".formatted(i, sin_tab[1*SIN_LEN+i], tl_tab[sin_tab[1*SIN_LEN+i]]));
+//logger.log(Level.TRACE, "sin2[%4i]= %4i (tl_tab value=%5i)".formatted(i, sin_tab[2*SIN_LEN+i], tl_tab[sin_tab[2*SIN_LEN+i]]));
+//logger.log(Level.TRACE, "sin3[%4i]= %4i (tl_tab value=%5i)".formatted(i, sin_tab[3*SIN_LEN+i], tl_tab[sin_tab[3*SIN_LEN+i]]));
+//logger.log(Level.TRACE, "sin4[%4i]= %4i (tl_tab value=%5i)".formatted(i, sin_tab[4*SIN_LEN+i], tl_tab[sin_tab[4*SIN_LEN+i]]));
+//logger.log(Level.TRACE, "sin5[%4i]= %4i (tl_tab value=%5i)".formatted(i, sin_tab[5*SIN_LEN+i], tl_tab[sin_tab[5*SIN_LEN+i]]));
+//logger.log(Level.TRACE, "sin6[%4i]= %4i (tl_tab value=%5i)".formatted(i, sin_tab[6*SIN_LEN+i], tl_tab[sin_tab[6*SIN_LEN+i]]));
+//logger.log(Level.TRACE, "sin7[%4i]= %4i (tl_tab value=%5i)".formatted(i, sin_tab[7*SIN_LEN+i], tl_tab[sin_tab[7*SIN_LEN+i]]));
             }
-//logger.log(Level.TRACE, "YMF262.C: ENV_QUIET= %08x (dec*8=%i)".formatted(ENV_QUIET, ENV_QUIET * 8));
+//logger.log(Level.TRACE, "ENV_QUIET= %08x (dec*8=%i)".formatted(ENV_QUIET, ENV_QUIET * 8));
         }
 
         private void init() {
@@ -1468,7 +1468,7 @@ public class YmF262 {
             // frequency base
             this.freqBase = (this.rate) != 0 ? ((double) this.clock / (8.0 * 36)) / this.rate : 0;
 
-//logger.log(Level.TRACE, "YMF262: freqBase=%f".formatted(this.freqBase));
+//logger.log(Level.TRACE, "freqBase=%f".formatted(this.freqBase));
 
             // Timer base time
             //this.TimerBase = attotime_mul(ATTOTIME_IN_HZ(this.clock), 8*36);
@@ -1477,7 +1477,7 @@ public class YmF262 {
             for (int i = 0; i < 1024; i++) {
                 // opn phase increment counter = 20bit
                 this.fnTab[i] = (int) ((double) i * 64 * this.freqBase * (1 << (FREQ_SH - 10))); // -10 because chips works with 10.10 fixed point, while we use 16.16
-//logger.log(Level.TRACE, "YMF262.C: fn_tab[%4i] = %08x (dec=%8i)".formatted(i, this.fn_tab[i] >> 6, this.fn_tab[i] >> 6));
+//logger.log(Level.TRACE, "fn_tab[%4i] = %08x (dec=%8i)".formatted(i, this.fn_tab[i] >> 6, this.fn_tab[i] >> 6));
             }
 
             // Amplitude modulation: 27 output levels (triangle waveForm); 1 level takes one of: 192, 256 or 448 samples
@@ -1494,7 +1494,7 @@ public class YmF262 {
 
             this.egTimerAdd = (int) ((1 << EG_SH) * this.freqBase);
             this.egTimerOverflow = 1 * (1 << EG_SH);
-//logger.log(Level.TRACE, "YMF262init eg_timer_add=%8x eg_timer_overflow=%8x".formatted(this.eg_timer_add, this.eg_timer_overflow));
+//logger.log(Level.TRACE, "eg_timer_add=%8x eg_timer_overflow=%8x".formatted(this.eg_timer_add, this.eg_timer_overflow));
         }
 
         @Override
@@ -1537,7 +1537,7 @@ public class YmF262 {
          * @param clock is chips clock in Hz
          * @param rate  is sampling rate
          */
-        private Opl3(int clock, int rate, int type) {
+        private MameOpl3(int clock, int rate, int type) {
             this.type = type;
             this.clock = clock;
             this.rate = rate;
@@ -1855,7 +1855,7 @@ public class YmF262 {
 
                 default:
 //if (r < 0x120)
-// logger.log(Level.TRACE, "YMF262: write to unknown register (set#2): %03x value=%02x".formatted(r, v));
+// logger.log(Level.TRACE, "write to unknown register (set#2): %03x value=%02x".formatted(r, v));
                     break;
                 }
 
@@ -1907,7 +1907,7 @@ public class YmF262 {
                     break;
 
                 default:
-//logger.log(Level.TRACE, "YMF262: write to unknown register: %02x value=%02x".formatted(r, v));
+//logger.log(Level.TRACE, "write to unknown register: %02x value=%02x".formatted(r, v));
                     break;
                 }
                 break;
@@ -2226,15 +2226,15 @@ public class YmF262 {
                             int conn = (ch.slots[SLOT1].con << 1) | (chP3.slots[SLOT1].con << 0);
                             switch (conn) {
                             case 0:
-                                // 1 . 2 . 3 . 4 - out
+                                // 1 -> 2 -> 3 -> 4 - out
                                 ch.slots[SLOT1].connect.index = 18;
                                 ch.slots[SLOT2].connect.index = 19;
                                 chP3.slots[SLOT1].connect.index = 18;
                                 chP3.slots[SLOT2].connect.index = chanNo + 3;
                                 break;
                             case 1:
-                                // 1 . 2 -\
-                                //  3 . 4 -+- out
+                                // 1 -> 2 -\
+                                // 3 -> 4 -+- out
                                 ch.slots[SLOT1].connect.index = 18;
                                 ch.slots[SLOT2].connect.index = chanNo;
                                 chP3.slots[SLOT1].connect.index = 18;
@@ -2242,7 +2242,7 @@ public class YmF262 {
                                 break;
                             case 2:
                                 // 1 -----------\
-                                //    2 . 3 . 4 -+- out
+                                // 2 -> 3 -> 4 -+- out
                                 ch.slots[SLOT1].connect.index = chanNo;
                                 ch.slots[SLOT2].connect.index = 19;
                                 chP3.slots[SLOT1].connect.index = 18;
@@ -2250,7 +2250,7 @@ public class YmF262 {
                                 break;
                             case 3:
                                 // 1 ------\
-                                //   2 . 3 -+- out
+                                // 2 -> 3 -+- out
                                 // 4 ------/
                                 ch.slots[SLOT1].connect.index = chanNo;
                                 ch.slots[SLOT2].connect.index = 19;
@@ -2275,32 +2275,32 @@ public class YmF262 {
                             int conn = (chM3.slots[SLOT1].con << 1) | (ch.slots[SLOT1].con << 0);
                             switch (conn) {
                             case 0:
-                                // 1 . 2 . 3 . 4 - out
+                                // 1 -> 2 -> 3 -> 4 - out
                                 chM3.slots[SLOT1].connect.index = 18;
                                 chM3.slots[SLOT2].connect.index = 19;
                                 ch.slots[SLOT1].connect.index = 18;
                                 ch.slots[SLOT2].connect.index = chanNo;
                                 break;
                             case 1:
-                                            /* 1 . 2 -\
-                                               3 . 4 -+- out */
+                                // 1 -> 2 -\
+                                // 3 -> 4 -+- out
                                 chM3.slots[SLOT1].connect.index = 18;
                                 chM3.slots[SLOT2].connect.index = chanNo - 3;
                                 ch.slots[SLOT1].connect.index = 18;
                                 ch.slots[SLOT2].connect.index = chanNo;
                                 break;
                             case 2:
-                                            /* 1 -----------\
-                                               2 . 3 . 4 -+- out */
+                                // 1 -----------\
+                                // 2 -> 3 -> 4 -+- out
                                 chM3.slots[SLOT1].connect.index = chanNo - 3;
                                 chM3.slots[SLOT2].connect.index = 19;
                                 ch.slots[SLOT1].connect.index = 18;
                                 ch.slots[SLOT2].connect.index = chanNo;
                                 break;
                             case 3:
-                                            /* 1 ------\
-                                               2 . 3 -+- out
-                                               4 ------/     */
+                                // 1 ------\
+                                // 2 -> 3 -+- out
+                                // 4 ------/
                                 chM3.slots[SLOT1].connect.index = chanNo - 3;
                                 chM3.slots[SLOT2].connect.index = 19;
                                 ch.slots[SLOT1].connect.index = chanNo;
@@ -2530,8 +2530,9 @@ public class YmF262 {
      *
      * @author Ken Silverman
      * @see "Ken Silverman's official web site: http://www.advsys.net/ken"
+     * @see DosboxYm3812
      */
-    public static class Opl2 implements Opl {
+    public static class AdlibOpl3 implements Opl3 {
 
         private static final int NUM_CHANNELS = 18;
 
@@ -2596,7 +2597,7 @@ public class YmF262 {
          * adlib register set.
          * Only the channels 0,1,2 (first set) and 9,10,11 (second set) can act as
          * 4op channels. The two additional operators for a channel y come from the
-         * 2op channel y+3 so the operatorss y, (9+y), y+3, (9+y)+3 make up a 4op
+         * 2op channel y+3 so the operators y, (9+y), y+3, (9+y)+3 make up a 4op
          * channel.
          */
         public static class Operator {
@@ -2611,7 +2612,7 @@ public class YmF262 {
             private static final int[] vibValConst = new int[BLOCKBUF_SIZE];
             private static final int[] tremValConst = new int[BLOCKBUF_SIZE];
 
-            // key scale level lookup table */
+            /** key scale level lookup table */
             private static final double[] kslMul = {
                     0.0, 0.5, 0.25, 1.0 // . 0, 3, 1.5, 6 dB/oct
             };
@@ -2709,7 +2710,7 @@ public class YmF262 {
                     wavTable[i + ((WAVEPREC * 17) >> 3)] = (short) (wavTable[i + (WAVEPREC >> 2)] + 16384);
                 }
 
-                // key scale level table verified ([table in book]*8/3)
+                // key scale level table verified ([table in book] * 8 / 3)
                 //
                 ksLev[7][0] = 0;
                 ksLev[7][1] = 24;
@@ -2733,7 +2734,7 @@ public class YmF262 {
             /** current output/last output (used for feedback) */
             private int cVal, lastCVal;
             /** time (position in waveForm) and time increment */
-            private int tCount, wfPos, tInc;
+            private long tCount, wfPos, tInc;
             /** and amplification (envelope) */
             private double amp, stepAmp;
             /** volume */
@@ -2808,16 +2809,16 @@ public class YmF262 {
             }
 
             public static void advanceDrums(Operator op1, int vib1, Operator op2, int vib2, Operator op3, int vib3, int generatorAdd) {
-                int c1 = op1.tCount / FIXEDPT;
-                int c3 = op3.tCount / FIXEDPT;
+                long c1 = op1.tCount / FIXEDPT;
+                long c3 = op3.tCount / FIXEDPT;
                 int phaseBit = (((c1 & 0x88) ^ ((c1 << 5) & 0x80)) | ((c3 ^ (c3 << 2)) & 0x20)) != 0 ? 0x02 : 0x00;
 
                 int noiseBit = rnd.nextInt() & 1; // rand() & 1;
 
-                int snare_phase_bit = (((op1.tCount / FIXEDPT) / 0x100) & 1);
+                long snare_phase_bit = (((op1.tCount / FIXEDPT) / 0x100) & 1);
 
                 // Hihat
-                int inttm = (phaseBit << 8) | (0x34 << (phaseBit ^ (noiseBit << 1)));
+                long inttm = (phaseBit << 8) | (0x34 << (phaseBit ^ (noiseBit << 1)));
                 op1.wfPos = inttm * FIXEDPT; // waveForm position
                 // advance waveForm time
                 op1.tCount += op1.tInc;
@@ -2846,7 +2847,7 @@ public class YmF262 {
 
                 // advance waveForm time
                 tCount += tInc;
-                tCount += (tInc) * vib / FIXEDPT;
+                tCount += tInc * vib / FIXEDPT;
 
                 generatorPos += generator_add;
             }
@@ -2918,10 +2919,10 @@ public class YmF262 {
                 }
             }
 
-            public void changeSustainLevel(int sustainlevel) {
-                // sustainlevel should be 0.0 when sustainlevel == 15 (max)
-                if (sustainlevel < 15) {
-                    this.sustainLevel = Math.pow(FL2, (double) sustainlevel * (-FL05));
+            public void changeSustainLevel(int sustainLevel) {
+                // sustainLevel should be 0.0 when sustainLevel == 15 (max)
+                if (sustainLevel < 15) {
+                    this.sustainLevel = Math.pow(FL2, (double) sustainLevel * (-FL05));
                 } else {
                     this.sustainLevel = 0.0;
                 }
@@ -2978,7 +2979,7 @@ public class YmF262 {
                 if ((adlibReg[ARC_TVS_KSR_MUL + regBase] & 0x10) == 0) this.tOff >>= 2;
 
                 // 20+a0+b0:
-                this.tInc = (int) ((((double) (frn << oct)) * frqMul[adlibReg[ARC_TVS_KSR_MUL + regBase] & 15]));
+                this.tInc = (long) ((((double) (frn << oct)) * frqMul[adlibReg[ARC_TVS_KSR_MUL + regBase] & 15]));
                 // 40+a0+b0:
                 double volIn = (double) (adlibReg[ARC_KSL_OUTLEV + regBase] & 63) +
                         (kslMul[adlibReg[ARC_KSL_OUTLEV + regBase] >> 6] * ksLev[oct][frn >> 6]);
@@ -3023,7 +3024,7 @@ public class YmF262 {
             public void output(int modulator, int trem) {
                 if (opState != OF_TYPE_OFF) {
                     lastCVal = cVal;
-                    int i = (wfPos + modulator) / FIXEDPT;
+                    int i = (int) ((wfPos + modulator) / FIXEDPT);
 
                     // wform: -16384 to 16383 (0x4000)
                     // trem :  32768 to 65535 (0x10000)
@@ -3235,7 +3236,7 @@ public class YmF262 {
                 Operator::off
         };
 
-        private Opl2(int clock, int sampleRate, UpdateHandler updateHandler) {
+        private AdlibOpl3(int clock, int sampleRate, UpdateHandler updateHandler) {
             //logger.log(Level.TRACE, "clock:%d rate:%d".formatted(clock, sampleRate));
 
             this.chipClock = clock;
@@ -3281,7 +3282,7 @@ public class YmF262 {
         @Override
         public int write(int addr, int val) {
             if ((addr & 1) != 0) {
-                //logger.log(Level.TRACE, "adr=%x  dat=%x".formatted(this.opl_addr, val));
+//logger.log(Level.TRACE, "adr=%x  dat=%x".formatted(this.opl_addr, val));
                 writeInternal(this.oplAddr, val & 0xff);
             } else
                 this.oplAddr = val | ((addr & 2) << 7);
@@ -3889,6 +3890,7 @@ public class YmF262 {
                     int opP;
                     int k = curCh;
                     Operator op;
+//#if defined(OPLTYPE_IS_OPL3)
                     if (curCh < 9) {
                         op = this.ops[curCh];
                         opP = curCh;
@@ -3899,6 +3901,9 @@ public class YmF262 {
                     }
                     // check if this Operator is part of a 4-Op
                     if (op.is4OpAttached) continue; // this is more correct
+//#else
+//                    op = this.ops[curCh];
+//#endif
 
                     // check for FM/AM
                     if ((this.adlibReg[ARC_FEEDBACK + k] & 1) != 0) {
