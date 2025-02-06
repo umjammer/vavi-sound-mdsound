@@ -7,40 +7,6 @@
 
   <profiles>
     <profile>
-      <id>mac</id>
-      <activation>
-        <os>
-          <family>mac</family>
-        </os>
-      </activation>
-      <properties>
-        <dev.null>/dev/null</dev.null>
-      </properties>
-    </profile>
-    <profile>
-      <id>unix</id>
-      <activation>
-        <os>
-          <family>unix</family>
-        </os>
-      </activation>
-      <properties>
-        <dev.null>/dev/null</dev.null>
-      </properties>
-    </profile>
-    <profile>
-      <id>windows</id>
-      <activation>
-        <os>
-          <family>windows</family>
-        </os>
-      </activation>
-      <properties>
-        <dev.null>NUL</dev.null>
-      </properties>
-    </profile>
-
-    <profile>
       <id>local</id>
       <activation>
         <file>
@@ -81,9 +47,6 @@
         <version>3.12.1</version>
         <configuration>
           <release>17</release>
-          <testExcludes>
-            <testExclude>test/RealChip.java</testExclude>
-          </testExcludes>
         </configuration>
       </plugin>
       <plugin>
@@ -137,7 +100,13 @@
     <dependency>
       <groupId>com.github.umjammer</groupId> <!-- com.github.umjammer / vavi -->
       <artifactId>vavi-sound-ymfm</artifactId>
-      <version>0.0.6</version>
+      <version>0.0.7</version>
+    </dependency>
+
+    <dependency>
+      <groupId>net.sourceforge.javamod</groupId>
+      <artifactId>JavaMod</artifactId>
+      <version>3.9.11-SNAPSHOT</version>
     </dependency>
 
     <dependency>
