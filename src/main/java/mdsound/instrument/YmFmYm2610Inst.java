@@ -43,7 +43,7 @@ public class YmFmYm2610Inst extends Instrument.BaseInstrument implements AdpcmEn
     }
 
     public YmFmYm2610Inst() {
-        //0..Main 1..FM 2..SSG 3..PCMa 4..PCMb
+        // 0..Main 1..FM 2..SSG 3..PCMa 4..PCMb
         visVolume = new int[][][] {
                 {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}},
                 {{0, 0}, {0, 0}, {0, 0}, {0, 0}, {0, 0}}
