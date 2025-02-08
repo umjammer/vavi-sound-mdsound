@@ -15,7 +15,7 @@ import mdsound.np.chip.DeviceInfo.BasicTrackInfo;
 public class NesFme7 implements SoundChip {
 
     // stereo mix
-    protected int[][] sm = new int[][] {new int[3], new int[3]};
+    protected int[][] sm = {new int[3], new int[3]};
     protected short[] buf = new short[2];
     protected Emu2149 emu2149;
     // clock divider

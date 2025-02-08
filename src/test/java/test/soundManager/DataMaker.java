@@ -5,8 +5,8 @@ import vavi.util.Debug;
 
 
 /**
- * データ生成器
- * ミュージックドライバーを駆動させ、生成するデータをDataSenderに送る
+ * Data Generator
+ * Run the music driver and send the generated data to the DataSender
  */
 public class DataMaker extends BaseMakerSender {
     private final DriverAction actionOfDriver;

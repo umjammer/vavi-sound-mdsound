@@ -26,13 +26,13 @@ public class RealChipSender extends ChipSender {
                 while (true) {
                     Thread.yield();
                     if (ringBuffer.getDataSize() == 0) {
-                        // 送信データが無く、停止指示がある場合のみ停止する
+                        // It will stop only if there is no data to send and there is a stop command.
                         if (!getStart())
                             break;
                         continue;
                     }
 
-                    // dataが貯まってます！
+                    // Data is being accumulated!
                     synchronized (lockObj) {
                         busy = true;
                     }

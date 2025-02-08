@@ -121,7 +121,7 @@ public class PSG {
         ePeriodBase = (int) ((1 << envShift) / 4.0 * clock / rate);
         nPeriodBase = (int) ((1 << noiseShift) / 4.0 * clock / rate);
 
-        // 各データの更新
+        // Update each data
         int tmp;
         tmp = (((reg[0] & 0xff) + (reg[1] & 0xff) * 256)) & 0xfff;
         sPeriod[0] = tmp != 0 ? tPeriodBase / tmp : tPeriodBase;

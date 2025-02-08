@@ -307,22 +307,22 @@ public class Emu2413 {
             }
 
             /** TOP-CYM */
-            private int calcCym(int pgout_hh) {
-                int dbout;
+            private int calcCym(int pgOut_hh) {
+                int dbOut;
 
                 if (this.egOut >= (DB_MUTE - 1))
                     return 0;
                 else if ((
                         // the same as fmopl.c
-                        ((bit(pgout_hh, PG_BITS - 8) ^ bit(pgout_hh, PG_BITS - 1)) | bit(pgout_hh, PG_BITS - 7)) ^
+                        ((bit(pgOut_hh, PG_BITS - 8) ^ bit(pgOut_hh, PG_BITS - 1)) | bit(pgOut_hh, PG_BITS - 7)) ^
                                 // different from fmopl.c
                                 (bit(this.pgOut, PG_BITS - 7) & ~bit(this.pgOut, PG_BITS - 5))) != 0
                 )
-                    dbout = DB_NEG(3.0);
+                    dbOut = DB_NEG(3.0);
                 else
-                    dbout = DB_POS(3.0);
+                    dbOut = DB_POS(3.0);
 
-                return db2linTable[dbout + this.egOut];
+                return db2linTable[dbOut + this.egOut];
             }
 
             /** HI-HAT */
@@ -366,7 +366,7 @@ public class Emu2413 {
             /** dB to Liner table */
             private static final int[] db2linTable = new int[(DB_MUTE + DB_MUTE) * 2];
 
-            /** Table for dB(0 -- (1<<DB_BITS)-1) to Liner(0 -- DB2LIN_AMP_WIDTH) */
+            /* Table for dB(0 -- (1<<DB_BITS)-1) to Liner(0 -- DB2LIN_AMP_WIDTH) */
             static {
                 for (int i = 0; i < DB_MUTE + DB_MUTE; i++) {
                     db2linTable[i] = (int) ((double) ((1 << DB2LIN_AMP_BITS) - 1) * Math.pow(10, -(double) i * DB_STEP / 20));

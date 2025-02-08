@@ -119,7 +119,7 @@ public class NpNesApu {
     private final boolean[] enable = new boolean[2];
 
     private final Counter tickCount = new Counter();
-    private int tickLast;
+    private long tickLast;
 
     private void sweepSqr(int i) {
         int shifted = this.freq[i] >> this.sweepAmount[i];
@@ -195,7 +195,7 @@ public class NpNesApu {
             {1, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1}
     };
 
-    private int calcSqr(int i, int clocks) {
+    private int calcSqr(int i, long clocks) {
         this.sCounter[i] += clocks;
         while (this.sCounter[i] > this.freq[i]) {
             this.sPhase[i] = (this.sPhase[i] + 1) & 15;
@@ -225,7 +225,7 @@ public class NpNesApu {
             return false;
     }
 
-    public void tick(int clocks) {
+    public void tick(long clocks) {
         this.out[0] = calcSqr(0, clocks);
         this.out[1] = calcSqr(1, clocks);
     }
@@ -305,7 +305,7 @@ public class NpNesApu {
         b[1] = m[0] * this.sm[1][0];
         b[1] += m[1] * this.sm[1][1];
         b[1] >>= 7 - 3; // see above
-//System.err.println("b[0] = " + b[0] + ", b[1] = " + b[1]);
+//logger.log(Level.TRACE, "b[0] = " + b[0] + ", b[1] = " + b[1]);
         return 2;
     }
 

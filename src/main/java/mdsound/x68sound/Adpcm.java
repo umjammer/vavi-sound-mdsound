@@ -280,7 +280,7 @@ public class Adpcm {
         int mtc;
         mtc = dmaReg[0x0a] * 0x100 + dmaReg[0x0b];
         if (mtc == 0) {
-//            if (dmaReg[0x07] & 0x40) { // Continue動作
+//            if (dmaReg[0x07] & 0x40) { // Continue action
 //                if (dmaContinueSetNextMtcMar()) {
 //                    return 0x80000000;
 //                }

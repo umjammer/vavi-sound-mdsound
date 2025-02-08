@@ -61,7 +61,7 @@ public class Ym2612Inst extends Instrument.BaseInstrument {
         chips[chipId].init(clock, samplingRate, clock);
         chips[chipId].reset();
 
-        // 動作オプション設定
+        // Operation option settings
         if (option != null && option.length > 0 && option[0] instanceof Integer flags) {
 logger.log(Level.DEBUG, "option: " + flags);
             chips[chipId].setOptions(flags & 0x3);

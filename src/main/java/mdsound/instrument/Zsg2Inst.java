@@ -60,9 +60,9 @@ public class Zsg2Inst extends BaseInstrument {
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        //TBD
-        //  更新タイミングの計算
-        //  ZSG2は出力が4chである
+        // TODO
+        //  Update timing calculation
+        //  The ZSG2 has 4 channels of output.
 
         chips[chipId].update(outputs, samples);
     }

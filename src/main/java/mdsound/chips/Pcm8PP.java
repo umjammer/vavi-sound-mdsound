@@ -168,12 +168,12 @@ public class Pcm8PP {
 
     public void update(int[][] outputs, int samples) {
         for (int i = 0; i < samples; i++) {
-            // バッファクリア
+            // Clear Buffer
             outputs[0][i] = 0;
             outputs[1][i] = 0;
 
             for (int c = 0; c < ch.length; c++) {
-                // 発音していないなら次のチャンネルの処理へ
+                // If not, proceed to process the next channel
                 if (!ch[c].play) continue;
 
                 Channel st = ch[c];
@@ -181,16 +181,16 @@ public class Pcm8PP {
                 int valR = 0;
 
                 if (st.PcmKind < 7) {
-                    // pcm8(既存)の加工処理
+                    // Processing of pcm8 (existing)
                     if (st.PcmKind == 5) {   // 16bitPCM
                         if (mem.length <= st.adrsPtr) valL = 0;
                         else valL = (short) ((mem[st.adrsPtr] << 8) + mem[st.adrsPtr + 1]);
                         //pcm16_2pcm(st, valL);
                         //st.OutPcm = ((st.InpPcm << 9) - (st.InpPcm_prev << 9) + 459 * st.OutPcm) >> 9;
                         //st.InpPcm_prev = st.InpPcm;
-                        // 音量反映
+                        // Volume Reflection
                         valL = valL * st.volume;
-                        valL = valL >> 3;//3 適当
+                        valL = valL >> 3; // 3 sloppy
                         valR = valL;
                     } else if (st.PcmKind == 6) {   // 8bitPCM
                         if (mem.length <= st.adrsPtr) valL = 0;
@@ -198,10 +198,10 @@ public class Pcm8PP {
                         //pcm16_2pcm(st,valL);
                         //st.OutPcm = ((st.InpPcm << 9) - (st.InpPcm_prev << 9) + 459 * st.OutPcm) >> 9;
                         //st.InpPcm_prev = st.InpPcm;
-                        // 音量反映
+                        // Volume Reflection
                         valL = valL * st.volume;
                         valL <<= 5;
-                        valL = valL >> 3;//3 適当
+                        valL = valL >> 3; // 3 sloppy
                         valR = valL;
                     } else {
                         if (st.adpcmUpdate) {
@@ -221,9 +221,9 @@ public class Pcm8PP {
                         valR = valL = ((st.OutPcm * st.volume) >> 8);// >> 4);
                     }
                 } else {
-                    //pcm8ppの加工処理
+                    // Processing of pcm8pp
 
-                    //音声データ加工
+                    // Audio data processing
                     if (mem.length <= st.adrsPtr) valL = 0;
                     else valL = mem[st.adrsPtr];
                     if (st.type == 2) {
@@ -231,36 +231,36 @@ public class Pcm8PP {
                         else valL = (short) (((byte) valL << 8) + mem[st.adrsPtr + 1]);
                     }
 
-                    //音量反映
+                    // Volume Reflection
                     valL = valL * st.volume;
                     if (st.type != 2) valL <<= 5;
-                    valL = valL >> 3;//3 適当
+                    valL = valL >> 3; // 3 sloppy
                     if (st.outs == 1) {
                         valR = valL;
                     } else {
                         if (st.type != 2) {
                             if (mem.length <= st.adrsPtr + 1) valR = 0;
                             else valR = mem[st.adrsPtr + 1];
-                            //音量反映
+                            // Volume Reflection
                             valR = valR * st.volume;
                             valR <<= 5;
                         } else {
                             if (mem.length <= st.adrsPtr + 2) valR = 0;
                             else valR = (short) ((mem[st.adrsPtr + 2] << 8) + mem[st.adrsPtr + 3]);
-                            //音量反映
+                            // Volume Reflection
                             valR = valR * st.volume;
                         }
-                        valR = valR >> 3;//3 適当
+                        valR = valR >> 3; // 3 sloppy
                     }
                 }
 
-                // バッファへ格納(加算)
+                // Store in buffer (add)
                 if (!st.mute) {
                     outputs[0][i] += valL * ((st.pan & 1) != 0 ? 1 : 0);
                     outputs[1][i] += valR * ((st.pan & 2) != 0 ? 1 : 0);
                 }
 
-                // ポインタ移動
+                // Pointer movement
                 double step = st.freq / sampleRate;
                 st.step += step;
                 while (st.step >= 1.0) {
@@ -275,7 +275,7 @@ public class Pcm8PP {
                     }
                     st.step -= 1.0;
                 }
-                // エンド位置を越えたら演奏終了
+                // Play ends when the end position is reached
                 if (st.adrsPtr >= st.endAdrs)
                     st.play = false;
 
@@ -355,7 +355,7 @@ public class Pcm8PP {
         this.mem = mem;
     }
 
-    // adpcmを入力して InpPcm の値を変化させる
+    // Enter adpcm to change the value of InpPcm
     // -2047<<(4+4) <= InpPcm <= +2047<<(4+4)
     private void adpcm2pcm(Channel st, byte adpcm) {
         int dltL;
@@ -388,7 +388,7 @@ public class Pcm8PP {
         }
     }
 
-    // pcm16を入力して InpPcm の値を変化させる
+    // Input pcm16 to change the value of InpPcm
     // -2047<<(4+4) <= InpPcm <= +2047<<(4+4)
     private void pcm16_2pcm(Channel st, int pcm16) {
         st.Pcm += pcm16 - st.Pcm16Prev;

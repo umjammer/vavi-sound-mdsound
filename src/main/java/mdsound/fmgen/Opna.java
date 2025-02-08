@@ -2001,7 +2001,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
         };
 
         /**
-         * AdpcmA 合成
+         * AdpcmA synthesis
          */
         public void adpcmAMix(int[] buffer, int count) {
 

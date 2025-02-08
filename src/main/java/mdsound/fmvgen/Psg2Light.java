@@ -203,7 +203,7 @@ public class Psg2Light extends PSG {
                     }
                 } else {
                     int ptrDest = 0;
-                    // ノイズ有り
+                    // Noise
                     for (int i = 0; i < nSamples; i++) {
                         sampleL = 0;
                         sampleR = 0;
@@ -211,8 +211,8 @@ public class Psg2Light extends PSG {
                         revSampleR = 0;
                         sample = 0;
                         for (int j = 0; j < (1 << overSampling); j++) {
-                            noise = (int) (noiseTable[((int) ncountDbl >> (int) ((noiseShift + overSampling + 6)) & (noiseTableSize - 1))]
-                                    >> (int) ((int) ncountDbl >> (noiseShift + overSampling + 1)));
+                            noise = noiseTable[((int) ncountDbl >> (noiseShift + overSampling + 6) & (noiseTableSize - 1))]
+                                    >> ((int) ncountDbl >> (noiseShift + overSampling + 1));
 
                             ncountDbl += ((double) nPeriod / ((reg[6] & 0x20) != 0 ? ncountDiv : 1.0));
 
@@ -222,8 +222,8 @@ public class Psg2Light extends PSG {
                                 int L = sample;
                                 int R = sample;
 
-                                //ノイズ
-                                nv = ((int) (sCount[k] >> (toneShift + overSampling)) & 0 | (nenable[k] & noise)) - 1;
+                                // Noise
+                                nv = ((sCount[k] >> (toneShift + overSampling)) & 0 | (nenable[k] & noise)) - 1;
                                 sample = (int) ((oLevel[k] + nv) ^ nv);
                                 L += sample;
                                 R += sample;
@@ -287,7 +287,7 @@ public class Psg2Light extends PSG {
                             int L = sample;
                             int R = sample;
 
-                            //ノイズ
+                            // Noise
                             nv = ((sCount[k] >> (toneShift + overSampling)) & 0 | (nenable[k] & noise)) - 1;
                             sample = (int) ((lv + nv) ^ nv);
                             L += sample;

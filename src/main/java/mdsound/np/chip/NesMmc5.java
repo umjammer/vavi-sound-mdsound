@@ -78,11 +78,11 @@ public class NesMmc5 implements SoundChip {
         for (int i = 1; i < 32; i++)
             squareTable[i] = (int) ((8192.0 * 95.88) / (8128.0 / i + 100));
 
-        // 2A03 style nonlinear pcm mix with double the bits
-        //pcm_table[0] = 0;
-        //int wd = 22638;
-        //for(int d=1;d<256; ++d)
-        //    pcm_table[d] = (int)((8192.0*159.79)/(100.0+1.0/((double)d/wd)));
+//        // 2A03 style nonlinear pcm mix with double the bits
+//        pcm_table[0] = 0;
+//        int wd = 22638;
+//        for (int d = 1; d < 256; ++d)
+//            pcm_table[d] = (int) ((8192.0 * 159.79) / (100.0 + 1.0 / ((double) d / wd)));
 
         // linear pcm mix (actual hardware seems closer to this)
         pcmTable[0] = 0;
@@ -98,8 +98,6 @@ public class NesMmc5 implements SoundChip {
 
     @Override
     public void reset() {
-        int i;
-
         sCounter[0] = 0;
         sCounter[1] = 0;
         sPhase[0] = 0;
@@ -113,12 +111,12 @@ public class NesMmc5 implements SoundChip {
         envelopeCounter[1] = 0;
         frameSequenceCount = 0;
 
-        for (i = 0; i < 8; i++)
+        for (int i = 0; i < 8; i++)
             write(0x5000 + i, 0);
 
         write(0x5015, 0);
 
-        for (i = 0; i < 3; ++i) out[i] = 0;
+        for (int i = 0; i < 3; ++i) out[i] = 0;
 
         mask = 0;
         pcm = 0; // PCM channel

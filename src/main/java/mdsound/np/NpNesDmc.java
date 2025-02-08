@@ -10,6 +10,7 @@ import java.util.Random;
 
 import mdsound.np.cpu.Km6502;
 import mdsound.np.cpu.Km6502.IRQDevices;
+import vavi.util.Debug;
 
 
 /**
@@ -128,7 +129,7 @@ public class NpNesDmc {
     public Km6502 cpu;
 
     private final Counter tickCount = new Counter();
-    private int tickLast;
+    private long tickLast;
 
     private int getDamp() {
         return (this.damp << 1) | this.dacLsb;
@@ -178,40 +179,40 @@ public class NpNesDmc {
 //    TrackInfo getTrackInfo(int trk) {
 //        switch (trk) {
 //            case 0:
-//                trkinfo[trk].max_volume = 255;
-//                trkinfo[0].key = (linear_counter > 0 && length_counter[0] > 0 && enable[0]);
-//                trkinfo[0].volume = 0;
-//                trkinfo[0]._freq = tri_freq;
-//                if (trkinfo[0]._freq)
-//                    trkinfo[0].freq = clock / 32 / (trkinfo[0]._freq + 1);
+//                trkInfo[trk].max_volume = 255;
+//                trkInfo[0].key = (linear_counter > 0 && length_counter[0] > 0 && enable[0]);
+//                trkInfo[0].volume = 0;
+//                trkInfo[0]._freq = tri_freq;
+//                if (trkInfo[0]._freq)
+//                    trkInfo[0].freq = clock / 32 / (trkInfo[0]._freq + 1);
 //                else
-//                    trkinfo[0].freq = 0;
-//                trkinfo[0].tone = -1;
-//                trkinfo[0].output = out[0];
+//                    trkInfo[0].freq = 0;
+//                trkInfo[0].tone = -1;
+//                trkInfo[0].output = out[0];
 //                break;
 //            case 1:
-//                trkinfo[1].max_volume = 15;
-//                trkinfo[1].volume = noise_volume + (envelope_disable ? 0 : 0x10) + (envelope_loop ? 0x20 : 0);
-//                trkinfo[1].key = length_counter[1] > 0 && enable[1] &&
+//                trkInfo[1].max_volume = 15;
+//                trkInfo[1].volume = noise_volume + (envelope_disable ? 0 : 0x10) + (envelope_loop ? 0x20 : 0);
+//                trkInfo[1].key = length_counter[1] > 0 && enable[1] &&
 //                        (envelope_disable ? (noise_volume > 0) : (envelope_counter > 0));
-//                trkinfo[1]._freq = reg[0x400e - 0x4008] & 0xF;
-//                trkinfo[1].freq = clock / double(wavlen_table[pal][trkinfo[1]._freq] * ((noise_tap & (1 << 6)) ? 93 : 1));
-//                trkinfo[1].tone = noise_tap & (1 << 6);
-//                trkinfo[1].output = out[1];
+//                trkInfo[1]._freq = reg[0x400e - 0x4008] & 0xF;
+//                trkInfo[1].freq = clock / double(wavLen_table[pal][trkInfo[1]._freq] * ((noise_tap & (1 << 6)) ? 93 : 1));
+//                trkInfo[1].tone = noise_tap & (1 << 6);
+//                trkInfo[1].output = out[1];
 //                break;
 //            case 2:
-//                trkinfo[2].max_volume = 127;
-//                trkinfo[2].volume = reg[0x4011 - 0x4008] & 0x7F;
-//                trkinfo[2].key = dlength > 0;
-//                trkinfo[2]._freq = reg[0x4010 - 0x4008] & 0xF;
-//                trkinfo[2].freq = clock / double(freq_table[pal][trkinfo[2]._freq]);
-//                trkinfo[2].tone = (0xc000 | (adr_reg << 6));
-//                trkinfo[2].output = (damp << 1) | dac_lsb;
+//                trkInfo[2].max_volume = 127;
+//                trkInfo[2].volume = reg[0x4011 - 0x4008] & 0x7F;
+//                trkInfo[2].key = dLength > 0;
+//                trkInfo[2]._freq = reg[0x4010 - 0x4008] & 0xF;
+//                trkInfo[2].freq = clock / double(freq_table[pal][trkInfo[2]._freq]);
+//                trkInfo[2].tone = (0xc000 | (adr_reg << 6));
+//                trkInfo[2].output = (damp << 1) | dac_lsb;
 //                break;
 //            default:
 //                return NULL;
 //        }
-//        return trkinfo[trk];
+//        return trkInfo[trk];
 //    }
 
     private void sequenceFrame(int s) {
@@ -239,12 +240,12 @@ public class NpNesDmc {
             this.linearCounterHalt = false;
         }
 
-        // $4009 unuse address
-        //this.reg[1] = (int)(
-        //    (this.linear_counter != 0 ? 4 : 0) //triangle
-        //    | (this.length_counter[1]!=0 ? 8:0) //noise
-        //    | (this.active ? 0x10 : 0) //dmc
-        //    );
+//        // $4009 unused address
+//        this.reg[1] = (int)(
+//            (this.linear_counter != 0 ? 4 : 0) // triangle
+//            | (this.length_counter[1]!=0 ? 8:0) // noise
+//            | (this.active ? 0x10 : 0) //dmc
+//            );
 
         // noise envelope
         boolean divider = false;
@@ -286,12 +287,12 @@ public class NpNesDmc {
     };
 
     /** Calculates triangle wave channel. Returns 0-15. */
-    private int calcTri(int clocks) {
+    private int calcTri(long clocks) {
         int tri = 0;
         if (this.linearCounter > 0 && this.lengthCounter[0] > 0
                 && (this.option[OPT.TRI_MUTE.ordinal()] == 0 || this.triFreq > 0)) {
             tri = 1;
-            this.counter[0] -= clocks;
+            this.counter[0] -= (int) clocks;
             while (this.counter[0] < 0) {
                 this.tPhase = (this.tPhase + 1) & 31;
                 this.counter[0] += this.triFreq + 1;
@@ -319,7 +320,7 @@ public class NpNesDmc {
      * so only the noise is synthesized at a high clock rate within this function,
      * and simple sampling rate conversion is performed.
      */
-    private int calcNoise(int clocks) {
+    private int calcNoise(long clocks) {
         int noi = 1;
 
         int env, last, count, accum, clocksAccum;
@@ -336,20 +337,18 @@ public class NpNesDmc {
 
         if (clocks < 1) return last;
 
-        // simple anti-aliasing (noise requires it, even when oversampling is off)
+        // simple antialiasing (noise requires it, even when oversampling is off)
         count = 0;
         accum = this.counter[1] * last;
         int accumClocks = this.counter[1];
-//#ifdef _DEBUG
-// int start_clocks = counter[1];
-//#endif
+int startClocks = counter[1];
         if (this.counter[1] < 0) { // only happens on startup when using the randomize noise option
             accum = 0;
             accumClocks = 0;
         }
 
-        this.counter[1] -= clocks;
-        // assert(this.nfreq > 0); // prevent infinite loop
+        this.counter[1] -= (int) clocks;
+        // assert(this.nFreq > 0); // prevent infinite loop
         while (this.counter[1] < 0) {
             // tick the noise generator
             int feedback = (this.noise & 1) ^ (((this.noise & this.noiseTap) != 0) ? 1 : 0);
@@ -368,9 +367,7 @@ public class NpNesDmc {
 
         accum -= last * this.counter[1]; // remove these samples which belong in the next calc
         accumClocks -= this.counter[1];
-//#ifdef _DEBUG
-// if (start_clocks >= 0) assert(accumClocks == clocks); // these should be equal
-//#endif
+if (startClocks >= 0) { assert(accumClocks == clocks); } // these should be equal
 
         int average = accum / accumClocks;
         //assert(average <= 15); // above this would indicate overflow
@@ -378,8 +375,8 @@ public class NpNesDmc {
     }
 
     // Tick the DMC for the number of clocks, and return output counter;
-    private int calcDmc(int clocks) {
-        this.counter[2] -= clocks;
+    private int calcDmc(long clocks) {
+        this.counter[2] -= (int) clocks;
         //assert(dfreq > 0); // prevent infinite loop
         while (this.counter[2] < 0) {
             this.counter[2] += this.dFreq;
@@ -473,8 +470,8 @@ public class NpNesDmc {
         return (this.damp << 1) + this.dacLsb;
     }
 
-    public void tickFrameSequence(int clocks) {
-        this.frameSequenceCount += clocks;
+    public void tickFrameSequence(long clocks) {
+        this.frameSequenceCount += (int) clocks;
         while (this.frameSequenceCount > this.frameSequenceLength) {
             sequenceFrame(this.frameSequenceStep);
             this.frameSequenceCount -= this.frameSequenceLength;
@@ -484,7 +481,7 @@ public class NpNesDmc {
         }
     }
 
-    public void tick(int clocks) {
+    public void tick(long clocks) {
         this.out[0] = calcTri(clocks);
         this.out[1] = calcNoise(clocks);
         this.out[2] = calcDmc(clocks);
@@ -499,10 +496,9 @@ public class NpNesDmc {
     private final int[] m = new int[3];
 
     public int render(int[] b) {
-        int clocks;
 
         this.tickCount.iup(); // increase counter (overflows after 255)
-        clocks = (this.tickCount.value() - this.tickLast) & 0xff;
+        long clocks = (this.tickCount.value() - this.tickLast) & 0xff;
         tickFrameSequence(clocks);
         tick(clocks);
         this.tickLast = this.tickCount.value();

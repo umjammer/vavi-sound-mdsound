@@ -47,7 +47,7 @@ public class Pcm8 {
     private int mode;
     /** x/16 */
     private int volume;
-    /** 0～4:ADPCM  5:16bitPCM  6:8bitPCM  7:謎 */
+    /** 0-4: ADPCM 5: 16bit PCM 6: 8bit PCM 7: Mystery */
     private int pcmKind;
 
     public int dmaLastValue;

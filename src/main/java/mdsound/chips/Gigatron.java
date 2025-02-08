@@ -47,17 +47,17 @@ public class Gigatron {
     }
 
     public void Update(int[][] outputs, int samples) {
-        //合成処理
+        // Synthesis
         for (int p = 0; p < samples; p++) {
 
-            //scanlineCounterの更新
+            // Update scanlineCounter
             this.scanlineCounter += this.audioSampleRate / this.bClock;
 
-            // 4scanline毎に実施
+            // Executed every 4 scanlines
             while (this.scanlineCounter >= 4.0) {
                 this.samp = 3;
 
-                //channel update
+                // channel update
                 for (int n = 0; n < 4; n++) {
 
                     int c = n & this.channelMask;// ? from dev.asm.py
@@ -70,7 +70,7 @@ public class Gigatron {
                     this.samp += i;
                 }
 
-                //上位4bitのみ出力
+                // Only the upper 4 bits are output
                 this.samp &= 0xf0;
 
                 this.scanlineCounter -= 4.0;

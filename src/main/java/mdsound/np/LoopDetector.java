@@ -68,7 +68,7 @@ public interface LoopDetector extends Device {
         }
 
         @Override
-        public boolean write(int adr, int val, int id /*= 0*/) {
+        public boolean write(int adr, int val, int id /* = 0 */) {
             empty = false;
             timeBuf[bIdx] = currentTime;
             streamBuf[bIdx] = ((adr & 0xffff) << 8) | (val & 0xff);
@@ -83,9 +83,6 @@ public interface LoopDetector extends Device {
 
         @Override
         public boolean isLooped(int time_in_ms, int match_second, int match_interval) {
-            int i, j;
-            int match_size, match_length;
-
             if (time_in_ms - currentTime < match_interval)
                 return false;
 
@@ -99,15 +96,16 @@ public interface LoopDetector extends Device {
                 wSpeed = bIdx - bLast; // first time
             bLast = bIdx;
 
-            match_size = wSpeed * match_second / match_interval;
-            match_length = bufSize - match_size;
+            int match_size = wSpeed * match_second / match_interval;
+            int match_length = bufSize - match_size;
 
             if (match_length < 0)
                 return false;
 
             //logger.log(Level.TRACE, "match_length:%d".formatted(match_length));
             //logger.log(Level.TRACE, "match_size  :%d".formatted(match_size));
-            for (i = 0; i < match_length; i++) {
+            for (int i = 0; i < match_length; i++) {
+                int j;
                 for (j = 0; j < match_size; j++) {
                     if (streamBuf[(bIdx + j + match_length) & bufMask] !=
                             streamBuf[(bIdx + i + j) & bufMask]) {
@@ -193,7 +191,7 @@ public interface LoopDetector extends Device {
         protected int n106Addr;
         protected int loopStart, m_loop_end;
 
-        private static final int[] bufsize_table = new int[] {
+        private static final int[] bufsize_table = {
                 15, 15, 15, 15, 15, // SQR0, SQR1, TRI, NOIZ, DPCM
                 14, 14, 14, 14,// N106[0-3]
                 14, 14, 14, 14 // N106[4-7]

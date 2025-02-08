@@ -567,11 +567,11 @@ public class Op {
         inpLast = o;
 
         out1[0] = o;
-        out2[0] = o; // alg=5用
-        out3[0] = o; // alg=5用
+        out2[0] = o; // for alg=5
+        out3[0] = o; // for alg=5
         //*out = o2;
-        //*out2 = o2; // alg=5用
-        //*out3 = o2; // alg=5用
+        //*out2 = o2; // for alg=5
+        //*out3 = o2; // for alg=5
     }
 
     public void output(int lfoPitch, int lfoLevel) {

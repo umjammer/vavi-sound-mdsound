@@ -33,7 +33,7 @@ public class Lfo {
     //#define CYCLE2PMAM (30-8) // log2(LFOTIMECYCLE/SIZEPMAMTBL)
     //#define LFOHZ  0.0009313900811
     //int  LFOSTEPTBL[256];
-    //int  LFOSTEPTBL3[256]; // Wave form 3 用
+    //int  LFOSTEPTBL3[256]; // For Wave form 3
     //short PMSTBL[8]={ 0,1,2,4,8,16,64,128 };
     private static final int[] PMSMUL = new int[] {0, 1, 2, 4, 8, 16, 32, 32};
     private static final int[] PMSSHL = new int[] {0, 0, 0, 0, 0, 0, 1, 2};

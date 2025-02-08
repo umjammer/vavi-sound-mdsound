@@ -24,18 +24,18 @@ public class NesVrc6 implements SoundChip {
     public static final double DEFAULT_CLOCK = 1789772.0;
     public static final int DEFAULT_RATE = 44100;
 
-    // frequency divider
+    /** frequency divider */
     protected int[] counter = new int[3];
-    // phase counter
+    /** phase counter */
     protected int[] phase = new int[3];
-    // adjusted frequency
+    /** adjusted frequency */
     protected int[] freq2 = new int[3];
-    // saw 14-stage counter
+    /** saw 14-stage counter */
     protected int count14;
 
     protected int mask;
-    // stereo mix
-    protected int[][] sm = new int[][] {new int[3], new int[3]};
+    /** stereo mix */
+    protected int[][] sm = {new int[3], new int[3]};
     protected int[] duty = new int[2];
     protected int[] volume = new int[3];
     protected int[] enable = new int[3];
@@ -46,7 +46,6 @@ public class NesVrc6 implements SoundChip {
     public double clock, rate;
     protected int[] out = new int[3];
     protected BasicTrackInfo[] trkInfo = new BasicTrackInfo[3];
-
 
     public NesVrc6() {
         setClock(DEFAULT_CLOCK);
@@ -140,15 +139,15 @@ logger.log(Level.ERROR, e.getMessage(), e);
         phase[0] = 2;
     }
 
-    static final short[][] sqrTbl = new short[][] {
-            new short[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
-            new short[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1},
-            new short[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1},
-            new short[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
-            new short[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1},
-            new short[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
-            new short[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1},
-            new short[] {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1}
+    static final short[][] sqrTbl = {
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1},
+            {0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1},
+            {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1}
     };
 
     private short calcSqr(int i, int clocks) {
@@ -235,7 +234,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
     private static final int[] cmap = new int[] {0, 0, 1, 2};
 
     @Override
-    public boolean write(int adr, int val, int id/*=0*/) {
+    public boolean write(int adr, int val, int id /* = 0 */) {
         int ch;
 
         switch (adr) {
@@ -278,8 +277,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
         case 0x9003:
             halt = (val & 1) != 0;
             freqShift = (val & 4) != 0 ? 8 :
-                    (val & 2) != 0 ? 4 :
-                            0;
+                    (val & 2) != 0 ? 4 : 0;
             freq2[0] = (freq[0] >> freqShift);
             freq2[1] = (freq[1] >> freqShift);
             freq2[2] = (freq[2] >> freqShift);
