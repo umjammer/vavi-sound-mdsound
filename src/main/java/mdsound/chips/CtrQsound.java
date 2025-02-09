@@ -731,7 +731,7 @@ public class CtrQsound {
     private static void delayedUpdate(boolean isDry, int ch, Delay d) {
         short new_read_pos = (short) ((d.writePos - registerMap[(ch << 1) + (isDry ? 0xdf : 0xde)]) % 51);
         if (new_read_pos < 0)
-            new_read_pos += 51;
+            new_read_pos = (short) (new_read_pos + 51);
 
         d.readPos = new_read_pos;
     }
