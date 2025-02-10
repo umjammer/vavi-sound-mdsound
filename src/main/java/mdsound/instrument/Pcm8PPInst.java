@@ -77,4 +77,16 @@ public class Pcm8PPInst extends BaseInstrument {
     @Override
     public void resetMask(int chipId, int ch) {
     }
+
+    public void keyOn(int chipId, int c, int adrsPtr, int mode, int len, int d3Freq) {
+        chips[chipId].keyOn(c, adrsPtr, mode, len, d3Freq);
+    }
+
+    public void keyOff(int chipId, int c) {
+        chips[chipId].keyOff(c);
+    }
+
+    public void mountMemory(int chipId, byte[] mem) {
+        chips[chipId].mountMemory(mem);
+    }
 }

@@ -184,7 +184,7 @@ public class Pcm8PP {
                     // Processing of pcm8 (existing)
                     if (st.PcmKind == 5) {   // 16bitPCM
                         if (mem.length <= st.adrsPtr) valL = 0;
-                        else valL = (short) ((mem[st.adrsPtr] << 8) + mem[st.adrsPtr + 1]);
+                        else valL = ((mem[st.adrsPtr] & 0xff) << 8) + (mem[st.adrsPtr + 1] & 0xff);
                         //pcm16_2pcm(st, valL);
                         //st.OutPcm = ((st.InpPcm << 9) - (st.InpPcm_prev << 9) + 459 * st.OutPcm) >> 9;
                         //st.InpPcm_prev = st.InpPcm;
@@ -194,7 +194,7 @@ public class Pcm8PP {
                         valR = valL;
                     } else if (st.PcmKind == 6) {   // 8bitPCM
                         if (mem.length <= st.adrsPtr) valL = 0;
-                        else valL = (byte) mem[st.adrsPtr];
+                        else valL = mem[st.adrsPtr] & 0xff;
                         //pcm16_2pcm(st,valL);
                         //st.OutPcm = ((st.InpPcm << 9) - (st.InpPcm_prev << 9) + 459 * st.OutPcm) >> 9;
                         //st.InpPcm_prev = st.InpPcm;
@@ -209,7 +209,7 @@ public class Pcm8PP {
                             if (!st.N1DataFlag) {
                                 int N10Data;
                                 if (mem.length <= st.adrsPtr) N10Data = 0;
-                                else N10Data = mem[st.adrsPtr];
+                                else N10Data = mem[st.adrsPtr] & 0xff;
                                 adpcm2pcm(st, (byte) (N10Data & 0x0F));
                                 st.N1Data = (byte) ((N10Data >> 4) & 0x0F);
                             } else {
@@ -225,10 +225,10 @@ public class Pcm8PP {
 
                     // Audio data processing
                     if (mem.length <= st.adrsPtr) valL = 0;
-                    else valL = mem[st.adrsPtr];
+                    else valL = mem[st.adrsPtr] & 0xff;
                     if (st.type == 2) {
                         if (mem.length <= st.adrsPtr + 1) valL = 0;
-                        else valL = (short) (((byte) valL << 8) + mem[st.adrsPtr + 1]);
+                        else valL = ((byte) valL << 8) + (mem[st.adrsPtr + 1] & 0xff);
                     }
 
                     // Volume Reflection
@@ -240,13 +240,13 @@ public class Pcm8PP {
                     } else {
                         if (st.type != 2) {
                             if (mem.length <= st.adrsPtr + 1) valR = 0;
-                            else valR = mem[st.adrsPtr + 1];
+                            else valR = mem[st.adrsPtr + 1] & 0xff;
                             // Volume Reflection
                             valR = valR * st.volume;
                             valR <<= 5;
                         } else {
                             if (mem.length <= st.adrsPtr + 2) valR = 0;
-                            else valR = (short) ((mem[st.adrsPtr + 2] << 8) + mem[st.adrsPtr + 3]);
+                            else valR = ((mem[st.adrsPtr + 2] & 0xff) << 8) + (mem[st.adrsPtr + 3] & 0xff);
                             // Volume Reflection
                             valR = valR * st.volume;
                         }
@@ -265,8 +265,8 @@ public class Pcm8PP {
                 st.step += step;
                 while (st.step >= 1.0) {
                     if (st.type != 0) {
-                        st.adrsPtr += (int) st.type;
-                        if (st.outs != 1) st.adrsPtr += (int) st.type;
+                        st.adrsPtr += st.type;
+                        if (st.outs != 1) st.adrsPtr += st.type;
                     } else {
                         st.N1DataFlag = !st.N1DataFlag;
                         if (!st.N1DataFlag)
