@@ -210,7 +210,7 @@ logger.log(Level.WARNING, "no chips");
 
             resampler.setup(chip);
         }
-instruments.forEach((k, v) -> logger.log(Level.DEBUG, "instrument: " + k.getSimpleName().replace("Inst", "") + ": chips: " + v.stream().map(Instrument::getName).collect(Collectors.joining(", ", "[", "]"))));
+instruments.keySet().forEach(k -> logger.log(Level.DEBUG, "instrument: " + k.getSimpleName().replace("Inst", "") + ": chips: " + instruments.get(k).stream().map(Instrument::getName).collect(Collectors.joining(", ", "[", "]"))));
 
         dacControl = new DacControl(samplingRate, this);
 
