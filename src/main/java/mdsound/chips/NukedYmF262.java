@@ -34,6 +34,9 @@ package mdsound.chips;
 
 import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.ShortBuffer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
@@ -62,9 +65,9 @@ public class NukedYmF262 {
 
         Channel channel;
         Chip chip;
-        int out;
-        int fbMod;
-        int mod;
+        final ShortBuffer out = ShortBuffer.allocate(1);
+        final ShortBuffer fbMod = ShortBuffer.allocate(1);
+        ShortBuffer mod;
         int prOut;
         int eg_rout;
         int eg_out;
@@ -72,7 +75,7 @@ public class NukedYmF262 {
         EnvelopeGen eg_gen;
         int eg_rate;
         int eg_ksl;
-        int trem;
+        ByteBuffer trem;
         int reg_vib;
         int reg_type;
         int reg_ksr;
@@ -97,7 +100,7 @@ public class NukedYmF262 {
         Slot[] slots = new Slot[2];
         Channel pair;
         Chip chip;
-        int[] out = new int[4];
+        final ShortBuffer[] out = new ShortBuffer[4];
 
 //#if OPL_ENABLE_STEREOEXT
 //        int leftPan;
@@ -138,11 +141,12 @@ public class NukedYmF262 {
         int rhy;
         int vibPos;
         int vibShift;
-        int tremolo;
+        final ByteBuffer tremolo = ByteBuffer.allocate(1);
         int tremoloPos;
         int tremoloShift;
         int noise;
-        int zeroMod;
+        final ByteBuffer _zeroMod = ByteBuffer.allocate(2);
+        final ShortBuffer zeroMod = _zeroMod.asShortBuffer();
         int[] mixBuff = new int[4];
         int rm_hh_bit2;
         int rm_hh_bit3;
@@ -186,9 +190,9 @@ public class NukedYmF262 {
 //#endif
 
     /** input: [0, 256), output: [0, 65536] */
-    private static int OPL_SIN(int x) {
-        return (int) (Math.sin(x * Math.PI / 512.0) * 65536.0);
-    }
+//    private static int OPL_SIN(int x) {
+//        return (int) (Math.sin(x * Math.PI / 512.0) * 65536.0);
+//    }
 
     /* Quirk: Some FM channels are output one sample later on the left side than the right. */
     private static final boolean OPL_QUIRK_CHANNELSAMPLEDELAY = !OPL_ENABLE_STEREOEXT;
@@ -322,7 +326,7 @@ public class NukedYmF262 {
 //#endif
 
     /** Envelope generator */
-    private interface EnvelopeSinFunc extends BiFunction<Integer, Integer, Integer> {
+    private interface EnvelopeSinFunc extends BiFunction<Integer, Integer, Short> {
 
     }
 
@@ -330,14 +334,14 @@ public class NukedYmF262 {
 
     }
 
-    private static int OPL3_EnvelopeCalcExp(int level) {
+    private static short OPL3_EnvelopeCalcExp(int level) {
         if (level > 0x1fff) {
             level = 0x1fff;
         }
-        return (expRom[level & 0xff] << 1) >> (level >> 8);
+        return (short) ((expRom[level & 0xff] << 1) >> (level >> 8));
     }
 
-    private static int OPL3_EnvelopeCalcSin0(int phase, int envelope) {
+    private static short OPL3_EnvelopeCalcSin0(int phase, int envelope) {
         int out = 0;
         int neg = 0;
         phase &= 0x3ff;
@@ -349,10 +353,10 @@ public class NukedYmF262 {
         } else {
             out = logSinRom[phase & 0xff];
         }
-        return (short) (OPL3_EnvelopeCalcExp(out + (envelope << 3)) ^ neg) & 0xffff;
+        return (short) (OPL3_EnvelopeCalcExp(out + (envelope << 3)) ^ neg);
     }
 
-    private static int OPL3_EnvelopeCalcSin1(int phase, int envelope) {
+    private static short OPL3_EnvelopeCalcSin1(int phase, int envelope) {
         int out = 0;
         phase &= 0x3ff;
         if ((phase & 0x200) != 0) {
@@ -365,7 +369,7 @@ public class NukedYmF262 {
         return OPL3_EnvelopeCalcExp(out + (envelope << 3));
     }
 
-    private static int OPL3_EnvelopeCalcSin2(int phase, int envelope) {
+    private static short OPL3_EnvelopeCalcSin2(int phase, int envelope) {
         int out = 0;
         phase &= 0x3ff;
         if ((phase & 0x100) != 0) {
@@ -376,7 +380,7 @@ public class NukedYmF262 {
         return OPL3_EnvelopeCalcExp(out + (envelope << 3));
     }
 
-    private static int OPL3_EnvelopeCalcSin3(int phase, int envelope) {
+    private static short OPL3_EnvelopeCalcSin3(int phase, int envelope) {
         int out = 0;
         phase &= 0x3ff;
         if ((phase & 0x100) != 0) {
@@ -387,7 +391,7 @@ public class NukedYmF262 {
         return OPL3_EnvelopeCalcExp(out + (envelope << 3));
     }
 
-    private static int OPL3_EnvelopeCalcSin4(int phase, int envelope) {
+    private static short OPL3_EnvelopeCalcSin4(int phase, int envelope) {
         int out = 0;
         int neg = 0;
         phase &= 0x3ff;
@@ -401,10 +405,10 @@ public class NukedYmF262 {
         } else {
             out = logSinRom[(phase << 1) & 0xff];
         }
-        return (short) (OPL3_EnvelopeCalcExp(out + (envelope << 3)) ^ neg) & 0xffff;
+        return (short) (OPL3_EnvelopeCalcExp(out + (envelope << 3)) ^ neg);
     }
 
-    private static int OPL3_EnvelopeCalcSin5(int phase, int envelope) {
+    private static short OPL3_EnvelopeCalcSin5(int phase, int envelope) {
         int out = 0;
         phase &= 0x3ff;
         if ((phase & 0x200) != 0) {
@@ -417,16 +421,16 @@ public class NukedYmF262 {
         return OPL3_EnvelopeCalcExp(out + (envelope << 3));
     }
 
-    private static int OPL3_EnvelopeCalcSin6(int phase, int envelope) {
+    private static short OPL3_EnvelopeCalcSin6(int phase, int envelope) {
         int neg = 0;
         phase &= 0x3ff;
         if ((phase & 0x200) != 0) {
             neg = 0xffff;
         }
-        return (short) (OPL3_EnvelopeCalcExp(envelope << 3) ^ neg) & 0xffff;
+        return (short) (OPL3_EnvelopeCalcExp(envelope << 3) ^ neg);
     }
 
-    private static int OPL3_EnvelopeCalcSin7(int phase, int envelope) {
+    private static short OPL3_EnvelopeCalcSin7(int phase, int envelope) {
         int out = 0;
         int neg = 0;
         phase &= 0x3ff;
@@ -435,7 +439,7 @@ public class NukedYmF262 {
             phase = (phase & 0x1ff) ^ 0x1ff;
         }
         out = phase << 3;
-        return (short) (OPL3_EnvelopeCalcExp(out + (envelope << 3)) ^ neg) & 0xffff;
+        return (short) (OPL3_EnvelopeCalcExp(out + (envelope << 3)) ^ neg);
     }
 
     private static final EnvelopeSinFunc[] envelope_sin = {
@@ -462,7 +466,7 @@ public class NukedYmF262 {
         if (ksl < 0) {
             ksl = 0;
         }
-        slot.eg_ksl = ksl;
+        slot.eg_ksl = ksl & 0xff;
     }
 
     private static void OPL3_EnvelopeCalc(Slot slot) {
@@ -478,7 +482,7 @@ public class NukedYmF262 {
         int eg_off;
         int reset = 0;
         slot.eg_out = (short) (slot.eg_rout + (slot.reg_tl << 2)
-                + (slot.eg_ksl >> kslShift[slot.reg_ksl]) + slot.trem);
+                + (slot.eg_ksl >> kslShift[slot.reg_ksl]) + (slot.trem.get(0) & 0xff));
         if (slot.key != 0 && slot.eg_gen == EnvelopeGen.Release) {
             reset = 1;
             reg_rate = slot.reg_ar;
@@ -582,8 +586,6 @@ public class NukedYmF262 {
         if (slot.key == 0) {
             slot.eg_gen = EnvelopeGen.Release;
         }
-//if (CC++ < 300) { System.err.printf("%s, %d\n", slot.eg_gen, slot.eg_rout); }
-//else { System.exit(1); }
     }
 
     private static void OPL3_EnvelopeKeyOn(Slot slot, int type) {
@@ -604,7 +606,7 @@ public class NukedYmF262 {
         int baseFreq;
         int rm_xor, n_bit;
         int noise;
-        int phase;
+        short phase;
 
         chip = slot.chip;
         f_num = slot.channel.f_num;
@@ -628,7 +630,7 @@ public class NukedYmF262 {
             f_num += range;
         }
         baseFreq = (f_num << slot.channel.block) >> 1;
-        phase = slot.pg_phase >> 9;
+        phase = (short) (slot.pg_phase >> 9);
         if (slot.pg_reset != 0) {
             slot.pg_phase = 0;
         }
@@ -682,7 +684,7 @@ public class NukedYmF262 {
         if (((data >> 7) & 0x01) != 0) {
             slot.trem = slot.chip.tremolo;
         } else {
-            slot.trem = slot.chip.zeroMod;
+            slot.trem = slot.chip._zeroMod;
         }
         slot.reg_vib = (data >> 6) & 0x01;
         slot.reg_type = (data >> 5) & 0x01;
@@ -717,16 +719,16 @@ public class NukedYmF262 {
     }
 
     private static void OPL3_SlotGenerate(Slot slot) {
-        slot.out = envelope_sin[slot.reg_wf].apply(slot.pg_phase_out + slot.mod, slot.eg_out);
+        slot.out.put(0, envelope_sin[slot.reg_wf].apply(slot.pg_phase_out + slot.mod.get(0), slot.eg_out));
     }
 
     private static void OPL3_SlotCalcFB(Slot slot) {
         if (slot.channel.fb != 0x00) {
-            slot.fbMod = (slot.prOut + slot.out) >>> (0x09 - slot.channel.fb);
+            slot.fbMod.put(0, (short) ((slot.prOut + slot.out.get(0)) >> (0x09 - slot.channel.fb)));
         } else {
-            slot.fbMod = 0;
+            slot.fbMod.put(0, (short) 0);
         }
-        slot.prOut = slot.out;
+        slot.prOut = slot.out.get(0);
     }
 
     //
@@ -957,10 +959,10 @@ public class NukedYmF262 {
         channel.con = data & 0x01;
         OPL3_ChannelUpdateAlg(channel);
         if (channel.chip.newM != 0) {
-            channel.cha = ((data >> 4) & 0x01) != 0 ? 0xffff : 0;
-            channel.chb = ((data >> 5) & 0x01) != 0 ? 0xffff : 0;
-            channel.chc = ((data >> 6) & 0x01) != 0 ? 0xffff : 0;
-            channel.chd = ((data >> 7) & 0x01) != 0 ? 0xffff : 0;
+            channel.cha = ((data >> 4) & 0x01) != 0 ? ~0 : 0;
+            channel.chb = ((data >> 5) & 0x01) != 0 ? ~0 : 0;
+            channel.chc = ((data >> 6) & 0x01) != 0 ? ~0 : 0;
+            channel.chd = ((data >> 7) & 0x01) != 0 ? ~0 : 0;
         } else {
             channel.cha = channel.chb = 0xffff;
             // TODO: Verify on real chip if DAC2 output is disabled in compat mode
@@ -1074,21 +1076,21 @@ assert chip.slot[ii].channel != null : "slot: " + ii + ", slot: @" + chip.slot.h
         mix[0] = mix[1] = 0;
         for (int ii = 0; ii < 18; ii++) {
             Channel channel = chip.channel[ii];
-            int[] out = channel.out;
-            short accm = (short) (out[0] + out[1] + out[2] + out[3]);
+            ShortBuffer[] out = channel.out;
+            short accm = (short) (out[0].get(0) + out[1].get(0) + out[2].get(0) + out[3].get(0));
 //#if OPL_ENABLE_STEREOEXT
 //            mix[0] += (short) ((accm * channel.leftPan) >> 16);
 //#else
-            mix[0] += (short) (accm * channel.cha);
+            mix[0] += (short) (accm & channel.cha);
 //#endif
-            mix[1] += (short) (accm * channel.chc);
+            mix[1] += (short) (accm & channel.chc);
         }
         chip.mixBuff[0] = mix[0];
         chip.mixBuff[2] = mix[1];
 
 //#if OPL_QUIRK_CHANNELSAMPLEDELAY
         for (int ii = 15; ii < 18; ii++) {
-            OPL3_ProcessSlot( chip.slot[ii]);
+            OPL3_ProcessSlot(chip.slot[ii]);
         }
 //#endif
 
@@ -1097,21 +1099,21 @@ assert chip.slot[ii].channel != null : "slot: " + ii + ", slot: @" + chip.slot.h
 
 //#if OPL_QUIRK_CHANNELSAMPLEDELAY
         for (int ii = 18; ii < 33; ii++) {
-            OPL3_ProcessSlot( chip.slot[ii]);
+            OPL3_ProcessSlot(chip.slot[ii]);
         }
 //#endif
 
         mix[0] = mix[1] = 0;
         for (int ii = 0; ii < 18; ii++) {
             Channel channel = chip.channel[ii];
-            int[] out = channel.out;
-            short accm = (short) (out[0] + out[1] + out[2] + out[3]);
+            ShortBuffer[] out = channel.out;
+            short accm = (short) (out[0].get(0) + out[1].get(0) + out[2].get(0) + out[3].get(0));
 //#if OPL_ENABLE_STEREOEXT
 //            mix[0] += (short) ((accm * channel.rightPan) >> 16);
 //#else
-            mix[0] += (short) (accm * channel.chb);
+            mix[0] += (short) (accm & channel.chb);
 //#endif
-            mix[1] += (short) (accm * channel.chd);
+            mix[1] += (short) (accm & channel.chd);
         }
         chip.mixBuff[1] = mix[0];
         chip.mixBuff[3] = mix[1];
@@ -1126,9 +1128,9 @@ assert chip.slot[ii].channel != null : "slot: " + ii + ", slot: @" + chip.slot.h
             chip.tremoloPos = (chip.tremoloPos + 1) % 210;
         }
         if (chip.tremoloPos < 105) {
-            chip.tremolo = chip.tremoloPos >> chip.tremoloShift;
+            chip.tremolo.put(0, (byte) (chip.tremoloPos >> chip.tremoloShift));
         } else {
-            chip.tremolo = (210 - chip.tremoloPos) >> chip.tremoloShift;
+            chip.tremolo.put(0, (byte) ((210 - chip.tremoloPos) >> chip.tremoloShift));
         }
 
         if ((chip.timer & 0x3ff) == 0x3ff) {
@@ -1214,7 +1216,7 @@ assert chip.slot[ii].channel != null : "slot: " + ii + ", slot: @" + chip.slot.h
             slot.eg_rout = 0x1ff;
             slot.eg_out = 0x1ff;
             slot.eg_gen = EnvelopeGen.Release;
-            slot.trem = chip.zeroMod; // TODO
+            slot.trem = chip._zeroMod;
             slot.slot_num = slotnum;
         }
         for (int channum = 0; channum < 18; channum++) {
