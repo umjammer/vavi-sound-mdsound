@@ -34,10 +34,10 @@ this is a fork of [MDsound](https://github.com/kuma4649/MDSound)
 | YM3812 (dosbox)       | OPL2        | FM    |   ✅    | dosbox                   | Out_Zone_(Toaplan_1)/05 Soldier a GoGo (Chapter 4).vgz                                                                       |
 | YM3812 (mame)         | OPL2        | FM    |   ✅    | oldmame:burczynski       | ditto                                                                                                                        |
 | Y8950                 | OPL2+ADPCM  | FM    |   ✅    | oldmame:burczynski       | Impact_MuSiX_Disk_#2_(MSX2)/04 Moment for Morricone.vgz                                                                      |
-| YMF262 (dosbox)       | OPL3        | FM    |  ✅ 🚧  | dosbox                   | Touhou_Koumakyou_~_the_Embodiment_of_Scarlet_Devil._(IBM_PC_AT)/05 Tomboyish Girl in Love (Stage 2 Boss - Cirno's Theme).vgz |
+| YMF262 (dosbox)       | OPL3        | FM    |   ✅    | dosbox                   | Touhou_Koumakyou_~_the_Embodiment_of_Scarlet_Devil._(IBM_PC_AT)/05 Tomboyish Girl in Love (Stage 2 Boss - Cirno's Theme).vgz |
 | YMF262 (mame)         | OPL3        | FM    |   ✅    | mame                     | ditto                                                                                                                        |
-| YMF262 (nuked)        | OPL3        | FM    |   🚧   | nukeykt                  | ditto                                                                                                                        |
-| YMF262 (cozendey)     | OPL3        | FM    |  ✅ 🚧  | cozendey                 | ditto                                                                                                                        |
+| YMF262 (nuked)        | OPL3        | FM    |   ✅    | nukeykt                  | ditto                                                                                                                        |
+| YMF262 (cozendey)     | OPL3        | FM    |   ✅    | cozendey                 | ditto                                                                                                                        |
 | YMF262 (ymfm)         | OPL3        | FM    |   ✅    | ymfm                     | ditto                                                                                                                        |
 | YMF278B               | OPL4        | FM    |   ✅    | galibert                 | MoonDriver_Demo_(MSX2+)/05 encounter the unknown environment.vgz                                                             |
 | YMF271                | OPX         | FM    |   ✅    |                          | Desert_War_(Jaleco_Mega_System_32)/08 Destruction Mission.vgz                                                                |
@@ -59,35 +59,35 @@ this is a fork of [MDsound](https://github.com/kuma4649/MDSound)
 | PWM                   | PWM         | PCM   |   ✅    |                          | Virtua_Fighter_(Sega_32X)/04 Theme of Jacky.vgz                                                                              |
 | MultiPcm              |             | PCM   |   ✅    |                          | Daytona_USA_(Sega_Model_2)/03 The King of Speed.vgz                                                                          |
 | WSwan                 |             | PCM   |   ✅    |                          | Final_Fantasy_(Bandai_WonderSwan_Color)/02 Prelude.vgz                                                                       |
-| NES_DMC               |             | PCM   |        |                          |                                                                                                                              |
-| PPZ8                  | PPZ8        | PCM   |        |                          |                                                                                                                              |
-| PPS                   | PPS         | PCM   |        |                          |                                                                                                                              |
-| PC-9801-86            | P86         | PCM   |        |                          |                                                                                                                              |
+| X1_010                |             | PCM   |   ✅    |                          | Cal.50_Caliber_Fifty_(Seta_1)/02 Area 1.vgz                                                                                  |
+| NES_DMC               |             | PCM   |        | nes                      |                                                                                                                              |
+| PPZ8                  | PPZ8        | PCM   |        | pmd                      |                                                                                                                              |
+| PPS                   | PPS         | PCM   |        | pmd                      |                                                                                                                              |
+| PC-9801-86            | P86         | PCM   |        | pmd                      |                                                                                                                              |
 | HuC6280 (has FM-like) | HuC6        | WTS   |   ✅    |                          | Street_Fighter_II'_-_Champion_Edition_(TG-16)/04 Ryu.vgz                                                                     |
 | K051649               | K051        | WTS   |   ✅    |                          | opllssg_demo_vgm/GIMICNRT.vgm                                                                                                |
-| NES_FDS (has FM-like) |             | WTS   |        |                          |                                                                                                                              |
+| NES_FDS (has FM-like) |             | WTS   |        | nes                      |                                                                                                                              |
 | SN76489               | DSCG        | PSG   |   ✅    | nicola                   | Thexder_(IBM_PCjr,_Tandy_1000)/02 Thexder Theme \[IBM PCjr].vgz                                                              |
 | SN76496               |             | PSG   |   ✅    | nicola                   | ditto                                                                                                                        |
-| AY8910                |             | PSG   |   ✅    | libvgm                   | opllssg_demo_vgm/CS3.vgm                                                                                                     |
+| AY8910                |             | PSG   |   ✅    | fmgen                    | opllssg_demo_vgm/CS3.vgm                                                                                                     |
 | AY8910 (mame)         |             | PSG   |   ✅    | mame                     | NRTDRV_Demo_Songs_(NEC_PC-8801)/14 Perfume - Electro World.vgz                                                               |
 | Ga20                  |             | PSG?  |   ✅    | mame                     | R-Type_Leo_(Irem_M92)/02 Paradise Planet (Area 1).vgz                                                                        |
 | Pokey                 |             | PSG?  |   ✅    | mame                     | Xevious_(Atari_5200)/01 Start ~ Main BGM.vgz                                                                                 |
-| Saa1099               |             | PSG?  |   ✅    |                          | Creative_Music_System_Demo_Songs_(IBM_PC_XT_AT)/02 Top of the World (The Carpenters, A Song for You).vgz                     |
-| NES_APU               |             | PSG   |   🚧   |                          |                                                                                                                              |
-| YM2609                | OPNA2       | Other |        |                          |                                                                                                                              |
+| Saa1099               |             | PSG?  |   ✅    | mame                     | Creative_Music_System_Demo_Songs_(IBM_PC_XT_AT)/02 Top of the World (The Carpenters, A Song for You).vgz                     |
+| NES_APU               |             | PSG   |   🚧   | nes                      |                                                                                                                              |
+| YM2609                | OPNA2       | Other |        | fmvgen                   |                                                                                                                              |
 | AY8910-2              | PSG2        | Other |        | fmvgen                   |                                                                                                                              |
-| Dmg                   |             |       |   ✅    |                          | Beatmania_GB2_Gatcha_Mix_(Game_Boy,_Color)/11 Friends.vgz                                                                    |
-| Vrc6                  |             |       |        |                          |                                                                                                                              |
-| X1_010                |             |       |        |                          |                                                                                                                              |
+| Dmg                   |             |       |   ✅    | dmg                      | Beatmania_GB2_Gatcha_Mix_(Game_Boy,_Color)/11 Friends.vgz                                                                    |
+| Vrc6                  |             |       |        | nes                      |                                                                                                                              |
 | YM2149                |             | PSG   |   🥚   | np:okaxaki               |                                                                                                                              |
 | YM2143                | OPLL        | FM    |   🥚   | np:okaxaki               |                                                                                                                              |
-| Gigatron              |             |       |        |                          |                                                                                                                              |
-| MPCMPP                |             | PCM   |        |                          |                                                                                                                              |
-| PCM8PP                |             | PCM   |        |                          |                                                                                                                              |
+| Gigatron              |             |       |        | zgm                      |                                                                                                                              |
+| MPCMPP                |             | PCM   |        | mnd                      |                                                                                                                              |
+| PCM8PP                |             | PCM   |   ✅?   | mxdrv                    |                                                                                                                              |
 | MSM5232               |             |       |   🥚   |                          |                                                                                                                              |
 | ES5503                |             |       |   ✅    |                          | Space_Fox_(Apple_IIgs)/01 Title.vgz                                                                                          |
 | ES5505                |             |       |   🥚   |                          |                                                                                                                              |
-| μPD7759               |             | ADPCM |   🥚   |                          |                                                                                                                              |
+| μPD7759               |             | PCM   |   🥚   |                          |                                                                                                                              |
 
 <sub>* WTS ... [wavetable synthesis](https://ja.wikipedia.org/wiki/%E6%B3%A2%E5%BD%A2%E3%83%A1%E3%83%A2%E3%83%AA%E9%9F%B3%E6%BA%90)</sub><br/>
 
@@ -116,9 +116,9 @@ this is a fork of [MDsound](https://github.com/kuma4649/MDSound)
  * test all
  * javax.sound.sampled.spi, javax.sound.midi.spi
  * debug
-   * ymf262 (dosbox) no ssg? or so small
-   * ymf262 (nuked) no sound
-   * ymf262 (cozendey) some notes lacked? sampling related?
+   * ~~ymf262 (dosbox) no ssg? or so small~~
+   * ~~ymf262 (nuked) no sound -> small click sound, and lack of channels???~~
+   * ~~ymf262 (cozendey) some notes lacked? sampling related?~~
    * ~~y8950 rhythm only?~~
    * ~~YM2151 (x68sound) noise (05 Japan (Ryu) I.vgz)~~
    * ~~YmF271 mostly~~
