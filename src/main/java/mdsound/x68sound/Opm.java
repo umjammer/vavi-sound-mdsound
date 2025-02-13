@@ -1529,7 +1529,7 @@ public class Opm {
                     }
                     op[7][3].output32(lfoPitch[7], lfoLevel[7]);
 
-                    // InpInpOpm[] に OPM の出力PCMをステレオ加算
+                    // Add the OPM output PCM to InpInpOpm[] in stereo
                     if ((opmChMask & 0xff) != 0) {
                         inpInpOpm[0] = ((opmChMask & 0x01) != 0 ? 0 : (opOut[0][0] & pan[0][0]))
                                 + ((opmChMask & 0x02) != 0 ? 0 : (opOut[1][0] & pan[0][1]))
@@ -1574,7 +1574,7 @@ public class Opm {
                     inpOpm[0] = inpInpOpm[0];
                     inpOpm[1] = inpInpOpm[1];
 
-                    // 全体の音量を調整
+                    // Adjust the overall volume
                     outOpm[0] = (inpOpm[0] * global.totalVolume) >> 8;
                     outOpm[1] = (inpOpm[1] * global.totalVolume) >> 8;
 

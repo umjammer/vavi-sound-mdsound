@@ -91,7 +91,7 @@ public class NesBank implements Device {
             return true;
         }
 
-        if (0 <= bankSwitch[adr >> 12] && 0x8000 <= adr && adr < 0x10000) {
+        if (0 <= bankSwitch[adr >> 12] && 0x8000 <= adr && adr < 0x1_0000) {
             val[0] = image[bank[bankSwitch[adr >> 12]] + (adr & 0xfff)] & 0xff;
             return true;
         }

@@ -58,6 +58,10 @@ public interface NScci extends Library {
         public NSCCI_INTERFACE_INFO getInterfaceInfo(int i) {
             return null;
         }
+
+        public boolean isBufferEmpty() {
+            return false;
+        }
     }
 
     class NSCCI_SOUND_CHIP_INFO extends Structure {
@@ -88,6 +92,10 @@ public interface NScci extends Library {
 
         public boolean isBufferEmpty() {
             return false;
+        }
+
+        public void init() {
+
         }
     }
 

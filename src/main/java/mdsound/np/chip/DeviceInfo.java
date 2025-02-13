@@ -93,7 +93,7 @@ public class DeviceInfo {
             }
         }
 
-        public void Clear() {
+        public void clear() {
             for (int i = 0; i < bufMax; i++) {
                 buffer[i].first = 0;
                 buffer[i].second = null;

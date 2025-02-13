@@ -241,7 +241,7 @@ public class PSG2 extends mdsound.fmgen.PSG {
                                 int[] l = new int[] {sample};
                                 int[] r = new int[] {sample};
 
-                                //ノイズ
+                                // noise
                                 nv = ((sCount[k] >> (toneShift + overSampling)) & 0 | (nEnable[k] & noise)) - 1;
                                 sample = (oLevel[k] + nv) ^ nv;
                                 l[0] += sample;
@@ -309,7 +309,7 @@ public class PSG2 extends mdsound.fmgen.PSG {
                             int[] l = new int[] {sample};
                             int[] r = new int[] {sample};
 
-                            //ノイズ
+                            // noise
                             nv = ((sCount[k] >> (toneShift + overSampling)) & 0 | (nEnable[k] & noise)) - 1;
                             sample = (lv + nv) ^ nv;
                             l[0] += sample;

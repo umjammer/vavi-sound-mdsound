@@ -20,51 +20,51 @@ public class SoundManager {
     public static final int DATA_SEQUENCE_FREQUENCE = 44100;
 
     /**
-     * ミュージックデータ解析
-     * 処理周期 : 無し
-     * データ受取時 : dataSenderへ即送信
-     * dataSenderが受け取ることができない状態の場合は、待ち合わせする
+     * Music Data Analysis
+     * Processing cycle: None
+     * When receiving data: Immediately send to dataSender
+     * If the dataSender is not able to receive the data, wait for a while.
      */
     private DataMaker dataMaker;
 
     /**
-     * データ送信
-     * 処理周期 : 44100Hz(Default)
-     * SeqCounter値に合わせて各ChipSenderへデータを振り分けながら送信。
-     * ChipSenderが受け取ることができない状態の場合は、待ち合わせする
+     * Data transmission
+     * Processing cycle: 44100Hz (Default)
+     * Data is distributed and sent to each ChipSender according to the SeqCounter value.
+     * If ChipSender is not available to receive, wait for a while.
      */
     private DataSender dataSender;
 
     /**
-     * エミュチップ専門データ送信
-     * 処理周期 : 無し
-     * データが来たら、エミュレーションむけリングバッファにEnqueue
-     * Enqueueできない場合は、待ち合わせする
+     * EmuChip specialized data transmission
+     * Processing cycle: None
+     * When data arrives, Enqueue it into the ring buffer for emulation.
+     * If you can't enqueue, wait
      */
     private EmuChipSender emuChipSender;
 
     /**
-     * 実チップ専門データ送信
-     * 処理周期 : 無し
-     * データが来たら、実チップ向けコールバックを実施
-     * 待ち合わせ無し
+     * Real chip specialized data transmission
+     * Processing cycle: None
+     * When data arrives, a callback is made to the actual chip.
+     * No appointment
      */
     private RealChipSender realChipSender;
 
     /**
-     * 割り込み処理カウンタ
-     * 割り込みが発生している(1以上の)間、DataSenderは各チップへデータを送信しない
+     * Interrupt Processing Counter
+     * While an interrupt is occurring (1 or more), the DataSender does not send data to each chip.
      */
     private int interruptCounter = 0;
 
     private final Object lockObj = new Object();
 
     /**
-     * セットアップ
-     * @param driverAction ミュージックドライバーの1フレームあたりの処理を指定してください
-     * @param realChipAction 実チップ向けデータ送信処理を指定してください
-     * @param startData dataSenderが初期化を行うときに出力するデータを指定してください
-     * @param stopData dataSenderが演奏停止を行うときに出力するデータを指定してください
+     * set up
+     * @param driverAction Please specify the processing per frame of the music driver
+     * @param realChipAction Please specify the data transmission process for the actual chip.
+     * @param startData Specify the data to be output when dataSender is initialized.
+     * @param stopData Specify the data to be output when the dataSender stops playing.
      */
     public void setup(DriverAction driverAction, Snd realChipAction, Pack[] startData, Pack[] stopData) {
         dataMaker = new DataMaker(driverAction);
@@ -148,21 +148,21 @@ public class SoundManager {
     }
 
     /**
-     * DriverのデータをEnqueueするメソッドを取得する
+     * Gets the method to enqueue the driver data.
      */
     public Enq getDriverDataEnqueue() {
         return dataSender::enq;
     }
 
     /**
-     * EmuのデータをDequeueするメソッドを取得する
+     * Get the method to dequeue Emu data
      */
     public Deq getEmuDataDequeue() {
         return emuChipSender::deq;
     }
 
     /**
-     * RealのデータをDequeueするメソッドを取得する
+     * Get a method to dequeue Real data
      */
     public Deq getRealDataDequeue() {
         return realChipSender::deq;

@@ -16,7 +16,7 @@ import mdsound.np.chip.DeviceInfo.BasicTrackInfo;
 public class NesVrc7 implements SoundChip {
     protected int mask;
     protected int patchSet;
-    protected int[][] sm = new int[][] {new int[6], new int[6]}; // stereo mix
+    protected int[][] sm = {new int[6], new int[6]}; // stereo mix
     protected short[] buf = new short[2];
     protected Emu2413.Opll opll;
     protected Emu2413 emu2413 = new Emu2413();
@@ -29,7 +29,7 @@ public class NesVrc7 implements SoundChip {
 
         opll = new Emu2413.Opll(3579545, Common.SampleRate);
         opll.resetPatch(patchSet);
-        setClock(Common.NsfClock);// DEFAULT_CLOCK);
+        setClock(Common.NsfClock); // DEFAULT_CLOCK);
 
         for (int c = 0; c < 2; ++c)
             for (int t = 0; t < 6; ++t)

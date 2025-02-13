@@ -56,7 +56,7 @@ public class CozYmF262Inst extends Instrument.BaseInstrument {
     @Override
     public int write(int chipId, int port, int adr, int data) {
         int adr_ = port * 0x100 + adr;
-        writeInternal(chipId, (adr_ & 0x100) != 0 ? 0x02 : 0x00, adr_ & 0xff);
+        writeInternal(chipId, (adr_ & 0x100) != 0 ? 0x02 : 0x00, adr);
         writeInternal(chipId, (adr_ & 0x100) != 0 ? 0x03 : 0x01, data);
         return 0;
     }
@@ -66,7 +66,7 @@ public class CozYmF262Inst extends Instrument.BaseInstrument {
     private void writeInternal(int chipId, int adr, int data) {
         switch (adr) {
             case 0, 2 -> { this.address = data; }
-            case 1, 3 -> { chips[chipId].write((adr & 2) << 7, address, data); }
+            case 1, 3 -> { chips[chipId].write((adr & 2) >> 1, address, data); }
         }
     }
 

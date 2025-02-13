@@ -170,12 +170,12 @@ public class Km6502 implements Device {
         (byte) 0x81, (byte) 0x81,
     };
 
-    public byte FLAG_NZ(int w) {
+    public int FLAG_NZ(int w) {
         return fl_table[w & 0xff];
     }
 
     public int FLAG_NZC(int w) {
-        return fl_table[w & 0x01ff] & 0xff;
+        return fl_table[w & 0x01ff];
     }
 
     public void KI_ADDCLOCK(int cycle) {
@@ -403,7 +403,7 @@ public class Km6502 implements Device {
     public int KM_ASL(int des) {
         int w = des << 1;
         this.p &= ~(N_FLAG | Z_FLAG | C_FLAG);
-        this.p += FLAG_NZ(w) + ((des >> 7)/* & C_FLAG */);
+        this.p += FLAG_NZ(w) + ((des >> 7) /* & C_FLAG */);
         this.p &= 0xff;
         return w & 0xff;
     }
@@ -1139,7 +1139,7 @@ public class Km6502 implements Device {
         this.p |= I_FLAG;
     }
 
-    /// * --- SET --- */
+    // SET ---
 
     // STA
     public void opCode81() {
@@ -1196,11 +1196,11 @@ public class Km6502 implements Device {
         K_WRITE(KA_ZPX(), this.y);
     }
 
-    /// * --- STZ --- */
-    /// * --- TAMi --- */
-    /// * --- TRB --- */
-    /// * --- TSB --- */
-    /// * --- TST --- */
+    // STZ ---
+    // TAMi ---
+    // TRB ---
+    // TSB ---
+    // TST ---
 
     // TAX
     public void opCodeAA() { // AA - TAX

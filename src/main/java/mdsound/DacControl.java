@@ -543,7 +543,7 @@ public class DacControl {
     }
 
     private void sendCommand(Control chip) {
-        //注意!! chipはlock中です
+        // Caution!! The chip is locked.
 
         int port;
         int command;

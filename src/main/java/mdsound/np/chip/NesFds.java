@@ -71,7 +71,7 @@ public class NesFds implements SoundChip {
     }
 
     @Override
-    public boolean write(int adr, int val, int id/* = 0*/) {
+    public boolean write(int adr, int val, int id /* = 0 */) {
         return fds.write(adr, val);
     }
 

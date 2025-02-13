@@ -157,7 +157,7 @@ public class MPcm {
 
         private void setPan(int pan) {
             if (pan < 0x80) {
-                // 3段階
+                // 3 steps
                 switch (pan) {
                     case 1:
                         this.lr[0] = 1;
@@ -179,7 +179,7 @@ public class MPcm {
                         break;
                 }
             } else {
-                // 128段階
+                // 128 steps
             }
         }
     }

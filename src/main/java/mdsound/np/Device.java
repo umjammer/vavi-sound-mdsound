@@ -219,23 +219,23 @@ class Counter {
     private static final int COUNTER_SHIFT = 24;
 
     public double ratio;
-    public int val, step;
+    public long val, step;
 
     void setCycle(int s) {
-        this.step = (int) (this.ratio / (s + 1));
+        this.step = (long) (this.ratio / (s + 1));
     }
 
     void iup() {
         this.val += this.step;
     }
 
-    int value() {
+    long value() {
         return this.val >> COUNTER_SHIFT;
     }
 
     void init(double clk, double rate) {
         this.ratio = (1 << COUNTER_SHIFT) * (1.0 * clk / rate);
-        this.step = (int) (this.ratio + 0.5);
+        this.step = (long) (this.ratio + 0.5);
         this.val = 0;
     }
 }

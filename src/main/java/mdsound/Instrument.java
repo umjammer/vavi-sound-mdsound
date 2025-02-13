@@ -118,13 +118,10 @@ public interface Instrument {
     interface PcmEnabledInstrument extends Instrument, PcmEnabled {
     }
 
-    /** for reuse instances */
-    ServiceLoader<Instrument> serviceLoader = ServiceLoader.load(Instrument.class);
-
-    /** @return reused instance */
+    /** @return new instance */
     @SuppressWarnings("unchecked")
     static <T extends Instrument> T getInstrument(Class<T> c) {
-        for (Instrument i : serviceLoader) {
+        for (Instrument i : ServiceLoader.load(Instrument.class)) {
             if (i.getClass() == c) {
                 return (T) i;
             }

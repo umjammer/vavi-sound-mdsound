@@ -441,7 +441,7 @@ public class OotakeHuC6280 {
                     if ((c == 0) && (lfoControl > 0)) {
                         // When _LfoCtrl is 1 and shifts 0 times (as is), "Honey in the Sky" sounds closer to the actual instrument.
                         // When _LfoCtrl is 3 and there are 4 shifts, the "Flash Hiders" sound is closer to the real thing.
-                        int lfo = psgs[1].wave[psgs[1].phase >> 27] << ((lfoControl - 1) << 1); // Updated in v1.60
+                        int lfo = psgs[1].wave[psgs[1].phase >>> 27] << ((lfoControl - 1) << 1); // Updated in v1.60
                         psgs[0].phase += (int) ((65536.0 * 256.0 * 8.0 * resampleRate) / (double) (psgs[0].frq + lfo) + 0.5);
                         psgs[1].phase += (int) ((65536.0 * 256.0 * 8.0 * resampleRate) / (double) (psgs[1].frq * lfoFreq) + 0.5); // Updated in v1.60
                     } else

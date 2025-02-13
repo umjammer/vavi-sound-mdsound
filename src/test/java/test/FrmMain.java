@@ -365,7 +365,7 @@ public class FrmMain extends JFrame {
         JFileChooser ofd = new JFileChooser();
         ofd.addChoosableFileFilter(new FileFilter() {
             @Override public boolean accept(java.io.File f) { return f.getName().toLowerCase().endsWith(".vgm"); }
-            @Override public String getDescription() { return "VGMファイル(*.vgm)"; }
+            @Override public String getDescription() { return "VGM files(*.vgm)"; }
         });
         ofd.setDialogTitle("Select a file");
         String dir = prefs.get(KEY_FILECHOOSER_DIRECTORY, null);
@@ -385,7 +385,7 @@ public class FrmMain extends JFrame {
             app.prePlay(tbFile.getText());
         } catch (Exception e) {
             logger.log(Level.ERROR, e.getMessage(), e);
-            JOptionPane.showMessageDialog(null, "ファイルの読み込みに失敗しました。");
+            JOptionPane.showMessageDialog(null, "Failed to read file.");
         }
 
         btnPlay.setEnabled(true);

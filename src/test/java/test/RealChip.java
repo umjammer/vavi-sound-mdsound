@@ -280,7 +280,7 @@ public class RealChip {
             realChip = nsc;
             dClock = (int) nsc.getSoundChipClock();
 
-            // chipの種類ごとに初期化コマンドを送りたい場合
+            // If you want to send initialization commands for each chip type
             switch (RealChipType.values()[nsc.getSoundChipType()]) {
             case YM2608:
                 // setRegister(0x2d, 00);

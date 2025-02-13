@@ -48,7 +48,7 @@ public class RingBuffer {
                 if (!autoExtend) {
                     return false;
                 }
-                // 自動拡張
+                // Auto-growth
                 try {
                     Pack.PPack p = new Pack.PPack();
                     buf.add(p);
@@ -63,7 +63,7 @@ public class RingBuffer {
 
             bLength++;
 
-            // データをセット
+            // Set data
             enqPos.counter = counter;
             enqPos.pack.copy(dev, typ, adr, val, ex);
 
@@ -76,7 +76,7 @@ public class RingBuffer {
             }
 
             Pack.PPack lastPos = enqPos.prev;
-            // サーチ
+            // search
             srcPos = enqPos.prev;
             while (counter < srcPos.counter && srcPos != deqPos) {
                 srcPos = srcPos.prev;
@@ -87,12 +87,12 @@ public class RingBuffer {
                 deqPos = enqPos;
             }
 
-            // enqPosをリングから切り出す。
+            // Cut enqPos out of the ring.
             Pack.PPack nextPack = enqPos;
             enqPos.prev.next = enqPos.next;
             enqPos.next.prev = enqPos.prev;
 
-            // enqPosを挿入する
+            // Insert enqPos
             tmpPos = srcPos.next;
             tmpPos.prev = enqPos;
             srcPos.next = enqPos;

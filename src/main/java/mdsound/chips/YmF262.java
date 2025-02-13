@@ -2534,7 +2534,11 @@ public class YmF262 {
      */
     public static class AdlibOpl3 implements Opl3 {
 
+//#if defined(OPLTYPE_IS_OPL3)
         private static final int NUM_CHANNELS = 18;
+//#else
+//        private static final int NUM_CHANNELS = 9;
+//#endif
 
         private static final int MAXOPERATORS = NUM_CHANNELS * 2;
 
@@ -2661,6 +2665,13 @@ public class YmF262 {
                     1 / 1.59744
             };
 
+            private static final double[] decRelConst = {
+                    1 / 39.28064,
+                    1 / 31.41608,
+                    1 / 26.17344,
+                    1 / 22.44608
+            };
+
             private static final Random rnd = new Random();
 
             /** wave form table */
@@ -2689,7 +2700,7 @@ public class YmF262 {
                 for (int i = 0; i < TREMTAB_SIZE; i++) {
                     // 0.0 .. -26/26*4.8/6 == [0.0 .. -0.8], 4/53 steps == [1 .. 0.57]
                     double trem_val1 = ((double) tremTableInt[i]) * 4.8 / 26.0 / 6.0; // 4.8db
-                    double trem_val2 = (((int) (tremTableInt[i] / 4d)) * 1.2) / 6.0 / 6.0; // 1.2db (larger stepping)
+                    double trem_val2 = ((tremTableInt[i] / 4) * 1.2) / 6.0 / 6.0; // 1.2db (larger stepping)
 
                     tremTable[i] = (int) (Math.pow(FL2, trem_val1) * FIXEDPT);
                     tremTable[TREMTAB_SIZE + i] = (int) (Math.pow(FL2, trem_val2) * FIXEDPT);
@@ -2808,6 +2819,16 @@ public class YmF262 {
                 this.rightPan = 1;
             }
 
+            public void advance(int vib, int generator_add) {
+                wfPos = tCount; // waveForm position
+
+                // advance waveForm time
+                tCount += tInc;
+                tCount += (int) (tInc * vib / FIXEDPT);
+
+                generatorPos += generator_add;
+            }
+
             public static void advanceDrums(Operator op1, int vib1, Operator op2, int vib2, Operator op3, int vib3, int generatorAdd) {
                 long c1 = op1.tCount / FIXEDPT;
                 long c3 = op3.tCount / FIXEDPT;
@@ -2842,23 +2863,140 @@ public class YmF262 {
                 op3.generatorPos += generatorAdd;
             }
 
-            public void advance(int vib, int generator_add) {
-                wfPos = tCount; // waveForm position
+            /**
+             * output level is sustained, mode changes only when Operator is turned off (.release)
+             * or when the keep-sustained bit is turned off (.sustain_nokeep)
+             */
+            public void output(int modulator, int trem) {
+                if (opState != OF_TYPE_OFF) {
+                    lastCVal = cVal;
+                    int i = (int) ((wfPos + modulator) / FIXEDPT);
 
-                // advance waveForm time
-                tCount += tInc;
-                tCount += tInc * vib / FIXEDPT;
+                    // wform: -16384 to 16383 (0x4000)
+                    // trem :  32768 to 65535 (0x10000)
+                    // stepAmp: 0.0 to 1.0
+                    // vol  : 1/2^14 to 1/2^29 (/0x4000; /1../0x8000)
 
-                generatorPos += generator_add;
+                    cVal = (int) (stepAmp * vol * wavTable[curWFormPtr + (i & curWMask)] * trem / 16.0);
+                }
+            }
+
+            /** no action, Operator is off */
+            public void off() {
+            }
+
+            /**
+             * output level is sustained, mode changes only when Operator is turned off (.release)
+             * or when the keep-sustained bit is turned off (.sustain_nokeep)
+             */
+            public void sustain() {
+                int num_steps_add = generatorPos / FIXEDPT; // number of (standardized) samples
+                for (int ct = 0; ct < num_steps_add; ct++) {
+                    curEnvStep++;
+                }
+                generatorPos -= num_steps_add * FIXEDPT;
+            }
+
+            /** Operator in release mode, if output level reaches zero the Operator is turned off */
+            public void release() {
+                // ??? boundary?
+                if (amp > 0.00000001) {
+                    // release phase
+                    amp *= releaseMul;
+                }
+
+                int num_steps_add = generatorPos / FIXEDPT; // number of (standardized) samples
+                for (int ct = 0; ct < num_steps_add; ct++) {
+                    curEnvStep++; // sample counter
+                    if ((curEnvStep & envStepR) == 0) {
+                        if (amp <= 0.00000001) {
+                            // release phase finished, turn off this Operator
+                            amp = 0.0;
+                            if (opState == OF_TYPE_REL) {
+                                opState = OF_TYPE_OFF;
+                            }
+                        }
+                        stepAmp = amp;
+                    }
+                }
+                generatorPos -= num_steps_add * FIXEDPT;
+            }
+
+            /**
+             * Operator in decay mode, if sustain level is reached the output level is either
+             * kept (sustain level keep enabled) or the Operator is switched into release mode
+             */
+            public void decay() {
+
+                if (amp > sustainLevel) {
+                    // decay phase
+                    amp *= decayMul;
+                }
+
+                int num_steps_add = generatorPos / FIXEDPT; // number of (standardized) samples
+                for (int ct = 0; ct < num_steps_add; ct++) {
+                    curEnvStep++;
+                    if ((curEnvStep & envStepD) == 0) {
+                        if (amp <= sustainLevel) {
+                            // decay phase finished, sustain level reached
+                            if (susKeep) {
+                                // keep sustain level (until turned off)
+                                opState = OF_TYPE_SUS;
+                                amp = sustainLevel;
+                            } else {
+                                // next: release phase
+                                opState = OF_TYPE_SUS_NOKEEP;
+                            }
+                        }
+                        stepAmp = amp;
+                    }
+                }
+                generatorPos -= num_steps_add * FIXEDPT;
+            }
+
+            /**
+             * Operator in attack mode, if full output level is reached,
+             * the Operator is switched into decay mode
+             */
+            public void attack() {
+                amp = ((a3 * amp + a2) * amp + a1) * amp + a0;
+
+                int num_steps_add = generatorPos / FIXEDPT; // number of (standardized) samples
+                for (int ct = 0; ct < num_steps_add; ct++) {
+                    curEnvStep++; // next sample
+                    if ((curEnvStep & envStepA) == 0) { // check if next step already reached
+                        if (amp > 1.0) {
+                            // attack phase finished, next: decay
+                            opState = OF_TYPE_DEC;
+                            amp = 1.0;
+                            stepAmp = 1.0;
+                        }
+                        step_skip_pos_a = (step_skip_pos_a << 1) & 0xff;
+                        if (step_skip_pos_a == 0) step_skip_pos_a = 1;
+                        if ((step_skip_pos_a & envStepSkipA) != 0) { // check if required to skip next step
+                            stepAmp = amp;
+                        }
+                    }
+                }
+                generatorPos -= num_steps_add * FIXEDPT;
+            }
+
+            public void checkEgAttack() {
+                if (((this.curEnvStep + 1) & this.envStepA) == 0) {
+                    // check if next step already reached
+                    if (this.a0 >= 1.0) {
+                        // attack phase finished, next: decay
+                        this.opState = OF_TYPE_DEC;
+                        this.amp = 1.0;
+                        this.stepAmp = 1.0;
+                    }
+                }
             }
 
             private static final int[] stepSkipMask = { 0xff,  0xfe,  0xee,  0xba,  0xaa};
 
             public void changeAttackRate(int attackRate, double recIpSamp) {
                 if (attackRate != 0) {
-                    int stepSkip;
-                    int steps;
-                    int stepNum;
 
                     double f = Math.pow(FL2, (double) attackRate + (tOff >> 2) - 1) * attackConst[tOff & 3] * recIpSamp;
                     // attack rate coefficients
@@ -2867,14 +3005,18 @@ public class YmF262 {
                     a2 = -17.57 * f;
                     a3 = 7.42 * f;
 
-                    stepSkip = attackRate * 4 + tOff;
-                    steps = stepSkip >> 2;
+                    int stepSkip = attackRate * 4 + tOff;
+                    int steps = stepSkip >> 2;
                     envStepA = (1 << (steps <= 12 ? 12 - steps : 0)) - 1;
 
-                    stepNum = (stepSkip <= 48) ? (4 - (stepSkip & 3)) : 0;
+                    int stepNum = (stepSkip <= 48) ? (4 - (stepSkip & 3)) : 0;
                     envStepSkipA = stepSkipMask[stepNum];
 
+//#if defined(OPLTYPE_IS_OPL3)
                     if (stepSkip >= 60) {
+//#else
+//                    if (stepSkip >= 62) {
+//#endif
                         a0 = 2.0; // something that triggers an immediate transition to amp:=1.0
                         a1 = 0.0;
                         a2 = 0.0;
@@ -2907,11 +3049,9 @@ public class YmF262 {
             public void changeReleaseRate(int releaseRate, double recIpSamp) {
                 // releaseMul should be 1.0 when releaseRate == 0
                 if (releaseRate != 0) {
-                    int steps;
-
                     double f = -7.4493 * decRelConst[tOff & 3] * recIpSamp;
                     releaseMul = Math.pow(FL2, f * Math.pow(FL2, releaseRate + (tOff >> 2)));
-                    steps = (releaseRate * 4 + tOff) >> 2;
+                    int steps = (releaseRate * 4 + tOff) >> 2;
                     envStepR = (1 << (steps <= 12 ? 12 - steps : 0)) - 1;
                 } else {
                     releaseMul = 1.0;
@@ -2928,16 +3068,6 @@ public class YmF262 {
                 }
             }
 
-            public void changeKeepSustain(boolean susKeep) {
-                if (opState == OF_TYPE_SUS) {
-                    if (!susKeep)
-                        opState = OF_TYPE_SUS_NOKEEP;
-                } else if (opState == OF_TYPE_SUS_NOKEEP) {
-                    if (susKeep)
-                        opState = OF_TYPE_SUS;
-                }
-            }
-
             public void changeWaveform(int regBase, int[] wave_sel) {
 //#if defined(OPLTYPE_IS_OPL3)
                 if (regBase >= ARC_SECONDSET) regBase -= (ARC_SECONDSET - 22); // second set starts at 22
@@ -2947,6 +3077,17 @@ public class YmF262 {
                 //op_pt.cur_wform = wavTable[waveForm[this.wave_sel[regbase]]];
                 curWFormPtr = waveForm[wave_sel[regBase]];
                 // (might need to be adapted to waveForm type here...)
+            }
+
+            public void changeKeepSustain(boolean susKeep) {
+                this.susKeep = susKeep;
+                if (opState == OF_TYPE_SUS) {
+                    if (!susKeep)
+                        opState = OF_TYPE_SUS_NOKEEP;
+                } else if (opState == OF_TYPE_SUS_NOKEEP) {
+                    if (susKeep)
+                        opState = OF_TYPE_SUS;
+                }
             }
 
             /** enable/disable vibrato/tremolo LFO effects */
@@ -3016,143 +3157,11 @@ public class YmF262 {
                     }
                 }
             }
-
-            /**
-             * output level is sustained, mode changes only when Operator is turned off (.release)
-             * or when the keep-sustained bit is turned off (.sustain_nokeep)
-             */
-            public void output(int modulator, int trem) {
-                if (opState != OF_TYPE_OFF) {
-                    lastCVal = cVal;
-                    int i = (int) ((wfPos + modulator) / FIXEDPT);
-
-                    // wform: -16384 to 16383 (0x4000)
-                    // trem :  32768 to 65535 (0x10000)
-                    // stepAmp: 0.0 to 1.0
-                    // vol  : 1/2^14 to 1/2^29 (/0x4000; /1../0x8000)
-
-                    cVal = (int) (stepAmp * vol * wavTable[curWFormPtr + (i & curWMask)] * trem / 16.0);
-                }
-            }
-
-            /** no action, Operator is off */
-            public void off() {
-            }
-
-            /**
-             * Operator in attack mode, if full output level is reached,
-             * the Operator is switched into decay mode
-             */
-            public void attack() {
-                amp = ((a3 * amp + a2) * amp + a1) * amp + a0;
-
-                int num_steps_add = generatorPos / FIXEDPT; // number of (standardized) samples
-                for (int ct = 0; ct < num_steps_add; ct++) {
-                    curEnvStep++; // next sample
-                    if ((curEnvStep & envStepA) == 0) { // check if next step already reached
-                        if (amp > 1.0) {
-                            // attack phase finished, next: decay
-                            opState = OF_TYPE_DEC;
-                            amp = 1.0;
-                            stepAmp = 1.0;
-                        }
-                        step_skip_pos_a <<= 1;
-                        if (step_skip_pos_a == 0) step_skip_pos_a = 1;
-                        if ((step_skip_pos_a & envStepSkipA) != 0) { // check if required to skip next step
-                            stepAmp = amp;
-                        }
-                    }
-                }
-                generatorPos -= num_steps_add * FIXEDPT;
-            }
-
-            /**
-             * Operator in decay mode, if sustain level is reached the output level is either
-             * kept (sustain level keep enabled) or the Operator is switched into release mode
-             */
-            public void decay() {
-                int num_steps_add;
-                int ct;
-
-                if (amp > sustainLevel) {
-                    // decay phase
-                    amp *= decayMul;
-                }
-
-                num_steps_add = generatorPos / FIXEDPT; // number of (standardized) samples
-                for (ct = 0; ct < num_steps_add; ct++) {
-                    curEnvStep++;
-                    if ((curEnvStep & envStepD) == 0) {
-                        if (amp <= sustainLevel) {
-                            // decay phase finished, sustain level reached
-                            if (susKeep) {
-                                // keep sustain level (until turned off)
-                                opState = OF_TYPE_SUS;
-                                amp = sustainLevel;
-                            } else {
-                                // next: release phase
-                                opState = OF_TYPE_SUS_NOKEEP;
-                            }
-                        }
-                        stepAmp = amp;
-                    }
-                }
-                generatorPos -= num_steps_add * FIXEDPT;
-            }
-
-            /**
-             * output level is sustained, mode changes only when Operator is turned off (.release)
-             * or when the keep-sustained bit is turned off (.sustain_nokeep)
-             */
-            public void sustain() {
-                int num_steps_add = generatorPos / FIXEDPT; // number of (standardized) samples
-                for (int ct = 0; ct < num_steps_add; ct++) {
-                    curEnvStep++;
-                }
-                generatorPos -= num_steps_add * FIXEDPT;
-            }
-
-            /** Operator in release mode, if output level reaches zero the Operator is turned off */
-            public void release() {
-                // ??? boundary?
-                if (amp > 0.00000001) {
-                    // release phase
-                    amp *= releaseMul;
-                }
-
-                int num_steps_add = generatorPos / FIXEDPT; // number of (standardized) samples
-                for (int ct = 0; ct < num_steps_add; ct++) {
-                    curEnvStep++; // sample counter
-                    if ((curEnvStep & envStepR) == 0) {
-                        if (amp <= 0.00000001) {
-                            // release phase finished, turn off this Operator
-                            amp = 0.0;
-                            if (opState == OF_TYPE_REL) {
-                                opState = OF_TYPE_OFF;
-                            }
-                        }
-                        stepAmp = amp;
-                    }
-                }
-                generatorPos -= num_steps_add * FIXEDPT;
-            }
-
-            public void checkEgAttack() {
-                if (((this.curEnvStep + 1) & this.envStepA) == 0) {
-                    // check if next step already reached
-                    if (this.a0 >= 1.0) {
-                        // attack phase finished, next: decay
-                        this.opState = OF_TYPE_DEC;
-                        this.amp = 1.0;
-                        this.stepAmp = 1.0;
-                    }
-                }
-            }
         }
 
         // vibrato value tables (used per-Operator)
         private static final int[] vibValVar1 = new int[BLOCKBUF_SIZE];
-        private static final int[] vibvalVar2 = new int[BLOCKBUF_SIZE];
+        private static final int[] vibValVar2 = new int[BLOCKBUF_SIZE];
 
         /** frequency multiplicator lookup table */
         private static final double[] frqMulTab = {
@@ -3181,13 +3190,6 @@ public class YmF262 {
         private static final int[] regBase2op = {
                 0, 1, 2, 9, 10, 11, 0, 0, 3, 4, 5, 12, 13, 14, 0, 0, 6, 7, 8, 15, 16, 17, // first set
                 18, 19, 20, 27, 28, 29, 0, 0, 21, 22, 23, 30, 31, 32, 0, 0, 24, 25, 26, 33, 34, 35 // second set
-        };
-
-        private static final double[] decRelConst = {
-                1 / 39.28064,
-                1 / 31.41608,
-                1 / 26.17344,
-                1 / 22.44608
         };
 
         // per-chips variables
@@ -3251,7 +3253,7 @@ public class YmF262 {
             }
 
             // vibrato at ~6.1 ?? (opl3 docs say 6.1, opl4 docs say 6.0, Y8950 docs say 6.4)
-            this.vibTabAdd = (int) ((double) VIBTAB_SIZE * FIXEDPT_LFO / 8192 * this.intFreqU() / this.intSamplerate);
+            this.vibTabAdd = (int) (VIBTAB_SIZE * FIXEDPT_LFO / 8192 * this.intFreqU() / this.intSamplerate);
             this.vibTabPos = 0;
 
             // tremolo at 3.7hz
@@ -3283,9 +3285,13 @@ public class YmF262 {
         public int write(int addr, int val) {
             if ((addr & 1) != 0) {
 //logger.log(Level.TRACE, "adr=%x  dat=%x".formatted(this.opl_addr, val));
-                writeInternal(this.oplAddr, val & 0xff);
+                writeInternal(this.oplAddr, val);
             } else
+//#if defined(OPLTYPE_IS_OPL3)
                 this.oplAddr = val | ((addr & 2) << 7);
+//#else
+//                this.oplAddr = val;
+//#endif
             return 0;
         }
 
@@ -3352,12 +3358,16 @@ public class YmF262 {
 
                     // change frequency calculations of this Operator as
                     // key scale rate and frequency multiplicator can be changed
+//#if defined(OPLTYPE_IS_OPL3)
                     if ((this.adlibReg[0x105] & 1) != 0 && (this.ops[modOp].is4OpAttached)) {
                         // Operator uses frequency of channel
                         op.changeFrequency(chanBase - 3, regBase, this.adlibReg, this.frqMul, this.recIpSamp);
                     } else {
                         op.changeFrequency(chanBase, regBase, this.adlibReg, this.frqMul, this.recIpSamp);
                     }
+//#else
+//                    op.changeFrequency(chanBase, base, this.adlibReg, this.frqMul, this.recIpSamp);
+//#endif
                 }
             }
             break;
@@ -3372,14 +3382,18 @@ public class YmF262 {
 
                     // change frequency calculations of this Operator as
                     // key scale level and output rate can be changed
+//#if defined(OPLTYPE_IS_OPL3)
                     Operator op = this.ops[modOp + ((num < 3) ? 0 : 9)];
-                    int regbase = base + secondSet;
+                    int regBase = base + secondSet;
                     if ((this.adlibReg[0x105] & 1) != 0 && (this.ops[modOp].is4OpAttached)) {
                         // Operator uses frequency of channel
-                        op.changeFrequency(chanBase - 3, regbase, this.adlibReg, this.frqMul, this.recIpSamp);
+                        op.changeFrequency(chanBase - 3, regBase, this.adlibReg, this.frqMul, this.recIpSamp);
                     } else {
-                        op.changeFrequency(chanBase, regbase, this.adlibReg, this.frqMul, this.recIpSamp);
+                        op.changeFrequency(chanBase, regBase, this.adlibReg, this.frqMul, this.recIpSamp);
                     }
+//#else
+//                    op.changeFrequency(chanBase, base, this.adlibReg, this.frqMul, this.recIpSamp);
+//#endif
                 }
             }
             break;
@@ -3418,7 +3432,9 @@ public class YmF262 {
                 int base = (idx - ARC_FREQ_NUM) & 0xff;
                 if (base < 9) {
                     int opBase = secondSet != 0 ? (base + 18) : base;
+//#if defined(OPLTYPE_IS_OPL3)
                     if ((this.adlibReg[0x105] & 1) != 0 && this.ops[opBase].is4OpAttached) break;
+//#endif
                     // regBase of modulator:
                     int modBase = modulatorBase[base] + secondSet;
 
@@ -3426,11 +3442,13 @@ public class YmF262 {
 
                     this.ops[opBase].changeFrequency(chanBase, modBase, this.adlibReg, this.frqMul, this.recIpSamp);
                     this.ops[opBase + 9].changeFrequency(chanBase, modBase + 3, this.adlibReg, this.frqMul, this.recIpSamp);
+//#if defined(OPLTYPE_IS_OPL3)
                     // for 4op channels all four operators are modified to the frequency of the channel
                     if ((this.adlibReg[0x105] & 1) != 0 && this.ops[secondSet != 0 ? (base + 18) : base].is4Op) {
                         this.ops[opBase + 3].changeFrequency(chanBase, modBase + 8, this.adlibReg, this.frqMul, this.recIpSamp);
                         this.ops[opBase + 3 + 9].changeFrequency(chanBase, modBase + 3 + 8, this.adlibReg, this.frqMul, this.recIpSamp);
                     }
+//#endif
                 }
             }
             break;
@@ -3438,7 +3456,9 @@ public class YmF262 {
                 if (this.updateHandler != null) // hack for DOSBox logs
                     this.updateHandler.run();
                 if (idx == ARC_PERC_MODE) {
+//#if defined(OPLTYPE_IS_OPL3)
                     if (secondSet != 0) return;
+//#endif
 
                     if ((val & 0x30) == 0x30) { // BassDrum active
                         this.ops[6].enable(16, OP_ACT_PERC, this.waveSel);
@@ -3483,27 +3503,33 @@ public class YmF262 {
                     // regBase of modulator:
                     int modBase = modulatorBase[base] + secondSet;
 
+//#if defined(OPLTYPE_IS_OPL3)
                     if ((this.adlibReg[0x105] & 1) != 0 && this.ops[opBase].is4OpAttached) break;
+//#endif
                     if ((val & 32) != 0) {
                         // Operator switched on
                         this.ops[opBase].enable(modBase, OP_ACT_NORMAL, this.waveSel); // modulator (if 2op)
                         this.ops[opBase + 9].enable(modBase + 3, OP_ACT_NORMAL, this.waveSel); // carrier (if 2op)
+//#if defined(OPLTYPE_IS_OPL3)
                         // for 4op channels all four operators are switched on
                         if ((this.adlibReg[0x105] & 1) != 0 && this.ops[opBase].is4Op) {
                             // turn on chan+3 operators as well
                             this.ops[opBase + 3].enable(modBase + 8, OP_ACT_NORMAL, this.waveSel);
                             this.ops[opBase + 3 + 9].enable(modBase + 3 + 8, OP_ACT_NORMAL, this.waveSel);
                         }
+//#endif
                     } else {
                         // Operator switched off
                         this.ops[opBase].disable(OP_ACT_NORMAL);
                         this.ops[opBase + 9].disable(OP_ACT_NORMAL);
+//#if defined(OPLTYPE_IS_OPL3)
                         // for 4op channels all four operators are switched off
                         if ((this.adlibReg[0x105] & 1) != 0 && this.ops[opBase].is4Op) {
                             // turn off chan+3 operators as well
                             this.ops[opBase + 3].disable(OP_ACT_NORMAL);
                             this.ops[opBase + 3 + 9].disable(OP_ACT_NORMAL);
                         }
+//#endif
                     }
 
                     int chanBase = base + secondSet;
@@ -3512,12 +3538,14 @@ public class YmF262 {
                     // the frequency of the channel has changed
                     this.ops[opBase].changeFrequency(chanBase, modBase, this.adlibReg, this.frqMul, this.recIpSamp);
                     this.ops[opBase + 9].changeFrequency(chanBase, modBase + 3, this.adlibReg, this.frqMul, this.recIpSamp);
+//#if defined(OPLTYPE_IS_OPL3)
                     // for 4op channels all four operators are modified to the frequency of the channel
                     if ((this.adlibReg[0x105] & 1) != 0 && this.ops[secondSet != 0 ? (base + 18) : base].is4Op) {
                         // change frequency calculations of chan+3 operators as well
                         this.ops[opBase + 3].changeFrequency(chanBase, modBase + 8, this.adlibReg, this.frqMul, this.recIpSamp);
                         this.ops[opBase + 3 + 9].changeFrequency(chanBase, modBase + 3 + 8, this.adlibReg, this.frqMul, this.recIpSamp);
                     }
+//#endif
                 }
             }
             break;
@@ -3528,11 +3556,13 @@ public class YmF262 {
                     int opBase = secondSet != 0 ? (base + 18) : base;
                     int chanBase = base + secondSet;
                     this.ops[opBase].changeFeedback(adlibReg[ARC_FEEDBACK + chanBase] & 14);
+//#if defined(OPLTYPE_IS_OPL3)
                     // Opl3 panning
                     this.ops[opBase].leftPan = ((val & 0x10) >> 4);
                     this.ops[opBase].rightPan = ((val & 0x20) >> 5);
                     this.ops[opBase].leftPan += ((val & 0x40) >> 6);
                     this.ops[opBase].rightPan += ((val & 0x80) >> 7);
+//#endif
                 }
             }
             break;
@@ -3551,10 +3581,11 @@ public class YmF262 {
                     op.changeWaveform(wselBase, this.waveSel);
 //#else
 //                    // wave selection enabled, change waveForm
-//                    this.wave_sel[base] = val & 3;
-//                    op = this.Op[regBase2Modop[base] + ((num < 3) ? 0 : 9)];
-//                    change_waveform(base, op);
-//                }
+//                    if (this.adlibReg[0x01] & 0x20) {
+//                        this.wave_sel[base] = val & 3;
+//                        op = this.Op[regBase2Modop[base] + ((num < 3) ? 0 : 9)];
+//                        op.changeWaveform(base, this.waveSel);
+//                    }
 //#endif
                 }
             }
@@ -3652,7 +3683,9 @@ public class YmF262 {
 
                 for (int i = 0; i < endSamples; i++) {
                     outBufL[i] = 0;
+//#if defined(OPLTYPE_IS_OPL3)
                     outBufR[i] = 0;
+//#endif
                 }
 
                 // calculate vibrato/tremolo lookup tables
@@ -3720,7 +3753,7 @@ public class YmF262 {
                                 } else
                                     vibVal1 = Operator.vibValConst;
                                 if ((this.ops[opP + 9].vibrato) && (this.ops[opP + 9].opState != OF_TYPE_OFF)) {
-                                    vibVal2 = vibvalVar2;
+                                    vibVal2 = vibValVar2;
                                     for (int i = 0; i < endSamples; i++)
                                         vibVal2[i] = (vibLut[i] * this.ops[opP + 9].freqHigh / 8) * FIXEDPT * VIBFAC;
                                 } else
@@ -3778,7 +3811,7 @@ public class YmF262 {
                         // calculate channel output
                         for (int i = 0; i < endSamples; i++) {
                             this.ops[opP].advance(vibVal3[i], this.generatorAdd);
-                            opFuncs[this.ops[opP].opState].accept(this.ops[8]); // TomTom
+                            opFuncs[this.ops[opP].opState].accept(this.ops[opP]); // TomTom
 
                             this.ops[opP].output(0, tremVal3[i]);
                             int chanVal = this.ops[opP].cVal * 2;
@@ -3804,7 +3837,7 @@ public class YmF262 {
                         } else
                             vibVal1 = Operator.vibValConst;
                         if ((this.ops[opP + 9].vibrato) && (this.ops[opP + 9].opState == OF_TYPE_OFF)) {
-                            vibVal2 = vibvalVar2;
+                            vibVal2 = vibValVar2;
                             for (int i = 0; i < endSamples; i++)
                                 vibVal2[i] = (vibLut[i] * this.ops[opP + 9].freqHigh / 8) * FIXEDPT * VIBFAC;
                         } else
@@ -3821,7 +3854,7 @@ public class YmF262 {
 
                         opP = 8;
                         if ((this.ops[opP + 9].vibrato) && (this.ops[opP + 9].opState == OF_TYPE_OFF)) {
-                            vibVal4 = vibvalVar2;
+                            vibVal4 = vibValVar2;
                             for (int i = 0; i < endSamples; i++)
                                 vibVal4[i] = (vibLut[i] * this.ops[opP + 9].freqHigh / 8) * FIXEDPT * VIBFAC;
                         } else
@@ -4088,7 +4121,7 @@ public class YmF262 {
                         } else
                             vibVal1 = Operator.vibValConst;
                         if ((this.ops[opP + 9].vibrato) && (this.ops[opP + 9].opState != OF_TYPE_OFF)) {
-                            vibVal2 = vibvalVar2;
+                            vibVal2 = vibValVar2;
                             for (int i = 0; i < endSamples; i++)
                                 vibVal2[i] = (vibLut[i] * this.ops[opP + 9].freqHigh / 8) * FIXEDPT * VIBFAC;
                         } else
@@ -4139,7 +4172,7 @@ public class YmF262 {
                                     } else
                                         vibVal1 = Operator.vibValConst;
                                     if ((this.ops[opP + 9].vibrato) && (this.ops[opP + 9].opState != OF_TYPE_OFF)) {
-                                        vibVal2 = vibvalVar2;
+                                        vibVal2 = vibValVar2;
                                         for (int i = 0; i < endSamples; i++)
                                             vibVal2[i] = (vibLut[i] * this.ops[opP + 9].freqHigh / 8) * FIXEDPT * VIBFAC;
                                     } else
@@ -4217,7 +4250,7 @@ public class YmF262 {
                                     } else
                                         vibVal1 = Operator.vibValConst;
                                     if ((this.ops[opP + 9].vibrato) && (this.ops[opP + 9].opState != OF_TYPE_OFF)) {
-                                        vibVal2 = vibvalVar2;
+                                        vibVal2 = vibValVar2;
                                         for (int i = 0; i < endSamples; i++)
                                             vibVal2[i] = (vibLut[i] * this.ops[opP + 9].freqHigh / 8) * FIXEDPT * VIBFAC;
                                     } else
@@ -4281,7 +4314,7 @@ public class YmF262 {
                         } else
                             vibVal1 = Operator.vibValConst;
                         if ((this.ops[opP + 9].vibrato) && (this.ops[opP + 9].opState != OF_TYPE_OFF)) {
-                            vibVal2 = vibvalVar2;
+                            vibVal2 = vibValVar2;
                             for (int i = 0; i < endSamples; i++)
                                 vibVal2[i] = (vibLut[i] * this.ops[opP + 9].freqHigh / 8) * FIXEDPT * VIBFAC;
                         } else

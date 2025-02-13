@@ -81,10 +81,10 @@ public class NpNesFds {
     // two ramp envelopes
     public final boolean[] envMode = new boolean[2];
     public final boolean[] envDisable = new boolean[2];
-    private final int[] envTimer = new int[2];
+    private final long[] envTimer = new long[2];
     public final int[] envSpeed = new int[2];
     public final int[] envOut = new int[2];
-    public int masterEnvSpeed;
+    public long masterEnvSpeed;
 
     // 1-pole RC low-pass filter
     private int rcAccum;
@@ -92,7 +92,7 @@ public class NpNesFds {
     private int rcL;
 
     private final Counter tickCount = new Counter();
-    private int tickLast;
+    private long tickLast;
 
     public void setMask(int m) {
         this.mask = m & 1;
@@ -183,17 +183,13 @@ public class NpNesFds {
         write(0x4089, 0x00); // wav write disable, max Global volume}
     }
 
-    public void tick(int clocks) {
+    public void tick(long clocks) {
         // clock envelopes
         if (!this.envHalt && !this.wavHalt && (this.masterEnvSpeed != 0)) {
-            int i;
-
-            for (i = 0; i < 2; ++i) {
+            for (int i = 0; i < 2; ++i) {
                 if (!this.envDisable[i]) {
-                    int period;
-
                     this.envTimer[i] += clocks;
-                    period = ((this.envSpeed[i] + 1) * this.masterEnvSpeed) << 3;
+                    long period = ((this.envSpeed[i] + 1) * this.masterEnvSpeed) << 3;
                     while (this.envTimer[i] >= period) {
                         // clock the envelope
                         if (this.envMode[i]) {
@@ -209,25 +205,23 @@ public class NpNesFds {
 
         // clock the mod table
         if (!this.modHalt) {
-            int start_pos, end_pos, p;
-
             // advance phase, adjust for modulator
-            start_pos = this.phase[TG.TMOD.ordinal()] >> 16;
+            int start_pos = this.phase[TG.TMOD.ordinal()] >> 16;
             this.phase[TG.TMOD.ordinal()] += clocks * this.freq[TG.TMOD.ordinal()];
-            end_pos = this.phase[TG.TMOD.ordinal()] >> 16;
+            int end_pos = this.phase[TG.TMOD.ordinal()] >> 16;
 
             // wrap the phase to the 64-step table (+ 16 bit accumulator)
             this.phase[TG.TMOD.ordinal()] = this.phase[TG.TMOD.ordinal()] & 0x3f_ffff;
 
             // execute all clocked steps
-            for (p = start_pos; p < end_pos; ++p) {
-                int wv = this.wave[TG.TMOD.ordinal()][p & 0x3F];
+            for (int p = start_pos; p < end_pos; ++p) {
+                int wv = this.wave[TG.TMOD.ordinal()][p & 0x3f];
                 if (wv == 4) // 4 resets mod position
                     this.modPos = 0;
                 else {
-                    int[] bias = new int[] {0, 1, 2, 4, 0, -4, -2, -1};
+                    int[] bias = {0, 1, 2, 4, 0, -4, -2, -1};
                     this.modPos += bias[wv];
-                    this.modPos &= 0x7F; // 7-bit clamp
+                    this.modPos &= 0x7f; // 7-bit clamp
                 }
             }
         }
@@ -242,7 +236,7 @@ public class NpNesFds {
 
                 // multiply pos by gain,
                 // shift off 4 bits but with odd "rounding" behaviour
-                int temp = pos * this.envOut[EG.EMOD.ordinal()];
+                int temp = (int) (pos * this.envOut[EG.EMOD.ordinal()]);
                 int rem = temp & 0x0f;
                 temp >>= 4;
                 if ((rem > 0) && ((temp & 0x80) == 0)) {
@@ -266,10 +260,10 @@ public class NpNesFds {
 
             // advance wave table position
             int f = this.freq[TG.TWAV.ordinal()] + mod;
-            this.phase[TG.TWAV.ordinal()] = this.phase[TG.TWAV.ordinal()] + (clocks * f);
+            this.phase[TG.TWAV.ordinal()] = (int) (this.phase[TG.TWAV.ordinal()] + (clocks * f));
             this.phase[TG.TWAV.ordinal()] = this.phase[TG.TWAV.ordinal()] & 0x3f_ffff; // wrap
 
-            // store for trackinfo
+            // store for trackInfo
             this.lastFreq = f;
         }
 
@@ -279,7 +273,7 @@ public class NpNesFds {
 
         // final output
         if (!this.wavWrite)
-            this.fOut = this.wave[TG.TWAV.ordinal()][(this.phase[TG.TWAV.ordinal()] >> 16) & 0x3F] * volOut;
+            this.fOut = this.wave[TG.TWAV.ordinal()][(this.phase[TG.TWAV.ordinal()] >> 16) & 0x3f] * volOut;
 
         // NOTE: during wav_halt, the unit still outputs (at phase 0)
         // and volume can affect it if the first sample is nonzero.
@@ -293,23 +287,20 @@ public class NpNesFds {
 
     public int render(int[] b) {
 
-        int clocks;
-        int v, rc_out, m;
-
         this.tickCount.iup();
-        clocks = (this.tickCount.value() - this.tickLast) & 0xff;
+        long clocks = (this.tickCount.value() - this.tickLast) & 0xff;
         tick(clocks);
         this.tickLast = this.tickCount.value();
 
-        v = this.fOut * MASTER[this.masterVol] >> 8;
+        int v = this.fOut * MASTER[this.masterVol] >> 8;
 
         // low-pass RC filter
-        rc_out = ((this.rcAccum * this.rcK) + (v * this.rcL)) >> RC_BITS;
+        int rc_out = ((this.rcAccum * this.rcK) + (v * this.rcL)) >> RC_BITS;
         this.rcAccum = rc_out;
         v = rc_out;
 
         // output mix
-        m = this.mask != 0 ? 0 : v;
+        int m = this.mask != 0 ? 0 : v;
         b[0] = (m * this.sm[0]) >> 5;
         b[1] = (m * this.sm[1]) >> 5;
         return 2;
@@ -317,18 +308,15 @@ public class NpNesFds {
 
     public int renderOrg(int[] b) {
 
-        //int clocks;
-        int v, rc_out, m;
-
-        v = this.fOut * MASTER[this.masterVol] >> 8;
+        int v = this.fOut * MASTER[this.masterVol] >> 8;
 
         // low-pass RC filter
-        rc_out = ((this.rcAccum * this.rcK) + (v * this.rcL)) >> RC_BITS;
+        int rc_out = ((this.rcAccum * this.rcK) + (v * this.rcL)) >> RC_BITS;
         this.rcAccum = rc_out;
         v = rc_out;
 
         // output mix
-        m = this.mask != 0 ? 0 : v;
+        int m = this.mask != 0 ? 0 : v;
         b[0] = (m * this.sm[0]) >> (7 - 3);
         b[1] = (m * this.sm[1]) >> (7 - 3);
         return 2;

@@ -119,7 +119,7 @@ public class X1_010 {
                 if ((this.reg[ch * 8 + 0] & 2) == 0) { // PCM sampling
                     int start = (this.reg[ch * 8 + 4] & 0xff) * 0x1000; // +4 reg.start
                     int end = (0x100 - (this.reg[ch * 8 + 5] & 0xff)) * 0x1000; // +5 reg.end
-                    int volL = ((this.reg[ch * 8 + 1] >> 4) & 0xf) * VOL_BASE; // +1 reg.volume
+                    int volL = ((this.reg[ch * 8 + 1] >>> 4) & 0xf) * VOL_BASE; // +1 reg.volume
                     int volR = ((this.reg[ch * 8 + 1] >> 0) & 0xf) * VOL_BASE; // +1 reg.volume
                     int smpOffs = this.smpOffset[ch];
                     int freq = (this.reg[ch * 8 + 2] & 0xff) >> div; // +2 reg.frequency
@@ -136,7 +136,7 @@ public class X1_010 {
                         int delta = smpOffs >> FREQ_BASE_BITS;
                         // sample ended?
                         if (start + delta >= end) {
-                            this.reg[ch * 8 + 0] &= 0xfe; // ~0x01: Key off +0: reg.status
+                            this.reg[ch * 8 + 0] = (byte) (this.reg[ch * 8 + 0] & 0xfe); // ~0x01: Key off +0: reg.status
                             break;
                         }
                         byte data = this.rom[start + delta];
@@ -148,7 +148,7 @@ public class X1_010 {
                 } else { // Wave form
                     int start = (this.reg[ch * 8 + 1] & 0xff) * 128 + 0x1000;
                     int smpOffs = this.smpOffset[ch];
-                    int freq = (((this.reg[ch * 8 + 3] & 0xff) << 8) + (this.reg[ch * 8 + 2] & 0xff)) >> div;
+                    int freq = (((this.reg[ch * 8 + 3] & 0xff) << 8) + (this.reg[ch * 8 + 2] & 0xff)) >>> div;
                     int smpStep = (int) ((float) this.baseClock / 128.0 / 1024.0 / 4.0 * freq * (1 << FREQ_BASE_BITS) / (float) this.rate + 0.5f);
 
                     int env = (this.reg[ch * 8 + 5] & 0xff) * 128;
@@ -166,13 +166,13 @@ public class X1_010 {
                         int delta = envOffs >> ENV_BASE_BITS;
                         // Envelope one shot mode
                         if ((this.reg[ch * 8 + 0] & 4) != 0 && delta >= 0x80) {
-                            this.reg[ch * 8 + 0] &= 0xfe;// ~0x01; // Key off
+                            this.reg[ch * 8 + 0] = (byte) (this.reg[ch * 8 + 0] & 0xfe); // ~0x01; // Key off
                             break;
                         }
-                        int vol = this.reg[env + (delta & 0x7f)];
-                        int volL = ((vol >> 4) & 0xf) * VOL_BASE;
+                        int vol = this.reg[env + (delta & 0x7f)] & 0xff;
+                        int volL = ((vol >>> 4) & 0xf) * VOL_BASE;
                         int volR = ((vol >> 0) & 0xf) * VOL_BASE;
-                        int data = this.reg[start + ((smpOffs >> FREQ_BASE_BITS) & 0x7f)] & 0xff;
+                        int data = this.reg[start + ((smpOffs >> FREQ_BASE_BITS) & 0x7f)];
                         bufL[i] += (data * volL / 256);
                         bufR[i] += (data * volR / 256);
                         smpOffs += smpStep;
@@ -196,7 +196,7 @@ public class X1_010 {
             this.envOffset[i] = 0;
         }
         // Print some more debug info
-//logger.log(Lvel.DEBUG, "masterclock = %d rate = %d".formatted(device.clock(), this.rate));
+//logger.log(Lvel.DEBUG, "masterClock = %d rate = %d".formatted(device.clock(), this.rate));
     }
 
     public void stop() {

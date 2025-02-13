@@ -48,16 +48,16 @@ public class Emu2149 {
     private static final int VOL_AY_3_8910 = 1;
 
     private static final int[][] VolTbl = {
-            {0x00, 0x01, 0x01, 0x02, 0x02, 0x03, 0x03, 0x04, 0x05, 0x06, 0x07, 0x09, 0x0B, 0x0D, 0x0F, 0x12,
-                    0x16, 0x1A, 0x1F, 0x25, 0x2D, 0x35, 0x3F, 0x4C, 0x5A, 0x6A, 0x7F, 0x97, 0xB4, 0xD6, 0xEB, 0xff},
-            {0x00, 0x00, 0x01, 0x01, 0x02, 0x02, 0x03, 0x03, 0x05, 0x05, 0x07, 0x07, 0x0B, 0x0B, 0x0F, 0x0F,
-                    0x16, 0x16, 0x1F, 0x1F, 0x2D, 0x2D, 0x3F, 0x3F, 0x5A, 0x5A, 0x7F, 0x7F, 0xB4, 0xB4, 0xff, 0xff}
+            {0x00, 0x01, 0x01, 0x02, 0x02, 0x03, 0x03, 0x04, 0x05, 0x06, 0x07, 0x09, 0x0b, 0x0d, 0x0f, 0x12,
+                    0x16, 0x1a, 0x1f, 0x25, 0x2d, 0x35, 0x3f, 0x4c, 0x5a, 0x6a, 0x7f, 0x97, 0xb4, 0xd6, 0xeb, 0xff},
+            {0x00, 0x00, 0x01, 0x01, 0x02, 0x02, 0x03, 0x03, 0x05, 0x05, 0x07, 0x07, 0x0b, 0x0b, 0x0f, 0x0f,
+                    0x16, 0x16, 0x1f, 0x1f, 0x2d, 0x2d, 0x3f, 0x3f, 0x5a, 0x5a, 0x7f, 0x7f, 0xb4, 0xb4, 0xff, 0xff}
     };
 
     static class Psg {
 
         private static int PSG_MASK_CH(int x) {
-            return (1 << (x));
+            return 1 << x;
         }
 
         /** Volume Table */
@@ -144,11 +144,9 @@ public class Emu2149 {
         }
 
         public void reset() {
-            int i;
-
             this.baseCount = 0;
 
-            for (i = 0; i < 3; i++) {
+            for (int i = 0; i < 3; i++) {
                 this.cout[i] = 0;
                 this.count[i] = 0x1000;
                 this.freq[i] = 0;
@@ -158,7 +156,7 @@ public class Emu2149 {
 
             this.mask = 0;
 
-            for (i = 0; i < 16; i++)
+            for (int i = 0; i < 16; i++)
                 this.reg[i] = 0;
             this.adr = 0;
 
@@ -181,7 +179,6 @@ public class Emu2149 {
 
         public int readReg(int reg) {
             return this.reg[reg & 0x1f];
-
         }
 
         public void writeIO(int adr, int val) {
@@ -193,12 +190,10 @@ public class Emu2149 {
 
         public int calc() {
 
-            int i, noise;
-            int incr;
             int mix = 0;
 
             this.baseCount += this.baseIncr;
-            incr = (this.baseCount >> GETA_BITS);
+            int incr = (this.baseCount >> GETA_BITS);
             this.baseCount &= (1 << GETA_BITS) - 1;
 
             // Envelope
@@ -233,10 +228,10 @@ public class Emu2149 {
                 this.noiseSeed >>= 1;
                 this.noiseCount -= this.noiseFreq;
             }
-            noise = this.noiseSeed & 1;
+            int noise = this.noiseSeed & 1;
 
             // Tone/
-            for (i = 0; i < 3; i++) {
+            for (int i = 0; i < 3; i++) {
                 this.count[i] += incr;
                 if ((this.count[i] & 0x1000) != 0) {
                     if (this.freq[i] > 1) {
@@ -282,7 +277,6 @@ public class Emu2149 {
         }
 
         public void writeReg(int reg, int val) {
-            int c;
 
             if (reg > 15) return;
 
@@ -294,7 +288,7 @@ public class Emu2149 {
             case 3:
             case 4:
             case 5:
-                c = reg >> 1;
+                int c = reg >> 1;
                 this.freq[c] = ((this.reg[c * 2 + 1] & 15) << 8) + this.reg[c * 2];
                 break;
 

@@ -8,6 +8,7 @@ package mdsound.np;
 
 import mdsound.np.Device.Renderable;
 
+
 //
 // Excerpt from filter.h
 //
@@ -22,16 +23,13 @@ public class Filter {
     protected int getaBits;
 
     public Filter() {
-        getaBits = 20;
-        target = null;
-        rate = 48000; // DEFAULT_RATE;
-        r = 4700;
-        C = 10.0E-9;
-        disable = false;
-        _out[0] = _out[1] = 0;
-    }
-
-    protected void finalinze() {
+        this.getaBits = 20;
+        this.target = null;
+        this.rate = 48000; // DEFAULT_RATE;
+        this.r = 4700;
+        this.C = 10.0E-9;
+        this.disable = false;
+        this._out[0] =this. _out[1] = 0;
     }
 
     public void attach(Renderable t) {
@@ -63,7 +61,7 @@ public class Filter {
         // C = 1.0E-10 * c;
         this.r = r;
 
-        C = Math.pow((double) (c) / 400.0, 2.0) * 1.0E-10 * 400.0;
+        this.C = Math.pow((double) (c) / 400.0, 2.0) * 1.0E-10 * 400.0;
         // curved to try to provide useful range of settings
         // LPF = 112 ~ my NES
 
@@ -75,15 +73,15 @@ public class Filter {
     }
 
     public void setRate(double r) {
-        rate = r;
+        this.rate = r;
         updateFactor();
     }
 
     public void updateFactor() {
         if (r != 0.0 && C != 0.0 && rate != 0.0)
-            a = (1.0 / rate) / ((r * C) + (1.0 / rate));
+            this.a = (1.0 / rate) / ((r * C) + (1.0 / rate));
         else
-            a = 2.0; // disabled
+            this.a = 2.0; // disabled
     }
 
     public double getFactor() {

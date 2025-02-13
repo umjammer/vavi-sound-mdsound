@@ -51,10 +51,10 @@ public class NesN106 implements SoundChip {
 
     protected double rate, clock;
     protected int mask;
-    protected int[][] sm = new int[][] {new int[8], new int[8]}; // stereo mix
+    protected int[][] sm = {new int[8], new int[8]}; // stereo mix
     protected int[] fOut = new int[8]; // current output
     protected TrackInfo[] trkInfo = new TrackInfo[8];
-    protected int[] option = new int[(int) OPT.END];
+    protected int[] option = new int[OPT.END];
 
     protected boolean master_disable;
     protected int[] reg = new int[0x80]; // all state is contained here
@@ -162,8 +162,10 @@ logger.log(Level.ERROR, e.getMessage(), e);
         if (id < OPT.END) option[id] = val;
     }
 
+boolean INIT;
     @Override
     public void reset() {
+INIT = true;
         master_disable = false;
         Arrays.fill(reg, 0);
         regSelect = 0;
@@ -182,6 +184,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
             write(0x4800, 0x00);
         }
         write(0xF800, 0x00); // select $00 without auto-increment
+INIT = false;
     }
 
     @Override
@@ -206,6 +209,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
 
             // wrap phase if wavelength exceeded
             int hiLen = len << 16;
+assert hiLen >= 0;
             while (phase >= hiLen) phase -= hiLen;
 
             // write back phase
@@ -214,6 +218,8 @@ logger.log(Level.ERROR, e.getMessage(), e);
             // fetch sample (note: N163 output is centred at 8, and inverted w.r.t 2A03)
             int sample = 8 - getSample(((phase >> 16) + off) & 0xff);
             fOut[channel] = sample * vol;
+//if (CC++ < 300) { System.err.printf("%d, %d\n", phase, sample * vol); }
+//else { System.exit(1); }
 
             // cycle to next channel every 15 clocks
             tickClock -= 15;
@@ -223,7 +229,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
         }
     }
 
-    private static final int[] MIX = new int[] {256 / 1, 256 / 1, 256 / 2, 256 / 3, 256 / 4, 256 / 5, 256 / 6, 256 / 6, 256 / 6};
+    private static final int[] MIX = {256 / 1, 256 / 1, 256 / 2, 256 / 3, 256 / 4, 256 / 5, 256 / 6, 256 / 6, 256 / 6};
 
     @Override
     public int render(int[] b) {
@@ -297,19 +303,24 @@ logger.log(Level.ERROR, e.getMessage(), e);
         return 2;
     }
 
+int CC=0;
     @Override
-    public boolean write(int adr, int val, int id/*=0*/) {
+    public boolean write(int adr, int val, int id /* = 0 */) {
+//if (!INIT) {
+//if (CC++ < 300) { System.err.printf("%04x, %d, %d\n", adr, val, id); }
+//else { System.exit(1); }
+//}
         if (adr == 0xE000) { // master disable
             master_disable = ((val & 0x40) != 0);
             return true;
-        } else if (adr == 0xF800) { // register select
-            regSelect = (val & 0x7F);
+        } else if (adr == 0xf800) { // register select
+            regSelect = (val & 0x7f);
             regAdvance = (val & 0x80) != 0;
             return true;
         } else if (adr == 0x4800) { // register write
             reg[regSelect] = val;
             if (regAdvance)
-                regSelect = (regSelect + 1) & 0x7F;
+                regSelect = (regSelect + 1) & 0x7f;
             return true;
         }
         return false;
@@ -320,7 +331,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
         if (adr == 0x4800) { // register read
             val[0] = reg[regSelect];
             if (regAdvance)
-                regSelect = (regSelect + 1) & 0x7F;
+                regSelect = (regSelect + 1) & 0x7f;
             return true;
         }
         return false;
@@ -372,7 +383,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
     }
 
     private int getChannels() {
-        // 3-bit channel count stored in reg 0x7F
+        // 3-bit channel count stored in reg 0x7f
         return ((reg[0x7f] >> 4) & 0x07) + 1;
     }
 

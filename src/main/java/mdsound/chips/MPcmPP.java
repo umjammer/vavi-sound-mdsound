@@ -4,25 +4,25 @@ package mdsound.chips;
 
 
 //
-// MPCM (c)wachoman 互換えんじん(mndrvが使ってる機能のみ)
+// MPCM (c)wachoman Compatible engine (only functions used by mndrv)
 //
-// ADPCMデコードはXM6をぱk参考にした．
+// ADPCM decoding was cop^H^H^H based on XM6.
 //
 public class MPcmPP {
 
     public static class SETPCM {
 
-        public byte type;      // -1:ADPCM 0:なし 1:16bit 2:8bit
-        public byte orig;      // 基本note
+        public byte type;      // -1: ADPCM 0: None 1: 16bit 2: 8bit
+        public byte orig;      // Basic note
         public byte[] adrs_buf;
         public int adrs_ptr;
         public int size;
-        public int start;        // ループ開始点
-        public int end;      // ループ終点
-        public int count;        // ループ回数(0:無限)
+        public int start;        // Loop Opening
+        public int end;      // Loop End Point
+        public int count;        // Loop count (0: infinite)
     }
 
-    public static final int VOICE_MAX = 16;         // 効果音用の chは未サポート
+    public static final int VOICE_MAX = 16;         // Sound effect ch is not supported
 
     protected static final int TYPE_NONE = 0;
     protected static final int TYPE_16 = 1;
@@ -348,13 +348,13 @@ public class MPcmPP {
         int[] p;
         int p_ptr;
 
-        // テーブル作成(floorで丸めた方がpanic等で良い結果が得られる)
+        // Create a table (rounding by floor gives better results with panic, etc.)
         p = this.diffTable;
         p_ptr = 0;
         for (i = 0; i < 49; i++) {
             base_ = (int) Math.floor(16.0 * Math.pow(1.1, i));
 
-            // 演算もすべてintで行う
+            // All calculations are performed in int.
             for (j = 0; j < 16; j++) {
                 diff = 0;
                 if ((j & 4) != 0) {
@@ -516,7 +516,7 @@ public class MPcmPP {
         }
 
         if (pan < 0x80) {
-            // 3段階
+            // 3 steps
             switch (pan) {
                 case 1:
                     this.work[ch].lr[0] = 1;
@@ -541,7 +541,7 @@ public class MPcmPP {
             return;
         }
 
-        // 128段階
+        // 128 steps
         pan -= 0x80;
         if (pan >= 0 && pan <= 31) {
             this.work[ch].lr[0] = 1;
@@ -594,7 +594,7 @@ public class MPcmPP {
 
         cnt = pos - prev;
         if (prev == -1) {
-            // 初回だぜ．
+            // It's the first time.
             cnt = pos;
             prev = 0;
             offset = 0;
@@ -610,23 +610,23 @@ public class MPcmPP {
                 data &= 0x0f;
             }
 
-            // 差分テーブルから得る
+            // Get from the difference table
             index = offset << 4;
             index |= data;
             diff = this.diffTable[index];
 
-            // ストアデータを演算
+            // Calculate the stored data
             sample += diff;
             if (sample > 2047) sample = 2047;
             if (sample < -2048) sample = -2048;
 
-            // 偶数番値の場合はループ位置判定をする
+            // If the value is an even number, the loop position is determined.
             if (((prev + c) & 1) == 0 && (this.work[ch].lp_start == pos)) {
                 this.work[ch].lp_sample = sample;
                 this.work[ch].lp_offset = offset;
             }
 
-            // 次のオフセットを求めておく
+            // Find the next offset
             offset += NextTable[data & 7];
             offset = OffsetTable[offset + 1];
         }

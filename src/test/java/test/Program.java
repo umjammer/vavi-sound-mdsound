@@ -1412,7 +1412,7 @@ Debug.println("eof: vgmAdr: " + vgmAdr + ", vgmBuf.length: " + vgmBuf.length + "
 
             break;
         default:
-            // わからんコマンド
+            // Unknown command
             Debug.printf(Level.WARNING, "%02x", vgmBuf[vgmAdr++]);
         }
     }
@@ -1449,7 +1449,7 @@ Debug.println("eof: vgmAdr: " + vgmAdr + ", vgmBuf.length: " + vgmBuf.length + "
         for (int i = 0; i < 0x100; i++) {
 
             if (!vgmStreams[i].sw) continue;
-            if (vgmStreams[i].chipId != 0x02) continue; // とりあえずYM2612のみ
+            if (vgmStreams[i].chipId != 0x02) continue; // For now, only YM2612
 
             while (vgmStreams[i].wkDataStep >= 1.0) {
                 mds.write(Ym2612Inst.class, 0, vgmStreams[i].port, vgmStreams[i].cmd, vgmBuf[vgmPcmBaseAdr + vgmStreams[i].wkDataAdr] & 0xff);

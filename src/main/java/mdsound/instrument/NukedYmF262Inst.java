@@ -79,34 +79,10 @@ public class NukedYmF262Inst extends Instrument.BaseInstrument {
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        short[] b = new short[2];
+        short[] b = new short[4];
 
         for (int i = 0; i < samples; i++) {
-            outputs[0][i] = 0;
-            outputs[1][i] = 0;
-        }
-        // make sure that the enqueued register writes get processed properly
-        if (chip.rateRatio == (1 << RSM_FRAC)) {
-
-            for (int i = 0; i < samples; i++) {
-                if ((chip.writeBuf[chip.writeBuf_cur].reg & 0x200) == 0)
-                    break;
-                chips[chipId].OPL3_Generate4Ch(chip, chip.samples);
-            }
-        } else {
-            chip.sampleCnt += samples << RSM_FRAC;
-            while (chip.sampleCnt >= chip.rateRatio) {
-                if ((chip.writeBuf[chip.writeBuf_cur].reg & 0x200) == 0) {
-                    chip.sampleCnt = 0;
-                    break;
-                }
-                chips[chipId].OPL3_Generate4Ch(chip, chip.samples);
-                chip.sampleCnt -= chip.rateRatio;
-            }
-        }
-
-        for (int i = 0; i < samples; i++) {
-            chips[chipId].OPL3_GenerateStream(chip, b, 0, 1);
+            chips[chipId].OPL3_GenerateResampled(chip, b, 0);
             outputs[0][i] = b[0];
             outputs[1][i] = b[1];
 

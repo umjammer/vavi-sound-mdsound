@@ -61,10 +61,10 @@ public class DataSender extends BaseSender {
         seqCounter = Def_SeqCounter;
         ringBuffer.init(ringBufferSize);
 
-        // 開始時のデータの送信
+        // Sending data at the start
         if (startData != null) {
             for (Pack dat : startData) {
-                // 振り分けてEnqueue
+                // Enqueue by dividing
                 if (dat.dev >= 0)
                     while (!emuEnq.apply(0, dat.dev, dat.typ, dat.adr, dat.val, null))
                         Thread.yield();
@@ -101,7 +101,7 @@ public class DataSender extends BaseSender {
                     sw = System.currentTimeMillis();
                     if (el1 - o < step)
                         continue;
-                    if (el1 - o >= step * frq / 100.0) { // 閾値10ms
+                    if (el1 - o >= step * frq / 100.0) { // Threshold 10ms
                         do {
                             o += step;
                         } while (el1 - o >= step);
@@ -111,7 +111,7 @@ public class DataSender extends BaseSender {
 
                     // lock (lockObj)
                     {
-                        // 待ち合わせ割り込み
+                        // Waiting Interrupt
                         if (parent.getInterrupt()) {
                             // Thread.Sleep(0);
                             continue;
@@ -133,7 +133,7 @@ public class DataSender extends BaseSender {
                         // continue;
                     }
 
-                    // dataが貯まってます！
+                    // Data is being accumulated!
                     while (seqCounter >= ringBuffer.lookUpCounter()) {
                         int[] counter_ = new int[1];
                         int[] dev_ = new int[1];
@@ -151,7 +151,7 @@ public class DataSender extends BaseSender {
                             break;
                         }
 
-                        // 振り分けてEnqueue
+                        // Enqueue by dividing
                         if (dev >= 0)
                             while (!emuEnq.apply(counter, dev, typ, adr, val, ex))
                                 Thread.yield();
@@ -161,10 +161,10 @@ public class DataSender extends BaseSender {
                     }
                 }
 
-                // 停止時のデータの送信
+                // Sending data when stopped
                 if (stopData != null) {
                     for (Pack dat : stopData) {
-                        // 振り分けてEnqueue
+                        // Enqueue by dividing
                         if (dat.dev >= 0)
                             while (!emuEnq.apply(counter, dat.dev, dat.typ, dat.adr, dat.val, null))
                                 Thread.yield();
