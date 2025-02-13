@@ -62,9 +62,8 @@ public class YmF262Inst extends Instrument.BaseInstrument {
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        int adr_ = port * 0x100 + adr;
-        chips[chipId].write((adr_ & 0x100) != 0 ? 0x02 : 0x00, adr_ & 0xff);
-        chips[chipId].write((adr_ & 0x100) != 0 ? 0x03 : 0x01, data);
+        chips[chipId].write((port << 1) | 0x00, adr);
+        chips[chipId].write((port << 1) | 0x01, data);
         return 0;
     }
 

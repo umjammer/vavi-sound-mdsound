@@ -2534,7 +2534,11 @@ public class YmF262 {
      */
     public static class AdlibOpl3 implements Opl3 {
 
+//#if defined(OPLTYPE_IS_OPL3)
         private static final int NUM_CHANNELS = 18;
+//#else
+//        private static final int NUM_CHANNELS = 9;
+//#endif
 
         private static final int MAXOPERATORS = NUM_CHANNELS * 2;
 
@@ -2820,7 +2824,7 @@ public class YmF262 {
 
                 // advance waveForm time
                 tCount += tInc;
-                tCount += tInc * vib / FIXEDPT;
+                tCount += (int) (tInc * vib / FIXEDPT);
 
                 generatorPos += generator_add;
             }
@@ -2967,7 +2971,7 @@ public class YmF262 {
                             amp = 1.0;
                             stepAmp = 1.0;
                         }
-                        step_skip_pos_a <<= 1;
+                        step_skip_pos_a = (step_skip_pos_a << 1) & 0xff;
                         if (step_skip_pos_a == 0) step_skip_pos_a = 1;
                         if ((step_skip_pos_a & envStepSkipA) != 0) { // check if required to skip next step
                             stepAmp = amp;
@@ -3076,6 +3080,7 @@ public class YmF262 {
             }
 
             public void changeKeepSustain(boolean susKeep) {
+                this.susKeep = susKeep;
                 if (opState == OF_TYPE_SUS) {
                     if (!susKeep)
                         opState = OF_TYPE_SUS_NOKEEP;
@@ -3280,7 +3285,7 @@ public class YmF262 {
         public int write(int addr, int val) {
             if ((addr & 1) != 0) {
 //logger.log(Level.TRACE, "adr=%x  dat=%x".formatted(this.opl_addr, val));
-                writeInternal(this.oplAddr, val & 0xff);
+                writeInternal(this.oplAddr, val);
             } else
 //#if defined(OPLTYPE_IS_OPL3)
                 this.oplAddr = val | ((addr & 2) << 7);
