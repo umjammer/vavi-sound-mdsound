@@ -126,6 +126,7 @@ this is a fork of [MDsound](https://github.com/kuma4649/MDSound)
    * ~~multipcm mostly~~
    * ~~wswan noise only~~
    * ~~pwn laud noise~~
+   * ~~ymf262 (nuked) little bit different?~~
  * libvgm says
    * ym3812 dosbox is better than mame
    * ym2612 nuked uses a lot of cpu
