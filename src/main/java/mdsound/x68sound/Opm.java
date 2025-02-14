@@ -394,7 +394,7 @@ public class Opm {
         betwIntProc = null;
         waveFunc = null;
 
-        global.memRead = Global::memReadDefault;
+        global.memRead = global::memReadDefault;
 
 //#if C86CTL
 //        if (pChipOPM)
@@ -1426,7 +1426,7 @@ public class Opm {
                         InpOpmBuf1[inpOpmIdx + Global.OPMLPF_COL] = (short) outInpOpm[1];
             }
 
-            global.firOpm(opmLPFpBuf[opmLPFpPtr], inpOpmBuf0, inpOpmIdx, InpOpmBuf1, inpOpmIdx, outOpm);
+            Global.firOpm(opmLPFpBuf[opmLPFpPtr], inpOpmBuf0, inpOpmIdx, InpOpmBuf1, inpOpmIdx, outOpm);
 
             opmLPFpPtr += 1;
             if (opmLPFpPtr >= global.OPMLPF_ROW) {
@@ -1762,12 +1762,12 @@ public class Opm {
 
         if (sampleRate == 44100) {
             Global.sampleRate = global.opmRate;
-            global.OPMLPF_ROW = Global.OPMLPF_ROW_44;
-            global.OPMLOWPASS = Global.OPMLOWPASS_44;
+            Global.OPMLPF_ROW = Global.OPMLPF_ROW_44;
+            Global.OPMLOWPASS = Global.OPMLOWPASS_44;
         } else if (sampleRate == 48000) {
             Global.sampleRate = global.opmRate;
-            global.OPMLPF_ROW = Global.OPMLPF_ROW_48;
-            global.OPMLOWPASS = Global.OPMLOWPASS_48;
+            Global.OPMLPF_ROW = Global.OPMLPF_ROW_48;
+            Global.OPMLOWPASS = Global.OPMLOWPASS_48;
         } else {
             Global.sampleRate = sampleRate;
         }
@@ -1802,12 +1802,12 @@ public class Opm {
 
         if (sampleRate == 44100) {
             Global.sampleRate = global.opmRate;
-            global.OPMLPF_ROW = Global.OPMLPF_ROW_44;
-            global.OPMLOWPASS = Global.OPMLOWPASS_44;
+            Global.OPMLPF_ROW = Global.OPMLPF_ROW_44;
+            Global.OPMLOWPASS = Global.OPMLOWPASS_44;
         } else if (sampleRate == 48000) {
             Global.sampleRate = global.opmRate;
-            global.OPMLPF_ROW = Global.OPMLPF_ROW_48;
-            global.OPMLOWPASS = Global.OPMLOWPASS_48;
+            Global.OPMLPF_ROW = Global.OPMLPF_ROW_48;
+            Global.OPMLOWPASS = Global.OPMLOWPASS_48;
         } else {
             Global.sampleRate = sampleRate;
         }
@@ -1831,12 +1831,12 @@ public class Opm {
 
         if (sampleRate == 44100) {
             Global.sampleRate = global.opmRate;
-            global.OPMLPF_ROW = Global.OPMLPF_ROW_44;
-            global.OPMLOWPASS = Global.OPMLOWPASS_44;
+            Global.OPMLPF_ROW = Global.OPMLPF_ROW_44;
+            Global.OPMLOWPASS = Global.OPMLOWPASS_44;
         } else if (sampleRate == 48000) {
             Global.sampleRate = global.opmRate;
-            global.OPMLPF_ROW = Global.OPMLPF_ROW_48;
-            global.OPMLOWPASS = Global.OPMLOWPASS_48;
+            Global.OPMLPF_ROW = Global.OPMLPF_ROW_48;
+            Global.OPMLOWPASS = Global.OPMLOWPASS_48;
         } else {
             Global.sampleRate = sampleRate;
         }
@@ -1873,13 +1873,13 @@ public class Opm {
 
     private int waveAndTimerStart() {
 
-        global.Betw_Time = _betw;
-        global.TimerResolution = _betw;
-        global.Late_Time = _late + _betw;
+        global.betwTime = _betw;
+        global.timerResolution = _betw;
+        global.lateTime = _late + _betw;
         global.betwSamplesSlower = (int) Math.floor((double) (Global.waveOutSamp) * _betw / 1000.0 - _rev);
         global.betwSamplesFaster = (int) Math.ceil((double) (Global.waveOutSamp) * _betw / 1000.0 + _rev);
         global.betwSamplesVerySlower = (int) (Math.floor((double) (Global.waveOutSamp) * _betw / 1000.0 - _rev) / 8.0);
-        global.lateSamples = Global.waveOutSamp * global.Late_Time / 1000;
+        global.lateSamples = Global.waveOutSamp * global.lateTime / 1000;
 
         global.blkSamples = global.lateSamples;
 
@@ -1889,14 +1889,14 @@ public class Opm {
             global.fasterLimit = Global.waveOutSamp * 50 / 1000;
         }
         if (global.fasterLimit > global.lateSamples) global.fasterLimit = global.lateSamples;
-        global.Slower_Limit = global.fasterLimit;
-        if (global.Slower_Limit > global.lateSamples) global.Slower_Limit = global.lateSamples;
+        global.slowerLimit = global.fasterLimit;
+        if (global.slowerLimit > global.lateSamples) global.slowerLimit = global.lateSamples;
 
         if (dousaMode != 1) {
             return 0;
         }
 
-        pcmBufSize = global.blkSamples * Global.N_waveblk;
+        pcmBufSize = global.blkSamples * Global.N_WaveBlk;
         global.nSamples = global.betwSamplesFaster;
 
 //        if (naudio != null) naudio.Stop();
@@ -1904,7 +1904,7 @@ public class Opm {
         //naudio.Start();
 
 //        try {
-//            Global.thread_handle = WinAPI.CreateThread(IntPtr.Zero, 0, Global.keepWaveOutThread, IntPtr.Zero, 0, out Global.thread_id);
+//            Global.thread_handle = WinAPI.CreateThread(IntPtr.Zero, 0, Global.keepWaveOutThread, IntPtr.Zero, 0, out Global.threadId);
 //            WinAPI.SetThreadPriority(Global.thread_handle, 1);// THREAD_PRIORITY_ABOVE_NORMAL);
 //            WinAPI.SetThreadPriority(Global.thread_handle, -1);// THREAD_PRIORITY_BELOW_NORMAL);
 //            WinAPI.SetThreadPriority(Global.thread_handle, 2);// THREAD_PRIORITY_HIGHEST);
@@ -1913,7 +1913,7 @@ public class Opm {
 //            Global.ErrorCode = 5;
 //            return X68Sound.X68SNDERR_TIMER;
 //        }
-//        while (Global.thread_flag == 0) System.Threading.Thread.Sleep(100);
+//        while (Global.threadFlag == 0) System.Threading.Thread.Sleep(100);
 //
 //        WinAPI.MMRESULT ret;
 //
@@ -1926,7 +1926,7 @@ public class Opm {
 //        wfx.nAvgBytesPerSec = wfx.nSamplesPerSec * wfx.nBlockAlign;
 //        wfx.cbSize = 0;
 //
-//        Global.timer_start_flag = 0;
+//        Global.timerStartFlag = 0;
 //        if ((ret = WinAPI.waveOutOpen(Global.hwo, Global.WAVE_MAPPER, wfx, Global.keepWaveOutProc, 0, Global.CALLBACK_FUNCTION))
 //        != WinAPI.MMRESULT.MMSYSERR_NOERROR) {
 //            Global.hwo = IntPtr.Zero;
@@ -1950,28 +1950,28 @@ public class Opm {
         _pcmBufPtr = global.blkSamples + global.lateSamples + global.betwSamplesFaster;
         while (_pcmBufPtr >= pcmBufSize) _pcmBufPtr -= pcmBufSize;
         global.waveblk = 0;
-        global.playingblk = 0;
-//        playingblk_next = playingblk + 1;
-//        for (int i = 0; i < global.N_waveblk; ++i) {
-//            WinAPI.PostThreadMessage(Global.thread_id, Global.THREADMES_WAVEOUTDONE, (int)Ptr.Zero, IntPtr.Zero);
+        global.playingBlk = 0;
+//        playingBlkNext = playingBlk + 1;
+//        for (int i = 0; i < global.N_WaveBlk; ++i) {
+//            WinAPI.PostThreadMessage(Global.threadId, Global.THREADMES_WAVEOUTDONE, (int)Ptr.Zero, IntPtr.Zero);
 //        }
 
-//        WinAPI.timeBeginPeriod(Global.TimerResolution);
+//        WinAPI.timeBeginPeriod(Global.timerResolution);
 //        int usrctx = 0;
-//        TimerID = WinAPI.timeSetEvent((int)Global.Betw_Time, Global.TimerResolution, Global.keepOpmTimeProc, usrctx , Global.TIME_PERIODIC);
+//        TimerID = WinAPI.timeSetEvent((int)Global.betwTime, Global.timerResolution, Global.keepOpmTimeProc, usrctx , Global.TIME_PERIODIC);
 //        if (TimerID == 0) {
 //            Free();
 //            Global.ErrorCode = 4;
 //            return X68Sound.X68SNDERR_TIMER;
 //        }
 
-        //while (Global.timer_start_flag == 0) System.Threading.Thread.Sleep(200); // Wait until the multimedia timer starts
+        //while (Global.timerStartFlag == 0) System.Threading.Thread.Sleep(200); // Wait until the multimedia timer starts
 
         return 0;
     }
 
     public void free() {
-        global.timer_start_flag = 0; // Stop processing multimedia timers
+        global.timerStartFlag = 0; // Stop processing multimedia timers
 
         dousaMode = 0;
     }
@@ -2224,7 +2224,7 @@ public class Opm {
     }
 
     public void memReadFunc(Function<Integer, Integer> func) {
-        global.memRead = Objects.requireNonNullElseGet(func, () -> Global::memReadDefault);
+        global.memRead = Objects.requireNonNullElseGet(func, () -> global::memReadDefault);
     }
 
     public void setMask(int v) {
