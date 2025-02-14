@@ -34,8 +34,11 @@ package mdsound.chips;
  to mahorna@teleline.es or 432937@cepsz.unizar.es.
  http://teleline.terra.es/personal/mahorna
  *
+ * BSMT2000?
+ *
  * @author Paul Leaman
  * @author Angel Horna
+ * @see "https://github.com/SatyrDiamond/adpcm"
  */
 public class QSound {
 

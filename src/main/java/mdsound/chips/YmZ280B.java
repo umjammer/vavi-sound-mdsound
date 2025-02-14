@@ -153,6 +153,8 @@ public class YmZ280B {
 
         /**
          * general ADPCM decoding routine
+         * ADPCM-Z?
+         * @see "https://github.com/SatyrDiamond/adpcm"
          */
         private int generateAdpcm(byte[] base, int size, short[] buffer, int samples) {
             int position = this.position;

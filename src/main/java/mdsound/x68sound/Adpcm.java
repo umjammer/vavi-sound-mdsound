@@ -17,9 +17,10 @@ import static java.lang.System.getLogger;
 
 
 /**
- * Adpcm.
+ * Adpcm. MSM6258
  *
  * @author m_puusan
+ * @see "http://www.pastel-flower.jp/~isaki/NetBSD/src/?sys/dev/ic/msm6258.c"
  */
 public class Adpcm {
 

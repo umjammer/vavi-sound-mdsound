@@ -35,7 +35,6 @@ package mdsound.chips;
 import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -373,7 +372,7 @@ public class NukedYmF262 {
         int out = 0;
         phase &= 0x3ff;
         if ((phase & 0x100) != 0) {
-            out = 0x1000;
+            out = logSinRom[(phase & 0xff) ^ 0xff];
         } else {
             out = logSinRom[phase & 0xff];
         }
@@ -481,8 +480,8 @@ public class NukedYmF262 {
         int eg_inc;
         int eg_off;
         int reset = 0;
-        slot.eg_out = (short) (slot.eg_rout + (slot.reg_tl << 2)
-                + (slot.eg_ksl >> kslShift[slot.reg_ksl]) + (slot.trem.get(0) & 0xff));
+        slot.eg_out = (slot.eg_rout + (slot.reg_tl << 2)
+                + (slot.eg_ksl >> kslShift[slot.reg_ksl]) + (slot.trem.get(0) & 0xff)) & 0xffff;
         if (slot.key != 0 && slot.eg_gen == EnvelopeGen.Release) {
             reset = 1;
             reg_rate = slot.reg_ar;
@@ -561,7 +560,7 @@ public class NukedYmF262 {
                 if (slot.eg_rout == 0) {
                     slot.eg_gen = EnvelopeGen.Decay;
                 } else if (slot.key != 0 && shift > 0 && rate_hi != 0x0f) {
-                    eg_inc = ~slot.eg_rout >> (4 - shift);
+                    eg_inc = (short) (~slot.eg_rout >>> (4 - shift));
                 }
                 break;
             case Decay:
@@ -606,7 +605,7 @@ public class NukedYmF262 {
         int baseFreq;
         int rm_xor, n_bit;
         int noise;
-        short phase;
+        int phase;
 
         chip = slot.chip;
         f_num = slot.channel.f_num;
@@ -630,7 +629,7 @@ public class NukedYmF262 {
             f_num += range;
         }
         baseFreq = (f_num << slot.channel.block) >> 1;
-        phase = (short) (slot.pg_phase >> 9);
+        phase = (slot.pg_phase >> 9) & 0xffff;
         if (slot.pg_reset != 0) {
             slot.pg_phase = 0;
         }
@@ -1137,7 +1136,7 @@ assert chip.slot[ii].channel != null : "slot: " + ii + ", slot: @" + chip.slot.h
             chip.vibPos = (chip.vibPos + 1) & 7;
         }
 
-        chip.timer += (chip.timer + 1) & 0xffff;
+        chip.timer = (chip.timer + 1) & 0xffff;
 
         if (chip.eg_state != 0) {
             while (shift < 13 && ((chip.eg_timer >> shift) & 1) == 0) {
@@ -1262,7 +1261,6 @@ logger.log(Level.DEBUG, "rateRatio: " + chip.rateRatio);
 //#endif
     }
 
-static int CC;
     public void OPL3_WriteReg(Chip chip, int reg, int v) {
         int high = (reg >> 8) & 0x01;
         int regm = reg & 0xff;

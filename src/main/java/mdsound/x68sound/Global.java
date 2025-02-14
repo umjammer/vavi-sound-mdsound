@@ -22,7 +22,7 @@ import mdsound.Common;
  */
 public class Global {
 
-    private static byte[] memory = null;
+    private byte[] memory = null;
     public Opm opm;
 
     private Global() {
@@ -278,12 +278,12 @@ public class Global {
         return (data << 8) + (data >> 8);
     }
 
-    public static int memReadDefault(int adrs) {
+    public int memReadDefault(int adrs) {
         if (memory.length <= adrs) return -1;
         return memory[adrs];
     }
 
-    public Function<Integer, Integer> memRead = Global::memReadDefault;
+    public Function<Integer, Integer> memRead = this::memReadDefault;
 
     int seed = 1;
 
@@ -314,34 +314,34 @@ public class Global {
         }
     }
 
-    public int OPMLPF_ROW = OPMLPF_ROW_44;
-    public short[][] OPMLOWPASS; // Implemented in the constructor
+    public static int OPMLPF_ROW = OPMLPF_ROW_44;
+    public static short[][] OPMLOWPASS; // Implemented in the constructor
 
-    public int Betw_Time; // 5 ms
-    public int Late_Time; // (200+Bet_time) ms
-    public int lateSamples; // (44100*Late_Time/1000)
-    public int blkSamples; // 44100/N_waveblk
+    public int betwTime; // 5 ms
+    public int lateTime; // (200+Bet_time) ms
+    public int lateSamples; // (44100*lateTime/1000)
+    public int blkSamples; // 44100/N_WaveBlk
     public int betwSamplesSlower; // floor(44100.0*5/1000.0-rev)
     public int betwSamplesFaster; // ceil(44100.0*5/1000.0+rev)
     public int betwSamplesVerySlower; // floor(44100.0*5/1000.0-rev)/4.0
-    public int Slower_Limit, fasterLimit;
+    public int slowerLimit, fasterLimit;
 //    public HWAVEOUT hwo = null;
 //    public LPWAVEHDR lpwh = null;
-    public int N_wavehdr = 0;
+    public int N_WaveHdr = 0;
 //    public WAVEFORMATEX wfx;
-    public int TimerResolution = 1;
+    public int timerResolution = 1;
 //    int SamplesCounter = 0;
 //    int SamplesCounterRev = 0;
     public int nSamples;
 
 //    public HANDLE thread_handle = null;
-    public int thread_id = 0;
-    public int thread_flag = 0;
-    public int timer_start_flag = 0;
-//    final int N_waveblk = 8;
-    public static final int N_waveblk = 4;
+    public int threadId = 0;
+    public int threadFlag = 0;
+    public int timerStartFlag = 0;
+//    final int N_WaveBlk = 8;
+    public static final int N_WaveBlk = 4;
     public int waveblk = 0;
-    public int playingblk = 0, playingblk_next = 1;
+    public int playingBlk = 0, playingBlkNext = 1;
     public int setPcmBufPtr = -1;
 
     public static final int WM_USER = 0x0400;
@@ -351,9 +351,9 @@ public class Global {
     // Multimedia Timer
     public int procOpmTimer(short[] buffer, int offset, int sampleCount) {
 
-        //if (timer_start_flag==0) return sampleCount;
+        //if (timerStartFlag==0) return sampleCount;
 
-        //if (opm.PcmBufPtr / Blk_Samples == ((playingblk - 1) & (N_waveblk - 1))) return;
+        //if (opm.PcmBufPtr / Blk_Samples == ((playingBlk - 1) & (N_WaveBlk - 1))) return;
         if (setPcmBufPtr != -1) {
             opm.setPcmBufPtr(setPcmBufPtr);
             setPcmBufPtr = -1;
@@ -391,7 +391,7 @@ public class Global {
         return sampleCount;
     }
 
-    public void firOpm(short[] p, short[] buf0, int buf0Ptr, short[] buf1, int buf1Ptr, int[] result) {
+    public static void firOpm(short[] p, short[] buf0, int buf0Ptr, short[] buf1, int buf1Ptr, int[] result) {
         result[0] = (int) buf0[buf0Ptr + 0] * p[0] +
                 (int) buf0[buf0Ptr + 1] * p[1] +
                 (int) buf0[buf0Ptr + 2] * p[2] +
