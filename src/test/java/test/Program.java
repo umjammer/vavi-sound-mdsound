@@ -730,7 +730,7 @@ Debug.printf("version is after 1.50, %04x", version);
                 chip.samplingRate = SamplingRate;
                 chip.clock = ByteUtil.readLeInt(vgmBuf, 0xa8);
                 chip.volume = 0;
-                chip.option = new Object[] {C140.Type.valueOf(vgmBuf[0x96] & 0xff)};
+                chip.option = new Object[] {C140.Type.values()[vgmBuf[0x96] & 0xff]};
                 lstChip.add(chip);
             }
 

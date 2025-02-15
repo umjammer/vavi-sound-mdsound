@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2025 by Naohide Sano, All rights reserved.
+ *
+ * Programmed by Naohide Sano
+ */
+
 package mdsound.instrument;
 
 import java.util.HashMap;
@@ -7,31 +13,36 @@ import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
 import mdsound.Instrument.PcmEnabledInstrument;
 import mdsound.chips.C140;
+import mdsound.chips.C219;
 
 
-public class C140Inst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
+/**
+ * C219.
+ *
+ * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
+ * @version 0.00 2025-02-15 nsano initial version <br>
+ */
+public class C219Inst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
     public static final int MAX_CHIPS = 0x02;
 
-    private final C140[] chips = {new C140(), new C140()};
+    private final C219[] chips = {new C219(), new C219()};
 
     private final int[] mask = {0, 0};
 
-    private C140.Type type;
-
-    public C140Inst() {
+    public C219Inst() {
         // 0..Main
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
 
     @Override
     public String getName() {
-        return "C140" + type.name().toLowerCase();
+        return "C219";
     }
 
     @Override
     public String getShortName() {
-        return "C140";
+        return "C219";
     }
 
     @Override
@@ -44,23 +55,11 @@ public class C140Inst extends Instrument.BaseInstrument implements PcmEnabledIns
     public void reset(int chipId) {
     }
 
-    /**
-     * @param option 0: C140.Type
-     */
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
         assert chipId < MAX_CHIPS;
 
-        int sampleRate = clock;
-        if ((CHIP_SAMPLING_MODE == 0x01 && sampleRate < CHIP_SAMPLE_RATE) || CHIP_SAMPLING_MODE == 0x02)
-            sampleRate = CHIP_SAMPLE_RATE;
-        if (sampleRate >= 0x100_0000) // limit to 16 MHz sample rate (32 MB buffer)
-            return 0;
-
-        type = (C140.Type) option[0];
-        chips[chipId].start(clock, sampleRate, type);
-
-        return sampleRate;
+        return chips[chipId].start(clock);
     }
 
     @Override
@@ -76,7 +75,7 @@ public class C140Inst extends Instrument.BaseInstrument implements PcmEnabledIns
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        chips[chipId].update(outputs, samples);
+        chips[chipId].update(samples, outputs);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
@@ -99,22 +98,12 @@ public class C140Inst extends Instrument.BaseInstrument implements PcmEnabledIns
         chips[chipId].setMuteMask(mask[chipId]);
     }
 
-    /** @param extras 0: srcOffset, 1: romSize */
+    /** @param extras 0: srcOffset. 1: romSize */
     @Override
     public synchronized void writePcm(int chipId, byte[] buf, int offset, int length, Object... extras) {
         int srcOffset = (int) extras[0];
         int romSize = (int) extras[1];
-        chips[chipId].writeRom(romSize, offset, length, buf, srcOffset);
-    }
-
-    //----
-
-    public void setBase(int chipId, byte[] base) {
-        chips[chipId].setBase(base);
-    }
-
-    public synchronized C140 getRegister(int cur) {
-        return chips[cur];
+        chips[chipId].writeRom(offset, length, buf, srcOffset, romSize);
     }
 
     //----
