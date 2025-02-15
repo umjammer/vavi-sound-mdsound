@@ -100,7 +100,7 @@ public class C140Inst extends Instrument.BaseInstrument implements PcmEnabledIns
     @Override
     public synchronized void writePcm(int chipId, byte[] buf, int offset, int length, Object... extras) {
         int srcOffset = (int) extras[0];
-        int romSize = (int) extras[0];
+        int romSize = (int) extras[1];
         chips[chipId].writeRom(romSize, offset, length, buf, srcOffset);
     }
 
