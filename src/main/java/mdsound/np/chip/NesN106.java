@@ -21,10 +21,11 @@ public class NesN106 implements SoundChip {
 
     private static final Logger logger = getLogger(NesN106.class.getName());
 
-    public static class TrackInfo extends BasicTrackInfo {
+    public static class TrackInfo extends BasicTrackInfo implements Cloneable {
         public int waveLen;
         public short[] wave = new short[256];
 
+        @Override
         public DeviceInfo clone() {
             NesN106.TrackInfo ti = new NesN106.TrackInfo();
             ti.output = output;
@@ -110,7 +111,7 @@ public class NesN106 implements SoundChip {
             t.output = fOut[channel];
 
             t.key = (t.volume > 0) && (t._freq > 0);
-            t.freq = ((double) (t._freq) * clock) / (double) (15 * 65536 * channels * t.waveLen);
+            t.freq = ((double) t._freq * clock) / (double) (15 * 65536 * channels * t.waveLen);
             t.halt = getChannels() > trk;
             for (int i = 0; i < t.waveLen; ++i)
                 t.wave[i] = (short) getSample((i + t.tone) & 0xff);
@@ -178,12 +179,12 @@ INIT = true;
 
         for (int i = 0; i < 8; ++i) fOut[i] = 0;
 
-        write(0xE000, 0x00); // master disable off
-        write(0xF800, 0x80); // select $00 with auto-increment
+        write(0xe000, 0x00); // master disable off
+        write(0xf800, 0x80); // select $00 with auto-increment
         for (int i = 0; i < 0x80; ++i) { // set all regs to 0
             write(0x4800, 0x00);
         }
-        write(0xF800, 0x00); // select $00 without auto-increment
+        write(0xf800, 0x00); // select $00 without auto-increment
 INIT = false;
     }
 
@@ -218,8 +219,6 @@ assert hiLen >= 0;
             // fetch sample (note: N163 output is centred at 8, and inverted w.r.t 2A03)
             int sample = 8 - getSample(((phase >> 16) + off) & 0xff);
             fOut[channel] = sample * vol;
-//if (CC++ < 300) { System.err.printf("%d, %d\n", phase, sample * vol); }
-//else { System.exit(1); }
 
             // cycle to next channel every 15 clocks
             tickClock -= 15;
@@ -297,6 +296,8 @@ assert hiLen >= 0;
         final int GAIN = (int) ((MASTER_VOL / MAX_OUT) * 256.0f);
         b[0] = (b[0] * GAIN) >> 8;
         b[1] = (b[1] * GAIN) >> 8;
+//if (CC++ < 300) { System.err.printf("%d: %d, %d\n", CC, b[0], b[1]); }
+//else { System.exit(1); }
 
         if (listener != null) listener.accept(new int[] {-1, -1, -1, -1, -1, Math.abs(b[0]), -1, -1});
 
@@ -307,10 +308,10 @@ int CC=0;
     @Override
     public boolean write(int adr, int val, int id /* = 0 */) {
 //if (!INIT) {
-//if (CC++ < 300) { System.err.printf("%04x, %d, %d\n", adr, val, id); }
+//if (CC++ < 300) { System.err.printf("%d: %04x, %d\n", CC, adr, val); }
 //else { System.exit(1); }
 //}
-        if (adr == 0xE000) { // master disable
+        if (adr == 0xe000) { // master disable
             master_disable = ((val & 0x40) != 0);
             return true;
         } else if (adr == 0xf800) { // register select

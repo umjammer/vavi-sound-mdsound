@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2025 by Naohide Sano, All rights reserved.
+ *
+ * Programmed by Naohide Sano
+ */
+
 package mdsound.instrument;
 
 import java.util.HashMap;
@@ -9,6 +15,12 @@ import vavi.sound.ymfm.Opl.Ymf262;
 import vavi.sound.ymfm.YmFm.VgmChip;
 
 
+/**
+ * YmFmYmF262Inst.
+ *
+ * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
+ * @version 0.00 2025-02-06 nsano initial version <br>
+ */
 public class YmFmYmF262Inst extends Instrument.BaseInstrument {
 
     public static final int DefaultClockValue = 14318180;

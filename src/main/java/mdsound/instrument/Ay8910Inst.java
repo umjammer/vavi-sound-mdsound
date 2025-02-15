@@ -45,8 +45,7 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        PSG chip = chips[chipId];
-        chip.setClock(clock, samplingRate);
+        chips[chipId].setClock(clock, samplingRate);
         return samplingRate;
     }
 
