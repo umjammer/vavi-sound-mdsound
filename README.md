@@ -13,11 +13,11 @@ this is a fork of [MDsound](https://github.com/kuma4649/MDSound)
 
 | name                  | common name | type  | status | origin                   | sample                                                                                                                       |
 |-----------------------|-------------|-------|:------:|--------------------------|------------------------------------------------------------------------------------------------------------------------------|
-| YM2612 (mame-A) gens? | OPN2        | FM    |   ✅️   | mame:dallongeville+green | Puyo Puyo/09 - Sticker.vgz                                                                                                   |
-| YM2612 (mame-B)       | OPN2        | FM    |   ✅️   | mame:burczynski          | ditto                                                                                                                        |
-| YM3438                | OPN2 (cmos) | FM    |   ✅️   | nukeyktA+bufA            | ditto                                                                                                                        |
-| YM3438 (simple)       | OPN2 (cmos) | FM    |   ✅️   | nukeyktB+bufB            | ditto                                                                                                                        |
-| YM3438 (vavi)         | OPN2 (cmos) | FM    |   ✅️   | nukeyktA+bufB            | ditto                                                                                                                        |
+| YM2612 (mame:A) gens? | OPN2        | FM    |   ✅️   | mame:dallongeville+green | Puyo Puyo/09 - Sticker.vgz                                                                                                   |
+| YM2612 (mame:B)       | OPN2        | FM    |   ✅️   | mame:burczynski          | ditto                                                                                                                        |
+| YM3438                | OPN2 (cmos) | FM    |   ✅️   | nukeykt:A+bufA           | ditto                                                                                                                        |
+| YM3438 (simple)       | OPN2 (cmos) | FM    |   ✅️   | nukeykt:B+bufB           | ditto                                                                                                                        |
+| YM3438 (vavi)         | OPN2 (cmos) | FM    |   ✅️   | nukeykt:A+bufB           | ditto                                                                                                                        |
 | YM2151 (mame)         | OPM         | FM    |   ✅️   | mame                     | Out_Run_(Arcade)/01 Magical Sound Shower.vgz                                                                                 |
 | YM2151 (fmgen)        | OPM         | FM    |   ✅️   | fmgen                    | ditto                                                                                                                        |
 | YM2151 (x68sound)     | OPM         | FM    |   ✅️   | x68sound                 | ditto                                                                                                                        |
@@ -44,7 +44,10 @@ this is a fork of [MDsound](https://github.com/kuma4649/MDSound)
 | YMZ280B               |             | FM    |   ✅    |                          | Guwange_(Cave_68000)/03 Falling Cherry Blossoms.vgz                                                                          |
 | RF5C164               | ScdPcm      | PCM   |   ✅    |                          | Sonic CD (Mega CD)/01 - Palmtree Panic Zone Past.vgz                                                                         |
 | RF5C68                | RF5C        | PCM   |   ✅    |                          | Michael_Jackson's_Moonwalker_(Sega_System_18)/04 Smooth Criminal (Round 2).vgz                                               |
-| C140                  | C140        | PCM   |   ✅    | mame                     | Dragon_Saber_-_After_Story_of_Dragon_Spirit_(Namco_System_2)/04 Submerged City (Stage 1).vgz                                 |
+| C140 (system2)        | C140        | PCM   |   ✅    | mame:A                   | Dragon_Saber_-_After_Story_of_Dragon_Spirit_(Namco_System_2)/04 Submerged City (Stage 1).vgz                                 |
+| C140 (system21)       | C140        | PCM   |   ✅    | mame:A                   | Cyber_Sled_(Namco_System_21)/06 Be Warped Time.vgz                                                                           |
+| C140 (asicC219)       | C219        | PCM   |   ✅    | mame:A                   | Knuckle_Heads_(Namco_NA-2)/04 Hawk's Dance, Wolf's Howl (VS Fujioka).vgz                                                     |
+| C219                  | C219        | PCM   |   ✅    | mame:B                   | ditto                                                                                                                        |
 | C352                  | C352        | PCM   |   ✅️   |                          | Ridge_Racer_(Namco_System_22)/03 Rare Hero (Sanodigy mix).vgz                                                                |
 | OKIM6258              | OKI65       | PCM   |   ✅️   |                          | Akumajo_Dracula_(Sharp_X68000)/02 Black Mass (Opening).vgz                                                                   |
 | MPCM (OKIM6258)       | MPCM        | PCM   |        | mndrv                    |                                                                                                                              |
