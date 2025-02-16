@@ -166,7 +166,7 @@ public class C140 {
                     v.lastDt = 0;
                     v.prevDt = 0;
                     v.dltDt = 0;
-                    v.bank = this.reg[vreg + 4];// vreg.bank;
+                    v.bank = this.reg[vreg + 4] & 0xff; // vreg.bank;
                     v.mode = data;
 
                     // on the 219 asic, addresses are in words
@@ -196,10 +196,6 @@ public class C140 {
         SYSTEM2,
         SYSTEM21,
         ASIC219;
-
-        public static Type valueOf(int v) {
-            return Arrays.stream(values()).filter(e -> e.ordinal() == v).findFirst().get();
-        }
     }
 
     public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData) {
@@ -237,7 +233,7 @@ public class C140 {
         int frequency, delta, offset, pos;
         int cnt, voiceCnt;
         int lastdt, prevdt, dltdt;
-        float pbase = (float) this.baseRate * 2.0f / (float) this.sampleRate;
+        float pBase = (float) this.baseRate * 2.0f / (float) this.sampleRate;
 
         int[] lmix, rmix;
 
@@ -266,7 +262,7 @@ public class C140 {
             if (frequency == 0) continue;
 
             // Delta =  frequency * ((8MHz/374)*2 / sample rate)
-            delta = (int) (frequency * pbase);
+            delta = (int) (frequency * pBase);
 
             // Calculate left/right channel volumes
             lvol = ((this.reg[vReg + 1] & 0xff) << 5) / MAX_VOICE; //32ch . 24ch

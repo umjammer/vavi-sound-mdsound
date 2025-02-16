@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2025 by Naohide Sano, All rights reserved.
+ *
+ * Programmed by Naohide Sano
+ */
+
 package mdsound.instrument;
 
 import java.util.HashMap;
@@ -5,30 +11,38 @@ import java.util.Map;
 
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
-import mdsound.fmgen.PSG;
+import mdsound.Instrument.PcmEnabledInstrument;
+import mdsound.chips.C140;
+import mdsound.chips.C219;
 
 
-public class Ay8910Inst extends Instrument.BaseInstrument {
+/**
+ * C219.
+ *
+ * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
+ * @version 0.00 2025-02-15 nsano initial version <br>
+ */
+public class C219Inst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
-    public static final int DefaultClockValue = 1789750;
+    public static final int MAX_CHIPS = 0x02;
 
-    private final PSG[] chips = {new PSG(), new PSG()};
+    private final C219[] chips = {new C219(), new C219()};
 
     private final int[] mask = {0, 0};
 
-    public Ay8910Inst() {
+    public C219Inst() {
         // 0..Main
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
 
     @Override
     public String getName() {
-        return "AY8910";
+        return "C219";
     }
 
     @Override
     public String getShortName() {
-        return "AY10";
+        return "C219";
     }
 
     @Override
@@ -39,41 +53,29 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        assert chipId < chips.length;
-        chips[chipId].reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        chips[chipId].setClock(clock, samplingRate);
-        return samplingRate;
+        assert chipId < MAX_CHIPS;
+
+        return chips[chipId].start(clock);
     }
 
     @Override
     public int read(int chipId, int adr) {
-        throw new UnsupportedOperationException();
+        return chips[chipId].read(adr);
     }
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        assert chipId < chips.length;
-        chips[chipId].setReg(adr, data);
+        chips[chipId].write(adr, data);
         return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        assert chipId < chips.length;
-
-        int[] buffer = new int[2];
-        buffer[0] = 0;
-        buffer[1] = 0;
-        chips[chipId].mix(buffer, 1);
-        for (int i = 0; i < 1; i++) {
-            outputs[0][i] = buffer[i * 2 + 0];
-            outputs[1][i] = buffer[i * 2 + 1];
-//logger.log(Level.TRACE, "[%8d] : [%8d] [%d]".formatted(outputs[0][i], outputs[1][i], i));
-        }
+        chips[chipId].update(samples, outputs);
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
@@ -81,36 +83,34 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
 
     @Override
     public void stop(int chipId) {
-        chips[chipId] = null;
+        chips[chipId].stop();
     }
 
     @Override
     public synchronized void setMask(int chipId, int ch) {
         mask[chipId] |= ch;
-        setMute(chipId, mask[chipId]);
+        chips[chipId].setMuteMask(mask[chipId]);
     }
 
     @Override
     public synchronized void resetMask(int chipId, int ch) {
-        mask[chipId] &= ~ch;
-        setMute(chipId, mask[chipId]);
+        mask[chipId] &= ~(int) ch;
+        chips[chipId].setMuteMask(mask[chipId]);
     }
 
-    public void setVolume(int chipId, int db) {
-        assert chipId < chips.length;
-        chips[chipId].setVolume(db);
-    }
-
-    private void setMute(int chipId, int val) {
-        assert chipId < chips.length;
-        chips[chipId].setChannelMask(val);
+    /** @param extras 0: srcOffset. 1: romSize */
+    @Override
+    public synchronized void writePcm(int chipId, byte[] buf, int offset, int length, Object... extras) {
+        int srcOffset = (int) extras[0];
+        int romSize = (int) extras[1];
+        chips[chipId].writeRom(offset, length, buf, srcOffset, romSize);
     }
 
     //----
 
     @Override
     public Tuple<Integer, Double> getRegulationVolume() {
-        return new Tuple<>(0x100, 2d);
+        return new Tuple<>(0x100, 1d);
     }
 
     @Override

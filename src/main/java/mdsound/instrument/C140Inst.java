@@ -17,6 +17,8 @@ public class C140Inst extends Instrument.BaseInstrument implements PcmEnabledIns
 
     private final int[] mask = {0, 0};
 
+    private C140.Type type;
+
     public C140Inst() {
         // 0..Main
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
@@ -24,7 +26,7 @@ public class C140Inst extends Instrument.BaseInstrument implements PcmEnabledIns
 
     @Override
     public String getName() {
-        return "C140";
+        return "C140" + type.name().toLowerCase();
     }
 
     @Override
@@ -55,7 +57,8 @@ public class C140Inst extends Instrument.BaseInstrument implements PcmEnabledIns
         if (sampleRate >= 0x100_0000) // limit to 16 MHz sample rate (32 MB buffer)
             return 0;
 
-        chips[chipId].start(clock, sampleRate, (C140.Type) option[0]);
+        type = (C140.Type) option[0];
+        chips[chipId].start(clock, sampleRate, type);
 
         return sampleRate;
     }
@@ -100,7 +103,7 @@ public class C140Inst extends Instrument.BaseInstrument implements PcmEnabledIns
     @Override
     public synchronized void writePcm(int chipId, byte[] buf, int offset, int length, Object... extras) {
         int srcOffset = (int) extras[0];
-        int romSize = (int) extras[0];
+        int romSize = (int) extras[1];
         chips[chipId].writeRom(romSize, offset, length, buf, srcOffset);
     }
 

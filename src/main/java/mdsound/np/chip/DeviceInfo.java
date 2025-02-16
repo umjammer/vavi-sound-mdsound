@@ -120,7 +120,7 @@ public class DeviceInfo {
         }
     }
 
-    public static class BasicTrackInfo extends TrackInfo {
+    public static class BasicTrackInfo extends TrackInfo implements Cloneable {
 
         public int output;
         public int volume;
@@ -133,6 +133,7 @@ public class DeviceInfo {
         public int tone;
         public int freqShift;
 
+        @Override
         public DeviceInfo clone() {
             BasicTrackInfo tib = new BasicTrackInfo();
             tib.output = output;

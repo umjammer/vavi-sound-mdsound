@@ -57,7 +57,7 @@ public class Filter {
         return fastRender(b);
     }
 
-    public void SetParam(double r, int c) { // c = 0-400, 0=off, 400=max
+    public void setParam(double r, int c) { // c = 0-400, 0=off, 400=max
         // C = 1.0E-10 * c;
         this.r = r;
 
