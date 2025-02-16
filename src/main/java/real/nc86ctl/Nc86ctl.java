@@ -57,6 +57,7 @@ public interface Nc86ctl extends Library {
         public static final ChipType CHIP_UNKNOWN = null;
         public static final ChipType CHIP_YM2608 = null;
         public static final ChipType CHIP_YMF288 = null;
+        public static final ChipType CHIP_YM2203 = null;
     }
 
     class NIRealChip extends Structure {
@@ -73,6 +74,13 @@ public interface Nc86ctl extends Library {
         }
 
         public int apply(short adr) {
+            return 0;
+        }
+
+        public void out(short adr, byte dat) {
+        }
+
+        public int in(short adr) {
             return 0;
         }
     }
