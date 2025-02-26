@@ -56,7 +56,7 @@ public class NesMem implements Device {
     }
 
     @Override
-    public boolean read(int adr, int[] val, int id) {
+    public boolean read(int adr, /* ref */ int[] val, int id) {
         if (0x0000 <= adr && adr < 0x2000) {
             val[0] = image[adr & 0x7ff] & 0xff;
             return true;

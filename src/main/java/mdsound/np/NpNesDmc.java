@@ -440,7 +440,7 @@ if (startClocks >= 0) { assert(accumClocks == clocks); } // these should be equa
 
             if (this.data[0] <= 0x100) { // shift register is empty
                 if (this.dLength > 0) {
-                    this.orgMemory.read(this.dAddress, this.data);
+                    this.orgMemory.read(this.dAddress, /* ref */ this.data);
                     //this.data = this.memory[this.dAddress + this.ptrMemory];
                     //cpu.StealCycles(4); // DMC read takes 3 or 4 CPU cycles, usually 4
                     // (checking for the 3-cycle case would require sub-instruction emulation)
@@ -922,7 +922,7 @@ if (startClocks >= 0) { assert(accumClocks == clocks); } // these should be equa
         return true;
     }
 
-    public boolean read(int adr, int[] val) {
+    public boolean read(int adr, /* ref */ int[] val) {
         if (adr == 0x4015) {
             val[0] |= (this.irq ? 0x80 : 0)
                     | (this.frameIrq ? 0x40 : 0)

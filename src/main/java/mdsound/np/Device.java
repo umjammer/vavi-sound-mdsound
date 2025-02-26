@@ -21,9 +21,9 @@ public interface Device {
         return write(adr, val, 0);
     }
 
-    boolean read(int adr, int[] val, int id);
+    boolean read(int adr, /* ref */ int[] val, int id);
 
-    default boolean read(int adr, int[] val) {
+    default boolean read(int adr, /* ref */ int[] val) {
         return read(adr, val, 0);
     }
 
@@ -151,7 +151,7 @@ public interface Device {
          * The return value is the logical OR of the return values of valid devices (the Read method returns true).
          */
         @Override
-        public boolean read(int adr, int[] val, int id /* = 0 */) {
+        public boolean read(int adr, /* ref */ int[] val, int id /* = 0 */) {
             boolean ret = false;
             int[] vtmp = new int[] { 0 };
 
@@ -203,7 +203,7 @@ public interface Device {
          * The process ends when a device that was successfully read from is found.
          */
         @Override
-        public boolean read(int adr, int[] val, int id /* = 0 */) {
+        public boolean read(int adr, /* ref */ int[] val, int id /* = 0 */) {
             val[0] = 0;
             for (Device it : vd) {
                 if (it.read(adr, val)) return true;

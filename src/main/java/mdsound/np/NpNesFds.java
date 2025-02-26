@@ -418,7 +418,7 @@ public class NpNesFds {
         }
     }
 
-    public boolean read(int adr, int[] val) {
+    public boolean read(int adr, /* ref */ int[] val) {
 
         if (adr >= 0x4040 && adr < 0x407F) {
             // TODO: if wav_write is not enabled, the

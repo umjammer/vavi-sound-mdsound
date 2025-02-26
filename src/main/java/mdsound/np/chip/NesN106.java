@@ -328,7 +328,7 @@ int CC=0;
     }
 
     @Override
-    public boolean read(int adr, int[] val, int id) {
+    public boolean read(int adr, /* ref */ int[] val, int id) {
         if (adr == 0x4800) { // register read
             val[0] = reg[regSelect];
             if (regAdvance)

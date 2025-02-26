@@ -214,7 +214,7 @@ public class NpNesApu {
         return ret;
     }
 
-    public boolean read(int adr, int[] val) {
+    public boolean read(int adr, /* ref */ int[] val) {
         if (0x4000 <= adr && adr < 0x4008) {
             val[0] |= this.reg[adr & 0x7];
             return true;
