@@ -11,10 +11,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 import dotnet4j.util.compat.QuadConsumer;
+import dotnet4j.util.compat.TriConsumer;
 import mdsound.instrument.NesInst;
 
 import static java.lang.System.getLogger;
@@ -63,7 +63,7 @@ public class MDSound {
 
         public interface AdditionalUpdate extends QuadConsumer<Chip, Integer, int[][], Integer> {
         }
-        public interface SetVolume extends BiConsumer<Integer, Double> {
+        public interface SetVolume extends TriConsumer<String, Integer, Double> {
         }
 
         public Instrument instrument = null;
@@ -112,19 +112,19 @@ public class MDSound {
         public void setVolume(String tag, int vol, double volumeMul) {
             SetVolume setVolume = setVolumes.get(tag);
             if (setVolume != null)
-                setVolumes.get(tag).accept(vol, volumeMul);
+                setVolumes.get(tag).accept(tag, vol, volumeMul);
             else
                 logger.log(Level.WARNING, "no such tag: " + tag);
         }
 
         public SetVolume mainWrappedSetVolume(SetVolume setVolume) {
-            return (i, d) -> {
-                setDefaultVolume(i, d);
-                setVolume.accept(i, d);
+            return (t, i, d) -> {
+                setDefaultVolume(t, i, d);
+                setVolume.accept(t, i, d);
             };
         }
 
-        private void setDefaultVolume(int vol, double volumeMul) {
+        private void setDefaultVolume(String tag, int vol, double volumeMul) {
             this.volume = Math.max(Math.min(vol, 20), -192);
             int n = (((int) (16384.0 * Math.pow(10.0, this.volume / 40.0)) * this.tVolumeBalance) >> 8);
             this.tVolume = Math.max(Math.min((int) (n * volumeMul), Short.MAX_VALUE), Short.MIN_VALUE);

@@ -97,24 +97,25 @@ public class Ym2610Inst extends Instrument.BaseInstrument implements AdpcmEnable
     public void resetMask(int chipId, int ch) {
     }
 
-    private void setFMVolume(int chipId, int db) {
-        assert chipId < chips.length;
-        chips[chipId].setVolumeFM(db);
-    }
-
-    private void setPSGVolume(int chipId, int db) {
-        assert chipId < chips.length;
-        chips[chipId].setVolumePSG(db);
-    }
-
-    private void setAdpcmAVolume(int chipId, int db) {
-        assert chipId < chips.length;
-        chips[chipId].setVolumeADPCMATotal(db);
-    }
-
-    private void setAdpcmBVolume(int chipId, int db) {
-        assert chipId < chips.length;
-        chips[chipId].setVolumeADPCMB(db);
+    public void setVolume(String tag, int vol, double ignored) {
+        switch (tag) {
+            case "FM" -> {
+                chips[0].setVolumeFM(vol);
+                chips[1].setVolumeFM(vol);
+            }
+            case "SSG" -> {
+                chips[0].setVolumePSG(vol);
+                chips[1].setVolumePSG(vol);
+            }
+            case "ADPCMA" -> {
+                chips[0].setVolumeADPCMATotal(vol);
+                chips[1].setVolumeADPCMATotal(vol);
+            }
+            case "ADPCMB" -> {
+                chips[0].setVolumeADPCMB(vol);
+                chips[1].setVolumeADPCMB(vol);
+            }
+        }
     }
 
     // ----
@@ -138,30 +139,6 @@ public class Ym2610Inst extends Instrument.BaseInstrument implements AdpcmEnable
         chips[chipId].setAdpcmB(Buf, Buf.length);
     }
 
-    // TODO automatic wired, use annotation?
-    public void setFMVolume(int vol, double ignored) {
-        setFMVolume(0, vol);
-        setFMVolume(1, vol);
-    }
-
-    // TODO automatic wired, use annotation?
-    public void setPSGVolume(int vol, double ignored) {
-        setPSGVolume(0, vol);
-        setPSGVolume(1, vol);
-    }
-
-    // TODO automatic wired, use annotation?
-    public void setAdpcmAVolume(int vol, double ignored) {
-        setAdpcmAVolume(0, vol);
-        setAdpcmAVolume(1, vol);
-    }
-
-    // TODO automatic wired, use annotation?
-    public void setAdpcmBVolume(int vol, double ignored) {
-        setAdpcmBVolume(0, vol);
-        setAdpcmBVolume(1, vol);
-    }
-
     // ----
 
     @Override
@@ -176,10 +153,10 @@ public class Ym2610Inst extends Instrument.BaseInstrument implements AdpcmEnable
         switch (key) {
             case "volume" -> {
                 result.put("ym2610", getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
-                result.put("ym2610FM", getMonoVolume(visVolume[0][1][0], visVolume[0][1][1], visVolume[1][1][0], visVolume[1][1][1]));
-                result.put("ym2610SSG", getMonoVolume(visVolume[0][2][0], visVolume[0][2][1], visVolume[1][2][0], visVolume[1][2][1]));
-                result.put("ym2610APCMA", getMonoVolume(visVolume[0][3][0], visVolume[0][3][1], visVolume[1][3][0], visVolume[1][3][1]));
-                result.put("ym2610APCMB", getMonoVolume(visVolume[0][4][0], visVolume[0][4][1], visVolume[1][4][0], visVolume[1][4][1]));
+                result.put("ym2610:FM", getMonoVolume(visVolume[0][1][0], visVolume[0][1][1], visVolume[1][1][0], visVolume[1][1][1]));
+                result.put("ym2610:SSG", getMonoVolume(visVolume[0][2][0], visVolume[0][2][1], visVolume[1][2][0], visVolume[1][2][1]));
+                result.put("ym2610:ADPCMA", getMonoVolume(visVolume[0][3][0], visVolume[0][3][1], visVolume[1][3][0], visVolume[1][3][1]));
+                result.put("ym2610:ADPCMB", getMonoVolume(visVolume[0][4][0], visVolume[0][4][1], visVolume[1][4][0], visVolume[1][4][1]));
             }
         }
         return result;

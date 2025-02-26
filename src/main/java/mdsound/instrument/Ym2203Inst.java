@@ -111,16 +111,17 @@ public class Ym2203Inst extends Instrument.BaseInstrument {
         return keyOn[chipId];
     }
 
-    // TODO automatic wired, use annotation?
-    public void setFMVolume(int vol, double ignored) {
-        chips[0].setVolumeFM(vol);
-        chips[1].setVolumeFM(vol);
-    }
-
-    // TODO automatic wired, use annotation?
-    public void setPSGVolume(int vol, double ignored) {
-        chips[0].setVolumePSG(vol);
-        chips[1].setVolumePSG(vol);
+    public void setVolume(String tag, int vol, double ignored) {
+        switch (tag) {
+            case "FM" -> {
+                chips[0].setVolumeFM(vol);
+                chips[1].setVolumeFM(vol);
+            }
+            case "SSG" -> {
+                chips[0].setVolumePSG(vol);
+                chips[1].setVolumePSG(vol);
+            }
+        }
     }
 
     // ----
@@ -137,8 +138,8 @@ public class Ym2203Inst extends Instrument.BaseInstrument {
         switch (key) {
             case "volume" -> {
                 result.put("ym2203", getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
-                result.put("ym2203FM", getMonoVolume(visVolume[0][1][0], visVolume[0][1][1], visVolume[1][1][0], visVolume[1][1][1]));
-                result.put("ym2203SSG", getMonoVolume(visVolume[0][2][0], visVolume[0][2][1], visVolume[1][2][0], visVolume[1][2][1]));
+                result.put("ym2203:FM", getMonoVolume(visVolume[0][1][0], visVolume[0][1][1], visVolume[1][1][0], visVolume[1][1][1]));
+                result.put("ym2203:SSG", getMonoVolume(visVolume[0][2][0], visVolume[0][2][1], visVolume[1][2][0], visVolume[1][2][1]));
             }
         }
         return result;

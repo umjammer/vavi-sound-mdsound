@@ -138,36 +138,33 @@ public class Ym2608Inst extends Instrument.BaseInstrument {
         switch (key) {
             case "volume" -> {
                 result.put("ym2608", getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
-                result.put("ym2608FM", getMonoVolume(visVolume[0][1][0], visVolume[0][1][1], visVolume[1][1][0], visVolume[1][1][1]));
-                result.put("ym2608SSG", getMonoVolume(visVolume[0][2][0], visVolume[0][2][1], visVolume[1][2][0], visVolume[1][2][1]));
-                result.put("ym2608Rtm", getMonoVolume(visVolume[0][3][0], visVolume[0][3][1], visVolume[1][3][0], visVolume[1][3][1]));
-                result.put("ym2608APCM", getMonoVolume(visVolume[0][4][0], visVolume[0][4][1], visVolume[1][4][0], visVolume[1][4][1]));
+                result.put("ym2608:FM", getMonoVolume(visVolume[0][1][0], visVolume[0][1][1], visVolume[1][1][0], visVolume[1][1][1]));
+                result.put("ym2608:SSG", getMonoVolume(visVolume[0][2][0], visVolume[0][2][1], visVolume[1][2][0], visVolume[1][2][1]));
+                result.put("ym2608:RHYTHM", getMonoVolume(visVolume[0][3][0], visVolume[0][3][1], visVolume[1][3][0], visVolume[1][3][1]));
+                result.put("ym2608:ADPCM", getMonoVolume(visVolume[0][4][0], visVolume[0][4][1], visVolume[1][4][0], visVolume[1][4][1]));
             }
         }
         return result;
     }
 
-    // TODO automatic wired, use annotation?
-    public void setFMVolume(int vol, double ignored) {
-        chips[0].setVolumeFM(vol);
-        chips[1].setVolumeFM(vol);
-    }
-
-    // TODO automatic wired, use annotation?
-    public void setPSGVolume(int vol, double ignored) {
-        chips[0].setVolumePSG(vol);
-        chips[1].setVolumePSG(vol);
-    }
-
-    // TODO automatic wired, use annotation?
-    public void setRhythmVolume(int vol, double ignored) {
-        chips[0].setVolumeRhythmTotal(vol);
-        chips[1].setVolumeRhythmTotal(vol);
-    }
-
-    // TODO automatic wired, use annotation?
-    public void setAdpcmVolume(int vol, double ignored) {
-        chips[0].setVolumeADPCM(vol);
-        chips[1].setVolumeADPCM(vol);
+    public void setVolume(String tag, int vol, double ignored) {
+        switch (tag) {
+            case "FM" -> {
+                chips[0].setVolumeFM(vol);
+                chips[1].setVolumeFM(vol);
+            }
+            case "SSG" -> {
+                chips[0].setVolumePSG(vol);
+                chips[1].setVolumePSG(vol);
+            }
+            case "RHYTHM" -> {
+                chips[0].setVolumeRhythmTotal(vol);
+                chips[1].setVolumeRhythmTotal(vol);
+            }
+            case "ADPCM" -> {
+                chips[0].setVolumeADPCM(vol);
+                chips[1].setVolumeADPCM(vol);
+            }
+        }
     }
 }
