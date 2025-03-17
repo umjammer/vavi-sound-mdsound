@@ -117,20 +117,6 @@ public class YmFmYm2203Inst extends Instrument.BaseInstrument {
 
     // ----
 
-    // TODO automatic wired, use annotation?
-    public void setFMVolume(int vol, double ignored) {
-        if (chips[0] != null) return; // chips[0].setFMVolume(vol);
-        if (chips[1] != null) return; // chips[1].setFMVolume(vol);
-    }
-
-    // TODO automatic wired, use annotation?
-    public void setPSGVolume(int vol, double ignored) {
-        if (chips[0] != null) return; // chips[0].setPSGVolume(vol);
-        if (chips[1] != null) return; // chips[1].setPSGVolume(vol);
-    }
-
-    // ----
-
     @Override
     public Tuple<Integer, Double> getRegulationVolume() {
         // mul=0.5 SSG

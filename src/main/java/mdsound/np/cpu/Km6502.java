@@ -2928,7 +2928,7 @@ public class Km6502 implements Device {
 
     private int readByte(int adr) {
         int[] val = new int[] { 0 };
-        read(adr, val, 0);
+        read(adr, /* ref */ val, 0);
         return val[0];
     }
 
@@ -3037,7 +3037,7 @@ public class Km6502 implements Device {
     }
 
     @Override
-    public boolean read(int adr, int[] val, int id) {
+    public boolean read(int adr, /* ref */ int[] val, int id) {
         if (bus != null) {
             boolean result = bus.read(adr, val, id);
 

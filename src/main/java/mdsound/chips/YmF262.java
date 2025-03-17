@@ -110,6 +110,7 @@ public class YmF262 {
 
     private Opl3 opl3;
 
+    /** @param updateHandler works when {@code emuCore} is {@link #EC_DBOPL} only, nullable */
     public void start(int emuCore, int clock, int rate, UpdateHandler updateHandler) {
         switch (emuCore) {
         case EC_MAME:
@@ -3238,6 +3239,7 @@ public class YmF262 {
                 Operator::off
         };
 
+        /** @param updateHandler nullable */
         private AdlibOpl3(int clock, int sampleRate, UpdateHandler updateHandler) {
             //logger.log(Level.TRACE, "clock:%d rate:%d".formatted(clock, sampleRate));
 

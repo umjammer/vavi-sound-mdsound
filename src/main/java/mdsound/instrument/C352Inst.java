@@ -102,7 +102,7 @@ public class C352Inst extends Instrument.BaseInstrument implements PcmEnabledIns
      * used for volume also
      * @see mdsound.MDSound.Chip.SetVolume
      */
-    public void setRearMute(int vol, double ignored) {
+    public void setRearMute(String tag, int vol, double ignored) {
         C352.setOptions(vol & 0xff); // TODO ugly
     }
 

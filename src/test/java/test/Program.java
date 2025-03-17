@@ -460,8 +460,8 @@ Debug.printf("version is after 1.50, %04x", version);
             chip.samplingRate = SamplingRate;
             chip.clock = ByteUtil.readLeInt(vgmBuf, 0x44);
             chip.volume = 0;
-            chip.setVolumes.put("FM", ym2203::setFMVolume);
-            chip.setVolumes.put("PSG", ym2203::setPSGVolume);
+            chip.setVolumes.put("FM", ym2203::setVolume);
+            chip.setVolumes.put("SSG", ym2203::setVolume);
             chip.option = null;
             lstChip.add(chip);
         }
@@ -474,10 +474,10 @@ Debug.printf("version is after 1.50, %04x", version);
             chip.samplingRate = SamplingRate;
             chip.clock = ByteUtil.readLeInt(vgmBuf, 0x48);
             chip.volume = 0;
-            chip.setVolumes.put("FM", ym2608::setFMVolume);
-            chip.setVolumes.put("PSG", ym2608::setPSGVolume);
-            chip.setVolumes.put("Rhythm", ym2608::setRhythmVolume);
-            chip.setVolumes.put("Adpcm", ym2608::setAdpcmVolume);
+            chip.setVolumes.put("FM", ym2608::setVolume);
+            chip.setVolumes.put("SSG", ym2608::setVolume);
+            chip.setVolumes.put("RHYTHM", ym2608::setVolume);
+            chip.setVolumes.put("ADPCM", ym2608::setVolume);
             chip.option = null;
             lstChip.add(chip);
         }
@@ -501,10 +501,10 @@ Debug.printf("version is after 1.50, %04x", version);
             chip.samplingRate = SamplingRate;
             chip.clock = ByteUtil.readLeInt(vgmBuf, 0x4c) & 0x7fff_ffff;
             chip.volume = 0;
-            chip.setVolumes.put("FM", ym2610::setFMVolume);
-            chip.setVolumes.put("PSG", ym2610::setPSGVolume);
-            chip.setVolumes.put("AdpcmA", ym2610::setAdpcmAVolume);
-            chip.setVolumes.put("AdpcmB", ym2610::setAdpcmBVolume);
+            chip.setVolumes.put("FM", ym2610::setVolume);
+            chip.setVolumes.put("SSG", ym2610::setVolume);
+            chip.setVolumes.put("ADPCMA", ym2610::setVolume);
+            chip.setVolumes.put("ADPCMB", ym2610::setVolume);
             chip.option = null;
             bufYM2610AdpcmA = null;
             bufYM2610AdpcmB = null;
@@ -858,7 +858,7 @@ Debug.println("chips: " + lstChip.size());
     private void oneFrameVGM() {
 
         if (!vgmAnalyze) {
-//Debug.println("vgmAnalyz is flase");
+//Debug.println("vgmAnalyze is false");
             return;
         }
 

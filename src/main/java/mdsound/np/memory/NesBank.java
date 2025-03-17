@@ -85,7 +85,7 @@ public class NesBank implements Device {
     }
 
     @Override
-    public boolean read(int adr, int[] val, int id) {
+    public boolean read(int adr, /* ref */ int[] val, int id) {
         if (0x5ff8 <= adr && adr < 0x5fff) {
             val[0] = bankSwitch[(adr & 7) + 8];
             return true;

@@ -123,7 +123,7 @@ public class NesInst extends Instrument.BaseInstrument {
     }
 
     // TODO automatic wired, use annotation?
-    public void setVolume(int vol, double ignored) {
+    public void setVolume(String tag, int vol, double ignored) {
         for (Nes info : chips) info.setVolumeAPU(vol);
     }
 

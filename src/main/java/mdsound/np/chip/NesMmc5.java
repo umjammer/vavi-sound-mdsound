@@ -362,7 +362,7 @@ public class NesMmc5 implements SoundChip {
     }
 
     @Override
-    public boolean read(int adr, int[] val, int id /* = 0 */) {
+    public boolean read(int adr, /* ref */ int[] val, int id /* = 0 */) {
         // in PCM read mode, reads from $8000-$C000 automatically load the PCM output
         if (pcmMode && (0x8000 <= adr) && (adr < 0xC000) && cpu != null) {
             pcmMode = false; // prevent recursive entry

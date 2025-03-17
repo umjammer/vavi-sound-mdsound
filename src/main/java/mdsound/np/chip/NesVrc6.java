@@ -295,7 +295,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
 
 
     @Override
-    public boolean read(int adr, int[] val, int id /* = 0 */) {
+    public boolean read(int adr, /* ref */ int[] val, int id /* = 0 */) {
         return false;
     }
 

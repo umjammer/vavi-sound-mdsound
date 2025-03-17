@@ -7,7 +7,7 @@
 
 Video Game Music Emulation Library
 
-this is a fork of [MDsound](https://github.com/kuma4649/MDSound)
+this is a fork of [MDSound](https://github.com/kuma4649/MDSound)
 
 ### Status
 
@@ -100,7 +100,7 @@ this is a fork of [MDsound](https://github.com/kuma4649/MDSound)
 
 ## Usage
 
- * test is still wip, use via [vavi-apps-mdplayer]()
+ * test is still wip, use via [vavi-apps-mdplayer](https://jitpack.io/#umjammer/vavi-apps-mdplayer)
 
 ## References
 
@@ -113,6 +113,13 @@ this is a fork of [MDsound](https://github.com/kuma4649/MDSound)
 * https://github.com/nukeykt/Nuked-OPN2
 * https://en.wikipedia.org/wiki/Advanced_Multimedia_Supplements (QSound related)
 * https://github.com/Gnzdream/NsfPlayer
+* https://sakuramail.net/fswold/music.html#muskin (MuSICA related)
+* libvgm says
+   * ym3812 dosbox is better than mame
+   * ym2612 nuked uses a lot of cpu
+* https://github.com/M-HT/websynth_d-77 (ps2 wavesynth)
+* https://github.com/M-HT/casio_sw-10 (wavesynth (not vgm))
+* https://sourceforge.net/projects/vgmtoolbox/
 
 ## TODO
 
@@ -130,9 +137,6 @@ this is a fork of [MDsound](https://github.com/kuma4649/MDSound)
    * ~~wswan noise only~~
    * ~~pwn laud noise~~
    * ~~ymf262 (nuked) little bit different?~~
- * libvgm says
-   * ym3812 dosbox is better than mame
-   * ym2612 nuked uses a lot of cpu
 
 ---
 

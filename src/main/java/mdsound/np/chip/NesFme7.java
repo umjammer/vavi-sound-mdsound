@@ -75,7 +75,7 @@ public class NesFme7 implements SoundChip {
 
     /** @param value OUT */
     @Override
-    public boolean read(int address, int[] value, int id /* = 0 */) {
+    public boolean read(int address, /* ref */ int[] value, int id /* = 0 */) {
         value[0] = emu2149.psg.readReg(address);
         return false;
     }
