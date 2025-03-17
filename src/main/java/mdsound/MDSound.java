@@ -199,6 +199,7 @@ logger.log(Level.WARNING, "no chips");
         }
 
         for (Chip chip : chips) {
+logger.log(Level.DEBUG, "instrument: %s, %d, %d".formatted(chip.instrument.getClass().getSimpleName(), chip.samplingRate, chip.clock));
             chip.samplingRate = chip.instrument.start(chip.id, chip.samplingRate, chip.clock, chip.option);
             chip.instrument.reset(chip.id);
 

@@ -45,8 +45,6 @@ import static java.lang.System.getLogger;
 /**
  * Nuked OPL3
  *
- * TODO WIP
- *
  * @author Nuke.YKT
  * @version 1.8
  * @see "https://github.com/nukeykt/Nuked-OPL3"
@@ -1201,7 +1199,7 @@ assert chip.slot[ii].channel != null : "slot: " + ii + ", slot: @" + chip.slot.h
     }
 
     public void OPL3_GenerateResampled(Chip chip, short[] buf, int off) {
-        short[] samples = new short[4];
+        short[] samples = new short[4]; // why only 2 / 4 samples are used?
         OPL3_Generate4ChResampled(chip, samples);
         buf[off + 0] = samples[0];
         buf[off + 1] = samples[1];
