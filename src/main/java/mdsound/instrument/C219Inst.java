@@ -6,6 +6,8 @@
 
 package mdsound.instrument;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -15,6 +17,8 @@ import mdsound.Instrument.PcmEnabledInstrument;
 import mdsound.chips.C140;
 import mdsound.chips.C219;
 
+import static java.lang.System.getLogger;
+
 
 /**
  * C219.
@@ -23,6 +27,8 @@ import mdsound.chips.C219;
  * @version 0.00 2025-02-15 nsano initial version <br>
  */
 public class C219Inst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
+
+    private static final Logger logger = getLogger(C219Inst.class.getName());
 
     public static final int MAX_CHIPS = 0x02;
 
@@ -59,7 +65,9 @@ public class C219Inst extends Instrument.BaseInstrument implements PcmEnabledIns
     public int start(int chipId, int samplingRate, int clock, Object... option) {
         assert chipId < MAX_CHIPS;
 
-        return chips[chipId].start(clock);
+        int sampleRete = chips[chipId].start(clock);
+logger.log(Level.DEBUG, "sampleRate: " + sampleRete);
+        return sampleRete;
     }
 
     @Override

@@ -114,7 +114,7 @@ public class MDSound {
             if (setVolume != null)
                 setVolumes.get(tag).accept(tag, vol, volumeMul);
             else
-                logger.log(Level.WARNING, "no such tag: " + tag);
+                logger.log(Level.WARNING, "no such tag: " + tag, new Exception("instrument: " + instrument));
         }
 
         public SetVolume mainWrappedSetVolume(SetVolume setVolume) {

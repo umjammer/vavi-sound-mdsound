@@ -347,8 +347,8 @@ public class YmZ280B {
                 // loop while we still have samples to generate
                 while (samples != 0) {
                     // fetch the current value
-                    val = (short) (((readMemory(base, size, position / 2 + 0) & 0xff) << 8)
-                            + (readMemory(base, size, position / 2 + 1) & 0xff));
+                    val = (short) (((readMemory(base, size, position / 2 + 0) & 0xff) << 8) +
+                            (readMemory(base, size, position / 2 + 1) & 0xff));
 
                     // output to the buffer, scaling by the volume
                     buffer[ptrBuffer++] = (short) val;

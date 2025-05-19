@@ -1,5 +1,7 @@
 package mdsound.instrument;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -8,8 +10,12 @@ import mdsound.Instrument;
 import mdsound.Instrument.PcmEnabledInstrument;
 import mdsound.chips.C140;
 
+import static java.lang.System.getLogger;
+
 
 public class C140Inst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
+
+    private static final Logger logger = getLogger(C140Inst.class.getName());
 
     public static final int MAX_CHIPS = 0x02;
 
@@ -54,8 +60,10 @@ public class C140Inst extends Instrument.BaseInstrument implements PcmEnabledIns
         int sampleRate = clock;
         if ((CHIP_SAMPLING_MODE == 0x01 && sampleRate < CHIP_SAMPLE_RATE) || CHIP_SAMPLING_MODE == 0x02)
             sampleRate = CHIP_SAMPLE_RATE;
-        if (sampleRate >= 0x100_0000) // limit to 16 MHz sample rate (32 MB buffer)
+        if (sampleRate >= 0x100_0000) { // limit to 16 MHz sample rate (32 MB buffer)
+logger.log(Level.WARNING, "sampleRate: " + sampleRate);
             return 0;
+        }
 
         type = (C140.Type) option[0];
         chips[chipId].start(clock, sampleRate, type);

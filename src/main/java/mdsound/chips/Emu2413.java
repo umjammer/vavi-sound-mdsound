@@ -1641,8 +1641,8 @@ logger.log(Level.TRACE, "[slot#{0} state:{1} fnum:{2:03x} rate:{3}-{4}]",
                 this.panCh = Math.min(Math.max(data, 0), 13);
                 break;
             case 0x41: // Pan value specification
-                this.pan[this.panCh] = ((data & 0xf0) != 0 ? 0x02 : 0x00)
-                        | ((data & 0x0f) != 0 ? 0x01 : 0x00);
+                this.pan[this.panCh] = ((data & 0xf0) != 0 ? 0x02 : 0x00) |
+                        ((data & 0x0f) != 0 ? 0x01 : 0x00);
                 this.pan[this.panCh] = (this.pan[this.panCh] == 0)
                         ? 3
                         : this.pan[this.panCh];

@@ -231,8 +231,8 @@ public class PSG2 extends mdsound.fmgen.PSG {
                         revSampleR = 0;
                         sample = 0;
                         for (int j = 0; j < (1 << overSampling); j++) {
-                            noise = noiseTable[((int) nCountDbl >> (noiseShift + overSampling + 6) & (noiseTableSize - 1))]
-                                    >> ((int) nCountDbl >> (noiseShift + overSampling + 1));
+                            noise = noiseTable[((int) nCountDbl >> (noiseShift + overSampling + 6) & (noiseTableSize - 1))] >>
+                                    ((int) nCountDbl >> (noiseShift + overSampling + 1));
 
                             nCountDbl += ((double) nPeriod / ((reg[6] & 0x20) != 0 ? nCountDiv : 1.0));
 
@@ -299,8 +299,8 @@ public class PSG2 extends mdsound.fmgen.PSG {
                                 eCount |= (1 << (envShift + 5 + overSampling));
                             eCount &= (1 << (envShift + 6 + overSampling)) - 1;
                         }
-                        noise = noiseTable[((int) nCountDbl >> (noiseShift + overSampling + 6) & (noiseTableSize - 1))]
-                                >> ((int) nCountDbl >> (noiseShift + overSampling + 1));
+                        noise = noiseTable[((int) nCountDbl >> (noiseShift + overSampling + 6) & (noiseTableSize - 1))] >>
+                                ((int) nCountDbl >> (noiseShift + overSampling + 1));
                         nCountDbl += (nPeriod / ((reg[6] & 0x20) != 0 ? nCountDiv : 1.0));
 
                         for (int k = 0; k < 3; k++) {

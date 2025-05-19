@@ -19,7 +19,7 @@ package mdsound.chips;
  * <p>
  * Thanks to Sean Young (sean@mess.org) for some bugfixes.
  * <p>
- * K052539 is more or less equivalent to this chips except channel 5
+ * K052539 is more or less equivalent to this chip except channel 5
  * does not share waveram with channel 4.
  *
  * @author Bryan McPhail (MAME)

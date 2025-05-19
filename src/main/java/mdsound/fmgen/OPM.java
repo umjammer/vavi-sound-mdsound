@@ -225,9 +225,8 @@ public class OPM extends Timer {
             lfoFreq = data & 0xff;
 
             //assert(16 - 4 - FM_RATIOBITS >= 0);
-            lfoCountDiff = rateRatio
-                    * ((16 + (lfoFreq & 15)) << (16 - 4 - Fmgen.FM_RATIOBITS))
-                    / (1 << (15 - (lfoFreq >> 4)));
+            lfoCountDiff = rateRatio * ((16 + (lfoFreq & 15)) << (16 - 4 - Fmgen.FM_RATIOBITS)) /
+                    (1 << (15 - (lfoFreq >> 4)));
 
             break;
 

@@ -529,8 +529,8 @@ public class CtrQsound {
 
         // Read sample from rom and apply volume
         //output = (short)((v.volume * get_sample(chips, v.bank, v.addr)) >> 14);
-        output = (short) ((registerMap[(voiceNo << 3) + 6]
-                * get_sample(registerMap[(((voiceNo - 1 + 16) % 16) << 3) + 0], registerMap[(voiceNo << 3) + 1])) >> 14);
+        output = (short) ((registerMap[(voiceNo << 3) + 6] *
+                get_sample(registerMap[(((voiceNo - 1 + 16) % 16) << 3) + 0], registerMap[(voiceNo << 3) + 1])) >> 14);
 //logger.log(Level.TRACE, "output:%d vadr:%d".formatted(output, register_map[(voiceNo << 3) + 1]));
 
 //if (voiceNo == 2) {

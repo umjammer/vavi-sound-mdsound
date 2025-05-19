@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 
-import static dotnet4j.util.compat.CollectionUtilities.toByteArray;
+import vavi.util.ByteUtil;
 
 
 /**
@@ -51,7 +51,7 @@ public class PPS {
     private boolean interpolation = true;
     private boolean real = false;
     private BiConsumer<Integer, Integer> psg = null;
-    private static final int[] table = new int[] {
+    private static final int[] table = {
             0, 0, 0, 5, 9, 10, 11, 12, 13, 13, 14, 14, 14, 15, 15, 15,
             0, 0, 3, 5, 9, 10, 11, 12, 13, 13, 14, 14, 14, 15, 15, 15,
             0, 3, 5, 7, 9, 10, 11, 12, 13, 13, 14, 14, 14, 15, 15, 15,
@@ -78,7 +78,7 @@ public class PPS {
 
         double _base = 0x4000 * 2 / 3.0 * Math.pow(10.0, vol / 40.0);
         for (int i = 15; i >= 1; i--) {
-            emitTable[i] = (int) (_base);
+            emitTable[i] = (int) _base;
             _base /= 1.189207115;
         }
         emitTable[0] = 0;
@@ -199,7 +199,7 @@ public class PPS {
 
             if (!real) {
                 if (!keyonFlag) data += keyoffVol;
-                //if(keyoff_vol!=0) logger.log(Level.DEBUG, "keyoff_vol%d".formatted(keyoff_vol));
+                //if (keyoff_vol != 0) logger.log(Level.DEBUG, "keyoff_vol%d".formatted(keyoff_vol));
                 outputs[0][i] = Math.max(Math.min(outputs[0][i] + data, Short.MAX_VALUE), Short.MIN_VALUE);
                 outputs[1][i] = Math.max(Math.min(outputs[1][i] + data, Short.MAX_VALUE), Short.MIN_VALUE);
             }
@@ -317,7 +317,7 @@ public class PPS {
             }
 
         }
-        ppsDt = toByteArray(o);
+        ppsDt = ByteUtil.toByteArray(o);
 
         // Creating a Header
         List<Header> h = new ArrayList<>();

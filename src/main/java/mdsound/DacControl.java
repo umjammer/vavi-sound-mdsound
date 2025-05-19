@@ -566,18 +566,16 @@ public class DacControl {
             command = chip.dstCommand & 0x00FF;
             data = chip.data[chip.dataStart + chip.realPos] & 0xff;
 
-            chipRegWrite(chip.dstChipType
-                    , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
-                    , port, command, data);
+            chipRegWrite(chip.dstChipType, chip.dstEmuType, chip.dstChipIndex, chip.dstchipId,
+                    port, command, data);
             break;
         case 0x11: // PWM (4-bit Register, 12-bit data)
             port = chip.dstCommand & 0x000F;
             command = chip.data[chip.dataStart + chip.realPos + 1] & 0x0F;
             data = chip.data[chip.dataStart + chip.realPos] & 0xff;
 
-            chipRegWrite(chip.dstChipType
-                    , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
-                    , port, command, data);
+            chipRegWrite(chip.dstChipType, chip.dstEmuType, chip.dstChipIndex, chip.dstchipId,
+                    port, command, data);
             break;
         // Support for other chips (mainly for completeness)
         case 0x00: // Sn76496 (4-bit Register, 4-bit/10-bit data)
@@ -586,18 +584,15 @@ public class DacControl {
 
             if ((command & 0x10) != 0) {
                 // Volume Change (4-Bit value)
-                chipRegWrite(chip.dstChipType
-                        , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
-                        , 0x00, 0x00, command | data);
+                chipRegWrite(chip.dstChipType, chip.dstEmuType, chip.dstChipIndex, chip.dstchipId,
+                        0x00, 0x00, command | data);
             } else {
                 // Frequency Write (10-Bit value)
                 port = ((chip.data[chip.dataStart + chip.realPos + 1] & 0x03) << 4) | ((chip.data[chip.dataStart + chip.realPos] & 0xF0) >> 4);
-                chipRegWrite(chip.dstChipType
-                        , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
-                        , 0x00, 0x00, command | data);
-                chipRegWrite(chip.dstChipType
-                        , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
-                        , 0x00, 0x00, port);
+                chipRegWrite(chip.dstChipType, chip.dstEmuType, chip.dstChipIndex, chip.dstchipId,
+                        0x00, 0x00, command | data);
+                chipRegWrite(chip.dstChipType, chip.dstEmuType, chip.dstChipIndex, chip.dstchipId,
+                        0x00, 0x00, port);
             }
             break;
         case 0x18: // OKIM6295 - TODO: verify
@@ -609,23 +604,19 @@ public class DacControl {
                 if ((data & 0x80) > 0) {
                     // Sample Start
                     // write sample ID
-                    chipRegWrite(chip.dstChipType
-                            , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
-                            , 0x00, command, data);
+                    chipRegWrite(chip.dstChipType, chip.dstEmuType, chip.dstChipIndex, chip.dstchipId,
+                            0x00, command, data);
                     // write channel(s) that should play the sample
-                    chipRegWrite(chip.dstChipType
-                            , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
-                            , 0x00, command, port << 4);
+                    chipRegWrite(chip.dstChipType, chip.dstEmuType, chip.dstChipIndex, chip.dstchipId,
+                            0x00, command, port << 4);
                 } else {
                     // Sample Stop
-                    chipRegWrite(chip.dstChipType
-                            , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
-                            , 0x00, command, port << 3);
+                    chipRegWrite(chip.dstChipType, chip.dstEmuType, chip.dstChipIndex, chip.dstchipId,
+                            0x00, command, port << 3);
                 }
             } else {
-                chipRegWrite(chip.dstChipType
-                        , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
-                        , 0x00, command, data);
+                chipRegWrite(chip.dstChipType, chip.dstEmuType, chip.dstChipIndex, chip.dstchipId,
+                        0x00, command, data);
             }
             break;
         // Generic support: 8-bit Register, 8-bit data
@@ -646,9 +637,8 @@ public class DacControl {
         case 0x1E: // Pokey - TODO: Verify
             command = chip.dstCommand & 0x00FF;
             data = chip.data[chip.dataStart + chip.realPos] & 0xff;
-            chipRegWrite(chip.dstChipType
-                    , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
-                    , 0x00, command, data);
+            chipRegWrite(chip.dstChipType, chip.dstEmuType, chip.dstChipIndex, chip.dstchipId,
+                    0x00, command, data);
             break;
         // Generic support: 16-bit Register, 8-bit data
         case 0x07: // YM2608
@@ -662,9 +652,8 @@ public class DacControl {
             port = (chip.dstCommand & 0xff00) >> 8;
             command = chip.dstCommand & 0x00FF;
             data = chip.data[chip.dataStart + chip.realPos] & 0xff;
-            chipRegWrite(chip.dstChipType
-                    , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
-                    , port, command, data);
+            chipRegWrite(chip.dstChipType, chip.dstEmuType, chip.dstChipIndex, chip.dstchipId,
+                    port, command, data);
             break;
         // Generic support: 8-bit Register with Channel Select, 8-bit data
         case 0x05: // RF5C68
@@ -675,9 +664,8 @@ public class DacControl {
             data = chip.data[chip.dataStart + chip.realPos] & 0xff;
 
             if (port == 0xff) // Send Channel Select
-                chipRegWrite(chip.dstChipType
-                        , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
-                        , 0x00, command & 0x0f, data);
+                chipRegWrite(chip.dstChipType, chip.dstEmuType, chip.dstChipIndex, chip.dstchipId,
+                        0x00, command & 0x0f, data);
             else {
                 int prevChn;
 
@@ -691,27 +679,23 @@ public class DacControl {
                     prevChn = mds.inst(HuC6280Inst.class, chip.dstChipIndex).read(chip.dstchipId, 0x00);
 
                 // Send Channel Select
-                chipRegWrite(chip.dstChipType
-                        , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
-                        , 0x00, command >> 4, port);
+                chipRegWrite(chip.dstChipType, chip.dstEmuType, chip.dstChipIndex, chip.dstchipId,
+                        0x00, command >> 4, port);
                 // Send data
-                chipRegWrite(chip.dstChipType
-                        , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
-                        , 0x00, command & 0x0F, data);
+                chipRegWrite(chip.dstChipType, chip.dstEmuType, chip.dstChipIndex, chip.dstchipId,
+                        0x00, command & 0x0F, data);
                 // restore old channel
                 if (prevChn != port)
-                    chipRegWrite(chip.dstChipType
-                            , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
-                            , 0x00, command >> 4, prevChn);
+                    chipRegWrite(chip.dstChipType, chip.dstEmuType, chip.dstChipIndex, chip.dstchipId,
+                            0x00, command >> 4, prevChn);
 
             }
             break;
         // Generic support: 8-bit Register, 16-bit data
         case 0x1F: // QSoundInst
             command = chip.dstCommand & 0x00FF;
-            chipRegWrite(chip.dstChipType
-                    , chip.dstEmuType, chip.dstChipIndex, chip.dstchipId
-                    , chip.data[chip.dataStart + chip.realPos] & 0xff, chip.data[chip.dataStart + chip.realPos + 1] & 0xff, command);
+            chipRegWrite(chip.dstChipType, chip.dstEmuType, chip.dstChipIndex, chip.dstchipId,
+                    chip.data[chip.dataStart + chip.realPos] & 0xff, chip.data[chip.dataStart + chip.realPos + 1] & 0xff, command);
             break;
         }
         chip.running |= 0x10;

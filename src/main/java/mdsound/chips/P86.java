@@ -60,19 +60,21 @@ public class P86 {
     private int volume;
     /** Volume table */
     private int[][] volumeTable;
-    private static final int[] rateTable = new int[] {4135, 5513, 8270, 11025, 16540, 22050, 33080, 44100};
+    private static final int[] rateTable = {4135, 5513, 8270, 11025, 16540, 22050, 33080, 44100};
 
     private static class Inst {
         public int start;
         public int size;
 
         public Inst(byte[] pcmData, int i) {
-            this.start = (pcmData[i * 6 + 0 + 12 + 1 + 3] & 0xff) +
+            this.start =
+                    (pcmData[i * 6 + 0 + 12 + 1 + 3] & 0xff) +
                     (pcmData[i * 6 + 1 + 12 + 1 + 3] & 0xff) * 0x100 +
-                    (pcmData[i * 6 + 2 + 12 + 1 + 3] & 0xff) * 0x10000; // - 0x610;
-            this.size = (pcmData[i * 6 + 3 + 12 + 1 + 3] & 0xff) +
+                    (pcmData[i * 6 + 2 + 12 + 1 + 3] & 0xff) * 0x1_0000; // - 0x610;
+            this.size =
+                    (pcmData[i * 6 + 3 + 12 + 1 + 3] & 0xff) +
                     (pcmData[i * 6 + 4 + 12 + 1 + 3] & 0xff) * 0x100 +
-                    (pcmData[i * 6 + 5 + 12 + 1 + 3] & 0xff) * 0x10000;
+                    (pcmData[i * 6 + 5 + 12 + 1 + 3] & 0xff) * 0x1_0000;
         }
     }
 

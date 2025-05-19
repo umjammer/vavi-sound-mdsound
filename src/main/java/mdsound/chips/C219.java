@@ -192,7 +192,7 @@ public class C219 {
                     v.sample = 0;
                     v.lastSample = 0;
 
-//                    logger.log(Level.ERROR, "219: play v %d mode %02x start %x loop %x end %x".formatted(
+//                    logger.log(Level.TRACE, "219: play v %d mode %02x start %x loop %x end %x".formatted(
 //                            offset >> 4, vReg.mode,
 //                            find_sample(v.sampleStart, vReg.bank, offset >> 4),
 //                            find_sample(v.sampleLoop, vReg.bank, offset >> 4),

@@ -126,8 +126,8 @@ public class X1_010 {
                     // Meta Fox does write the frequency register, but this is a hack to make it "work" with the current setup
                     // This is broken for Arbalester (it writes 8), but that'll be fixed later.
                     if (freq == 0) freq = 4;
-                    int smpStep = (int) ((float) this.baseClock / 8192.0f
-                            * freq * (1 << FREQ_BASE_BITS) / (float) this.rate + 0.5f);
+                    int smpStep = (int) ((float) this.baseClock / 8192.0f *
+                            freq * (1 << FREQ_BASE_BITS) / (float) this.rate + 0.5f);
                     if (smpOffs == 0) {
 //logger.log(Level.TRACE, "Play sample %p - %p, channel %X volume %d:%d freq %X step %X offset %X".formatted(
 // start, end, ch, volL, volR, freq, smpStep, smpOffs));
@@ -153,10 +153,8 @@ public class X1_010 {
 
                     int env = (this.reg[ch * 8 + 5] & 0xff) * 128;
                     int envOffs = this.envOffset[ch];
-                    int envStep = (int) (
-                            (float) this.baseClock / 128.0 / 1024.0 / 4.0
-                                    * (this.reg[ch * 8 + 4] & 0xff) * (1 << ENV_BASE_BITS) / (float) this.rate + 0.5f
-                    );
+                    int envStep = (int) ((float) this.baseClock / 128.0 / 1024.0 / 4.0 *
+                                    (this.reg[ch * 8 + 4] & 0xff) * (1 << ENV_BASE_BITS) / (float) this.rate + 0.5f);
                     // Print some more debug info
                     if (smpOffs == 0) {
 //logger.log(Level.TRACE, "Play waveform %X, channel %X volume %X freq %4X step %X offset %X".formatted(

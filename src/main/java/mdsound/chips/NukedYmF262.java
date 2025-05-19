@@ -458,8 +458,7 @@ public class NukedYmF262 {
     }
 
     private static void OPL3_EnvelopeUpdateKSL(Slot slot) {
-        short ksl = (short) ((kslRom[slot.channel.f_num >> 6] << 2)
-                        - ((0x08 - slot.channel.block) << 5));
+        short ksl = (short) ((kslRom[slot.channel.f_num >> 6] << 2) - ((0x08 - slot.channel.block) << 5));
         if (ksl < 0) {
             ksl = 0;
         }
@@ -478,8 +477,8 @@ public class NukedYmF262 {
         int eg_inc;
         int eg_off;
         int reset = 0;
-        slot.eg_out = (slot.eg_rout + (slot.reg_tl << 2)
-                + (slot.eg_ksl >> kslShift[slot.reg_ksl]) + (slot.trem.get(0) & 0xff)) & 0xffff;
+        slot.eg_out = (slot.eg_rout + (slot.reg_tl << 2) +
+                (slot.eg_ksl >> kslShift[slot.reg_ksl]) + (slot.trem.get(0) & 0xff)) & 0xffff;
         if (slot.key != 0 && slot.eg_gen == EnvelopeGen.Release) {
             reset = 1;
             reg_rate = slot.reg_ar;
@@ -646,9 +645,9 @@ public class NukedYmF262 {
             chip.rm_tc_bit5 = (phase >> 5) & 1;
         }
         if ((chip.rhy & 0x20) != 0) {
-            rm_xor = (chip.rm_hh_bit2 ^ chip.rm_hh_bit7)
-                    | (chip.rm_hh_bit3 ^ chip.rm_tc_bit5)
-                    | (chip.rm_tc_bit3 ^ chip.rm_tc_bit5);
+            rm_xor = (chip.rm_hh_bit2 ^ chip.rm_hh_bit7) |
+                    (chip.rm_hh_bit3 ^ chip.rm_tc_bit5) |
+                    (chip.rm_tc_bit3 ^ chip.rm_tc_bit5);
             switch (slot.slot_num) {
                 case 13: // hh
                     slot.pg_phase_out = rm_xor << 9;
@@ -659,8 +658,7 @@ public class NukedYmF262 {
                     }
                     break;
                 case 16: // sd
-                    slot.pg_phase_out = (chip.rm_hh_bit8 << 9)
-                            | ((chip.rm_hh_bit8 ^ (noise & 1)) << 8);
+                    slot.pg_phase_out = (chip.rm_hh_bit8 << 9) | ((chip.rm_hh_bit8 ^ (noise & 1)) << 8);
                     break;
                 case 17: // tc
                     slot.pg_phase_out = (rm_xor << 9) | 0x80;
@@ -810,8 +808,8 @@ public class NukedYmF262 {
             return;
         }
         channel.f_num = (channel.f_num & 0x300) | data;
-        channel.ksv = (channel.block << 1)
-                | ((channel.f_num >> (0x09 - channel.chip.nts)) & 0x01);
+        channel.ksv = (channel.block << 1) |
+                ((channel.f_num >> (0x09 - channel.chip.nts)) & 0x01);
         OPL3_EnvelopeUpdateKSL(channel.slots[0]);
         OPL3_EnvelopeUpdateKSL(channel.slots[1]);
         if ((channel.chip.newM & channel.chType) == ch_4op) {
@@ -828,8 +826,8 @@ public class NukedYmF262 {
         }
         channel.f_num = (channel.f_num & 0xff) | ((data & 0x03) << 8);
         channel.block = (data >> 2) & 0x07;
-        channel.ksv = (channel.block << 1)
-                | ((channel.f_num >> (0x09 - channel.chip.nts)) & 0x01);
+        channel.ksv = (channel.block << 1) |
+                ((channel.f_num >> (0x09 - channel.chip.nts)) & 0x01);
         OPL3_EnvelopeUpdateKSL(channel.slots[0]);
         OPL3_EnvelopeUpdateKSL(channel.slots[1]);
         if ((channel.chip.newM & channel.chType) == ch_4op) {
@@ -1187,14 +1185,14 @@ assert chip.slot[ii].channel != null : "slot: " + ii + ", slot: @" + chip.slot.h
             OPL3_Generate4Ch(chip, chip.samples);
             chip.sampleCnt -= chip.rateRatio;
         }
-        buf4[0] = (short) ((chip.oldSamples[0] * (chip.rateRatio - chip.sampleCnt)
-                + chip.samples[0] * chip.sampleCnt) / chip.rateRatio);
-        buf4[1] = (short) ((chip.oldSamples[1] * (chip.rateRatio - chip.sampleCnt)
-                + chip.samples[1] * chip.sampleCnt) / chip.rateRatio);
-        buf4[2] = (short) ((chip.oldSamples[2] * (chip.rateRatio - chip.sampleCnt)
-                + chip.samples[2] * chip.sampleCnt) / chip.rateRatio);
-        buf4[3] = (short) ((chip.oldSamples[3] * (chip.rateRatio - chip.sampleCnt)
-                + chip.samples[3] * chip.sampleCnt) / chip.rateRatio);
+        buf4[0] = (short) ((chip.oldSamples[0] * (chip.rateRatio - chip.sampleCnt) +
+                chip.samples[0] * chip.sampleCnt) / chip.rateRatio);
+        buf4[1] = (short) ((chip.oldSamples[1] * (chip.rateRatio - chip.sampleCnt) +
+                chip.samples[1] * chip.sampleCnt) / chip.rateRatio);
+        buf4[2] = (short) ((chip.oldSamples[2] * (chip.rateRatio - chip.sampleCnt) +
+                chip.samples[2] * chip.sampleCnt) / chip.rateRatio);
+        buf4[3] = (short) ((chip.oldSamples[3] * (chip.rateRatio - chip.sampleCnt) +
+                chip.samples[3] * chip.sampleCnt) / chip.rateRatio);
         chip.sampleCnt += 1 << RSM_FRAC;
     }
 
