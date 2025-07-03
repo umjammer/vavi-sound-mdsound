@@ -1,6 +1,8 @@
 package mdsound.instrument;
 
 import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,6 +43,9 @@ public class YmF262Inst extends Instrument.BaseInstrument {
         chips[chipId].reset();
     }
 
+    /**
+     * @param option [0] <Integer> ... 0: dosbox, 1: mame
+     */
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
         assert chipId < MAX_CHIPS;
@@ -49,7 +54,8 @@ public class YmF262Inst extends Instrument.BaseInstrument {
         if ((CHIP_SAMPLING_MODE == 0x01 && rate < CHIP_SAMPLE_RATE) || CHIP_SAMPLING_MODE == 0x02)
             rate = CHIP_SAMPLE_RATE;
 
-        if (option.length > 0) emuCore = (int) option[0];
+logger.log(Level.TRACE, "option: " + Arrays.toString(option));
+        if (option.length > 0 && option[0] instanceof Integer) emuCore = (int) option[0];
         chips[chipId].start(emuCore, clock, rate, this::updateHandler);
 
         return rate;
