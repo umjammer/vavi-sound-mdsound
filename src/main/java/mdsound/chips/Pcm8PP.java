@@ -156,12 +156,11 @@ public class Pcm8PP {
         }
     }
 
-    public int start(int sampleRate, int clock, Object... option) {
+    public int start(int sampleRate, int clock, int option) {
         this.sampleRate = sampleRate;
         baseClock = clock;
 
-        if (option == null || option.length < 1) sOption = -1;
-        else sOption = (int) option[0];
+        sOption = option;
 
         return sampleRate;
     }

@@ -40,12 +40,20 @@ public class Pcm8PPInst extends BaseInstrument {
         chips[chipId].reset();
     }
 
+    /**
+     * @param option [0] <Integer> ?
+     */
     @Override
-    public int start(int chipId, int samplerate, int clock, Object... option) {
+    public int start(int chipId, int samplingRate, int clock, Object... option) {
         assert chipId < chips.length;
-        chips[chipId].start(samplerate, clock);
 
-        return samplerate;
+        int sOption;
+        if (option == null || option.length < 1) sOption = -1;
+        else sOption = (int) option[0];
+
+        chips[chipId].start(samplingRate, clock, sOption);
+
+        return samplingRate;
     }
 
     @Override
