@@ -10,28 +10,30 @@ import java.util.Arrays;
  * MPCM (c)wachoman compatible engine (only functions used by mndrv)
  * <p>
  * ADPCM decoding was based on XM6.
+ *
+ * @see mdsound.instrument.X68kMPcmInst
  */
 public class MPcm {
 
     public static class PCM {
 
-        // -1: ADPCM 0: None 1: 16bit 2: 8bit
+        /** -1: ADPCM 0: None 1: 16bit 2: 8bit */
         public byte type;
-        // Basic note
+        /** Basic note */
         public byte orig;
         public byte[] adrsBuf;
         public int adrsPtr;
         public int size;
-        // Loop Start Point
+        /** Loop Start Point */
         public int start;
-        // Loop End Point
+        /** Loop End Point */
         public int end;
-        // Loop count (0: infinite)
+        /** Loop count (0: infinite) */
         public int count;
     }
 
     // Sound effect ch is not supported
-    private static final int VOICE_MAX = 16;
+    public static final int VOICE_MAX = 16;
 
     private enum TYPE {
         _NONE(0),
@@ -51,7 +53,7 @@ public class MPcm {
 
     private static final int TBL_DIFF = 49 * 16;
 
-    private static class Channel {
+    public static class Channel {
 
         private boolean enable;
         private int vol;
@@ -74,6 +76,8 @@ public class MPcm {
         private int sample;
         private int lpSample;
         private int lpOffset;
+        public float base;
+        public int lastNote;
 
         private void reset() {
             this.sample = 0;
@@ -94,7 +98,7 @@ public class MPcm {
             this.enable = false;
         }
 
-        private void setPcm(PCM ptr) {
+        private void setPcm(MPcm.PCM ptr) {
             this.type = ptr.type;
             this.orig = ptr.orig << 6;
             this.adrsBuf = ptr.adrsBuf;
@@ -184,6 +188,16 @@ public class MPcm {
         }
     }
 
+    public static final int[] baseClockTbl = {
+            3900,
+            5200,
+            7800,
+            10400,
+            15600,
+            20800,
+            31200
+    };
+
     private int[] volTbl;
 
     private static final int[][] VolTbl = {
@@ -235,10 +249,20 @@ public class MPcm {
         }
     }
 
-    private Channel[] channels;
+    public void setVolTable(int sel, int[] tbl) {
+        if (sel == 1) {
+            // 16
+            this.volTbl = tbl;
+        } else {
+            // 128
+            this.volTbl = tbl;
+        }
+    }
+
+    public Channel[] channels;
     private static final int[] diffTable = new int[TBL_DIFF];
-    private float rate;
-    private float base;
+    public float rate;
+    public float base;
     private int mask = 0;
 
     // If I try to make this by calculation, it doesn't add up...

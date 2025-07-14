@@ -49,58 +49,58 @@ public class Pcm8PP {
     private double baseClock;
 
     private static final double[] freqTable = {
-            //ADPCM mono
-            3906.2,//0
-            5208.0,//1
-            7812.5,//2
-            10416.7,//3
-            15625.0,//4
-            //16bit signed PCM mono
-            15625.0,//5
-            //8bit signed PCM mono
-            15625.0,//6
-            //16bit signed PCM (Through) mono
-            -1,//7
-            //16bit signed PCM mono
-            15625.0,//8
-            16000.0,//9
-            22050.0,//10
-            24000.0,//11
-            32000.0,//12
-            44100.0,//13
-            48000.0,//14
-            -1,//15
-            //8bit signed PCM mono
-            15625.0,//16
-            16000.0,//17
-            22050.0,//18
-            24000.0,//19
-            32000.0,//20
-            44100.0,//21
-            48000.0,//22
-            -1,//23
-            //16bit signed PCM stereo
-            15625.0,//24
-            16000.0,//25
-            22050.0,//26
-            24000.0,//27
-            32000.0,//28
-            44100.0,//29
-            48000.0,//30
-            -1,//31
-            //8bit signed PCM stereo
-            15625.0,//32
-            16000.0,//33
-            22050.0,//34
-            24000.0,//35
-            32000.0,//36
-            44100.0,//37
-            48000.0,//38
-            -1,//39
-            //variabled ADPCM mono
-            -1,//40
-            //variabled 16bit signed PCM mono
-            -1//41
+            // ADPCM mono
+            3906.2, // 0
+            5208.0, // 1
+            7812.5, // 2
+            10416.7, // 3
+            15625.0, // 4
+            // 16bit signed PCM mono
+            15625.0, // 5
+            // 8bit signed PCM mono
+            15625.0, // 6
+            // 16bit signed PCM (Through) mono
+            -1, // 7
+            // 16bit signed PCM mono
+            15625.0, // 8
+            16000.0, // 9
+            22050.0, // 10
+            24000.0, // 11
+            32000.0, // 12
+            44100.0, // 13
+            48000.0, // 14
+            -1, // 15
+            // 8bit signed PCM mono
+            15625.0, // 16
+            16000.0, // 17
+            22050.0, // 18
+            24000.0, // 19
+            32000.0, // 20
+            44100.0, // 21
+            48000.0, // 22
+            -1, // 23
+            // 16bit signed PCM stereo
+            15625.0, // 24
+            16000.0, // 25
+            22050.0, // 26
+            24000.0, // 27
+            32000.0, // 28
+            44100.0, // 29
+            48000.0, // 30
+            -1, // 31
+            // 8bit signed PCM stereo
+            15625.0, // 32
+            16000.0, // 33
+            22050.0, // 34
+            24000.0, // 35
+            32000.0, // 36
+            44100.0, // 37
+            48000.0, // 38
+            -1, // 39
+            // variabled ADPCM mono
+            -1, // 40
+            // variabled 16bit signed PCM mono
+            -1 // 41
     };
     private static final int[] outsTable = {
             1, 1, 1, 1, 1, 1, 1, 1,
@@ -132,21 +132,21 @@ public class Pcm8PP {
             -1, -1, -1, -1, 2, 4, 6, 8,
     };
     private static final int MAXPCMVAL = 2047;
-    private int sOption = -1; // -1:default
+    private int sOption = -1; // -1: default
     private static final int[] sOpTable = {
-            28, 36, //s0: 16s32k    8s32k
-            29, 37, //s1: 16s44.1k  8s44.1k
-            30, 38, //s2: 16s48k    8s48k
-            25, 33, //s3: 16s16k    8s16k
-            26, 34, //s4: 16s22.05k 8s22.05k
-            27, 35, //s5: 16s24k    8s24k
+            28, 36, // s0: 16s32k    8s32k
+            29, 37, // s1: 16s44.1k  8s44.1k
+            30, 38, // s2: 16s48k    8s48k
+            25, 33, // s3: 16s16k    8s16k
+            26, 34, // s4: 16s22.05k 8s22.05k
+            27, 35, // s5: 16s24k    8s24k
 
-            12, 20, //s6: 16m32k    8m32k
-            13, 21, //s7: 16m44.1k  8m44.1k
-            14, 22, //s8: 16m48k    8m48k
-            9, 17, //s9: 16m16k    8m16k
-            10, 18, //sA: 16m22.05k 8m22.05k
-            11, 19, //sB: 16m24k    8m24k
+            12, 20, // s6: 16m32k    8m32k
+            13, 21, // s7: 16m44.1k  8m44.1k
+            14, 22, // s8: 16m48k    8m48k
+             9, 17, // s9: 16m16k    8m16k
+            10, 18, // sA: 16m22.05k 8m22.05k
+            11, 19, // sB: 16m24k    8m24k
     };
 
     public void reset() {
@@ -214,7 +214,7 @@ public class Pcm8PP {
                             } else {
                                 adpcm2pcm(st, st.n1Data);
                             }
-                            st.OutPcm = ((st.InpPcm << 9) - (st.InpPcm_prev << 9) + 459 * st.OutPcm) >> 9;
+                            st.outPcm = ((st.inpPcm << 9) - (st.inpPcmPrev << 9) + 459 * st.outPcm) >>> 9;
                             st.inpPcmPrev = st.inpPcm;
                         }
                         valR = valL = ((st.outPcm * st.volume) >> 8); // >> 4);
@@ -227,7 +227,7 @@ public class Pcm8PP {
                     else valL = mem[st.adrsPtr] & 0xff;
                     if (st.type == 2) {
                         if (mem.length <= st.adrsPtr + 1) valL = 0;
-                        else valL = ((byte) valL << 8) + (mem[st.adrsPtr + 1] & 0xff);
+                        else valL = ((valL & 0xff) << 8) + (mem[st.adrsPtr + 1] & 0xff);
                     }
 
                     // Volume Reflection
@@ -298,7 +298,7 @@ public class Pcm8PP {
             ch[c].volume = volTable[v];
             ch[c].mode = (ch[c].mode & 0xff00_ffff) | (v << 16);
         }
-        int m = mode >> 8;
+        int m = (mode >> 8) & 0xff;
         if (m != 0xff) {
 
             if (sOption != -1 && (m == 5 || m == 6)) {
@@ -314,7 +314,7 @@ public class Pcm8PP {
                 ch[c].freq = d3Freq / 256.0;
             }
         }
-        int p = mode;
+        int p = mode & 0xff;
         if (p != 0xff) {
             if ((p & 3) != 0) {
                 ch[c].play = true;
@@ -365,7 +365,7 @@ public class Pcm8PP {
         dltL = (dltL ^ sign) + (sign & 1);
         st.pcm += dltL;
 
-        if (((st.Pcm + MAXPCMVAL) & 0xffff_ffffL) > MAXPCMVAL * 2L) {
+        if (((st.pcm + MAXPCMVAL) & 0xffff_ffffL) > ((MAXPCMVAL * 2) & 0xffff_ffffL)) {
             if ((st.pcm + MAXPCMVAL) >= (MAXPCMVAL * 2)) {
                 st.pcm = MAXPCMVAL;
             } else {
@@ -391,7 +391,7 @@ public class Pcm8PP {
         st.pcm += pcm16 - st.pcm16Prev;
         st.pcm16Prev = pcm16;
 
-        if (((st.Pcm + MAXPCMVAL) & 0xffff_ffffL) > MAXPCMVAL * 2L) {
+        if (((st.pcm + MAXPCMVAL) & 0xffff_ffffL) > ((MAXPCMVAL * 2) & 0xffff_ffffL)) {
             if ((st.pcm + MAXPCMVAL) >= (MAXPCMVAL * 2)) {
                 st.pcm = MAXPCMVAL;
             } else {
