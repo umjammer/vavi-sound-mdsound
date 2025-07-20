@@ -21,36 +21,36 @@ public class Xgm {
     }
 
     /** Information on each channel */
-    private final Pcm[][] xgmPcm = {new Pcm[4], new Pcm[4]};
+    private final Pcm[] xgmPcm = new Pcm[4];
     /** PCM data set */
-    private final byte[][] pcmBuf = {null, null};
+    private final byte[] pcmBuf = null;
     /** PCM Table */
-    private final SampleID[][] sampleID = {new SampleID[63], new SampleID[63]};
+    private final SampleID[] sampleID = new SampleID[63];
 
-    private final double[] pcmStep = new double[2];
-    private final double[] pcmExecDelta = new double[2];
-    private final byte[] dacEnable = {0, 0};
-    private final Object[] lockobj = {new Object(), new Object()};
+    private double pcmStep;
+    private double pcmExecDelta;
+    private boolean dacEnable = false;
+    private final Object lockObj = new Object();
     private boolean ox2b = false;
 
-    public void reset(int chipId, int sampleRate) {
-        pcmStep[chipId] = sampleRate / 14000.0;
-        stop(chipId);
+    public void reset(int sampleRate) {
+        pcmStep = sampleRate / 14000.0;
+        stop();
     }
 
-    public void stop(int chipId) {
-        pcmExecDelta[chipId] = 0.0;
-        dacEnable[chipId] = 0;
+    public void stop() {
+        pcmExecDelta = 0.0;
+        dacEnable = false;
         ox2b = false;
 
         for (int i = 0; i < 4; i++) {
-            if (xgmPcm[chipId][i] == null) xgmPcm[chipId][i] = new Pcm();
-            xgmPcm[chipId][i].isPlaying = false;
+            if (xgmPcm[i] == null) xgmPcm[i] = new Pcm();
+            xgmPcm[i].isPlaying = false;
         }
-        for (int i = 0; i < 63; i++) sampleID[chipId][i] = new SampleID();
+        for (int i = 0; i < 63; i++) sampleID[i] = new SampleID();
     }
 
-    public void write(int chipId, int port, int adr, int data) {
+    public void write(int port, int adr, int data) {
         //
         // OPN2 is a type in which the address and data are sent in two separate transmissions.
         // First address (adr = 0)
@@ -64,61 +64,61 @@ public class Xgm {
         }
         if (ox2b && port == 0 && adr == 1) {
             // 0x80 : Bit 7 (1: ON, 0: OFF) indicates the DAC switch
-            dacEnable[chipId] = (byte) (data & 0x80);
+            dacEnable = (data & 0x80) != 0;
             ox2b = false;
         }
     }
 
-    public void update(int chipId, int samples, QuadFunction<Byte, Integer, Integer, Integer, Integer> Write) {
+    public void update(int samples, QuadFunction<Byte, Integer, Integer, Integer, Integer> write) {
         for (int i = 0; i < samples; i++) {
-            while ((int) pcmExecDelta[chipId] <= 0) {
-                write(chipId, 0, 0, 0x2a);
-                write(chipId, 0, 1, oneFramePCM(chipId));
-                pcmExecDelta[chipId] += pcmStep[chipId];
+            while ((int) pcmExecDelta <= 0) {
+                write(0, 0, 0x2a);
+                write(0, 1, oneFramePCM());
+                pcmExecDelta += pcmStep;
             }
-            pcmExecDelta[chipId] -= 1.0;
+            pcmExecDelta -= 1.0;
         }
     }
 
-    public void playPCM(int chipId, int X, int id) {
-        int priority = X & 0xc;
-        int channel = X & 0x3;
+    public void playPCM(int x, int id) {
+        int priority = x & 0xc;
+        int channel = x & 0x3;
 
-        synchronized (lockobj[chipId]) {
+        synchronized (lockObj) {
             // Can only be played if it has high priority or is muted
-            if (xgmPcm[chipId][channel].priority > priority && xgmPcm[chipId][channel].isPlaying) return;
+            if (xgmPcm[channel].priority > priority && xgmPcm[channel].isPlaying) return;
 
-            if (id == 0 || id > sampleID[chipId].length || sampleID[chipId][id - 1].size == 0) {
+            if (id == 0 || id > sampleID.length || sampleID[id - 1].size == 0) {
                 // If the ID is 0 or an undefined ID is specified, the sound will stop.
-                xgmPcm[chipId][channel].priority = 0;
-                xgmPcm[chipId][channel].isPlaying = false;
+                xgmPcm[channel].priority = 0;
+                xgmPcm[channel].isPlaying = false;
                 return;
             }
 
             // Sound start instruction
-            xgmPcm[chipId][channel].priority = priority;
-            xgmPcm[chipId][channel].startAddr = sampleID[chipId][id - 1].addr;
-            xgmPcm[chipId][channel].endAddr = sampleID[chipId][id - 1].addr + sampleID[chipId][id - 1].size;
-            xgmPcm[chipId][channel].addr = sampleID[chipId][id - 1].addr;
-            xgmPcm[chipId][channel].inst = id;
-            xgmPcm[chipId][channel].isPlaying = true;
+            xgmPcm[channel].priority = priority;
+            xgmPcm[channel].startAddr = sampleID[id - 1].addr;
+            xgmPcm[channel].endAddr = sampleID[id - 1].addr + sampleID[id - 1].size;
+            xgmPcm[channel].addr = sampleID[id - 1].addr;
+            xgmPcm[channel].inst = id;
+            xgmPcm[channel].isPlaying = true;
         }
     }
 
-    private short oneFramePCM(int chipId) {
-        if (dacEnable[chipId] == 0) return 0x80; // 0x80: Silence (or rather the center of the waveform?)
+    private short oneFramePCM() {
+        if (!dacEnable) return 0x80; // 0x80: Silence (or rather the center of the waveform?)
 
         // Waveform Synthesis
         int o = 0;
-        synchronized (lockobj[chipId]) {
+        synchronized (lockObj) {
             for (int i = 0; i < 4; i++) {
-                if (!xgmPcm[chipId][i].isPlaying) continue;
-                byte d = xgmPcm[chipId][i].addr < pcmBuf[chipId].length ? pcmBuf[chipId][xgmPcm[chipId][i].addr++] : (byte) 0;
+                if (!xgmPcm[i].isPlaying) continue;
+                byte d = xgmPcm[i].addr < pcmBuf.length ? pcmBuf[xgmPcm[i].addr++] : (byte) 0;
                 o += d;
-                xgmPcm[chipId][i].data = Math.abs(d);
-                if (xgmPcm[chipId][i].addr >= xgmPcm[chipId][i].endAddr) {
-                    xgmPcm[chipId][i].isPlaying = false;
-                    xgmPcm[chipId][i].data = 0;
+                xgmPcm[i].data = Math.abs(d);
+                if (xgmPcm[i].addr >= xgmPcm[i].endAddr) {
+                    xgmPcm[i].isPlaying = false;
+                    xgmPcm[i].data = 0;
                 }
             }
         }
