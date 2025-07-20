@@ -11,7 +11,7 @@ import static java.lang.System.getLogger;
 
 
 /**
- * PPZ8.
+ * PPZ8 (PMD).
  *
  * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
  * @version 0.00 2022-07-08 nsano initial version <br>

@@ -1,7 +1,10 @@
 package mdsound.chips;
 
 
-/** from PMDWin */
+/**
+ * PC-9801-86 (PMD)
+ * @see "PMDWin"
+ */
 public class P86 {
 
     public double samplingRate = 44100.0;
@@ -338,7 +341,7 @@ public class P86 {
             break;
         case 0x05: // pitch
             int srcRate = adr >> 5;
-            int pitch = (adr & 0x1f) * 0x10000 + data;
+            int pitch = (adr & 0x1f) * 0x1_0000 + data;
             if (srcRate < 0 || srcRate > 7)
                 break;
             if (pitch > 0x1f_ffff)

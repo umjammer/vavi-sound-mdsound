@@ -272,7 +272,7 @@ logger.log(Level.DEBUG, "Warning: UPD7759 reading empty FIFO!");
             /* Start state: we begin here as soon as a sample is triggered */
             case START:
                 this.req_sample = this.rom != null ? this.fifo_in : 0x10;
-logger.log(Level.DEBUG, String.format("UPD7759: req_sample = %02x", this.req_sample));
+logger.log(Level.DEBUG, "UPD7759: req_sample = %02x".formatted(this.req_sample));
                 /* 35+ cycles after we get here, the /DRQ goes low
                  *     (first byte (number of samples in ROM) should be sent in response)
                  *

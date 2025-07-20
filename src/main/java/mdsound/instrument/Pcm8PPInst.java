@@ -11,7 +11,7 @@ import mdsound.chips.Pcm8PP;
 
 
 /**
- * Pcm8PPInst.
+ * Pcm8PPInst (MSX).
  *
  * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
  * @version 0.00 2025-02-02 nsano initial version <br>
@@ -80,14 +80,16 @@ public class Pcm8PPInst extends BaseInstrument {
 
     @Override
     public void setMask(int chipId, int ch) {
+        assert chipId < chips.length;
+        chips[chipId].setMute(ch, true);
     }
 
     @Override
     public void resetMask(int chipId, int ch) {
     }
 
-    public void keyOn(int chipId, int c, int adrsPtr, int mode, int len, int d3Freq) {
-        chips[chipId].keyOn(c, adrsPtr, mode, len, d3Freq);
+    public void keyOn(int chipId, int c, int adrsPtr, int mode, int len) {
+        chips[chipId].keyOn(c, adrsPtr, mode, len, 0);
     }
 
     public void keyOff(int chipId, int c) {
