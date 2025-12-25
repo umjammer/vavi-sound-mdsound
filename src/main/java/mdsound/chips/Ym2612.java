@@ -253,7 +253,7 @@ public class Ym2612 {
     /** sometimes it creates a terrible noise */
     private int dacHighpassEnable = 1;
 
-    private static final int[] vol = new int[2];
+    private final int[] vol = new int[2];
 
     private static class Channel {
 
@@ -1218,7 +1218,7 @@ logger.log(Level.TRACE, "controlCsmKey");
         ch.doLimit();
     }
 
-    private static void doOutput(Channel ch, int[][] buf, int i) {
+    private void doOutput(Channel ch, int[][] buf, int i) {
         buf[0][i] += ch.outD & ch.left;
         buf[1][i] += ch.outD & ch.right;
 //logger.log(Level.DEBUG, "fm: %04x, %04x".formatted(buf[0][i] & 0xffff, buf[1][i] & 0xffff));

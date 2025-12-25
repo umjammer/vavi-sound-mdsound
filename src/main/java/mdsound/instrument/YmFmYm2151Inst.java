@@ -6,6 +6,8 @@
 
 package mdsound.instrument;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -13,6 +15,8 @@ import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
 import vavi.sound.ymfm.Opm.Ym2151;
 import vavi.sound.ymfm.YmFm.VgmChip;
+
+import static java.lang.System.getLogger;
 
 
 /**
@@ -22,6 +26,8 @@ import vavi.sound.ymfm.YmFm.VgmChip;
  * @version 0.00 2025-01-18 nsano initial version <br>
  */
 public class YmFmYm2151Inst extends Instrument.BaseInstrument {
+
+    private static final Logger logger = getLogger(YmFmYm2151Inst.class.getName());
 
     public static final int DefaultClockValue = 3579545;
 
@@ -56,6 +62,7 @@ public class YmFmYm2151Inst extends Instrument.BaseInstrument {
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
         chips[chipId] = new VgmChip(clock, Ym2151.class);
+logger.log(Level.DEBUG, "chipId: %d, %d".formatted(chipId, chips.hashCode()));
 
         output_step = 0x1_0000_0000L / samplingRate;
 
@@ -69,7 +76,7 @@ public class YmFmYm2151Inst extends Instrument.BaseInstrument {
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        assert chipId < chips.length;
+        assert chipId < chips.length && chips[chipId] != null : "chipId: %d, %d".formatted(chipId, chips.hashCode());
         chips[chipId].write(adr, data);
         return 0;
     }
