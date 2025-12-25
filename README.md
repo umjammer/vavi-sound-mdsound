@@ -5,7 +5,9 @@
 
 # vavi-sound-mdsound
 
-Video Game Music Emulation Library
+<img alt="logo" src="src/test/resources/guitar_duke.png" width="160" />
+
+🪇 Video Game Music Emulation Library
 
 this is a fork of [MDSound](https://github.com/kuma4649/MDSound)
 
@@ -80,7 +82,7 @@ this is a fork of [MDSound](https://github.com/kuma4649/MDSound)
 | NES_APU               |             | PSG   |   🚧   | nes                      |                                                                                                                              |
 | YM2609                | OPNA2       | Other |        | fmvgen                   |                                                                                                                              |
 | AY8910-2              | PSG2        | Other |        | fmvgen                   |                                                                                                                              |
-| Dmg                   |             |       |   ✅    | dmg                      | Beatmania_GB2_Gatcha_Mix_(Game_Boy,_Color)/11 Friends.vgz                                                                    |
+| Dmg                   |             |       |   ✅    | gb                       | Beatmania_GB2_Gatcha_Mix_(Game_Boy,_Color)/11 Friends.vgz                                                                    |
 | Vrc6                  |             |       |        | nes                      |                                                                                                                              |
 | YM2149                |             | PSG   |   🥚   | np:okaxaki               |                                                                                                                              |
 | YM2143                | OPLL        | FM    |   🥚   | np:okaxaki               |                                                                                                                              |
@@ -120,6 +122,13 @@ this is a fork of [MDSound](https://github.com/kuma4649/MDSound)
 * https://github.com/M-HT/websynth_d-77 (ps2 wavesynth)
 * https://github.com/M-HT/casio_sw-10 (wavesynth (not vgm))
 * https://sourceforge.net/projects/vgmtoolbox/
+* https://pcm1723.hateblo.jp/entry/20180828/1535424562
+* http://zarala.g2.xrea.com/soft/analyse/ps2_adpcm.txt (.mib)
+* https://github.com/tildearrow/furnace (namco c15)
+* https://github.com/ngeiswei/dsynkant (roland d-50/550 (la synthesis) incompleted?)
+* https://github.com/110-kenichi/mame (merged to mame?)
+* https://github.com/jariseon/amame (mame vst)
+* https://github.com/110-kenichi/mame (mame midi?)
 
 ## TODO
 
@@ -137,6 +146,7 @@ this is a fork of [MDSound](https://github.com/kuma4649/MDSound)
    * ~~wswan noise only~~
    * ~~pwn laud noise~~
    * ~~ymf262 (nuked) little bit different?~~
+   * ~~c219 (my impl is something wrong)~~ ... system2x is not supported, use c140inst
 
 ---
 
@@ -238,3 +248,7 @@ thank you very much.
  - Wikipedia
 
  - [Original in C#](https://github.com/kuma4649/MDSound)
+
+---
+
+<sub>image designed by @umjammer, drawn by nano banana</sub>
