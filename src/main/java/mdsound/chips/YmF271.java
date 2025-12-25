@@ -304,11 +304,11 @@ public class YmF271 {
                 } else {
                     // 12bit
                     if ((this.stepPtr & 0x10000) != 0)
-                        sample = (short) ((readMemory.apply((int) (this.startAddr + (this.stepPtr >> 17) * 3 + 2)) & 0xff) << 8
-                                | (readMemory.apply((int) (this.startAddr + (this.stepPtr >> 17) * 3 + 1)) << 4) & 0xf0);
+                        sample = (short) ((readMemory.apply((int) (this.startAddr + (this.stepPtr >> 17) * 3 + 2)) & 0xff) << 8 |
+                                (readMemory.apply((int) (this.startAddr + (this.stepPtr >> 17) * 3 + 1)) << 4) & 0xf0);
                     else
-                        sample = (short) ((readMemory.apply((int) (this.startAddr + (this.stepPtr >> 17) * 3)) & 0xff) << 8
-                                | readMemory.apply((int) (this.startAddr + (this.stepPtr >> 17) * 3 + 1)) & 0xf0);
+                        sample = (short) ((readMemory.apply((int) (this.startAddr + (this.stepPtr >> 17) * 3)) & 0xff) << 8 |
+                                readMemory.apply((int) (this.startAddr + (this.stepPtr >> 17) * 3 + 1)) & 0xf0);
                 }
 
                 this.updateEnvelope();

@@ -3,26 +3,34 @@
 package mdsound.chips;
 
 
-//
-// MPCM (c)wachoman Compatible engine (only functions used by mndrv)
-//
-// ADPCM decoding was cop^H^H^H based on XM6.
-//
+/**
+ * MPCM (c)wachoman Compatible engine (only functions used by mndrv)
+ *
+ * ADPCM decoding was cop^H^H^H based on XM6.
+ *
+ * @see mdsound.instrument.MPcmPPInst
+ */
 public class MPcmPP {
 
     public static class SETPCM {
 
-        public byte type;      // -1: ADPCM 0: None 1: 16bit 2: 8bit
-        public byte orig;      // Basic note
+        /** -1: ADPCM 0: None 1: 16bit 2: 8bit */
+        public byte type;
+        /** Basic note */
+        public byte orig;
         public byte[] adrs_buf;
         public int adrs_ptr;
         public int size;
-        public int start;        // Loop Opening
-        public int end;      // Loop End Point
-        public int count;        // Loop count (0: infinite)
+        /** Loop Opening */
+        public int start;
+        /** Loop End Point */
+        public int end;
+        /** Loop count (0: infinite) */
+        public int count;
     }
 
-    public static final int VOICE_MAX = 16;         // Sound effect ch is not supported
+    /** Sound effect ch is not supported */
+    public static final int VOICE_MAX = 16;
 
     protected static final int TYPE_NONE = 0;
     protected static final int TYPE_16 = 1;
@@ -63,19 +71,19 @@ public class MPcmPP {
     }
 
     private double[] baseClockTbl = {
-            //ADPCM mono
+            // ADPCM mono
             3906.2,
             5208.0,
             7812.5,
             10416.7,
             15625.0,
-            //16bit signed PCM mono
+            // 16bit signed PCM mono
             20800.0,
-            //8bit signed PCM mono
+            // 8bit signed PCM mono
             31200.0,
-            //16bit signed PCM (Through) mono
+            // 16bit signed PCM (Through) mono
             -1,
-            //16bit signed PCM mono
+            // 16bit signed PCM mono
             15625.0,
             16000.0,
             22050.0,
@@ -84,7 +92,7 @@ public class MPcmPP {
             44100.0,
             48000.0,
             -1,
-            //8bit signed PCM mono
+            // 8bit signed PCM mono
             15625.0,
             16000.0,
             22050.0,
@@ -93,7 +101,7 @@ public class MPcmPP {
             44100.0,
             48000.0,
             -1,
-            //16bit signed PCM stereo
+            // 16bit signed PCM stereo
             15625.0,
             16000.0,
             22050.0,
@@ -102,7 +110,7 @@ public class MPcmPP {
             44100.0,
             48000.0,
             -1,
-            //8bit signed PCM stereo
+            // 8bit signed PCM stereo
             15625.0,
             16000.0,
             22050.0,
@@ -111,9 +119,9 @@ public class MPcmPP {
             44100.0,
             48000.0,
             -1,
-            //variabled ADPCM mono
+            // variabled ADPCM mono
             -1,
-            //variabled 16bit signed PCM mono
+            // variabled 16bit signed PCM mono
             -1
     };
     private static final int[] outsTable = {
@@ -136,8 +144,8 @@ public class MPcmPP {
 
     private Channel[] work;
     private int[] diffTable;
-    private float rate;
-    private float base;
+    public float rate;
+    public float base;
     private int[] volTbl;
     private int mask = 0;
 
@@ -376,9 +384,9 @@ public class MPcmPP {
         }
     }
 
-    public void KeyOn(int ch) {
+    public void keyOn(int ch) {
         if (ch == 0xff) {
-            for (int i = 0; i < VOICE_MAX; i++) KeyOn(i);
+            for (int i = 0; i < VOICE_MAX; i++) keyOn(i);
             return;
         }
 

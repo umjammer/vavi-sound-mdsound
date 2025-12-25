@@ -499,70 +499,70 @@ public class Opm {
         opmChMask = 0;
 
         List<BiConsumer<Integer, Integer>> a = Arrays.<BiConsumer<Integer, Integer>>asList(
-                this::dmy, this::ExeCmd_LfoReset, this::dmy, this::dmy              // 00-03
-                , this::dmy, this::dmy, this::dmy, this::dmy              // 04-07
-                , this::ExeCmd_KON, this::dmy, this::dmy, this::dmy              // 08-0B
-                , this::dmy, this::dmy, this::dmy, this::ExeCmd_NeNfrq    // 0C-0F
-                , this::dmy, this::dmy, this::dmy, this::dmy              // 10-13
-                , this::dmy, this::dmy, this::dmy, this::dmy              // 14-17
-                , this::ExeCmd_Lfrq, this::ExeCmd_PmdAmd, this::dmy, this::ExeCmd_WaveForm  // 18-1B
-                , this::dmy, this::dmy, this::dmy, this::dmy              // 1C-1F
-                , this::ExeCmd_PanFlCon, this::ExeCmd_PanFlCon, this::ExeCmd_PanFlCon, this::ExeCmd_PanFlCon  // 20-23
-                , this::ExeCmd_PanFlCon, this::ExeCmd_PanFlCon, this::ExeCmd_PanFlCon, this::ExeCmd_PanFlCon  // 24-27
-                , this::ExeCmd_Kc, this::ExeCmd_Kc, this::ExeCmd_Kc, this::ExeCmd_Kc        // 28-2B
-                , this::ExeCmd_Kc, this::ExeCmd_Kc, this::ExeCmd_Kc, this::ExeCmd_Kc        // 2C-2F
-                , this::ExeCmd_Kf, this::ExeCmd_Kf, this::ExeCmd_Kf, this::ExeCmd_Kf        // 30-33
-                , this::ExeCmd_Kf, this::ExeCmd_Kf, this::ExeCmd_Kf, this::ExeCmd_Kf        // 34-37
-                , this::ExeCmd_PmsAms, this::ExeCmd_PmsAms, this::ExeCmd_PmsAms, this::ExeCmd_PmsAms    // 38-3B
-                , this::ExeCmd_PmsAms, this::ExeCmd_PmsAms, this::ExeCmd_PmsAms, this::ExeCmd_PmsAms    // 3C-3F
-                , this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul    // 40-43
-                , this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul    // 44-47
-                , this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul    // 48-4B
-                , this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul    // 4C-4F
-                , this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul    // 50-53
-                , this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul    // 54-57
-                , this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul    // 58-5B
-                , this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul    // 5C-5F
-                , this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl        // 60-63
-                , this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl        // 64-67
-                , this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl        // 68-6B
-                , this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl        // 6C-6F
-                , this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl        // 70-73
-                , this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl        // 74-77
-                , this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl        // 78-7B
-                , this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl        // 7C-7F
-                , this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr      // 80-83
-                , this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr      // 84-87
-                , this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr      // 88-8B
-                , this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr      // 8C-8F
-                , this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr      // 90-93
-                , this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr      // 94-97
-                , this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr      // 98-9B
-                , this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr      // 9C-9F
-                , this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r    // A0-A3
-                , this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r    // A4-A7
-                , this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r    // A8-AB
-                , this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r    // AC-AF
-                , this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r    // B0-B3
-                , this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r    // B4-B7
-                , this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r    // B8-BB
-                , this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r    // BC-BF
-                , this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r    // C0-C3
-                , this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r    // C4-C7
-                , this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r    // C8-CB
-                , this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r    // CC-CF
-                , this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r    // D0-D3
-                , this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r    // D4-D7
-                , this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r    // D8-DB
-                , this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r    // DC-DF
-                , this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr     // E0-E3
-                , this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr     // E4-E7
-                , this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr     // E8-EB
-                , this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr     // EC-EF
-                , this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr     // F0-F3
-                , this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr     // F4-F7
-                , this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr     // F8-FB
-                , this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr     // FC-FF
+                this::dmy, this::ExeCmd_LfoReset, this::dmy, this::dmy,                                      // 00-03
+                this::dmy, this::dmy, this::dmy, this::dmy,                                                  // 04-07
+                this::ExeCmd_KON, this::dmy, this::dmy, this::dmy,                                           // 08-0B
+                this::dmy, this::dmy, this::dmy, this::ExeCmd_NeNfrq,                                        // 0C-0F
+                this::dmy, this::dmy, this::dmy, this::dmy,                                                  // 10-13
+                this::dmy, this::dmy, this::dmy, this::dmy,                                                  // 14-17
+                this::ExeCmd_Lfrq, this::ExeCmd_PmdAmd, this::dmy, this::ExeCmd_WaveForm,                    // 18-1B
+                this::dmy, this::dmy, this::dmy, this::dmy,                                                  // 1C-1F
+                this::ExeCmd_PanFlCon, this::ExeCmd_PanFlCon, this::ExeCmd_PanFlCon, this::ExeCmd_PanFlCon,  // 20-23
+                this::ExeCmd_PanFlCon, this::ExeCmd_PanFlCon, this::ExeCmd_PanFlCon, this::ExeCmd_PanFlCon,  // 24-27
+                this::ExeCmd_Kc, this::ExeCmd_Kc, this::ExeCmd_Kc, this::ExeCmd_Kc,                          // 28-2B
+                this::ExeCmd_Kc, this::ExeCmd_Kc, this::ExeCmd_Kc, this::ExeCmd_Kc,                          // 2C-2F
+                this::ExeCmd_Kf, this::ExeCmd_Kf, this::ExeCmd_Kf, this::ExeCmd_Kf,                          // 30-33
+                this::ExeCmd_Kf, this::ExeCmd_Kf, this::ExeCmd_Kf, this::ExeCmd_Kf,                          // 34-37
+                this::ExeCmd_PmsAms, this::ExeCmd_PmsAms, this::ExeCmd_PmsAms, this::ExeCmd_PmsAms,          // 38-3B
+                this::ExeCmd_PmsAms, this::ExeCmd_PmsAms, this::ExeCmd_PmsAms, this::ExeCmd_PmsAms,          // 3C-3F
+                this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul,          // 40-43
+                this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul,          // 44-47
+                this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul,          // 48-4B
+                this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul,          // 4C-4F
+                this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul,          // 50-53
+                this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul,          // 54-57
+                this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul,          // 58-5B
+                this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul, this::ExeCmd_Dt1Mul,          // 5C-5F
+                this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl,                          // 60-63
+                this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl,                          // 64-67
+                this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl,                          // 68-6B
+                this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl,                          // 6C-6F
+                this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl,                          // 70-73
+                this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl,                          // 74-77
+                this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl,                          // 78-7B
+                this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl, this::ExeCmd_Tl,                          // 7C-7F
+                this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr,                  // 80-83
+                this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr,                  // 84-87
+                this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr,                  // 88-8B
+                this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr,                  // 8C-8F
+                this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr,                  // 90-93
+                this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr,                  // 94-97
+                this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr,                  // 98-9B
+                this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr, this::ExeCmd_KsAr,                  // 9C-9F
+                this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r,          // A0-A3
+                this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r,          // A4-A7
+                this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r,          // A8-AB
+                this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r,          // AC-AF
+                this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r,          // B0-B3
+                this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r,          // B4-B7
+                this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r,          // B8-BB
+                this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r, this::ExeCmd_AmeD1r,          // BC-BF
+                this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r,          // C0-C3
+                this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r,          // C4-C7
+                this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r,          // C8-CB
+                this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r,          // CC-CF
+                this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r,          // D0-D3
+                this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r,          // D4-D7
+                this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r,          // D8-DB
+                this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r, this::ExeCmd_Dt2D2r,          // DC-DF
+                this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr,              // E0-E3
+                this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr,              // E4-E7
+                this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr,              // E8-EB
+                this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr,              // EC-EF
+                this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr,              // F0-F3
+                this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr,              // F4-F7
+                this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr,              // F8-FB
+                this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr, this::CmdExe_D1lRr               // FC-FF
         );
         cmdTbl = a.toArray(BiConsumer[]::new);
         //new BiConsumer<Byte, Byte>[]
@@ -612,8 +612,8 @@ public class Opm {
         }
         for (int i = 17; i <= Global.SIZEALPHATBL; ++i) {
             global.ALPHATBL[Global.ALPHAZERO + i] = (int) (Math.floor(
-                    Math.pow(2.0, -((Global.SIZEALPHATBL) - i) * (128.0 / 8.0) / (Global.SIZEALPHATBL))
-                            * 1.0 * 1.0 * Global.PRECISION + 0.0));
+                    Math.pow(2.0, -((Global.SIZEALPHATBL) - i) * (128.0 / 8.0) / (Global.SIZEALPHATBL)) *
+                            1.0 * 1.0 * Global.PRECISION + 0.0));
         }
 
         // Create an envelope value → Noiseα conversion table
@@ -621,9 +621,8 @@ public class Opm {
             global.NOISEALPHATBL[i] = 0;
         }
         for (int i = 17; i <= Global.SIZEALPHATBL; ++i) {
-            global.NOISEALPHATBL[Global.ALPHAZERO + i] = (int) Math.floor(
-                    i * 1.0 / (Global.SIZEALPHATBL)
-                            * 1.0 * 0.25 * Global.PRECISION + 0.0); // Noise volume is 1/4 of Op.
+            global.NOISEALPHATBL[Global.ALPHAZERO + i] = (int) Math.floor(i * 1.0 / (Global.SIZEALPHATBL) *
+                            1.0 * 0.25 * Global.PRECISION + 0.0); // Noise volume is 1/4 of Op.
         }
 
         // Create a D1L → D1l conversion table
@@ -1267,47 +1266,47 @@ public class Opm {
 
                         // Stereo sum of OPM output PCM to OpmHpfInp[]
                         if ((opmChMask & 0xff) != 0) {
-                            opmHpfInp[0] = ((opmChMask & 0x01) != 0 ? 0 : (opOut[0][0] & pan[0][0]))
-                                    + ((opmChMask & 0x02) != 0 ? 0 : (opOut[1][0] & pan[0][1]))
-                                    + ((opmChMask & 0x04) != 0 ? 0 : (opOut[2][0] & pan[0][2]))
-                                    + ((opmChMask & 0x08) != 0 ? 0 : (opOut[3][0] & pan[0][3]))
-                                    + ((opmChMask & 0x10) != 0 ? 0 : (opOut[4][0] & pan[0][4]))
-                                    + ((opmChMask & 0x20) != 0 ? 0 : (opOut[5][0] & pan[0][5]))
-                                    + ((opmChMask & 0x40) != 0 ? 0 : (opOut[6][0] & pan[0][6]))
-                                    + ((opmChMask & 0x80) != 0 ? 0 : (opOut[7][0] & pan[0][7]));
-                            opmHpfInp[1] = ((opmChMask & 0x01) != 0 ? 0 : (opOut[0][0] & pan[1][0]))
-                                    + ((opmChMask & 0x02) != 0 ? 0 : (opOut[1][0] & pan[1][1]))
-                                    + ((opmChMask & 0x04) != 0 ? 0 : (opOut[2][0] & pan[1][2]))
-                                    + ((opmChMask & 0x08) != 0 ? 0 : (opOut[3][0] & pan[1][3]))
-                                    + ((opmChMask & 0x10) != 0 ? 0 : (opOut[4][0] & pan[1][4]))
-                                    + ((opmChMask & 0x20) != 0 ? 0 : (opOut[5][0] & pan[1][5]))
-                                    + ((opmChMask & 0x40) != 0 ? 0 : (opOut[6][0] & pan[1][6]))
-                                    + ((opmChMask & 0x80) != 0 ? 0 : (opOut[7][0] & pan[1][7]));
+                            opmHpfInp[0] = ((opmChMask & 0x01) != 0 ? 0 : (opOut[0][0] & pan[0][0])) +
+                                    ((opmChMask & 0x02) != 0 ? 0 : (opOut[1][0] & pan[0][1])) +
+                                    ((opmChMask & 0x04) != 0 ? 0 : (opOut[2][0] & pan[0][2])) +
+                                    ((opmChMask & 0x08) != 0 ? 0 : (opOut[3][0] & pan[0][3])) +
+                                    ((opmChMask & 0x10) != 0 ? 0 : (opOut[4][0] & pan[0][4])) +
+                                    ((opmChMask & 0x20) != 0 ? 0 : (opOut[5][0] & pan[0][5])) +
+                                    ((opmChMask & 0x40) != 0 ? 0 : (opOut[6][0] & pan[0][6])) +
+                                    ((opmChMask & 0x80) != 0 ? 0 : (opOut[7][0] & pan[0][7]));
+                            opmHpfInp[1] = ((opmChMask & 0x01) != 0 ? 0 : (opOut[0][0] & pan[1][0])) +
+                                    ((opmChMask & 0x02) != 0 ? 0 : (opOut[1][0] & pan[1][1])) +
+                                    ((opmChMask & 0x04) != 0 ? 0 : (opOut[2][0] & pan[1][2])) +
+                                    ((opmChMask & 0x08) != 0 ? 0 : (opOut[3][0] & pan[1][3])) +
+                                    ((opmChMask & 0x10) != 0 ? 0 : (opOut[4][0] & pan[1][4])) +
+                                    ((opmChMask & 0x20) != 0 ? 0 : (opOut[5][0] & pan[1][5])) +
+                                    ((opmChMask & 0x40) != 0 ? 0 : (opOut[6][0] & pan[1][6])) +
+                                    ((opmChMask & 0x80) != 0 ? 0 : (opOut[7][0] & pan[1][7]));
                         } else {
-                            opmHpfInp[0] = (opOut[0][0] & pan[0][0])
-                                    + (opOut[1][0] & pan[0][1])
-                                    + (opOut[2][0] & pan[0][2])
-                                    + (opOut[3][0] & pan[0][3])
-                                    + (opOut[4][0] & pan[0][4])
-                                    + (opOut[5][0] & pan[0][5])
-                                    + (opOut[6][0] & pan[0][6])
-                                    + (opOut[7][0] & pan[0][7]);
-                            opmHpfInp[1] = (opOut[0][0] & pan[1][0])
-                                    + (opOut[1][0] & pan[1][1])
-                                    + (opOut[2][0] & pan[1][2])
-                                    + (opOut[3][0] & pan[1][3])
-                                    + (opOut[4][0] & pan[1][4])
-                                    + (opOut[5][0] & pan[1][5])
-                                    + (opOut[6][0] & pan[1][6])
-                                    + (opOut[7][0] & pan[1][7]);
+                            opmHpfInp[0] = (opOut[0][0] & pan[0][0]) +
+                                    (opOut[1][0] & pan[0][1]) +
+                                    (opOut[2][0] & pan[0][2]) +
+                                    (opOut[3][0] & pan[0][3]) +
+                                    (opOut[4][0] & pan[0][4]) +
+                                    (opOut[5][0] & pan[0][5]) +
+                                    (opOut[6][0] & pan[0][6]) +
+                                    (opOut[7][0] & pan[0][7]);
+                            opmHpfInp[1] = (opOut[0][0] & pan[1][0]) +
+                                    (opOut[1][0] & pan[1][1]) +
+                                    (opOut[2][0] & pan[1][2]) +
+                                    (opOut[3][0] & pan[1][3]) +
+                                    (opOut[4][0] & pan[1][4]) +
+                                    (opOut[5][0] & pan[1][5]) +
+                                    (opOut[6][0] & pan[1][6]) +
+                                    (opOut[7][0] & pan[1][7]);
                         }
                         opmHpfInp[0] = (opmHpfInp[0] & -1024) << 4;
                         opmHpfInp[1] = (opmHpfInp[1] & -1024) << 4;
 
-                        opmHpfOut[0] = opmHpfInp[0] - opmHpfInpPrev[0]
-                                + opmHpfOut[0] - (opmHpfOut[0] >> 10) - (opmHpfOut[0] >> 12);
-                        opmHpfOut[1] = opmHpfInp[1] - opmHpfInpPrev[1]
-                                + opmHpfOut[1] - (opmHpfOut[1] >> 10) - (opmHpfOut[1] >> 12);
+                        opmHpfOut[0] = opmHpfInp[0] - opmHpfInpPrev[0] +
+                                opmHpfOut[0] - (opmHpfOut[0] >> 10) - (opmHpfOut[0] >> 12);
+                        opmHpfOut[1] = opmHpfInp[1] - opmHpfInpPrev[1] +
+                                opmHpfOut[1] - (opmHpfOut[1] >> 10) - (opmHpfOut[1] >> 12);
                         opmHpfInpPrev[0] = opmHpfInp[0];
                         opmHpfInpPrev[1] = opmHpfInp[1];
 
@@ -1316,10 +1315,8 @@ public class Opm {
 
                         inpInpOpm[0] = inpInpOpm[0] * 29;
                         inpInpOpm[1] = inpInpOpm[1] * 29;
-                        inpOpm[0] = (inpInpOpm[0] + inpInpOpmPrev[0]
-                                + inpOpm[0] * 70) >> 7;
-                        inpOpm[1] = (inpInpOpm[1] + inpInpOpmPrev[1]
-                                + inpOpm[1] * 70) >> 7;
+                        inpOpm[0] = (inpInpOpm[0] + inpInpOpmPrev[0] + inpOpm[0] * 70) >> 7;
+                        inpOpm[1] = (inpInpOpm[1] + inpInpOpmPrev[1] + inpOpm[1] * 70) >> 7;
                         inpInpOpmPrev[0] = inpInpOpm[0];
                         inpInpOpmPrev[1] = inpInpOpm[1];
 
@@ -1369,10 +1366,10 @@ public class Opm {
 
                     outInpAdpcm[0] *= 26;
                     outInpAdpcm[1] *= 26;
-                    outInpOutAdpcm[0] = (outInpAdpcm[0] + outInpAdpcmPrev[0] + outInpAdpcmPrev[0] + outInpAdpcmPrev2[0]
-                            - outInpOutAdpcmPrev[0] * (-1537) - outInpOutAdpcmPrev2[0] * 617) >> 10;
-                    outInpOutAdpcm[1] = (outInpAdpcm[1] + outInpAdpcmPrev[1] + outInpAdpcmPrev[1] + outInpAdpcmPrev2[1]
-                            - outInpOutAdpcmPrev[1] * (-1537) - outInpOutAdpcmPrev2[1] * 617) >> 10;
+                    outInpOutAdpcm[0] = (outInpAdpcm[0] + outInpAdpcmPrev[0] + outInpAdpcmPrev[0] + outInpAdpcmPrev2[0] -
+                            outInpOutAdpcmPrev[0] * (-1537) - outInpOutAdpcmPrev2[0] * 617) >> 10;
+                    outInpOutAdpcm[1] = (outInpAdpcm[1] + outInpAdpcmPrev[1] + outInpAdpcmPrev[1] + outInpAdpcmPrev2[1] -
+                            outInpOutAdpcmPrev[1] * (-1537) - outInpOutAdpcmPrev2[1] * 617) >> 10;
 
                     outInpAdpcmPrev2[0] = outInpAdpcmPrev[0];
                     outInpAdpcmPrev2[1] = outInpAdpcmPrev[1];
@@ -1385,10 +1382,10 @@ public class Opm {
 
                     outOutInpAdpcm[0] = outInpOutAdpcm[0] * (356);
                     outOutInpAdpcm[1] = outInpOutAdpcm[1] * (356);
-                    outOutAdpcm[0] = (outOutInpAdpcm[0] + outOutInpAdpcmPrev[0]
-                            - outOutAdpcmPrev[0] * (-312)) >> 10;
-                    outOutAdpcm[1] = (outOutInpAdpcm[1] + outOutInpAdpcmPrev[1]
-                            - outOutAdpcmPrev[1] * (-312)) >> 10;
+                    outOutAdpcm[0] = (outOutInpAdpcm[0] + outOutInpAdpcmPrev[0] -
+                            outOutAdpcmPrev[0] * (-312)) >> 10;
+                    outOutAdpcm[1] = (outOutInpAdpcm[1] + outOutInpAdpcmPrev[1] -
+                            outOutAdpcmPrev[1] * (-312)) >> 10;
 
                     outOutInpAdpcmPrev[0] = outOutInpAdpcm[0];
                     outOutInpAdpcmPrev[1] = outOutInpAdpcm[1];
@@ -1531,45 +1528,45 @@ public class Opm {
 
                     // Add the OPM output PCM to InpInpOpm[] in stereo
                     if ((opmChMask & 0xff) != 0) {
-                        inpInpOpm[0] = ((opmChMask & 0x01) != 0 ? 0 : (opOut[0][0] & pan[0][0]))
-                                + ((opmChMask & 0x02) != 0 ? 0 : (opOut[1][0] & pan[0][1]))
-                                + ((opmChMask & 0x04) != 0 ? 0 : (opOut[2][0] & pan[0][2]))
-                                + ((opmChMask & 0x08) != 0 ? 0 : (opOut[3][0] & pan[0][3]))
-                                + ((opmChMask & 0x10) != 0 ? 0 : (opOut[4][0] & pan[0][4]))
-                                + ((opmChMask & 0x20) != 0 ? 0 : (opOut[5][0] & pan[0][5]))
-                                + ((opmChMask & 0x40) != 0 ? 0 : (opOut[6][0] & pan[0][6]))
-                                + ((opmChMask & 0x80) != 0 ? 0 : (opOut[7][0] & pan[0][7]));
-                        inpInpOpm[1] = ((opmChMask & 0x01) != 0 ? 0 : (opOut[0][0] & pan[1][0]))
-                                + ((opmChMask & 0x02) != 0 ? 0 : (opOut[1][0] & pan[1][1]))
-                                + ((opmChMask & 0x04) != 0 ? 0 : (opOut[2][0] & pan[1][2]))
-                                + ((opmChMask & 0x08) != 0 ? 0 : (opOut[3][0] & pan[1][3]))
-                                + ((opmChMask & 0x10) != 0 ? 0 : (opOut[4][0] & pan[1][4]))
-                                + ((opmChMask & 0x20) != 0 ? 0 : (opOut[5][0] & pan[1][5]))
-                                + ((opmChMask & 0x40) != 0 ? 0 : (opOut[6][0] & pan[1][6]))
-                                + ((opmChMask & 0x80) != 0 ? 0 : (opOut[7][0] & pan[1][7]));
+                        inpInpOpm[0] = ((opmChMask & 0x01) != 0 ? 0 : (opOut[0][0] & pan[0][0])) +
+                                ((opmChMask & 0x02) != 0 ? 0 : (opOut[1][0] & pan[0][1])) +
+                                ((opmChMask & 0x04) != 0 ? 0 : (opOut[2][0] & pan[0][2])) +
+                                ((opmChMask & 0x08) != 0 ? 0 : (opOut[3][0] & pan[0][3])) +
+                                ((opmChMask & 0x10) != 0 ? 0 : (opOut[4][0] & pan[0][4])) +
+                                ((opmChMask & 0x20) != 0 ? 0 : (opOut[5][0] & pan[0][5])) +
+                                ((opmChMask & 0x40) != 0 ? 0 : (opOut[6][0] & pan[0][6])) +
+                                ((opmChMask & 0x80) != 0 ? 0 : (opOut[7][0] & pan[0][7]));
+                        inpInpOpm[1] = ((opmChMask & 0x01) != 0 ? 0 : (opOut[0][0] & pan[1][0])) +
+                                ((opmChMask & 0x02) != 0 ? 0 : (opOut[1][0] & pan[1][1])) +
+                                ((opmChMask & 0x04) != 0 ? 0 : (opOut[2][0] & pan[1][2])) +
+                                ((opmChMask & 0x08) != 0 ? 0 : (opOut[3][0] & pan[1][3])) +
+                                ((opmChMask & 0x10) != 0 ? 0 : (opOut[4][0] & pan[1][4])) +
+                                ((opmChMask & 0x20) != 0 ? 0 : (opOut[5][0] & pan[1][5])) +
+                                ((opmChMask & 0x40) != 0 ? 0 : (opOut[6][0] & pan[1][6])) +
+                                ((opmChMask & 0x80) != 0 ? 0 : (opOut[7][0] & pan[1][7]));
                     } else {
-                        inpInpOpm[0] = (opOut[0][0] & pan[0][0])
-                                + (opOut[1][0] & pan[0][1])
-                                + (opOut[2][0] & pan[0][2])
-                                + (opOut[3][0] & pan[0][3])
-                                + (opOut[4][0] & pan[0][4])
-                                + (opOut[5][0] & pan[0][5])
-                                + (opOut[6][0] & pan[0][6])
-                                + (opOut[7][0] & pan[0][7]);
-                        inpInpOpm[1] = (opOut[0][0] & pan[1][0])
-                                + (opOut[1][0] & pan[1][1])
-                                + (opOut[2][0] & pan[1][2])
-                                + (opOut[3][0] & pan[1][3])
-                                + (opOut[4][0] & pan[1][4])
-                                + (opOut[5][0] & pan[1][5])
-                                + (opOut[6][0] & pan[1][6])
-                                + (opOut[7][0] & pan[1][7]);
+                        inpInpOpm[0] = (opOut[0][0] & pan[0][0]) +
+                                (opOut[1][0] & pan[0][1]) +
+                                (opOut[2][0] & pan[0][2]) +
+                                (opOut[3][0] & pan[0][3]) +
+                                (opOut[4][0] & pan[0][4]) +
+                                (opOut[5][0] & pan[0][5]) +
+                                (opOut[6][0] & pan[0][6]) +
+                                (opOut[7][0] & pan[0][7]);
+                        inpInpOpm[1] = (opOut[0][0] & pan[1][0]) +
+                                (opOut[1][0] & pan[1][1]) +
+                                (opOut[2][0] & pan[1][2]) +
+                                (opOut[3][0] & pan[1][3]) +
+                                (opOut[4][0] & pan[1][4]) +
+                                (opOut[5][0] & pan[1][5]) +
+                                (opOut[6][0] & pan[1][6]) +
+                                (opOut[7][0] & pan[1][7]);
                     }
 
-                    inpInpOpm[0] = (inpInpOpm[0] & -1024)
-                            >> ((Global.SIZESINTBL_BITS + Global.PRECISION_BITS) - 10 - 5); // 8*-2^17 ～ 8*+2^17
-                    inpInpOpm[1] = (inpInpOpm[1] & -1024)
-                            >> ((Global.SIZESINTBL_BITS + Global.PRECISION_BITS) - 10 - 5); // 8*-2^17 ～ 8*+2^17
+                    inpInpOpm[0] = (inpInpOpm[0] & -1024) >>
+                            ((Global.SIZESINTBL_BITS + Global.PRECISION_BITS) - 10 - 5); // 8*-2^17 ～ 8*+2^17
+                    inpInpOpm[1] = (inpInpOpm[1] & -1024) >>
+                            ((Global.SIZESINTBL_BITS + Global.PRECISION_BITS) - 10 - 5); // 8*-2^17 ～ 8*+2^17
 
                     inpOpm[0] = inpInpOpm[0];
                     inpOpm[1] = inpInpOpm[1];
@@ -1636,10 +1633,10 @@ public class Opm {
                     outInpAdpcm[1] *= 40;
                 }
 
-                outOutAdpcm[0] = (outInpAdpcm[0] + outInpAdpcmPrev[0] + outInpAdpcmPrev[0] + outInpAdpcmPrev2[0]
-                        - outOutAdpcmPrev[0] * (-157) - outOutAdpcmPrev2[0] * 61) >> 8;
-                outOutAdpcm[1] = (outInpAdpcm[1] + outInpAdpcmPrev[1] + outInpAdpcmPrev[1] + outInpAdpcmPrev2[1]
-                        - outOutAdpcmPrev[1] * (-157) - outOutAdpcmPrev2[1] * 61) >> 8;
+                outOutAdpcm[0] = (outInpAdpcm[0] + outInpAdpcmPrev[0] + outInpAdpcmPrev[0] + outInpAdpcmPrev2[0] -
+                        outOutAdpcmPrev[0] * (-157) - outOutAdpcmPrev2[0] * 61) >> 8;
+                outOutAdpcm[1] = (outInpAdpcm[1] + outInpAdpcmPrev[1] + outInpAdpcmPrev[1] + outInpAdpcmPrev2[1] -
+                        outOutAdpcmPrev[1] * (-157) - outOutAdpcmPrev2[1] * 61) >> 8;
 
                 outInpAdpcmPrev2[0] = outInpAdpcmPrev[0];
                 outInpAdpcmPrev2[1] = outInpAdpcmPrev[1];
@@ -2087,10 +2084,10 @@ public class Opm {
                         || (adpcm.dmaReg[0x06] & 0x03) != 0        // DAC != 00 ?
                         //|| Global.bswapl(*(byte**)&adpcm.DmaReg[0x14]) != (byte*)0x00E92003) {
                         || (
-                        adpcm.dmaReg[0x14] * 0x100_0000
-                                + adpcm.dmaReg[0x15] * 0x1_0000
-                                + adpcm.dmaReg[0x16] * 0x100
-                                + adpcm.dmaReg[0x17]
+                        adpcm.dmaReg[0x14] * 0x100_0000 +
+                                adpcm.dmaReg[0x15] * 0x1_0000 +
+                                adpcm.dmaReg[0x16] * 0x100 +
+                                adpcm.dmaReg[0x17]
                 ) != 0x00e9_2003) {
                     adpcm.dmaError(0x0a); // Bus Error (Device Address)
                     adpcm.dmaReg[0x07] = data & 0x28;

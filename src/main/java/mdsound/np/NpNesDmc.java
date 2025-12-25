@@ -924,12 +924,11 @@ if (startClocks >= 0) { assert(accumClocks == clocks); } // these should be equa
 
     public boolean read(int adr, /* ref */ int[] val) {
         if (adr == 0x4015) {
-            val[0] |= (this.irq ? 0x80 : 0)
-                    | (this.frameIrq ? 0x40 : 0)
-                    | (this.dLength > 0 ? 0x10 : 0)
-                    | (this.lengthCounter[1] != 0 ? 0x08 : 0)
-                    | (this.lengthCounter[0] != 0 ? 0x04 : 0)
-            ;
+            val[0] |= (this.irq ? 0x80 : 0) |
+                    (this.frameIrq ? 0x40 : 0) |
+                    (this.dLength > 0 ? 0x10 : 0) |
+                    (this.lengthCounter[1] != 0 ? 0x08 : 0) |
+                    (this.lengthCounter[0] != 0 ? 0x04 : 0);
 
             this.frameIrq = false;
             if (this.cpu != null) this.cpu.updateIRQ(IRQDevices.IRQD_FRAME, false);

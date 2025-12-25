@@ -197,49 +197,49 @@ public class Es5505 extends Es550x {
 
             case 0x01: // FC
                 if ((mem_mask & 0x0000_00ff) != 0)
-                    voice[0].freqCount = (voice[0].freqCount
-                            & ~get_address_acc_shifted_val(0x00fe, 1))
-                            | (get_address_acc_shifted_val((long) (data & 0x00fe), 1));
+                    voice[0].freqCount = (voice[0].freqCount &
+                            ~get_address_acc_shifted_val(0x00fe, 1)) |
+                            (get_address_acc_shifted_val((long) (data & 0x00fe), 1));
                 if ((mem_mask & 0x0000_ff00) != 0)
-                    voice[0].freqCount = (voice[0].freqCount
-                            & ~get_address_acc_shifted_val(0xff00, 1))
-                            | (get_address_acc_shifted_val((long) (data & 0xff00), 1));
+                    voice[0].freqCount = (voice[0].freqCount &
+                            ~get_address_acc_shifted_val(0xff00, 1)) |
+                            (get_address_acc_shifted_val((long) (data & 0xff00), 1));
 //logger.log(Level.TRACE, "%s:voice %d, freq count=%08x\n", machine().describe_context(), m_current_page & 0x1f, get_address_acc_res(voice[0].freqcount, 1));
                 break;
 
             case 0x02: // STRT (hi)
                 if ((mem_mask & 0x0000_00ff) != 0)
-                    voice[0].start = (voice[0].start
-                            & ~get_address_acc_shifted_val(0x00ff_0000, 0))
-                            | (get_address_acc_shifted_val((data & 0x00ff) << 16, 0));
+                    voice[0].start = (voice[0].start &
+                            ~get_address_acc_shifted_val(0x00ff_0000, 0)) |
+                            (get_address_acc_shifted_val((data & 0x00ff) << 16, 0));
                 if ((mem_mask & 0x0000_ff00) != 0)
-                    voice[0].start = (voice[0].start
-                            & ~get_address_acc_shifted_val(0x1f000000, 0))
-                            | (get_address_acc_shifted_val((data & 0x1f00) << 16, 0));
+                    voice[0].start = (voice[0].start &
+                            ~get_address_acc_shifted_val(0x1f000000, 0)) |
+                            (get_address_acc_shifted_val((data & 0x1f00) << 16, 0));
 //logger.log(Level.TRACE, "%s:voice %d, loop start=%08x\n", machine().describe_context(), m_current_page & 0x1f, get_address_acc_res(voice[0].start));
                 break;
 
             case 0x03: // STRT (lo)
                 if ((mem_mask & 0x0000_00ff) != 0)
-                    voice[0].start = (voice[0].start
-                            & ~get_address_acc_shifted_val(0x0000_00e0, 0))
-                            | (get_address_acc_shifted_val((long) (data & 0x00e0), 0));
+                    voice[0].start = (voice[0].start &
+                            ~get_address_acc_shifted_val(0x0000_00e0, 0)) |
+                            (get_address_acc_shifted_val((long) (data & 0x00e0), 0));
                 if ((mem_mask & 0x0000_ff00) != 0)
-                    voice[0].start = (voice[0].start
-                            & ~get_address_acc_shifted_val(0x0000_ff00, 0))
-                            | (get_address_acc_shifted_val(data & 0xff00, 0));
+                    voice[0].start = (voice[0].start &
+                            ~get_address_acc_shifted_val(0x0000_ff00, 0)) |
+                            (get_address_acc_shifted_val(data & 0xff00, 0));
 //logger.log(Level.TRACE, "%s:voice %d, loop start=%08x\n", machine().describe_context(), m_current_page & 0x1f, get_address_acc_res(voice[0].start));
                 break;
 
             case 0x04: // END (hi)
                 if ((mem_mask & 0x0000_00ff) != 0)
-                    voice[0].end = (voice[0].end
-                            & ~get_address_acc_shifted_val(0x00ff_0000, 0))
-                            | (get_address_acc_shifted_val((long) ((data & 0x00ff) << 16), 0));
+                    voice[0].end = (voice[0].end &
+                            ~get_address_acc_shifted_val(0x00ff_0000, 0)) |
+                            (get_address_acc_shifted_val((long) ((data & 0x00ff) << 16), 0));
                 if ((mem_mask & 0x0000_ff00) != 0)
-                    voice[0].end = (voice[0].end
-                            & ~get_address_acc_shifted_val(0x1f00_0000, 0))
-                            | (get_address_acc_shifted_val((data & 0x1f00) << 16, 0));
+                    voice[0].end = (voice[0].end &
+                            ~get_address_acc_shifted_val(0x1f00_0000, 0)) |
+                            (get_address_acc_shifted_val((data & 0x1f00) << 16, 0));
 //#if RAINE_CHECK
                 voice[0].control |= CONTROL_STOP0;
 //#endif
@@ -248,13 +248,13 @@ public class Es5505 extends Es550x {
 
             case 0x05: // END (lo)
                 if ((mem_mask & 0x0000_00ff) != 0)
-                    voice[0].end = (voice[0].end
-                            & ~get_address_acc_shifted_val(0x0000_00e0, 0))
-                            | (get_address_acc_shifted_val((long) (data & 0x00e0), 0));
+                    voice[0].end = (voice[0].end &
+                            ~get_address_acc_shifted_val(0x0000_00e0, 0)) |
+                            (get_address_acc_shifted_val((long) (data & 0x00e0), 0));
                 if ((mem_mask & 0x0000_ff00) != 0)
-                    voice[0].end = (voice[0].end
-                            & ~get_address_acc_shifted_val(0x0000_ff00, 0))
-                            | (get_address_acc_shifted_val((long) (data & 0xff00), 0));
+                    voice[0].end = (voice[0].end &
+                            ~get_address_acc_shifted_val(0x0000_ff00, 0)) |
+                            (get_address_acc_shifted_val((long) (data & 0xff00), 0));
 //#if RAINE_CHECK
                 voice[0].control |= CONTROL_STOP0;
 //#endif
@@ -291,25 +291,24 @@ public class Es5505 extends Es550x {
 
             case 0x0a: // ACC (hi)
                 if ((mem_mask & 0x0000_00ff) != 0)
-                    voice[0].accum = (voice[0].accum
-                            & ~get_address_acc_shifted_val(0x00ff_0000, 0))
-                            | (get_address_acc_shifted_val((data & 0x00ff) << 16, 0));
+                    voice[0].accum = (voice[0].accum &
+                            ~get_address_acc_shifted_val(0x00ff_0000, 0)) |
+                            (get_address_acc_shifted_val((data & 0x00ff) << 16, 0));
                 if ((mem_mask & 0x0000_ff00) != 0)
-                    voice[0].accum = (voice[0].accum
-                            & ~get_address_acc_shifted_val(0x1f00_0000, 0))
-                            | (get_address_acc_shifted_val((data & 0x1f00) << 16, 0));
+                    voice[0].accum = (voice[0].accum &
+                            ~get_address_acc_shifted_val(0x1f00_0000, 0)) |
+                            (get_address_acc_shifted_val((data & 0x1f00) << 16, 0));
 //logger.log(Level.TRACE, "%s:voice %d, accum=%08x\n", machine().describe_context(), m_current_page & 0x1f, get_address_acc_res(voice.accum));
                 break;
 
             case 0x0b: // ACC (lo)
                 if ((mem_mask & 0x0000_00ff) != 0)
-                    voice[0].accum = (voice[0].accum
-                            & ~get_address_acc_shifted_val(0x0000_00ff, 0))
-                            | (get_address_acc_shifted_val(data & 0x00ff, 0));
+                    voice[0].accum = (voice[0].accum &
+                            ~get_address_acc_shifted_val(0x0000_00ff, 0)) |
+                            (get_address_acc_shifted_val(data & 0x00ff, 0));
                 if ((mem_mask & 0x0000_ff00) != 0)
-                    voice[0].accum = (voice[0].accum
-                            & ~get_address_acc_shifted_val(0x0000_ff00, 0))
-                            | (get_address_acc_shifted_val(data & 0xff00, 0));
+                    voice[0].accum = (voice[0].accum & ~get_address_acc_shifted_val(0x0000_ff00, 0)) |
+                            (get_address_acc_shifted_val(data & 0xff00, 0));
 //logger.log(Level.TRACE, "%s:voice %d, accum=%08x\n", machine().describe_context(), m_current_page & 0x1f, get_address_acc_res(voice.accum));
                 break;
 

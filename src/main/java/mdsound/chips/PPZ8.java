@@ -5,12 +5,13 @@ import java.lang.System.Logger.Level;
 import java.util.ArrayList;
 import java.util.List;
 
-import static dotnet4j.util.compat.CollectionUtilities.toByteArray;
+import vavi.util.ByteUtil;
+
 import static java.lang.System.getLogger;
 
 
 /**
- * PPZ8.
+ * PPZ8 (PMD).
  *
  * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
  * @version 0.00 2022-07-08 nsano initial version <br>
@@ -142,19 +143,19 @@ public class PPZ8 {
 
         if (pcmData[bank] != null) {
             chWk[al].ptr =
-                      (pcmData[bank][num * 0x12 +     32] & 0xff)
-                    + (pcmData[bank][num * 0x12 + 1 + 32] & 0xff) * 0x100
-                    + (pcmData[bank][num * 0x12 + 2 + 32] & 0xff) * 0x1_0000
-                    + (pcmData[bank][num * 0x12 + 3 + 32] & 0xff) * 0x10_00000
-                    + 0x20 + 0x12 * 128;
+                    (pcmData[bank][num * 0x12 + 32] & 0xff) +
+                    (pcmData[bank][num * 0x12 + 1 + 32] & 0xff) * 0x100 +
+                    (pcmData[bank][num * 0x12 + 2 + 32] & 0xff) * 0x1_0000 +
+                    (pcmData[bank][num * 0x12 + 3 + 32] & 0xff) * 0x10_00000 +
+                    0x20 + 0x12 * 128;
             if (chWk[al].ptr >= pcmData[bank].length) {
                 chWk[al].ptr = pcmData[bank].length - 1;
             }
-            chWk[al].end = chWk[al].ptr
-                    + (pcmData[bank][num * 0x12 + 4 + 32] & 0xff)
-                    + (pcmData[bank][num * 0x12 + 5 + 32] & 0xff) * 0x100
-                    + (pcmData[bank][num * 0x12 + 6 + 32] & 0xff) * 0x1_0000
-                    + (pcmData[bank][num * 0x12 + 7 + 32] & 0xff) * 0x10_00000;
+            chWk[al].end = chWk[al].ptr +
+                    (pcmData[bank][num * 0x12 + 4 + 32] & 0xff) +
+                    (pcmData[bank][num * 0x12 + 5 + 32] & 0xff) * 0x100 +
+                    (pcmData[bank][num * 0x12 + 6 + 32] & 0xff) * 0x1_0000 +
+                    (pcmData[bank][num * 0x12 + 7 + 32] & 0xff) * 0x10_00000;
             if (chWk[al].end >= pcmData[bank].length) {
                 chWk[al].end = pcmData[bank].length - 1;
             }
@@ -164,18 +165,18 @@ public class PPZ8 {
             chWk[al].loopStartOffset = chWk[al]._loopStartOffset;
             if (chWk[al]._loopStartOffset == -1) {
                 chWk[al].loopStartOffset =
-                          (pcmData[bank][num * 0x12 +  8 + 32] & 0xff)
-                        + (pcmData[bank][num * 0x12 +  9 + 32] & 0xff) * 0x100
-                        + (pcmData[bank][num * 0x12 + 10 + 32] & 0xff) * 0x10_000
-                        + (pcmData[bank][num * 0x12 + 11 + 32] & 0xff) * 0x100_0000;
+                        (pcmData[bank][num * 0x12 + 8 + 32] & 0xff) +
+                        (pcmData[bank][num * 0x12 + 9 + 32] & 0xff) * 0x100 +
+                        (pcmData[bank][num * 0x12 + 10 + 32] & 0xff) * 0x10_000 +
+                        (pcmData[bank][num * 0x12 + 11 + 32] & 0xff) * 0x100_0000;
             }
             chWk[al].loopEndOffset = chWk[al]._loopEndOffset;
             if (chWk[al]._loopEndOffset == -1) {
                 chWk[al].loopEndOffset =
-                          (pcmData[bank][num * 0x12 + 12 + 32] & 0xff)
-                        + (pcmData[bank][num * 0x12 + 13 + 32] & 0xff) * 0x100
-                        + (pcmData[bank][num * 0x12 + 14 + 32] & 0xff) * 0x10_000
-                        + (pcmData[bank][num * 0x12 + 15 + 32] & 0xff) * 0x100_0000;
+                        (pcmData[bank][num * 0x12 + 12 + 32] & 0xff) +
+                        (pcmData[bank][num * 0x12 + 13 + 32] & 0xff) * 0x100 +
+                        (pcmData[bank][num * 0x12 + 14 + 32] & 0xff) * 0x10_000 +
+                        (pcmData[bank][num * 0x12 + 15 + 32] & 0xff) * 0x100_0000;
             }
             if (chWk[al].loopStartOffset == 0xffff) {
                 chWk[al].loopStartOffset = -1;
@@ -237,7 +238,7 @@ public class PPZ8 {
     /**
      * 0x04 Loading status
      *
-     * @param al
+     * @param al 0xd: pcm0, oxe: pcm1
      */
     public void readStatus(int al) {
         switch (al) {
@@ -385,7 +386,7 @@ public class PPZ8 {
                     //logger.log(Level.TRACE, VolumeTable[chWk[i].volume][pcmData[chWk[i].bank][chWk[i].ptr]] * chWk[i].panL);
                 }
 
-                int n = chWk[i].ptr >= pcmData[chWk[i].bank].length ? 0x80 : pcmData[chWk[i].bank][chWk[i].ptr];
+                int n = chWk[i].ptr >= pcmData[chWk[i].bank].length ? 0x80 : pcmData[chWk[i].bank][chWk[i].ptr] & 0xff;
                 l += (int) (volumeTable[chWk[i].volume][n] * chWk[i].panL);
                 r += (int) (volumeTable[chWk[i].volume][n] * chWk[i].panR);
                 chWk[i].delta += ((float) chWk[i].srcFrequency * (long) chWk[i].frequency / (long) 0x8000) / samplingRate;
@@ -441,9 +442,9 @@ public class PPZ8 {
         long size2 = 0;
         for (int i = 0; i < instCount; i++) {
             int startAddress = ((pcmData[bank][i * 4 + 0x10] & 0xff) + (pcmData[bank][i * 4 + 0x11] & 0xff) * 0x100) << (5 + 1);
-            int size = (((pcmData[bank][i * 4 + 0x12] & 0xff) + (pcmData[bank][i * 4 + 0x13] & 0xff) * 0x100)
-                    - ((pcmData[bank][i * 4 + 0x10] & 0xff) + (pcmData[bank][i * 4 + 0x11] & 0xff) * 0x100) + 1)
-                    << (5 + 1);// endAdr - startAdr
+            int size = (((pcmData[bank][i * 4 + 0x12] & 0xff) + (pcmData[bank][i * 4 + 0x13] & 0xff) * 0x100) -
+                    ((pcmData[bank][i * 4 + 0x10] & 0xff) + (pcmData[bank][i * 4 + 0x11] & 0xff) * 0x100) + 1) <<
+                    (5 + 1);// endAdr - startAdr
             size2 += size;
             short rate = 16000; // 16kHz
 
@@ -495,9 +496,9 @@ public class PPZ8 {
             int xN = 0x80; // Xn (For ADPCM to PCM conversion)
             int deltaN = 127; // deltaN (For ADPCM to PCM conversion)
 
-            int size = (((pcmData[bank][i * 4 + 0x12] & 0xff) + (pcmData[bank][i * 4 + 0x13] & 0xff) * 0x100)
-                    - ((pcmData[bank][i * 4 + 0x10] & 0xff) + (pcmData[bank][i * 4 + 0x11] & 0xff) * 0x100) + 1)
-                    << (5 + 1); // endAdr - startAdr
+            int size = (((pcmData[bank][i * 4 + 0x12] & 0xff) + (pcmData[bank][i * 4 + 0x13] & 0xff) * 0x100) -
+                    ((pcmData[bank][i * 4 + 0x10] & 0xff) + (pcmData[bank][i * 4 + 0x11] & 0xff) * 0x100) + 1) <<
+                    (5 + 1); // endAdr - startAdr
 
             for (int j = 0; j < size / 2; j++) {
                 int psrc = pcmData[bank][psrcPtr++] & 0xff;
@@ -525,7 +526,7 @@ public class PPZ8 {
             }
         }
 
-        pcmData[bank] = toByteArray(o);
+        pcmData[bank] = ByteUtil.toByteArray(o);
         //File.writeAllBytes("a.raw", pcmData[bank]);
         return 0;
     }

@@ -6,49 +6,39 @@
 
 package mdsound.instrument;
 
-import java.lang.System.Logger;
-import java.lang.System.Logger.Level;
 import java.util.HashMap;
 import java.util.Map;
 
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
-import mdsound.Instrument.PcmEnabledInstrument;
-import mdsound.chips.C140;
-import mdsound.chips.C219;
-
-import static java.lang.System.getLogger;
+import uk.co.omgdrv.simplevgm.psg.nuked.NukedPsgProvider;
 
 
 /**
- * C219.
+ * YM7101 nuked version.
  *
  * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
- * @version 0.00 2025-02-15 nsano initial version <br>
+ * @version 0.00 2025-01-28 nsano initial version <br>
  */
-public class C219Inst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
+public class Ym7101Inst extends Instrument.BaseInstrument {
 
-    private static final Logger logger = getLogger(C219Inst.class.getName());
-
-    public static final int MAX_CHIPS = 0x02;
-
-    private final C219[] chips = {new C219(), new C219()};
+    private final NukedPsgProvider[] chips = {new NukedPsgProvider(), new NukedPsgProvider()};
 
     private final int[] mask = {0, 0};
 
-    public C219Inst() {
+    public Ym7101Inst() {
         // 0..Main
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
 
     @Override
     public String getName() {
-        return "C219";
+        return "YM7101";
     }
 
     @Override
     public String getShortName() {
-        return "C219";
+        return "YM7101";
     }
 
     @Override
@@ -59,31 +49,40 @@ public class C219Inst extends Instrument.BaseInstrument implements PcmEnabledIns
 
     @Override
     public void reset(int chipId) {
+        assert chipId < chips.length;
+        chips[chipId].reset();
     }
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        assert chipId < MAX_CHIPS;
-
-        int sampleRete = chips[chipId].start(clock);
-logger.log(Level.DEBUG, "sampleRate: " + sampleRete);
-        return sampleRete;
+        return samplingRate;
     }
 
     @Override
     public int read(int chipId, int adr) {
-        return chips[chipId].read(adr);
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        chips[chipId].write(adr, data);
+        assert chipId < chips.length;
+        chips[chipId].writeData(adr, data);
         return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        chips[chipId].update(samples, outputs);
+        assert chipId < chips.length;
+
+        int[] buffer = new int[2];
+        buffer[0] = 0;
+        buffer[1] = 0;
+        chips[chipId].endFrame(0);
+        for (int i = 0; i < 1; i++) {
+            outputs[0][i] = buffer[i * 2 + 0];
+            outputs[1][i] = buffer[i * 2 + 1];
+//logger.log(Level.TRACE, "[%8d] : [%8d] [%d]".formatted(outputs[0][i], outputs[1][i], i));
+        }
 
         visVolume[chipId][0][0] = outputs[0][0];
         visVolume[chipId][0][1] = outputs[1][0];
@@ -91,34 +90,34 @@ logger.log(Level.DEBUG, "sampleRate: " + sampleRete);
 
     @Override
     public void stop(int chipId) {
-        chips[chipId].stop();
+        chips[chipId] = null;
     }
 
     @Override
     public synchronized void setMask(int chipId, int ch) {
         mask[chipId] |= ch;
-        chips[chipId].setMuteMask(mask[chipId]);
+        setMute(chipId, mask[chipId]);
     }
 
     @Override
     public synchronized void resetMask(int chipId, int ch) {
-        mask[chipId] &= ~(int) ch;
-        chips[chipId].setMuteMask(mask[chipId]);
+        mask[chipId] &= ~ch;
+        setMute(chipId, mask[chipId]);
     }
 
-    /** @param extras 0: srcOffset. 1: romSize */
-    @Override
-    public synchronized void writePcm(int chipId, byte[] buf, int offset, int length, Object... extras) {
-        int srcOffset = (int) extras[0];
-        int romSize = (int) extras[1];
-        chips[chipId].writeRom(offset, length, buf, srcOffset, romSize);
+    public void setVolume(int chipId, int db) {
+        assert chipId < chips.length;
+    }
+
+    private void setMute(int chipId, int val) {
+        assert chipId < chips.length;
     }
 
     //----
 
     @Override
     public Tuple<Integer, Double> getRegulationVolume() {
-        return new Tuple<>(0x100, 1d);
+        return new Tuple<>(0x100, 2d);
     }
 
     @Override

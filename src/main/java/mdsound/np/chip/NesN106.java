@@ -147,15 +147,15 @@ logger.log(Level.ERROR, e.getMessage(), e);
     public void setMask(int m) {
         // bit reverse the mask,
         // N163 waves are displayed in reverse order
-        mask = 0
-                | ((m & (1 << 0)) != 0 ? (1 << 7) : 0)
-                | ((m & (1 << 1)) != 0 ? (1 << 6) : 0)
-                | ((m & (1 << 2)) != 0 ? (1 << 5) : 0)
-                | ((m & (1 << 3)) != 0 ? (1 << 4) : 0)
-                | ((m & (1 << 4)) != 0 ? (1 << 3) : 0)
-                | ((m & (1 << 5)) != 0 ? (1 << 2) : 0)
-                | ((m & (1 << 6)) != 0 ? (1 << 1) : 0)
-                | ((m & (1 << 7)) != 0 ? (1 << 0) : 0);
+        mask = 0 |
+                ((m & (1 << 0)) != 0 ? (1 << 7) : 0) |
+                ((m & (1 << 1)) != 0 ? (1 << 6) : 0) |
+                ((m & (1 << 2)) != 0 ? (1 << 5) : 0) |
+                ((m & (1 << 3)) != 0 ? (1 << 4) : 0) |
+                ((m & (1 << 4)) != 0 ? (1 << 3) : 0) |
+                ((m & (1 << 5)) != 0 ? (1 << 2) : 0) |
+                ((m & (1 << 6)) != 0 ? (1 << 1) : 0) |
+                ((m & (1 << 7)) != 0 ? (1 << 0) : 0);
     }
 
     @Override
@@ -345,17 +345,17 @@ int CC=0;
     private int getPhase(int channel) {
         // 24-bit phase stored in channel regs 1/3/5
         channel = channel << 3;
-        return (reg[0x41 + channel])
-                + (reg[0x43 + channel] << 8)
-                + (reg[0x45 + channel] << 16);
+        return (reg[0x41 + channel]) +
+                (reg[0x43 + channel] << 8) +
+                (reg[0x45 + channel] << 16);
     }
 
     private int getFreq(int channel) {
         // 19-bit frequency stored in channel regs 0/2/4
         channel = channel << 3;
-        return (reg[0x40 + channel])
-                + (reg[0x42 + channel] << 8)
-                + ((reg[0x44 + channel] & 0x03) << 16);
+        return (reg[0x40 + channel]) +
+                (reg[0x42 + channel] << 8) +
+                ((reg[0x44 + channel] & 0x03) << 16);
     }
 
     private int getOff(int channel) {

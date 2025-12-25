@@ -40,7 +40,7 @@ public class X68Sound {
         global.opm = opm;
     }
 
-    public void MountMemory(byte[] mem) {
+    public void mountMemory(byte[] mem) {
         global.mountMemory(mem);
     }
 

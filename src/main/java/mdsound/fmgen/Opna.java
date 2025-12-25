@@ -338,7 +338,7 @@ public class Opna {
                 setTimerControl(data);
                 break;
 
-            // Misc-
+            // Misc
             case 0x28: // Key On/Off
                 if ((data & 3) < 3) {
                     c = (data & 3) + ((data & 4) != 0 ? 3 : 0);
@@ -352,14 +352,14 @@ public class Opna {
                 // updateStatus(); // ?
                 break;
 
-            // Prescaler--
+            // Prescaler
             case 0x2d:
             case 0x2e:
             case 0x2f:
                 setPreScaler(addr - 0x2d);
                 break;
 
-            // F-Number---
+            // F-Number
             case 0x1a0:
             case 0x1a1:
             case 0x1a2:
@@ -398,7 +398,7 @@ public class Opna {
                 fNum2[c + 6] = data & 0xff;
                 break;
 
-            // Algorithm--
+            // Algorithm
 
             case 0x1b0:
             case 0x1b1:
@@ -428,7 +428,7 @@ public class Opna {
                 ch[c].setMS(data);
                 break;
 
-            // LFO--
+            // LFO
             case 0x22:
                 modified = reg22 ^ data;
                 reg22 = data;
@@ -437,7 +437,7 @@ public class Opna {
                 lfoDCount = (reg22 & 8) != 0 ? lfoTable[reg22 & 7] : 0;
                 break;
 
-            // Psg--
+            // Psg
             case 0:
             case 1:
             case 2:
@@ -457,7 +457,7 @@ public class Opna {
                 psg.setReg(addr, (byte) data);
                 break;
 
-            // Tone-
+            // Tone
             default:
                 if (c < 3) {
                     if ((addr & 0x100) != 0)

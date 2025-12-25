@@ -158,8 +158,8 @@ public class OPNA2 extends Opna.OPNABase {
     }
 
     public boolean init(int c, int r, boolean ipFlag,
-                        Function<String, Stream> appendFileReaderCallback/* = null*/,
-                        byte[] adpcmA/* = null*/, int adpcmaSize/* = 0*/) {
+                        Function<String, Stream> appendFileReaderCallback /* = null */,
+                        byte[] adpcmA/* = null*/, int adpcmaSize /* = 0 */) {
         rate = 8000;
         try {
             loadRhythmSample(appendFileReaderCallback);
@@ -168,15 +168,15 @@ public class OPNA2 extends Opna.OPNABase {
         }
 
         if (adpcmB[0].adpcmBuf == null)
-            adpcmB[0].adpcmBuf = new byte[0x40000];
+            adpcmB[0].adpcmBuf = new byte[0x4_0000];
         if (adpcmB[0].adpcmBuf == null)
             return false;
         if (adpcmB[1].adpcmBuf == null)
-            adpcmB[1].adpcmBuf = new byte[0x1000000];
+            adpcmB[1].adpcmBuf = new byte[0x100_0000];
         if (adpcmB[1].adpcmBuf == null)
             return false;
         if (adpcmB[2].adpcmBuf == null)
-            adpcmB[2].adpcmBuf = new byte[0x1000000];
+            adpcmB[2].adpcmBuf = new byte[0x100_0000];
         if (adpcmB[2].adpcmBuf == null)
             return false;
 

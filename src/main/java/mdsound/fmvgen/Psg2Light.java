@@ -211,8 +211,8 @@ public class Psg2Light extends PSG {
                         revSampleR = 0;
                         sample = 0;
                         for (int j = 0; j < (1 << overSampling); j++) {
-                            noise = noiseTable[((int) ncountDbl >> (noiseShift + overSampling + 6) & (noiseTableSize - 1))]
-                                    >> ((int) ncountDbl >> (noiseShift + overSampling + 1));
+                            noise = noiseTable[((int) ncountDbl >> (noiseShift + overSampling + 6) & (noiseTableSize - 1))] >>
+                                    ((int) ncountDbl >> (noiseShift + overSampling + 1));
 
                             ncountDbl += ((double) nPeriod / ((reg[6] & 0x20) != 0 ? ncountDiv : 1.0));
 
@@ -276,8 +276,8 @@ public class Psg2Light extends PSG {
                                 eCount |= (1 << (envShift + 5 + overSampling));
                             eCount &= (1 << (envShift + 6 + overSampling)) - 1;
                         }
-                        noise = noiseTable[((int) ncountDbl >> (noiseShift + overSampling + 6) & (noiseTableSize - 1))]
-                                >> ((int) ncountDbl >> (noiseShift + overSampling + 1));
+                        noise = noiseTable[((int) ncountDbl >> (noiseShift + overSampling + 6) & (noiseTableSize - 1))] >>
+                                ((int) ncountDbl >> (noiseShift + overSampling + 1));
                         ncountDbl += (nPeriod / ((reg[6] & 0x20) != 0 ? ncountDiv : 1.0));
 
                         int revBit = 0x80;

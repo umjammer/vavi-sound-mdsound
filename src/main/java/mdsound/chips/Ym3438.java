@@ -1261,8 +1261,7 @@ logger.log(Level.INFO, "chip_type: " + chip_type);
             if (this.modeTest21[6] != 0) {
                 // Read test data
 //                int slot = (this.cycles + 18) % 24;
-                int testdata = ((this.pgRead & 0x01) << 15)
-                        | (((this.egRead[this.modeTest21[0]]) & 0x01) << 14);
+                int testdata = ((this.pgRead & 0x01) << 15) | (((this.egRead[this.modeTest21[0]]) & 0x01) << 14);
                 if (this.modeTest2C[4] != 0) {
                     testdata |= this.chRead & 0x1ff;
                 } else {
@@ -1274,8 +1273,7 @@ logger.log(Level.INFO, "chip_type: " + chip_type);
                     return testdata >> 8;
                 }
             } else {
-                return ((this.busy << 7) | (this.timerBOverflowFlag << 1)
-                        | this.timerAOverflowFlag);
+                return ((this.busy << 7) | (this.timerBOverflowFlag << 1) | this.timerAOverflowFlag);
             }
         }
         return 0;
@@ -1378,10 +1376,10 @@ logger.log(Level.INFO, "chip_type: " + chip_type);
             this.sampleCnt -= this.rateRatio;
 //logger.log(Level.TRACE, "sampleCnt%d".formatted(this.sampleCnt));
         }
-        buf[0] = (this.oldSamples[0] * (this.rateRatio - this.sampleCnt)
-                + this.samples[0] * this.sampleCnt) / this.rateRatio;
-        buf[1] = (this.oldSamples[1] * (this.rateRatio - this.sampleCnt)
-                + this.samples[1] * this.sampleCnt) / this.rateRatio;
+        buf[0] = (this.oldSamples[0] * (this.rateRatio - this.sampleCnt) +
+                this.samples[0] * this.sampleCnt) / this.rateRatio;
+        buf[1] = (this.oldSamples[1] * (this.rateRatio - this.sampleCnt) +
+                this.samples[1] * this.sampleCnt) / this.rateRatio;
 //logger.log(Level.TRACE, "bl%d br%d this.oldSamples[0]%d this.samples[0]%d".formatted(buf[0], buf[1], this.oldSamples[0], this.samples[0]));
         this.sampleCnt += 1 << 10; // RSM_FRAC;
     }

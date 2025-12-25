@@ -918,8 +918,8 @@ public class Emu2413 {
             }
 
             this.opllTime -= this.realStep;
-            this._out = (int) (((double) this.next * (this.opllStep - this.opllTime)
-                    + (double) this.prev * this.opllTime) / this.opllStep);
+            this._out = (int) (((double) this.next * (this.opllStep - this.opllTime) +
+                    (double) this.prev * this.opllTime) / this.opllStep);
 
             return this._out;
         }
@@ -1223,10 +1223,10 @@ public class Emu2413 {
             }
 
             this.opllTime -= this.realStep;
-            out[0] = (int) (((double) this.sNext[0] * (this.opllStep - this.opllTime)
-                    + (double) this.sPrev[0] * this.opllTime) / this.opllStep);
-            out[1] = (int) (((double) this.sNext[1] * (this.opllStep - this.opllTime)
-                    + (double) this.sPrev[1] * this.opllTime) / this.opllStep);
+            out[0] = (int) (((double) this.sNext[0] * (this.opllStep - this.opllTime) +
+                    (double) this.sPrev[0] * this.opllTime) / this.opllStep);
+            out[1] = (int) (((double) this.sNext[1] * (this.opllStep - this.opllTime) +
+                    (double) this.sPrev[1] * this.opllTime) / this.opllStep);
         }
 
         private static final int OPLL_TONE_NUM = 8;

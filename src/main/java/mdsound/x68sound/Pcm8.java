@@ -214,9 +214,9 @@ public class Pcm8 {
     public void adpcm2pcm(byte adpcm) {
 
         int dltL = Global.dltLTBL[scale];
-        dltL = (dltL & ((adpcm & 4) != 0 ? -1 : 0))
-                + ((dltL >> 1) & ((adpcm & 2) != 0 ? -1 : 0))
-                + ((dltL >> 2) & ((adpcm & 1) != 0 ? -1 : 0)) + (dltL >> 3);
+        dltL = (dltL & ((adpcm & 4) != 0 ? -1 : 0)) +
+                ((dltL >> 1) & ((adpcm & 2) != 0 ? -1 : 0)) +
+                ((dltL >> 2) & ((adpcm & 1) != 0 ? -1 : 0)) + (dltL >> 3);
         int sign = (adpcm & 8) != 0 ? -1 : 0;
         dltL = (dltL ^ sign) + (sign & 1);
         pcm += dltL;

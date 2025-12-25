@@ -41,6 +41,9 @@ public class MameAy8910Inst extends Instrument.BaseInstrument {
         chips[chipId].reset();
     }
 
+    /**
+     * @param option 0: int type, 1: int flags
+     */
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
         sampleRate = samplingRate;

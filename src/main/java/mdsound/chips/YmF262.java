@@ -110,7 +110,10 @@ public class YmF262 {
 
     private Opl3 opl3;
 
-    /** @param updateHandler works when {@code emuCore} is {@link #EC_DBOPL} only, nullable */
+    /**
+     * @param emuCore {@link #EC_DBOPL} or {@link #EC_MAME}
+     * @param updateHandler works when {@code emuCore} is {@link #EC_DBOPL} only, nullable
+     */
     public void start(int emuCore, int clock, int rate, UpdateHandler updateHandler) {
         switch (emuCore) {
         case EC_MAME:
@@ -3123,6 +3126,7 @@ public class YmF262 {
                 // 20+a0+b0:
                 this.tInc = (long) ((((double) (frn << oct)) * frqMul[adlibReg[ARC_TVS_KSR_MUL + regBase] & 15]));
                 // 40+a0+b0:
+assert frn >> 6 < 16 : "%08x, %x, %x".formatted(frn, adlibReg[ARC_KON_BNUM + chanBase], adlibReg[ARC_FREQ_NUM + chanBase]);
                 double volIn = (double) (adlibReg[ARC_KSL_OUTLEV + regBase] & 63) +
                         (kslMul[adlibReg[ARC_KSL_OUTLEV + regBase] >> 6] * ksLev[oct][frn >> 6]);
                 this.vol = Math.pow(FL2, volIn * -0.125 - 14);

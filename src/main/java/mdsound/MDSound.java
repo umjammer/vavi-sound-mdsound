@@ -114,7 +114,7 @@ public class MDSound {
             if (setVolume != null)
                 setVolumes.get(tag).accept(tag, vol, volumeMul);
             else
-                logger.log(Level.WARNING, "no such tag: " + tag);
+                logger.log(Level.WARNING, "no such tag: " + tag, new Exception("instrument: " + instrument));
         }
 
         public SetVolume mainWrappedSetVolume(SetVolume setVolume) {
@@ -199,7 +199,7 @@ logger.log(Level.WARNING, "no chips");
         }
 
         for (Chip chip : chips) {
-logger.log(Level.DEBUG, "instrument: %s, %d, %d".formatted(chip.instrument.getClass().getSimpleName(), chip.samplingRate, chip.clock));
+logger.log(Level.DEBUG, "instrument start/reset: %s[%d], %d, %d".formatted(chip.instrument.getClass().getSimpleName(), chip.id, chip.samplingRate, chip.clock));
             chip.samplingRate = chip.instrument.start(chip.id, chip.samplingRate, chip.clock, chip.option);
             chip.instrument.reset(chip.id);
 

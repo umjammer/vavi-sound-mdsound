@@ -1315,7 +1315,7 @@ Debug.println("eof: vgmAdr: " + vgmAdr + ", vgmBuf.length: " + vgmBuf.length + "
             vgmAdr += 3;
             //mds.write(HuC6280Inst.class, (byte) 0, rAdr, rDat);
             break;
-        case 0xba: // K053260Inst
+        case 0xba: // K053260
             rAdr = vgmBuf[vgmAdr + 1] & 0xff;
             rDat = vgmBuf[vgmAdr + 2] & 0xff;
             vgmAdr += 3;
@@ -1353,7 +1353,7 @@ Debug.println("eof: vgmAdr: " + vgmAdr + ", vgmBuf.length: " + vgmBuf.length + "
             vgmAdr += 4;
             //mds.write(MultiPCMSetBankInst.class, 0, multiPCM_ch, multiPCM_adr);
             break;
-        case 0xc4: // QSoundInst
+        case 0xc4: // QSound
             mds.write(QSoundInst.class, 0, 0, 0x00, vgmBuf[vgmAdr + 1] & 0xff);
             mds.write(QSoundInst.class, 0, 0, 0x01, vgmBuf[vgmAdr + 2] & 0xff);
             mds.write(QSoundInst.class, 0, 0, 0x02, vgmBuf[vgmAdr + 3] & 0xff);
@@ -1377,7 +1377,7 @@ Debug.println("eof: vgmAdr: " + vgmAdr + ", vgmBuf.length: " + vgmBuf.length + "
             vgmAdr += 4;
             //mds.write(YMF271Inst.class, ymf271_chipId, ymf271_port, ymf271_offset, rDat);
             break;
-        case 0xd2: // SCC1(K051649Inst?)
+        case 0xd2: // SCC1(K051649?)
             int scc1_port = vgmBuf[vgmAdr + 1] & 0x7f;
             int scc1_offset = vgmBuf[vgmAdr + 2] & 0xff;
             rDat = vgmBuf[vgmAdr + 3] & 0xff;
@@ -1393,7 +1393,7 @@ Debug.println("eof: vgmAdr: " + vgmAdr + ", vgmBuf.length: " + vgmBuf.length + "
             vgmAdr += 4;
             //mds.write(K054539Inst.class, chipId, k054539_adr, rDat);
             break;
-        case 0xd4: // C140Inst
+        case 0xd4: // C140
             int c140_adr = (vgmBuf[vgmAdr + 1] & 0x7f) * 0x100 + (vgmBuf[vgmAdr + 2] & 0xff);
             rDat = vgmBuf[vgmAdr + 3] & 0xff;
             int c140_chipId = (vgmBuf[vgmAdr + 1] & 0x80) != 0 ? 1 : 0;
@@ -1404,7 +1404,7 @@ Debug.println("eof: vgmAdr: " + vgmAdr + ", vgmBuf.length: " + vgmBuf.length + "
             vgmPcmPtr = ByteUtil.readLeInt(vgmBuf, vgmAdr + 1) + vgmPcmBaseAdr;
             vgmAdr += 5;
             break;
-        case 0xe1: // C352Inst
+        case 0xe1: // C352
             int adr = (vgmBuf[vgmAdr + 1] & 0xff) * 0x100 + (vgmBuf[vgmAdr + 2] & 0xff);
             int dat = (vgmBuf[vgmAdr + 3] & 0xff) * 0x100 + (vgmBuf[vgmAdr + 4] & 0xff);
             vgmAdr += 5;

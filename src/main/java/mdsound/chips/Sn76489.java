@@ -446,15 +446,15 @@ logger.log(Level.TRACE, "psg: %02x, mute: %02x".formatted(data & 0xff, mute)); /
             // Latch/data byte  %1 cc t dddd
             this.latchedRegister = (data >> 4) & 0x07;
             this.registers[this.latchedRegister] =
-                    (this.registers[this.latchedRegister] & 0x3f0) // zero low 4 bits
-                            | (data & 0xf); // and replace with data
+                    (this.registers[this.latchedRegister] & 0x3f0) | // zero low 4 bits
+                            (data & 0xf); // and replace with data
         } else {
             // data byte %0 - dddddd
             if ((this.latchedRegister % 2) == 0 && (this.latchedRegister < 5))
                 // Tone register
                 this.registers[this.latchedRegister] =
-                        (this.registers[this.latchedRegister] & 0x00f) // zero high 6 bits
-                                | ((data & 0x3f) << 4); // and replace with data
+                        (this.registers[this.latchedRegister] & 0x00f) | // zero high 6 bits
+                                ((data & 0x3f) << 4); // and replace with data
             else
                 // Other register
                 this.registers[this.latchedRegister] = data & 0x0f; // Replace with data

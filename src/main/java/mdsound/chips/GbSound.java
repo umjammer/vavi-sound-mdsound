@@ -929,12 +929,12 @@ public class GbSound {
         if (offset < AUD3W0) {
             if (this.controller.on != 0) {
                 if (offset == NR52) {
-                    return (this.registers[NR52] & 0xf0)
-                                    | (this.sound1.on ? 1 : 0)
-                                    | (this.sound2.on ? 2 : 0)
-                                    | (this.sound3.on ? 4 : 0)
-                                    | (this.sound4.on ? 8 : 0)
-                                    | 0x70;
+                    return (this.registers[NR52] & 0xf0) |
+                            (this.sound1.on ? 1 : 0) |
+                            (this.sound2.on ? 2 : 0) |
+                            (this.sound3.on ? 4 : 0) |
+                            (this.sound4.on ? 8 : 0) |
+                            0x70;
                 }
                 return this.registers[offset] | readMask[offset & 0x3f];
             } else {
@@ -1020,11 +1020,11 @@ public class GbSound {
             outputs[1][i] = right;
         }
 
-        this.registers[NR52] = (this.registers[NR52] & 0xf0)
-                | (this.sound1.on ? 1 : 0)
-                | ((this.sound2.on ? 1 : 0) << 1)
-                | ((this.sound3.on ? 1 : 0) << 2)
-                | ((this.sound4.on ? 1 : 0) << 3);
+        this.registers[NR52] = (this.registers[NR52] & 0xf0) |
+                (this.sound1.on ? 1 : 0) |
+                ((this.sound2.on ? 1 : 0) << 1) |
+                ((this.sound3.on ? 1 : 0) << 2) |
+                ((this.sound4.on ? 1 : 0) << 3);
     }
 
     public void start(int clock, int rate) {

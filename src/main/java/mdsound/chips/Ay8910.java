@@ -786,16 +786,16 @@ public class Ay8910 {
         this.regs[r] = v;
 
         switch (r) {
-        case AY_AFINE:   // 0
-        case AY_ACOARSE:
-        case AY_BFINE:
-        case AY_BCOARSE:
-        case AY_CFINE:
-        case AY_CCOARSE:
-        case AY_NOISEPER:
-        case AY_AVOL:
-        case AY_BVOL:
-        case AY_CVOL:
+        case AY_AFINE:    // 0
+        case AY_ACOARSE:  // 1
+        case AY_BFINE:    // 2
+        case AY_BCOARSE:  // 3
+        case AY_CFINE:    // 4
+        case AY_CCOARSE:  // 5
+        case AY_NOISEPER: // 6
+        case AY_AVOL:     // 8
+        case AY_BVOL:     // 9
+        case AY_CVOL:     // 10
         case AY_EFINE:
         case AY_ECOARSE:
             // No action required
@@ -899,8 +899,8 @@ public class Ay8910 {
             }
 
             for (int chan = 0; chan < NUM_CHANNELS; chan++) {
-                this.volEnabled[chan] = (this.output[chan] | getToneEnabled(chan))
-                                & (getNoiseOutput() | getNoiseEnabled(chan)
+                this.volEnabled[chan] = (this.output[chan] | getToneEnabled(chan)) &
+                        (getNoiseOutput() | getNoiseEnabled(chan)
                 );
             }
 

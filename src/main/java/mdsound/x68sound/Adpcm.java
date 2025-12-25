@@ -189,10 +189,10 @@ public class Adpcm {
         dmaReg[0x1a] = (btc >> 8) & 0xff;
         dmaReg[0x1b] = btc & 0xff;
 
-        int bar = dmaReg[0x1c] * 0x100_0000
-                + dmaReg[0x1d] * 0x1_0000
-                + dmaReg[0x1e] * 0x100
-                + dmaReg[0x1f];
+        int bar = dmaReg[0x1c] * 0x100_0000 +
+                dmaReg[0x1d] * 0x1_0000 +
+                dmaReg[0x1e] * 0x100 +
+                dmaReg[0x1f];
         int mem0 = global.memRead.apply(bar++);
         int mem1 = global.memRead.apply(bar++);
         int mem2 = global.memRead.apply(bar++);
@@ -224,10 +224,10 @@ public class Adpcm {
     }
 
     public int dmaLinkArrayChainSetNextMtcMar() {
-        int bar = dmaReg[0x1c] * 0x10_00000
-                + dmaReg[0x1d] * 0x1_0000
-                + dmaReg[0x1e] * 0x100
-                + dmaReg[0x1f];
+        int bar = dmaReg[0x1c] * 0x10_00000 +
+                dmaReg[0x1d] * 0x1_0000 +
+                dmaReg[0x1e] * 0x100 +
+                dmaReg[0x1f];
         if (bar == 0) {
             dmaFinish();
             finishCounter = 0;
@@ -291,10 +291,10 @@ public class Adpcm {
 //            }
         }
 
-        int mar = dmaReg[0x0c] * 0x100_0000
-                + dmaReg[0x0d] * 0x1_0000
-                + dmaReg[0x0e] * 0x100
-                + dmaReg[0x0f];
+        int mar = dmaReg[0x0c] * 0x100_0000 +
+                dmaReg[0x0d] * 0x1_0000 +
+                dmaReg[0x0e] * 0x100 +
+                dmaReg[0x0f];
         int mem = global.memRead.apply(mar);
         if (mem == -1) {
             dmaError(0x09); // Bus error (memory address/memory counter)
@@ -354,9 +354,9 @@ public class Adpcm {
     public void adpcm2pcm(int adpcm) {
 
         int dltL = Global.dltLTBL[scale];
-        dltL = (dltL & ((adpcm & 4) != 0 ? -1 : 0))
-                + ((dltL >> 1) & ((adpcm & 2) != 0 ? -1 : 0))
-                + ((dltL >> 2) & ((adpcm & 1) != 0 ? -1 : 0)) + (dltL >> 3);
+        dltL = (dltL & ((adpcm & 4) != 0 ? -1 : 0)) +
+                ((dltL >> 1) & ((adpcm & 2) != 0 ? -1 : 0)) +
+                ((dltL >> 2) & ((adpcm & 1) != 0 ? -1 : 0)) + (dltL >> 3);
         int sign = (adpcm & 8) != 0 ? -1 : 0;
         dltL = (dltL ^ sign) + (sign & 1);
         pcm += dltL;

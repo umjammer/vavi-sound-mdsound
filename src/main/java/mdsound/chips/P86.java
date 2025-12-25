@@ -1,7 +1,10 @@
 package mdsound.chips;
 
 
-/** from PMDWin */
+/**
+ * PC-9801-86 (PMD)
+ * @see "PMDWin"
+ */
 public class P86 {
 
     public double samplingRate = 44100.0;
@@ -60,19 +63,21 @@ public class P86 {
     private int volume;
     /** Volume table */
     private int[][] volumeTable;
-    private static final int[] rateTable = new int[] {4135, 5513, 8270, 11025, 16540, 22050, 33080, 44100};
+    private static final int[] rateTable = {4135, 5513, 8270, 11025, 16540, 22050, 33080, 44100};
 
     private static class Inst {
         public int start;
         public int size;
 
         public Inst(byte[] pcmData, int i) {
-            this.start = (pcmData[i * 6 + 0 + 12 + 1 + 3] & 0xff) +
+            this.start =
+                    (pcmData[i * 6 + 0 + 12 + 1 + 3] & 0xff) +
                     (pcmData[i * 6 + 1 + 12 + 1 + 3] & 0xff) * 0x100 +
-                    (pcmData[i * 6 + 2 + 12 + 1 + 3] & 0xff) * 0x10000; // - 0x610;
-            this.size = (pcmData[i * 6 + 3 + 12 + 1 + 3] & 0xff) +
+                    (pcmData[i * 6 + 2 + 12 + 1 + 3] & 0xff) * 0x1_0000; // - 0x610;
+            this.size =
+                    (pcmData[i * 6 + 3 + 12 + 1 + 3] & 0xff) +
                     (pcmData[i * 6 + 4 + 12 + 1 + 3] & 0xff) * 0x100 +
-                    (pcmData[i * 6 + 5 + 12 + 1 + 3] & 0xff) * 0x10000;
+                    (pcmData[i * 6 + 5 + 12 + 1 + 3] & 0xff) * 0x1_0000;
         }
     }
 
@@ -158,7 +163,7 @@ public class P86 {
      */
     private void doubleTrans(int[][] buffer, int samples) {
         for (int i = 0; i < samples; i++) {
-            int data = volumeTable[vol][pcmData[currentOffset]];
+            int data = volumeTable[vol][pcmData[currentOffset] & 0xff];
 
             data = (short) Math.max(Math.min(data, Short.MAX_VALUE), Short.MIN_VALUE);
             buffer[0][i] += data;
@@ -176,7 +181,7 @@ public class P86 {
      */
     private void doubleTransG(int[][] buffer, int samples) {
         for (int i = 0; i < samples; i++) {
-            int data = volumeTable[vol][pcmData[currentOffset]];
+            int data = volumeTable[vol][pcmData[currentOffset] & 0xff];
 
             buffer[0][i] += data;
             buffer[1][i] -= data;
@@ -193,7 +198,7 @@ public class P86 {
      */
     private void leftTrans(int[][] buffer, int samples) {
         for (int i = 0; i < samples; i++) {
-            int data = volumeTable[vol][pcmData[currentOffset]];
+            int data = volumeTable[vol][pcmData[currentOffset] & 0xff];
 
             buffer[0][i] += data;
             data = data * panDat / (256 / 2);
@@ -211,7 +216,7 @@ public class P86 {
      */
     private void leftTransG(int[][] buffer, int samples) {
         for (int i = 0; i < samples; i++) {
-            int data = volumeTable[vol][pcmData[currentOffset]];
+            int data = volumeTable[vol][pcmData[currentOffset] & 0xff];
 
             buffer[0][i] += data;
             data = data * panDat / (256 / 2);
@@ -229,7 +234,7 @@ public class P86 {
      */
     private void rightTrans(int[][] buffer, int samples) {
         for (int i = 0; i < samples; i++) {
-            int data = volumeTable[vol][pcmData[currentOffset]];
+            int data = volumeTable[vol][pcmData[currentOffset] & 0xff];
 
             buffer[1][i] += data;
             data = data * panDat / (256 / 2);
@@ -247,7 +252,7 @@ public class P86 {
      */
     private void rightTransG(int[][] buffer, int samples) {
         for (int i = 0; i < samples; i++) {
-            int data = volumeTable[vol][pcmData[currentOffset]];
+            int data = volumeTable[vol][pcmData[currentOffset] & 0xff];
 
             buffer[1][i] -= data;
             data = data * panDat / (256 / 2);
@@ -336,7 +341,7 @@ public class P86 {
             break;
         case 0x05: // pitch
             int srcRate = adr >> 5;
-            int pitch = (adr & 0x1f) * 0x10000 + data;
+            int pitch = (adr & 0x1f) * 0x1_0000 + data;
             if (srcRate < 0 || srcRate > 7)
                 break;
             if (pitch > 0x1f_ffff)

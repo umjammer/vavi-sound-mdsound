@@ -277,8 +277,8 @@ public class PSG {
                     for (int i = 0; i < nSamples; i++) {
                         int sample = 0;
                         for (int j = 0; j < (1 << overSampling); j++) {
-                            int noise = noiseTable[(nCount >>> (noiseShift + overSampling + 6)) & (noiseTableSize - 1)]
-                                    >> (nCount >> (noiseShift + overSampling + 1) & 31);
+                            int noise = noiseTable[(nCount >>> (noiseShift + overSampling + 6)) & (noiseTableSize - 1)] >>
+                                    (nCount >> (noiseShift + overSampling + 1) & 31);
                             nCount += nPeriod;
 
                             int x = (((sCount[0] >> (toneShift + overSampling)) & chEnable[0]) | (nEnable[0] & noise)) - 1; // 0 or -1
@@ -323,8 +323,8 @@ public class PSG {
                                 eCount |= (1 << (envShift + 5 + overSampling));
                             eCount &= (1 << (envShift + 6 + overSampling)) - 1;
                         }
-                        int noise = noiseTable[(nCount >> (noiseShift + overSampling + 6)) & (noiseTableSize - 1)]
-                                >> (nCount >> (noiseShift + overSampling + 1) & 31);
+                        int noise = noiseTable[(nCount >> (noiseShift + overSampling + 6)) & (noiseTableSize - 1)] >>
+                                (nCount >> (noiseShift + overSampling + 1) & 31);
                         nCount += nPeriod;
 
                         int x = (((sCount[0] >> (toneShift + overSampling)) & chEnable[0]) | (nEnable[0] & noise)) - 1;

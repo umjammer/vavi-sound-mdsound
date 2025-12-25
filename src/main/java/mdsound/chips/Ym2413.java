@@ -1433,8 +1433,8 @@ public class Ym2413 {
         }
 
         this.opllTime -= this.realStep;
-        this.out = (short) (((double) this.next * (this.opllStep - this.opllTime)
-                + (double) this.prev * this.opllTime) / this.opllStep);
+        this.out = (short) (((double) this.next * (this.opllStep - this.opllTime) +
+                (double) this.prev * this.opllTime) / this.opllStep);
 
         return (short) this.out;
     }
@@ -1862,10 +1862,10 @@ public class Ym2413 {
                 }
 
                 this.opllTime -= this.realStep;
-                bufMO[i] = (int) (((double) this.sNext[0] * (this.opllStep - this.opllTime)
-                        + (double) this.sPrev[0] * this.opllTime) / this.opllStep);
-                bufRO[i] = (int) (((double) this.sNext[1] * (this.opllStep - this.opllTime)
-                        + (double) this.sPrev[1] * this.opllTime) / this.opllStep);
+                bufMO[i] = (int) (((double) this.sNext[0] * (this.opllStep - this.opllTime) +
+                        (double) this.sPrev[0] * this.opllTime) / this.opllStep);
+                bufRO[i] = (int) (((double) this.sNext[1] * (this.opllStep - this.opllTime) +
+                        (double) this.sPrev[1] * this.opllTime) / this.opllStep);
             }
             bufMO[i] <<= 1;
             bufRO[i] <<= 1;

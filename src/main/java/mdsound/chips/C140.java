@@ -215,7 +215,7 @@ public class C140 {
             dataLength = romSize - dataStart;
 
         System.arraycopy(romData, srcStartAdr, this.pRom, dataStart, dataLength);
-//logger.log(Level.TRACE, "c140_write_rom2:%d:%d:%d:%d:%d".formatted(chipId, romSize, dataStart, dataLength, srcStartAdr));
+//logger.log(Level.TRACE, "c140_write_rom2:%d:%d:%d:%d".formatted(romSize, dataStart, dataLength, srcStartAdr));
     }
 
     public void setMuteMask(int muteMask) {
