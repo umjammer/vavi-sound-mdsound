@@ -1,6 +1,12 @@
 package mdsound.chips;
 
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
+
+import static java.lang.System.getLogger;
+
+
 public class Pcm8PP {
 
     //
@@ -9,13 +15,15 @@ public class Pcm8PP {
     // Unimplemented status
     // number Data Format              output     specification
     //  7H  16bit Signed PCM(Through)  Monoural Depends on playback frequency // I don't really know how it works
-    //  FH  Valiabled 16bit Signed PCM Monoural The frequency can be changed #1   // I don't think it's used in zmusic
-    // 17H  Valiabled  8bit Signed PCM Monoural The frequency can be changed #1   // I don't think it's used in zmusic
-    // 1FH  Valiabled 16bit Signed PCM Stereo   The frequency can be changed #1   // I don't think it's used in zmusic
-    // 27H  Valiabled  8bit Signed PCM Stereo   The frequency can be changed #1   // I don't think it's used in zmusic
-    // 28H  Valiabled ADPCM            Monoural The frequency can be changed #2   // I don't think it's used in zmusic
-    // 29H  Valiabled 16bit Signed PCM Monoural The frequency can be changed #2   // I don't think it's used in zmusic
+    //  FH  Valiabled 16bit Signed PCM Monoural The frequency can be changed #1 // I don't think it's used in zmusic
+    // 17H  Valiabled  8bit Signed PCM Monoural The frequency can be changed #1 // I don't think it's used in zmusic
+    // 1FH  Valiabled 16bit Signed PCM Stereo   The frequency can be changed #1 // I don't think it's used in zmusic
+    // 27H  Valiabled  8bit Signed PCM Stereo   The frequency can be changed #1 // I don't think it's used in zmusic
+    // 28H  Valiabled ADPCM            Monoural The frequency can be changed #2 // I don't think it's used in zmusic
+    // 29H  Valiabled 16bit Signed PCM Monoural The frequency can be changed #2 // I don't think it's used in zmusic
     //
+
+    private static final Logger logger = getLogger(Pcm8PP.class.getName());
 
     private static class Channel {
 
@@ -158,6 +166,7 @@ public class Pcm8PP {
 
     public int start(int sampleRate, int clock, int option) {
         this.sampleRate = sampleRate;
+logger.log(Level.INFO, "sampleRate: " + sampleRate);
         baseClock = clock;
 
         sOption = option;
@@ -181,9 +190,9 @@ public class Pcm8PP {
 
                 if (st.pcmKind < 7) {
                     // Processing of pcm8 (existing)
-                    if (st.pcmKind == 5) {   // 16bitPCM
+                    if (st.pcmKind == 5) { // 16bitPCM
                         if (mem.length <= st.adrsPtr) valL = 0;
-                        else valL = ((mem[st.adrsPtr] & 0xff) << 8) + (mem[st.adrsPtr + 1] & 0xff);
+                        else valL = (short) (((mem[st.adrsPtr] & 0xff) << 8) + (mem[st.adrsPtr + 1] & 0xff));
                         //pcm16_2pcm(st, valL);
                         //st.outPcm = ((st.inpPcm << 9) - (st.inpPcmPrev << 9) + 459 * st.outPcm) >> 9;
                         //st.inpPcmPrev = st.inpPcm;
@@ -191,7 +200,7 @@ public class Pcm8PP {
                         valL = valL * st.volume;
                         valL = valL >> 3; // 3 sloppy
                         valR = valL;
-                    } else if (st.pcmKind == 6) {   // 8bitPCM
+                    } else if (st.pcmKind == 6) { // 8bitPCM
                         if (mem.length <= st.adrsPtr) valL = 0;
                         else valL = mem[st.adrsPtr] & 0xff;
                         //pcm16_2pcm(st,valL);
@@ -214,7 +223,7 @@ public class Pcm8PP {
                             } else {
                                 adpcm2pcm(st, st.n1Data);
                             }
-                            st.outPcm = ((st.inpPcm << 9) - (st.inpPcmPrev << 9) + 459 * st.outPcm) >>> 9;
+                            st.outPcm = ((st.inpPcm << 9) - (st.inpPcmPrev << 9) + 459 * st.outPcm) >> 9;
                             st.inpPcmPrev = st.inpPcm;
                         }
                         valR = valL = ((st.outPcm * st.volume) >> 8); // >> 4);
@@ -224,10 +233,10 @@ public class Pcm8PP {
 
                     // Audio data processing
                     if (mem.length <= st.adrsPtr) valL = 0;
-                    else valL = mem[st.adrsPtr] & 0xff;
+                    else valL = mem[st.adrsPtr];
                     if (st.type == 2) {
                         if (mem.length <= st.adrsPtr + 1) valL = 0;
-                        else valL = ((valL & 0xff) << 8) + (mem[st.adrsPtr + 1] & 0xff);
+                        else valL = (short) ((valL & 0xff) << 8) + (mem[st.adrsPtr + 1] & 0xff);
                     }
 
                     // Volume Reflection
@@ -239,13 +248,13 @@ public class Pcm8PP {
                     } else {
                         if (st.type != 2) {
                             if (mem.length <= st.adrsPtr + 1) valR = 0;
-                            else valR = mem[st.adrsPtr + 1] & 0xff;
+                            else valR = mem[st.adrsPtr + 1];
                             // Volume Reflection
                             valR = valR * st.volume;
                             valR <<= 5;
                         } else {
                             if (mem.length <= st.adrsPtr + 2) valR = 0;
-                            else valR = ((mem[st.adrsPtr + 2] & 0xff) << 8) + (mem[st.adrsPtr + 3] & 0xff);
+                            else valR = (short) ((mem[st.adrsPtr + 2] & 0xff) << 8) + (mem[st.adrsPtr + 3] & 0xff);
                             // Volume Reflection
                             valR = valR * st.volume;
                         }
@@ -275,7 +284,7 @@ public class Pcm8PP {
                     st.step -= 1.0;
                 }
                 // Play ends when the end position is reached
-                if (st.adrsPtr >= st.endAdrs)
+                if (Integer.compareUnsigned(st.adrsPtr, st.endAdrs) >= 0)
                     st.play = false;
             }
         }
@@ -341,8 +350,7 @@ public class Pcm8PP {
         ch[c].mute = b;
     }
 
-    public void setMask(byte chipID, int n) {
-        if (chipID != 0) return;
+    public void setMask(int n) {
         n >>= 8;
         for (int i = 0; i < 16; i++) {
             setMute(i, ((n >> i) & 1) != 0);
