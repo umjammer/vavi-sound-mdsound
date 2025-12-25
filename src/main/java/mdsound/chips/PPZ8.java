@@ -386,7 +386,7 @@ public class PPZ8 {
                     //logger.log(Level.TRACE, VolumeTable[chWk[i].volume][pcmData[chWk[i].bank][chWk[i].ptr]] * chWk[i].panL);
                 }
 
-                int n = chWk[i].ptr >= pcmData[chWk[i].bank].length ? 0x80 : pcmData[chWk[i].bank][chWk[i].ptr];
+                int n = chWk[i].ptr >= pcmData[chWk[i].bank].length ? 0x80 : pcmData[chWk[i].bank][chWk[i].ptr] & 0xff;
                 l += (int) (volumeTable[chWk[i].volume][n] * chWk[i].panL);
                 r += (int) (volumeTable[chWk[i].volume][n] * chWk[i].panR);
                 chWk[i].delta += ((float) chWk[i].srcFrequency * (long) chWk[i].frequency / (long) 0x8000) / samplingRate;

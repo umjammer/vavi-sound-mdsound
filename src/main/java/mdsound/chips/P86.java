@@ -163,7 +163,7 @@ public class P86 {
      */
     private void doubleTrans(int[][] buffer, int samples) {
         for (int i = 0; i < samples; i++) {
-            int data = volumeTable[vol][pcmData[currentOffset]];
+            int data = volumeTable[vol][pcmData[currentOffset] & 0xff];
 
             data = (short) Math.max(Math.min(data, Short.MAX_VALUE), Short.MIN_VALUE);
             buffer[0][i] += data;
@@ -181,7 +181,7 @@ public class P86 {
      */
     private void doubleTransG(int[][] buffer, int samples) {
         for (int i = 0; i < samples; i++) {
-            int data = volumeTable[vol][pcmData[currentOffset]];
+            int data = volumeTable[vol][pcmData[currentOffset] & 0xff];
 
             buffer[0][i] += data;
             buffer[1][i] -= data;
@@ -198,7 +198,7 @@ public class P86 {
      */
     private void leftTrans(int[][] buffer, int samples) {
         for (int i = 0; i < samples; i++) {
-            int data = volumeTable[vol][pcmData[currentOffset]];
+            int data = volumeTable[vol][pcmData[currentOffset] & 0xff];
 
             buffer[0][i] += data;
             data = data * panDat / (256 / 2);
@@ -216,7 +216,7 @@ public class P86 {
      */
     private void leftTransG(int[][] buffer, int samples) {
         for (int i = 0; i < samples; i++) {
-            int data = volumeTable[vol][pcmData[currentOffset]];
+            int data = volumeTable[vol][pcmData[currentOffset] & 0xff];
 
             buffer[0][i] += data;
             data = data * panDat / (256 / 2);
@@ -234,7 +234,7 @@ public class P86 {
      */
     private void rightTrans(int[][] buffer, int samples) {
         for (int i = 0; i < samples; i++) {
-            int data = volumeTable[vol][pcmData[currentOffset]];
+            int data = volumeTable[vol][pcmData[currentOffset] & 0xff];
 
             buffer[1][i] += data;
             data = data * panDat / (256 / 2);
@@ -252,7 +252,7 @@ public class P86 {
      */
     private void rightTransG(int[][] buffer, int samples) {
         for (int i = 0; i < samples; i++) {
-            int data = volumeTable[vol][pcmData[currentOffset]];
+            int data = volumeTable[vol][pcmData[currentOffset] & 0xff];
 
             buffer[1][i] -= data;
             data = data * panDat / (256 / 2);
