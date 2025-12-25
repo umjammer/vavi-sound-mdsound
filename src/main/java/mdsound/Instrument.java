@@ -118,10 +118,14 @@ public interface Instrument {
     interface PcmEnabledInstrument extends Instrument, PcmEnabled {
     }
 
-    /** @return new instance */
+    /** for reuse instances */
+    ServiceLoader<Instrument> serviceLoader = ServiceLoader.load(Instrument.class);
+
+    // TODO why resue is wrong?
+    /** @return reused instance */
     @SuppressWarnings("unchecked")
     static <T extends Instrument> T getInstrument(Class<T> c) {
-        for (Instrument i : ServiceLoader.load(Instrument.class)) {
+        for (Instrument i : serviceLoader) {
             if (i.getClass() == c) {
                 return (T) i;
             }
