@@ -78,3 +78,4 @@ mdsound.instrument.Pcm8PPInst
 mdsound.instrument.C219Inst
 mdsound.instrument.ZxBeepInst
 mdsound.instrument.MPcmPPInst
+mdsound.instrument.Cs4231Inst

@@ -114,7 +114,8 @@ public class MDSound {
             if (setVolume != null)
                 setVolumes.get(tag).accept(tag, vol, volumeMul);
             else
-                logger.log(Level.WARNING, "no such tag: " + tag, new Exception("instrument: " + instrument));
+                // add "chip.setVolumes.put(TAG, method_reference::for_volume)" in your plugin
+                logger.log(Level.WARNING, "no such tag: " + tag, new Exception("no such tag: " + tag + ", instrument: " + instrument.getClass().getName()));
         }
 
         public SetVolume mainWrappedSetVolume(SetVolume setVolume) {
