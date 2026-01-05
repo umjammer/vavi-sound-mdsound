@@ -354,6 +354,8 @@ public class K054539 {
         if ((this.regs[0x22f] & 1) == 0) // Enable PCM
             return;
 
+        if (rom == null) return;
+
         for (int i = 0; i != samples; i++) {
             // Reverb
             double lVal, rVal;
