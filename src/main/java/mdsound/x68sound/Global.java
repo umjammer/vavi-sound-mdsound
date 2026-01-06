@@ -280,7 +280,7 @@ public class Global {
 
     public int memReadDefault(int adrs) {
         if (memory.length <= adrs) return -1;
-        return memory[adrs];
+        return memory[adrs] & 0xff;
     }
 
     public Function<Integer, Integer> memRead = this::memReadDefault;

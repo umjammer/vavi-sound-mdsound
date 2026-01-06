@@ -1204,7 +1204,7 @@ public class Opm {
         }
     }
 
-    static int rate = 0;
+    int rate = 0;
 
     public void setPcm62(short[] buffer, int offset, int ndata, BiConsumer<Runnable, Boolean> oneFrameProc /* = null */) {
 
