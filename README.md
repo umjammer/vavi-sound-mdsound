@@ -88,7 +88,7 @@ this is a fork of [MDSound](https://github.com/kuma4649/MDSound)
 | YM2143                | OPLL        | FM    |   🥚   | np:okaxaki               |                                                                                                                              |
 | Gigatron              |             |       |        | zgm                      |                                                                                                                              |
 | MPCMPP                |             | PCM   |        | mnd                      |                                                                                                                              |
-| PCM8PP                |             | PCM   |   ✅?   | mxdrv                    |                                                                                                                              |
+| PCM8PP                |             | PCM   |   ✅*   | mxdrv                    | (*) applyed an original fix                                                                                                  |
 | MSM5232               |             |       |   🥚   |                          |                                                                                                                              |
 | ES5503                |             |       |   ✅    |                          | Space_Fox_(Apple_IIgs)/01 Title.vgz                                                                                          |
 | ES5505                |             |       |   🥚   |                          |                                                                                                                              |
