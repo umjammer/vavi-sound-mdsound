@@ -236,13 +236,18 @@ logger.log(Level.INFO, "sampleRate: " + sampleRate);
                     else valL = mem[st.adrsPtr];
                     if (st.type == 2) {
                         if (mem.length <= st.adrsPtr + 1) valL = 0;
-                        else valL = (short) ((valL & 0xff) << 8) + (mem[st.adrsPtr + 1] & 0xff);
+                        else valL = (short) (((valL & 0xff) << 8) + (mem[st.adrsPtr + 1] & 0xff));
                     }
 
                     // Volume Reflection
                     valL = valL * st.volume;
-                    if (st.type != 2) valL <<= 5;
-                    valL = valL >> 3; // 3 sloppy
+                    if (st.type != 2) {
+                        valL <<= 5;
+                        valL = valL >> 3; // 3 sloppy
+                    } else {
+                        valL = valL >> 7; // Correct scale for 16-bit (80/128 ~ 0.6)
+                    }
+
                     if (st.outs == 1) {
                         valR = valL;
                     } else {
@@ -252,13 +257,14 @@ logger.log(Level.INFO, "sampleRate: " + sampleRate);
                             // Volume Reflection
                             valR = valR * st.volume;
                             valR <<= 5;
+                            valR = valR >> 3;
                         } else {
                             if (mem.length <= st.adrsPtr + 2) valR = 0;
-                            else valR = (short) ((mem[st.adrsPtr + 2] & 0xff) << 8) + (mem[st.adrsPtr + 3] & 0xff);
+                            else valR = (short) (((mem[st.adrsPtr + 2] & 0xff) << 8) + (mem[st.adrsPtr + 3] & 0xff));
                             // Volume Reflection
                             valR = valR * st.volume;
+                            valR = valR >> 7;
                         }
-                        valR = valR >> 3; // 3 sloppy
                     }
                 }
 

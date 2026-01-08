@@ -28,14 +28,14 @@ public class SoundIocs {
      * Returns the 16-bit value with the byte order reversed.
      */
     private static int bSwapW(int data) {
-        return (data >> 8) + ((data & 0xff) << 8);
+        return ((data & 0xff00) >> 8) + ((data & 0xff) << 8);
     }
 
     /**
      * Returns the reversed byte order of a 32-bit value.
      */
     private static int bSwapL(int adrs) {
-        return (adrs >> 24) + ((adrs & 0xff0000) >> 8) + ((adrs & 0xff00) << 8) + ((adrs & 0xff) << 24);
+        return ((adrs & 0xff000000) >> 24) + ((adrs & 0xff0000) >> 8) + ((adrs & 0xff00) << 8) + ((adrs & 0xff) << 24);
     }
 
     /**

@@ -7,6 +7,7 @@
 package mdsound.instrument;
 
 import mdsound.Instrument.BaseInstrument;
+import mdsound.Instrument.PcmEnabledInstrument;
 import mdsound.chips.Pcm8PP;
 
 
@@ -16,7 +17,7 @@ import mdsound.chips.Pcm8PP;
  * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
  * @version 0.00 2025-02-02 nsano initial version <br>
  */
-public class Pcm8PPInst extends BaseInstrument {
+public class Pcm8PPInst extends BaseInstrument implements PcmEnabledInstrument {
 
     private final Pcm8PP[] chips = {new Pcm8PP(), new Pcm8PP()};
 
@@ -88,15 +89,16 @@ public class Pcm8PPInst extends BaseInstrument {
     public void resetMask(int chipId, int ch) {
     }
 
+    @Override
+    public void writePcm(int chipId, byte[] buf, int offset, int length, Object... extras) {
+        chips[chipId].mountMemory(buf);
+    }
+
     public void keyOn(int chipId, int c, int adrsPtr, int mode, int len) {
         chips[chipId].keyOn(c, adrsPtr, mode, len, 0);
     }
 
     public void keyOff(int chipId, int c) {
         chips[chipId].keyOff(c);
-    }
-
-    public void mountMemory(int chipId, byte[] mem) {
-        chips[chipId].mountMemory(mem);
     }
 }
