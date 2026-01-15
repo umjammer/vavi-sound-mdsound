@@ -48,6 +48,9 @@ public class TestCase {
         if (localPropertiesExists()) {
             PropsEntity.Util.bind(this);
         }
+
+        System.setProperty("mdsound.volume", String.valueOf(volume));
+Debug.print("volume: " + volume);
     }
 
     @Test
@@ -55,7 +58,9 @@ public class TestCase {
     @EnabledIfSystemProperty(named = "vavi.test", matches = "ide")
     void testP1() throws Exception {
         Program.main(new String[0]);
-        Thread.sleep(10000000);
+
+        CountDownLatch cdl = new CountDownLatch(1);
+        cdl.await();
     }
 
     @Test
@@ -64,6 +69,7 @@ public class TestCase {
         Program app = new Program();
 Debug.println(filename);
         app.prePlay(filename);
+
         CountDownLatch cdl = new CountDownLatch(1);
         cdl.await();
     }

@@ -102,7 +102,8 @@ this is a fork of [MDSound](https://github.com/kuma4649/MDSound)
 
 ## Usage
 
- * test is still wip, use via [vavi-apps-mdplayer](https://jitpack.io/#umjammer/vavi-apps-mdplayer)
+* [sample](src/test/java/test/Program.java)
+* [vavi-apps-mdplayer](https://jitpack.io/#umjammer/vavi-apps-mdplayer)
 
 ## References
 

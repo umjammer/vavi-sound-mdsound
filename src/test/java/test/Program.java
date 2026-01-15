@@ -1,7 +1,6 @@
 package test;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import javax.sound.sampled.AudioFormat;
@@ -13,13 +12,8 @@ import mdsound.Instrument;
 import mdsound.MDSound;
 import mdsound.chips.C140;
 import mdsound.instrument.*;
-import test.soundManager.DriverAction;
-import test.soundManager.Pack;
-import test.soundManager.RingBuffer;
-import test.soundManager.SoundManager;
 import vavi.util.ByteUtil;
 import vavi.util.Debug;
-import vavi.util.StringUtil;
 
 import static vavi.sound.SoundUtil.volume;
 
@@ -81,12 +75,11 @@ public class Program {
         public double wkDataStep;
     }
 
+    private Thread playbackThread;
+    private volatile boolean isPlaying = false;
     private final short[] emuRenderBuf = new short[2];
-    private int packCounter = 0;
-    private final Pack pack = new Pack();
 
     int driverSeqCounter = 0;
-    int emuSeqCounter = 0;
 
     private final static int PCM_BANK_COUNT = 0x40;
     private final VgmPcmBank[] pcmBanks = new VgmPcmBank[PCM_BANK_COUNT];
@@ -106,23 +99,8 @@ public class Program {
         public int bnkPos;
     }
 
-    test.soundManager.SoundManager sm;
-    private SoundManager.Enq enq;
-    //    private static RealChip rc = null;
-//    private static RSoundChip rsc = null;
-    private RingBuffer emuRecvBuffer = null;
-
     /** */
     public Program() {
-        // Search for the actual chip (OPNA) (rsc is null if not available)
-//        rc = new RealChip();
-//        rsc = rc.SearchOPNA();
-//        if (rsc != null) {
-//            rsc.init();
-//        }
-
-        mount();
-
         mds = new MDSound(SamplingRate, SamplingBuffer, null);
 
         try {
@@ -131,222 +109,70 @@ public class Program {
             volume(audioOutput, Double.parseDouble(System.getProperty("mdsound.volume", "0.2")));
             audioOutput.start();
         } catch (Exception e) {
-            e.printStackTrace();
+            Debug.printStackTrace(e);
         }
-    }
-
-    /** */
-    private void mount() {
-        sm = new test.soundManager.SoundManager();
-        DriverAction driverAction = new DriverAction();
-        driverAction.main = this::driverActionMain;
-        driverAction.final_ = this::driverActionFinal;
-
-//        if (rsc == null) {
-//            sm.setup(driverAction, null, softInitYM2608(0x56), softResetYM2608(0x56));
-//        } else {
-        sm.setup(driverAction, this::realChipAction, softInitYM2608(-1), softResetYM2608(-1));
-//        }
-
-        enq = sm.getDriverDataEnqueue();
-        emuRecvBuffer = sm.getEmuRecvBuffer();
-    }
-
-    /** */
-    private void driverActionMain() {
-        oneFrameVGM();
-    }
-
-    /** */
-    private void driverActionFinal() {
-        Pack[] data;
-
-//         if (rsc == null) {
-//             data = SoftResetYM2608(0x56);
-//             dataEnq(DriverSeqCounter, 0x56, 0, -1, -1, data);
-//         } else {
-        data = softResetYM2608(-1);
-        dataEnq(driverSeqCounter, -1, 0, -1, -1, (Object) data);
-//         }
-    }
-
-    /** */
-    private void realChipAction(long counter, int dev, int typ, int adr, int val, Object[] ex) {
-        if (adr >= 0) {
-//                rsc.setRegister(adr, val);
-        } else {
-            sm.setInterrupt();
-            try {
-                Pack[] data = (Pack[]) ex;
-//                for (Pack dat : data) {
-//                    rsc.setRegister(dat.adr, dat.val);
-//                }
-//                rc.WaitOPNADPCMData(true);
-            } finally {
-                sm.resetInterrupt();
-            }
-        }
-    }
-
-    /** */
-    private void unmount() {
-        sm.requestStop();
-        while (sm.isRunningAsync()) ;
-        sm.release();
-    }
-
-    /** */
-    public void dataEnq(int counter, int dev, int typ, int adr, int val, Object... ex) {
-        while (!enq.apply(counter, dev, typ, adr, val, ex)) Thread.yield();
-    }
-
-    /** */
-    private static Pack[] softInitYM2608(int dev) {
-        List<Pack> data = new ArrayList<>();
-
-        data.add(new Pack(dev, 0, 0x2d, 0x00));
-        data.add(new Pack(dev, 0, 0x29, 0x82));
-        data.add(new Pack(dev, 0, 0x07, 0x38)); // Reset with Psg TONE
-        for (int i = 0xb4; i < 0xb4 + 3; i++) {
-            data.add(new Pack(dev, 0, i, 0xc0));
-            data.add(new Pack(dev, 0, 0x100 + i, 0xc0));
-        }
-
-        return data.toArray(Pack[]::new);
-    }
-
-    /** */
-    private static Pack[] softResetYM2608(int dev) {
-        List<Pack> data = new ArrayList<>();
-
-        // FM all channel key off
-        data.add(new Pack(dev, 0, 0x28, 0x00));
-        data.add(new Pack(dev, 0, 0x28, 0x01));
-        data.add(new Pack(dev, 0, 0x28, 0x02));
-        data.add(new Pack(dev, 0, 0x28, 0x04));
-        data.add(new Pack(dev, 0, 0x28, 0x05));
-        data.add(new Pack(dev, 0, 0x28, 0x06));
-
-        // FM TL=127
-        for (int i = 0x40; i < 0x4F + 1; i++) {
-            data.add(new Pack(dev, 0, i, 0x7f));
-            data.add(new Pack(dev, 0, 0x100 + i, 0x7f));
-        }
-        // FM ML/DT
-        for (int i = 0x30; i < 0x3F + 1; i++) {
-            data.add(new Pack(dev, 0, i, 0x0));
-            data.add(new Pack(dev, 0, 0x100 + i, 0x0));
-        }
-        // FM AR,DR,SR,KS,AMON
-        for (int i = 0x50; i < 0x7F + 1; i++) {
-            data.add(new Pack(dev, 0, i, 0x0));
-            data.add(new Pack(dev, 0, 0x100 + i, 0x0));
-        }
-        // FM SL,RR
-        for (int i = 0x80; i < 0x8F + 1; i++) {
-            data.add(new Pack(dev, 0, i, 0xff));
-            data.add(new Pack(dev, 0, 0x100 + i, 0xff));
-        }
-        // FM F-Num, FB/CONNECT
-        for (int i = 0x90; i < 0xBF + 1; i++) {
-            data.add(new Pack(dev, 0, i, 0x0));
-            data.add(new Pack(dev, 0, 0x100 + i, 0x0));
-        }
-        // FM PAN/AMS/PMS
-        for (int i = 0xB4; i < 0xB6 + 1; i++) {
-            data.add(new Pack(dev, 0, i, 0xc0));
-            data.add(new Pack(dev, 0, 0x100 + i, 0xc0));
-        }
-        data.add(new Pack(dev, 0, 0x22, 0x00)); // HW LFO
-        data.add(new Pack(dev, 0, 0x24, 0x00)); // Timer-A(1)
-        data.add(new Pack(dev, 0, 0x25, 0x00)); // Timer-A(2)
-        data.add(new Pack(dev, 0, 0x26, 0x00)); // Timer-B
-        data.add(new Pack(dev, 0, 0x27, 0x30)); // Timer Controller
-        data.add(new Pack(dev, 0, 0x29, 0x80)); // FM4-6 Enable
-
-        // SSG Pitch (2byte*3ch)
-        for (int i = 0x00; i < 0x05 + 1; i++) {
-            data.add(new Pack(dev, 0, i, 0x00));
-        }
-        data.add(new Pack(dev, 0, 0x06, 0x00)); // SSG Noise Frequency
-        data.add(new Pack(dev, 0, 0x07, 0x38)); // SSG Mixer
-        // SSG Volume (3ch)
-        for (int i = 0x08; i < 0x0A + 1; i++) {
-            data.add(new Pack(dev, 0, i, 0x00));
-        }
-        // SSG Envelope
-        for (int i = 0x0B; i < 0x0D + 1; i++) {
-            data.add(new Pack(dev, 0, i, 0x00));
-        }
-
-        // RHYTHM
-        data.add(new Pack(dev, 0, 0x10, 0xBF)); // Forced sound stop
-        data.add(new Pack(dev, 0, 0x11, 0x00)); // Total Level
-        data.add(new Pack(dev, 0, 0x18, 0x00)); // BD volume
-        data.add(new Pack(dev, 0, 0x19, 0x00)); // SD volume
-        data.add(new Pack(dev, 0, 0x1A, 0x00)); // CYM volume
-        data.add(new Pack(dev, 0, 0x1B, 0x00)); // HH volume
-        data.add(new Pack(dev, 0, 0x1C, 0x00)); // TOM volume
-        data.add(new Pack(dev, 0, 0x1D, 0x00)); // RIM volume
-
-        // ADPCM
-        data.add(new Pack(dev, 0, 0x100 + 0x00, 0x21)); // ADPCM reset
-        data.add(new Pack(dev, 0, 0x100 + 0x01, 0x06)); // ADPCM mute
-        data.add(new Pack(dev, 0, 0x100 + 0x10, 0x9C)); // FLAG reset
-
-        return data.toArray(Pack[]::new);
     }
 
     public void prePlay(String fileName) {
-        sm.requestStop();
-        while (sm.isRunningAsync()) {
-            Thread.yield();
-        }
-
-        driverSeqCounter = sm.getDriverSeqCounterDelay();
-        driverSeqCounter = 0;
-
+        stop();
         play(fileName);
+        start();
+    }
 
-        sm.requestStart();
-        while (!sm.isRunningAsync()) {
-//Debug.println("loop");
-            emuCallback();
-            Thread.yield();
-        }
-
-//        if (rsc == null) {
-//            sm.RequestStopAtRealChipSender();
-//            while (sm.IsRunningAtRealChipSender()) ;
-//        } else {
-        sm.requestStopAtEmuChipSender();
-        while (sm.isRunningAtEmuChipSender()) Thread.yield();
-Debug.println("done");
-//        }
+    public void start() {
+        if (isPlaying) return;
+        isPlaying = true;
+        playbackThread = new Thread(this::playbackLoop);
+        playbackThread.start();
     }
 
     public void stop() {
-        sm.requestStop();
-        while (sm.isRunningAsync()) Thread.yield();
+        isPlaying = false;
+        if (playbackThread != null) {
+            try {
+                playbackThread.join();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            playbackThread = null;
+        }
     }
 
     public void close() {
-        sm.requestStop();
-        while (sm.isRunningAsync()) Thread.yield();
+        stop();
+        if (audioOutput != null) {
+            audioOutput.close();
+        }
+    }
 
-        unmount();
+    private void playbackLoop() {
+        int len = 512;
+        byte[] frames = new byte[len];
+        int bufCnt = len / 4;
 
-//        if (rc != null) {
-//            rc.close();
-//        }
+        while (isPlaying) {
+            if (audioOutput.available() < len) {
+                try {
+                    Thread.sleep(1);
+                } catch (InterruptedException e) {
+                    break;
+                }
+                continue;
+            }
 
-        audioOutput.close();
+            for (int i = 0; i < bufCnt; i++) {
+                mds.update(emuRenderBuf, 0, 1, this::processOneFrame);
+                ByteUtil.writeLeShort(emuRenderBuf[0], frames, i * 4 + 0);
+                ByteUtil.writeLeShort(emuRenderBuf[1], frames, i * 4 + 2);
+            }
+            audioOutput.write(frames, 0, len);
+        }
     }
 
     private void play(String fileName) {
 
         vgmBuf = File.readAllBytes(fileName);
-Debug.println("\n" + StringUtil.getDump(vgmBuf, 128));
+//Debug.println("\n" + StringUtil.getDump(vgmBuf, 128));
 
         for (int i = 0; i < pcmBanks.length; i++) {
             pcmBanks[i] = new VgmPcmBank();
@@ -802,17 +628,17 @@ Debug.printf("version is after 1.50, %04x", version);
             }
         }
 
-Debug.println("chips: " + lstChip.size());
+Debug.println("chips: " + lstChip.size() + ", " + lstChip.stream().map(c -> c.instrument.getClass().getSimpleName()).toList());
         mds.init(SamplingRate, SamplingBuffer, lstChip);
     }
 
-    public static void changeChipSampleRate(MDSound.Chip chip, int NewSmplRate) {
+    public static void changeChipSampleRate(MDSound.Chip chip, int newSmplRate) {
         MDSound.Chip caa = chip;
 
-        if (caa.samplingRate == NewSmplRate) return;
+        if (caa.samplingRate == newSmplRate) return;
 
         // quick and dirty hack to make sample rate changes work
-        caa.samplingRate = NewSmplRate;
+        caa.samplingRate = newSmplRate;
         if (caa.samplingRate < SamplingRate) caa.resampler = 0x01;
         else if (caa.samplingRate == SamplingRate) caa.resampler = 0x02;
         else if (caa.samplingRate > SamplingRate) caa.resampler = 0x03;
@@ -821,41 +647,11 @@ Debug.println("chips: " + lstChip.size());
         caa.smpLast = 0x00;
     }
 
-//static int dummy = 0;
-
-    private void emuCallback() {
-        int len = 512;
-        byte[] frames = new byte[len];
-        int bufCnt = len / 4;
-        int seqCnt = sm.getSeqCounter();
-        emuSeqCounter = seqCnt - bufCnt;
-        emuSeqCounter = Math.max(emuSeqCounter, 0);
-
-        for (int i = 0; i < bufCnt; i++) {
-            mds.update(emuRenderBuf, 0, 1, this::oneFrameVGMaaa);
-
-            ByteUtil.writeLeShort(emuRenderBuf[0], frames, i * 4 + 0);
-            ByteUtil.writeLeShort(emuRenderBuf[1], frames, i * 4 + 2);
-//            Debug.print("adr[%8x] : Wait[%8d] : [%8d]/[%8d]\n", vgmAdr, 0, 0, 0);
-//            dummy++;
-//            dummy %= 500;
-//            frames[i * 2 + 0] = (short) dummy; // (dummy < 100 ? 0xfff : 0x000);
-        }
-//if (dummy++ > 300) System.exit(1);
-//Debug.println("\n" + StringUtil.getDump(frames, len));
-        audioOutput.write(frames, 0, len / 2);
-    }
-
-    private void oneFrameVGMaaa() {
+    private void processOneFrame() {
         if (driverSeqCounter > 0) {
             driverSeqCounter--;
             return;
         }
-
-        oneFrameVGM();
-    }
-
-    private void oneFrameVGM() {
 
         if (!vgmAnalyze) {
 //Debug.println("vgmAnalyze is false");
@@ -869,19 +665,18 @@ Debug.println("chips: " + lstChip.size());
 
         if (vgmAdr == vgmBuf.length || vgmAdr == vgmEof) {
             vgmAnalyze = false;
-            sm.requestStopAtDataMaker();
 Debug.println("eof: vgmAdr: " + vgmAdr + ", vgmBuf.length: " + vgmBuf.length + ", vgmEof: " + vgmEof);
             return;
         }
 
 //Debug.println("vgmAdr: " + vgmAdr);
         byte cmd = vgmBuf[vgmAdr];
-        //Debug.print(" adr[%x]:cmd[%x]\r\n", vgmAdr, cmd);
+//Debug.printf(" adr[%x]:cmd[%x]", vgmAdr, cmd);
         switch (cmd & 0xff) {
         case 0x4f: // GG Psg
         case 0x50: // Psg
-            mds.write(Sn76489Inst.class, 0, 0, 0, vgmBuf[vgmAdr + 1] & 0xff);
-            //mds.write(SN76496Inst.class, 0, vgmBuf[vgmAdr + 1]);
+//            mds.write(Sn76489Inst.class, 0, 0, 0, vgmBuf[vgmAdr + 1] & 0xff);
+            mds.write(Sn76496Inst.class, 0, 0, 0, vgmBuf[vgmAdr + 1]);
             vgmAdr += 2;
             break;
         case 0x51: // YM2413
@@ -896,7 +691,8 @@ Debug.println("eof: vgmAdr: " + vgmAdr + ", vgmBuf.length: " + vgmBuf.length + "
             rAdr = vgmBuf[vgmAdr + 1] & 0xff;
             rDat = vgmBuf[vgmAdr + 2] & 0xff;
             vgmAdr += 3;
-            mds.write(Ym2612Inst.class, 0, p, rAdr, rDat);
+//            mds.write(Ym2612Inst.class, 0, p, rAdr, rDat);
+            mds.write(MameYm2612Inst.class, 0, p, rAdr, rDat);
 
             break;
         case 0x54: // YM2151
@@ -934,8 +730,8 @@ Debug.println("eof: vgmAdr: " + vgmAdr + ", vgmBuf.length: " + vgmBuf.length + "
             vgmAdr += 3;
 //            if (rsc == null) dataEnq(DriverSeqCounter, 0x56, 0, 0 * 0x100 + rAdr, rDat);
 //            else
-            dataEnq(driverSeqCounter, -1, 0, 0 * 0x100 + rAdr, rDat);
-            //mds.write(Ym2609Inst.class, 0, 0, rAdr, rDat);
+//            dataEnq(driverSeqCounter, -1, 0, 0 * 0x100 + rAdr, rDat);
+            mds.write(Ym2609Inst.class, 0, 0, rAdr, rDat);
             break;
         case 0x57: // YM2609 Port1
             rAdr = vgmBuf[vgmAdr + 1] & 0xff;
@@ -943,8 +739,8 @@ Debug.println("eof: vgmAdr: " + vgmAdr + ", vgmBuf.length: " + vgmBuf.length + "
             vgmAdr += 3;
 //            if (rsc == null) dataEnq(DriverSeqCounter, 0x56, 0, 1 * 0x100 + rAdr, rDat);
 //            else
-            dataEnq(driverSeqCounter, -1, 0, 1 * 0x100 + rAdr, rDat);
-            //mds.write(YM2609Inst.class, 0, 1, rAdr, rDat);
+//            dataEnq(driverSeqCounter, -1, 0, 1 * 0x100 + rAdr, rDat);
+            mds.write(Ym2609Inst.class, 0, 1, rAdr, rDat);
 
             break;
         case 0x58: // YM2610 Port0
@@ -1055,37 +851,33 @@ Debug.println("eof: vgmAdr: " + vgmAdr + ", vgmBuf.length: " + vgmBuf.length + "
                 case 0x81:
 
                     // YM2608/YM2609
-                    List<Pack> data = Arrays.asList(
-                            new Pack(0, 0, 0x100 + 0x00, 0x20),
-                            new Pack(0, 0, 0x100 + 0x00, 0x21),
-                            new Pack(0, 0, 0x100 + 0x00, 0x00),
+                    // 0: port, 0x100+r: adr, val
+                    mds.write(Ym2608Inst.class, 0, 0, 0x00, 0x20);
+                    mds.write(Ym2608Inst.class, 0, 0, 0x00, 0x21);
+                    mds.write(Ym2608Inst.class, 0, 0, 0x00, 0x00);
 
-                            new Pack(0, 0, 0x100 + 0x10, 0x00),
-                            new Pack(0, 0, 0x100 + 0x10, 0x80),
+                    mds.write(Ym2608Inst.class, 0, 0, 0x10, 0x00);
+                    mds.write(Ym2608Inst.class, 0, 0, 0x10, 0x80);
 
-                            new Pack(0, 0, 0x100 + 0x00, 0x61),
-                            new Pack(0, 0, 0x100 + 0x00, 0x68),
-                            new Pack(0, 0, 0x100 + 0x01, 0x00),
+                    mds.write(Ym2608Inst.class, 0, 0, 0x00, 0x61);
+                    mds.write(Ym2608Inst.class, 0, 0, 0x00, 0x68);
+                    mds.write(Ym2608Inst.class, 0, 0, 0x01, 0x00);
 
-                            new Pack(0, 0, 0x100 + 0x02, startAddress >> 2),
-                            new Pack(0, 0, 0x100 + 0x03, startAddress >> 10),
-                            new Pack(0, 0, 0x100 + 0x04, 0xff),
-                            new Pack(0, 0, 0x100 + 0x05, 0xff),
-                            new Pack(0, 0, 0x100 + 0x0c, 0xff),
-                            new Pack(0, 0, 0x100 + 0x0d, 0xff));
+                    mds.write(Ym2608Inst.class, 0, 0, 0x02, (startAddress >> 2) & 0xff);
+                    mds.write(Ym2608Inst.class, 0, 0, 0x03, (startAddress >> 10) & 0xff);
+                    mds.write(Ym2608Inst.class, 0, 0, 0x04, 0xff);
+                    mds.write(Ym2608Inst.class, 0, 0, 0x05, 0xff);
+                    mds.write(Ym2608Inst.class, 0, 0, 0x0c, 0xff);
+                    mds.write(Ym2608Inst.class, 0, 0, 0x0d, 0xff);
 
                     // Data Transfer
                     for (int cnt = 0; cnt < bLen - 8; cnt++) {
-                        data.add(new Pack(0, 0, 0x100 + 0x08, vgmBuf[vgmAdr + 15 + cnt] & 0xff));
+                        mds.write(Ym2608Inst.class, 0, 0, 0x08, vgmBuf[vgmAdr + 15 + cnt] & 0xff);
                     }
-                    data.add(new Pack(0, 0, 0x100 + 0x00, 0x00));
-                    data.add(new Pack(0, 0, 0x100 + 0x10, 0x80));
+                    mds.write(Ym2608Inst.class, 0, 0, 0x00, 0x00);
+                    mds.write(Ym2608Inst.class, 0, 0, 0x10, 0x80);
 
-//                    if (rsc == null) dataEnq(DriverSeqCounter, 0x56, 0, -1, -1, data.toArray());
-//                    else {
-                    dataEnq(driverSeqCounter, -1, 0, -1, -1, data.toArray());
                     driverSeqCounter += bLen;
-//                    }
 
                     break;
 
@@ -1424,64 +1216,5 @@ Debug.println("eof: vgmAdr: " + vgmAdr + ", vgmBuf.length: " + vgmBuf.length + "
         if (chipReadOffset >= pcmBanks[chipType].dataSize) return null;
 
         return chipReadOffset;
-    }
-
-    private void oneFrameVGMStream() {
-        while (emuRecvBuffer.lookUpCounter() <= emuSeqCounter) {
-            int[] packCounter_ = new int[1];
-            int[] dev_ = new int[1];
-            int[] typ_ = new int[1];
-            int[] adr_ = new int[1];
-            int[] val_ = new int[1];
-            Object[][] ex_ = new Object[1][];
-            boolean ret = emuRecvBuffer.deq(packCounter_, dev_, typ_, adr_, val_, ex_);
-            packCounter = packCounter_[0];
-            pack.dev = dev_[0];
-            pack.typ = typ_[0];
-            pack.adr = adr_[0];
-            pack.val = val_[0];
-            pack.ex = ex_[0];
-            if (!ret) break;
-            sendEmuData(packCounter, pack.dev, pack.typ, pack.adr, pack.val, pack.ex);
-        }
-        emuSeqCounter++;
-
-        for (int i = 0; i < 0x100; i++) {
-
-            if (!vgmStreams[i].sw) continue;
-            if (vgmStreams[i].chipId != 0x02) continue; // For now, only YM2612
-
-            while (vgmStreams[i].wkDataStep >= 1.0) {
-                mds.write(Ym2612Inst.class, 0, vgmStreams[i].port, vgmStreams[i].cmd, vgmBuf[vgmPcmBaseAdr + vgmStreams[i].wkDataAdr] & 0xff);
-                vgmStreams[i].wkDataAdr++;
-                vgmStreams[i].dataLength--;
-                vgmStreams[i].wkDataStep -= 1.0;
-            }
-            vgmStreams[i].wkDataStep += (double) vgmStreams[i].frequency / (double) SamplingRate;
-
-            if (vgmStreams[i].dataLength <= 0) {
-                vgmStreams[i].sw = false;
-            }
-        }
-    }
-
-    private void sendEmuData(int counter, int dev, int typ, int adr, int val, Object... ex) {
-        switch (dev) {
-        case 0x56:
-            if (adr >= 0) {
-                mds.write(Ym2609Inst.class, 0, adr >> 8, adr, val);
-            } else {
-                sm.setInterrupt();
-                try {
-                    Pack[] data = (Pack[]) ex;
-                    for (Pack dat : data) {
-                        mds.write(Ym2609Inst.class, 0, dat.adr >> 8, dat.adr, dat.val);
-                    }
-                } finally {
-                    sm.resetInterrupt();
-                }
-            }
-            break;
-        }
     }
 }
