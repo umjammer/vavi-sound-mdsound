@@ -93,6 +93,7 @@ this is a fork of [MDSound](https://github.com/kuma4649/MDSound)
 | ES5503                |             |       |   ✅    |                          | Space_Fox_(Apple_IIgs)/01 Title.vgz                                                                                          |
 | ES5505                |             |       |   🥚   |                          |                                                                                                                              |
 | μPD7759               |             | PCM   |   🥚   |                          |                                                                                                                              |
+| MDPCM                 | MDPCM       | PCM   |   ✅*   | mdsdrv                   | (*) not perfect                                                                                                              |
 
 <sub>* WTS ... [wavetable synthesis](https://ja.wikipedia.org/wiki/%E6%B3%A2%E5%BD%A2%E3%83%A1%E3%83%A2%E3%83%AA%E9%9F%B3%E6%BA%90)</sub><br/>
 
