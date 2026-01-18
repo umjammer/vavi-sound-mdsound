@@ -412,21 +412,6 @@ public class FrmMain extends JFrame {
         label3.setLocation(new Point(Math.min((r / 600) * 3 - 174, 0), label3.getLocation().y));
 
         lblDriverSeqCounter.setText(String.valueOf(app.driverSeqCounter));
-        lblEmuSeqCounter.setText(String.valueOf(app.emuSeqCounter));
-        lblSeqCounter.setText(String.valueOf(app.sm.getSeqCounter()));
-        lblDataSenderBufferCounter.setText(String.valueOf(app.sm.getDataSenderBufferCounter()));
-        lblDataSenderBufferSize.setText(String.valueOf(app.sm.getDataSenderBufferSize()));
-        lblEmuChipSenderBufferSize.setText(String.valueOf(app.sm.getEmuChipSenderBufferSize()));
-        lblRealChipSenderBufferSize.setText(String.valueOf(app.sm.getRealChipSenderBufferSize()));
-
-        lblDataMakerIsRunning.setText(app.sm.isRunningAtDataMaker() ? "Running" : "Stop");
-        lblDataSenderIsRunning.setText(app.sm.isRunningAtDataSender() ? "Running" : "Stop");
-        lblEmuChipSenderIsRunning.setText(app.sm.isRunningAtEmuChipSender() ? "Running" : "Stop");
-        lblRealChipSenderIsRunning.setText(app.sm.isRunningAtRealChipSender() ? "Running" : "Stop");
-
-        lblInterrupt.setText(app.sm.getInterrupt() ? "Enable" : "Disable");
-
-//        lblDebug.setText(app.mds.getDebugMsg()); // TODO vavi
     }
 
     private void frmMainShown(WindowEvent ev) {

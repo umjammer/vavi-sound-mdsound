@@ -277,7 +277,7 @@ logger.log(Level.TRACE, "[%d] %+04d, %+04d".formatted(i, a[0], b[0]));
 
     public synchronized void write(Class<? extends Instrument> i, int chipIndex, int chipId, int port, int adr, int data) {
         if (!instruments.containsKey(i)) {
-//logger.log(Level.TRACE, "not contains: " + i);
+logger.log(Level.WARNING, "not contains: " + i);
             return;
         }
 

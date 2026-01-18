@@ -55,6 +55,8 @@ Unmapped registers:
     2002.07.20  R. Belmont   added support for multiple banking types
     2006.01.08  R. Belmont   added support for NA-1/2 "219" derivative
     2018.11.15  Valley Bell  split "219" from C140 code, ported channel update + MuLaw table from superctr's C352 core
+
+    @see "https://github.com/ValleyBell/libvgm/blob/master/emu/cores/c219.c"
 */
 public class C219 {
 
@@ -147,7 +149,7 @@ public class C219 {
 
     private int keyonStatusRead(int offset) {
         //m_stream.update();
-        Voice v = this.voices[offset >> 4];
+        Voice v = this.voices[offset >>> 4];
 
         // suzuka 8 hours and final lap games read from here, expecting bit 6 to be an in-progress sample flag.
         // four trax also expects bit 4 high for some specific channels to make engine noises to work properly
@@ -176,7 +178,7 @@ public class C219 {
 
         this.regs[offset] = data;
         if (offset < 0x100) {
-            Voice v = this.voices[offset >> 4];
+            Voice v = this.voices[offset >>> 4];
 
             if ((offset & 0xf) == 0x5) {
                 if ((data & C219_MODE_KEYON) != 0) {
@@ -211,7 +213,7 @@ public class C219 {
         v.lastSample = v.sample;
 
         if ((vReg.mode & C219_MODE_NOISE) != 0) {
-            this.random = (short) ((this.random >> 1) ^ ((-(this.random & 1)) & 0xfff6));
+            this.random = (short) ((this.random >>> 1) ^ ((-(this.random & 1)) & 0xfff6));
             v.sample = this.random;
         } else {
             int addr = findSample(v.pos, vid);
@@ -266,8 +268,8 @@ public class C219 {
                 }
             }
 
-            outputs[0][i] += (out[0] >> 9);
-            outputs[1][i] += (out[1] >> 9);
+            outputs[0][i] += (out[0] >>> 9);
+            outputs[1][i] += (out[1] >>> 9);
         }
     }
 
@@ -345,6 +347,6 @@ Debug.println("rom: " + length);
 
     public void setMuteMask(int muteMask) {
         for (int curChn = 0; curChn < MAX_VOICE; curChn++)
-            this.voices[curChn].muted = (muteMask >> curChn) & 0x01;
+            this.voices[curChn].muted = (muteMask >>> curChn) & 0x01;
     }
 }
