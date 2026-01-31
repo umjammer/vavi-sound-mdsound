@@ -10,6 +10,7 @@ import mdsound.chips.Nes;
 import mdsound.np.NpNesFds;
 
 
+// TODO currently mdplayer doesn't use this.
 public class NesInst extends Instrument.BaseInstrument {
 
     public static final byte MAX_CHIPS = 0x02;

@@ -352,7 +352,7 @@ int startClocks = counter[1];
         while (this.counter[1] < 0) {
             // tick the noise generator
             int feedback = (this.noise & 1) ^ (((this.noise & this.noiseTap) != 0) ? 1 : 0);
-            this.noise = (this.noise >> 1) | (feedback << 14);
+            this.noise = (this.noise >>> 1) | (feedback << 14);
 
             last = (this.noise & 0x4000) != 0 ? 0 : env;
             accum += (last * this.nFreq);
