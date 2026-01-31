@@ -5,7 +5,7 @@
 
 # vavi-sound-mdsound
 
-<img alt="logo" src="src/test/resources/guitar_duke.png" width="160" />
+<img alt="logo" src="src/test/resources/duke_guitar.png" width="160" />
 
 🪇 Video Game Music Emulation Library
 
@@ -65,13 +65,11 @@ this is a fork of [MDSound](https://github.com/kuma4649/MDSound)
 | MultiPcm              |             | PCM   |   ✅    |                          | Daytona_USA_(Sega_Model_2)/03 The King of Speed.vgz                                                                          |
 | WSwan                 |             | PCM   |   ✅    |                          | Final_Fantasy_(Bandai_WonderSwan_Color)/02 Prelude.vgz                                                                       |
 | X1_010                |             | PCM   |   ✅    |                          | Cal.50_Caliber_Fifty_(Seta_1)/02 Area 1.vgz                                                                                  |
-| NES_DMC               |             | PCM   |        | nes                      |                                                                                                                              |
 | PPZ8                  | PPZ8        | PCM   |        | pmd                      |                                                                                                                              |
 | PPS                   | PPS         | PCM   |        | pmd                      |                                                                                                                              |
 | PC-9801-86            | P86         | PCM   |        | pmd                      |                                                                                                                              |
 | HuC6280 (has FM-like) | HuC6        | WTS   |   ✅    |                          | Street_Fighter_II'_-_Champion_Edition_(TG-16)/04 Ryu.vgz                                                                     |
 | K051649               | K051        | WTS   |   ✅    |                          | opllssg_demo_vgm/GIMICNRT.vgm                                                                                                |
-| NES_FDS (has FM-like) |             | WTS   |        | nes                      |                                                                                                                              |
 | SN76489               | DSCG        | PSG   |   ✅    | nicola                   | Thexder_(IBM_PCjr,_Tandy_1000)/02 Thexder Theme \[IBM PCjr].vgz                                                              |
 | SN76496               |             | PSG   |   ✅    | nicola                   | ditto                                                                                                                        |
 | AY8910                |             | PSG   |   ✅    | fmgen                    | opllssg_demo_vgm/CS3.vgm                                                                                                     |
@@ -79,13 +77,17 @@ this is a fork of [MDSound](https://github.com/kuma4649/MDSound)
 | Ga20                  |             | PSG?  |   ✅    | mame                     | R-Type_Leo_(Irem_M92)/02 Paradise Planet (Area 1).vgz                                                                        |
 | Pokey                 |             | PSG?  |   ✅    | mame                     | Xevious_(Atari_5200)/01 Start ~ Main BGM.vgz                                                                                 |
 | Saa1099               |             | PSG?  |   ✅    | mame                     | Creative_Music_System_Demo_Songs_(IBM_PC_XT_AT)/02 Top of the World (The Carpenters, A Song for You).vgz                     |
-| NES_APU               |             | PSG   |   🚧   | nes                      |                                                                                                                              |
 | YM2609                | OPNA2       | Other |        | fmvgen                   |                                                                                                                              |
 | AY8910-2              | PSG2        | Other |        | fmvgen                   |                                                                                                                              |
-| Dmg                   |             |       |   ✅    | gb                       | Beatmania_GB2_Gatcha_Mix_(Game_Boy,_Color)/11 Friends.vgz                                                                    |
-| Vrc6                  |             |       |        | nes                      |                                                                                                                              |
+| NES_APU               |             | PSG   |   ✅*   | np                       | (*) not work in vgm                                                                                                          |
+| NES_DMC               |             | PCM   |   ✅    | np                       |                                                                                                                              |
+| NES_FDS (has FM-like) |             | WTS   |        | np                       |                                                                                                                              |
+| N106                  |             | WTS   |   ✅    | np                       | Thunder Force IV - Sand Hell [5-N163].nsf                                                                                    |
+| Vrc6                  |             |       |        | np                       |                                                                                                                              |
 | YM2149                |             | PSG   |   🥚   | np:okaxaki               |                                                                                                                              |
 | YM2143                | OPLL        | FM    |   🥚   | np:okaxaki               |                                                                                                                              |
+| Vrc7                  |             |       |        | nes                      |                                                                                                                              |
+| Dmg                   |             |       |   ✅    | gb                       | Beatmania_GB2_Gatcha_Mix_(Game_Boy,_Color)/11 Friends.vgz                                                                    |
 | Gigatron              |             |       |        | zgm                      |                                                                                                                              |
 | MPCMPP                |             | PCM   |        | mnd                      |                                                                                                                              |
 | PCM8PP                |             | PCM   |   ✅*   | mxdrv                    | (*) applyed an original fix                                                                                                  |
