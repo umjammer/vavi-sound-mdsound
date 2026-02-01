@@ -1,5 +1,7 @@
 package mdsound.instrument;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -9,9 +11,13 @@ import mdsound.Instrument;
 import mdsound.chips.Nes;
 import mdsound.np.NpNesFds;
 
+import static mdsound.MDSound.Chip.MAIN_TAG;
 
-// TODO currently mdplayer doesn't use this.
-public class NesInst extends Instrument.BaseInstrument {
+
+// nes for vgm
+public class NesInst extends Instrument.BaseInstrument implements Instrument.PcmEnabled {
+
+    private static final Logger logger = System.getLogger(NesInst.class.getName());
 
     public static final byte MAX_CHIPS = 0x02;
 
@@ -59,6 +65,7 @@ public class NesInst extends Instrument.BaseInstrument {
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
+//logger.log(Level.TRACE, "adr: %02x, %02x".formatted(adr, data));
         chips[chipId].write(adr, data);
         return 0;
     }
@@ -107,8 +114,11 @@ public class NesInst extends Instrument.BaseInstrument {
         chips[chipId].setMuteMask(mask[chipId]);
     }
 
-    public synchronized void writeRam(int chipId, int dataStart, int dataLength, byte[] ramData, int ramDataStartAdr) {
-        chips[chipId].writeRam(dataStart, dataLength, ramData, ramDataStartAdr);
+    @Override
+    public void writePcm(int chipId, byte[] buf, int offset, int length, Object... extras) {
+        int dataStart = (int) extras[0];
+logger.log(Level.DEBUG, "PCM: offset: " + offset + ", length: " + length + ", dataStart: " + dataStart);
+        chips[chipId].writeRam(dataStart, length, buf, offset);
     }
 
     public synchronized int[] readApu(int chipId) {
@@ -123,9 +133,15 @@ public class NesInst extends Instrument.BaseInstrument {
         return chips[chipId].readDds();
     }
 
-    // TODO automatic wired, use annotation?
     public void setVolume(String tag, int vol, double ignored) {
-        for (Nes info : chips) info.setVolumeAPU(vol);
+        for (Nes chip : chips) {
+logger.log(Level.DEBUG, "tag: " + tag + ", vol: " + vol);
+            switch (tag) {
+                case MAIN_TAG -> chip.setVolumeAPU(vol);
+                case "DMC" -> chip.setVolumeDMC(vol);
+                case "FDS" -> chip.setVolumeFDS(vol);
+            }
+        }
     }
 
     // ----
@@ -159,7 +175,7 @@ public class NesInst extends Instrument.BaseInstrument {
             return result;
         }
         private void setDMCVolume(int db) {
-            for (Nes info : chips) info.setVolumeDMC(db);
+            for (Nes chip : chips) chip.setVolumeDMC(db);
         }
 
         // TODO automatic wired, use annotation?
@@ -177,7 +193,7 @@ public class NesInst extends Instrument.BaseInstrument {
             return result;
         }
         private void setFDSVolume(int db) {
-            for (Nes info : chips) info.setVolumeFDS(db);
+            for (Nes chip : chips) chip.setVolumeFDS(db);
         }
 
         // TODO automatic wired, use annotation?

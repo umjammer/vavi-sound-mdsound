@@ -8,6 +8,7 @@ package mdsound.np;
 
 import java.util.Random;
 
+import mdsound.np.Device.Counter;
 import mdsound.np.cpu.Km6502;
 import mdsound.np.cpu.Km6502.IRQDevices;
 import vavi.util.Debug;
@@ -559,6 +560,7 @@ if (startClocks >= 0) { assert(accumClocks == clocks); } // these should be equa
         return 2;
     }
 
+    // w/o tick
     public int renderOrg(int[] b) {
         //int clocks;
 

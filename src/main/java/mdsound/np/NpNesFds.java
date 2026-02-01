@@ -8,6 +8,8 @@ package mdsound.np;
 
 import java.util.Arrays;
 
+import mdsound.np.Device.Counter;
+
 
 /**
  * NpNesFds.
@@ -306,6 +308,7 @@ public class NpNesFds {
         return 2;
     }
 
+    // w/o tick
     public int renderOrg(int[] b) {
 
         int v = this.fOut * MASTER[this.masterVol] >> 8;

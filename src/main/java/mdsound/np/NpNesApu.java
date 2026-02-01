@@ -44,6 +44,8 @@
 
 package mdsound.np;
 
+import mdsound.np.Device.Counter;
+
 
 /**
  * NES 2A03
@@ -234,6 +236,7 @@ public class NpNesApu {
 
     // The amplitude of the generated waveform is 0-8191.
     public int render(int[] b) {
+
         this.tickCount.iup();
         tick((this.tickCount.value() - this.tickLast) & 0xff);
         this.tickLast = this.tickCount.value();
@@ -273,6 +276,7 @@ public class NpNesApu {
         return 2;
     }
 
+    // w/o tick
     public int renderOrg(int[] b) {
         this.out[0] = (this.mask & 1) != 0 ? 0 : this.out[0];
         this.out[1] = (this.mask & 2) != 0 ? 0 : this.out[1];
