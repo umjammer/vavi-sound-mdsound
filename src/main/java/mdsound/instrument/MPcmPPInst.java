@@ -107,6 +107,10 @@ public class MPcmPPInst extends BaseInstrument {
         chips[chipId].setPan(ch, pan);
     }
 
+    public void setVolTable(int chipId, int sel, byte[] vtbl) {
+        chips[chipId].setVolTable(sel, null);
+    }
+
     public void setVolTableZms(int chipId, int sel, int[] vtbl) {
         chips[chipId].setVolTableZms(sel, vtbl);
     }
