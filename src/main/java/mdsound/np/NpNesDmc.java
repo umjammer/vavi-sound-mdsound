@@ -8,6 +8,7 @@ package mdsound.np;
 
 import java.util.Random;
 
+import mdsound.np.Device.Counter;
 import mdsound.np.cpu.Km6502;
 import mdsound.np.cpu.Km6502.IRQDevices;
 import vavi.util.Debug;
@@ -352,7 +353,7 @@ int startClocks = counter[1];
         while (this.counter[1] < 0) {
             // tick the noise generator
             int feedback = (this.noise & 1) ^ (((this.noise & this.noiseTap) != 0) ? 1 : 0);
-            this.noise = (this.noise >> 1) | (feedback << 14);
+            this.noise = (this.noise >>> 1) | (feedback << 14);
 
             last = (this.noise & 0x4000) != 0 ? 0 : env;
             accum += (last * this.nFreq);
@@ -559,6 +560,7 @@ if (startClocks >= 0) { assert(accumClocks == clocks); } // these should be equa
         return 2;
     }
 
+    // w/o tick
     public int renderOrg(int[] b) {
         //int clocks;
 

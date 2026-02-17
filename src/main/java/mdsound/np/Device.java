@@ -212,30 +212,30 @@ public interface Device {
             return false;
         }
     }
-}
 
-class Counter {
-    // Note: For increased speed, I'll inline all of NSFPlay's Counter member functions.
-    private static final int COUNTER_SHIFT = 24;
+    class Counter {
+        // Note: For increased speed, I'll inline all of NSFPlay's Counter member functions.
+        private static final int COUNTER_SHIFT = 24;
 
-    public double ratio;
-    public long val, step;
+        public double ratio;
+        public long val, step;
 
-    void setCycle(int s) {
-        this.step = (long) (this.ratio / (s + 1));
-    }
+        void setCycle(int s) {
+            this.step = (long) (this.ratio / (s + 1));
+        }
 
-    void iup() {
-        this.val += this.step;
-    }
+        void iup() {
+            this.val += this.step;
+        }
 
-    long value() {
-        return this.val >> COUNTER_SHIFT;
-    }
+        long value() {
+            return this.val >> COUNTER_SHIFT;
+        }
 
-    void init(double clk, double rate) {
-        this.ratio = (1 << COUNTER_SHIFT) * (1.0 * clk / rate);
-        this.step = (long) (this.ratio + 0.5);
-        this.val = 0;
+        void init(double clk, double rate) {
+            this.ratio = (1 << COUNTER_SHIFT) * (1.0 * clk / rate);
+            this.step = (long) (this.ratio + 0.5);
+            this.val = 0;
+        }
     }
 }

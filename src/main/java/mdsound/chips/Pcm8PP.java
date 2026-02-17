@@ -1,6 +1,5 @@
 package mdsound.chips;
 
-
 import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
 
@@ -33,6 +32,7 @@ public class Pcm8PP {
         private int len = 0;
         private int endAdrs = 0;
         private double freq = 0;
+        private double freqPerSampleRate = 0;
         private int outs = 0;
         private int type = 0;
         private int volume = 0;
@@ -180,38 +180,21 @@ logger.log(Level.INFO, "sampleRate: " + sampleRate);
             outputs[0][i] = 0;
             outputs[1][i] = 0;
 
-            for (int c = 0; c < ch.length; c++) {
+            for (Channel channel : ch) {
                 // If not, proceed to process the next channel
-                if (!ch[c].play) continue;
+                if (!channel.play) continue;
 
-                Channel st = ch[c];
-                int valL = 0;
-                int valR = 0;
-
-                if (st.pcmKind < 7) {
+                Channel st = channel;
+                int valL;
+                int valR;
+                switch (st.pcmKind) {
                     // Processing of pcm8 (existing)
-                    if (st.pcmKind == 5) { // 16bitPCM
-                        if (mem.length <= st.adrsPtr) valL = 0;
-                        else valL = (short) (((mem[st.adrsPtr] & 0xff) << 8) + (mem[st.adrsPtr + 1] & 0xff));
-                        //pcm16_2pcm(st, valL);
-                        //st.outPcm = ((st.inpPcm << 9) - (st.inpPcmPrev << 9) + 459 * st.outPcm) >> 9;
-                        //st.inpPcmPrev = st.inpPcm;
-                        // Volume Reflection
-                        valL = valL * st.volume;
-                        valL = valL >> 3; // 3 sloppy
-                        valR = valL;
-                    } else if (st.pcmKind == 6) { // 8bitPCM
-                        if (mem.length <= st.adrsPtr) valL = 0;
-                        else valL = mem[st.adrsPtr] & 0xff;
-                        //pcm16_2pcm(st,valL);
-                        //st.outPcm = ((st.inpPcm << 9) - (st.inpPcmPrev << 9) + 459 * st.outPcm) >> 9;
-                        //st.inpPcmPrev = st.inpPcm;
-                        // Volume Reflection
-                        valL = valL * st.volume;
-                        valL <<= 5;
-                        valL = valL >> 3; // 3 sloppy
-                        valR = valL;
-                    } else {
+                    case 0:
+                    case 1:
+                    case 2:
+                    case 3:
+                    case 4:
+                        // ADPCM mono
                         if (st.adpcmUpdate) {
                             st.adpcmUpdate = false;
                             if (!st.n1DataFlag) {
@@ -226,46 +209,73 @@ logger.log(Level.INFO, "sampleRate: " + sampleRate);
                             st.outPcm = ((st.inpPcm << 9) - (st.inpPcmPrev << 9) + 459 * st.outPcm) >> 9;
                             st.inpPcmPrev = st.inpPcm;
                         }
-                        valR = valL = ((st.outPcm * st.volume) >> 8); // >> 4);
-                    }
-                } else {
-                    // Processing of pcm8pp
-
-                    // Audio data processing
-                    if (mem.length <= st.adrsPtr) valL = 0;
-                    else valL = mem[st.adrsPtr];
-                    if (st.type == 2) {
-                        if (mem.length <= st.adrsPtr + 1) valL = 0;
-                        else valL = (short) (((valL & 0xff) << 8) + (mem[st.adrsPtr + 1] & 0xff));
-                    }
-
-                    // Volume Reflection
-                    valL = valL * st.volume;
-                    if (st.type != 2) {
-                        valL <<= 5;
-                        valL = valL >> 3; // 3 sloppy
-                    } else {
-                        valL = valL >> 7; // Correct scale for 16-bit (80/128 ~ 0.6)
-                    }
-
-                    if (st.outs == 1) {
+                        valR = valL = ((st.outPcm * st.volume) >> 8);
+                        break;
+                    case 5:
+                        // 16bit signed PCM mono
+                        if (mem.length <= st.adrsPtr) valL = 0;
+                        else valL = (short) (((mem[st.adrsPtr] & 0xff) << 8) + (mem[st.adrsPtr + 1] & 0xff));
+                        // Volume Reflection
+                        valL = valL * st.volume;
+                        valL >>= 3; // 3 sloppy
                         valR = valL;
-                    } else {
-                        if (st.type != 2) {
-                            if (mem.length <= st.adrsPtr + 1) valR = 0;
-                            else valR = mem[st.adrsPtr + 1];
-                            // Volume Reflection
-                            valR = valR * st.volume;
-                            valR <<= 5;
-                            valR = valR >> 3;
-                        } else {
-                            if (mem.length <= st.adrsPtr + 2) valR = 0;
-                            else valR = (short) (((mem[st.adrsPtr + 2] & 0xff) << 8) + (mem[st.adrsPtr + 3] & 0xff));
-                            // Volume Reflection
-                            valR = valR * st.volume;
-                            valR = valR >> 7;
+                        break;
+                    case 6: // 8bit signed PCM mono
+                        if (mem.length <= st.adrsPtr) valL = 0;
+                        else valL = mem[st.adrsPtr] & 0xff;
+                        // Volume Reflection
+                        valL = valL * st.volume;
+//                        valL <<= 5;
+//                        valL = valL >> 3; // 3 sloppy
+                        valL <<= 2;
+                        valR = valL;
+                        break;
+                    // 7以降は新規実装
+                    default:
+                        // Processing of pcm8pp
+                        switch (st.type) {
+                            case 2:
+                                // Audio data processing
+//                                if (mem.length <= st.adrsPtr) valL = 0;
+//                                else valL = mem[st.adrsPtr];
+
+                                if (mem.length <= st.adrsPtr + 1) valL = 0;
+                                else valL = (short) (((mem[st.adrsPtr] & 0xff) << 8) + (mem[st.adrsPtr + 1] & 0xff));
+
+                                // Volume Reflection
+                                valL = valL * st.volume;
+                                valL >>= 3; // 3 sloppy
+                                if (st.outs == 1) {
+                                    valR = valL;
+                                } else {
+                                    if (mem.length <= st.adrsPtr + 2) valR = 0;
+                                    else valR = (short) (((mem[st.adrsPtr + 2] & 0xff) << 8) + (mem[st.adrsPtr + 3] & 0xff));
+                                    // Volume Reflection
+                                    valR *= st.volume;
+                                    valR >>= 3;
+                                }
+                                break;
+                            default:
+                                // Audio data processing
+                                if (mem.length <= st.adrsPtr) valL = 0;
+                                else valL = /* signed */ mem[st.adrsPtr];
+
+                                // Volume Reflection
+                                valL *= st.volume;
+                                valL <<= 2;
+                                if (st.outs == 1) {
+                                    valR = valL;
+                                } else {
+                                    if (mem.length <= st.adrsPtr + 1) valR = 0;
+                                    else
+                                        valR = /* signed */ mem[st.adrsPtr + 1];
+                                    // Volume Reflection
+                                    valR *= st.volume;
+                                    valR <<= 2;
+                                }
+                                break;
                         }
-                    }
+                        break;
                 }
 
                 // Store in buffer (add)
@@ -275,8 +285,8 @@ logger.log(Level.INFO, "sampleRate: " + sampleRate);
                 }
 
                 // Pointer movement
-                double step = st.freq / sampleRate;
-                st.step += step;
+                st.step += st.freqPerSampleRate;
+
                 while (st.step >= 1.0) {
                     if (st.type != 0) {
                         st.adrsPtr += st.type;

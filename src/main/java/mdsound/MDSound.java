@@ -118,6 +118,7 @@ public class MDSound {
                 logger.log(Level.WARNING, "no such tag: " + tag, new Exception("no such tag: " + tag + ", instrument: " + instrument.getClass().getName()));
         }
 
+        // TODO used only nes
         public SetVolume mainWrappedSetVolume(SetVolume setVolume) {
             return (t, i, d) -> {
                 setDefaultVolume(t, i, d);
