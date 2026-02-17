@@ -107,7 +107,18 @@
       <groupId>com.github.umjammer</groupId> <!-- com.github.umjammer / net.sourceforge.javamod -->
       <artifactId>JavaMod</artifactId>
       <version>3.9.13</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.github.umjammer</groupId> <!-- because of fuckin' jitpack -->
+          <artifactId>vavi-sound-emu</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
+<dependency>
+  <groupId>com.github.umjammer</groupId>
+  <artifactId>vavi-sound-emu</artifactId>
+  <version>0.0.9</version>
+</dependency> <!-- because of fuckin' jitpack -->
 
     <dependency>
       <groupId>org.junit.jupiter</groupId>
