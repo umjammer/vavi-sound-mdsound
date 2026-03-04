@@ -8,6 +8,7 @@ import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -175,6 +176,7 @@ public class MDSound {
 
     /** */
     public synchronized void init(int samplingRate, int samplingBuffer, List<Chip> chips) {
+notContains.clear();
         if (chips == null) {
 logger.log(Level.WARNING, "no chips");
             return;
@@ -276,9 +278,14 @@ logger.log(Level.TRACE, "[%d] %+04d, %+04d".formatted(i, a[0], b[0]));
         write(i, 0, chipId, port, adr, data);
     }
 
+Set<Class<? extends Instrument>> notContains = new HashSet<>();
+
     public synchronized void write(Class<? extends Instrument> i, int chipIndex, int chipId, int port, int adr, int data) {
         if (!instruments.containsKey(i)) {
-logger.log(Level.WARNING, "not contains: " + i);
+if (!notContains.contains(i)) {
+ notContains.add(i);
+ logger.log(Level.WARNING, "not contains: " + i);
+}
             return;
         }
 

@@ -140,10 +140,15 @@ static int INTERVAL = 1024;
 
     private int mul;
 
+boolean noInst = false;
+
     /** */
     public void resample(int[][] retSample, int length) {
         if (insts == null || insts.isEmpty()) {
-logger.log(Level.WARNING, "no insts");
+if (!noInst) {
+ logger.log(Level.WARNING, "no insts");
+ noInst = true;
+}
             return;
         }
         if (length > tempSample[0].length) {
