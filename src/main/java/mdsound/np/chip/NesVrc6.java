@@ -25,27 +25,27 @@ public class NesVrc6 implements SoundChip {
     public static final int DEFAULT_RATE = 44100;
 
     /** frequency divider */
-    protected int[] counter = new int[3];
+    protected final int[] counter = new int[3];
     /** phase counter */
-    protected int[] phase = new int[3];
+    protected final int[] phase = new int[3];
     /** adjusted frequency */
-    protected int[] freq2 = new int[3];
+    protected final int[] freq2 = new int[3];
     /** saw 14-stage counter */
     protected int count14;
 
     protected int mask;
     /** stereo mix */
-    protected int[][] sm = {new int[3], new int[3]};
-    protected int[] duty = new int[2];
-    protected int[] volume = new int[3];
-    protected int[] enable = new int[3];
-    protected int[] gate = new int[3];
-    protected int[] freq = new int[3];
+    protected final int[][] sm = {new int[3], new int[3]};
+    protected final int[] duty = new int[2];
+    protected final int[] volume = new int[3];
+    protected final int[] enable = new int[3];
+    protected final int[] gate = new int[3];
+    protected final int[] freq = new int[3];
     protected boolean halt;
     protected int freqShift;
     public double clock, rate;
-    protected int[] out = new int[3];
-    protected BasicTrackInfo[] trkInfo = new BasicTrackInfo[3];
+    protected final int[] out = new int[3];
+    protected final BasicTrackInfo[] trkInfo = new BasicTrackInfo[3];
 
     public NesVrc6() {
         setClock(DEFAULT_CLOCK);

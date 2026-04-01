@@ -18,7 +18,7 @@ import mdsound.np.NpNesDmc;
 
 public class NesDmc implements SoundChip {
 
-    public NpNesDmc dmc;
+    public final NpNesDmc dmc;
 
     public NesDmc() {
         dmc = new NpNesDmc();

@@ -272,8 +272,8 @@ public class Fmgen {
 
             // Operator
 
-            static int[] sineTable = new int[1024];
-            static int[] clTable = new int[FM_CLENTS];
+            static final int[] sineTable = new int[1024];
+            static final int[] clTable = new int[FM_CLENTS];
 
             /** OP type (MPcm, N...) */
             public Chip.OpType type;
@@ -948,7 +948,7 @@ public class Fmgen {
             private int amL;
             private int pmL;
             private int pmV;
-            public OpType opType;
+            public final OpType opType;
             private final int[][] mulTable = {new int[16], new int[16], new int[16], new int[16]};
 
             /**
@@ -1044,7 +1044,7 @@ public class Fmgen {
         private int algo;
         private Chip chip;
 
-        Operator[] op = new Operator[] {
+        final Operator[] op = new Operator[] {
                 new Operator(), new Operator(), new Operator(), new Operator()
         };
 

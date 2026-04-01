@@ -43,7 +43,7 @@ public class Op {
     };
 
     /** FM Modulation Input */
-    int[] inp = new int[1];
+    final int[] inp = new int[1];
     /** If it is the previous lfopitch value or CULC_DELTA_T value, recalculate DeltaT. */
     private int lfoPitch;
     /** current time (0 <= T < SIZESINTBL*PRECISION) */
@@ -585,7 +585,7 @@ public class Op {
 
         int lfoLevelAme = lfoLevel & ame;
         if ((this.lfoLevel != lfoLevelAme || lfoLevelReCalc) && IS_ZERO_CLOSS(sinBf, sin) != 0) {
-            alpha = global.ALPHATBL[global.ALPHAZERO + tl - xrEl - lfoLevelAme];
+            alpha = global.ALPHATBL[Global.ALPHAZERO + tl - xrEl - lfoLevelAme];
             this.lfoLevel = lfoLevelAme;
             lfoLevelReCalc = false;
         }

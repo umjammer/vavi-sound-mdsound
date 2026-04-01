@@ -52,12 +52,12 @@ public class Msm5232 {
 
     // internal state
 
-    private VOICE[] m_voi = new VOICE[8];
+    private final VOICE[] m_voi = new VOICE[8];
 
-    private int[] m_EN_out16 = new int[2]; // enable 16' output masks for both groups (0-disabled ; ~0 -enabled)
-    private int[] m_EN_out8 = new int[2];  // enable 8'  output masks
-    private int[] m_EN_out4 = new int[2];  // enable 4'  output masks
-    private int[] m_EN_out2 = new int[2];  // enable 2'  output masks
+    private final int[] m_EN_out16 = new int[2]; // enable 16' output masks for both groups (0-disabled ; ~0 -enabled)
+    private final int[] m_EN_out8 = new int[2];  // enable 8'  output masks
+    private final int[] m_EN_out4 = new int[2];  // enable 4'  output masks
+    private final int[] m_EN_out2 = new int[2];  // enable 2'  output masks
 
     private int m_noise_cnt;
     private int m_noise_step;
@@ -67,8 +67,8 @@ public class Msm5232 {
     private int m_UpdateStep;
 
     // rate tables
-    private double[] m_ar_tbl = new double[8];
-    private double[] m_dr_tbl = new double[16];
+    private final double[] m_ar_tbl = new double[8];
+    private final double[] m_dr_tbl = new double[16];
 
     private int m_control1;
     private int m_control2;
@@ -78,7 +78,7 @@ public class Msm5232 {
     private int m_chip_clock;   // chip clock in Hz
     private int m_rate;         // sample rate in Hz
 
-    private double[] m_external_capacitance = new double[8]; // in Farads, eg 0.39e-6 = 0.36 uF (microFarads)
+    private final double[] m_external_capacitance = new double[8]; // in Farads, eg 0.39e-6 = 0.36 uF (microFarads)
 
     private final int CLOCK_RATE_DIVIDER = 16;
 
@@ -146,7 +146,7 @@ public class Msm5232 {
         return (short) (counter | (bindiv << 9));
     }
 
-    private short[] MSM5232_ROM = new short[88];
+    private final short[] MSM5232_ROM = new short[88];
 
     private void initMSM5232_ROM() {
         // higher values are Programmable Counter data (9 bits)
@@ -331,7 +331,7 @@ public class Msm5232 {
     }
 //#undef ROM
 
-    private int STEP_SH = (16);    /* step calculations accuracy */
+    private final int STEP_SH = (16);    /* step calculations accuracy */
 
     /*
      * Resistance values are guesswork, default capacitance is mentioned in the datasheets

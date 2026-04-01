@@ -23,12 +23,12 @@ public class NesMmc5 implements SoundChip {
         NONLINEAR_MIXER, PHASE_REFRESH, END
     }
 
-    protected int[] option = new int[OPT.END.ordinal()];
+    protected final int[] option = new int[OPT.END.ordinal()];
     protected int mask;
-    protected int[][] sm = {new int[3], new int[3]}; // stereo panning
-    protected byte[] ram = new byte[0x6000 - 0x5c00];
-    protected byte[] reg = new byte[8];
-    protected int[] mReg = new int[2];
+    protected final int[][] sm = {new int[3], new int[3]}; // stereo panning
+    protected final byte[] ram = new byte[0x6000 - 0x5c00];
+    protected final byte[] reg = new byte[8];
+    protected final int[] mReg = new int[2];
     /** PCM channel */
     public int pcm;
     /** PCM channel */
@@ -37,33 +37,33 @@ public class NesMmc5 implements SoundChip {
     protected Km6502 cpu;
 
     /** frequency divider */
-    protected int[] sCounter = new int[2];
+    protected final int[] sCounter = new int[2];
     /** phase counter */
-    protected int[] sPhase = new int[2];
+    protected final int[] sPhase = new int[2];
 
-    protected int[] duty = new int[2];
-    protected int[] volume = new int[2];
-    protected int[] freq = new int[2];
-    protected int[] out = new int[3];
-    protected boolean[] enable = new boolean[2];
+    protected final int[] duty = new int[2];
+    protected final int[] volume = new int[2];
+    protected final int[] freq = new int[2];
+    protected final int[] out = new int[3];
+    protected final boolean[] enable = new boolean[2];
 
     // Envelope Enabled Flag
-    protected boolean[] envelopeDisable = new boolean[2];
+    protected final boolean[] envelopeDisable = new boolean[2];
     // Envelope Loop
-    protected boolean[] envelopeLoop = new boolean[2];
-    protected boolean[] envelopeWrite = new boolean[2];
-    protected int[] envelopeDivPeriod = new int[2];
-    protected int[] envelopeDiv = new int[2];
-    protected int[] envelopeCounter = new int[2];
+    protected final boolean[] envelopeLoop = new boolean[2];
+    protected final boolean[] envelopeWrite = new boolean[2];
+    protected final int[] envelopeDivPeriod = new int[2];
+    protected final int[] envelopeDiv = new int[2];
+    protected final int[] envelopeCounter = new int[2];
 
-    protected int[] lengthCounter = new int[2];
+    protected final int[] lengthCounter = new int[2];
 
     protected int frameSequenceCount;
 
     protected double clock, rate;
-    protected int[] squareTable = new int[32];
-    protected int[] pcmTable = new int[256];
-    protected BasicTrackInfo[] trackInfo = new BasicTrackInfo[3];
+    protected final int[] squareTable = new int[32];
+    protected final int[] pcmTable = new int[256];
+    protected final BasicTrackInfo[] trackInfo = new BasicTrackInfo[3];
 
     public NesMmc5() {
         cpu = null;

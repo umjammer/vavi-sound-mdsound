@@ -67,7 +67,7 @@ public class AdpcmA {
         }
     }
 
-    public Channel[] channel = new Channel[] {
+    public final Channel[] channel = new Channel[] {
             new Channel(), new Channel(), new Channel(),
             new Channel(), new Channel(), new Channel()
     };
@@ -82,7 +82,7 @@ public class AdpcmA {
     public byte key;
     public int step;
     public byte[] reg = new byte[32];
-    public static short[] jediTable = new short[(48 + 1) * 16];
+    public static final short[] jediTable = new short[(48 + 1) * 16];
 
     private final Fmvgen.Effects effects;
     private final int revStartCh;

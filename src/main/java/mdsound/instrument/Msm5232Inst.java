@@ -7,7 +7,6 @@
 package mdsound.instrument;
 
 import mdsound.Instrument.BaseInstrument;
-import mdsound.chips.MPcmPP;
 import mdsound.chips.Msm5232;
 
 

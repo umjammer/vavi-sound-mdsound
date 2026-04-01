@@ -40,9 +40,11 @@ public class Compressor {
          * A low-pass filter used to detect sound pressure
          * @see "https://vstcpp.wpblog.jp/?page_id=728"
          */
-        public Filter envfilterL, envfilterR;
+        public final Filter envfilterL;
+        public final Filter envfilterR;
         // Low-pass filter to avoid sudden volume changes
-        public Filter gainfilterL, gainfilterR;
+        public final Filter gainfilterL;
+        public final Filter gainfilterR;
 
         public float envFreq;
         public float envQ;

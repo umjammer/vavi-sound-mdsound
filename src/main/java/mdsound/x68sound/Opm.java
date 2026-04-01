@@ -40,7 +40,7 @@ public class Opm {
 //    typedef HRESULT(WINAPI C86CtlCreateInstance)(REFIID, LPVOID);
 //#endif
 
-    public String author;
+    public final String author;
 
     /** Operator 0-31 */
     private final Op[][] op = {
@@ -122,8 +122,8 @@ public class Opm {
     private Runnable opmIntProc;
 
 //    public double inpopmbuf_dummy;
-    private final short[] inpOpmBuf0 = new short[global.OPMLPF_COL * 2];
-    private final short[] InpOpmBuf1 = new short[global.OPMLPF_COL * 2];
+    private final short[] inpOpmBuf0 = new short[Global.OPMLPF_COL * 2];
+    private final short[] InpOpmBuf1 = new short[Global.OPMLPF_COL * 2];
     private int inpOpmIdx;
     private int opmLpfIdx;
     private short[][] opmLPFpBuf;
@@ -303,12 +303,12 @@ public class Opm {
                         inpOpmPrev2[0] = inpOpmPrev2[1] =
                                 outOpm[0] = outOpm[1] = 0;
 
-        for (int i = 0; i < global.OPMLPF_COL * 2; ++i) {
+        for (int i = 0; i < Global.OPMLPF_COL * 2; ++i) {
             inpOpmBuf0[i] = InpOpmBuf1[i] = 0;
         }
         inpOpmIdx = 0;
         opmLpfIdx = 0;
-        opmLPFpBuf = global.OPMLOWPASS;
+        opmLPFpBuf = Global.OPMLOWPASS;
         opmLPFpPtr = 0;
 
         opmHpfInp[0] = opmHpfInp[1] =
@@ -424,12 +424,12 @@ public class Opm {
         inpOpmPrev2[0] = inpOpmPrev2[1] =
         outOpm[0] = outOpm[1] = 0;
         {
-            for (int i = 0; i < global.OPMLPF_COL * 2; ++i) {
+            for (int i = 0; i < Global.OPMLPF_COL * 2; ++i) {
                 inpOpmBuf0[i] = InpOpmBuf1[i] = 0;
             }
             inpOpmIdx = 0;
             opmLpfIdx = 0;
-            opmLPFpBuf = global.OPMLOWPASS;
+            opmLPFpBuf = Global.OPMLOWPASS;
             opmLPFpPtr = 0;
         }
         opmHpfInp[0] = opmHpfInp[1] =
@@ -1426,8 +1426,8 @@ public class Opm {
             Global.firOpm(opmLPFpBuf[opmLPFpPtr], inpOpmBuf0, inpOpmIdx, InpOpmBuf1, inpOpmIdx, outOpm);
 
             opmLPFpPtr += 1;
-            if (opmLPFpPtr >= global.OPMLPF_ROW) {
-                opmLPFpBuf = global.OPMLOWPASS;
+            if (opmLPFpPtr >= Global.OPMLPF_ROW) {
+                opmLPFpBuf = Global.OPMLOWPASS;
                 opmLPFpPtr = 0;
             }
 
@@ -1473,8 +1473,8 @@ public class Opm {
 
     private final int[] out = new int[2];
     private final int[] outInpOpm = new int[2];
-    int[] lfoPitch = new int[8];
-    int[] lfoLevel = new int[8];
+    final int[] lfoPitch = new int[8];
+    final int[] lfoLevel = new int[8];
     int rate_b = 0;
     int rate2 = 0;
 

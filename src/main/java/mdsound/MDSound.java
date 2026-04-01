@@ -57,7 +57,7 @@ public class MDSound {
     private double volumeMul;
 
     /** view */
-    public VisWaveBuffer visWaveBuffer = new VisWaveBuffer();
+    public final VisWaveBuffer visWaveBuffer = new VisWaveBuffer();
 
     /** */
     public static class Chip {
@@ -69,7 +69,7 @@ public class MDSound {
 
         public Instrument instrument = null;
         public AdditionalUpdate additionalUpdate = null;
-        public Map<String, SetVolume> setVolumes = new HashMap<>();
+        public final Map<String, SetVolume> setVolumes = new HashMap<>();
 
         public static final String MAIN_TAG = "MAIN";
 
@@ -128,9 +128,9 @@ public class MDSound {
         }
 
         private void setDefaultVolume(String tag, int vol, double volumeMul) {
-            this.volume = Math.max(Math.min(vol, 20), -192);
+            this.volume = Math.clamp(vol, -192, 20);
             int n = (((int) (16384.0 * Math.pow(10.0, this.volume / 40.0)) * this.tVolumeBalance) >> 8);
-            this.tVolume = Math.max(Math.min((int) (n * volumeMul), Short.MAX_VALUE), Short.MIN_VALUE);
+            this.tVolume = Math.clamp((int) (n * volumeMul), Short.MIN_VALUE, Short.MAX_VALUE);
         }
 
         // default, 0x80, 1
@@ -278,7 +278,7 @@ logger.log(Level.TRACE, "[%d] %+04d, %+04d".formatted(i, a[0], b[0]));
         write(i, 0, chipId, port, adr, data);
     }
 
-Set<Class<? extends Instrument>> notContains = new HashSet<>();
+final Set<Class<? extends Instrument>> notContains = new HashSet<>();
 
     public synchronized void write(Class<? extends Instrument> i, int chipIndex, int chipId, int port, int adr, int data) {
         if (!instruments.containsKey(i)) {

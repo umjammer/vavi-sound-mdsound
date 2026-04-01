@@ -26,13 +26,13 @@ public class Fmvgen extends Fmgen {
     public static class Effects {
         private static final int MaxCh = 39;
 
-        public Reverb reverb;
-        public Distortion distortion;
-        public Chorus chorus;
-        public ReversePhase reversePhase;
-        public HPFLPF hpflpf;
-        public Compressor compressor;
-        public Eq3band ep3band;
+        public final Reverb reverb;
+        public final Distortion distortion;
+        public final Chorus chorus;
+        public final ReversePhase reversePhase;
+        public final HPFLPF hpflpf;
+        public final Compressor compressor;
+        public final Eq3band ep3band;
 
         public Effects(int clock) {
             reverb = new Reverb(clock, MaxCh);
@@ -207,7 +207,7 @@ public class Fmvgen extends Fmgen {
         };
 
         //int[] sineTable = new int[1024];
-        static int[] clTable = new int[FM_CLENTS];
+        static final int[] clTable = new int[FM_CLENTS];
 
         /** OP type (MPcm, N...) */
         public OpType type;
@@ -968,7 +968,7 @@ public class Fmvgen extends Fmgen {
         private static final int[] oAlg = new int[] {2, 1, 3, 0};
         private int ch = 0;
 
-        public Operator[] op = new Operator[] {
+        public final Operator[] op = new Operator[] {
                 new Operator(), new Operator(), new Operator(), new Operator()
         };
 

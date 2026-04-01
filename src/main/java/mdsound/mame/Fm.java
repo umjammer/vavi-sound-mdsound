@@ -530,13 +530,13 @@ public class Fm {
         private static class _3Slot {
 
             /** fNum3,blk3: calculated */
-            private int[] fc = new int[3];
+            private final int[] fc = new int[3];
             /** freq3 latch */
             private int fnH;
             /** key code */
-            private int[] kCode = new int[3];
+            private final int[] kCode = new int[3];
             /** current fNum value for this slot (can be different between slots of one channel in 3slot mode) */
-            private int[] blockFNum = new int[3];
+            private final int[] blockFNum = new int[3];
         }
 
         private static class Channel {
@@ -955,14 +955,14 @@ public class Fm {
             }
 
             /** four SLOTs (operators) */
-            private Slot[] slots = new Slot[4];
+            private final Slot[] slots = new Slot[4];
 
             /** algorithm */
             private int ALGO;
             /** feedback shift */
             private int FB;
             /** op1 output for feedback */
-            private int[] op1Out = new int[2];
+            private final int[] op1Out = new int[2];
 
             /** SLOT1 output pointer */
             private int[] connect1;
@@ -1091,7 +1091,7 @@ public class Fm {
             // local timetables
 
             /** DeTune table */
-            public int[][] dt_tab = new int[][] {
+            public final int[][] dt_tab = new int[][] {
                     new int[32], new int[32], new int[32], new int[32],
                     new int[32], new int[32], new int[32], new int[32]};
 
@@ -1268,7 +1268,7 @@ public class Fm {
         /** pointer of CH */
         public Channel[] pCh;
         /** Fm channels output masks (0xffffffff = enable) */
-        public int[] pan = new int[6 * 2];
+        public final int[] pan = new int[6 * 2];
 
         /** Global envelope generator counter */
         public int egCnt;
@@ -1283,7 +1283,7 @@ public class Fm {
         // but LFO works with one more bit of a precision so we really need 4096 elements 
 
         /** fnumber.increment counter */
-        public int[] fnTable = new int[4096];
+        public final int[] fnTable = new int[4096];
         /** maximal phase increment (used for phase overflow) */
         public int fnMax;
 
@@ -1298,7 +1298,7 @@ public class Fm {
         public int lfoInc;
 
         /** LFO FREQ table */
-        public int[] lfo_freq = new int[8];
+        public final int[] lfo_freq = new int[8];
 
         /** Phase Modulation input for operators 2,3,4 */
         public int m2, c1, c2;
@@ -1306,12 +1306,12 @@ public class Fm {
         public int mem;
 
         /** outputs of working channels */
-        public int[] outFm = new int[8];
+        public final int[] outFm = new int[8];
 
         /** channel output NONE,LEFT,RIGHT or CENTER for YM2608/YM2610 ADPCM */
-        public int[] outAdpcm = new int[4];
+        public final int[] outAdpcm = new int[4];
         /** channel output NONE,LEFT,RIGHT or CENTER for YM2608/YM2610 DeltaT */
-        public int[] outDelta = new int[4];
+        public final int[] outDelta = new int[4];
 
         /** register number to channel number , slot offset */
         private static int channel(int N) {
@@ -2168,11 +2168,11 @@ public class Fm {
     public static class YM2203 extends BaseChip {
 
         /** registers */
-        private int[] regs = new int[256];
+        private final int[] regs = new int[256];
         /** OPN state */
         private FM_OPN opn;
         /** channel state */
-        private Fm.FM_OPN.Channel[] ch = new Fm.FM_OPN.Channel[3];
+        private final Fm.FM_OPN.Channel[] ch = new Fm.FM_OPN.Channel[3];
 
         /** Generate samples for one of the YM2203s */
         public void updateOne(int[][] buffer, int length) {
@@ -3095,7 +3095,7 @@ public class Fm {
             };
 
             /** speedup purposes only */
-            private static int[] jedi_table = new int[49 * 16];
+            private static final int[] jedi_table = new int[49 * 16];
 
             static {
                 for (int step = 0; step < 49; step++) {
@@ -3237,11 +3237,11 @@ public class Fm {
         }
 
         /** registers */
-        int[] regs = new int[512];
+        final int[] regs = new int[512];
         /** OPN state */
         FM_OPN opn;
         /** channel state */
-        Fm.FM_OPN.Channel[] ch = new Fm.FM_OPN.Channel[6];
+        final Fm.FM_OPN.Channel[] ch = new Fm.FM_OPN.Channel[6];
         /** address line A1 */
         int addrA1;
 
@@ -3256,9 +3256,9 @@ public class Fm {
         /** adpcmA total level */
         int adpcmTL;
         /** adpcm channels */
-        AdpcmA[] adpcm = new AdpcmA[6];
+        final AdpcmA[] adpcm = new AdpcmA[6];
         /** registers */
-        private int[] adpcmReg = new int[0x30];
+        private final int[] adpcmReg = new int[0x30];
         int adpcmArrivedEndAddress;
         /** Delta-T ADPCM unit */
         YmDeltaT deltaT;
@@ -3705,7 +3705,7 @@ public class Fm {
 
             DeviceConfig.state_save_register_device_item(0, this.adpcmArrivedEndAddress);
             // rythm(AdpcmA) 
-            device.saveAdpcmAState(this.adpcm);
+            DeviceConfig.saveAdpcmAState(this.adpcm);
             // Delta-T ADPCM unit 
             this.deltaT.saveState(device);
         }
@@ -3962,7 +3962,7 @@ public class Fm {
             // address register1 
             DeviceConfig.state_save_register_device_item(0, this.addrA1);
             // rythm(AdpcmA) 
-            device.saveAdpcmAState(this.adpcm);
+            DeviceConfig.saveAdpcmAState(this.adpcm);
             // Delta-T ADPCM unit 
             this.deltaT.saveState(device);
         }

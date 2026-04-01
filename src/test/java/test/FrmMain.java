@@ -349,7 +349,7 @@ public class FrmMain extends JFrame {
     private JLabel label14;
     private JLabel lblDebug;
 
-    Program app;
+    final Program app;
 
     public FrmMain() {
         initializeComponent();
@@ -358,7 +358,7 @@ public class FrmMain extends JFrame {
     }
 
     static final String KEY_FILECHOOSER_DIRECTORY = "filechooser.directory";
-    static Preferences prefs = Preferences.userNodeForPackage(FrmMain.class);
+    static final Preferences prefs = Preferences.userNodeForPackage(FrmMain.class);
 
     private void btnRefClick(ActionEvent ev) {
 

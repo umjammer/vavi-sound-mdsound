@@ -1054,7 +1054,7 @@ public class Opl {
     private final int[] st = new int[2];
 
     /** Delta-T ADPCM unit (Y8950) */
-    public DeltaT deltaT = new DeltaT();
+    public final DeltaT deltaT = new DeltaT();
 
     // Keyboard and I/O ports interface
 

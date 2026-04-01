@@ -16,7 +16,7 @@ import mdsound.np.NpNesApu;
 
 public class NesApu implements SoundChip {
 
-    public NpNesApu apu;
+    public final NpNesApu apu;
 
     public NesApu() {
         apu = new NpNesApu();

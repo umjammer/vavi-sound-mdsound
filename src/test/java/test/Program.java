@@ -35,7 +35,7 @@ public class Program {
     private static final int SamplingRate = 44100;
     private static final int SamplingBuffer = 1024 * 8;
     private final short[] frames = new short[SamplingBuffer * 4];
-    MDSound mds;
+    final MDSound mds;
 
     private SourceDataLine audioOutput = null;
 
@@ -132,7 +132,7 @@ public class Program {
             try {
                 playbackThread.join();
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Debug.printStackTrace(e);
             }
             playbackThread = null;
         }

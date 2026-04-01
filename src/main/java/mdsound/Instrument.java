@@ -61,9 +61,9 @@ public interface Instrument {
 
     abstract class BaseInstrument implements Instrument {
 
-        protected static int CHIP_SAMPLING_MODE = 2;
+        protected static final int CHIP_SAMPLING_MODE = 2;
 
-        public static int CHIP_SAMPLE_RATE = 44100;
+        public static final int CHIP_SAMPLE_RATE = 44100;
 
         // chipId , type , LR
         protected int[][][] visVolume;

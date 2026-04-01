@@ -12,7 +12,7 @@ public class EmuChipSender extends ChipSender {
         super(null, bufferSize);
     }
 
-    public RingBuffer receiveBuffer = new RingBuffer(DATA_SEQUENCE_FREQUENCE);
+    public final RingBuffer receiveBuffer = new RingBuffer(DATA_SEQUENCE_FREQUENCE);
 
     @Override
     protected void main() {

@@ -57,7 +57,7 @@ public class Emu2413 {
         public OPLL_PATCH patch; /* voice parameter */
 
         /* slot output */
-        public int[] output = new int[2]; /* output value, latest and previous. */
+        public final int[] output = new int[2]; /* output value, latest and previous. */
 
         /* phase generator (pg) */
         public int[] wave_table; /* wave table */
@@ -332,8 +332,8 @@ public class Emu2413 {
 
     };
 
-    private static int[] halfSin_table = new int[PG_WIDTH];
-    private static int[][] wave_table_map = {
+    private static final int[] halfSin_table = new int[PG_WIDTH];
+    private static final int[][] wave_table_map = {
             new int[PG_WIDTH], new int[PG_WIDTH]
     };// { fullSin_table, halfSin_table };
 
@@ -398,7 +398,7 @@ public class Emu2413 {
 
     private static int[][][] tll_table;// new int[8 * 16][1 << TL_BITS][4]
 
-    private static int[][] rks_table = {
+    private static final int[][] rks_table = {
             new int[2], new int[2], new int[2], new int[2], new int[2], new int[2], new int[2], new int[2],
             new int[2], new int[2], new int[2], new int[2], new int[2], new int[2], new int[2], new int[2]
     };
@@ -672,12 +672,12 @@ public class Emu2413 {
     //
     // Synthesizing
     //
-    private int SLOT_BD1 = 12;
+    private final int SLOT_BD1 = 12;
     private int SLOT_BD2 = 13;
-    private int SLOT_HH = 14;
-    private int SLOT_SD = 15;
-    private int SLOT_TOM = 16;
-    private int SLOT_CYM = 17;
+    private final int SLOT_HH = 14;
+    private final int SLOT_SD = 15;
+    private final int SLOT_TOM = 16;
+    private final int SLOT_CYM = 17;
 
     /* utility macros */
     private OPLL_SLOT MOD(int x) {

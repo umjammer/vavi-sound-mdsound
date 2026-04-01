@@ -195,7 +195,7 @@ public class C140 {
     public enum Type {
         SYSTEM2,
         SYSTEM21,
-        ASIC219;
+        ASIC219
     }
 
     public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData) {

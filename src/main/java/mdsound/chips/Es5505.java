@@ -2,9 +2,9 @@ package mdsound.chips;
 
 public class Es5505 extends Es550x {
 
-    private int VOLUME_BIT_ES5505 = 8;
-    private int ADDRESS_INTEGER_BIT_ES5505 = 20;
-    private int ADDRESS_FRAC_BIT_ES5505 = 9;
+    private final int VOLUME_BIT_ES5505 = 8;
+    private final int ADDRESS_INTEGER_BIT_ES5505 = 20;
+    private final int ADDRESS_FRAC_BIT_ES5505 = 9;
 
     private int get_ca(int control) {
         return (control >> 10) & 7;

@@ -1141,7 +1141,7 @@ public abstract class Fm2612 {
                 /**
                  * op1 output for feedback
                  */
-                private int[] op1Out = new int[2];
+                private final int[] op1Out = new int[2];
 
                 /**
                  * SLOT1 output pointer
@@ -1488,7 +1488,7 @@ public abstract class Fm2612 {
                 /**
                  * DeTune table
                  */
-                private int[][] dt_tab = {
+                private final int[][] dt_tab = {
                         new int[32], new int[32], new int[32], new int[32],
                         new int[32], new int[32], new int[32], new int[32]
                 };
@@ -1636,7 +1636,7 @@ public abstract class Fm2612 {
                 /**
                  * fNum3,blk3: calculated
                  */
-                private int[] fc = new int[3];
+                private final int[] fc = new int[3];
                 /**
                  * freq3 latch
                  */
@@ -1644,11 +1644,11 @@ public abstract class Fm2612 {
                 /**
                  * key code
                  */
-                private byte[] kCode = new byte[3];
+                private final byte[] kCode = new byte[3];
                 /**
                  * current fNum value for this slot (can be different betweeen slots of one channel in 3slot mode)
                  */
-                private int[] blockFnum = new int[3];
+                private final int[] blockFnum = new int[3];
                 /**
                  * CSM mode Key-ON flag
                  */
@@ -1674,11 +1674,11 @@ public abstract class Fm2612 {
             /**
              * general state
              */
-            private State st = new State();
+            private final State st = new State();
             /**
              * 3 slot mode state
              */
-            private _3SLOT sl3 = new _3SLOT();
+            private final _3SLOT sl3 = new _3SLOT();
             /**
              * pointer of CH
              */
@@ -1686,7 +1686,7 @@ public abstract class Fm2612 {
             /**
              * Fm channels output masks (0xffff_ffff = enable)
              */
-            private int[] pan = new int[6 * 2];
+            private final int[] pan = new int[6 * 2];
 
             /**
              * Global envelope generator counter
@@ -1711,7 +1711,7 @@ public abstract class Fm2612 {
             /**
              * F-number increment counter
              */
-            private int[] fnTable = new int[4096];
+            private final int[] fnTable = new int[4096];
             /**
              * maximal phase increment (used for phase overflow)
              */
@@ -1753,7 +1753,7 @@ public abstract class Fm2612 {
             /**
              * one sample delay memory
              */
-            private Channel.Op mem = new Channel.Op();
+            private final Channel.Op mem = new Channel.Op();
             /**
              * outputs of working channels
              */
@@ -2897,7 +2897,7 @@ public abstract class Fm2612 {
         private void saveState(Ym2612 f2612) {
             RunningDevice.state_save_register_device_item_array(0, f2612.regs);
             this.saveState(f2612.opn.st);
-            this.saveChannel(f2612.ch, 6);
+            saveChannel(f2612.ch, 6);
             // 3slots
             RunningDevice.state_save_register_device_item_array(0, f2612.opn.sl3.fc);
             RunningDevice.state_save_register_device_item(0, f2612.opn.sl3.fnH);

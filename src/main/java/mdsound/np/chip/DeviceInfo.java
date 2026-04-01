@@ -78,11 +78,11 @@ public class DeviceInfo {
             }
         }
 
-        public int bufMax;
+        public final int bufMax;
 
         public int index;
 
-        public Pair[] buffer;
+        public final Pair[] buffer;
 
         public InfoBuffer(int max /* = 60 * 10 */) {
             index = 0;

@@ -165,9 +165,9 @@ public class Opna {
         protected int status;
         protected Fmgen.Channel4 csmCh;
 
-        public int[] visVolume = new int[] {0, 0};
+        public final int[] visVolume = new int[] {0, 0};
 
-        protected int[] lfoTable = new int[8];
+        protected final int[] lfoTable = new int[8];
 
         // Timer processing
         private void timerA() {
@@ -179,14 +179,14 @@ public class Opna {
 
         protected int preScale;
 
-        protected Fmgen.Channel4.Chip chip;
-        public PSG psg;
+        protected final Fmgen.Channel4.Chip chip;
+        public final PSG psg;
     }
 
     /** OPN2 Base */
     public static class OPNABase extends OPNBase {
-        public int[] visRtmVolume = new int[] {0, 0};
-        public int[] visAPCMVolume = new int[] {0, 0};
+        public final int[] visRtmVolume = new int[] {0, 0};
+        public final int[] visAPCMVolume = new int[] {0, 0};
 
         public OPNABase() {
             amTable[0] = -1;
@@ -963,12 +963,12 @@ stop:
             return adpcmX;
         }
 
-        public static boolean NO_BITTYPE_EMULATION = false;
+        public static final boolean NO_BITTYPE_EMULATION = false;
 
         // FM Sound Source
 
-        protected int[] pan = new int[6];
-        protected int[] fNum2 = new int[9];
+        protected final int[] pan = new int[6];
+        protected final int[] fNum2 = new int[9];
 
         protected int reg22;
         protected int reg29; // OPNA only?
@@ -979,8 +979,8 @@ stop:
         protected int lfoCount;
         protected int lfoDCount;
 
-        protected int[] fNum = new int[6];
-        protected int[] fNum3 = new int[3];
+        protected final int[] fNum = new int[6];
+        protected final int[] fNum3 = new int[3];
 
         // ADPCM related
 
@@ -1033,15 +1033,15 @@ stop:
         /** ADPCM Control Register 2 */
         protected int control2;
         /** ADPCM Part of a register */
-        protected byte[] adpcmReg = new byte[8];
+        protected final byte[] adpcmReg = new byte[8];
 
         protected int rhythmMask_;
 
-        protected Fmgen.Channel4[] ch = new Fmgen.Channel4[6];
+        protected final Fmgen.Channel4[] ch = new Fmgen.Channel4[6];
 
-        public static int[] amTable = new int[Fmgen.FM_LFOENTS];
-        public static int[] pmTable = new int[Fmgen.FM_LFOENTS];
-        public static int[] tlTable = new int[Fmgen.FM_TLENTS + Fmgen.FM_TLPOS];
+        public static final int[] amTable = new int[Fmgen.FM_LFOENTS];
+        public static final int[] pmTable = new int[Fmgen.FM_LFOENTS];
+        public static final int[] tlTable = new int[Fmgen.FM_TLENTS + Fmgen.FM_TLPOS];
         protected static boolean tableHasMade;
     }
 
@@ -2076,7 +2076,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
         // AdpcmA ROM
         public byte[] adpcmABuf;
         public int adpcmASize;
-        public ADPCMA[] adpcmA = {
+        public final ADPCMA[] adpcmA = {
                 new ADPCMA(), new ADPCMA(), new ADPCMA(), new ADPCMA(), new ADPCMA(), new ADPCMA()
         };
         // AdpcmA Overall Volume
@@ -2085,9 +2085,9 @@ logger.log(Level.ERROR, e.getMessage(), e);
         // AdpcmA key
         public int adpcmAKey;
         public int adpcmAStep;
-        public byte[] adpcmAReg = new byte[32];
+        public final byte[] adpcmAReg = new byte[32];
 
-        public static short[] jedi_table = new short[(48 + 1) * 16];
+        public static final short[] jedi_table = new short[(48 + 1) * 16];
 
 //        public new Fmgen.Channel4[] ch = new Fmgen.Channel4[6];
     }

@@ -64,9 +64,9 @@ public class OPNA2 extends Opna.OPNABase {
         private int step;
         /** sampling rate */
         private int rate;
-        public int efcCh;
-        public int num;
-        public Effects effects;
+        public final int efcCh;
+        public final int num;
+        public final Effects effects;
 
         public Rhythm(int num, Effects effects, int efcCh) {
             this.effects = effects;

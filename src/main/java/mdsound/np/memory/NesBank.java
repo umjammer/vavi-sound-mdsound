@@ -16,11 +16,11 @@ import mdsound.np.Device;
  */
 public class NesBank implements Device {
 
-    protected byte[] nullBank = new byte[0x1000];
-    protected int[] bank = new int[256];
+    protected final byte[] nullBank = new byte[0x1000];
+    protected final int[] bank = new int[256];
     protected byte[] image;
-    protected int[] bankSwitch = new int[16];
-    protected int[] bankDefault = new int[16];
+    protected final int[] bankSwitch = new int[16];
+    protected final int[] bankDefault = new int[16];
     protected boolean fdsEnable;
     protected int bankMax;
 

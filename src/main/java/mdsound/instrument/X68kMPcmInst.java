@@ -2,7 +2,6 @@ package mdsound.instrument;
 
 import mdsound.Instrument;
 import mdsound.chips.MPcm;
-import mdsound.chips.MPcmPP.SETPCM;
 
 
 /** X68kMPcm MPCM */
@@ -96,7 +95,7 @@ public class X68kMPcmInst extends Instrument.BaseInstrument {
 
     public void setFreq(int chipId, int ch, int num) {
         if (ch == 0xff) {
-            for (int i = 0; i < (int) MPcm.VOICE_MAX; i++) setFreq(chipId, i, num);
+            for (int i = 0; i < MPcm.VOICE_MAX; i++) setFreq(chipId, i, num);
         } else {
             if (num < 0 || num > 6) return;
             chips[chipId].channels[ch].base = (float) MPcm.baseClockTbl[num] / chips[chipId].rate;

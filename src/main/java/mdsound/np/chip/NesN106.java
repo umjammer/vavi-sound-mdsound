@@ -52,13 +52,13 @@ public class NesN106 implements SoundChip {
 
     protected double rate, clock;
     protected int mask;
-    protected int[][] sm = {new int[8], new int[8]}; // stereo mix
-    protected int[] fOut = new int[8]; // current output
-    protected TrackInfo[] trkInfo = new TrackInfo[8];
-    protected int[] option = new int[OPT.END];
+    protected final int[][] sm = {new int[8], new int[8]}; // stereo mix
+    protected final int[] fOut = new int[8]; // current output
+    protected final TrackInfo[] trkInfo = new TrackInfo[8];
+    protected final int[] option = new int[OPT.END];
 
     protected boolean master_disable;
-    protected int[] reg = new int[0x80]; // all state is contained here
+    protected final int[] reg = new int[0x80]; // all state is contained here
     protected int regSelect;
     protected boolean regAdvance;
     protected int tickChannel;

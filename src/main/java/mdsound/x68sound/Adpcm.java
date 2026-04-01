@@ -61,7 +61,7 @@ public class Adpcm {
 //    inline int dmaGetByte();
     public int dmaLastValue;
     public int adpcmReg;
-    public int[] dmaReg = new int[0x40];
+    public final int[] dmaReg = new int[0x40];
     public int finishCounter;
 
     public void setAdpcmRate(int rate) {

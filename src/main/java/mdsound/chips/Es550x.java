@@ -271,7 +271,7 @@ public abstract class Es550x {
     private int m_voice_index;
 
     /** the 32 voices */
-    protected es550x_voice[] m_voice = new es550x_voice[32];
+    protected final es550x_voice[] m_voice = new es550x_voice[32];
 
     private List<Short> m_ulaw_lookup;
     private List<Integer> m_volume_lookup;
@@ -294,10 +294,10 @@ public abstract class Es550x {
 
     private int RAINE_CHECK = 0;
 
-    private static int FINE_FILTER_BIT = 16;
-    private static int FILTER_BIT = 12;
-    private static int FILTER_SHIFT = FINE_FILTER_BIT - FILTER_BIT;
-    private static int ULAW_MAXBITS = 8;
+    private static final int FINE_FILTER_BIT = 16;
+    private static final int FILTER_BIT = 12;
+    private static final int FILTER_SHIFT = FINE_FILTER_BIT - FILTER_BIT;
+    private static final int ULAW_MAXBITS = 8;
 
     protected static final int CONTROL_BS1 = 0x8000;
     protected static final int CONTROL_BS0 = 0x4000;

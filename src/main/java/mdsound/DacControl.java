@@ -44,7 +44,7 @@ public class DacControl {
 
     public static class PcmBank {
         public int bankCount;
-        public List<PcmData> bank = new ArrayList<>();
+        public final List<PcmData> bank = new ArrayList<>();
         public int dataSize;
         public byte[] data;
         public int dataPos;

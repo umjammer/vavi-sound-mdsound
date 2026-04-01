@@ -58,7 +58,7 @@ public class NpNesDmc {
 
     private final int[] option = new int[10]; // OPT_END];
     private int mask;
-    private int[][] sm = {new int[3], new int[3]};
+    private final int[][] sm = {new int[3], new int[3]};
     public final int[] reg = new int[0x20];
     private int lenReg;
     private int adrReg;

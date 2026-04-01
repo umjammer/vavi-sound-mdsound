@@ -70,9 +70,9 @@ public class NpNesFds {
     public int lastVol;
 
     /** two wave tables */
-    public int[][] wave = {new int[64], new int[64]};
-    public int[] freq = new int[2];
-    private int[] phase = new int[2];
+    public final int[][] wave = {new int[64], new int[64]};
+    public final int[] freq = new int[2];
+    private final int[] phase = new int[2];
     public boolean wavWrite;
     public boolean wavHalt;
     public boolean envHalt;

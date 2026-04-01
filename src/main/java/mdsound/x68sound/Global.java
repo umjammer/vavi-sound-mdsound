@@ -201,8 +201,8 @@ public class Global {
     };
 
     public static class XR_ELE {
-        public int and;
-        public int add;
+        public final int and;
+        public final int add;
 
         public XR_ELE(int and, int add) {
             this.and = and;

@@ -66,8 +66,8 @@ public class P86 {
     private static final int[] rateTable = {4135, 5513, 8270, 11025, 16540, 22050, 33080, 44100};
 
     private static class Inst {
-        public int start;
-        public int size;
+        public final int start;
+        public final int size;
 
         public Inst(byte[] pcmData, int i) {
             this.start =

@@ -117,7 +117,7 @@ public class Emu2413 {
 
             // OUTPUT
             private int feedback;
-            int[] output = new int[2]; // Output value of slot */
+            final int[] output = new int[2]; // Output value of slot */
 
             // for Phase Generator (PG)
 

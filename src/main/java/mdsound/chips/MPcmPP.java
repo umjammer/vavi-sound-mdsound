@@ -45,7 +45,7 @@ public class MPcmPP {
         private int vol;
         private int volwork;
         private int type;
-        private int[] lr = new int[2];
+        private final int[] lr = new int[2];
         private short orig;
         private byte[] adrs_buf;
         private int adrs_ptr;
@@ -70,7 +70,7 @@ public class MPcmPP {
         private int outs;
     }
 
-    private double[] baseClockTbl = {
+    private final double[] baseClockTbl = {
             // ADPCM mono
             3906.2,
             5208.0,

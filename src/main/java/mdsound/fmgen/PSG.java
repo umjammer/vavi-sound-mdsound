@@ -22,14 +22,14 @@ public class PSG {
     /** If speed is more important than sound quality, you may want to reduce it. */
     public static final int overSampling = 2;
 
-    protected byte[] reg = new byte[16];
+    protected final byte[] reg = new byte[16];
 
     protected int[] envelop;
 
-    protected int[] oLevel = new int[3];
+    protected final int[] oLevel = new int[3];
 
-    protected int[] sCount = new int[3];
-    protected int[] sPeriod = new int[3];
+    protected final int[] sCount = new int[3];
+    protected final int[] sPeriod = new int[3];
     protected int eCount, ePeriod;
     protected int nCount, nPeriod;
     protected int tPeriodBase;
@@ -43,7 +43,7 @@ public class PSG {
             new int[64], new int[64], new int[64], new int[64], new int[64], new int[64], new int[64], new int[64]
     };
 
-    protected static int[] noiseTable = new int[noiseTableSize];
+    protected static final int[] noiseTable = new int[noiseTableSize];
     protected static final int[] emitTable = {-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     public int visVolume = 0;

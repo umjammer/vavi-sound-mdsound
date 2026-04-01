@@ -40,7 +40,8 @@ public class Chorus {
          * Ring Buffer
          * @see "https://vstcpp.wpblog.jp/?p=1505"
          */
-        public RingBuffer ringBufL, ringBufR;
+        public final RingBuffer ringBufL;
+        public final RingBuffer ringBufR;
 
         /**
          * Set the delay time by converting it into a number of samples
@@ -49,7 +50,7 @@ public class Chorus {
          * For now, let’s take about 1000 samples.
          * (Interval is a ring buffer. See https://vstcpp.wpblog.jp/?p=1505)
          */
-        public int delaySample;
+        public final int delaySample;
 
         public float theta;
 //        public float speed;

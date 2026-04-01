@@ -260,7 +260,7 @@ public class OotakeHuC6280 {
         public int volumeR;
         public int outVolumeL;
         public int outVolumeR;
-        public int[] wave = new int[32];
+        public final int[] wave = new int[32];
         private int waveIndex;
         private int ddaSample;
         private int phase;

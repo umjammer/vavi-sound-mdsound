@@ -32,9 +32,10 @@ public interface LoopDetector extends Device {
     }
 
     class BasicDetector implements LoopDetector {
-        protected int bufSize, bufMask;
-        protected int[] streamBuf;
-        protected int[] timeBuf;
+        protected final int bufSize;
+        protected final int bufMask;
+        protected final int[] streamBuf;
+        protected final int[] timeBuf;
         protected int bIdx;
         // bIdx last time checked
         protected int bLast;
@@ -186,8 +187,8 @@ public interface LoopDetector extends Device {
             MAX_CH
         }
 
-        protected BasicDetector[] ld = new BasicDetector[13];
-        protected boolean[] looped = new boolean[13];
+        protected final BasicDetector[] ld = new BasicDetector[13];
+        protected final boolean[] looped = new boolean[13];
         protected int n106Addr;
         protected int loopStart, m_loop_end;
 
