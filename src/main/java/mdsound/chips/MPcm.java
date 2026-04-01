@@ -2,7 +2,6 @@
 
 package mdsound.chips;
 
-import java.nio.ByteBuffer;
 import java.util.Arrays;
 
 
@@ -239,7 +238,7 @@ public class MPcm {
             }
     };
 
-    public void setVolTable(int sel, ByteBuffer tbl) {
+    public void setVolTable(int sel) {
         if (sel == 1) {
             // 16
             this.volTbl = VolTbl[0];

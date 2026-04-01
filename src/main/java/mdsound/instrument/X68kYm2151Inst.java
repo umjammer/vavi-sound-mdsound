@@ -3,11 +3,13 @@ package mdsound.instrument;
 import java.util.function.BiConsumer;
 
 import mdsound.Instrument;
+import mdsound.Instrument.PcmEnabledInstrument;
 import mdsound.x68sound.X68Sound;
 import mdsound.x68sound.SoundIocs;
 
 
-public class X68kYm2151Inst extends Instrument.BaseInstrument {
+/** X68kYm2151 PCM8 */
+public class X68kYm2151Inst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
     /** X68000 clock */
     public static final int DefaultClockValue = 4000000;
@@ -103,5 +105,10 @@ public class X68kYm2151Inst extends Instrument.BaseInstrument {
             outputs[0][i] = buf[chipId][0];
             outputs[1][i] = buf[chipId][1];
         }
+    }
+
+    @Override
+    public void writePcm(int chipId, byte[] buf, int offset, int length, Object... extras) {
+        chips[0].mountMemory(buf);
     }
 }

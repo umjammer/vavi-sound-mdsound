@@ -12,7 +12,7 @@ import mdsound.chips.Pcm8PP;
 
 
 /**
- * Pcm8PPInst (MSX).
+ * Pcm8PP PCM8 (MSX).
  *
  * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
  * @version 0.00 2025-02-02 nsano initial version <br>

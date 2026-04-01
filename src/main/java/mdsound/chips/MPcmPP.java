@@ -563,7 +563,7 @@ public class MPcmPP {
         }
     }
 
-    public void setVolTable(int sel, short[] tbl) {
+    public void setVolTable(int sel) {
         if (sel == 1) {
             // 16
             this.volTbl = volTbl_[0];
@@ -574,7 +574,7 @@ public class MPcmPP {
         this.volTbl = volTbl_[1];
     }
 
-    public void setVolTableZms(int sel, int[] tbl) {
+    public void setVolTable(int sel, int[] tbl) {
         if (sel == 1) {
             // 16
             this.volTbl = tbl;
