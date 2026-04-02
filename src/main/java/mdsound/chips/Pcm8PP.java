@@ -338,6 +338,7 @@ logger.log(Level.INFO, "sampleRate: " + sampleRate);
             if (freqTable[m] < 0 && m >= 0xf) {
                 ch[c].freq = d3Freq / 256.0;
             }
+            ch[c].freqPerSampleRate = ch[c].freq / sampleRate;
         }
         int p = mode & 0xff;
         if (p != 0xff) {
