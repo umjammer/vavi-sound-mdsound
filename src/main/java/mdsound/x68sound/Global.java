@@ -238,10 +238,8 @@ public class Global {
             new XR_ELE(0, 64), new XR_ELE(0, 64), new XR_ELE(0, 64), new XR_ELE(0, 64),
     };
 
-
     public static final int[] DT2TBL = {0, 384, 500, 608};
     public final int[] NOISEALPHATBL = new int[ALPHAZERO + SIZEALPHATBL + 1];
-
 
     public static final int[] dltLTBL = {
             16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45, 50, 55, 60, 66,
@@ -253,7 +251,6 @@ public class Global {
             -1, -1, -1, -1, 2, 4, 6, 8,
             -1, -1, -1, -1, 2, 4, 6, 8,
     };
-
 
     public static final int[][] ADPCMRATETBL = {
             {2, 3, 4, 4},
@@ -307,8 +304,8 @@ public class Global {
 
     static {
         try {
-            OPMLOWPASS_44 = Common.readArrays("/opmlowpass_44.dat");
-            OPMLOWPASS_48 = Common.readArrays("/opmlowpass_48.dat");
+            OPMLOWPASS_44 = Common.readArrays("/mdsound/x68sound/opmlowpass_44.dat");
+            OPMLOWPASS_48 = Common.readArrays("/mdsound/x68sound/opmlowpass_48.dat");
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }

@@ -34,17 +34,13 @@ class Resampler {
     private int samplingBuffer = DefaultSamplingBuffer;
     private int[][] streamBufs = null;
 
-    private final int[][] buff = new int[][] {new int[1], new int[1]};
+    private final int[][] buff = {new int[1], new int[1]};
 
-    private int[][] tempSample = new int[][] {new int[1], new int[1]};
-    private int[][] streamPnt = new int[][] {new int[0x100], new int[0x100]};
+    private int[][] tempSample = {new int[1], new int[1]};
+    private int[][] streamPnt = {new int[0x100], new int[0x100]};
     private int clearLength = 1;
 
     private List<Chip> insts;
-
-    private static int limit(int v, int max, int min) {
-        return Math.min(max, Math.max(v, min));
-    }
 
     private static int getFriction(int x) {
         return x & FIXPNT_MASK;
@@ -215,8 +211,8 @@ CC++;
         inst.smpP += length;
         inst.smpNext = inst.smpP * inst.samplingRate / samplingRate;
         if (inst.smpLast >= inst.smpNext) {
-            tempSample[0][0] = limit((inst.lSmpl[0] * mul) >> 15, 0x7fff, -0x8000);
-            tempSample[1][0] = limit((inst.lSmpl[1] * mul) >> 15, 0x7fff, -0x8000);
+            tempSample[0][0] = Math.clamp((inst.lSmpl[0] * mul) >> 15, -0x8000, 0x7fff);
+            tempSample[1][0] = Math.clamp((inst.lSmpl[1] * mul) >> 15, -0x8000, 0x7fff);
         } else {
             smpCnt = inst.smpNext - inst.smpLast;
             clearLength = smpCnt;
@@ -225,22 +221,22 @@ CC++;
                 buff[1][0] = 0;
                 inst.instrument.update(inst.id, buff, 1);
 
-                streamBufs[0][ind] += limit((buff[0][0] * mul) >> 15, 0x7fff, -0x8000);
-                streamBufs[1][ind] += limit((buff[1][0] * mul) >> 15, 0x7fff, -0x8000);
+                streamBufs[0][ind] += Math.clamp((buff[0][0] * mul) >> 15, -0x8000, 0x7fff);
+                streamBufs[1][ind] += Math.clamp((buff[1][0] * mul) >> 15, -0x8000, 0x7fff);
 if ((CC % INTERVAL) == 0) {
  logger.log(Level.DEBUG, "%s[%d] O: %+04d, %+04d".formatted(inst.instrument.getName(), ind, streamBufs[0][ind], streamBufs[1][ind]));
 }
             }
 
             if (smpCnt == 1) {
-                tempSample[0][0] = limit((curBufL[0] * mul) >> 15, 0x7fff, -0x8000);
-                tempSample[1][0] = limit((curBufR[0] * mul) >> 15, 0x7fff, -0x8000);
+                tempSample[0][0] = Math.clamp((curBufL[0] * mul) >> 15, -0x8000, 0x7fff);
+                tempSample[1][0] = Math.clamp((curBufR[0] * mul) >> 15, -0x8000, 0x7fff);
 
                 inst.lSmpl[0] = curBufL[0x00];
                 inst.lSmpl[1] = curBufR[0x00];
             } else if (smpCnt == 2) {
-                tempSample[0][0] = limit(((curBufL[0] + curBufL[1]) * mul) >> (15 + 1), 0x7fff, -0x8000);
-                tempSample[1][0] = limit(((curBufR[0] + curBufR[1]) * mul) >> (15 + 1), 0x7fff, -0x8000);
+                tempSample[0][0] = Math.clamp(((curBufL[0] + curBufL[1]) * mul) >> (15 + 1), -0x8000, 0x7fff);
+                tempSample[1][0] = Math.clamp(((curBufR[0] + curBufR[1]) * mul) >> (15 + 1), -0x8000, 0x7fff);
 
                 inst.lSmpl[0] = curBufL[0x01];
                 inst.lSmpl[1] = curBufR[0x01];
@@ -251,8 +247,8 @@ if ((CC % INTERVAL) == 0) {
                     tempS32L += curBufL[curSmpl];
                     tempS32R += curBufR[curSmpl];
                 }
-                tempSample[0][0] = limit(((tempS32L * mul) >> 15) / smpCnt, 0x7fff, -0x8000);
-                tempSample[1][0] = limit(((tempS32R * mul) >> 15) / smpCnt, 0x7fff, -0x8000);
+                tempSample[0][0] = Math.clamp(((tempS32L * mul) >> 15) / smpCnt, -0x8000, 0x7fff);
+                tempSample[1][0] = Math.clamp(((tempS32R * mul) >> 15) / smpCnt, -0x8000, 0x7fff);
 
                 inst.lSmpl[0] = curBufL[smpCnt - 1];
                 inst.lSmpl[1] = curBufR[smpCnt - 1];
@@ -282,8 +278,8 @@ if ((CC % INTERVAL) == 0) {
             buff[1][0] = 0;
             inst.instrument.update(inst.id, buff, 1);
 
-            streamPnt[0][0] = limit((buff[0][0] * mul) >> 15, 0x7fff, -0x8000);
-            streamPnt[1][0] = limit((buff[1][0] * mul) >> 15, 0x7fff, -0x8000);
+            streamPnt[0][0] = Math.clamp((buff[0][0] * mul) >> 15, -0x8000, 0x7fff);
+            streamPnt[1][0] = Math.clamp((buff[1][0] * mul) >> 15, -0x8000, 0x7fff);
 if ((CC % INTERVAL) == 0) {
  logger.log(Level.DEBUG, "%s[%d] U: %+04d, %+04d".formatted(inst.instrument.getName(), ind, streamPnt[0][0], streamPnt[1][0]));
 }
@@ -328,8 +324,8 @@ if ((CC % INTERVAL) == 0) {
             buff[1][0] = 0;
             inst.instrument.update(inst.id, buff, 1);
 
-            streamBufs[0][ind] = limit((buff[0][0] * mul) >> 15, 0x7fff, -0x8000);
-            streamBufs[1][ind] = limit((buff[1][0] * mul) >> 15, 0x7fff, -0x8000);
+            streamBufs[0][ind] = Math.clamp((buff[0][0] * mul) >> 15, -0x8000, 0x7fff);
+            streamBufs[1][ind] = Math.clamp((buff[1][0] * mul) >> 15, -0x8000, 0x7fff);
 if ((CC % INTERVAL) == 0) {
  logger.log(Level.DEBUG, "%s[%d] C: %+04d, %+04d".formatted(inst.instrument.getName(), ind, streamBufs[0][ind], streamBufs[1][ind]));
 }
@@ -360,8 +356,8 @@ if ((CC % INTERVAL) == 0) {
             buff[1][0] = 0;
             inst.instrument.update(inst.id, buff, 1);
 
-            streamPnt[0][ind] = limit((buff[0][0] * mul) >> 15, 0x7fff, -0x8000);
-            streamPnt[1][ind] = limit((buff[1][0] * mul) >> 15, 0x7fff, -0x8000);
+            streamPnt[0][ind] = Math.clamp((buff[0][0] * mul) >> 15, -0x8000, 0x7fff);
+            streamPnt[1][ind] = Math.clamp((buff[1][0] * mul) >> 15, -0x8000, 0x7fff);
 if ((CC % INTERVAL) == 0) {
  logger.log(Level.DEBUG, "%s[%d] D: %+04d, %+04d".formatted(inst.instrument.getName(), ind, streamPnt[0][0], streamPnt[1][0]));
 }
@@ -394,8 +390,8 @@ if ((CC % INTERVAL) == 0) {
             smpFrc = getFriction(inPosNext);
             inPre = fp2i_floor(inPosNext);
             if (smpFrc != 0) {
-                tempSmpL += curBufL[limit(inPre, curBufL.length, 0)] * smpFrc;
-                tempSmpR += curBufR[limit(inPre, curBufL.length, 0)] * smpFrc;
+                tempSmpL += curBufL[Math.clamp(inPre, 0, curBufL.length)] * smpFrc;
+                tempSmpR += curBufR[Math.clamp(inPre, 0, curBufL.length)] * smpFrc;
                 smpCnt += smpFrc;
             }
 
@@ -412,8 +408,8 @@ if ((CC % INTERVAL) == 0) {
             tempSample[1][outPos] = tempSmpR / smpCnt;
         }
 
-        inst.lSmpl[0] = curBufL[limit(inPre, curBufL.length, 0)];
-        inst.lSmpl[1] = curBufR[limit(inPre, curBufL.length, 0)];
+        inst.lSmpl[0] = curBufL[Math.clamp(inPre, 0, curBufL.length)];
+        inst.lSmpl[1] = curBufR[Math.clamp(inPre, 0, curBufL.length)];
         inst.smpP += length;
         inst.smpLast = inst.smpNext;
     }

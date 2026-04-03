@@ -12,13 +12,13 @@ package mdsound.x68sound;
 
 
 /**
- * SoundIocs.
+ * Sound Input Output Control System (BIOS equivalent).
  *
  * @author m_puusan
  */
 public class SoundIocs {
 
-    private X68Sound x68Sound = null;
+    private final X68Sound x68Sound;
 
     public SoundIocs(X68Sound x68Sound) {
         this.x68Sound = x68Sound;

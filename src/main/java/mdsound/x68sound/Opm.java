@@ -54,7 +54,7 @@ public class Opm {
 //    /** algorithm 0～7 */
 //    int con[N_CH];
     /** 0: Silence -1: Output */
-    private final int[][] pan = new int[][] {new int[Global.N_CH], new int[Global.N_CH]};
+    private final int[][] pan = {new int[Global.N_CH], new int[Global.N_CH]};
 //    /** 0, 1, 2, 4, 10, 20, 80, 140 */
 //    int pms[N_CH];
 //    /** Right shift count 31(0), 2(1), 1(2), 0(3) */
@@ -1609,8 +1609,8 @@ public class Opm {
                     }
 
                     // Adjust the overall volume
-                    //OutInpAdpcm[0] = (OutInpAdpcm[0]*TotalVolume) >> 8;
-                    //OutInpAdpcm[1] = (OutInpAdpcm[1]*TotalVolume) >> 8;
+                    //outInpAdpcm[0] = (outInpAdpcm[0] * global.totalVolume) >> 8;
+                    //outInpAdpcm[1] = (outInpAdpcm[1] * global.totalVolume) >> 8;
 
                     // Prevents distortion
                     final int PCM_LIMITS = ((1 << 19) - 1);
@@ -1652,8 +1652,8 @@ public class Opm {
             }
 
 //            // Adjust the overall volume
-//            Out[0] = (Out[0] * TotalVolume) >> 8;
-//            Out[1] = (Out[1] * TotalVolume) >> 8;
+//            out[0] = (out[0] * global.totalVolume) >> 8;
+//            out[1] = (out[1] * global.totalVolume) >> 8;
 
             // Add the output value of WaveFunc()
             if (waveFunc != null) {

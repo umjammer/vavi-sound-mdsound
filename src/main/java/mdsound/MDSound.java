@@ -29,20 +29,28 @@ public class MDSound {
 
     public DacControl dacControl = null;
 
+    /** Registered chips */
     private List<Chip> chips = null;
 
     public MDSound.Chip getChipInfo(Class<? extends Instrument> inst) {
         return chips.stream().filter(c -> c.instrument.getClass() == inst).findFirst().orElse(null);
     }
 
+    /** Registered instruments (based on {@link #chips} */
     private final Map<Class<? extends Instrument>, List<Instrument>> instruments = new HashMap<>();
 
-    /** @return nullable */
+    /**
+     * Gets a registered instrument for chipId 0.
+     * @return nullable
+     */
     public <T extends Instrument> T inst(Class<T> clazz) {
         return inst(clazz, 0);
     }
 
-    /** @return nullable */
+    /**
+     * Gets a registered instrument.
+     * @return nullable
+     */
     public <T extends Instrument> T inst(Class<T> clazz, int chipIndex) {
         if (instruments.containsKey(clazz) && chipIndex < instruments.get(clazz).size()) {
             return clazz.cast(instruments.get(clazz).get(chipIndex));

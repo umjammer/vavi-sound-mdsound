@@ -35,8 +35,8 @@ public class Lfo {
     //int  LFOSTEPTBL[256];
     //int  LFOSTEPTBL3[256]; // For Wave form 3
     //short PMSTBL[8]={ 0,1,2,4,8,16,64,128 };
-    private static final int[] PMSMUL = new int[] {0, 1, 2, 4, 8, 16, 32, 32};
-    private static final int[] PMSSHL = new int[] {0, 0, 0, 0, 0, 0, 1, 2};
+    private static final int[] PMSMUL = {0, 1, 2, 4, 8, 16, 32, 32};
+    private static final int[] PMSSHL = {0, 0, 0, 0, 0, 0, 1, 2};
 
     /** 0, 1, 2, 4, 8, 16, 32, 32 */
     private final int[] pmsMul = new int[Global.N_CH];

@@ -11,6 +11,11 @@ import java.util.ServiceLoader;
 import dotnet4j.util.compat.Tuple;
 
 
+/**
+ * Each chip abstraction.
+ *
+ * TODO free from chipId
+ */
 public interface Instrument {
 
     /** for view */

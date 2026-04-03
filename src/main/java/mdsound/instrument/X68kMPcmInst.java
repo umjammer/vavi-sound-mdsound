@@ -4,7 +4,11 @@ import mdsound.Instrument;
 import mdsound.chips.MPcm;
 
 
-/** X68kMPcm MPCM */
+/**
+ * X68kMPcm MPCM
+ * <p>
+ * original mpcmX68k.cs
+ */
 public class X68kMPcmInst extends Instrument.BaseInstrument {
 
     public static final int MAX_CHIPS = 0x02;

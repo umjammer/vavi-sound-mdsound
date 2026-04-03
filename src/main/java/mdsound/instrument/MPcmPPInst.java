@@ -12,7 +12,7 @@ import mdsound.chips.MPcmPP.SETPCM;
 
 
 /**
- * MPcmPP MPCM.
+ * MPCM++ MPCM  (Mercury Unit).
  *
  * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
  * @version 0.00 2025-02-02 nsano initial version <br>

@@ -31,7 +31,7 @@ public class X68Sound {
     public static final int SNDERR_DLL = -1;
     public static final int SNDERR_FUNC = -2;
 
-    private Global global = Global.getInstance();
+    private final Global global = Global.getInstance();
 
     public Opm opm;
 
