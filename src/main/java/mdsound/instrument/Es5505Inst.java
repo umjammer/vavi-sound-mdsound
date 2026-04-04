@@ -6,8 +6,6 @@
 
 package mdsound.instrument;
 
-import mdsound.Instrument.BaseInstrument;
-
 
 /**
  * Es5503Inst.

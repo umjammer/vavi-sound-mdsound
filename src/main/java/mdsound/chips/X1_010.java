@@ -1,6 +1,9 @@
 package mdsound.chips;
 
 
+import java.util.Arrays;
+
+
 /**
        -= Seta Hardware =-
 
@@ -204,8 +207,8 @@ public class X1_010 {
     public void reset() {
         for (int i = 0; i < 0x2000; i++) this.reg[i] = 0;
         //memset(this.HI_WORD_BUF, 0, 0x2000);
-        for (int i = 0; i < SETA_NUM_CHANNELS; i++) this.smpOffset[i] = 0;
-        for (int i = 0; i < SETA_NUM_CHANNELS; i++) this.envOffset[i] = 0;
+        Arrays.fill(this.smpOffset, 0);
+        Arrays.fill(this.envOffset, 0);
     }
 
     public int read(int offset) {

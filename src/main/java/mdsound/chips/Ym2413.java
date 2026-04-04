@@ -915,7 +915,7 @@ public class Ym2413 {
         }
     }
 
-    private void dump2patch(byte[] dump, int startAdr, Slot.Patch[][] patch) {
+    private static void dump2patch(byte[] dump, int startAdr, Slot.Patch[][] patch) {
         patch[startAdr][0].am = (dump[startAdr * 8 + 0] >> 7) & 1;
         patch[startAdr][1].am = (dump[startAdr * 8 + 1] >> 7) & 1;
         patch[startAdr][0].pm = (dump[startAdr * 8 + 0] >> 6) & 1;
@@ -942,7 +942,7 @@ public class Ym2413 {
         patch[startAdr][1].rr = (dump[startAdr * 8 + 7]) & 15;
     }
 
-    private void getDefaultPatch(int num, Slot.Patch[][] patch) {
+    private static void getDefaultPatch(int num, Slot.Patch[][] patch) {
         dump2patch(default_inst[0], num, patch);
     }
 
@@ -961,7 +961,7 @@ public class Ym2413 {
         }
     }
 
-    private void patch2dump(Slot.Patch[] patch, byte[] dump) {
+    private static void patch2dump(Slot.Patch[] patch, byte[] dump) {
         dump[0] = (byte) ((patch[0].am << 7) + (patch[0].pm << 6) + (patch[0].eg << 5) + (patch[0].kr << 4) + patch[0].ml);
         dump[1] = (byte) ((patch[1].am << 7) + (patch[1].pm << 6) + (patch[1].eg << 5) + (patch[1].kr << 4) + patch[1].ml);
         dump[2] = (byte) ((patch[0].kl << 6) + patch[0].tl);
@@ -1094,7 +1094,7 @@ public class Ym2413 {
     }
 
     /** Change a rhythm Voice */
-    private void setSlotPatch(Slot slot, Slot.Patch patch) {
+    private static void setSlotPatch(Slot slot, Slot.Patch patch) {
         slot.patch = patch;
     }
 
@@ -1110,7 +1110,7 @@ public class Ym2413 {
         car(c).volume = volume;
     }
 
-    private void setSlotVolume(Slot slot, int volume) {
+    private static void setSlotVolume(Slot slot, int volume) {
         slot.volume = volume;
     }
 
@@ -1880,7 +1880,7 @@ public class Ym2413 {
     private static final double SQRT2 = 1.414213562;
     private static final int RANGE = 512;
 
-    private void calcPanning(float[] channels, int position) {
+    private static void calcPanning(float[] channels, int position) {
         if (position > RANGE / 2)
             position = RANGE / 2;
         else if (position < -RANGE / 2)
@@ -1900,7 +1900,7 @@ public class Ym2413 {
     /**
      * Reset the panning values to the centre position
      */
-    private void centrePanning(float[] channels) {
+    private static void centrePanning(float[] channels) {
         channels[0] = channels[1] = 1.0f;
     }
 }

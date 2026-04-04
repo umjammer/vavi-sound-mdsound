@@ -19,7 +19,7 @@ import mdsound.chips.MPcmPP.SETPCM;
  */
 public class MPcmPPInst extends BaseInstrument {
 
-    private final int MAX_CHIPS = 0x02;
+    private static final int MAX_CHIPS = 0x02;
 
     public final MPcmPP[] chips = {new MPcmPP(), new MPcmPP()};
 

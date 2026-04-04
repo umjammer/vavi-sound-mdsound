@@ -238,7 +238,7 @@ public class NpNesFds {
 
                 // multiply pos by gain,
                 // shift off 4 bits but with odd "rounding" behaviour
-                int temp = (int) (pos * this.envOut[EG.EMOD.ordinal()]);
+                int temp = pos * this.envOut[EG.EMOD.ordinal()];
                 int rem = temp & 0x0f;
                 temp >>= 4;
                 if ((rem > 0) && ((temp & 0x80) == 0)) {

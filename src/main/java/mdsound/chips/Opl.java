@@ -1418,7 +1418,7 @@ public class Opl {
 
     // synchronized level of common table
 
-    private final int numLock = 0;
+    private static final int numLock = 0;
 
     private Slot slot7_1() {
         return this.channels[7].slots[SLOT1];
@@ -1676,7 +1676,7 @@ public class Opl {
         }
     }
 
-    private int opCalc(int phase, int env, int pm, int wave_tab) {
+    private static int opCalc(int phase, int env, int pm, int wave_tab) {
         int p = (env << 4) + sinTab[wave_tab + ((((phase & ~FREQ_MASK) + (pm << 16)) >> FREQ_SH) & SIN_MASK)];
 
         if (p >= TL_TAB_LEN)
@@ -1684,7 +1684,7 @@ public class Opl {
         return tlTab[p];
     }
 
-    private int opCalc1(int phase, int env, int pm, int wave_tab) {
+    private static int opCalc1(int phase, int env, int pm, int wave_tab) {
         int p = (env << 4) + sinTab[wave_tab + ((((phase & ~FREQ_MASK) + pm) >> FREQ_SH) & SIN_MASK)];
 
         if (p >= TL_TAB_LEN)
@@ -2040,7 +2040,7 @@ public class Opl {
     /**
      * update phase increment counter of Operator (also update the EG rates if necessary)
      */
-    private void calcFcSlot(Channel ch, Slot slot) {
+    private static void calcFcSlot(Channel ch, Slot slot) {
         // (frequency) phase increment counter
         slot.incr = ch.fc * slot.mul;
         int ksr = ch.kCode >> slot.KSR;
@@ -2448,45 +2448,47 @@ public class Opl {
         }
 
         // data port
-        switch (this.address) {
-        case 0x05: // KeyBoard IN
-            if ((this.type & SUB_TYPE_KEYBOARD) != 0) {
-                if (this.keyboardReadHandler != null)
-                    return this.keyboardReadHandler.get();
+        return switch (this.address) {
+            case 0x05 -> {
+                if ((this.type & SUB_TYPE_KEYBOARD) != 0) {
+                    if (this.keyboardReadHandler != null)
+                        yield this.keyboardReadHandler.get();
 //logger.log(Level.TRACE, "Y8950: read unmapped KEYBOARD port");
+                }
+                yield 0;
             }
-            return 0;
-
-        case 0x0f: // ADPCM-DATA
-            if ((this.type & SUB_TYPE_ADPCM) != 0) {
-                int val = this.deltaT.read();
+            case 0x0f -> {
+                if ((this.type & SUB_TYPE_ADPCM) != 0) {
+                    int val = this.deltaT.read();
 //logger.log(Level.TRACE, "Y8950: read ADPCM value read=%02x".formatted(val));
-                return val;
+                    yield val;
+                }
+                yield 0;
             }
-            return 0;
-
-        case 0x19: // I/O DATA
-            if ((this.type & SUB_OPL_TYPE_IO) != 0) {
-                if (this.portReadHandler != null)
-                    return this.portReadHandler.get();
+            case 0x19 -> {
+                if ((this.type & SUB_OPL_TYPE_IO) != 0) {
+                    if (this.portReadHandler != null)
+                        yield this.portReadHandler.get();
 //logger.log(Level.TRACE, "Y8950:read unmapped I/O port");
+                }
+                yield 0;
             }
-            return 0;
-        case 0x1a: // PCM-DATA
-            if ((this.type & SUB_TYPE_ADPCM) != 0) {
+            case 0x1a -> {
+                if ((this.type & SUB_TYPE_ADPCM) != 0) {
 //logger.log(Level.TRACE, "Y8950 A/D conversion is accessed but not implemented !");
-                return 0x80; // 2's complement PCM data - result from A/D conversion
+                    yield 0x80;
+                }
+                yield 0;
             }
-            return 0;
-        }
+            default -> 0xff;
+        };
 
-        return 0xff;
     }
 
     /**
      * CSM Key Control
      */
-    private void csmKeyControl(Channel ch) {
+    private static void csmKeyControl(Channel ch) {
         ch.slots[SLOT1].keyOn(4);
         ch.slots[SLOT2].keyOn(4);
 

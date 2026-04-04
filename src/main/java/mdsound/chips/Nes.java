@@ -210,7 +210,7 @@ public class Nes {
         return this.nesFds;
     }
 
-    private void nes_set_option(int options) {
+    private static void nes_set_option(int options) {
         nesOptions = options;
     }
 

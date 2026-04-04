@@ -11,7 +11,6 @@ import java.util.Random;
 import mdsound.np.Device.Counter;
 import mdsound.np.cpu.Km6502;
 import mdsound.np.cpu.Km6502.IRQDevices;
-import vavi.util.Debug;
 
 
 /**

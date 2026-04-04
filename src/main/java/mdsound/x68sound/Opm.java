@@ -159,7 +159,7 @@ public class Opm {
     private int ppiReg;
     /** ADPCM clock switching (0:8MHz 1:4Mhz) */
     private int adpcmBaseClock;
-//    inline void SetAdpcmRate();
+//    inline void setAdpcmRate();
 
     /** Currently specified OPM register number */
     private int opmRegNo;
@@ -1204,7 +1204,7 @@ public class Opm {
         }
     }
 
-    int rate = 0;
+    private int rate = 0;
 
     public void setPcm62(short[] buffer, int offset, int ndata, BiConsumer<Runnable, Boolean> oneFrameProc /* = null */) {
 

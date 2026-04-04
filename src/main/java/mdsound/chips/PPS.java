@@ -95,7 +95,7 @@ public class PPS {
         int a = 225 + ppsHd[num].toneOfs;
         a %= 256;
         a += shift;
-        a = Math.min(Math.max(a, 1), 255);
+        a = Math.clamp(a, 1, 255);
 
         if (ppsHd[num].volumeOfs + volshift >= 15) return;
         // Do not play when volume is below 0
@@ -138,16 +138,17 @@ public class PPS {
     }
 
     public boolean setParam(int paramno, int data) {
-        switch (paramno & 1) {
-        case 0:
-            singleFlag = data != 0;
-            return true;
-        case 1:
-            lowCpuCheckFlag = data != 0;
-            return true;
-        default:
-            return false;
-        }
+        return switch (paramno & 1) {
+            case 0 -> {
+                singleFlag = data != 0;
+                yield true;
+            }
+            case 1 -> {
+                lowCpuCheckFlag = data != 0;
+                yield true;
+            }
+            default -> false;
+        };
     }
 
     private void int04() {
@@ -200,8 +201,8 @@ public class PPS {
             if (!real) {
                 if (!keyonFlag) data += keyoffVol;
                 //if (keyoff_vol != 0) logger.log(Level.DEBUG, "keyoff_vol%d".formatted(keyoff_vol));
-                outputs[0][i] = Math.max(Math.min(outputs[0][i] + data, Short.MAX_VALUE), Short.MIN_VALUE);
-                outputs[1][i] = Math.max(Math.min(outputs[1][i] + data, Short.MAX_VALUE), Short.MIN_VALUE);
+                outputs[0][i] = Math.clamp(outputs[0][i] + data, Short.MIN_VALUE, Short.MAX_VALUE);
+                outputs[1][i] = Math.clamp(outputs[1][i] + data, Short.MIN_VALUE, Short.MAX_VALUE);
             }
 
             //  psg.mix(dest, 1);

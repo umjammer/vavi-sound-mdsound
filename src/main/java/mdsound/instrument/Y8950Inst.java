@@ -49,11 +49,11 @@ public class Y8950Inst extends Instrument.BaseInstrument implements PcmEnabledIn
         chips[chipId].start(clock, rate);
 
         // port and keyboard handler
-        chips[chipId].setPortHandler(this::writePort, this::readPort);
-        chips[chipId].setKeyboardHandler(this::writeKeyboard, this::readKeyboard);
+        chips[chipId].setPortHandler(this::writePort, Y8950Inst::readPort);
+        chips[chipId].setKeyboardHandler(this::writeKeyboard, Y8950Inst::readKeyboard);
 
         // Y8950 setup
-        chips[chipId].setTimerHandler(this::doTimer);
+        chips[chipId].setTimerHandler(Y8950Inst::doTimer);
         chips[chipId].setIrqHandler(this::doIrq);
         chips[chipId].setUpdateHandler(this::updateStream);
 
@@ -127,7 +127,7 @@ public class Y8950Inst extends Instrument.BaseInstrument implements PcmEnabledIn
 //        if (info.intf.handler) (info.intf.handler) (irq ? ASSERT_LINE : CLEAR_LINE);
     }
 
-    private void doTimer(int c, int period) {
+    private static void doTimer(int c, int period) {
 //        if( attotime_compare(period, attotime_zero) == 0 )
         if (period == 0) { // Reset FM Timer
 //            timer_enable(info.timer[c], 0);
@@ -136,7 +136,7 @@ public class Y8950Inst extends Instrument.BaseInstrument implements PcmEnabledIn
         }
     }
 
-    private int readPort() {
+    private static int readPort() {
 //        if (info.intf.portread)
 //            return info.intf.portread(0);
         return 0;
@@ -147,7 +147,7 @@ public class Y8950Inst extends Instrument.BaseInstrument implements PcmEnabledIn
 //            info.intf.portwrite(0,data);
     }
 
-    private int readKeyboard() {
+    private static int readKeyboard() {
 //        if (info.intf.keyboardread)
 //            return info.intf.keyboardread(0);
         return 0;

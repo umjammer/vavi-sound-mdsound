@@ -33,7 +33,7 @@ public class X68Sound {
 
     private final Global global = Global.getInstance();
 
-    public Opm opm;
+    public final Opm opm;
 
     public X68Sound() {
         opm = new Opm();

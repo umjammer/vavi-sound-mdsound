@@ -106,7 +106,7 @@ public class PPZ8 {
         for (int i = 0; i < 16; i++) {
             double temp = Math.pow(2.0, (i + PCM_VOLUME) / 2.0) * aVolume / 0x18000;
             for (int j = 0; j < 256; j++) {
-                volumeTable[i][j] = (short) (Math.max(Math.min((j - 128) * temp, Short.MAX_VALUE), Short.MIN_VALUE));
+                volumeTable[i][j] = (short) (Math.clamp((j - 128) * temp, Short.MIN_VALUE, Short.MAX_VALUE));
             }
         }
     }
@@ -427,8 +427,8 @@ public class PPZ8 {
                 }
             }
 
-            l = (short) Math.max(Math.min(l, Short.MAX_VALUE), Short.MIN_VALUE);
-            r = (short) Math.max(Math.min(r, Short.MAX_VALUE), Short.MIN_VALUE);
+            l = (short) Math.clamp(l, Short.MIN_VALUE, Short.MAX_VALUE);
+            r = (short) Math.clamp(r, Short.MIN_VALUE, Short.MAX_VALUE);
             outputs[0][j] += l;
             outputs[1][j] += r;
         }
@@ -523,21 +523,21 @@ public class PPZ8 {
 
                 int n = xN + table1[(psrc >> 4) & 0x0f] * deltaN / 8;
                 //logger.log(Level.TRACE, n);
-                xN = Math.max(Math.min(n, 32767), -32768);
+                xN = Math.clamp(n, -32768, 32767);
 
                 n = deltaN * table2[(psrc >> 4) & 0x0f] / 64;
                 //logger.log(Level.TRACE, n);
-                deltaN = Math.max(Math.min(n, 24576), 127);
+                deltaN = Math.clamp(n, 127, 24576);
 
                 o.add((byte) (xN / (32768 / 128) + 128));
 
                 n = xN + table1[psrc & 0x0f] * deltaN / 8;
                 //logger.log(Level.TRACE, n);
-                xN = Math.max(Math.min(n, 32767), -32768);
+                xN = Math.clamp(n, -32768, 32767);
 
                 n = deltaN * table2[psrc & 0x0f] / 64;
                 //logger.log(Level.TRACE, n);
-                deltaN = Math.max(Math.min(n, 24576), 127);
+                deltaN = Math.clamp(n, 127, 24576);
 
                 o.add((byte) (xN / (32768 / 128) + 128));
             }

@@ -9,8 +9,6 @@
 
 package mdsound.chips;
 
-import mdsound.MDSound;
-
 
 /**
  * RF5C164
@@ -307,7 +305,7 @@ public class ScdPcm {
     }
 
     private static int limit(int v, int max, int min) {
-        return Math.min(max, Math.max(v, min));
+        return Math.clamp(v, min, max);
     }
 
     public void start(int clock) {

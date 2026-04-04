@@ -224,26 +224,17 @@ public class C352 {
         }
 
         private int read(int address) {
-            switch (address % 8) {
-            case 0:
-                return this.volF;
-            case 1:
-                return this.volR;
-            case 2:
-                return this.freq;
-            case 3:
-                return this.flags;
-            case 4:
-                return this.waveBank;
-            case 5:
-                return this.waveStart;
-            case 6:
-                return this.waveEnd;
-            case 7:
-                return this.waveLoop;
-            default:
-                return 0;
-            }
+            return switch (address % 8) {
+                case 0 -> this.volF;
+                case 1 -> this.volR;
+                case 2 -> this.freq;
+                case 3 -> this.flags;
+                case 4 -> this.waveBank;
+                case 5 -> this.waveStart;
+                case 6 -> this.waveEnd;
+                case 7 -> this.waveLoop;
+                default -> 0;
+            };
         }
     }
 

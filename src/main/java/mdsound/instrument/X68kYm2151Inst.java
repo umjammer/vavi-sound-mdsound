@@ -37,7 +37,6 @@ public class X68kYm2151Inst extends Instrument.BaseInstrument implements PcmEnab
         return "OPMx";
     }
 
-    // w/o this cause npe of memory at x68000.Global
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
         assert chipId < chips.length;
@@ -158,11 +157,7 @@ public class X68kYm2151Inst extends Instrument.BaseInstrument implements PcmEnab
         soundIocs[chipId].adpcmMod(mode);
     }
 
-    public void keyOn(int chipId, int ch, int addr, int mode, int len) {
+    public void pcm8Out(int chipId, int ch, int addr, int mode, int len) {
         chips[chipId].pcm8Out(ch, null, addr, mode, len);
-    }
-
-    public void keyOff(int chipId, int ch) {
-        chips[chipId].pcm8Out(ch, null, 0, 0, 0);
     }
 }

@@ -174,7 +174,7 @@ public class SoundIocs {
         opmWait();
         x68Sound.opmPoke(opmReg1B); // ADPCM clock setting (8 or 4MHz)
         int ppiReg;
-        ppiReg = (((mode >> 6) & 0x0c) | PANTBL[mode & 3]);
+        ppiReg = (((mode >>> 6) & 0x0c) | PANTBL[mode & 3]);
         ppiReg |= (x68Sound.ppiPeek() & 0xf0);
         x68Sound.dmaPoke(0x07, ccr); // DMA transfer start
         x68Sound.ppiPoke(ppiReg); // Set sampling rate & PAN to PPI

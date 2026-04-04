@@ -541,7 +541,7 @@ public class OPNA2 extends Opna.OPNABase {
         }
     }
 
-    private FileStream createRhythmFileStream(String dir, String fname) {
+    private static FileStream createRhythmFileStream(String dir, String fname) {
         String path = dir == null || dir.isEmpty() ? fname : Path.combine(dir, fname);
         return File.exists(path) ? new FileStream(path, FileMode.Open, FileAccess.Read) : null;
     }

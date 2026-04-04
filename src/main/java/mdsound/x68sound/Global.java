@@ -10,6 +10,7 @@
 
 package mdsound.x68sound;
 
+import java.lang.System.Logger;
 import java.util.function.Function;
 
 import mdsound.Common;
@@ -21,6 +22,8 @@ import mdsound.Common;
  * @author m_puusan
  */
 public class Global {
+
+    private static final Logger logger = System.getLogger(Global.class.getName());
 
     private byte[] memory = null;
     public Opm opm;

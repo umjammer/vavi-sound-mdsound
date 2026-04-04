@@ -81,7 +81,7 @@ public class Fmgen {
     }
 
     public static int limit(int v, int max, int min) {
-        return Math.min(max, Math.max(v, min));
+        return Math.clamp(v, min, max);
     }
 
     /*
@@ -916,7 +916,7 @@ public class Fmgen {
             private void ssgShiftPhase(int mode) {
             }
 
-            private int fbCalc(int fb) {
+            private static int fbCalc(int fb) {
                 return -1;
             }
 

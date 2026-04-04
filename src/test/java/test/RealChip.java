@@ -225,11 +225,11 @@ public class RealChip {
     }
 
     public static class RSoundChip {
-        protected int SoundLocation;
+        protected final int SoundLocation;
 
-        protected int BusID;
+        protected final int BusID;
 
-        protected int SoundChip;
+        protected final int SoundChip;
 
         public int dClock = 3579545;
 

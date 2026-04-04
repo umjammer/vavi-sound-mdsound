@@ -1991,7 +1991,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
             }
         }
 
-        private int decodeADPCMASample(int a) {
+        private static int decodeADPCMASample(int a) {
             return -1;
         }
 

@@ -107,7 +107,7 @@ public class Zsg2 {
     // 16 registers per channel, 48 channels
     private static class Channel {
 
-        private int[] v = new int[16];
+        private final int[] v = new int[16];
         private int status;
         private int cur_pos;
         private int step_ptr;
@@ -132,9 +132,9 @@ public class Zsg2 {
         private int output_filter_state;
 
         // Attenuation for output channels
-        private int[] output_gain = new int[4];
+        private final int[] output_gain = new int[4];
 
-        private int[] samples = new int[5]; // +1 history
+        private final int[] samples = new int[5]; // +1 history
     }
 
     private int[] m_gain_tab;
@@ -274,7 +274,7 @@ public class Zsg2 {
             ch[0].emphasis_filter_state += raw_samples[ptr[0] + i] - ((ch[0].emphasis_filter_state + EMPHASIS_ROUNDING) >> EMPHASIS_FILTER_SHIFT);
 
             int sample = ch[0].emphasis_filter_state >> EMPHASIS_OUTPUT_SHIFT;
-            ch[0].samples[i + 1] = (short) Math.min(Math.max(sample, -32768), 32767);
+            ch[0].samples[i + 1] = (short) Math.clamp(sample, -32768, 32767);
         }
     }
 
@@ -286,8 +286,8 @@ public class Zsg2 {
             int[] mix = new int[4];
 
             // loop over all channels
-            for (int j = 0; j < m_chan.length; j++) {
-                Channel elem = m_chan[j];
+            for (Channel channel : m_chan) {
+                Channel elem = channel;
                 if ((~elem.status & STATUS_ACTIVE) != 0)
                     continue;
 
@@ -348,7 +348,7 @@ public class Zsg2 {
             }
 
             for (int output = 0; output < 4; output++)
-                outputs[output][i] = Math.min(Math.max(mix[output], -32768), 32767);
+                outputs[output][i] = Math.clamp(mix[output], -32768, 32767);
         }
         m_sample_count++;
     }
@@ -455,22 +455,20 @@ public class Zsg2 {
     }
 
     private int chan_r(int ch, int reg) {
-        switch (reg) {
-            case 0x3:
+        return switch (reg) {
+            case 0x3 ->
                 // no games read from this.
-                return m_chan[ch].status;
-            case 0x9:
+                    m_chan[ch].status;
+            case 0x9 ->
                 // pretty certain, though no games actually read from this.
-                return m_chan[ch].output_cutoff;
-            case 0xb: // Only later games (taitogn) read this register...
+                    m_chan[ch].output_cutoff;
+            case 0xb -> // Only later games (taitogn) read this register...
                 // GNet games use some of the flags to decide which channels to kill when
                 // all the channels are busy. (take raycris song #23 as an example)
-                return m_chan[ch].vol;
-            default:
-                break;
-        }
+                    m_chan[ch].vol;
+            default -> m_chan[ch].v[reg];
+        };
 
-        return m_chan[ch].v[reg];
     }
 
     // Convert ramping register value to something more usable.

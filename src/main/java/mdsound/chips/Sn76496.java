@@ -236,8 +236,8 @@ public class Sn76496 {
         }
     }
 
-    int[] vol = new int[4];
-    int[] ggst = new int[2];
+    final int[] vol = new int[4];
+    final int[] ggst = new int[2];
 
     public void update(int[][] outputs, int samples) {
         int i;

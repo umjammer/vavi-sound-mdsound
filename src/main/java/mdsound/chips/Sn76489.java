@@ -55,7 +55,7 @@ public class Sn76489 {
     // Psg registers
 
     /** Tone, vol x4 */
-    public int[] registers = new int[8];
+    public final int[] registers = new int[8];
     private int latchedRegister;
     private int noiseShiftRegister;
     /** Noise channel signal generator frequency */

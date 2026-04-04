@@ -92,7 +92,7 @@ public class YmFmYm2608Inst extends Instrument.BaseInstrument {
         return 0;
     }
 
-    int[] buffer = new int[2];
+    final int[] buffer = new int[2];
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {

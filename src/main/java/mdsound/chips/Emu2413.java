@@ -28,7 +28,7 @@ public class Emu2413 {
 
     private static final Logger logger = getLogger(Emu2413.class.getName());
 
-    private final int OPLL_DEBUG = 0;
+    private static final int OPLL_DEBUG = 0;
 
     private enum OPLL_TONE_ENUM {
         OPLL_2413_TONE,
@@ -88,7 +88,7 @@ public class Emu2413 {
     }
 
     // mask
-    private int OPLL_MASK_CH(int x) {
+    private static int OPLL_MASK_CH(int x) {
         return 1 << x;
     }
 
@@ -517,7 +517,7 @@ public class Emu2413 {
     }
 
     /** f_inp: input frequency. f_out: output frequency, ch: number of channels */
-    private OPLL_RateConv OPLL_RateConv_new(double f_inp, double f_out, int ch) {
+    private static OPLL_RateConv OPLL_RateConv_new(double f_inp, double f_out, int ch) {
         OPLL_RateConv conv = new OPLL_RateConv();// malloc(sizeof(OPLL_RateConv));
 
         conv.ch = ch;
@@ -550,7 +550,7 @@ public class Emu2413 {
         return table[Math.min(SINC_RESO * LW / 2 - 1, index)];
     }
 
-    private void OPLL_RateConv_reset(OPLL_RateConv conv) {
+    private static void OPLL_RateConv_reset(OPLL_RateConv conv) {
         conv.timer = 0;
         for (int i = 0; i < conv.ch; i++) {
             for (int j = 0; j < LW; j++) {
@@ -561,7 +561,7 @@ public class Emu2413 {
     }
 
     /* put original data to this converter at f_inp. */
-    private void OPLL_RateConv_putData(OPLL_RateConv conv, int ch, short data) {
+    private static void OPLL_RateConv_putData(OPLL_RateConv conv, int ch, short data) {
         short[] buf = conv.buf[ch];
         for (int i = 0; i < LW - 1; i++) {
             buf[i] = buf[i + 1];
@@ -598,11 +598,10 @@ public class Emu2413 {
         }
 
         for (int x = 0; x < PG_WIDTH / 2; x++) {
-            fullsin_table[PG_WIDTH / 2 + x] = (int) (0x8000 | fullsin_table[x]);
+            fullsin_table[PG_WIDTH / 2 + x] = 0x8000 | fullsin_table[x];
         }
 
-        for (int x = 0; x < PG_WIDTH / 2; x++)
-            halfSin_table[x] = fullsin_table[x];
+        System.arraycopy(fullsin_table, 0, halfSin_table, 0, PG_WIDTH / 2);
 
         for (int x = PG_WIDTH / 2; x < PG_WIDTH; x++)
             halfSin_table[x] = 0xfff;
@@ -631,13 +630,13 @@ public class Emu2413 {
                 for (int TL = 0; TL < 64; TL++) {
                     for (int KL = 0; KL < 4; KL++) {
                         if (KL == 0) {
-                            tll_table[(block << 4) | fnum][TL][KL] = (int) TL2EG(TL);
+                            tll_table[(block << 4) | fnum][TL][KL] = TL2EG(TL);
                         } else {
                             int tmp = (int) (kl_table[fnum] - (3.000) * 2 * (7 - block));
                             if (tmp <= 0)
                                 tll_table[(block << 4) | fnum][TL][KL] = TL2EG(TL);
                             else
-                                tll_table[(block << 4) | fnum][TL][KL] = (int) ((tmp >> (3 - KL)) / EG_STEP) + (int) TL2EG(TL);
+                                tll_table[(block << 4) | fnum][TL][KL] = (int) ((tmp >> (3 - KL)) / EG_STEP) + TL2EG(TL);
                         }
                     }
                 }
@@ -672,12 +671,12 @@ public class Emu2413 {
     //
     // Synthesizing
     //
-    private final int SLOT_BD1 = 12;
+    private static final int SLOT_BD1 = 12;
     private int SLOT_BD2 = 13;
-    private final int SLOT_HH = 14;
-    private final int SLOT_SD = 15;
-    private final int SLOT_TOM = 16;
-    private final int SLOT_CYM = 17;
+    private static final int SLOT_HH = 14;
+    private static final int SLOT_SD = 15;
+    private static final int SLOT_TOM = 16;
+    private static final int SLOT_CYM = 17;
 
     /* utility macros */
     private OPLL_SLOT MOD(int x) {
@@ -693,7 +692,7 @@ public class Emu2413 {
     }
 
 //#if OPLL_DEBUG
-    private void _debug_print_patch(OPLL_SLOT slot) {
+    private static void _debug_print_patch(OPLL_SLOT slot) {
         OPLL_PATCH p = slot.patch;
 logger.log(Level.TRACE, "[slot#{0} am:{1} pm:{2} eg:{3} kr:{4} ml:{5} kl:{6} tl:{7} ws:{8} fb:{9} A:{10} D:{11} S:{12} R:{13}]",
                 slot.number, //
@@ -702,24 +701,18 @@ logger.log(Level.TRACE, "[slot#{0} am:{1} pm:{2} eg:{3} kr:{4} ml:{5} kl:{6} tl:
                 p.AR, p.DR, p.EG, p.SL, p.RR);
     }
 
-    private String _debug_eg_state_name(OPLL_SLOT slot) {
-        switch (__OPLL_EG_STATE.values()[slot.eg_state]) {
-            case ATTACK:
-                return "attack";
-            case DECAY:
-                return "decay";
-            case SUSTAIN:
-                return "sustain";
-            case RELEASE:
-                return "release";
-            case DAMP:
-                return "damp";
-            default:
-                return "unknown";
-        }
+    private static String _debug_eg_state_name(OPLL_SLOT slot) {
+        return switch (__OPLL_EG_STATE.values()[slot.eg_state]) {
+            case ATTACK -> "attack";
+            case DECAY -> "decay";
+            case SUSTAIN -> "sustain";
+            case RELEASE -> "release";
+            case DAMP -> "damp";
+            default -> "unknown";
+        };
     }
 
-    private void _debug_print_slot_info(OPLL_SLOT slot) {
+    private static void _debug_print_slot_info(OPLL_SLOT slot) {
         String name = _debug_eg_state_name(slot);
 logger.log(Level.TRACE, "[slot#{0} state:{1} fnum:{2:03x} rate:{3}-{4}]",
                 slot.number, name, slot.blk_fnum, slot.eg_rate_h,
@@ -729,7 +722,7 @@ logger.log(Level.TRACE, "[slot#{0} state:{1} fnum:{2:03x} rate:{3}-{4}]",
     }
 //#endif
 
-    private int get_parameter_rate(OPLL_SLOT slot) {
+    private static int get_parameter_rate(OPLL_SLOT slot) {
 
         if ((slot.type & 1) == 0 && slot.key_flag == 0) {
             return 0;
@@ -770,11 +763,11 @@ logger.log(Level.TRACE, "[slot#{0} state:{1} fnum:{2:03x} rate:{3}-{4}]",
         }
     }
 
-    private void request_update(OPLL_SLOT slot, int flag) {
+    private static void request_update(OPLL_SLOT slot, int flag) {
         slot.update_requests |= flag;
     }
 
-    private void commit_slot_update(OPLL_SLOT slot) {
+    private static void commit_slot_update(OPLL_SLOT slot) {
 //#if OPLL_DEBUG
         if (slot.last_eg_state != slot.eg_state) {
             _debug_print_slot_info(slot);
@@ -798,7 +791,7 @@ logger.log(Level.TRACE, "[slot#{0} state:{1} fnum:{2:03x} rate:{3}-{4}]",
             slot.rks = rks_table[slot.blk_fnum >> 8][slot.patch.KR];
         }
 
-        if ((slot.update_requests & ((int) SLOT_UPDATE_FLAG.UPDATE_RKS.v | (int) SLOT_UPDATE_FLAG.UPDATE_EG.v)) != 0) {
+        if ((slot.update_requests & (SLOT_UPDATE_FLAG.UPDATE_RKS.v | SLOT_UPDATE_FLAG.UPDATE_EG.v)) != 0) {
             int p_rate = get_parameter_rate(slot);
 
             if (p_rate == 0) {
@@ -925,7 +918,7 @@ logger.log(Level.TRACE, "[slot#{0} state:{1} fnum:{2:03x} rate:{3}-{4}]",
         request_update(CAR(ch), SLOT_UPDATE_FLAG.UPDATE_TLL.v);
     }
 
-    private void set_slot_volume(OPLL_SLOT slot, int volume) {
+    private static void set_slot_volume(OPLL_SLOT slot, int volume) {
         slot.volume = volume;
         request_update(slot, SLOT_UPDATE_FLAG.UPDATE_TLL.v);
     }
@@ -935,7 +928,7 @@ logger.log(Level.TRACE, "[slot#{0} state:{1} fnum:{2:03x} rate:{3}-{4}]",
         OPLL_SLOT car = CAR(ch);
         OPLL_SLOT mod = MOD(ch);
         car.fnum = fNum;
-        car.blk_fnum = (int) ((car.blk_fnum & 0xe00) | (fNum & 0x1ff));
+        car.blk_fnum = (car.blk_fnum & 0xe00) | (fNum & 0x1ff);
         mod.fnum = fNum;
         mod.blk_fnum = (mod.blk_fnum & 0xe00) | (fNum & 0x1ff);
         request_update(car, SLOT_UPDATE_FLAG.UPDATE_EG.v | SLOT_UPDATE_FLAG.UPDATE_RKS.v | SLOT_UPDATE_FLAG.UPDATE_TLL.v);
@@ -1026,7 +1019,7 @@ logger.log(Level.TRACE, "[slot#{0} state:{1} fnum:{2:03x} rate:{3}-{4}]",
         if (reset != 0) {
             slot.pg_phase = 0;
         }
-        slot.pg_phase += (int) ((((slot.fnum & 0x1ff) * 2 + pm) * ml_table[slot.patch.ML]) << slot.blk >> 2);
+        slot.pg_phase += (((slot.fnum & 0x1ff) * 2 + pm) * ml_table[slot.patch.ML]) << slot.blk >> 2;
         slot.pg_phase &= (DP_WIDTH - 1);
         slot.pg_out = slot.pg_phase >> DP_BASE_BITS;
     }
@@ -1034,46 +1027,49 @@ logger.log(Level.TRACE, "[slot#{0} state:{1} fnum:{2:03x} rate:{3}-{4}]",
     private static int lookup_attack_step(OPLL_SLOT slot, int counter) {
         int index;
 
-        switch (slot.eg_rate_h) {
-            case 12:
+        return switch (slot.eg_rate_h) {
+            case 12 -> {
                 index = (counter & 0xc) >> 1;
-                return 4 - eg_step_tables[slot.eg_rate_l][index];
-            case 13:
+                yield 4 - eg_step_tables[slot.eg_rate_l][index];
+            }
+            case 13 -> {
                 index = (counter & 0xc) >> 1;
-                return 3 - eg_step_tables[slot.eg_rate_l][index];
-            case 14:
+                yield 3 - eg_step_tables[slot.eg_rate_l][index];
+            }
+            case 14 -> {
                 index = (counter & 0xc) >> 1;
-                return 2 - eg_step_tables[slot.eg_rate_l][index];
-            case 0:
-            case 15:
-                return 0;
-            default:
+                yield 2 - eg_step_tables[slot.eg_rate_l][index];
+            }
+            case 0, 15 -> 0;
+            default -> {
                 index = counter >> slot.eg_shift;
-                return eg_step_tables[slot.eg_rate_l][index & 7] != 0 ? 4 : 0;
-        }
+                yield eg_step_tables[slot.eg_rate_l][index & 7] != 0 ? 4 : 0;
+            }
+        };
     }
 
     private static int lookup_decay_step(OPLL_SLOT slot, int counter) {
         int index;
 
-        switch (slot.eg_rate_h) {
-            case 0:
-                return 0;
-            case 13:
+        return switch (slot.eg_rate_h) {
+            case 0 -> 0;
+            case 13 -> {
                 index = ((counter & 0xc) >> 1) | (counter & 1);
-                return eg_step_tables[slot.eg_rate_l][index];
-            case 14:
+                yield eg_step_tables[slot.eg_rate_l][index];
+            }
+            case 14 -> {
                 index = ((counter & 0xc) >> 1);
-                return eg_step_tables[slot.eg_rate_l][index] + 1;
-            case 15:
-                return 2;
-            default:
+                yield eg_step_tables[slot.eg_rate_l][index] + 1;
+            }
+            case 15 -> 2;
+            default -> {
                 index = counter >> slot.eg_shift;
-                return eg_step_tables[slot.eg_rate_l][index & 7];
-        }
+                yield eg_step_tables[slot.eg_rate_l][index & 7];
+            }
+        };
     }
 
-    private void start_envelope(OPLL_SLOT slot) {
+    private static void start_envelope(OPLL_SLOT slot) {
         if (Math.min(15, slot.patch.AR + (slot.rks >> 2)) == 15) {
             slot.eg_state = __OPLL_EG_STATE.DECAY.ordinal();
             slot.eg_out = 0;
@@ -1091,7 +1087,7 @@ logger.log(Level.TRACE, "[slot#{0} state:{1} fnum:{2:03x} rate:{3}-{4}]",
             if (0 < slot.eg_out && 0 < slot.eg_rate_h && (eg_counter & mask & ~3) == 0) {
                 int s = lookup_attack_step(slot, eg_counter);
                 if (0 < s) {
-                    slot.eg_out = (int) Math.max(0, (int) ((int) slot.eg_out - (slot.eg_out >> s) - 1));
+                    slot.eg_out = Math.max(0, slot.eg_out - (slot.eg_out >> s) - 1);
                 }
             }
         } else {
@@ -1165,14 +1161,14 @@ logger.log(Level.TRACE, "[slot#{0} state:{1} fnum:{2:03x} rate:{3}-{4}]",
     }
 
     /** output: -4095...4095 */
-    private int lookup_exp_table(int i) {
+    private static int lookup_exp_table(int i) {
         // from andete's expression
         int t = exp_table[(i & 0xff) ^ 0xff] + 1024;
         int res = t >> ((i & 0x7f00) >> 8);
         return ((i & 0x8000) != 0 ? ~res : res) << 1;
     }
 
-    private int to_linear(int h, OPLL_SLOT slot, int am) {
+    private static int to_linear(int h, OPLL_SLOT slot, int am) {
         if (slot.eg_out > EG_MAX)
             return 0;
 
@@ -1194,7 +1190,7 @@ logger.log(Level.TRACE, "[slot#{0} state:{1} fnum:{2:03x} rate:{3}-{4}]",
     private int calc_slot_mod(int ch) {
         OPLL_SLOT slot = MOD(ch);
 
-        int fm = slot.patch.FB > 0 ? ((slot.output[1] + slot.output[0]) >> (int) (9 - slot.patch.FB)) : 0;
+        int fm = slot.patch.FB > 0 ? ((slot.output[1] + slot.output[0]) >> (9 - slot.patch.FB)) : 0;
         int am = slot.patch.AM != 0 ? this.lfo_am : 0;
 
         slot.output[1] = slot.output[0];
@@ -1210,7 +1206,7 @@ logger.log(Level.TRACE, "[slot#{0} state:{1} fnum:{2:03x} rate:{3}-{4}]",
     }
 
     /** Specify phase offset directly based on 10-bit (1024-length) sine table */
-    private int _PD(int phase) {
+    private static int _PD(int phase) {
         return ((PG_BITS < 10) ? (phase >> (10 - PG_BITS)) : (phase << (PG_BITS - 10)));
     }
 
@@ -1638,7 +1634,7 @@ logger.log(Level.TRACE, "[slot#{0} state:{1} fnum:{2:03x} rate:{3}-{4}]",
     public void extendFunction(int reg, int data) {
         switch (reg) {
             case 0x40: // Pan Channel specification
-                this.panCh = Math.min(Math.max(data, 0), 13);
+                this.panCh = Math.clamp(data, 0, 13);
                 break;
             case 0x41: // Pan value specification
                 this.pan[this.panCh] = ((data & 0xf0) != 0 ? 0x02 : 0x00) |

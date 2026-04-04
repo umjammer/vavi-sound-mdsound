@@ -375,7 +375,9 @@ public class Pcm8 {
         return ((outPcm >> 9) * volume) >> 4;
     }
 
+static int CC;
     public int out(byte[] adrsBuf, int adrsPtr, int mode, int len) {
+if (CC++ < 300) { System.out.printf("%03d: %05x, %05x, %04x%n", CC, adrsPtr, mode, len); }
         if (len <= 0) {
             if (len < 0) {
                 return getRest();

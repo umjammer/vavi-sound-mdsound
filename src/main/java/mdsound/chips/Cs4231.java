@@ -3,6 +3,7 @@ package mdsound.chips;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -232,7 +233,7 @@ public class Cs4231 {
         public DMA() {
             this.ptr = 0;
             this.cnt = 0;
-            for (int i = 0; i < fifoBuf.length; i++) fifoBuf[i] = (byte) 0x80;
+            Arrays.fill(fifoBuf, (byte) 0x80);
             //this.fifoBuf = fifoBuf;
             //this.int0bEnt = int0bEnt;
         }
@@ -297,17 +298,17 @@ public class Cs4231 {
         private int fifoend1 = FIFO_SIZE * 2;
         private int fifoptr2 = FIFO_SIZE * 2;
         private int fifoend2 = FIFO_SIZE * 4;
-        private final int fifofin = FIFO_SIZE * 2 * MAXBUF;
+        private static final int fifofin = FIFO_SIZE * 2 * MAXBUF;
         private int dma_adr = 0;
         private int dma_bank = 0;
         private int dma_count = 0;
-        private final int dma_data = FIFO_SIZE * 2;
-        private final byte dma_chan = 3;
+        private static final int dma_data = FIFO_SIZE * 2;
+        private static final byte dma_chan = 3;
         private int panl1_ = 0xc008; // or al,al
         private int panl2_ = 0xc008; // or al,al
-        private final int level1_ = 0x007f;
-        private final int level2_ = 0x7f;
-        private final int level3_ = 0x7f;
+        private static final int level1_ = 0x007f;
+        private static final int level2_ = 0x7f;
+        private static final int level3_ = 0x7f;
         public int jump1_ = 0;
         public int jump2_ = 0;
         /** EMS handle for PCM */

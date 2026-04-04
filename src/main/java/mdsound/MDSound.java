@@ -168,7 +168,7 @@ public class MDSound {
             else
                 this.tVolumeBalance = this.volumeBalance;
             int n = (((int) (16384.0 * Math.pow(10.0, this.volume / 40.0)) * this.tVolumeBalance) >> 8);
-            this.tVolume = Math.max(Math.min((int) (n * volumeMul), Short.MAX_VALUE), Short.MIN_VALUE);
+            this.tVolume = Math.clamp((int) (n * volumeMul), Short.MIN_VALUE, Short.MAX_VALUE);
         }
     }
 
@@ -319,7 +319,7 @@ if (!notContains.contains(i)) {
 //#region VisVolume
 
     public Set<Instrument> getFirstInstruments() {
-        return instruments.values().stream().map(is -> is.get(0)).collect(Collectors.toSet());
+        return instruments.values().stream().map(List::getFirst).collect(Collectors.toSet());
     }
 
     /**

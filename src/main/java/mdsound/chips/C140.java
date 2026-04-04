@@ -1,7 +1,5 @@
 package mdsound.chips;
 
-import java.util.Arrays;
-
 
 /**
  * C140
@@ -126,22 +124,19 @@ public class C140 {
     private int findSample(int adrs, int bank, int voice) {
         adrs = (bank << 16) + adrs;
 
-        switch (bankingType) {
-        case SYSTEM2:
-            // System 2 banking
-            return ((adrs & 0x20_0000) >> 2) | (adrs & 0x7_ffff);
+        return switch (bankingType) {
+            case SYSTEM2 ->
+                // System 2 banking
+                    ((adrs & 0x20_0000) >> 2) | (adrs & 0x7_ffff);
+            case SYSTEM21 ->
+                // System 21 banking.
+                // similar to System 2's.
+                    ((adrs & 0x30_0000) >> 1) | (adrs & 0x7_ffff);
+            case ASIC219 ->
+                // ASIC219's banking is fairly simple
+                    ((this.reg[asic219banks[voice / 4]] & 0x3) * 0x2_0000) | adrs;
+        };
 
-        case SYSTEM21:
-            // System 21 banking.
-            // similar to System 2's.
-            return ((adrs & 0x30_0000) >> 1) | (adrs & 0x7_ffff);
-
-        case ASIC219:
-            // ASIC219's banking is fairly simple
-            return ((this.reg[asic219banks[voice / 4]] & 0x3) * 0x2_0000) | adrs;
-        }
-
-        return 0;
     }
 
     public void write(int offset, int data) {

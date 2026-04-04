@@ -466,7 +466,7 @@ public class MPcmPP {
         this.work[ch].PcmKind = num;
         this.work[ch].freq = baseClockTbl[num];
         this.work[ch].outs = outsTable[num];
-        this.work[ch].type = (int) typeTable[num];
+        this.work[ch].type = typeTable[num];
         if (baseClockTbl[num] < 0 && num >= 0xf) {
             this.work[ch].freq = d3Freq / 256.0;
         }
@@ -699,8 +699,8 @@ public class MPcmPP {
                 if (!mute) {
                     int a = _buffer[0][buf_ptr] + (sampleL * this.work[ch].lr[0]);
                     int b = _buffer[1][buf_ptr] + (sampleR * this.work[ch].lr[1]);
-                    a = Math.min(Math.max(a, Short.MIN_VALUE), Short.MAX_VALUE);
-                    b = Math.min(Math.max(b, Short.MIN_VALUE), Short.MAX_VALUE);
+                    a = Math.clamp(a, Short.MIN_VALUE, Short.MAX_VALUE);
+                    b = Math.clamp(b, Short.MIN_VALUE, Short.MAX_VALUE);
                     _buffer[0][buf_ptr] = a;
                     _buffer[1][buf_ptr] = b;
                     buf_ptr++;

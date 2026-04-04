@@ -14,7 +14,6 @@ import java.util.Map;
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
 import mdsound.Instrument.PcmEnabledInstrument;
-import mdsound.chips.C140;
 import mdsound.chips.C219;
 
 import static java.lang.System.getLogger;

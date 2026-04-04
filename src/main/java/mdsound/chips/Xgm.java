@@ -16,8 +16,8 @@ public class Xgm {
     }
 
     private static class SampleID {
-        private final int addr = 0;
-        private final int size = 0;
+        private int addr = 0;
+        private int size = 0;
     }
 
     /** Information on each channel */
@@ -123,7 +123,7 @@ public class Xgm {
             }
         }
 
-        o = (short) Math.min(Math.max(o, Byte.MIN_VALUE + 1), Byte.MAX_VALUE); // clipping
+        o = (short) Math.clamp(o, Byte.MIN_VALUE + 1, Byte.MAX_VALUE); // clipping
         o += 0x80; // Move to the center position in OPN2
 
         return (short) o;

@@ -2519,16 +2519,14 @@ public abstract class Fm2612 {
         }
 
         public int read(int a) {
-            switch (a & 3) {
-            case 0: // status 0
-                return this.opn.st.setStatus();
-            case 1:
-            case 2:
-            case 3:
+            return switch (a & 3) {
+                case 0 -> // status 0
+                        this.opn.st.setStatus();
+                case 1, 2, 3 ->
 //logger.log(Level.TRACE, "Ym2612 #%p:A=%d read unmapped area".formatted(this.OPN.ST.param, a));
-                return this.opn.st.setStatus();
-            }
-            return 0;
+                        this.opn.st.setStatus();
+                default -> 0;
+            };
         }
 
         public int write(int a, int v) {
@@ -2896,7 +2894,7 @@ public abstract class Fm2612 {
     static class RunningDevice {
         private void saveState(Ym2612 f2612) {
             RunningDevice.state_save_register_device_item_array(0, f2612.regs);
-            this.saveState(f2612.opn.st);
+            RunningDevice.saveState(f2612.opn.st);
             saveChannel(f2612.ch, 6);
             // 3slots
             RunningDevice.state_save_register_device_item_array(0, f2612.opn.sl3.fc);
@@ -2950,7 +2948,7 @@ public abstract class Fm2612 {
             }
         }
 
-        private void saveState(Ym2612.Opn.State st) {
+        private static void saveState(Ym2612.Opn.State st) {
 //#if FM_BUSY_FLAG_SUPPORT
 //            state_save_register_device_item(device, 0, st.busy_expiry_time.seconds );
 //            state_save_register_device_item(device, 0, st.busy_expiry_time.attoseconds );

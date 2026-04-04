@@ -920,7 +920,7 @@ public class Fmvgen extends Fmgen {
         private void ssgShiftPhase(int mode) {
         }
 
-        private int fbCalc(int fb) {
+        private static int fbCalc(int fb) {
             return -1;
         }
 

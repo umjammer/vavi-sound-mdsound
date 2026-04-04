@@ -135,8 +135,8 @@ logger.log(Level.ERROR, e.getMessage(), e);
         counter[1] = 0;
         counter[2] = 0;
         phase[0] = 0;
-        phase[0] = 1;
-        phase[0] = 2;
+        phase[1] = 1;
+        phase[2] = 2;
     }
 
     static final short[][] sqrTbl = {

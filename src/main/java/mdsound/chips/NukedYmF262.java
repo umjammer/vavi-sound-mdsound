@@ -36,6 +36,7 @@ import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
 import java.nio.ByteBuffer;
 import java.nio.ShortBuffer;
+import java.util.Arrays;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
@@ -1064,7 +1065,7 @@ public class NukedYmF262 {
 //        for (int ii = 0; ii < 36; ii++)
 //#endif
         {
-assert chip.slot[ii].channel != null : "slot: " + ii + ", slot: @" + chip.slot.hashCode() + ", chip: @" + chip.hashCode();
+assert chip.slot[ii].channel != null : "slot: " + ii + ", slot: @" + Arrays.hashCode(chip.slot) + ", chip: @" + chip.hashCode();
             OPL3_ProcessSlot(chip.slot[ii]);
         }
 

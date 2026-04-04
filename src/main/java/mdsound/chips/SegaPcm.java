@@ -18,7 +18,7 @@ public class SegaPcm {
     }
 
     private byte[] ram;
-    private final int ptrRam = 0;
+    private int ptrRam = 0;
     private final int[] low = new int[16];
     private int romSize;
     private byte[] rom;

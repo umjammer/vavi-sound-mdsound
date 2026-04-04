@@ -10,7 +10,6 @@ import mdsound.chips.NukedYmF262;
 import mdsound.chips.NukedYmF262.Chip;
 
 import static java.lang.System.getLogger;
-import static mdsound.chips.NukedYmF262.RSM_FRAC;
 
 
 // YmF262 OPL3 nuked TODO WIP

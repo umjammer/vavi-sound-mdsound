@@ -1860,7 +1860,7 @@ public class Emu2413 {
 
         }
 
-        private void OPLL_setPatch(Opll opll, byte[] dump) {
+        private static void OPLL_setPatch(Opll opll, byte[] dump) {
             Slot.Patch[][][] patch = new Slot.Patch[OPLL_TONE_NUM][][];
             patch[0] = new Slot.Patch[2][];
             for (int i = 0; i < 19; i++) {

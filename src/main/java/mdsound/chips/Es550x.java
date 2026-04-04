@@ -203,12 +203,12 @@ public abstract class Es550x {
     //virtual inline u32 get_ca(u32 control) { return 0; }
     //virtual inline u32 get_lp(u32 control) { return 0; }
 
-    private long lShift_signed(long val, int shift) {
+    private static long lShift_signed(long val, int shift) {
         return (shift >= 0) ? val << shift : val >> (-shift);
     }
 //    private int rshift_signed(int val, int shift) { return (shift >= 0) ? val >> shift : val << (-shift); }
 //    private int rshift_signed(long val, int shift) { return 0; }// (shift >= 0) ? val >> shift : val << (-shift); }
-    private long rShift_signed(long val, int shift) {
+    private static long rShift_signed(long val, int shift) {
         return (shift >= 0) ? val >> shift : val << (-shift);
     }
 
@@ -392,14 +392,14 @@ public abstract class Es550x {
     public void compute_tables(int total_volume_bit, int exponent_bit, int mantissa_bit) {
         // allocate ulaw lookup table
         m_ulaw_lookup = new ArrayList<>();
-        for (int i = 0; i < (1 << (int) ULAW_MAXBITS); i++)
+        for (int i = 0; i < (1 << ULAW_MAXBITS); i++)
             m_ulaw_lookup.add((short) 0);
 
         // generate ulaw lookup table
-        for (int i = 0; i < (1 << (int) ULAW_MAXBITS); i++) {
-            short rawval = (short) ((i << (int) (16 - ULAW_MAXBITS)) | (1 << (int) (15 - ULAW_MAXBITS)));
+        for (int i = 0; i < (1 << ULAW_MAXBITS); i++) {
+            short rawval = (short) ((i << (16 - ULAW_MAXBITS)) | (1 << (15 - ULAW_MAXBITS)));
             byte exponent = (byte) (rawval >> 13);
-            int mantissa = (int) ((rawval << 3) & 0xffff);
+            int mantissa = (rawval << 3) & 0xffff;
 
             if (exponent == 0)
                 m_ulaw_lookup.set(i, (short) (mantissa >> 7));
@@ -451,7 +451,7 @@ public abstract class Es550x {
                 (((1L << address_integer) - 1) << address_frac) | ((1L << address_frac) - 1),
                 m_address_acc_shift);
         if (m_address_acc_shift > 0)
-            m_address_acc_mask = m_address_acc_mask | (long) ((1L << m_address_acc_shift) - 1);
+            m_address_acc_mask = m_address_acc_mask | ((1L << m_address_acc_shift) - 1);
     }
 
     /**
@@ -487,9 +487,9 @@ public abstract class Es550x {
         pole[0] = sample;
     }
 
-    private void apply_filters(/* ref */ es550x_voice[] voice, /* ref */ int[] sample) {
+    private static void apply_filters(/* ref */ es550x_voice[] voice, /* ref */ int[] sample) {
         // pole 1 is always low-pass using K1
-        sample[0] = apply_lowpass(sample[0], (int) voice[0].k1, voice[0].o1n1);
+        sample[0] = apply_lowpass(sample[0], voice[0].k1, voice[0].o1n1);
         int[] tmp = new int[] {voice[0].o1n1};
         update_pole(/* ref */ tmp, sample[0]);
         voice[0].o1n1 = tmp[0];
@@ -543,12 +543,12 @@ public abstract class Es550x {
 
             case LP3 | LP4:
                 // pole 3 is low-pass using K1
-                sample[0] = apply_lowpass(sample[0], (int) voice[0].k1, voice[0].o3n1);
+                sample[0] = apply_lowpass(sample[0], voice[0].k1, voice[0].o3n1);
                 tmp[0] = voice[0].o3n2; tmp2[0] = voice[0].o3n1;
                 update_2_pole(/* ref */ tmp, /* ref */tmp2, sample[0]);
                 voice[0].o3n2 = tmp[0]; voice[0].o3n1 = tmp2[0];
                 // pole 4 is low-pass using K2
-                sample[0] = apply_lowpass(sample[0], (int) voice[0].k2, voice[0].o4n1);
+                sample[0] = apply_lowpass(sample[0], voice[0].k2, voice[0].o4n1);
                 tmp[0] = voice[0].o4n1;
                 update_pole(/* ref */ tmp, sample[0]);
                 voice[0].o4n1 = tmp[0];

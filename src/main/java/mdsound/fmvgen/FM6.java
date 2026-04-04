@@ -107,7 +107,7 @@ public class FM6 {
         case 0x2b:
             waveType = data & 0x3;
             waveCh = (data >> 4) & 0xf;
-            waveCh = Math.max(Math.min(waveCh, 11), 0);
+            waveCh = Math.clamp(waveCh, 0, 11);
             waveCounter = 0;
             if ((data & 0x4) != 0) Fmvgen.waveReset(waveCh, waveType);
             break;
