@@ -102,7 +102,7 @@ public class PSG {
      * Initialize Psg. (RESET)
      */
     public void reset() {
-        for (int i = 0; i < 14; i++)
+        for (int i = 0; i < 15; i++)
             setReg(i, 0);
         setReg(7, 0xff);
         setReg(14, 0xff);
@@ -264,8 +264,8 @@ public class PSG {
                             sCount[2] += sPeriod[2];
                         }
                         sample /= (1 << overSampling);
-                        dest[ptrDest + 0] += sample;
-                        dest[ptrDest + 1] += sample;
+                        sample = Math.clamp(dest[ptrDest + 0] + sample, -0x8000, 0x7fff);
+                        sample = Math.clamp(dest[ptrDest + 1] + sample, -0x8000, 0x7fff);
                         ptrDest += 2;
 
                         visVolume = sample;
@@ -294,8 +294,8 @@ public class PSG {
                             sCount[2] += sPeriod[2];
                         }
                         sample /= (1 << overSampling);
-                        dest[ptrDest + 0] += sample;
-                        dest[ptrDest + 1] += sample;
+                        sample = Math.clamp(dest[ptrDest + 0] + sample, -0x8000, 0x7fff);
+                        sample = Math.clamp(dest[ptrDest + 1] + sample, -0x8000, 0x7fff);
                         ptrDest += 2;
 
                         visVolume = sample;
@@ -340,8 +340,8 @@ public class PSG {
 
                     }
                     sample /= (1 << overSampling);
-                    dest[ptrDest + 0] += sample;
-                    dest[ptrDest + 1] += sample;
+                    sample = Math.clamp(dest[ptrDest + 0] + sample, -0x8000, 0x7fff);
+                    sample = Math.clamp(dest[ptrDest + 1] + sample, -0x8000, 0x7fff);
                     ptrDest += 2;
 
                     visVolume = sample;

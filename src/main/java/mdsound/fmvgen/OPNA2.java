@@ -19,8 +19,6 @@ import mdsound.fmgen.Opna;
 import mdsound.fmvgen.Fmvgen.Effects;
 import mdsound.fmvgen.effect.ReversePhase;
 
-import static mdsound.fmgen.Fmgen.limit;
-
 
 /** YM2609(OPNA2) */
 public class OPNA2 extends Opna.OPNABase {
@@ -504,7 +502,7 @@ public class OPNA2 extends Opna.OPNABase {
             for (int i = 0; i < 6; i++) {
                 Rhythm r = rhythm[i];
                 if ((rhythmKey & (1 << i)) != 0 && r.level < 128) {
-                    int db = limit(rhythmTl + rhythmTVol + r.level + r.volume, 127, -31);
+                    int db = Math.clamp(rhythmTl + rhythmTVol + r.level + r.volume, -31, 127);
                     int vol = tlTable[Fmvgen.FM_TLPOS + (db << (Fmvgen.FM_TLBITS - 7))] >> 4;
                     int maskL = -((r.pan >> 1) & 1);
                     int maskR = -(r.pan & 1);

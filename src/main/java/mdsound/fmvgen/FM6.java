@@ -347,16 +347,16 @@ public class FM6 {
                 mixSubS(activech, iDest, iBuf);
             }
 
-            v = ((Fmvgen.limit(iBuf[0], 0x7fff, -0x8000) * fmVolume) >> 14);
+            v = ((Math.clamp(iBuf[0], -0x8000, 0x7fff) * fmVolume) >> 14);
             buffer[dest + 0] += v;
             visVolume[0] = v;
 
-            v = ((Fmvgen.limit(iBuf[1], 0x7fff, -0x8000) * fmVolume) >> 14);
+            v = ((Math.clamp(iBuf[1], -0x8000, 0x7fff) * fmVolume) >> 14);
             buffer[dest + 1] += v;
             visVolume[1] = v;
 
-            int rvL = ((Fmvgen.limit(iBuf[2], 0x7fff, -0x8000) * fmVolume) >> 14);
-            int rvR = ((Fmvgen.limit(iBuf[3], 0x7fff, -0x8000) * fmVolume) >> 14);
+            int rvL = ((Math.clamp(iBuf[2], -0x8000, 0x7fff) * fmVolume) >> 14);
+            int rvR = ((Math.clamp(iBuf[3], -0x8000, 0x7fff) * fmVolume) >> 14);
 
             effects.reverb.storeDataC(rvL, rvR);
         }

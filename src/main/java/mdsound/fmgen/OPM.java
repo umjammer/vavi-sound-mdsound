@@ -8,8 +8,6 @@ package mdsound.fmgen;
 
 import java.util.Random;
 
-import static mdsound.fmgen.Fmgen.limit;
-
 
 /**
  * A sound source unit that produces a sound similar to YM2151 (OPM)
@@ -502,8 +500,8 @@ public class OPM extends Timer {
                     mixSub(activeCh, iDest, iBuf);
                 }
 
-                buffer[dest + 0] += ((limit((iBuf[1] + iBuf[3]), 0xffff, -0x10000) * fmVolume) >> 14);
-                buffer[dest + 1] += ((limit((iBuf[2] + iBuf[3]), 0xffff, -0x10000) * fmVolume) >> 14);
+                buffer[dest + 0] += ((Math.clamp((iBuf[1] + iBuf[3]), -0x10000, 0xffff) * fmVolume) >> 14);
+                buffer[dest + 1] += ((Math.clamp((iBuf[2] + iBuf[3]), -0x10000, 0xffff) * fmVolume) >> 14);
             }
         }
     }

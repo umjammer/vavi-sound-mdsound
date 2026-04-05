@@ -76,14 +76,6 @@ public class Fmgen {
 
     // class Chip;
 
-    public static int storeSample(int dest, int data) {
-        return limit(dest + data, 0x7fff, -0x8000);
-    }
-
-    public static int limit(int v, int max, int min) {
-        return Math.clamp(v, min, max);
-    }
-
     /*
      * Creates tables
      */

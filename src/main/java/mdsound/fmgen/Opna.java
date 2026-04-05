@@ -21,7 +21,6 @@ import dotnet4j.io.Stream;
 import mdsound.Common;
 
 import static java.lang.System.getLogger;
-import static mdsound.fmgen.Fmgen.limit;
 
 
 /**
@@ -56,6 +55,18 @@ public class Opna {
             super.reset();
             psg.reset();
         }
+
+//        public void changePSGMode(int mode) {
+//            if (mode == 0) {
+//                psg = new PSG();
+//            } else {
+//                psg = new fmvgen.psg2Light();
+//            }
+//            byte[] table = { 4, 2, 1 };
+//            psg.setClock(clock / table[prescale], (int) psgrate);
+//            psg.reset();
+//            psg.setVolume(psg_db);
+//        }
 
         /** Sets volume. */
         public void setVolumeFM(int db) {
@@ -626,11 +637,11 @@ public class Opna {
                     mixSubS(activeCh, idest, ibuf);
                 }
 
-                int v = ((limit(ibuf[2] + ibuf[3], 0x7fff, -0x8000) * fmVolume) >> 14);
+                int v = ((Math.clamp(ibuf[2] + ibuf[3], -0x8000, 0x7fff) * fmVolume) >> 14);
                 buffer[dest + 0] += v;
                 visVolume[0] = v;
 
-                v = ((limit(ibuf[1] + ibuf[3], 0x7fff, -0x8000) * fmVolume) >> 14);
+                v = ((Math.clamp(ibuf[1] + ibuf[3], -0x8000, 0x7fff) * fmVolume) >> 14);
                 buffer[dest + 1]  += v;
                 visVolume[1] = v;
             }
@@ -958,8 +969,8 @@ stop:
                     57, 57, 57, 57, 77, 102, 128, 153,
             };
 
-            adpcmX = limit(adpcmX + table1[data] * adpcmD / 8, 32767, -32768);
-            adpcmD = limit(adpcmD * table2[data] / 64, 24576, 127);
+            adpcmX = Math.clamp(adpcmX + table1[data] * adpcmD / 8, -32768, 32767);
+            adpcmD = Math.clamp(adpcmD * table2[data] / 64, 127, 24576);
             return adpcmX;
         }
 
@@ -1121,7 +1132,7 @@ stop:
                     if ((actCh & 0x01) != 0) s = ch[0].calc();
                     if ((actCh & 0x04) != 0) s += ch[1].calc();
                     if ((actCh & 0x10) != 0) s += ch[2].calc();
-                    s = (limit(s, 0x7fff, -0x8000) * fmVolume) >> 14;
+                    s = (Math.clamp(s, -0x8000, 0x7fff) * fmVolume) >> 14;
                     buffer[dest + 0] += s;
                     buffer[dest + 1] += s;
 //logger.log(Level.TRACE, "%04x, %04x".formatted(buffer[dest + 0], buffer[dest + 1]));
@@ -1638,7 +1649,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
                 for (int i = 0; i < 6; i++) {
                     Rhythm r = rhythm[i];
                     if ((rhythmKey & (1 << i)) != 0 && r.level < 128) {
-                        int db = limit(rhythmTl + rhythmTVol + r.level + r.volume, 127, -31);
+                        int db = Math.clamp(rhythmTl + rhythmTVol + r.level + r.volume, -31, 127);
                         int vol = tlTable[Fmgen.FM_TLPOS + (db << (Fmgen.FM_TLBITS - 7))] >> 4;
                         int maskL = -((r.pan >> 1) & 1);
                         int maskR = -(r.pan & 1);
@@ -2017,7 +2028,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
                             maskl = maskr = 0;
                         }
 
-                        int db = limit(adpcmATl + adpcmATVol + r.level + r.volume, 127, -31);
+                        int db = Math.clamp(adpcmATl + adpcmATVol + r.level + r.volume, -31, 127);
                         int vol = tlTable[Fmgen.FM_TLPOS + (db << (Fmgen.FM_TLBITS - 7))] >> 4;
 
                         //Sample* dest = buffer;
@@ -2041,9 +2052,9 @@ logger.log(Level.ERROR, e.getMessage(), e);
                                 r.pos++;
 
                                 r.adpcmX += jedi_table[r.adpcmD + data];
-                                r.adpcmX = (short) limit(r.adpcmX, 2048 * 3 - 1, -2048 * 3);
+                                r.adpcmX = (short) Math.clamp((int) r.adpcmX, -2048 * 3, 2048 * 3 - 1);
                                 r.adpcmD += (short) decodeTableA1[data];
-                                r.adpcmD = (short) limit(r.adpcmD, 48 * 16, 0);
+                                r.adpcmD = (short) Math.clamp((int) r.adpcmD, 0, 48 * 16);
                             }
                             int sample = (r.adpcmX * vol) >> 10;
                             buffer[dest + 0] += sample & maskl;

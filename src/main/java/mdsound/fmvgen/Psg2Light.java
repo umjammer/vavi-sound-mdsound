@@ -5,8 +5,6 @@ import java.util.function.BiFunction;
 
 import mdsound.fmgen.PSG;
 
-import static mdsound.fmgen.Fmgen.storeSample;
-
 
 public class Psg2Light extends PSG {
 
@@ -194,8 +192,8 @@ public class Psg2Light extends PSG {
                         revSampleL /= (1 << overSampling);
                         revSampleR /= (1 << overSampling);
 
-                        dest[ptrDest + 0] = storeSample(dest[ptrDest + 0], sampleL);
-                        dest[ptrDest + 1] = storeSample(dest[ptrDest + 1], sampleR);
+                        dest[ptrDest + 0] = Math.clamp(dest[ptrDest + 0] + sampleL, -0x8000, 0x7fff);
+                        dest[ptrDest + 1] = Math.clamp(dest[ptrDest + 1] + sampleR, -0x8000, 0x7fff);
                         ptrDest += 2;
 
                         visVolume = sampleL;
@@ -242,8 +240,8 @@ public class Psg2Light extends PSG {
 
                         sampleL /= (1 << overSampling);
                         sampleR /= (1 << overSampling);
-                        dest[ptrDest + 0] = storeSample(dest[ptrDest + 0], sampleL);
-                        dest[ptrDest + 1] = storeSample(dest[ptrDest + 1], sampleR);
+                        dest[ptrDest + 0] = Math.clamp(dest[ptrDest + 0] + sampleL, -0x8000, 0x7fff);
+                        dest[ptrDest + 1] = Math.clamp(dest[ptrDest + 1] + sampleR, -0x8000, 0x7fff);
                         ptrDest += 2;
 
                         visVolume = sampleL;
@@ -310,8 +308,8 @@ public class Psg2Light extends PSG {
                     revSampleL /= (1 << overSampling);
                     revSampleR /= (1 << overSampling);
 
-                    dest[ptrDest + 0] = storeSample(dest[ptrDest + 0], sampleL);
-                    dest[ptrDest + 1] = storeSample(dest[ptrDest + 1], sampleR);
+                    dest[ptrDest + 0] = Math.clamp(dest[ptrDest + 0] + sampleL, -0x8000, 0x7fff);
+                    dest[ptrDest + 1] = Math.clamp(dest[ptrDest + 1] + sampleR, -0x8000, 0x7fff);
                     ptrDest += 2;
 
                     visVolume = sampleL;
