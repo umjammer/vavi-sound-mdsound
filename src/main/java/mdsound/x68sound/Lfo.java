@@ -11,6 +11,9 @@
 package mdsound.x68sound;
 
 
+import mdsound.x68sound.Global.Work;
+
+
 /**
  * Lfo.
  *
@@ -18,7 +21,7 @@ package mdsound.x68sound;
  */
 public class Lfo {
 
-    private static final Global global = Global.getInstance();
+    Work work;
 
     private static final int SIZELFOTBL = 512; // 2^9
     private static final int SIZELFOTBL_BITS = 9;
@@ -131,7 +134,7 @@ public class Lfo {
     }
 
     public void init() {
-        lfoTimeAdd = LFOPRECISION * global.opmRate / Global.sampleRate;
+        lfoTimeAdd = LFOPRECISION * work.opmRate / work.sampleRate;
 
         lfoSmallCounter = 0;
 
@@ -147,7 +150,7 @@ public class Lfo {
     }
 
     public void initSampleRate() {
-        lfoTimeAdd = LFOPRECISION * global.opmRate / Global.sampleRate;
+        lfoTimeAdd = LFOPRECISION * work.opmRate / work.sampleRate;
     }
 
     public void lfoReset() {
@@ -253,7 +256,7 @@ public class Lfo {
                 break;
             }
             case 3: {
-                lfoIdx = global.irnd() >> (32 - SIZELFOTBL_BITS);
+                lfoIdx = work.irnd() >> (32 - SIZELFOTBL_BITS);
                 pmTblValue = pmTbl0[lfoIdx];
                 amTblValue = amTbl0[lfoIdx];
                 break;

@@ -10,12 +10,16 @@
 
 package mdsound.x68sound;
 
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+
+import mdsound.x68sound.Global.Work;
 
 
 /**
@@ -25,7 +29,9 @@ import java.util.function.Supplier;
  */
 public class Opm {
 
-    private static final Global global = Global.getInstance();
+    private static final Logger logger = System.getLogger(Opm.class.getName());
+
+    Work work;
 //    private WinAPI.WAVEFORMATEX wfx;
 
     private static final int CMNDBUFSIZE = 65535;
@@ -99,7 +105,7 @@ public class Opm {
 //    int LfoWaveForm;
 //    void CalcLfoStep();
 //    void SetConnection(int ch, int alg);
-    private final int[][] opOut = new int[][] {new int[1], new int[1], new int[1], new int[1], new int[1], new int[1], new int[1], new int[1]};
+    private final int[][] opOut = {new int[1], new int[1], new int[1], new int[1], new int[1], new int[1], new int[1], new int[1]};
     private final int[] opOutDummy = new int[1];
 
     /** value of OPMreg$10 */
@@ -268,15 +274,15 @@ public class Opm {
 
     public int setOpmWait(int wait) {
         if (wait != -1) {
-            Global.OpmWait = wait;
+            work.opmWait = wait;
             calcCmndRate();
         }
-        return Global.OpmWait;
+        return work.opmWait;
     }
 
     private void calcCmndRate() {
-        if (Global.OpmWait != 0) {
-            cmndRate = (4096 * 160 / Global.OpmWait);
+        if (work.opmWait != 0) {
+            cmndRate = (4096 * 160 / work.opmWait);
             if (cmndRate == 0) {
                 cmndRate = 1;
             }
@@ -296,24 +302,24 @@ public class Opm {
 
         // Clear the treble filter buffer
         inpInpOpm[0] = inpInpOpm[1] =
-                inpInpOpmPrev[0] = inpInpOpmPrev[1] = 0;
+        inpInpOpmPrev[0] = inpInpOpmPrev[1] = 0;
         inpInpOpmPrev2[0] = inpInpOpmPrev2[1] = 0;
         inpOpm[0] = inpOpm[1] =
-                inpOpmPrev[0] = inpOpmPrev[1] =
-                        inpOpmPrev2[0] = inpOpmPrev2[1] =
-                                outOpm[0] = outOpm[1] = 0;
+        inpOpmPrev[0] = inpOpmPrev[1] =
+        inpOpmPrev2[0] = inpOpmPrev2[1] =
+        outOpm[0] = outOpm[1] = 0;
 
         for (int i = 0; i < Global.OPMLPF_COL * 2; ++i) {
             inpOpmBuf0[i] = InpOpmBuf1[i] = 0;
         }
         inpOpmIdx = 0;
         opmLpfIdx = 0;
-        opmLPFpBuf = Global.OPMLOWPASS;
+        opmLPFpBuf = work.OPMLOWPASS;
         opmLPFpPtr = 0;
 
         opmHpfInp[0] = opmHpfInp[1] =
-                opmHpfInpPrev[0] = opmHpfInpPrev[1] =
-                        opmHpfOut[0] = opmHpfOut[1] = 0;
+        opmHpfInpPrev[0] = opmHpfInpPrev[1] =
+        opmHpfOut[0] = opmHpfOut[1] = 0;
 //        {
 //            int i, j;
 //            for (i = 0; i < ADPCMLPF_COL * 2; ++i) {
@@ -325,18 +331,17 @@ public class Opm {
 //        }
 
         outInpAdpcm[0] = outInpAdpcm[1] =
-                outInpAdpcmPrev[0] = outInpAdpcmPrev[1] =
-                        outInpAdpcmPrev2[0] = outInpAdpcmPrev2[1] =
-                                outOutAdpcm[0] = outOutAdpcm[1] =
-                                        outOutAdpcmPrev[0] = outOutAdpcmPrev[1] =
-                                                outOutAdpcmPrev2[0] = outOutAdpcmPrev2[1] =
-                                                        0;
+        outInpAdpcmPrev[0] = outInpAdpcmPrev[1] =
+        outInpAdpcmPrev2[0] = outInpAdpcmPrev2[1] =
+        outOutAdpcm[0] = outOutAdpcm[1] =
+        outOutAdpcmPrev[0] = outOutAdpcmPrev[1] =
+        outOutAdpcmPrev2[0] = outOutAdpcmPrev2[1] = 0;
+
         outInpOutAdpcm[0] = outInpOutAdpcm[1] =
-                outInpOutAdpcmPrev[0] = outInpOutAdpcmPrev[1] =
-                        outInpOutAdpcmPrev2[0] = outInpOutAdpcmPrev2[1] =
-                                outOutInpAdpcm[0] = outOutInpAdpcm[1] =
-                                        outOutInpAdpcmPrev[0] = outOutInpAdpcmPrev[1] =
-                                                0;
+        outInpOutAdpcmPrev[0] = outInpOutAdpcmPrev[1] =
+        outInpOutAdpcmPrev2[0] = outInpOutAdpcmPrev2[1] =
+        outOutInpAdpcm[0] = outOutInpAdpcm[1] =
+        outOutInpAdpcmPrev[0] = outOutInpAdpcmPrev[1] = 0;
 
         // Initialize all operators
         for (int ch = 0; ch < Global.N_CH; ++ch) {
@@ -344,6 +349,10 @@ public class Opm {
             op[ch][1] = new Op();
             op[ch][2] = new Op();
             op[ch][3] = new Op();
+            op[ch][0].work = work;
+            op[ch][1].work = work;
+            op[ch][2].work = work;
+            op[ch][3].work = work;
             op[ch][0].init();
             op[ch][1].init();
             op[ch][2].init();
@@ -384,17 +393,18 @@ public class Opm {
             if (pcm8[i] == null) {
                 pcm8[i] = new Pcm8();
             }
+            pcm8[i].work = work;
             pcm8[i].init();
         }
 
-        global.totalVolume = 256;
+        work.totalVolume = 256;
         //TotalVolume = 192;
 
         opmRegNo = 0;
         betwIntProc = null;
         waveFunc = null;
 
-        global.memRead = global::memReadDefault;
+        work.memRead = work::memReadDefault;
 
 //#if C86CTL
 //        if (pChipOPM)
@@ -429,12 +439,12 @@ public class Opm {
             }
             inpOpmIdx = 0;
             opmLpfIdx = 0;
-            opmLPFpBuf = Global.OPMLOWPASS;
+            opmLPFpBuf = work.OPMLOWPASS;
             opmLPFpPtr = 0;
         }
         opmHpfInp[0] = opmHpfInp[1] =
-                opmHpfInpPrev[0] = opmHpfInpPrev[1] =
-                        opmHpfOut[0] = opmHpfOut[1] = 0;
+        opmHpfInpPrev[0] = opmHpfInpPrev[1] =
+        opmHpfOut[0] = opmHpfOut[1] = 0;
 //        {
 //            int i, j;
 //            for (i = 0; i < ADPCMLPF_COL * 2; ++i) {
@@ -450,14 +460,13 @@ public class Opm {
         outInpAdpcmPrev2[0] = outInpAdpcmPrev2[1] =
         outOutAdpcm[0] = outOutAdpcm[1] =
         outOutAdpcmPrev[0] = outOutAdpcmPrev[1] =
-        outOutAdpcmPrev2[0] = outOutAdpcmPrev2[1] =
-        0;
+        outOutAdpcmPrev2[0] = outOutAdpcmPrev2[1] = 0;
+
         outInpOutAdpcm[0] = outInpOutAdpcm[1] =
         outInpOutAdpcmPrev[0] = outInpOutAdpcmPrev[1] =
         outInpOutAdpcmPrev2[0] = outInpOutAdpcmPrev2[1] =
         outOutInpAdpcm[0] = outOutInpAdpcm[1] =
-        outOutInpAdpcmPrev[0] = outOutInpAdpcmPrev[1] =
-        0;
+        outOutInpAdpcmPrev[0] = outOutInpAdpcmPrev[1] = 0;
 
         // Initialize all operators
         for (int ch = 0; ch < Global.N_CH; ++ch) {
@@ -481,8 +490,12 @@ public class Opm {
     }
 
     public Opm() {
+        work = new Work();
+        work.opm = this;
         lfo = new Lfo();
+        lfo.work = work;
         adpcm = new Adpcm();
+        adpcm.work = work;
 
         cmndBuf = new int[CMNDBUFSIZE + 1][];
         for (int i = 0; i < CMNDBUFSIZE + 1; i++) {
@@ -603,33 +616,33 @@ public class Opm {
 
         // Create a sin table
         for (int i = 0; i < Global.SIZESINTBL; ++i) {
-            global.SINTBL[i] = (short) (Math.sin(2.0 * Math.PI * (i + 0.0) / Global.SIZESINTBL) * (Global.MAXSINVAL) + 0.5);
+            Global.SINTBL[i] = (short) (Math.sin(2.0 * Math.PI * (i + 0.0) / Global.SIZESINTBL) * (Global.MAXSINVAL) + 0.5);
         }
 
         // Create an envelope value → alpha conversion table
         for (int i = 0; i <= Global.ALPHAZERO + Global.SIZEALPHATBL; ++i) {
-            global.ALPHATBL[i] = 0;
+            Global.ALPHATBL[i] = 0;
         }
         for (int i = 17; i <= Global.SIZEALPHATBL; ++i) {
-            global.ALPHATBL[Global.ALPHAZERO + i] = (int) (Math.floor(
+            Global.ALPHATBL[Global.ALPHAZERO + i] = (int) (Math.floor(
                     Math.pow(2.0, -((Global.SIZEALPHATBL) - i) * (128.0 / 8.0) / (Global.SIZEALPHATBL)) *
                             1.0 * 1.0 * Global.PRECISION + 0.0));
         }
 
         // Create an envelope value → Noiseα conversion table
         for (int i = 0; i <= Global.ALPHAZERO + Global.SIZEALPHATBL; ++i) {
-            global.NOISEALPHATBL[i] = 0;
+            Global.NOISEALPHATBL[i] = 0;
         }
         for (int i = 17; i <= Global.SIZEALPHATBL; ++i) {
-            global.NOISEALPHATBL[Global.ALPHAZERO + i] = (int) Math.floor(i * 1.0 / (Global.SIZEALPHATBL) *
+            Global.NOISEALPHATBL[Global.ALPHAZERO + i] = (int) Math.floor(i * 1.0 / (Global.SIZEALPHATBL) *
                             1.0 * 0.25 * Global.PRECISION + 0.0); // Noise volume is 1/4 of Op.
         }
 
         // Create a D1L → D1l conversion table
         for (int i = 0; i < 15; ++i) {
-            global.D1LTBL[i] = i * 2;
+            Global.D1LTBL[i] = i * 2;
         }
-        global.D1LTBL[15] = (15 + 16) * 2;
+        Global.D1LTBL[15] = (15 + 16) * 2;
 
         // Create a C1 <. M2 transposition table
         for (int slot = 0; slot < 8; ++slot) {
@@ -648,12 +661,12 @@ public class Opm {
                 } else {
                     step = Global.STEPTBL_O2[notekf] >> (3 - oct);
                 }
-                global.STEPTBL[oct * 12 * 64 + notekf] = (int) (step * 64 * (long) (global.opmRate) / Global.sampleRate);
+                Global.STEPTBL[oct * 12 * 64 + notekf] = (int) (step * 64 * (long) (work.opmRate) / work.sampleRate);
             }
         }
 
         for (int i = 0; i <= 128 + 4 - 1; ++i) {
-            global.DT1TBL[i] = (int) (Global.DT1TBL_org[i] * 64 * (long) (global.opmRate) / Global.sampleRate);
+            Global.DT1TBL[i] = (int) (Global.DT1TBL_org[i] * 64 * (long) (work.opmRate) / work.sampleRate);
         }
     }
 
@@ -737,14 +750,14 @@ public class Opm {
             timerReg = data & 0x8F;
             statReg &= 0xff - ((data >> 4) & 3);
 
-            global.timerSemaphore = 0;
+            work.timerSemaphore = 0;
 
             break;
 
         case 0x1B:
             // WaveForm
 
-            adpcmBaseClock = data >> 7;
+            adpcmBaseClock = (data >>> 7) & 0xff;
             setAdpcmRate();
 
             break;
@@ -1207,24 +1220,23 @@ public class Opm {
     private int rate = 0;
 
     public void setPcm62(short[] buffer, int offset, int ndata, BiConsumer<Runnable, Boolean> oneFrameProc /* = null */) {
-
         //DetectMMX();
 
         _pcmBufPtr = 0;
         for (int i = 0; i < ndata / 2; ++i) {
-            //int[] Out = new int[];
+            //int[] out = new int[];
             out[0] = out[1] = 0;
             boolean firstFlg = true;
 
-            opmLpfIdx += Global.sampleRate;
-            while (opmLpfIdx >= Global.waveOutSamp) {
-                opmLpfIdx -= Global.waveOutSamp;
+            opmLpfIdx += work.sampleRate;
+            while (opmLpfIdx >= work.waveOutSamp) {
+                opmLpfIdx -= work.waveOutSamp;
 
                 outInpOpm[0] = outInpOpm[1] = 0;
                 if (useOpmFlag != 0) {
-                    rate -= global.opmRate;
+                    rate -= work.opmRate;
                     while (rate < 0) {
-                        rate += global.opmRate;
+                        rate += work.opmRate;
 
                         if (oneFrameProc != null) {
                             oneFrameProc.accept(this::timer, firstFlg);
@@ -1238,12 +1250,14 @@ public class Opm {
                             ++envCounter1;
                             int slot;
                             for (slot = 0; slot < 32; ++slot) {
-                                op[slot / 4][slot % 4].envelope(envCounter1);
+                                op[slot & 7][slot >> 3].envelope(envCounter1);
                             }
                         }
                     }
 
                     if (useOpmFlag == 1) {
+                        lfo.update();
+
                         for (int ch = 0; ch < 8; ++ch) {
                             op[ch][1].inp[0] = op[ch][2].inp[0] = op[ch][3].inp[0] = opOut[ch][0] = 0;
 
@@ -1264,7 +1278,7 @@ public class Opm {
                         }
                         op[7][3].output32(lfoPitch[7], lfoLevel[7]);
 
-                        // Stereo sum of OPM output PCM to OpmHpfInp[]
+                        // Stereo sum of OPM output PCM to opmHpfInp[]
                         if ((opmChMask & 0xff) != 0) {
                             opmHpfInp[0] = ((opmChMask & 0x01) != 0 ? 0 : (opOut[0][0] & pan[0][0])) +
                                     ((opmChMask & 0x02) != 0 ? 0 : (opOut[1][0] & pan[0][1])) +
@@ -1328,7 +1342,7 @@ public class Opm {
 
                 if (useAdpcmFlag != 0) {
                     outInpAdpcm[0] = outInpAdpcm[1] = 0;
-                    // Add the output PCM of Adpcm to OutInpAdpcm[]
+                    // Add the output PCM of Adpcm to outInpAdpcm[]
                     int o = adpcm.getPcm62();
                     if ((opmChMask & 0x100) == 0)
                         if (o != 0x8000_0000) {
@@ -1336,14 +1350,14 @@ public class Opm {
                             outInpAdpcm[1] += ((ppiReg & 1) - 1) & o;
                         }
 
-                    // Add the output PCM of Pcm8 to OutInpAdpcm[]
+                    // Add the output PCM of Pcm8 to outInpAdpcm[]
                     for ( int ch = 0; ch < Global.PCM8_NCH; ++ch) {
                         int pan = pcm8[ch].getMode();
                         int o2 = pcm8[ch].getPcm62();
                         if ((opmChMask & (0x100 << ch)) == 0)
                             if (o2 != 0x8000_0000) {
-                                outInpAdpcm[0] += (-(pan & 1)) & o;
-                                outInpAdpcm[1] += (-((pan >> 1) & 1)) & o;
+                                outInpAdpcm[0] += (-(pan & 1)) & o2;
+                                outInpAdpcm[1] += (-((pan >> 1) & 1)) & o2;
                             }
                     }
 
@@ -1426,14 +1440,14 @@ public class Opm {
             Global.firOpm(opmLPFpBuf[opmLPFpPtr], inpOpmBuf0, inpOpmIdx, InpOpmBuf1, inpOpmIdx, outOpm);
 
             opmLPFpPtr += 1;
-            if (opmLPFpPtr >= Global.OPMLPF_ROW) {
-                opmLPFpBuf = Global.OPMLOWPASS;
+            if (opmLPFpPtr >= work.OPMLPF_ROW) {
+                opmLPFpBuf = work.OPMLOWPASS;
                 opmLPFpPtr = 0;
             }
 
             // Adjust the overall volume
-            outOpm[0] = (outOpm[0] * global.totalVolume) >> 8;
-            outOpm[1] = (outOpm[1] * global.totalVolume) >> 8;
+            outOpm[0] = (outOpm[0] * work.totalVolume) >> 8;
+            outOpm[1] = (outOpm[1] * work.totalVolume) >> 8;
 
             out[0] -= outOpm[0]; // -4096 ～ +4096
             out[1] -= outOpm[1];
@@ -1441,8 +1455,8 @@ public class Opm {
             // Add the output value of WaveFunc()
             if (waveFunc != null) {
                 int ret = waveFunc.get();
-                out[0] += (short) (ret & 0xffff);
-                out[1] += (short) ((ret >> 16) & 0xffff);
+                out[0] += (short) ret;
+                out[1] += (short) (ret >> 16);
             }
 
             // Prevents distortion
@@ -1487,9 +1501,9 @@ public class Opm {
             if (useOpmFlag != 0) {
                 //int rate = 0;
 
-                rate_b -= global.opmRate;
+                rate_b -= work.opmRate;
                 while (rate_b < 0) {
-                    rate_b += Global.waveOutSamp;
+                    rate_b += work.waveOutSamp;
 
                     timer();
                     executeCommand();
@@ -1498,7 +1512,7 @@ public class Opm {
                         ++envCounter1;
                         int slot;
                         for (slot = 0; slot < 32; ++slot) {
-                            op[slot / 4][slot % 4].envelope(envCounter1);
+                            op[slot & 7][slot >> 3].envelope(envCounter1);
                         }
                     }
                 }
@@ -1572,8 +1586,8 @@ public class Opm {
                     inpOpm[1] = inpInpOpm[1];
 
                     // Adjust the overall volume
-                    outOpm[0] = (inpOpm[0] * global.totalVolume) >> 8;
-                    outOpm[1] = (inpOpm[1] * global.totalVolume) >> 8;
+                    outOpm[0] = (inpOpm[0] * work.totalVolume) >> 8;
+                    outOpm[1] = (inpOpm[1] * work.totalVolume) >> 8;
 
                     out[0] -= outOpm[0] >> 5; // -4096 ～ +4096
                     out[1] -= outOpm[1] >> 5;
@@ -1586,7 +1600,7 @@ public class Opm {
                 //static int rate2 = 0;
                 rate2 -= 15625;
                 if (rate2 < 0) {
-                    rate2 += Global.waveOutSamp;
+                    rate2 += work.waveOutSamp;
 
                     outInpAdpcm[0] = outInpAdpcm[1] = 0;
                     // Add the output PCM of Adpcm to OutInpAdpcm[]
@@ -1602,15 +1616,15 @@ public class Opm {
                         int pan = pcm8[ch].getMode();
                         int o2 = pcm8[ch].getPcm();
                         if ((opmChMask & (0x100 << ch)) == 0)
-                            if (o2 != 0x8000_0000) { //0x8000_0000)
-                                outInpAdpcm[0] += (-(pan & 1)) & o;
-                                outInpAdpcm[1] += (-((pan >> 1) & 1)) & o;
+                            if (o2 != 0x8000_0000) {
+                                outInpAdpcm[0] += (-(pan & 1)) & o2;
+                                outInpAdpcm[1] += (-((pan >> 1) & 1)) & o2;
                             }
                     }
 
                     // Adjust the overall volume
-                    //outInpAdpcm[0] = (outInpAdpcm[0] * global.totalVolume) >> 8;
-                    //outInpAdpcm[1] = (outInpAdpcm[1] * global.totalVolume) >> 8;
+                    //outInpAdpcm[0] = (outInpAdpcm[0] * work.totalVolume) >> 8;
+                    //outInpAdpcm[1] = (outInpAdpcm[1] * work.totalVolume) >> 8;
 
                     // Prevents distortion
                     final int PCM_LIMITS = ((1 << 19) - 1);
@@ -1652,8 +1666,8 @@ public class Opm {
             }
 
 //            // Adjust the overall volume
-//            out[0] = (out[0] * global.totalVolume) >> 8;
-//            out[1] = (out[1] * global.totalVolume) >> 8;
+//            out[0] = (out[0] * work.totalVolume) >> 8;
+//            out[1] = (out[1] * work.totalVolume) >> 8;
 
             // Add the output value of WaveFunc()
             if (waveFunc != null) {
@@ -1691,11 +1705,12 @@ public class Opm {
 
     public int getPcm(short[] buf, int offset, int ndata, BiConsumer<Runnable, Boolean> oneFrameProc /* = null */) {
         if (dousaMode != 2) {
+logger.log(Level.WARNING, "pcm not active: " + dousaMode);
             return X68Sound.SNDERR_NOTACTIVE;
         }
         pcmBuf = buf;
         _pcmBufPtr = 0;
-        if (Global.waveOutSamp == 44100 || Global.waveOutSamp == 48000) {
+        if (work.waveOutSamp == 44100 || work.waveOutSamp == 48000) {
             setPcm62(pcmBuf, offset, ndata, oneFrameProc);
         } else {
             setPcm22(pcmBuf, 0, ndata);
@@ -1731,7 +1746,7 @@ public class Opm {
 
         statReg |= flagSet;
 
-        global.timerSemaphore = 0;
+        work.timerSemaphore = 0;
 
         if (flagSet != 0) {
             if (prevStat == 0) {
@@ -1742,8 +1757,10 @@ public class Opm {
         }
     }
 
+    // startXXX cannot call 2 or more times
     public int start(int sampleRate, int opmFlag, int adpcmFlag, int betw, int pcmBuf, int late, double rev) {
         if (dousaMode != 0) {
+logger.log(Level.WARNING, "already started: " + dousaMode);
             return X68Sound.SNDERR_ALREADYACTIVE;
         }
         dousaMode = 1;
@@ -1752,23 +1769,24 @@ public class Opm {
 
         useOpmFlag = opmFlag;
         useAdpcmFlag = adpcmFlag;
+logger.log(Level.INFO, "useOpmFlag: %d useAdpcmFlag: %d".formatted(useOpmFlag, useAdpcmFlag));
         _betw = betw;
         _pcmbuf = pcmBuf;
         _late = late;
         _rev = (int) rev;
 
         if (sampleRate == 44100) {
-            Global.sampleRate = global.opmRate;
-            Global.OPMLPF_ROW = Global.OPMLPF_ROW_44;
-            Global.OPMLOWPASS = Global.OPMLOWPASS_44;
+            work.sampleRate = work.opmRate;
+            work.OPMLPF_ROW = Global.OPMLPF_ROW_44;
+            work.OPMLOWPASS = Global.OPMLOWPASS_44;
         } else if (sampleRate == 48000) {
-            Global.sampleRate = global.opmRate;
-            Global.OPMLPF_ROW = Global.OPMLPF_ROW_48;
-            Global.OPMLOWPASS = Global.OPMLOWPASS_48;
+            work.sampleRate = work.opmRate;
+            work.OPMLPF_ROW = Global.OPMLPF_ROW_48;
+            work.OPMLOWPASS = Global.OPMLOWPASS_48;
         } else {
-            Global.sampleRate = sampleRate;
+            work.sampleRate = sampleRate;
         }
-        Global.waveOutSamp = sampleRate;
+        work.waveOutSamp = sampleRate;
 
 //#if ROMEO
 //    if (UseOpmFlag == 2) {
@@ -1784,31 +1802,34 @@ public class Opm {
         return waveAndTimerStart();
     }
 
+    // startXXX cannot call 2 or more times
     public int startPcm(int sampleRate, int opmFlag, int adpcmFlag, int pcmBuf) {
         if (dousaMode != 0) {
+logger.log(Level.WARNING, "already started: " + dousaMode);
             return X68Sound.SNDERR_ALREADYACTIVE;
         }
         dousaMode = 2;
 
         useOpmFlag = opmFlag;
         useAdpcmFlag = adpcmFlag;
+logger.log(Level.INFO, "useOpmFlag: %d useAdpcmFlag: %d".formatted(useOpmFlag, useAdpcmFlag));
         _betw = 5;
         _pcmbuf = pcmBuf;
         _late = 200;
         _rev = (int) 1.0;
 
         if (sampleRate == 44100) {
-            Global.sampleRate = global.opmRate;
-            Global.OPMLPF_ROW = Global.OPMLPF_ROW_44;
-            Global.OPMLOWPASS = Global.OPMLOWPASS_44;
+            work.sampleRate = work.opmRate;
+            work.OPMLPF_ROW = Global.OPMLPF_ROW_44;
+            work.OPMLOWPASS = Global.OPMLOWPASS_44;
         } else if (sampleRate == 48000) {
-            Global.sampleRate = global.opmRate;
-            Global.OPMLPF_ROW = Global.OPMLPF_ROW_48;
-            Global.OPMLOWPASS = Global.OPMLOWPASS_48;
+            work.sampleRate = work.opmRate;
+            work.OPMLPF_ROW = Global.OPMLPF_ROW_48;
+            work.OPMLOWPASS = Global.OPMLOWPASS_48;
         } else {
-            Global.sampleRate = sampleRate;
+            work.sampleRate = sampleRate;
         }
-        Global.waveOutSamp = sampleRate;
+        work.waveOutSamp = sampleRate;
 
         makeTable();
         reset();
@@ -1827,17 +1848,17 @@ public class Opm {
         free();
 
         if (sampleRate == 44100) {
-            Global.sampleRate = global.opmRate;
-            Global.OPMLPF_ROW = Global.OPMLPF_ROW_44;
-            Global.OPMLOWPASS = Global.OPMLOWPASS_44;
+            work.sampleRate = work.opmRate;
+            work.OPMLPF_ROW = Global.OPMLPF_ROW_44;
+            work.OPMLOWPASS = Global.OPMLOWPASS_44;
         } else if (sampleRate == 48000) {
-            Global.sampleRate = global.opmRate;
-            Global.OPMLPF_ROW = Global.OPMLPF_ROW_48;
-            Global.OPMLOWPASS = Global.OPMLOWPASS_48;
+            work.sampleRate = work.opmRate;
+            work.OPMLPF_ROW = Global.OPMLPF_ROW_48;
+            work.OPMLOWPASS = Global.OPMLOWPASS_48;
         } else {
-            Global.sampleRate = sampleRate;
+            work.sampleRate = sampleRate;
         }
-        Global.waveOutSamp = sampleRate;
+        work.waveOutSamp = sampleRate;
 
         makeTable();
         resetSampleRate();
@@ -1852,14 +1873,14 @@ public class Opm {
             return X68Sound.SNDERR_BADARG;
         }
         if (dousaMode == 0) {
-            global.opmRate = rate;
+            work.opmRate = rate;
             return 0;
         }
         int dousa_mode_bak = dousaMode;
 
         free();
 
-        global.opmRate = rate;
+        work.opmRate = rate;
 
         makeTable();
         resetSampleRate();
@@ -1870,31 +1891,31 @@ public class Opm {
 
     private int waveAndTimerStart() {
 
-        global.betwTime = _betw;
-        global.timerResolution = _betw;
-        global.lateTime = _late + _betw;
-        global.betwSamplesSlower = (int) Math.floor((double) (Global.waveOutSamp) * _betw / 1000.0 - _rev);
-        global.betwSamplesFaster = (int) Math.ceil((double) (Global.waveOutSamp) * _betw / 1000.0 + _rev);
-        global.betwSamplesVerySlower = (int) (Math.floor((double) (Global.waveOutSamp) * _betw / 1000.0 - _rev) / 8.0);
-        global.lateSamples = Global.waveOutSamp * global.lateTime / 1000;
+        work.betwTime = _betw;
+        work.timerResolution = _betw;
+        work.lateTime = _late + _betw;
+        work.betwSamplesSlower = (int) Math.floor((double) (work.waveOutSamp) * _betw / 1000.0 - _rev);
+        work.betwSamplesFaster = (int) Math.ceil((double) (work.waveOutSamp) * _betw / 1000.0 + _rev);
+        work.betwSamplesVerySlower = (int) (Math.floor((double) (work.waveOutSamp) * _betw / 1000.0 - _rev) / 8.0);
+        work.lateSamples = work.waveOutSamp * work.lateTime / 1000;
 
-        global.blkSamples = global.lateSamples;
+        work.blkSamples = work.lateSamples;
 
-        if (global.lateSamples >= Global.waveOutSamp * 175 / 1000) {
-            global.fasterLimit = global.lateSamples - Global.waveOutSamp * 125 / 1000;
+        if (work.lateSamples >= work.waveOutSamp * 175 / 1000) {
+            work.fasterLimit = work.lateSamples - work.waveOutSamp * 125 / 1000;
         } else {
-            global.fasterLimit = Global.waveOutSamp * 50 / 1000;
+            work.fasterLimit = work.waveOutSamp * 50 / 1000;
         }
-        if (global.fasterLimit > global.lateSamples) global.fasterLimit = global.lateSamples;
-        global.slowerLimit = global.fasterLimit;
-        if (global.slowerLimit > global.lateSamples) global.slowerLimit = global.lateSamples;
+        if (work.fasterLimit > work.lateSamples) work.fasterLimit = work.lateSamples;
+        work.slowerLimit = work.fasterLimit;
+        if (work.slowerLimit > work.lateSamples) work.slowerLimit = work.lateSamples;
 
         if (dousaMode != 1) {
             return 0;
         }
 
-        pcmBufSize = global.blkSamples * Global.N_WaveBlk;
-        global.nSamples = global.betwSamplesFaster;
+        pcmBufSize = work.blkSamples * Global.N_WaveBlk;
+        work.nSamples = work.betwSamplesFaster;
 
 //        if (naudio != null) naudio.Stop();
 //        naudio = new NAudioWrap(Global.WaveOutSamp, Global.OpmTimeProc);
@@ -1944,12 +1965,12 @@ public class Opm {
             pcmBuf[i] = 0;
         }
 
-        _pcmBufPtr = global.blkSamples + global.lateSamples + global.betwSamplesFaster;
+        _pcmBufPtr = work.blkSamples + work.lateSamples + work.betwSamplesFaster;
         while (_pcmBufPtr >= pcmBufSize) _pcmBufPtr -= pcmBufSize;
-        global.waveblk = 0;
-        global.playingBlk = 0;
+        work.waveblk = 0;
+        work.playingBlk = 0;
 //        playingBlkNext = playingBlk + 1;
-//        for (int i = 0; i < global.N_WaveBlk; ++i) {
+//        for (int i = 0; i < work.N_WaveBlk; ++i) {
 //            WinAPI.PostThreadMessage(Global.threadId, Global.THREADMES_WAVEOUTDONE, (int)Ptr.Zero, IntPtr.Zero);
 //        }
 
@@ -1968,7 +1989,7 @@ public class Opm {
     }
 
     public void free() {
-        global.timerStartFlag = 0; // Stop processing multimedia timers
+        work.timerStartFlag = 0; // Stop processing multimedia timers
 
         dousaMode = 0;
     }
@@ -2080,10 +2101,10 @@ public class Opm {
                 }
                 adpcm.dmaReg[0x00] |= 0x08; // ACT=1
                 //adpcm.FinishFlag=0;
-                if ((adpcm.dmaReg[0x04] & 0x08) != 0       // DPS != 0 ?
-                        || (adpcm.dmaReg[0x06] & 0x03) != 0        // DAC != 00 ?
-                        //|| Global.bswapl(*(byte**)&adpcm.DmaReg[0x14]) != (byte*)0x00E92003) {
-                        || (
+                if ((adpcm.dmaReg[0x04] & 0x08) != 0 ||       // DPS != 0 ?
+                        (adpcm.dmaReg[0x06] & 0x03) != 0 ||        // DAC != 00 ?
+                        //Global.bswapl(*(byte**)&adpcm.DmaReg[0x14]) != (byte*)0x00E92003) {
+                        (
                         adpcm.dmaReg[0x14] * 0x100_0000 +
                                 adpcm.dmaReg[0x15] * 0x1_0000 +
                                 adpcm.dmaReg[0x16] * 0x100 +
@@ -2193,9 +2214,9 @@ public class Opm {
 
     public int setTotalVolume(int v) {
         if (v <= 65535) {
-            global.totalVolume = v;
+            work.totalVolume = v;
         }
-        return global.totalVolume;
+        return work.totalVolume;
     }
 
     public void betwInt(Runnable proc) {
@@ -2221,7 +2242,7 @@ public class Opm {
     }
 
     public void memReadFunc(Function<Integer, Integer> func) {
-        global.memRead = Objects.requireNonNullElseGet(func, () -> global::memReadDefault);
+        work.memRead = Objects.requireNonNullElseGet(func, () -> work::memReadDefault);
     }
 
     public void setMask(int v) {

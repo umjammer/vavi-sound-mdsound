@@ -21,30 +21,128 @@ import mdsound.Common;
  *
  * @author m_puusan
  */
-public class Global {
+class Global {
 
     private static final Logger logger = System.getLogger(Global.class.getName());
 
-    private byte[] memory = null;
-    public Opm opm;
+    static class Work {
 
-    private Global() {
-        OPMLOWPASS = OPMLOWPASS_44;
+        Work() {
+            OPMLOWPASS = OPMLOWPASS_44;
+        }
+
+        private byte[] memory = null;
+        private int mask;
+        public Opm opm;
+
+        // gross!
+        public void mountMemory(byte[] mem) {
+            memory = mem;
+            int len = Integer.toHexString(memory.length).length();
+            mask = Integer.parseInt("f".repeat(len), 16);
+        }
+
+        public int DebugValue = 0;
+        public int ErrorCode = 0;
+
+        public int sampleRate = 44100;
+        public int waveOutSamp = 44100;
+        public int opmWait = 240; // 24.0μｓ
+        public int opmRate = 62500; // Input clock ÷ 64
+
+        public int memReadDefault(int adrs) {
+            adrs &= mask;
+            if (memory.length <= adrs) return -1;
+            return memory[adrs] & 0xff;
+        }
+
+        public Function<Integer, Integer> memRead = this::memReadDefault;
+
+        int seed = 1;
+
+        public int irnd() {
+            seed = (int) (seed * 1566083941L + 1);
+            return seed;
+        }
+
+        public int totalVolume; // Volume x/256
+
+        //public int semaphore = 0;
+        public int timerSemaphore = 0;
+
+        public int OPMLPF_ROW = OPMLPF_ROW_44;
+        public short[][] OPMLOWPASS; // Implemented in the constructor
+
+        public int betwTime; // 5 ms
+        public int lateTime; // (200+Bet_time) ms
+        public int lateSamples; // (44100*lateTime/1000)
+        public int blkSamples; // 44100/N_WaveBlk
+        public int betwSamplesSlower; // floor(44100.0*5/1000.0-rev)
+        public int betwSamplesFaster; // ceil(44100.0*5/1000.0+rev)
+        public int betwSamplesVerySlower; // floor(44100.0*5/1000.0-rev)/4.0
+        public int slowerLimit, fasterLimit;
+        //public HWAVEOUT hwo = null;
+//    public LPWAVEHDR lpwh = null;
+        public int N_WaveHdr = 0;
+        //public WAVEFORMATEX wfx;
+        public int timerResolution = 1;
+        //int SamplesCounter = 0;
+//    int SamplesCounterRev = 0;
+        public int nSamples;
+
+        //public HANDLE thread_handle = null;
+        public int threadId = 0;
+        public int threadFlag = 0;
+        public int timerStartFlag = 0;
+//    final int N_WaveBlk = 8;
+
+        public int waveblk = 0;
+        public int playingBlk = 0, playingBlkNext = 1;
+        public int setPcmBufPtr = -1;
+
+        // Multimedia Timer
+        public int procOpmTimer(short[] buffer, int offset, int sampleCount) {
+
+            //if (timerStartFlag==0) return sampleCount;
+
+            //if (opm.PcmBufPtr / Blk_Samples == ((playingBlk - 1) & (N_WaveBlk - 1))) return;
+            if (setPcmBufPtr != -1) {
+                opm.setPcmBufPtr(setPcmBufPtr);
+                setPcmBufPtr = -1;
+            }
+
+            opm.pushRegs();
+
+            if (waveOutSamp == 44100 || waveOutSamp == 48000) {
+                //opm.pcmset62((int) nSamples);
+                opm.setPcm62(buffer, offset, sampleCount, null);
+            } else {
+                //opm.pcmset22((int) nSamples);
+                opm.setPcm22(buffer, offset, sampleCount);
+            }
+
+            // opm.timer();
+            opm.betwint();
+
+            opm.popRegs();
+
+//        if (opm.adpcm.DmaReg[0x00] & 0x10) {
+//            if (opm.adpcm.DmaReg[0x07] & 0x08) { // INT == 1 ?
+//                if (opm.adpcm.ErrIntProc != NULL) {
+//                    opm.adpcm.ErrIntProc();
+//                }
+//            }
+//        } else if (opm.adpcm.DmaReg[0x00] & 0x10) {
+//            if (opm.adpcm.DmaReg[0x07] & 0x08) { // INT == 1 ?
+//                if (opm.adpcm.IntProc != NULL) {
+//                    opm.adpcm.IntProc();
+//                }
+//            }
+//        }
+
+            return sampleCount;
+        }
     }
-
-    private static final Global instance = new Global();
-
-    static Global getInstance() {
-        return instance;
-    }
-
-    // gross!
-    public void mountMemory(byte[] mem) {
-        memory = mem;
-    }
-
-    public int DebugValue = 0;
-    public int ErrorCode = 0;
 
     public static final int N_CH = 8;
 
@@ -57,15 +155,10 @@ public class Global {
     public static final int SIZESINTBL = 1 << SIZESINTBL_BITS;
     public static final int MAXSINVAL = 1 << (SIZESINTBL_BITS + 2);
 
-    public static int sampleRate = 44100;
-    public static int waveOutSamp = 44100;
-    public static int OpmWait = 240; // 24.0μｓ
-    public int opmRate = 62500; // Input clock ÷ 64
-
-    public final int[] STEPTBL = new int[11 * 12 * 64];
+    public static final int[] STEPTBL = new int[11 * 12 * 64];
     public static final int ALPHAZERO = (SIZEALPHATBL * 3);
-    public final int[] ALPHATBL = new int[ALPHAZERO + SIZEALPHATBL + 1];
-    public final short[] SINTBL = new short[SIZESINTBL];
+    public static final int[] ALPHATBL = new int[ALPHAZERO + SIZEALPHATBL + 1];
+    public static final short[] SINTBL = new short[SIZESINTBL];
     public static final int[] STEPTBL_O2 = {
             1299, 1300, 1301, 1302, 1303, 1304, 1305, 1306,
             1308, 1309, 1310, 1311, 1313, 1314, 1315, 1316,
@@ -164,9 +257,9 @@ public class Global {
             2561, 2563, 2565, 2567, 2568, 2571, 2572, 2575,
             2577, 2579, 2581, 2583, 2586, 2589, 2590, 2593,
     };
-    public final int[] D1LTBL = new int[16];
+    public static final int[] D1LTBL = new int[16];
 
-    public final int[] DT1TBL = new int[128 + 4];
+    public static final int[] DT1TBL = new int[128 + 4];
     public static final int[] DT1TBL_org = {
             0, 0, 1, 2,
             0, 0, 1, 2,
@@ -242,7 +335,7 @@ public class Global {
     };
 
     public static final int[] DT2TBL = {0, 384, 500, 608};
-    public final int[] NOISEALPHATBL = new int[ALPHAZERO + SIZEALPHATBL + 1];
+    public static final int[] NOISEALPHATBL = new int[ALPHAZERO + SIZEALPHATBL + 1];
 
     public static final int[] dltLTBL = {
             16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45, 50, 55, 60, 66,
@@ -278,25 +371,6 @@ public class Global {
         return (data << 8) + (data >> 8);
     }
 
-    public int memReadDefault(int adrs) {
-        if (memory.length <= adrs) return -1;
-        return memory[adrs] & 0xff;
-    }
-
-    public Function<Integer, Integer> memRead = this::memReadDefault;
-
-    int seed = 1;
-
-    public int irnd() {
-        seed = (int) (seed * 1566083941L + 1);
-        return seed;
-    }
-
-    public int totalVolume; // Volume x/256
-
-//    public int semaphore = 0;
-    public int timerSemaphore = 0;
-
     public static final int OPMLPF_COL = 64;
     public static final int OPMLPF_ROW_44 = 441;
 
@@ -314,82 +388,11 @@ public class Global {
         }
     }
 
-    public static int OPMLPF_ROW = OPMLPF_ROW_44;
-    public static short[][] OPMLOWPASS; // Implemented in the constructor
-
-    public int betwTime; // 5 ms
-    public int lateTime; // (200+Bet_time) ms
-    public int lateSamples; // (44100*lateTime/1000)
-    public int blkSamples; // 44100/N_WaveBlk
-    public int betwSamplesSlower; // floor(44100.0*5/1000.0-rev)
-    public int betwSamplesFaster; // ceil(44100.0*5/1000.0+rev)
-    public int betwSamplesVerySlower; // floor(44100.0*5/1000.0-rev)/4.0
-    public int slowerLimit, fasterLimit;
-//    public HWAVEOUT hwo = null;
-//    public LPWAVEHDR lpwh = null;
-    public int N_WaveHdr = 0;
-//    public WAVEFORMATEX wfx;
-    public int timerResolution = 1;
-//    int SamplesCounter = 0;
-//    int SamplesCounterRev = 0;
-    public int nSamples;
-
-//    public HANDLE thread_handle = null;
-    public int threadId = 0;
-    public int threadFlag = 0;
-    public int timerStartFlag = 0;
-//    final int N_WaveBlk = 8;
     public static final int N_WaveBlk = 4;
-    public int waveblk = 0;
-    public int playingBlk = 0, playingBlkNext = 1;
-    public int setPcmBufPtr = -1;
 
     public static final int WM_USER = 0x0400;
     public static final int THREADMES_WAVEOUTDONE = WM_USER + 1;
     public static final int THREADMES_KILL = WM_USER + 2;
-
-    // Multimedia Timer
-    public int procOpmTimer(short[] buffer, int offset, int sampleCount) {
-
-        //if (timerStartFlag==0) return sampleCount;
-
-        //if (opm.PcmBufPtr / Blk_Samples == ((playingBlk - 1) & (N_WaveBlk - 1))) return;
-        if (setPcmBufPtr != -1) {
-            opm.setPcmBufPtr(setPcmBufPtr);
-            setPcmBufPtr = -1;
-        }
-
-        opm.pushRegs();
-
-        if (waveOutSamp == 44100 || waveOutSamp == 48000) {
-            //opm.pcmset62((int) nSamples);
-            opm.setPcm62(buffer, offset, sampleCount, null);
-        } else {
-            //opm.pcmset22((int) nSamples);
-            opm.setPcm22(buffer, offset, sampleCount);
-        }
-
-        // opm.timer();
-        opm.betwint();
-
-        opm.popRegs();
-
-//        if (opm.adpcm.DmaReg[0x00] & 0x10) {
-//            if (opm.adpcm.DmaReg[0x07] & 0x08) { // INT == 1 ?
-//                if (opm.adpcm.ErrIntProc != NULL) {
-//                    opm.adpcm.ErrIntProc();
-//                }
-//            }
-//        } else if (opm.adpcm.DmaReg[0x00] & 0x10) {
-//            if (opm.adpcm.DmaReg[0x07] & 0x08) { // INT == 1 ?
-//                if (opm.adpcm.IntProc != NULL) {
-//                    opm.adpcm.IntProc();
-//                }
-//            }
-//        }
-
-        return sampleCount;
-    }
 
     public static void firOpm(short[] p, short[] buf0, int buf0Ptr, short[] buf1, int buf1Ptr, int[] result) {
         result[0] = (int) buf0[buf0Ptr + 0] * p[0] +

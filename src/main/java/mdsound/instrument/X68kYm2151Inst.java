@@ -10,7 +10,7 @@ import mdsound.x68sound.SoundIocs;
 import mdsound.x68sound.X68Sound;
 
 
-/** X68kYm2151 OPM and PCM8 */
+/** Ym2151 OPM and PCM8 powered by X68Sound */
 public class X68kYm2151Inst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
     private static final Logger logger = System.getLogger(X68kYm2151Inst.class.getName());
