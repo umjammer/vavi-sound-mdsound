@@ -358,7 +358,7 @@ public class MultiPCM {
         }
 
         private int num;
-        public int[] regs = new int[8];
+        public final int[] regs = new int[8];
         private int playing;
         public Sample sample;
         private int base;

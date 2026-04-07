@@ -520,9 +520,9 @@ public class YmF262 {
                 }
 
                 /** slot output pointer  */
-                protected Connect connect = new Connect();
+                protected final Connect connect = new Connect();
                 /** slot1 output for feedback  */
-                protected int[] op1Out = new int[2];
+                protected final int[] op1Out = new int[2];
                 /** connection (algorithm) type  */
                 protected int con;
 
@@ -678,7 +678,7 @@ public class YmF262 {
             /** 0 / 3.0 / 1.5 / 6.0 dB/OCT  */
             private static final int[] kslShift = new int[] {31, 1, 2, 0};
 
-            protected Slot[] slots = new Slot[] {new Slot(), new Slot()};
+            protected final Slot[] slots = {new Slot(), new Slot()};
 
             /** block+fNum */
             protected int blockFNum;
@@ -887,7 +887,7 @@ public class YmF262 {
         private static final int OPL3_TYPE_YMF262 = 0;
 
         /** Opl3 chips have 18 channels */
-        protected Channel[] channels = {
+        protected final Channel[] channels = {
                 new Channel(), new Channel(), new Channel(), new Channel(),
                 new Channel(), new Channel(), new Channel(), new Channel(),
                 new Channel(), new Channel(), new Channel(), new Channel(),
@@ -896,14 +896,14 @@ public class YmF262 {
         };
 
         /** channels output masks (0xffffffff = enable); 4 masks per one channel */
-        protected int[] pan = new int[18 * 4];
+        protected final int[] pan = new int[18 * 4];
         /** output control values 1 per one channel (1 value contains 4 masks) */
-        protected int[] panCtrlValue = new int[18];
+        protected final int[] panCtrlValue = new int[18];
         /** for the 5 Rhythm Channels */
-        protected int[] muteSpc = new int[5];
+        protected final int[] muteSpc = new int[5];
 
         /** 18 channels */
-        protected int[] chanOut = new int[18];
+        protected final int[] chanOut = new int[18];
         /** phase modulation input (SLOT 2) */
         protected int phaseModulation;
         /** phase modulation input (SLOT 3 in 4 Operator channels) */
@@ -919,7 +919,7 @@ public class YmF262 {
         protected int egTimerOverflow;
 
         /** fnumber->increment counter */
-        protected int[] fnTab = new int[1024];
+        protected final int[] fnTab = new int[1024];
 
         // LFO
         protected int lfoAm;
@@ -945,9 +945,9 @@ public class YmF262 {
         protected int rhythm;
 
         /** timer counters */
-        protected int[] T = new int[2];
+        protected final int[] T = new int[2];
         /** timer enable */
-        protected int[] st = new int[2];
+        protected final int[] st = new int[2];
 
         /** address register */
         protected int address;

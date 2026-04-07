@@ -1109,7 +1109,7 @@ public class YmF278B {
         //if (((CHIP_SAMPLING_MODE & 0x01) && rate < CHIP_SAMPLE_RATE) ||
         // CHIP_SAMPLING_MODE == 0x02)
         // rate = CHIP_SAMPLE_RATE;
-        ymf262.start(ymf262.EC_DBOPL, clock * 8 / 19, rate, null);
+        ymf262.start(YmF262.EC_DBOPL, clock * 8 / 19, rate, null);
         this.fmEnabled = 0x00;
 
         this.rom = null;

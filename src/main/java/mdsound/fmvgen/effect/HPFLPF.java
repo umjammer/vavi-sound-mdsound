@@ -128,7 +128,7 @@ public class HPFLPF {
     public void setReg(int adr, byte data) {
         switch (adr) {
         case 0:
-            currentCh = Math.max(Math.min(data & 0x3f, 38), 0);
+            currentCh = Math.clamp(data & 0x3f, 0, 38);
             if ((data & 0x80) != 0)
                 init();
             updateParam(currentCh);

@@ -7,6 +7,7 @@ import mdsound.Instrument.PcmEnabledInstrument;
 import mdsound.chips.PPS;
 
 
+/** PPS (PMD) */
 public class PpsInst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
     private final PPS[] chips = {new PPS(), new PPS()};

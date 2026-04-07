@@ -15,31 +15,31 @@ public class FM6 {
     public OPNA2 parent = null;
 
     public int fmVolume;
-    protected Channel4 csmCh;
-    protected int[] fNum = new int[6];
-    protected int[] fNum3 = new int[3];
-    public Channel4[] ch = new Channel4[6];
+    protected final Channel4 csmCh;
+    protected final int[] fNum = new int[6];
+    protected final int[] fNum3 = new int[3];
+    public final Channel4[] ch = new Channel4[6];
 
-    protected int[] fNum2 = new int[9];
+    protected final int[] fNum2 = new int[9];
 
     protected int reg22;
     protected int reg29; // OPNA only?
-    protected int[] pan = new int[6];
+    protected final int[] pan = new int[6];
 //    protected float[] panTable = new float[4] { 1.0f, 0.5012f, 0.2512f, 0.1000f };
-    protected float[] panL = new float[6];
-    protected float[] panR = new float[6];
+    protected final float[] panL = new float[6];
+    protected final float[] panR = new float[6];
 //    protected boolean[] ac = new boolean[6];
     protected int lfoCount;
     protected int lfoDCount;
-    public int[] visVolume = new int[] {0, 0};
+    public final int[] visVolume = new int[] {0, 0};
     protected int regTc;
-    public Fmgen.Channel4.Chip chip;
+    public final Fmgen.Channel4.Chip chip;
     public int waveType = 0;
     public int waveCh = 0;
     public int waveCounter = 0;
     private final ReversePhase reversePhase = ReversePhase.getInstance();
 
-    protected int[] lfoTable = new int[8];
+    protected final int[] lfoTable = new int[8];
     private final Effects effects;
     private final int efcStartCh;
     private final int num;
@@ -107,7 +107,7 @@ public class FM6 {
         case 0x2b:
             waveType = data & 0x3;
             waveCh = (data >> 4) & 0xf;
-            waveCh = Math.max(Math.min(waveCh, 11), 0);
+            waveCh = Math.clamp(waveCh, 0, 11);
             waveCounter = 0;
             if ((data & 0x4) != 0) Fmvgen.waveReset(waveCh, waveType);
             break;
@@ -347,16 +347,16 @@ public class FM6 {
                 mixSubS(activech, iDest, iBuf);
             }
 
-            v = ((Fmvgen.limit(iBuf[0], 0x7fff, -0x8000) * fmVolume) >> 14);
+            v = ((Math.clamp(iBuf[0], -0x8000, 0x7fff) * fmVolume) >> 14);
             buffer[dest + 0] += v;
             visVolume[0] = v;
 
-            v = ((Fmvgen.limit(iBuf[1], 0x7fff, -0x8000) * fmVolume) >> 14);
+            v = ((Math.clamp(iBuf[1], -0x8000, 0x7fff) * fmVolume) >> 14);
             buffer[dest + 1] += v;
             visVolume[1] = v;
 
-            int rvL = ((Fmvgen.limit(iBuf[2], 0x7fff, -0x8000) * fmVolume) >> 14);
-            int rvR = ((Fmvgen.limit(iBuf[3], 0x7fff, -0x8000) * fmVolume) >> 14);
+            int rvL = ((Math.clamp(iBuf[2], -0x8000, 0x7fff) * fmVolume) >> 14);
+            int rvR = ((Math.clamp(iBuf[3], -0x8000, 0x7fff) * fmVolume) >> 14);
 
             effects.reverb.storeDataC(rvL, rvR);
         }

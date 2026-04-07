@@ -29,7 +29,7 @@ public class VaviYm3438Inst extends Instrument.BaseInstrument {
 
     private final int[][] ym3438_accm = new int[24][2];
     int ym3438_cycles = 0;
-    int[] ym3438_sample = new int[2];
+    final int[] ym3438_sample = new int[2];
 
     double rateRatioAcc = 0;
     double sampleRateCalcAcc = 0;
@@ -39,7 +39,7 @@ public class VaviYm3438Inst extends Instrument.BaseInstrument {
 
     private static final int MASTER_CLOCK_HZ = 7_670_442; // MD_NTSC FM CLOCK
     private static final int CLOCK_HZ = MASTER_CLOCK_HZ / 6;
-    private static double CYCLE_PER_MS = CLOCK_HZ / 1000.0;
+    private static final double CYCLE_PER_MS = CLOCK_HZ / 1000.0;
     private final static double rateRatio = 44100 / 1000.0 / CYCLE_PER_MS;
 
     private final int[] mask = {0, 0};

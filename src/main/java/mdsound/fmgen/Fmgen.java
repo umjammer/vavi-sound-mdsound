@@ -76,14 +76,6 @@ public class Fmgen {
 
     // class Chip;
 
-    public static int storeSample(int dest, int data) {
-        return limit(dest + data, 0x7fff, -0x8000);
-    }
-
-    public static int limit(int v, int max, int min) {
-        return Math.min(max, Math.max(v, min));
-    }
-
     /*
      * Creates tables
      */
@@ -272,8 +264,8 @@ public class Fmgen {
 
             // Operator
 
-            static int[] sineTable = new int[1024];
-            static int[] clTable = new int[FM_CLENTS];
+            static final int[] sineTable = new int[1024];
+            static final int[] clTable = new int[FM_CLENTS];
 
             /** OP type (MPcm, N...) */
             public Chip.OpType type;
@@ -916,7 +908,7 @@ public class Fmgen {
             private void ssgShiftPhase(int mode) {
             }
 
-            private int fbCalc(int fb) {
+            private static int fbCalc(int fb) {
                 return -1;
             }
 
@@ -948,7 +940,7 @@ public class Fmgen {
             private int amL;
             private int pmL;
             private int pmV;
-            public OpType opType;
+            public final OpType opType;
             private final int[][] mulTable = {new int[16], new int[16], new int[16], new int[16]};
 
             /**
@@ -1044,7 +1036,7 @@ public class Fmgen {
         private int algo;
         private Chip chip;
 
-        Operator[] op = new Operator[] {
+        final Operator[] op = new Operator[] {
                 new Operator(), new Operator(), new Operator(), new Operator()
         };
 

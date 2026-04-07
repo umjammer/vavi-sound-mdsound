@@ -338,6 +338,7 @@ logger.log(Level.INFO, "sampleRate: " + sampleRate);
             if (freqTable[m] < 0 && m >= 0xf) {
                 ch[c].freq = d3Freq / 256.0;
             }
+            ch[c].freqPerSampleRate = ch[c].freq / sampleRate;
         }
         int p = mode & 0xff;
         if (p != 0xff) {
@@ -379,7 +380,7 @@ logger.log(Level.INFO, "sampleRate: " + sampleRate);
 
     // Enter adpcm to change the value of inpPcm
     // -2047<<(4+4) <= inpPcm <= +2047<<(4+4)
-    private void adpcm2pcm(Channel st, byte adpcm) {
+    private static void adpcm2pcm(Channel st, byte adpcm) {
         int dltL;
         dltL = dltLTBL[st.scale];
         dltL = (dltL & ((adpcm & 4) != 0 ? -1 : 0)) +
@@ -411,7 +412,7 @@ logger.log(Level.INFO, "sampleRate: " + sampleRate);
 
     // Input pcm16 to change the value of inpPcm
     // -2047<<(4+4) <= inpPcm <= +2047<<(4+4)
-    private void pcm16_2pcm(Channel st, int pcm16) {
+    private static void pcm16_2pcm(Channel st, int pcm16) {
         st.pcm += pcm16 - st.pcm16Prev;
         st.pcm16Prev = pcm16;
 

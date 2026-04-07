@@ -336,7 +336,7 @@ public class Emu2149 {
         }
     }
 
-    Psg psg;
+    final Psg psg;
 
     public Emu2149(int c, int r) {
         psg = new Psg();

@@ -3,8 +3,6 @@ package mdsound.chips;
 import java.util.Arrays;
 import java.util.function.Function;
 
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
-
 
 /**
  * YmF271.
@@ -524,8 +522,8 @@ public class YmF271 {
     private final byte[] regsMain = new byte[0x10];
 
     private int timerA, timerB;
-    private final int timerAVal = 0;
-    private final int timerBVal = 0;
+    private int timerAVal = 0;
+    private int timerBVal = 0;
     private int irqState;
     private int status;
     private int enable;

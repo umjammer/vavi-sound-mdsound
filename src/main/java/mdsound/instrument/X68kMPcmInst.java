@@ -1,12 +1,14 @@
 package mdsound.instrument;
 
-import java.nio.ByteBuffer;
-
 import mdsound.Instrument;
 import mdsound.chips.MPcm;
-import mdsound.chips.MPcmPP.SETPCM;
 
 
+/**
+ * X68kMPcm MPCM
+ * <p>
+ * original mpcmX68k.cs
+ */
 public class X68kMPcmInst extends Instrument.BaseInstrument {
 
     public static final int MAX_CHIPS = 0x02;
@@ -87,8 +89,8 @@ public class X68kMPcmInst extends Instrument.BaseInstrument {
         chips[chipId].setPan(ch, pan);
     }
 
-    public void setVolTable(int chipId, int sel, ByteBuffer tbl) {
-        chips[chipId].setVolTable(sel, tbl);
+    public void setVolTable(int chipId, int sel) {
+        chips[chipId].setVolTable(sel);
     }
 
     private int decode(int chipId, int ch, byte[] buffer, int bufferP, int pos) {
@@ -97,7 +99,7 @@ public class X68kMPcmInst extends Instrument.BaseInstrument {
 
     public void setFreq(int chipId, int ch, int num) {
         if (ch == 0xff) {
-            for (int i = 0; i < (int) MPcm.VOICE_MAX; i++) setFreq(chipId, i, num);
+            for (int i = 0; i < MPcm.VOICE_MAX; i++) setFreq(chipId, i, num);
         } else {
             if (num < 0 || num > 6) return;
             chips[chipId].channels[ch].base = (float) MPcm.baseClockTbl[num] / chips[chipId].rate;
@@ -105,7 +107,7 @@ public class X68kMPcmInst extends Instrument.BaseInstrument {
         }
     }
 
-    public void setVolTableZms(int chipId, int sel, int[] vtbl) {
+    public void setVolTable(int chipId, int sel, int[] vtbl) {
         if (sel == 1) {
             // 16
             chips[chipId].setVolTable(sel, vtbl);

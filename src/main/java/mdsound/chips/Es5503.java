@@ -449,9 +449,7 @@ public class Es5503 {
         if (offset + length > this.dramSize)
             length = this.dramSize - offset;
 
-        for (int i = 0; i < length; i++) {
-            this.docRam[offset + i] = data[i];
-        }
+        if (length >= 0) System.arraycopy(data, 0, this.docRam, offset + 0, length);
     }
 
     public void setMuteMask(int muteMask) {

@@ -12,14 +12,14 @@ import mdsound.chips.MPcmPP.SETPCM;
 
 
 /**
- * MPcmPPInst.
+ * MPCM++ MPCM  (Mercury Unit).
  *
  * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
  * @version 0.00 2025-02-02 nsano initial version <br>
  */
 public class MPcmPPInst extends BaseInstrument {
 
-    private final int MAX_CHIPS = 0x02;
+    private static final int MAX_CHIPS = 0x02;
 
     public final MPcmPP[] chips = {new MPcmPP(), new MPcmPP()};
 
@@ -107,11 +107,11 @@ public class MPcmPPInst extends BaseInstrument {
         chips[chipId].setPan(ch, pan);
     }
 
-    public void setVolTable(int chipId, int sel, byte[] vtbl) {
-        chips[chipId].setVolTable(sel, null);
+    public void setVolTable(int chipId, int sel) {
+        chips[chipId].setVolTable(sel);
     }
 
-    public void setVolTableZms(int chipId, int sel, int[] vtbl) {
-        chips[chipId].setVolTableZms(sel, vtbl);
+    public void setVolTable(int chipId, int sel, int[] vtbl) {
+        chips[chipId].setVolTable(sel, vtbl);
     }
 }

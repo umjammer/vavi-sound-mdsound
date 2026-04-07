@@ -13,6 +13,8 @@ package mdsound.x68sound;
 import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
 
+import mdsound.x68sound.Global.Work;
+
 import static java.lang.System.getLogger;
 
 
@@ -26,7 +28,7 @@ public class Adpcm {
 
     private static final Logger logger = getLogger(Adpcm.class.getName());
 
-    private static final Global global = Global.getInstance();
+    Work work;
 
     //
     private int scale;
@@ -61,7 +63,7 @@ public class Adpcm {
 //    inline int dmaGetByte();
     public int dmaLastValue;
     public int adpcmReg;
-    public int[] dmaReg = new int[0x40];
+    public final int[] dmaReg = new int[0x40];
     public int finishCounter;
 
     public void setAdpcmRate(int rate) {
@@ -193,12 +195,12 @@ public class Adpcm {
                 dmaReg[0x1d] * 0x1_0000 +
                 dmaReg[0x1e] * 0x100 +
                 dmaReg[0x1f];
-        int mem0 = global.memRead.apply(bar++);
-        int mem1 = global.memRead.apply(bar++);
-        int mem2 = global.memRead.apply(bar++);
-        int mem3 = global.memRead.apply(bar++);
-        int mem4 = global.memRead.apply(bar++);
-        int mem5 = global.memRead.apply(bar++);
+        int mem0 = work.memRead.apply(bar++);
+        int mem1 = work.memRead.apply(bar++);
+        int mem2 = work.memRead.apply(bar++);
+        int mem3 = work.memRead.apply(bar++);
+        int mem4 = work.memRead.apply(bar++);
+        int mem5 = work.memRead.apply(bar++);
         if ((mem0 | mem1 | mem2 | mem3 | mem4 | mem5) == -1) {
             dmaError(0x0B); // Bus error (base address/base counter)
             return 1;
@@ -234,16 +236,16 @@ public class Adpcm {
             return 1;
         }
 
-        int mem0 = global.memRead.apply(bar++);
-        int mem1 = global.memRead.apply(bar++);
-        int mem2 = global.memRead.apply(bar++);
-        int mem3 = global.memRead.apply(bar++);
-        int mem4 = global.memRead.apply(bar++);
-        int mem5 = global.memRead.apply(bar++);
-        int mem6 = global.memRead.apply(bar++);
-        int mem7 = global.memRead.apply(bar++);
-        int mem8 = global.memRead.apply(bar++);
-        int mem9 = global.memRead.apply(bar++);
+        int mem0 = work.memRead.apply(bar++);
+        int mem1 = work.memRead.apply(bar++);
+        int mem2 = work.memRead.apply(bar++);
+        int mem3 = work.memRead.apply(bar++);
+        int mem4 = work.memRead.apply(bar++);
+        int mem5 = work.memRead.apply(bar++);
+        int mem6 = work.memRead.apply(bar++);
+        int mem7 = work.memRead.apply(bar++);
+        int mem8 = work.memRead.apply(bar++);
+        int mem9 = work.memRead.apply(bar++);
         if ((mem0 | mem1 | mem2 | mem3 | mem4 | mem5 | mem6 | mem7 | mem8 | mem9) == -1) {
             dmaError(0x0b); // Bus error (base address/base counter)
             return 1;
@@ -295,7 +297,7 @@ public class Adpcm {
                 dmaReg[0x0d] * 0x1_0000 +
                 dmaReg[0x0e] * 0x100 +
                 dmaReg[0x0f];
-        int mem = global.memRead.apply(mar);
+        int mem = work.memRead.apply(mar);
         if (mem == -1) {
             dmaError(0x09); // Bus error (memory address/memory counter)
             return -2147483648; // 0x8000_0000;
@@ -407,7 +409,7 @@ public class Adpcm {
         outPcm = ((inpPcm << 9) - (inpPcmPrev << 9) + 459 * outPcm) >> 9;
         inpPcmPrev = inpPcm;
 
-        return (outPcm * global.totalVolume) >> 8;
+        return (outPcm * work.totalVolume) >> 8;
     }
 
     // -32768<<4 <= retval <= +32768<<4

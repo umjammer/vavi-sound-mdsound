@@ -7,7 +7,9 @@ package mdsound;
 import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -28,20 +30,28 @@ public class MDSound {
 
     public DacControl dacControl = null;
 
+    /** Registered chips */
     private List<Chip> chips = null;
 
     public MDSound.Chip getChipInfo(Class<? extends Instrument> inst) {
         return chips.stream().filter(c -> c.instrument.getClass() == inst).findFirst().orElse(null);
     }
 
+    /** Registered instruments (based on {@link #chips} */
     private final Map<Class<? extends Instrument>, List<Instrument>> instruments = new HashMap<>();
 
-    /** @return nullable */
+    /**
+     * Gets a registered instrument for chipId 0.
+     * @return nullable
+     */
     public <T extends Instrument> T inst(Class<T> clazz) {
         return inst(clazz, 0);
     }
 
-    /** @return nullable */
+    /**
+     * Gets a registered instrument.
+     * @return nullable
+     */
     public <T extends Instrument> T inst(Class<T> clazz, int chipIndex) {
         if (instruments.containsKey(clazz) && chipIndex < instruments.get(clazz).size()) {
             return clazz.cast(instruments.get(clazz).get(chipIndex));
@@ -56,7 +66,7 @@ public class MDSound {
     private double volumeMul;
 
     /** view */
-    public VisWaveBuffer visWaveBuffer = new VisWaveBuffer();
+    public final VisWaveBuffer visWaveBuffer = new VisWaveBuffer();
 
     /** */
     public static class Chip {
@@ -68,7 +78,7 @@ public class MDSound {
 
         public Instrument instrument = null;
         public AdditionalUpdate additionalUpdate = null;
-        public Map<String, SetVolume> setVolumes = new HashMap<>();
+        public final Map<String, SetVolume> setVolumes = new HashMap<>();
 
         public static final String MAIN_TAG = "MAIN";
 
@@ -127,9 +137,9 @@ public class MDSound {
         }
 
         private void setDefaultVolume(String tag, int vol, double volumeMul) {
-            this.volume = Math.max(Math.min(vol, 20), -192);
+            this.volume = Math.clamp(vol, -192, 20);
             int n = (((int) (16384.0 * Math.pow(10.0, this.volume / 40.0)) * this.tVolumeBalance) >> 8);
-            this.tVolume = Math.max(Math.min((int) (n * volumeMul), Short.MAX_VALUE), Short.MIN_VALUE);
+            this.tVolume = Math.clamp((int) (n * volumeMul), Short.MIN_VALUE, Short.MAX_VALUE);
         }
 
         // default, 0x80, 1
@@ -159,7 +169,7 @@ public class MDSound {
             else
                 this.tVolumeBalance = this.volumeBalance;
             int n = (((int) (16384.0 * Math.pow(10.0, this.volume / 40.0)) * this.tVolumeBalance) >> 8);
-            this.tVolume = Math.max(Math.min((int) (n * volumeMul), Short.MAX_VALUE), Short.MIN_VALUE);
+            this.tVolume = Math.clamp((int) (n * volumeMul), Short.MIN_VALUE, Short.MAX_VALUE);
         }
     }
 
@@ -175,6 +185,7 @@ public class MDSound {
 
     /** */
     public synchronized void init(int samplingRate, int samplingBuffer, List<Chip> chips) {
+notContains.clear();
         if (chips == null) {
 logger.log(Level.WARNING, "no chips");
             return;
@@ -201,7 +212,7 @@ logger.log(Level.WARNING, "no chips");
         }
 
         for (Chip chip : chips) {
-logger.log(Level.DEBUG, "instrument start/reset: %s[%d], %d, %d".formatted(chip.instrument.getClass().getSimpleName(), chip.id, chip.samplingRate, chip.clock));
+logger.log(Level.DEBUG, "instrument start/reset: %s[%d], %d, %d, @%x, %s".formatted(chip.instrument.getClass().getSimpleName(), chip.id, chip.samplingRate, chip.clock, chip.hashCode(), Arrays.toString(chip.option)));
             chip.samplingRate = chip.instrument.start(chip.id, chip.samplingRate, chip.clock, chip.option);
             chip.instrument.reset(chip.id);
 
@@ -220,7 +231,14 @@ instruments.keySet().forEach(k -> logger.log(Level.DEBUG, "instrument: " + k.get
         instruments.values().forEach(is -> is.forEach(Instrument::init));
     }
 
-    /** */
+    /**
+     *
+     * @param buf stereo buffer (4)
+     * @param offset buffer start offset (0)
+     * @param sampleCount samples * stereo (4)
+     * @param frame clock
+     * @return precessed samples
+     */
     public synchronized int update(short[] buf, int offset, int sampleCount, Runnable frame) {
         int i;
         for (i = 0; i < sampleCount && offset + i < buf.length; i += 2) {
@@ -276,9 +294,14 @@ logger.log(Level.TRACE, "[%d] %+04d, %+04d".formatted(i, a[0], b[0]));
         write(i, 0, chipId, port, adr, data);
     }
 
+final Set<Class<? extends Instrument>> notContains = new HashSet<>();
+
     public synchronized void write(Class<? extends Instrument> i, int chipIndex, int chipId, int port, int adr, int data) {
         if (!instruments.containsKey(i)) {
-logger.log(Level.WARNING, "not contains: " + i);
+if (!notContains.contains(i)) {
+ notContains.add(i);
+ logger.log(Level.WARNING, "not contains: " + i);
+}
             return;
         }
 
@@ -304,7 +327,7 @@ logger.log(Level.WARNING, "not contains: " + i);
 //#region VisVolume
 
     public Set<Instrument> getFirstInstruments() {
-        return instruments.values().stream().map(is -> is.get(0)).collect(Collectors.toSet());
+        return instruments.values().stream().map(List::getFirst).collect(Collectors.toSet());
     }
 
     /**
@@ -331,6 +354,9 @@ logger.log(Level.WARNING, "not contains: " + i);
 
 //#endregion
 
+    /**
+     * when a driver needs to add own rendered data to mds rendered data
+     */
     public synchronized void setIncFlag() {
         incFlag = true;
     }

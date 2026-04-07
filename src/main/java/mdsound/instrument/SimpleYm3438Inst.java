@@ -7,7 +7,6 @@
 package mdsound.instrument;
 
 import mdsound.Instrument;
-import mdsound.chips.Ym3438Const;
 import uk.co.omgdrv.simplevgm.fm.nukeykt.Ym3438Provider;
 
 

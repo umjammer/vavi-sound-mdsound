@@ -16,11 +16,11 @@ public class Filter {
 
     protected Renderable target;
     protected int type;
-    protected int[] _out = new int[2];
+    protected final int[] _out = new int[2];
     protected double a;
     protected double rate, r, C;
-    protected boolean disable;
-    protected int getaBits;
+    protected final boolean disable;
+    protected final int getaBits;
 
     public Filter() {
         this.getaBits = 20;

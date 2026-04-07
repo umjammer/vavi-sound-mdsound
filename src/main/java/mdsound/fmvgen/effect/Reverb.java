@@ -39,7 +39,7 @@ public class Reverb {
     }
 
     public void setDelta(int n) {
-        this.delta = buf[0].length / 128 * Math.max(Math.min(n, 127), 0);
+        this.delta = buf[0].length / 128 * Math.clamp(n, 0, 127);
     }
 
     public void setSendLevel(int ch, int n) {
@@ -48,7 +48,7 @@ public class Reverb {
             return;
         }
         //sendLevel[ch] = 1.0 / (2 << Math.max(Math.min((15 - n), 15), 0));
-        n = Math.max(Math.min(n, 15), 0);
+        n = Math.clamp(n, 0, 15);
         sendLevel[ch] = 1.0 * sl[n];
 //logger.log(Level.TRACE, "%d %d".formatted(ch, SendLevel[ch]));
     }
@@ -102,7 +102,7 @@ public class Reverb {
         if (adr == 0) {
             setDelta(data & 0x7f);
         } else if (adr == 1) {
-            currentCh = Math.max(Math.min(data & 0x3f, 38), 0);
+            currentCh = Math.clamp(data & 0x3f, 0, 38);
             if ((data & 0x80) != 0)
                 initParams();
         } else if (adr == 2) {

@@ -3,6 +3,7 @@ package mdsound.chips;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,17 +22,17 @@ public class Cs4231 {
     int indexData;
     int status;
     int PIOData;
-    int[] reg = new int[32];
+    final int[] reg = new int[32];
     int dmaInt;
     public int renderingFreq;
-    public short[] sound = new short[2];
-    short[][] sound2 = {
+    public final short[] sound = new short[2];
+    final short[][] sound2 = {
             new short[2], new short[2], new short[2], new short[2], new short[2],
             new short[2], new short[2], new short[2], new short[2], new short[2]
     };
     static final int[] xtal = {24_576_000, 16_934_400};
     static final int[] divTbl = {3072, 1536, 896, 768, 448, 384, 512, 2560};
-    public DMA dma = new DMA();
+    public final DMA dma = new DMA();
     public int imr = 0;
     double step = 0;
     double counter = 0;
@@ -232,7 +233,7 @@ public class Cs4231 {
         public DMA() {
             this.ptr = 0;
             this.cnt = 0;
-            for (int i = 0; i < fifoBuf.length; i++) fifoBuf[i] = (byte) 0x80;
+            Arrays.fill(fifoBuf, (byte) 0x80);
             //this.fifoBuf = fifoBuf;
             //this.int0bEnt = int0bEnt;
         }
@@ -291,49 +292,49 @@ public class Cs4231 {
 
         private int fifoseg = 0;
         private int fifoptr1 = 0;
-        private static int MAXBUF = 18;
-        private static int FIFO_SIZE = 128;
+        private static final int MAXBUF = 18;
+        private static final int FIFO_SIZE = 128;
         private final static int PWORKE = 1; // 18;
         private int fifoend1 = FIFO_SIZE * 2;
         private int fifoptr2 = FIFO_SIZE * 2;
         private int fifoend2 = FIFO_SIZE * 4;
-        private int fifofin = FIFO_SIZE * 2 * MAXBUF;
+        private static final int fifofin = FIFO_SIZE * 2 * MAXBUF;
         private int dma_adr = 0;
         private int dma_bank = 0;
         private int dma_count = 0;
-        private int dma_data = FIFO_SIZE * 2;
-        private byte dma_chan = 3;
+        private static final int dma_data = FIFO_SIZE * 2;
+        private static final byte dma_chan = 3;
         private int panl1_ = 0xc008; // or al,al
         private int panl2_ = 0xc008; // or al,al
-        private int level1_ = 0x007f;
-        private int level2_ = 0x7f;
-        private int level3_ = 0x7f;
+        private static final int level1_ = 0x007f;
+        private static final int level2_ = 0x7f;
+        private static final int level3_ = 0x7f;
         public int jump1_ = 0;
         public int jump2_ = 0;
         /** EMS handle for PCM */
         public int phandle = 0xffff;
         /** For saving EMS map information */
-        private byte[] pemsbuf = new byte[32];
+        private final byte[] pemsbuf = new byte[32];
         public int freq2 = 0x987;
-        public EMS ems = new EMS();
+        public final EMS ems = new EMS();
 
         public static class Pcm0work {
 
             /** Extended PCM playback start address/EMS page */
-            public int[] pcm0adrs = {0, 0};
+            public final int[] pcm0adrs = {0, 0};
             /** Playback subtraction counter * 4 */
-            public int[] pcm0cnt = {0, 0};
+            public final int[] pcm0cnt = {0, 0};
             /** Frequency */
-            public int[] pcm0freq = {0, 0};
+            public final int[] pcm0freq = {0, 0};
             /** right+left pan and data (0/FFFF) */
-            public int[] pcm0pan = {0, 0};
+            public final int[] pcm0pan = {0, 0};
             /** Volume */
-            public int[] pcm0vol =  {0, 0};
+            public final int[] pcm0vol =  {0, 0};
             /** Mute flag */
             public boolean mask = false;
         }
 
-        public Pcm0work[] pcm0work = {
+        public final Pcm0work[] pcm0work = {
                 new Pcm0work(), new Pcm0work(), new Pcm0work(), new Pcm0work(),
                 new Pcm0work(), new Pcm0work(), new Pcm0work(), new Pcm0work(),
                 new Pcm0work(), new Pcm0work(), new Pcm0work(), new Pcm0work(),
@@ -655,10 +656,10 @@ fifo_end1:
         private int crntPageMap = 0;
         private int pPageNo = 0;
         private int lPageNo = 0;
-        private Map<Integer, Boolean> useEMSList;
-        private Map<Integer, String> handleName;
-        private Map<Integer, byte[][]> emsBuff;
-        private Map<Integer, int[]> mappedPage;
+        private final Map<Integer, Boolean> useEMSList;
+        private final Map<Integer, String> handleName;
+        private final Map<Integer, byte[][]> emsBuff;
+        private final Map<Integer, int[]> mappedPage;
 
         public EMS() {
             crntEmsHandle = 0;

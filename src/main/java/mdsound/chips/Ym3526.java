@@ -472,7 +472,7 @@ public class Ym3526 {
             };
 
             /* synchronized level of common table */
-            private final int numLock = 0;
+            private static final int numLock = 0;
 
             /* attack rate: AR<<2 */
             private int ar;
@@ -982,7 +982,7 @@ public class Ym3526 {
             }
         }
 
-        private int opCalc(int phase, int env, int pm, int wave_tab) {
+        private static int opCalc(int phase, int env, int pm, int wave_tab) {
             int p;
 
             p = (env << 4) + sinTab[wave_tab + ((((phase & ~FREQ_MASK) + (pm << 16)) >> FREQ_SH) & SIN_MASK)];
@@ -992,7 +992,7 @@ public class Ym3526 {
             return tl_tab[p];
         }
 
-        private int opCalc1(int phase, int env, int pm, int wave_tab) {
+        private static int opCalc1(int phase, int env, int pm, int wave_tab) {
             int p;
 
             p = (env << 4) + sinTab[wave_tab + ((((phase & ~FREQ_MASK) + pm) >> FREQ_SH) & SIN_MASK)];
@@ -1336,7 +1336,7 @@ public class Ym3526 {
 //logger.log(Level.TRACE, "OPLinit eg_timer_add=%8x eg_timer_overflow=%8x".formatted(this.eg_timer_add, this.eg_timer_overflow));
         }
 
-        private void keyOn(Opl.Slot slot, int keySet) {
+        private static void keyOn(Opl.Slot slot, int keySet) {
             if (slot.key == 0) {
                 // restart Phase Generator
                 slot.cnt = 0;
@@ -1346,7 +1346,7 @@ public class Ym3526 {
             slot.key |= keySet;
         }
 
-        private void keyOff(Opl.Slot slot, int keyClr) {
+        private static void keyOff(Opl.Slot slot, int keyClr) {
             if (slot.key != 0) {
                 slot.key &= keyClr;
 
@@ -1660,7 +1660,7 @@ public class Ym3526 {
         }
 
         /** CSM Key Controller */
-        private void controlCSMKey(Opl.Channel ch) {
+        private static void controlCSMKey(Opl.Channel ch) {
             keyOn(ch.slots[SLOT1], 4);
             keyOn(ch.slots[SLOT2], 4);
 

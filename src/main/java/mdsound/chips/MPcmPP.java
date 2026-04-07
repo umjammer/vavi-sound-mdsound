@@ -45,7 +45,7 @@ public class MPcmPP {
         private int vol;
         private int volwork;
         private int type;
-        private int[] lr = new int[2];
+        private final int[] lr = new int[2];
         private short orig;
         private byte[] adrs_buf;
         private int adrs_ptr;
@@ -70,7 +70,7 @@ public class MPcmPP {
         private int outs;
     }
 
-    private double[] baseClockTbl = {
+    private final double[] baseClockTbl = {
             // ADPCM mono
             3906.2,
             5208.0,
@@ -466,7 +466,7 @@ public class MPcmPP {
         this.work[ch].PcmKind = num;
         this.work[ch].freq = baseClockTbl[num];
         this.work[ch].outs = outsTable[num];
-        this.work[ch].type = (int) typeTable[num];
+        this.work[ch].type = typeTable[num];
         if (baseClockTbl[num] < 0 && num >= 0xf) {
             this.work[ch].freq = d3Freq / 256.0;
         }
@@ -563,7 +563,7 @@ public class MPcmPP {
         }
     }
 
-    public void setVolTable(int sel, short[] tbl) {
+    public void setVolTable(int sel) {
         if (sel == 1) {
             // 16
             this.volTbl = volTbl_[0];
@@ -574,7 +574,7 @@ public class MPcmPP {
         this.volTbl = volTbl_[1];
     }
 
-    public void setVolTableZms(int sel, int[] tbl) {
+    public void setVolTable(int sel, int[] tbl) {
         if (sel == 1) {
             // 16
             this.volTbl = tbl;
@@ -699,8 +699,8 @@ public class MPcmPP {
                 if (!mute) {
                     int a = _buffer[0][buf_ptr] + (sampleL * this.work[ch].lr[0]);
                     int b = _buffer[1][buf_ptr] + (sampleR * this.work[ch].lr[1]);
-                    a = Math.min(Math.max(a, Short.MIN_VALUE), Short.MAX_VALUE);
-                    b = Math.min(Math.max(b, Short.MIN_VALUE), Short.MAX_VALUE);
+                    a = Math.clamp(a, Short.MIN_VALUE, Short.MAX_VALUE);
+                    b = Math.clamp(b, Short.MIN_VALUE, Short.MAX_VALUE);
                     _buffer[0][buf_ptr] = a;
                     _buffer[1][buf_ptr] = b;
                     buf_ptr++;

@@ -12,13 +12,13 @@ package mdsound.x68sound;
 
 
 /**
- * SoundIocs.
+ * Sound Input Output Control System (BIOS equivalent).
  *
  * @author m_puusan
  */
 public class SoundIocs {
 
-    private X68Sound x68Sound = null;
+    private final X68Sound x68Sound;
 
     public SoundIocs(X68Sound x68Sound) {
         this.x68Sound = x68Sound;
@@ -174,7 +174,7 @@ public class SoundIocs {
         opmWait();
         x68Sound.opmPoke(opmReg1B); // ADPCM clock setting (8 or 4MHz)
         int ppiReg;
-        ppiReg = (((mode >> 6) & 0x0c) | PANTBL[mode & 3]);
+        ppiReg = (((mode >>> 6) & 0x0c) | PANTBL[mode & 3]);
         ppiReg |= (x68Sound.ppiPeek() & 0xf0);
         x68Sound.dmaPoke(0x07, ccr); // DMA transfer start
         x68Sound.ppiPoke(ppiReg); // Set sampling rate & PAN to PPI

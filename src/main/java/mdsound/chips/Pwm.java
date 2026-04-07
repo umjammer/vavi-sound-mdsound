@@ -54,7 +54,7 @@ public class Pwm {
     private int wpR;
     private int rpL;
     private int wpL;
-    private final int cycles = 0;
+    private int cycles = 0;
     private int cycle;
     private int cycleCnt;
     private int int_;
@@ -65,7 +65,7 @@ public class Pwm {
     private int outL;
 
     private int cycleTmp;
-    private final int cyclesTmp = 0;
+    private int cyclesTmp = 0;
     private int intTmp;
     private int fifoLTmp;
     private int fifoRTmp;

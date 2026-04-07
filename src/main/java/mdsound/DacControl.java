@@ -44,7 +44,7 @@ public class DacControl {
 
     public static class PcmBank {
         public int bankCount;
-        public List<PcmData> bank = new ArrayList<>();
+        public final List<PcmData> bank = new ArrayList<>();
         public int dataSize;
         public byte[] data;
         public int dataPos;
@@ -292,7 +292,7 @@ public class DacControl {
             return (byte) 0x80;
 
         pcmBank[0x00].dataPos++;
-        return pcmBank[0x00].bank.get(0).data[dataPos];
+        return pcmBank[0x00].bank.getFirst().data[dataPos];
     }
 
     public Integer getPCMAddressFromPCMBank(int type, int dataPos) {
@@ -399,29 +399,25 @@ public class DacControl {
                     outBit += bitReadVal;
                 }
 
-                switch (cmpSubType) {
-                case 0x00: // Copy
-                    outVal = inVal + addVal;
-                    break;
-                case 0x01: // Shift Left
-                    outVal = (inVal << outShift) + addVal;
-                    break;
-                case 0x02: // Table
-                    switch (valSize) {
-                    case 0x01:
-                        outVal = pcmTbl.entries[ent1B + inVal] & 0xff;
-                        break;
-                    case 0x02:
+                outVal = switch (cmpSubType) {
+                    case 0x00 -> // Copy
+                            inVal + addVal;
+                    case 0x01 -> // Shift Left
+                            (inVal << outShift) + addVal;
+                    case 0x02 -> // Table
+                        //#endif
+                            switch (valSize) {
+                                case 0x01 -> pcmTbl.entries[ent1B + inVal] & 0xff;
+                                case 0x02 ->
 //#ifndef BIG_ENDIAN
 //                        outVal = ent2B[inVal];
 //#else
-                        //ReadLE16(((int)8*)&ent2B[inVal]);
-                        outVal = (pcmTbl.entries[ent2B + inVal * 2] & 0xff) + (pcmTbl.entries[ent2B + inVal * 2 + 1] & 0xff) * 0x100;
-//#endif
-                        break;
-                    }
-                    break;
-                }
+                                    //ReadLE16(((int)8*)&ent2B[inVal]);
+                                        (pcmTbl.entries[ent2B + inVal * 2] & 0xff) + (pcmTbl.entries[ent2B + inVal * 2 + 1] & 0xff) * 0x100;
+                                default -> outVal;
+                            };
+                    default -> outVal;
+                };
 
 //#ifndef BIG_ENDIAN
 //               //memcpy(outPos, &outVal, valSize);

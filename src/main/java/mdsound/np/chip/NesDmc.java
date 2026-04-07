@@ -10,7 +10,6 @@ import java.util.function.Consumer;
 
 import mdsound.Common;
 import mdsound.Instrument;
-import mdsound.chips.Nes;
 import mdsound.np.Device;
 import mdsound.np.Device.SoundChip;
 import mdsound.np.NpNesDmc;
@@ -18,7 +17,7 @@ import mdsound.np.NpNesDmc;
 
 public class NesDmc implements SoundChip {
 
-    public NpNesDmc dmc;
+    public final NpNesDmc dmc;
 
     public NesDmc() {
         dmc = new NpNesDmc();

@@ -70,9 +70,9 @@ public class NpNesFds {
     public int lastVol;
 
     /** two wave tables */
-    public int[][] wave = {new int[64], new int[64]};
-    public int[] freq = new int[2];
-    private int[] phase = new int[2];
+    public final int[][] wave = {new int[64], new int[64]};
+    public final int[] freq = new int[2];
+    private final int[] phase = new int[2];
     public boolean wavWrite;
     public boolean wavHalt;
     public boolean envHalt;
@@ -238,7 +238,7 @@ public class NpNesFds {
 
                 // multiply pos by gain,
                 // shift off 4 bits but with odd "rounding" behaviour
-                int temp = (int) (pos * this.envOut[EG.EMOD.ordinal()]);
+                int temp = pos * this.envOut[EG.EMOD.ordinal()];
                 int rem = temp & 0x0f;
                 temp >>= 4;
                 if ((rem > 0) && ((temp & 0x80) == 0)) {

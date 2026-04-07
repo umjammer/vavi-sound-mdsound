@@ -182,16 +182,14 @@ public class IremGa20 {
     public int read(int offset) {
         int channel = offset >> 3;
 
-        switch (offset & 0x7) {
-        case 7: // Voice status.  bit 0 is 1 if active. (routine around 0xccc in rtypeleo)
-            return this.channel[channel].play != 0 ? 1 : 0;
-
-        default:
+        return switch (offset & 0x7) {
+            case 7 -> // Voice status.  bit 0 is 1 if active. (routine around 0xccc in rtypeleo)
+                    this.channel[channel].play != 0 ? 1 : 0;
+            default ->
 //logger.log(Level.TRACE, "GA20: read unk. register %d, channel %d".formatted(offset & 0xf, channel));
-            break;
-        }
+                    0;
+        };
 
-        return 0;
     }
 
     private void resetChannels() {

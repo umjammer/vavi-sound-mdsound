@@ -13,6 +13,8 @@ package mdsound.x68sound;
 import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
 
+import mdsound.x68sound.Global.Work;
+
 import static java.lang.System.getLogger;
 
 
@@ -25,7 +27,7 @@ public class Pcm8 {
 
     private static final Logger logger = getLogger(Pcm8.class.getName());
 
-    private static final Global global = Global.getInstance();
+    Work work;
 
     private int scale; //
     /** 16bit PCM data */
@@ -113,12 +115,12 @@ public class Pcm8 {
         --dmaBtc;
 
         int mem0, mem1, mem2, mem3, mem4, mem5;
-        mem0 = global.memRead.apply(dmaBarPtr++);
-        mem1 = global.memRead.apply(dmaBarPtr++);
-        mem2 = global.memRead.apply(dmaBarPtr++);
-        mem3 = global.memRead.apply(dmaBarPtr++);
-        mem4 = global.memRead.apply(dmaBarPtr++);
-        mem5 = global.memRead.apply(dmaBarPtr++);
+        mem0 = work.memRead.apply(dmaBarPtr++);
+        mem1 = work.memRead.apply(dmaBarPtr++);
+        mem2 = work.memRead.apply(dmaBarPtr++);
+        mem3 = work.memRead.apply(dmaBarPtr++);
+        mem4 = work.memRead.apply(dmaBarPtr++);
+        mem5 = work.memRead.apply(dmaBarPtr++);
         if ((mem0 | mem1 | mem2 | mem3 | mem4 | mem5) == -1) {
             // Bus error (base address/base counter)
             return 1;
@@ -141,16 +143,16 @@ public class Pcm8 {
 
         int mem0, mem1, mem2, mem3, mem4, mem5;
         int mem6, mem7, mem8, mem9;
-        mem0 = global.memRead.apply(dmaBarPtr++);
-        mem1 = global.memRead.apply(dmaBarPtr++);
-        mem2 = global.memRead.apply(dmaBarPtr++);
-        mem3 = global.memRead.apply(dmaBarPtr++);
-        mem4 = global.memRead.apply(dmaBarPtr++);
-        mem5 = global.memRead.apply(dmaBarPtr++);
-        mem6 = global.memRead.apply(dmaBarPtr++);
-        mem7 = global.memRead.apply(dmaBarPtr++);
-        mem8 = global.memRead.apply(dmaBarPtr++);
-        mem9 = global.memRead.apply(dmaBarPtr++);
+        mem0 = work.memRead.apply(dmaBarPtr++);
+        mem1 = work.memRead.apply(dmaBarPtr++);
+        mem2 = work.memRead.apply(dmaBarPtr++);
+        mem3 = work.memRead.apply(dmaBarPtr++);
+        mem4 = work.memRead.apply(dmaBarPtr++);
+        mem5 = work.memRead.apply(dmaBarPtr++);
+        mem6 = work.memRead.apply(dmaBarPtr++);
+        mem7 = work.memRead.apply(dmaBarPtr++);
+        mem8 = work.memRead.apply(dmaBarPtr++);
+        mem9 = work.memRead.apply(dmaBarPtr++);
         if ((mem0 | mem1 | mem2 | mem3 | mem4 | mem5 | mem6 | mem7 | mem8 | mem9) == -1) {
             // Bus error (base address/base counter)
             return 1;
@@ -170,7 +172,7 @@ public class Pcm8 {
         if (dmaMtc == 0) {
             return 0x8000_0000;
         }
-        int mem = global.memRead.apply(dmaMarPtr);
+        int mem = work.memRead.apply(dmaMarPtr);
         if (mem == -1) {
             // Bus error (memory address/memory counter)
             return 0x8000_0000;
@@ -201,9 +203,8 @@ public class Pcm8 {
         return dmaLastValue;
     }
 
-
     private static final int MAXPCMVAL = 2047;
-    private static final int[] HPF_shift_tbl = new int[] {0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 4,};
+    private static final int[] HPF_shift_tbl = {0, 0, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3, 4,};
 
     /**
      * Enter adpcm to change the value of InpPcm
@@ -315,7 +316,7 @@ public class Pcm8 {
         outPcm = ((inpPcm << 9) - (inpPcmPrev << 9) + 459 * outPcm) >> 9;
         inpPcmPrev = inpPcm;
 
-        return (((outPcm * volume) >> 4) * global.totalVolume) >> 8;
+        return (((outPcm * volume) >> 4) * work.totalVolume) >> 8;
     }
 
     // -32768<<4 <= retval <= +32768<<4

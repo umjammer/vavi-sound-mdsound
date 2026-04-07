@@ -10,7 +10,7 @@ public class Gigatron {
         private byte wavA;
     }
 
-    private Channel[] ch = {
+    private final Channel[] ch = {
             new Channel(), new Channel(), new Channel(), new Channel()
     };
     private byte[] soundTable = new byte[256];

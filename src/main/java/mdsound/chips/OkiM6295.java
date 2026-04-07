@@ -583,9 +583,9 @@ logger.log(Level.WARNING, dataStart + " > " +  romSize);
 
         public int masterClock = 0;
         public int pin7State = 0;
-        public int[] nmkBank = new int[4];
-        public boolean[] keyon = new boolean[4];
-        public ChannelInfo.Channel[] chInfo = new ChannelInfo.Channel[] {new ChannelInfo.Channel(), new ChannelInfo.Channel(), new ChannelInfo.Channel(), new ChannelInfo.Channel()};
+        public final int[] nmkBank = new int[4];
+        public final boolean[] keyon = new boolean[4];
+        public final ChannelInfo.Channel[] chInfo = new ChannelInfo.Channel[] {new ChannelInfo.Channel(), new ChannelInfo.Channel(), new ChannelInfo.Channel(), new ChannelInfo.Channel()};
     }
 
     public ChannelInfo readChInfo() {

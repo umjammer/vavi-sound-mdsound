@@ -142,7 +142,7 @@ public class GbSound {
         private static final int[] divisor = {8, 16, 32, 48, 64, 80, 96, 112};
 
         // Common
-        public int[] registers = new int[5];
+        public final int[] registers = new int[5];
         private boolean on;
         private int channel;
         public int length;
@@ -605,7 +605,7 @@ public class GbSound {
     public Sound sound4;
     public Controller controller;
 
-    public int[] registers = new int[0x30];
+    public final int[] registers = new int[0x30];
 
     private Ratio cycleCounter;
 

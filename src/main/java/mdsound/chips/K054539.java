@@ -99,7 +99,7 @@ public class K054539 {
 
     private final byte[] regs = new byte[0x230];
     private byte[] ram;
-    private final int ptrRam = 0;
+    private int ptrRam = 0;
     private int reverbPos;
 
     private int curPtr;
@@ -107,7 +107,7 @@ public class K054539 {
     private byte [] curZone;
     private int ptrCurZone;
     private byte[] rom;
-    private final int ptrRom = 0;
+    private int ptrRom = 0;
 
     private int romSize;
     private int romMask;

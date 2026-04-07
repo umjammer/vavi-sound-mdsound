@@ -21,7 +21,6 @@ import dotnet4j.io.Stream;
 import mdsound.Common;
 
 import static java.lang.System.getLogger;
-import static mdsound.fmgen.Fmgen.limit;
 
 
 /**
@@ -56,6 +55,18 @@ public class Opna {
             super.reset();
             psg.reset();
         }
+
+//        public void changePSGMode(int mode) {
+//            if (mode == 0) {
+//                psg = new PSG();
+//            } else {
+//                psg = new fmvgen.psg2Light();
+//            }
+//            byte[] table = { 4, 2, 1 };
+//            psg.setClock(clock / table[prescale], (int) psgrate);
+//            psg.reset();
+//            psg.setVolume(psg_db);
+//        }
 
         /** Sets volume. */
         public void setVolumeFM(int db) {
@@ -165,9 +176,9 @@ public class Opna {
         protected int status;
         protected Fmgen.Channel4 csmCh;
 
-        public int[] visVolume = new int[] {0, 0};
+        public final int[] visVolume = new int[] {0, 0};
 
-        protected int[] lfoTable = new int[8];
+        protected final int[] lfoTable = new int[8];
 
         // Timer processing
         private void timerA() {
@@ -179,14 +190,14 @@ public class Opna {
 
         protected int preScale;
 
-        protected Fmgen.Channel4.Chip chip;
-        public PSG psg;
+        protected final Fmgen.Channel4.Chip chip;
+        public final PSG psg;
     }
 
     /** OPN2 Base */
     public static class OPNABase extends OPNBase {
-        public int[] visRtmVolume = new int[] {0, 0};
-        public int[] visAPCMVolume = new int[] {0, 0};
+        public final int[] visRtmVolume = new int[] {0, 0};
+        public final int[] visAPCMVolume = new int[] {0, 0};
 
         public OPNABase() {
             amTable[0] = -1;
@@ -626,11 +637,11 @@ public class Opna {
                     mixSubS(activeCh, idest, ibuf);
                 }
 
-                int v = ((limit(ibuf[2] + ibuf[3], 0x7fff, -0x8000) * fmVolume) >> 14);
+                int v = ((Math.clamp(ibuf[2] + ibuf[3], -0x8000, 0x7fff) * fmVolume) >> 14);
                 buffer[dest + 0] += v;
                 visVolume[0] = v;
 
-                v = ((limit(ibuf[1] + ibuf[3], 0x7fff, -0x8000) * fmVolume) >> 14);
+                v = ((Math.clamp(ibuf[1] + ibuf[3], -0x8000, 0x7fff) * fmVolume) >> 14);
                 buffer[dest + 1]  += v;
                 visVolume[1] = v;
             }
@@ -958,17 +969,17 @@ stop:
                     57, 57, 57, 57, 77, 102, 128, 153,
             };
 
-            adpcmX = limit(adpcmX + table1[data] * adpcmD / 8, 32767, -32768);
-            adpcmD = limit(adpcmD * table2[data] / 64, 24576, 127);
+            adpcmX = Math.clamp(adpcmX + table1[data] * adpcmD / 8, -32768, 32767);
+            adpcmD = Math.clamp(adpcmD * table2[data] / 64, 127, 24576);
             return adpcmX;
         }
 
-        public static boolean NO_BITTYPE_EMULATION = false;
+        public static final boolean NO_BITTYPE_EMULATION = false;
 
         // FM Sound Source
 
-        protected int[] pan = new int[6];
-        protected int[] fNum2 = new int[9];
+        protected final int[] pan = new int[6];
+        protected final int[] fNum2 = new int[9];
 
         protected int reg22;
         protected int reg29; // OPNA only?
@@ -979,8 +990,8 @@ stop:
         protected int lfoCount;
         protected int lfoDCount;
 
-        protected int[] fNum = new int[6];
-        protected int[] fNum3 = new int[3];
+        protected final int[] fNum = new int[6];
+        protected final int[] fNum3 = new int[3];
 
         // ADPCM related
 
@@ -1033,15 +1044,15 @@ stop:
         /** ADPCM Control Register 2 */
         protected int control2;
         /** ADPCM Part of a register */
-        protected byte[] adpcmReg = new byte[8];
+        protected final byte[] adpcmReg = new byte[8];
 
         protected int rhythmMask_;
 
-        protected Fmgen.Channel4[] ch = new Fmgen.Channel4[6];
+        protected final Fmgen.Channel4[] ch = new Fmgen.Channel4[6];
 
-        public static int[] amTable = new int[Fmgen.FM_LFOENTS];
-        public static int[] pmTable = new int[Fmgen.FM_LFOENTS];
-        public static int[] tlTable = new int[Fmgen.FM_TLENTS + Fmgen.FM_TLPOS];
+        public static final int[] amTable = new int[Fmgen.FM_LFOENTS];
+        public static final int[] pmTable = new int[Fmgen.FM_LFOENTS];
+        public static final int[] tlTable = new int[Fmgen.FM_TLENTS + Fmgen.FM_TLPOS];
         protected static boolean tableHasMade;
     }
 
@@ -1121,7 +1132,7 @@ stop:
                     if ((actCh & 0x01) != 0) s = ch[0].calc();
                     if ((actCh & 0x04) != 0) s += ch[1].calc();
                     if ((actCh & 0x10) != 0) s += ch[2].calc();
-                    s = (limit(s, 0x7fff, -0x8000) * fmVolume) >> 14;
+                    s = (Math.clamp(s, -0x8000, 0x7fff) * fmVolume) >> 14;
                     buffer[dest + 0] += s;
                     buffer[dest + 1] += s;
 //logger.log(Level.TRACE, "%04x, %04x".formatted(buffer[dest + 0], buffer[dest + 1]));
@@ -1638,7 +1649,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
                 for (int i = 0; i < 6; i++) {
                     Rhythm r = rhythm[i];
                     if ((rhythmKey & (1 << i)) != 0 && r.level < 128) {
-                        int db = limit(rhythmTl + rhythmTVol + r.level + r.volume, 127, -31);
+                        int db = Math.clamp(rhythmTl + rhythmTVol + r.level + r.volume, -31, 127);
                         int vol = tlTable[Fmgen.FM_TLPOS + (db << (Fmgen.FM_TLBITS - 7))] >> 4;
                         int maskL = -((r.pan >> 1) & 1);
                         int maskR = -(r.pan & 1);
@@ -1991,7 +2002,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
             }
         }
 
-        private int decodeADPCMASample(int a) {
+        private static int decodeADPCMASample(int a) {
             return -1;
         }
 
@@ -2017,7 +2028,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
                             maskl = maskr = 0;
                         }
 
-                        int db = limit(adpcmATl + adpcmATVol + r.level + r.volume, 127, -31);
+                        int db = Math.clamp(adpcmATl + adpcmATVol + r.level + r.volume, -31, 127);
                         int vol = tlTable[Fmgen.FM_TLPOS + (db << (Fmgen.FM_TLBITS - 7))] >> 4;
 
                         //Sample* dest = buffer;
@@ -2041,9 +2052,9 @@ logger.log(Level.ERROR, e.getMessage(), e);
                                 r.pos++;
 
                                 r.adpcmX += jedi_table[r.adpcmD + data];
-                                r.adpcmX = (short) limit(r.adpcmX, 2048 * 3 - 1, -2048 * 3);
+                                r.adpcmX = (short) Math.clamp((int) r.adpcmX, -2048 * 3, 2048 * 3 - 1);
                                 r.adpcmD += (short) decodeTableA1[data];
-                                r.adpcmD = (short) limit(r.adpcmD, 48 * 16, 0);
+                                r.adpcmD = (short) Math.clamp((int) r.adpcmD, 0, 48 * 16);
                             }
                             int sample = (r.adpcmX * vol) >> 10;
                             buffer[dest + 0] += sample & maskl;
@@ -2076,7 +2087,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
         // AdpcmA ROM
         public byte[] adpcmABuf;
         public int adpcmASize;
-        public ADPCMA[] adpcmA = {
+        public final ADPCMA[] adpcmA = {
                 new ADPCMA(), new ADPCMA(), new ADPCMA(), new ADPCMA(), new ADPCMA(), new ADPCMA()
         };
         // AdpcmA Overall Volume
@@ -2085,9 +2096,9 @@ logger.log(Level.ERROR, e.getMessage(), e);
         // AdpcmA key
         public int adpcmAKey;
         public int adpcmAStep;
-        public byte[] adpcmAReg = new byte[32];
+        public final byte[] adpcmAReg = new byte[32];
 
-        public static short[] jedi_table = new short[(48 + 1) * 16];
+        public static final short[] jedi_table = new short[(48 + 1) * 16];
 
 //        public new Fmgen.Channel4[] ch = new Fmgen.Channel4[6];
     }

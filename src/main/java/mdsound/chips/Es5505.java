@@ -2,11 +2,11 @@ package mdsound.chips;
 
 public class Es5505 extends Es550x {
 
-    private int VOLUME_BIT_ES5505 = 8;
-    private int ADDRESS_INTEGER_BIT_ES5505 = 20;
-    private int ADDRESS_FRAC_BIT_ES5505 = 9;
+    private static final int VOLUME_BIT_ES5505 = 8;
+    private static final int ADDRESS_INTEGER_BIT_ES5505 = 20;
+    private static final int ADDRESS_FRAC_BIT_ES5505 = 9;
 
-    private int get_ca(int control) {
+    private static int get_ca(int control) {
         return (control >> 10) & 7;
     }
 
@@ -46,7 +46,7 @@ public class Es5505 extends Es550x {
         //    space(s).cache(m_cache[s]);
 
         // compute the tables
-        compute_tables((int) VOLUME_BIT_ES5505, 4, 4); // 4 bit exponent, 4 bit mantissa
+        compute_tables(VOLUME_BIT_ES5505, 4, 4); // 4 bit exponent, 4 bit mantissa
 
         // initialize the rest of the structure
         m_channels = channels;
@@ -85,7 +85,7 @@ public class Es5505 extends Es550x {
                 // non-looping
                 case 0:
                 case CONTROL_BLE:
-                    voice[0].control |= (int) CONTROL_STOP0;
+                    voice[0].control |= CONTROL_STOP0;
                     break;
 
                 // uni-directional looping
@@ -96,7 +96,7 @@ public class Es5505 extends Es550x {
                 // bi-directional looping
                 case CONTROL_LPE | CONTROL_BLE:
                     accum = (voice[0].end - (accum - voice[0].end)) & m_address_acc_mask;
-                    voice[0].control ^= (int) CONTROL_DIR;
+                    voice[0].control ^= CONTROL_DIR;
                     break;
             }
         }
@@ -107,15 +107,15 @@ public class Es5505 extends Es550x {
         // are we past the end?
         if (accum < voice[0].start) {
             // generate interrupt if required
-            if ((voice[0].control & (int) CONTROL_IRQE) != 0)
-                voice[0].control |= (int) CONTROL_IRQ;
+            if ((voice[0].control & CONTROL_IRQE) != 0)
+                voice[0].control |= CONTROL_IRQ;
 
             // handle the different types of looping
-            switch (voice[0].control & (int) CONTROL_LOOPMASK) {
+            switch (voice[0].control & CONTROL_LOOPMASK) {
                 // non-looping
                 case 0:
                 case (int) CONTROL_BLE:
-                    voice[0].control |= (int) CONTROL_STOP0;
+                    voice[0].control |= CONTROL_STOP0;
                     break;
 
                 // uni-directional looping
@@ -124,9 +124,9 @@ public class Es5505 extends Es550x {
                     break;
 
                 // bi-directional looping
-                case (int) CONTROL_LPE | (int) CONTROL_BLE:
+                case CONTROL_LPE | CONTROL_BLE:
                     accum = (voice[0].start + (voice[0].start - accum)) & m_address_acc_mask;
-                    voice[0].control ^= (int) CONTROL_DIR;
+                    voice[0].control ^= CONTROL_DIR;
                     break;
             }
         }
@@ -199,11 +199,11 @@ public class Es5505 extends Es550x {
                 if ((mem_mask & 0x0000_00ff) != 0)
                     voice[0].freqCount = (voice[0].freqCount &
                             ~get_address_acc_shifted_val(0x00fe, 1)) |
-                            (get_address_acc_shifted_val((long) (data & 0x00fe), 1));
+                            (get_address_acc_shifted_val(data & 0x00fe, 1));
                 if ((mem_mask & 0x0000_ff00) != 0)
                     voice[0].freqCount = (voice[0].freqCount &
                             ~get_address_acc_shifted_val(0xff00, 1)) |
-                            (get_address_acc_shifted_val((long) (data & 0xff00), 1));
+                            (get_address_acc_shifted_val(data & 0xff00, 1));
 //logger.log(Level.TRACE, "%s:voice %d, freq count=%08x\n", machine().describe_context(), m_current_page & 0x1f, get_address_acc_res(voice[0].freqcount, 1));
                 break;
 
@@ -223,7 +223,7 @@ public class Es5505 extends Es550x {
                 if ((mem_mask & 0x0000_00ff) != 0)
                     voice[0].start = (voice[0].start &
                             ~get_address_acc_shifted_val(0x0000_00e0, 0)) |
-                            (get_address_acc_shifted_val((long) (data & 0x00e0), 0));
+                            (get_address_acc_shifted_val(data & 0x00e0, 0));
                 if ((mem_mask & 0x0000_ff00) != 0)
                     voice[0].start = (voice[0].start &
                             ~get_address_acc_shifted_val(0x0000_ff00, 0)) |
@@ -235,7 +235,7 @@ public class Es5505 extends Es550x {
                 if ((mem_mask & 0x0000_00ff) != 0)
                     voice[0].end = (voice[0].end &
                             ~get_address_acc_shifted_val(0x00ff_0000, 0)) |
-                            (get_address_acc_shifted_val((long) ((data & 0x00ff) << 16), 0));
+                            (get_address_acc_shifted_val((data & 0x00ff) << 16, 0));
                 if ((mem_mask & 0x0000_ff00) != 0)
                     voice[0].end = (voice[0].end &
                             ~get_address_acc_shifted_val(0x1f00_0000, 0)) |
@@ -250,11 +250,11 @@ public class Es5505 extends Es550x {
                 if ((mem_mask & 0x0000_00ff) != 0)
                     voice[0].end = (voice[0].end &
                             ~get_address_acc_shifted_val(0x0000_00e0, 0)) |
-                            (get_address_acc_shifted_val((long) (data & 0x00e0), 0));
+                            (get_address_acc_shifted_val(data & 0x00e0, 0));
                 if ((mem_mask & 0x0000_ff00) != 0)
                     voice[0].end = (voice[0].end &
                             ~get_address_acc_shifted_val(0x0000_ff00, 0)) |
-                            (get_address_acc_shifted_val((long) (data & 0xff00), 0));
+                            (get_address_acc_shifted_val(data & 0xff00, 0));
 //#if RAINE_CHECK
                 voice[0].control |= CONTROL_STOP0;
 //#endif
@@ -271,15 +271,15 @@ public class Es5505 extends Es550x {
 
             case 0x07: // K1
                 if ((mem_mask & 0x0000_00ff) != 0)
-                    voice[0].k1 = (int) (voice[0].k1 & ~0x00f0) | (data & 0x00f0);
+                    voice[0].k1 = (voice[0].k1 & ~0x00f0) | (data & 0x00f0);
                 if ((mem_mask & 0x0000_ff00) != 0)
-                    voice[0].k1 = (int) (voice[0].k1 & ~0xff00) | (data & 0xff00);
+                    voice[0].k1 = (voice[0].k1 & ~0xff00) | (data & 0xff00);
 //logger.log(Level.TRACE, "%s:voice %d, K1=%03x\n", machine().describe_context(), m_current_page & 0x1f, voice.k1 >> FILTER_SHIFT);
                 break;
 
             case 0x08: // LVOL
                 if ((mem_mask & 0x0000_ff00) != 0)
-                    voice[0].lvol = (int) (voice[0].lvol & ~0xff) | (int) ((data & 0xff00) >> 8);
+                    voice[0].lvol = (voice[0].lvol & ~0xff) | ((data & 0xff00) >> 8);
 //logger.log(Level.TRACE, "%s:voice %d, left vol=%02x\n", machine().describe_context(), m_current_page & 0x1f, voice.lvol);
                 break;
 
@@ -318,7 +318,7 @@ public class Es5505 extends Es550x {
             case 0x0d: // ACT
                 if ((mem_mask & 0x0000_00ff) != 0) {
                     m_active_voices = (byte) (data & 0x1f);
-                    m_sample_rate = (int) (m_master_clock / (16 * (m_active_voices + 1)));
+                    m_sample_rate = m_master_clock / (16 * (m_active_voices + 1));
                     //m_stream.set_sample_rate(m_sample_rate);
                     //m_sample_rate_changed_cb(m_sample_rate);
 
@@ -454,7 +454,7 @@ public class Es5505 extends Es550x {
             case 0x0d:  // ACT
                 if (((mem_mask & 0x000000ff) != 0)) {
                     m_active_voices = (byte) (data & 0x1f);
-                    m_sample_rate = (int) (m_master_clock / (16 * (m_active_voices + 1)));
+                    m_sample_rate = m_master_clock / (16 * (m_active_voices + 1));
                     //m_stream.set_sample_rate(m_sample_rate);
                     //m_sample_rate_changed_cb(m_sample_rate);
 
@@ -600,7 +600,7 @@ public class Es5505 extends Es550x {
                 // want to waste time filtering stopped channels, we just look for a read from
                 // this register on a stopped voice, and return the raw sample data at the
                 // accumulator
-                if ((voice[0].control & (int) CONTROL_STOPMASK) != 0) {
+                if ((voice[0].control & CONTROL_STOPMASK) != 0) {
                     voice[0].o1n1 = read_sample(/* ref */ voice, (int) get_integer_addr(voice[0].accum, 0));
                     // logger.log(Level.TRACE, "%02x %08x ==> %08x\n",voice[0].o1n1,get_bank(voice[0].control),get_integer_addr(voice[0].accum));
                 }

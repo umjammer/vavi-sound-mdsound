@@ -43,6 +43,6 @@ public class Pack {
 
         public int counter;
 
-        public Pack pack = new Pack();
+        public final Pack pack = new Pack();
     }
 }

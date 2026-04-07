@@ -97,7 +97,7 @@ public interface Device {
 
     class Bus implements Device {
 
-        protected List<Device> vd = new ArrayList<>();
+        protected final List<Device> vd = new ArrayList<>();
 
         /**
          * Reset

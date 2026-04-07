@@ -67,7 +67,7 @@ public class AdpcmA {
         }
     }
 
-    public Channel[] channel = new Channel[] {
+    public final Channel[] channel = new Channel[] {
             new Channel(), new Channel(), new Channel(),
             new Channel(), new Channel(), new Channel()
     };
@@ -82,7 +82,7 @@ public class AdpcmA {
     public byte key;
     public int step;
     public byte[] reg = new byte[32];
-    public static short[] jediTable = new short[(48 + 1) * 16];
+    public static final short[] jediTable = new short[(48 + 1) * 16];
 
     private final Fmvgen.Effects effects;
     private final int revStartCh;
@@ -140,7 +140,7 @@ public class AdpcmA {
                     //int maskl = (int)(r.panL == 0f ? -1 : 0);
                     //int maskr = (int)(r.panR == 0f ? -1 : 0);
 
-                    int db = Fmvgen.limit(tl + tVol + r.level + r.volume, 127, -31);
+                    int db = Math.clamp(tl + tVol + r.level + r.volume, -31, 127);
                     int vol = OPNABase.tlTable[Fmvgen.FM_TLPOS + (db << (Fmvgen.FM_TLBITS - 7))] >> 4;
 
                     int dest = 0;
@@ -163,9 +163,9 @@ public class AdpcmA {
                             r.pos++;
 
                             r.adpcmX += jediTable[r.adpcmD + data];
-                            r.adpcmX = (short) Fmvgen.limit(r.adpcmX, 2048 * 3 - 1, -2048 * 3);
+                            r.adpcmX = (short) Math.clamp((int) r.adpcmX, -2048 * 3, 2048 * 3 - 1);
                             r.adpcmD += (short) decodeTableA1[data];
-                            r.adpcmD = (short) Fmvgen.limit(r.adpcmD, 48 * 16, 0);
+                            r.adpcmD = (short) Math.clamp((int) r.adpcmD, 0, 48 * 16);
                         }
 
                         int[] sampleL = new int[] { (r.adpcmX * vol) >> 10 };

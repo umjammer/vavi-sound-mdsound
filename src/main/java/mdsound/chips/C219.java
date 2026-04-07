@@ -71,18 +71,18 @@ public class C219 {
 
     private static class VRegs {
 
-        int volumeRight;
-        int volumeLeft;
-        int frequencyMsb;
-        int frequencyLsb;
-        int bank;
-        int mode;
-        int startMsb;
-        int startLsb;
-        int endMsb;
-        int endLsb;
-        int loopMsb;
-        int loopLsb;
+        final int volumeRight;
+        final int volumeLeft;
+        final int frequencyMsb;
+        final int frequencyLsb;
+        final int bank;
+        final int mode;
+        final int startMsb;
+        final int startLsb;
+        final int endMsb;
+        final int endLsb;
+        final int loopMsb;
+        final int loopLsb;
         byte[] reserved = new byte[4];
 
         VRegs(int[] regs, int offset) {

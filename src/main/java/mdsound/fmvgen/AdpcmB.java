@@ -10,7 +10,7 @@ import mdsound.fmvgen.effect.ReversePhase;
 public class AdpcmB {
     public OPNA2 parent = null;
 
-    public static boolean NO_BITTYPE_EMULATION = false;
+    public static final boolean NO_BITTYPE_EMULATION = false;
 
     public int stMask;
     public int statusNext;
@@ -69,7 +69,7 @@ public class AdpcmB {
     /** ADPCM Control Register 2 */
     public byte control2;
     /** Part of the ADPCM register */
-    protected byte[] adpcmReg = new byte[8];
+    protected final byte[] adpcmReg = new byte[8];
     protected float panL = 1.0f;
     protected float panR = 1.0f;
     private final Fmvgen.Effects effects;
@@ -403,8 +403,8 @@ stop:
     };
 
     protected int decodeSample(int data) {
-        adpcMx = Fmvgen.limit(adpcMx + table1[data] * adpcmD / 8, 32767, -32768);
-        adpcmD = Fmvgen.limit(adpcmD * table2[data] / 64, 24576, 127);
+        adpcMx = Math.clamp(adpcMx + table1[data] * adpcmD / 8, -32768, 32767);
+        adpcmD = Math.clamp(adpcmD * table2[data] / 64, 127, 24576);
         return adpcMx;
     }
 

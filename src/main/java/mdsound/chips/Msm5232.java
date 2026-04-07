@@ -52,12 +52,12 @@ public class Msm5232 {
 
     // internal state
 
-    private VOICE[] m_voi = new VOICE[8];
+    private final VOICE[] m_voi = new VOICE[8];
 
-    private int[] m_EN_out16 = new int[2]; // enable 16' output masks for both groups (0-disabled ; ~0 -enabled)
-    private int[] m_EN_out8 = new int[2];  // enable 8'  output masks
-    private int[] m_EN_out4 = new int[2];  // enable 4'  output masks
-    private int[] m_EN_out2 = new int[2];  // enable 2'  output masks
+    private final int[] m_EN_out16 = new int[2]; // enable 16' output masks for both groups (0-disabled ; ~0 -enabled)
+    private final int[] m_EN_out8 = new int[2];  // enable 8'  output masks
+    private final int[] m_EN_out4 = new int[2];  // enable 4'  output masks
+    private final int[] m_EN_out2 = new int[2];  // enable 2'  output masks
 
     private int m_noise_cnt;
     private int m_noise_step;
@@ -67,8 +67,8 @@ public class Msm5232 {
     private int m_UpdateStep;
 
     // rate tables
-    private double[] m_ar_tbl = new double[8];
-    private double[] m_dr_tbl = new double[16];
+    private final double[] m_ar_tbl = new double[8];
+    private final double[] m_dr_tbl = new double[16];
 
     private int m_control1;
     private int m_control2;
@@ -78,9 +78,9 @@ public class Msm5232 {
     private int m_chip_clock;   // chip clock in Hz
     private int m_rate;         // sample rate in Hz
 
-    private double[] m_external_capacitance = new double[8]; // in Farads, eg 0.39e-6 = 0.36 uF (microFarads)
+    private final double[] m_external_capacitance = new double[8]; // in Farads, eg 0.39e-6 = 0.36 uF (microFarads)
 
-    private final int CLOCK_RATE_DIVIDER = 16;
+    private static final int CLOCK_RATE_DIVIDER = 16;
 
     //	DEFINE_DEVICE_TYPE(MSM5232, msm5232_device, "msm5232", "MSM5232")
 
@@ -142,11 +142,11 @@ public class Msm5232 {
 
     // ROM table to convert from pitch data into data for programmable counter and binary counter
     // Chip has 88x12bits ROM   (addressing (in hex) from 0x00 to 0x57)
-    private short ROM(int counter, int bindiv) {
+    private static short ROM(int counter, int bindiv) {
         return (short) (counter | (bindiv << 9));
     }
 
-    private short[] MSM5232_ROM = new short[88];
+    private final short[] MSM5232_ROM = new short[88];
 
     private void initMSM5232_ROM() {
         // higher values are Programmable Counter data (9 bits)
@@ -331,7 +331,7 @@ public class Msm5232 {
     }
 //#undef ROM
 
-    private int STEP_SH = (16);    /* step calculations accuracy */
+    private static final int STEP_SH = 16;    /* step calculations accuracy */
 
     /*
      * Resistance values are guesswork, default capacitance is mentioned in the datasheets
@@ -359,9 +359,9 @@ public class Msm5232 {
      * 250ms -> 101000 ohms
      */
 
-    private final double R51 = 870;    // attack resistance
-    private final double R52 = 17400;    // decay 1 resistance
-    private final double R53 = 101000;    // decay 2 resistance
+    private static final double R51 = 870;    // attack resistance
+    private static final double R52 = 17400;    // decay 1 resistance
+    private static final double R53 = 101000;    // decay 2 resistance
 
     private void init_tables() {
         // sample rate = chip clock !!!  But :
@@ -447,7 +447,7 @@ public class Msm5232 {
 
                         pg = MSM5232_ROM[data & 0x7f];
 
-                        m_voi[ch].TG_count_period = (int) ((pg & 0x1ff) * m_UpdateStep / 2);
+                        m_voi[ch].TG_count_period = (pg & 0x1ff) * m_UpdateStep / 2;
 
                         n = (pg >> 9) & 7; /* n = bit number for 16' output */
                         m_voi[ch].TG_out16 = (byte) (1 << n);
@@ -511,10 +511,10 @@ public class Msm5232 {
                         m_voi[i].eg_arm = (byte) (data & 0x10);
                     }
 
-                    m_EN_out16[0] = (int) ((data & 1) != 0 ? ~0 : 0);
-                    m_EN_out8[0] = (int) ((data & 2) != 0 ? ~0 : 0);
-                    m_EN_out4[0] = (int) ((data & 4) != 0 ? ~0 : 0);
-                    m_EN_out2[0] = (int) ((data & 8) != 0 ? ~0 : 0);
+                    m_EN_out16[0] = (data & 1) != 0 ? ~0 : 0;
+                    m_EN_out8[0] = (data & 2) != 0 ? ~0 : 0;
+                    m_EN_out4[0] = (data & 4) != 0 ? ~0 : 0;
+                    m_EN_out2[0] = (data & 8) != 0 ? ~0 : 0;
 
                     break;
 
@@ -535,18 +535,18 @@ public class Msm5232 {
                         m_voi[i + 4].eg_arm = (byte) (data & 0x10);
                     }
 
-                    m_EN_out16[1] = (int) ((data & 1) != 0 ? ~0 : 0);
-                    m_EN_out8[1] = (int) ((data & 2) != 0 ? ~0 : 0);
-                    m_EN_out4[1] = (int) ((data & 4) != 0 ? ~0 : 0);
-                    m_EN_out2[1] = (int) ((data & 8) != 0 ? ~0 : 0);
+                    m_EN_out16[1] = (data & 1) != 0 ? ~0 : 0;
+                    m_EN_out8[1] = (data & 2) != 0 ? ~0 : 0;
+                    m_EN_out4[1] = (data & 4) != 0 ? ~0 : 0;
+                    m_EN_out2[1] = (data & 8) != 0 ? ~0 : 0;
 
                     break;
             }
         }
     }
 
-    private final int VMIN = 0;
-    private final int VMAX = 32768;
+    private static final int VMIN = 0;
+    private static final int VMAX = 32768;
 
     private void EG_voices_advance() {
         int samplerate = m_rate;
@@ -699,10 +699,10 @@ public class Msm5232 {
         } while (i > 0);
 
         /* cut off disabled output lines */
-        o16 &= (int) m_EN_out16[groupIdx];
-        o8 &= (int) m_EN_out8[groupIdx];
-        o4 &= (int) m_EN_out4[groupIdx];
-        o2 &= (int) m_EN_out2[groupIdx];
+        o16 &= m_EN_out16[groupIdx];
+        o8 &= m_EN_out8[groupIdx];
+        o4 &= m_EN_out4[groupIdx];
+        o2 &= m_EN_out2[groupIdx];
     }
 
     /* MAME Interface */
@@ -742,22 +742,22 @@ public class Msm5232 {
             EG_voices_advance();
 
             TG_group_advance(0);   /* calculate tones group 1 */
-            buf1[i] = Math.min(Math.max(o2, -32767), 32768);
-            buf2[i] = Math.min(Math.max(o4, -32767), 32768);
-            buf3[i] = Math.min(Math.max(o8, -32767), 32768);
-            buf4[i] = Math.min(Math.max(o16, -32767), 32768);
+            buf1[i] = Math.clamp(o2, -32767, 32768);
+            buf2[i] = Math.clamp(o4, -32767, 32768);
+            buf3[i] = Math.clamp(o8, -32767, 32768);
+            buf4[i] = Math.clamp(o16, -32767, 32768);
             //SAVE_SINGLE_CHANNEL(0, o2);
             //SAVE_SINGLE_CHANNEL(1, o4);
             //SAVE_SINGLE_CHANNEL(2, o8);
             //SAVE_SINGLE_CHANNEL(3, o16);
 
             TG_group_advance(1);   /* calculate tones group 2 */
-            buf5[i] = Math.min(Math.max(o2, -32767), 32768);
-            buf6[i] = Math.min(Math.max(o4, -32767), 32768);
-            buf7[i] = Math.min(Math.max(o8, -32767), 32768);
-            buf8[i] = Math.min(Math.max(o16, -32767), 32768);
-            bufsolo1[i] = Math.min(Math.max(solo8, -32767), 32768);
-            bufsolo2[i] = Math.min(Math.max(solo16, -32767), 32768);
+            buf5[i] = Math.clamp(o2, -32767, 32768);
+            buf6[i] = Math.clamp(o4, -32767, 32768);
+            buf7[i] = Math.clamp(o8, -32767, 32768);
+            buf8[i] = Math.clamp(o16, -32767, 32768);
+            bufsolo1[i] = Math.clamp(solo8, -32767, 32768);
+            bufsolo2[i] = Math.clamp(solo16, -32767, 32768);
             //SAVE_SINGLE_CHANNEL(4, o2)
             //SAVE_SINGLE_CHANNEL(5, o4)
             //SAVE_SINGLE_CHANNEL(6, o8)

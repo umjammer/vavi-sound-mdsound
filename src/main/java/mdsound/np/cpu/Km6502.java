@@ -1904,7 +1904,7 @@ public class Km6502 implements Device {
      * boundary case BRK(#$00) +7 by interrupt BS - corrected NOP timings for
      * undefined opCodes
      */
-    public byte[] cl_table = {
+    public final byte[] cl_table = {
         // L 0 1 2 3 4 5 6 7 8 9 A B C D E F H
         0, 6, (2), (8), (3), 3, 5, (5), 3, 2, 2, (2), (4), 4, 6, (6), // 0
         2, +5, (2), (8), (4), 4, 6, (6), 2, +4, (2), (7), (4), +4, 7, (7), // 1
@@ -2883,10 +2883,10 @@ public class Km6502 implements Device {
     protected int frameQuarter;
     protected int breakPoint;
     protected int irqs;
-    protected boolean enableIrq;
+    protected final boolean enableIrq;
     protected Device bus;
 
-    public double NES_BASECYCLES;
+    public final double NES_BASECYCLES;
 
     private static final double DEFAULT_CLOCK = 1789773.0;
     private static final int DEFAULT_RATE = 44100;

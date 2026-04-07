@@ -36,6 +36,7 @@ import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
 import java.nio.ByteBuffer;
 import java.nio.ShortBuffer;
+import java.util.Arrays;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
@@ -94,7 +95,7 @@ public class NukedYmF262 {
     private static class Channel {
 
         /** Don't use "slots" keyword to avoid conflict with Qt applications */
-        Slot[] slots = new Slot[2];
+        final Slot[] slots = new Slot[2];
         Channel pair;
         Chip chip;
         final ShortBuffer[] out = new ShortBuffer[4];
@@ -125,8 +126,8 @@ public class NukedYmF262 {
 
     public static class Chip {
 
-        Channel[] channel = new Channel[18];
-        Slot[] slot = new Slot[36];
+        final Channel[] channel = new Channel[18];
+        final Slot[] slot = new Slot[36];
         int timer;
         long eg_timer;
         int eg_timerRem;
@@ -144,7 +145,7 @@ public class NukedYmF262 {
         int noise;
         final ByteBuffer _zeroMod = ByteBuffer.allocate(2);
         final ShortBuffer zeroMod = _zeroMod.asShortBuffer();
-        int[] mixBuff = new int[4];
+        final int[] mixBuff = new int[4];
         int rm_hh_bit2;
         int rm_hh_bit3;
         int rm_hh_bit7;
@@ -159,14 +160,14 @@ public class NukedYmF262 {
         // OPL3L
         public int rateRatio;
         public int sampleCnt;
-        short[] oldSamples = new short[4];
-        public short[] samples = new short[4];
+        final short[] oldSamples = new short[4];
+        public final short[] samples = new short[4];
 
         long writeBuf_sampleCnt;
         public int writeBuf_cur;
         int writeBuf_last;
         long writeBuf_lastTime;
-        public WriteBuf[] writeBuf = new WriteBuf[OPL_WRITEBUF_SIZE];
+        public final WriteBuf[] writeBuf = new WriteBuf[OPL_WRITEBUF_SIZE];
 
         public Chip() {
             for (int i = 0; i < channel.length; i++) {
@@ -1064,7 +1065,7 @@ public class NukedYmF262 {
 //        for (int ii = 0; ii < 36; ii++)
 //#endif
         {
-assert chip.slot[ii].channel != null : "slot: " + ii + ", slot: @" + chip.slot.hashCode() + ", chip: @" + chip.hashCode();
+assert chip.slot[ii].channel != null : "slot: " + ii + ", slot: @" + Arrays.hashCode(chip.slot) + ", chip: @" + chip.hashCode();
             OPL3_ProcessSlot(chip.slot[ii]);
         }
 

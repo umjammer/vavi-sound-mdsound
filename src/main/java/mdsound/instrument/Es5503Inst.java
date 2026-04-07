@@ -6,7 +6,6 @@
 
 package mdsound.instrument;
 
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import mdsound.Instrument.BaseInstrument;
@@ -77,7 +76,7 @@ public class Es5503Inst extends BaseInstrument implements PcmEnabledInstrument {
     }
 
     public void setMute(int chipId, int v) {
-        chips[chipId].setMuteMask((int) v);
+        chips[chipId].setMuteMask(v);
     }
 
     @Override

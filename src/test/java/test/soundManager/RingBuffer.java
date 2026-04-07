@@ -34,11 +34,11 @@ public class RingBuffer {
             buf.get(i).prev = buf.get(i - 1);
             buf.get(i - 1).next = buf.get(i);
         }
-        buf.get(0).prev = buf.get(buf.size() - 1);
-        buf.get(buf.size() - 1).next = buf.get(0);
+        buf.getFirst().prev = buf.getLast();
+        buf.getLast().next = buf.getFirst();
 
-        enqPos = buf.get(0);
-        deqPos = buf.get(0);
+        enqPos = buf.getFirst();
+        deqPos = buf.getFirst();
         bLength = 0;
     }
 

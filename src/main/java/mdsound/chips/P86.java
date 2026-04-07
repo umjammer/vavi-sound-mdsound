@@ -66,8 +66,8 @@ public class P86 {
     private static final int[] rateTable = {4135, 5513, 8270, 11025, 16540, 22050, 33080, 44100};
 
     private static class Inst {
-        public int start;
-        public int size;
+        public final int start;
+        public final int size;
 
         public Inst(byte[] pcmData, int i) {
             this.start =
@@ -165,7 +165,7 @@ public class P86 {
         for (int i = 0; i < samples; i++) {
             int data = volumeTable[vol][pcmData[currentOffset] & 0xff];
 
-            data = (short) Math.max(Math.min(data, Short.MAX_VALUE), Short.MIN_VALUE);
+            data = (short) Math.clamp(data, Short.MIN_VALUE, Short.MAX_VALUE);
             buffer[0][i] += data;
             buffer[1][i] += data;
 

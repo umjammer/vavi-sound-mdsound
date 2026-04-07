@@ -260,7 +260,7 @@ public class OotakeHuC6280 {
         public int volumeR;
         public int outVolumeL;
         public int outVolumeR;
-        public int[] wave = new int[32];
+        public final int[] wave = new int[32];
         private int waveIndex;
         private int ddaSample;
         private int phase;
@@ -473,10 +473,10 @@ public class OotakeHuC6280 {
     public int mainVolumeR; // 0 - 15
     public int lfoFreq;
     /** Not used since v1.59. Retained for state loading of previous versions. */
-    private final boolean lfoOn = false;
+    private static final boolean lfoOn = false;
     public int lfoControl;
     /** Not used since v1.59. Retained for state loading of previous versions. */
-    private final int lfoShift = 0;
+    private static final int lfoShift = 0;
     /** Added by Kitao. */
     private int psgVolumeEffect;
     /** Added by Kitao. */

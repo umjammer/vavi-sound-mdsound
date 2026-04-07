@@ -130,7 +130,7 @@ logger.log(Level.TRACE, "option: " + Arrays.toString(option));
     private void irqHandler(int irq) {
     }
 
-    private void timerHandler(int timer, int period) {
+    private static void timerHandler(int timer, int period) {
         if (period == 0) { // Reset FM Timer
 //            timer_enable(info.timer[timer], 0);
         } else { // Start FM Timer

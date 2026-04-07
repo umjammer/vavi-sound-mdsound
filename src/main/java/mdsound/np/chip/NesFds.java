@@ -16,7 +16,7 @@ import mdsound.np.NpNesFds;
 
 public class NesFds implements SoundChip {
 
-    public NpNesFds fds;
+    public final NpNesFds fds;
 
     public NesFds() {
         fds = new NpNesFds();

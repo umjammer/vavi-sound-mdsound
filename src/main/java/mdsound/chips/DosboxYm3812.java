@@ -261,7 +261,7 @@ public class DosboxYm3812 {
                 //
                 int[] tremTableInt = new int[TREMTAB_SIZE];
 
-                for (int i = 0; i < BLOCKBUF_SIZE; i++) vibValConst[i] = 0;
+                Arrays.fill(vibValConst, 0);
 
                 // create tremolo table
                 //
@@ -279,7 +279,7 @@ public class DosboxYm3812 {
                 }
 
                 //
-                for (int i = 0; i < BLOCKBUF_SIZE; i++) tremValConst[i] = FIXEDPT;
+                Arrays.fill(tremValConst, FIXEDPT);
 
                 // create waveForm tables
                 //
@@ -1420,13 +1420,10 @@ public class DosboxYm3812 {
     }
 
     public int read(int offset) {
-        switch (EMU_CORE) {
-        case EC_MAME:
-        case EC_DBOPL:
-            return opl.read(offset & 0x01);
-        default:
-            return 0x00;
-        }
+        return switch (EMU_CORE) {
+            case EC_MAME, EC_DBOPL -> opl.read(offset & 0x01);
+            default -> 0x00;
+        };
     }
 
     public void write(int offset, int data) {

@@ -31,17 +31,14 @@ public class X68Sound {
     public static final int SNDERR_DLL = -1;
     public static final int SNDERR_FUNC = -2;
 
-    private Global global = Global.getInstance();
-
-    public Opm opm;
+    public final Opm opm;
 
     public X68Sound() {
         opm = new Opm();
-        global.opm = opm;
     }
 
     public void mountMemory(byte[] mem) {
-        global.mountMemory(mem);
+        opm.work.mountMemory(mem);
     }
 
     public int start(int sampleRate /* = 44100 */, int opmFlag /* = 1 */, int adpcmFlag /* = 1 */,
@@ -201,11 +198,11 @@ public class X68Sound {
 
 
     public int errorCode() {
-        return global.ErrorCode;
+        return opm.work.ErrorCode;
     }
 
     public int debugValue() {
-        return global.DebugValue;
+        return opm.work.DebugValue;
     }
 
     public void timerA() {

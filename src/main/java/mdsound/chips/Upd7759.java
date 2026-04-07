@@ -9,6 +9,7 @@ package mdsound.chips;
 
 import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
+import java.util.Arrays;
 
 import static java.lang.System.getLogger;
 
@@ -114,14 +115,14 @@ public class Upd7759 {
 
     private static final Logger logger = getLogger(Upd7759.class.getName());
 
-    public final int UPD7759_STANDARD_CLOCK = 640000;
+    public static final int UPD7759_STANDARD_CLOCK = 640000;
 
     //
     // finalants
     //
 
     // step value fractional bits
-    private final int FRAC_BITS = 20;
+    private static final int FRAC_BITS = 20;
     private final int FRAC_ONE = (1 << FRAC_BITS);
     private final int FRAC_MASK = (FRAC_ONE - 1);
 
@@ -192,7 +193,7 @@ public class Upd7759 {
     private int ChipMode;                 // 0 - Master, 1 - Slave
 
     // Valley Bell: Added a FIFO buffer based on Sega Pico.
-    private byte[] data_buf = new byte[0x40];
+    private final byte[] data_buf = new byte[0x40];
     private int dbuf_pos_read;
     private int dbuf_pos_write;
 
@@ -479,12 +480,12 @@ logger.log(Level.DEBUG, "UPD7759: nibble_count = %d, requesting next byte".forma
                 /* handle clocks, but only in standalone mode */
                 if (this.ChipMode == 0) {
                     while (this.rom != null && pos >= FRAC_ONE) {
-                        int clocks_this_time = (int) (pos >> FRAC_BITS);
+                        int clocks_this_time = pos >> FRAC_BITS;
                         if (clocks_this_time > clocks_left)
                             clocks_this_time = clocks_left;
 
                         /* clock once */
-                        pos -= (int) (clocks_this_time * FRAC_ONE);
+                        pos -= clocks_this_time * FRAC_ONE;
                         clocks_left -= clocks_this_time;
 
                         /* if we're out of clocks, time to handle the next state */
@@ -520,8 +521,8 @@ logger.log(Level.DEBUG, "UPD7759: nibble_count = %d, requesting next byte".forma
 
         /* if we got out early, just zap the rest of the buffer */
         if (samples != 0) {
-            for (int i = 0; i < buffer.length; i++) buffer[i] = 0;
-            for (int i = 0; i < buffer2.length; i++) buffer2[i] = 0;
+            Arrays.fill(buffer, 0);
+            Arrays.fill(buffer2, 0);
         }
 
         /* flush the state back */
@@ -728,18 +729,18 @@ logger.log(Level.DEBUG, "upd7759_start_w: %d->%d".formatted(oldstart, this.start
     public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
         if (this.romsize != romSize) {
             this.rombase = new byte[romSize];// (int8*) realloc(this.rombase, romSize);
-            this.romsize = (int) romSize;
+            this.romsize = romSize;
             for (int i = 0; i < romSize; i++) this.rombase[i] = (byte) 0xff;
 
             this.rom = this.rombase;
-            this.romPtr = (int) this.romoffset;
+            this.romPtr = this.romoffset;
         }
         if (dataStart > romSize)
             return;
         if (dataStart + dataLength > romSize)
             dataLength = romSize - dataStart;
 
-        for (int i = 0; i < dataLength; i++) this.rombase[i + dataStart] = romData[i + srcStartAdr];
+        System.arraycopy(romData, 0 + srcStartAdr, this.rombase, 0 + dataStart, dataLength);
     }
 }
 

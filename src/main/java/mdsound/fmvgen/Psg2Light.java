@@ -5,24 +5,22 @@ import java.util.function.BiFunction;
 
 import mdsound.fmgen.PSG;
 
-import static mdsound.fmgen.Fmgen.storeSample;
-
 
 public class Psg2Light extends PSG {
 
-    protected byte[] panpot = new byte[3];
-    protected byte[] panpotLM = new byte[3];
-    protected byte[] panpotRM = new byte[3];
+    protected final byte[] panpot = new byte[3];
+    protected final byte[] panpotLM = new byte[3];
+    protected final byte[] panpotRM = new byte[3];
     public static final float[] panTable = {1.0f, 0.8756f, 0.7512f, 0.6012f, 0.4512f, 0.2506f, 0.0500f, 0.0250f};
-    protected byte[] phaseReset = new byte[3];
-    protected boolean[] phaseResetBefore = new boolean[3];
-    protected byte[] duty = new byte[3];
+    protected final byte[] phaseReset = new byte[3];
+    protected final boolean[] phaseResetBefore = new boolean[3];
+    protected final byte[] duty = new byte[3];
     private final byte[][] user = {new byte[64], new byte[64], new byte[64], new byte[64], new byte[64], new byte[64]};
     private int userDefCounter = 0;
     private int userDefNum = 0;
     private BiFunction<Integer, Integer, Integer>[] tblGetSample;
     protected double ncountDbl;
-    private final double ncountDiv = 32.0;
+    private static final double ncountDiv = 32.0;
 
     public Psg2Light() {
         makeTblGetSample();
@@ -38,7 +36,7 @@ public class Psg2Light extends PSG {
             case 0:     // ChA Fine Tune
             case 1:     // ChA Coarse Tune
                 tmp = ((reg[0] + reg[1] * 256) & 0xfff);
-                sPeriod[0] = (int) (tmp != 0 ? tPeriodBase / tmp : tPeriodBase);
+                sPeriod[0] = tmp != 0 ? tPeriodBase / tmp : tPeriodBase;
                 duty[0] = (byte) (reg[1] >> 4);
                 duty[0] = (byte) (duty[0] < 8 ? (7 - duty[0]) : duty[0]);
                 break;
@@ -46,7 +44,7 @@ public class Psg2Light extends PSG {
             case 2:     // ChB Fine Tune
             case 3:     // ChB Coarse Tune
                 tmp = ((reg[2] + reg[3] * 256) & 0xfff);
-                sPeriod[1] = (int) (tmp != 0 ? tPeriodBase / tmp : tPeriodBase);
+                sPeriod[1] = tmp != 0 ? tPeriodBase / tmp : tPeriodBase;
                 duty[1] = (byte) (reg[3] >> 4);
                 duty[1] = (byte) (duty[1] < 8 ? (7 - duty[1]) : duty[1]);
                 break;
@@ -54,7 +52,7 @@ public class Psg2Light extends PSG {
             case 4:     // ChC Fine Tune
             case 5:     // ChC Coarse Tune
                 tmp = ((reg[4] + reg[5] * 256) & 0xfff);
-                sPeriod[2] = (int) (tmp != 0 ? tPeriodBase / tmp : tPeriodBase);
+                sPeriod[2] = tmp != 0 ? tPeriodBase / tmp : tPeriodBase;
                 duty[2] = (byte) (reg[5] >> 4);
                 duty[2] = (byte) (duty[2] < 8 ? (7 - duty[2]) : duty[2]);
                 break;
@@ -76,21 +74,21 @@ public class Psg2Light extends PSG {
                 }
                 break;
             case 8:
-                oLevel[0] = (int) ((mask & 1) != 0 ? emitTable[(data & 15) * 2 + 1] : 0);
+                oLevel[0] = (mask & 1) != 0 ? emitTable[(data & 15) * 2 + 1] : 0;
                 panpot[0] = (byte) (data >> 6);
                 panpot[0] = (byte) (panpot[0] == 0 ? 3 : panpot[0]);
                 phaseReset[0] = (byte) ((data & 0x20) != 0 ? 1 : 0);
                 break;
 
             case 9:
-                oLevel[1] = (int) ((mask & 2) != 0 ? emitTable[(data & 15) * 2 + 1] : 0);
+                oLevel[1] = (mask & 2) != 0 ? emitTable[(data & 15) * 2 + 1] : 0;
                 panpot[1] = (byte) (data >> 6);
                 panpot[1] = (byte) (panpot[1] == 0 ? 3 : panpot[1]);
                 phaseReset[1] = (byte) ((data & 0x20) != 0 ? 1 : 0);
                 break;
 
             case 10:
-                oLevel[2] = (int) ((mask & 4) != 0 ? emitTable[(data & 15) * 2 + 1] : 0);
+                oLevel[2] = (mask & 4) != 0 ? emitTable[(data & 15) * 2 + 1] : 0;
                 panpot[2] = (byte) (data >> 6);
                 panpot[2] = (byte) (panpot[2] == 0 ? 3 : panpot[2]);
                 phaseReset[2] = (byte) ((data & 0x20) != 0 ? 1 : 0);
@@ -99,7 +97,7 @@ public class Psg2Light extends PSG {
             case 11:    // Envelop period
             case 12:
                 tmp = ((reg[11] + reg[12] * 256) & 0xffff);
-                ePeriod = (int) (tmp != 0 ? ePeriodBase / tmp : ePeriodBase * 2);
+                ePeriod = tmp != 0 ? ePeriodBase / tmp : ePeriodBase * 2;
                 break;
 
             case 13:    // Envelop shape
@@ -127,16 +125,16 @@ public class Psg2Light extends PSG {
 
     private final byte[] chenable = new byte[3];
     private final byte[] nenable = new byte[3];
-    private Integer[] p = new Integer[3];
+    private final Integer[] p = new Integer[3];
 
     @Override
     public void mix(int[] dest, int nSamples) {
         byte r7 = (byte) ~reg[7];
 
         if (((r7 & 0x3f) | ((reg[8] | reg[9] | reg[10]) & 0x1f)) != 0) {
-            chenable[0] = (byte) ((((r7 & 0x01) != 0) && (sPeriod[0] <= (int) (1 << toneShift))) ? 15 : 0);
-            chenable[1] = (byte) ((((r7 & 0x02) != 0) && (sPeriod[1] <= (int) (1 << toneShift))) ? 15 : 0);
-            chenable[2] = (byte) ((((r7 & 0x04) != 0) && (sPeriod[2] <= (int) (1 << toneShift))) ? 15 : 0);
+            chenable[0] = (byte) ((((r7 & 0x01) != 0) && (sPeriod[0] <= (1 << toneShift))) ? 15 : 0);
+            chenable[1] = (byte) ((((r7 & 0x02) != 0) && (sPeriod[1] <= (1 << toneShift))) ? 15 : 0);
+            chenable[2] = (byte) ((((r7 & 0x04) != 0) && (sPeriod[2] <= (1 << toneShift))) ? 15 : 0);
             nenable[0] = (byte) ((r7 & 0x08) != 0 ? 1 : 0);
             nenable[1] = (byte) ((r7 & 0x10) != 0 ? 1 : 0);
             nenable[2] = (byte) ((r7 & 0x20) != 0 ? 1 : 0);
@@ -194,8 +192,8 @@ public class Psg2Light extends PSG {
                         revSampleL /= (1 << overSampling);
                         revSampleR /= (1 << overSampling);
 
-                        dest[ptrDest + 0] = storeSample(dest[ptrDest + 0], sampleL);
-                        dest[ptrDest + 1] = storeSample(dest[ptrDest + 1], sampleR);
+                        dest[ptrDest + 0] = Math.clamp(dest[ptrDest + 0] + sampleL, -0x8000, 0x7fff);
+                        dest[ptrDest + 1] = Math.clamp(dest[ptrDest + 1] + sampleR, -0x8000, 0x7fff);
                         ptrDest += 2;
 
                         visVolume = sampleL;
@@ -224,7 +222,7 @@ public class Psg2Light extends PSG {
 
                                 // Noise
                                 nv = ((sCount[k] >> (toneShift + overSampling)) & 0 | (nenable[k] & noise)) - 1;
-                                sample = (int) ((oLevel[k] + nv) ^ nv);
+                                sample = (oLevel[k] + nv) ^ nv;
                                 L += sample;
                                 R += sample;
 
@@ -242,8 +240,8 @@ public class Psg2Light extends PSG {
 
                         sampleL /= (1 << overSampling);
                         sampleR /= (1 << overSampling);
-                        dest[ptrDest + 0] = storeSample(dest[ptrDest + 0], sampleL);
-                        dest[ptrDest + 1] = storeSample(dest[ptrDest + 1], sampleR);
+                        dest[ptrDest + 0] = Math.clamp(dest[ptrDest + 0] + sampleL, -0x8000, 0x7fff);
+                        dest[ptrDest + 1] = Math.clamp(dest[ptrDest + 1] + sampleR, -0x8000, 0x7fff);
                         ptrDest += 2;
 
                         visVolume = sampleL;
@@ -252,7 +250,7 @@ public class Psg2Light extends PSG {
                 }
 
                 // Balancing the accounts by skipping the envelope calculations
-                eCount = (int) ((eCount >> 8) + (ePeriod >> (8 - overSampling)) * nSamples);
+                eCount = (eCount >> 8) + (ePeriod >> (8 - overSampling)) * nSamples;
                 if (eCount >= (1 << (envShift + 6 + overSampling - 8))) {
                     if ((reg[0x0d] & 0x0b) != 0x0a)
                         eCount |= (1 << (envShift + 5 + overSampling - 8));
@@ -289,7 +287,7 @@ public class Psg2Light extends PSG {
 
                             // Noise
                             nv = ((sCount[k] >> (toneShift + overSampling)) & 0 | (nenable[k] & noise)) - 1;
-                            sample = (int) ((lv + nv) ^ nv);
+                            sample = (lv + nv) ^ nv;
                             L += sample;
                             R += sample;
 
@@ -310,8 +308,8 @@ public class Psg2Light extends PSG {
                     revSampleL /= (1 << overSampling);
                     revSampleR /= (1 << overSampling);
 
-                    dest[ptrDest + 0] = storeSample(dest[ptrDest + 0], sampleL);
-                    dest[ptrDest + 1] = storeSample(dest[ptrDest + 1], sampleR);
+                    dest[ptrDest + 0] = Math.clamp(dest[ptrDest + 0] + sampleL, -0x8000, 0x7fff);
+                    dest[ptrDest + 1] = Math.clamp(dest[ptrDest + 1] + sampleR, -0x8000, 0x7fff);
                     ptrDest += 2;
 
                     visVolume = sampleL;
@@ -349,34 +347,34 @@ public class Psg2Light extends PSG {
         int pos = (sCount[k] >> (toneShift + overSampling - 3 - 2)) & 63;
         int n = user[duty[k] - 10][pos];
         int x = n - 128;
-        return (int) ((lv * x) >> 7);
+        return (lv * x) >> 7;
     }
 
     private int GetSampleFromSaw(int k, int lv) {
         if (chenable[k] == 0) return 0;
 
-        int n = ((int) (sCount[k] >> (toneShift + overSampling - 3)) & chenable[k]);
+        int n = ((sCount[k] >> (toneShift + overSampling - 3)) & chenable[k]);
         // Sawtooth Wave
         int x = n < 7 ? n : (n - 16);
-        return (int) ((lv * x) >> 2);
+        return (lv * x) >> 2;
     }
 
     private int GetSampleFromTriangle(int k, int lv) {
         if (chenable[k] == 0) return 0;
 
-        int n = ((int) (sCount[k] >> (toneShift + overSampling - 3)) & chenable[k]);
+        int n = ((sCount[k] >> (toneShift + overSampling - 3)) & chenable[k]);
         // Triangle wave
         int x = n < 8 ? (n - 4) : (15 - 4 - n);
-        return (int) ((lv * x) >> 1);
+        return (lv * x) >> 1;
     }
 
     private int GetSampleFromDuty(int k, int lv) {
         if (chenable[k] == 0) return 0;
 
-        int n = ((int) (sCount[k] >> (toneShift + overSampling - 3)) & chenable[k]);
+        int n = ((sCount[k] >> (toneShift + overSampling - 3)) & chenable[k]);
         // Square wave
         int x = n > duty[k] ? 0 : -1;
-        return (int) ((lv + x) ^ x);
+        return (lv + x) ^ x;
     }
 }
 

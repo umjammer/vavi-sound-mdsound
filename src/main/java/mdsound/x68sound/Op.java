@@ -11,6 +11,9 @@
 package mdsound.x68sound;
 
 
+import mdsound.x68sound.Global.Work;
+
+
 /**
  * Op.
  *
@@ -18,7 +21,7 @@ package mdsound.x68sound;
  */
 public class Op {
 
-    private static final Global global = Global.getInstance();
+    Work work;
 
     public static final int KEYON = -1;
     public static final int ATACK = 0;
@@ -43,7 +46,7 @@ public class Op {
     };
 
     /** FM Modulation Input */
-    int[] inp = new int[1];
+    final int[] inp = new int[1];
     /** If it is the previous lfopitch value or CULC_DELTA_T value, recalculate DeltaT. */
     private int lfoPitch;
     /** current time (0 <= T < SIZESINTBL*PRECISION) */
@@ -174,7 +177,7 @@ public class Op {
         mul = 2;
         ame = 0;
 
-        noiseStep = (int) ((1L << 26) * (long) global.opmRate / Global.sampleRate);
+        noiseStep = (int) ((1L << 26) * (long) work.opmRate / work.sampleRate);
         setNFRQ(0);
         noiseValue = 1;
 
@@ -193,7 +196,7 @@ public class Op {
         statTbl[4] = new _StatTbl();
         statTbl[5] = new _StatTbl();
         statTbl[ATACK].limit = 0;
-        statTbl[DECAY].limit = global.D1LTBL[0];
+        statTbl[DECAY].limit = Global.D1LTBL[0];
         statTbl[SUSTAIN].limit = 63;
         statTbl[SUSTAIN_MAX].limit = 63;
         statTbl[RELEASE].limit = 63;
@@ -230,7 +233,7 @@ public class Op {
     public void initSampleRate() {
         lfoPitch = CULC_DELTA_T;
 
-        noiseStep = (int) ((1L << 26) * (long) global.opmRate / Global.sampleRate);
+        noiseStep = (int) ((1L << 26) * (long) work.opmRate / work.sampleRate);
         culcNoiseCycle();
 
         calcArStep();
@@ -316,7 +319,7 @@ public class Op {
     }
 
     private void calcDt1Pitch() {
-        dt1Pitch = global.DT1TBL[(kc & 0xFC) + (dt1 & 3)];
+        dt1Pitch = Global.DT1TBL[(kc & 0xFC) + (dt1 & 3)];
         if ((dt1 & 0x04) != 0) {
             dt1Pitch = -dt1Pitch;
         }
@@ -396,7 +399,7 @@ public class Op {
     }
 
     public void setD1LRR(int n) {
-        statTbl[DECAY].limit = global.D1LTBL[(n & 255) >> 4];
+        statTbl[DECAY].limit = Global.D1LTBL[(n & 255) >> 4];
         if (xrStat == DECAY) {
             xrLimit = statTbl[DECAY].limit;
         }
@@ -546,15 +549,15 @@ public class Op {
     public void output0(int lfoPitch, int lfoLevel) {
         if (this.lfoPitch != lfoPitch) {
             //DeltaT = ((STEPTBL[Pitch+lfoPitch]+Dt1Pitch)*Mul)>>1;
-            deltaT = ((global.STEPTBL[pitch + lfoPitch] + dt1Pitch) * mul) >> (6 + 1);
+            deltaT = ((Global.STEPTBL[pitch + lfoPitch] + dt1Pitch) * mul) >> (6 + 1);
             this.lfoPitch = lfoPitch;
         }
         t += deltaT;
-        short sin = (global.SINTBL[(((t + out2Fb) >> Global.PRECISION_BITS)) & (Global.SIZESINTBL - 1)]);
+        short sin = (Global.SINTBL[(((t + out2Fb) >> Global.PRECISION_BITS)) & (Global.SIZESINTBL - 1)]);
 
         int lfoLevelAme = lfoLevel & ame;
         if ((this.lfoLevel != lfoLevelAme || lfoLevelReCalc) && IS_ZERO_CLOSS(sinBf, sin) != 0) {
-            alpha = global.ALPHATBL[Global.ALPHAZERO + tl - xrEl - lfoLevelAme];
+            alpha = Global.ALPHATBL[Global.ALPHAZERO + tl - xrEl - lfoLevelAme];
             this.lfoLevel = lfoLevelAme;
             lfoLevelReCalc = false;
         }
@@ -577,15 +580,15 @@ public class Op {
     public void output(int lfoPitch, int lfoLevel) {
         if (this.lfoPitch != lfoPitch) {
             //DeltaT = ((STEPTBL[Pitch+lfoPitch]+Dt1Pitch)*Mul)>>1;
-            deltaT = ((global.STEPTBL[pitch + lfoPitch] + dt1Pitch) * mul) >> (6 + 1);
+            deltaT = ((Global.STEPTBL[pitch + lfoPitch] + dt1Pitch) * mul) >> (6 + 1);
             this.lfoPitch = lfoPitch;
         }
         t += deltaT;
-        short sin = (global.SINTBL[(((t + inp[0]) >> Global.PRECISION_BITS)) & (Global.SIZESINTBL - 1)]);
+        short sin = (Global.SINTBL[(((t + inp[0]) >> Global.PRECISION_BITS)) & (Global.SIZESINTBL - 1)]);
 
         int lfoLevelAme = lfoLevel & ame;
         if ((this.lfoLevel != lfoLevelAme || lfoLevelReCalc) && IS_ZERO_CLOSS(sinBf, sin) != 0) {
-            alpha = global.ALPHATBL[global.ALPHAZERO + tl - xrEl - lfoLevelAme];
+            alpha = Global.ALPHATBL[Global.ALPHAZERO + tl - xrEl - lfoLevelAme];
             this.lfoLevel = lfoLevelAme;
             lfoLevelReCalc = false;
         }
@@ -598,17 +601,17 @@ public class Op {
     public void output32(int lfoPitch, int lfoLevel) {
         if (this.lfoPitch != lfoPitch) {
             //DeltaT = ((STEPTBL[Pitch + lfoPitch] + Dt1Pitch) * Mul) >> 1;
-            deltaT = ((global.STEPTBL[pitch + lfoPitch] + dt1Pitch) * mul) >> (6 + 1);
+            deltaT = ((Global.STEPTBL[pitch + lfoPitch] + dt1Pitch) * mul) >> (6 + 1);
             this.lfoPitch = lfoPitch;
         }
         t += deltaT;
 
         int o;
-        short sin = global.SINTBL[(((t + inp[0]) >> Global.PRECISION_BITS)) & (Global.SIZESINTBL - 1)];
+        short sin = Global.SINTBL[(((t + inp[0]) >> Global.PRECISION_BITS)) & (Global.SIZESINTBL - 1)];
         if (noiseCycle == 0) {
             int lfoLevelAme = lfoLevel & ame;
             if ((this.lfoLevel != lfoLevelAme || lfoLevelReCalc) && IS_ZERO_CLOSS(sinBf, sin) != 0) {
-                alpha = global.ALPHATBL[Global.ALPHAZERO + tl - xrEl - lfoLevelAme];
+                alpha = Global.ALPHATBL[Global.ALPHAZERO + tl - xrEl - lfoLevelAme];
                 this.lfoLevel = lfoLevelAme;
                 lfoLevelReCalc = false;
             }
@@ -617,13 +620,13 @@ public class Op {
         } else {
             noiseCounter -= noiseStep;
             if (noiseCounter <= 0) {
-                noiseValue = ((global.irnd() >> 30) & 2) - 1;
+                noiseValue = ((work.irnd() >> 30) & 2) - 1;
                 noiseCounter += noiseCycle;
             }
 
             int lfoLevelAme = lfoLevel & ame;
             if (this.lfoLevel != lfoLevelAme || lfoLevelReCalc) {
-                alpha = global.NOISEALPHATBL[Global.ALPHAZERO + tl - xrEl - lfoLevelAme];
+                alpha = Global.NOISEALPHATBL[Global.ALPHAZERO + tl - xrEl - lfoLevelAme];
                 this.lfoLevel = lfoLevelAme;
                 lfoLevelReCalc = false;
             }
