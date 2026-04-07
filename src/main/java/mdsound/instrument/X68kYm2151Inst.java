@@ -60,8 +60,8 @@ public class X68kYm2151Inst extends Instrument.BaseInstrument implements PcmEnab
                 pcmBuf = (int) option[2];
             if (option.length > 3 && option[3] != null)
                 this.clocks[chipId] = (BiConsumer<Runnable, Boolean>) option[3];
-logger.log(Level.INFO, "opmFlag: %d, adpcmFlag: %d, pcmBuf: %d, clock: %s, @%08x".formatted(opmFlag, adpcmFlag, pcmBuf, this.clocks[chipId], chips[chipId].hashCode()));
         }
+logger.log(Level.INFO, "opmFlag: %d, adpcmFlag: %d, pcmBuf: %d, clock: %s, @%08x".formatted(opmFlag, adpcmFlag, pcmBuf, this.clocks[chipId], chips[chipId].hashCode()));
 
         chips[chipId].startPcm(samplingRate, opmFlag, adpcmFlag, pcmBuf);
         if (this.clocks[chipId] != null) // means not from mxdrv pcm8

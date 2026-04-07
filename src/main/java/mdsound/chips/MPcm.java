@@ -498,6 +498,7 @@ public class MPcm {
         }
     }
 
+    /** decode adpcm */
     public int decode(int ch, byte[] adrsBuf, int adrsPtr, int pos) {
         int index;
         int data;

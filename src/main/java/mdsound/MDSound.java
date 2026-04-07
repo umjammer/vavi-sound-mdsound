@@ -7,6 +7,7 @@ package mdsound;
 import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -211,7 +212,7 @@ logger.log(Level.WARNING, "no chips");
         }
 
         for (Chip chip : chips) {
-logger.log(Level.DEBUG, "instrument start/reset: %s[%d], %d, %d".formatted(chip.instrument.getClass().getSimpleName(), chip.id, chip.samplingRate, chip.clock));
+logger.log(Level.DEBUG, "instrument start/reset: %s[%d], %d, %d, @%x, %s".formatted(chip.instrument.getClass().getSimpleName(), chip.id, chip.samplingRate, chip.clock, chip.hashCode(), Arrays.toString(chip.option)));
             chip.samplingRate = chip.instrument.start(chip.id, chip.samplingRate, chip.clock, chip.option);
             chip.instrument.reset(chip.id);
 
@@ -230,7 +231,14 @@ instruments.keySet().forEach(k -> logger.log(Level.DEBUG, "instrument: " + k.get
         instruments.values().forEach(is -> is.forEach(Instrument::init));
     }
 
-    /** */
+    /**
+     *
+     * @param buf stereo buffer (4)
+     * @param offset buffer start offset (0)
+     * @param sampleCount samples * stereo (4)
+     * @param frame clock
+     * @return precessed samples
+     */
     public synchronized int update(short[] buf, int offset, int sampleCount, Runnable frame) {
         int i;
         for (i = 0; i < sampleCount && offset + i < buf.length; i += 2) {
