@@ -1,7 +1,7 @@
 [![Release](https://jitpack.io/v/umjammer/vavi-sound-mdsound.svg)](https://jitpack.io/#umjammer/vavi-sound-mdsound)
 [![Java CI](https://github.com/umjammer/vavi-sound-mdsound/actions/workflows/maven.yml/badge.svg)](https://github.com/umjammer/vavi-sound-mdsound/actions/workflows/maven.yml)
 [![CodeQL](https://github.com/umjammer/vavi-sound-mdsound/actions/workflows/codeql.yml/badge.svg)](https://github.com/umjammer/vavi-sound-mdsound/actions/workflows/codeql.yml)
-![Java](https://img.shields.io/badge/Java-21-b07219)
+![Java](https://img.shields.io/badge/Java-25-b07219)
 
 # vavi-sound-mdsound
 
@@ -52,7 +52,6 @@ this is a fork of [MDSound](https://github.com/kuma4649/MDSound)
 | C219                  | C219        | PCM   |   ✅    | mame:B                   | ditto                                                                                                                        |
 | C352                  | C352        | PCM   |   ✅️   |                          | Ridge_Racer_(Namco_System_22)/03 Rare Hero (Sanodigy mix).vgz                                                                |
 | OKIM6258              | OKI65       | PCM   |   ✅️   |                          | Akumajo_Dracula_(Sharp_X68000)/02 Black Mass (Opening).vgz                                                                   |
-| MPCM (OKIM6258)       | MPCM        | PCM   |        | mndrv                    |                                                                                                                              |
 | OKIM6295              | OKI69       | PCM   |   ✅    | mame                     | Street_Fighter_II_-_Champion_Edition_(CP_System)/05 Japan (Ryu) I.vgz                                                        |
 | SEGAPCM               | SEGAPCM     | PCM   |   ✅️   |                          | Out_Run_(Arcade)/01 Magical Sound Shower.vgz                                                                                 |
 | K005289               | K005        | PCM   |  n/a️  | mame                     |                                                                                                                              |
@@ -65,9 +64,9 @@ this is a fork of [MDSound](https://github.com/kuma4649/MDSound)
 | MultiPcm              |             | PCM   |   ✅    |                          | Daytona_USA_(Sega_Model_2)/03 The King of Speed.vgz                                                                          |
 | WSwan                 |             | PCM   |   ✅    |                          | Final_Fantasy_(Bandai_WonderSwan_Color)/02 Prelude.vgz                                                                       |
 | X1_010                |             | PCM   |   ✅    |                          | Cal.50_Caliber_Fifty_(Seta_1)/02 Area 1.vgz                                                                                  |
-| PPZ8                  | PPZ8        | PCM   |        | pmd                      |                                                                                                                              |
-| PPS                   | PPS         | PCM   |        | pmd                      |                                                                                                                              |
-| PC-9801-86            | P86         | PCM   |        | pmd                      |                                                                                                                              |
+| PPZ8                  | PPZ8        | PCM   |   ✅    | pmd                      | FMPD1/{76THSTAR.OZI, FMPVI_B.PVI}                                                                                            |
+| PPS                   | PPS         | PCM   |   ⏳️   | pmd                      |                                                                                                                              |
+| PC-9801-86            | P86         | PCM   |   ⏳️   | pmd                      |                                                                                                                              |
 | HuC6280 (has FM-like) | HuC6        | WTS   |   ✅    |                          | Street_Fighter_II'_-_Champion_Edition_(TG-16)/04 Ryu.vgz                                                                     |
 | K051649               | K051        | WTS   |   ✅    |                          | opllssg_demo_vgm/GIMICNRT.vgm                                                                                                |
 | SN76489               | DSCG        | PSG   |   ✅    | nicola                   | Thexder_(IBM_PCjr,_Tandy_1000)/02 Thexder Theme \[IBM PCjr].vgz                                                              |
@@ -89,8 +88,10 @@ this is a fork of [MDSound](https://github.com/kuma4649/MDSound)
 | Vrc7                  |             |       |   ⏳️   | mdplayer                 |                                                                                                                              |
 | Dmg                   |             |       |   ✅    | gb                       | Beatmania_GB2_Gatcha_Mix_(Game_Boy,_Color)/11 Friends.vgz                                                                    |
 | Gigatron              |             |       |        | zgm                      |                                                                                                                              |
-| MPCMPP                |             | PCM   |        | mnd                      |                                                                                                                              |
-| PCM8PP                |             | PCM   |   ✅*   | mxdrv                    | (*) applyed an original fix                                                                                                  |
+| PCM8                  | PCM8        | PCM   |   ✅️   | x68sound                 | Arrange/RUNUPC.MDX                                                                                                           |
+| PCM8PP                | PCM8        | PCM   |   ⏳️   | mercuryunit              |                                                                                                                              |
+| MPCM (OKIM6258)       | MPCM        | PCM   |   ⏳️   | x68sound                 |                                                                                                                              |
+| MPCMPP                | MPCM        | PCM   |   ⏳️   | mercuryunit              |                                                                                                                              |
 | MSM5232               |             |       |   🥚   |                          |                                                                                                                              |
 | ES5503                |             |       |   ✅    | vgm                      | Space_Fox_(Apple_IIgs)/01 Title.vgz                                                                                          |
 | ES5505                |             |       |   🥚   |                          |                                                                                                                              |
@@ -151,6 +152,8 @@ this is a fork of [MDSound](https://github.com/kuma4649/MDSound)
    * ~~pwn laud noise~~
    * ~~ymf262 (nuked) little bit different?~~
    * ~~c219 (my impl is something wrong)~~ ... system2x is not supported, use c140inst
+ * instrument class should handle one chip
+ * pcm i/o should use chip register
 
 ---
 
