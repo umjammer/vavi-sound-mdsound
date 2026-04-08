@@ -210,7 +210,6 @@ Debug.printf("version is after 1.50, %04x", version);
         vgmAdr = vgmDataOffset;
         vgmAnalyze = true;
 
-        MDSound.Chip[] chips;
         List<MDSound.Chip> lstChip = new ArrayList<>();
         MDSound.Chip chip;
 
@@ -248,6 +247,7 @@ Debug.printf("version is after 1.50, %04x", version);
             chip.instrument = ym2612;
             chip.samplingRate = SamplingRate;
             chip.clock = ByteUtil.readLeInt(vgmBuf, 0x2c);
+Debug.println("ym2612: clock: " + chip.clock);
             chip.volume = 0;
             chip.option = null;
             lstChip.add(chip);

@@ -17,8 +17,8 @@ public class Gigatron {
     private byte samp = 3;
     private double scanlineCounter = 0;
 
-    private double scanlines = 521.0;
-    private double vSync = 59.98;
+    private static final double scanlines = 521.0;
+    private static final double vSync = 59.98;
     private double bClock = 521.0 * 59.98; // scanlines * vSync
     private double audioSampleRate = 44100;
     private byte channelMask = 0x3;

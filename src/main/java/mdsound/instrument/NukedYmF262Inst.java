@@ -70,9 +70,9 @@ public class NukedYmF262Inst extends Instrument.BaseInstrument {
 
     private void writeInternal(int chipId, int adr, int data) {
         switch (adr) {
-            case 0 -> { this.address = data; }
-            case 2 -> { this.address = data | 0x100; }
-            case 1, 3 -> { chips[chipId].OPL3_WriteRegBuffered(chip, this.address, data); }
+            case 0 -> this.address = data;
+            case 2 -> this.address = data | 0x100;
+            case 1, 3 -> chips[chipId].OPL3_WriteRegBuffered(chip, this.address, data);
         }
     }
 

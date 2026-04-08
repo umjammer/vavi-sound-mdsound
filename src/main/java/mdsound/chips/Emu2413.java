@@ -672,7 +672,7 @@ public class Emu2413 {
     // Synthesizing
     //
     private static final int SLOT_BD1 = 12;
-    private int SLOT_BD2 = 13;
+    private static final int SLOT_BD2 = 13;
     private static final int SLOT_HH = 14;
     private static final int SLOT_SD = 15;
     private static final int SLOT_TOM = 16;

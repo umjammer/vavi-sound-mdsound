@@ -10,37 +10,37 @@ package mdsound.chips;
 /**
  * ZOOM ZSG-2 custom wave-table synthesizer
  * <p>
- * Written by Olivier Galibert
- * MAME conversion by R. Belmont
- * Working emulation by The Talentuous Hands Of The Popularious hap
- * Properly working emulation by superctr
- * ---
- * <p>
+ * Written by Olivier Galibert<br/>
+ * MAME conversion by R. Belmont<br/>
+ * Working emulation by The Talentuous Hands Of The Popularious hap<br/>
+ * Properly working emulation by superctr<br/>
+ * <hr/>
+ * <pre>
  * Register map:
  * 000-5fe : Channel specific registers (48 channels)
- * (high)   (low)
- * +000 : xxxxxxxx -------- : Start address (low)
- * +000 : -------- xxxxxxxx :   Unknown register (usually cleared)
- * +002 : xxxxxxxx -------- : Address page
- * : -------- xxxxxxxx : Start address (high)
- * +004 : -------- -------- :   Unknown register (usually cleared)
- * +006 : -----x-- -------- :   Unknown bit, always set
- * +008 : xxxxxxxx xxxxxxxx : Frequency
- * +00a : xxxxxxxx -------- : DSP ch 3 (right) output gain
- * : -------- xxxxxxxx : Loop address (low)
- * +00c : xxxxxxxx xxxxxxxx : End address
- * +00e : xxxxxxxx -------- : DSP ch 2 (Left) output gain
- * : -------- xxxxxxxx : Loop address (high)
- * +010 : xxxxxxxx xxxxxxxx : Initial filter time constant
- * +012 : xxxxxxxx xxxxxxxx : Current filter time constant
- * +014 : xxxxxxxx xxxxxxxx : Initial volume
- * +016 : xxxxxxxx xxxxxxxx : Current volume?
- * +018 : xxxxxxxx xxxxxxxx : Target filter time constant
- * +01a : xxxxxxxx -------- : DSP ch 1 (chorus) output gain
- * : -------- xxxxxxxx : Filter ramping speed
- * +01c : xxxxxxxx xxxxxxxx : Target volume
- * +01e : xxxxxxxx -------- : DSP ch 0 (reverb) output gain
- * : -------- xxxxxxxx : Filter ramping speed
+ *           (high)   (low)
+ *    +000 : xxxxxxxx -------- : Start address (low)
+ *    +000 : -------- xxxxxxxx :   Unknown register (usually cleared)
+ *    +002 : xxxxxxxx -------- : Address page
+ *         : -------- xxxxxxxx : Start address (high)
+ *    +004 : -------- -------- :   Unknown register (usually cleared)
+ *    +006 : -----x-- -------- :   Unknown bit, always set
+ *    +008 : xxxxxxxx xxxxxxxx : Frequency
+ *    +00a : xxxxxxxx -------- : DSP ch 3 (right) output gain
+ *         : -------- xxxxxxxx : Loop address (low)
+ *    +00c : xxxxxxxx xxxxxxxx : End address
+ *    +00e : xxxxxxxx -------- : DSP ch 2 (Left) output gain
+ *         : -------- xxxxxxxx : Loop address (high)
+ *    +010 : xxxxxxxx xxxxxxxx : Initial filter time constant
+ *    +012 : xxxxxxxx xxxxxxxx : Current filter time constant
+ *    +014 : xxxxxxxx xxxxxxxx : Initial volume
+ *    +016 : xxxxxxxx xxxxxxxx : Current volume?
+ *    +018 : xxxxxxxx xxxxxxxx : Target filter time constant
+ *    +01a : xxxxxxxx -------- : DSP ch 1 (chorus) output gain
+ *         : -------- xxxxxxxx : Filter ramping speed
+ *    +01c : xxxxxxxx xxxxxxxx : Target volume
+ *    +01e : xxxxxxxx -------- : DSP ch 0 (reverb) output gain
+ *         : -------- xxxxxxxx : Filter ramping speed
  * 600-604 : Key on flags (each bit corresponds to a channel)
  * 608-60c : Key off flags (each bit corresponds to a channel)
  * 618     : Unknown register (usually 0x5cbc is written)
@@ -52,9 +52,8 @@ package mdsound.chips;
  * 63a     : ROM readback address high
  * 63c     : ROM readback word low
  * 63e     : ROM readback word high
- * <p>
- * ---
- * <p>
+ * </pre>
+ * <hr/>
  * Additional notes on the sample format, reverse-engineered
  * by Olivier Galibert and David Haywood:
  * <p>
@@ -63,10 +62,10 @@ package mdsound.chips;
  * <p>
  * The header is a vector of 16 bytes structures composed of 4 32bits
  * little-endian values representing:
- * - sample start position in bytes, always a multiple of 4
- * - sample end position in bytes, minus 4, always...
- * - loop position in bytes, always....
- * - flags, probably
+ * <li> sample start position in bytes, always a multiple of 4
+ * <li> sample end position in bytes, minus 4, always...
+ * <li> loop position in bytes, always....
+ * <li> flags, probably
  * <p>
  * It is interesting to note that this header is *not* parsed by the
  * ZSG.  The main program reads the rom through appropriate ZSG
@@ -80,20 +79,19 @@ package mdsound.chips;
  * The samples are compressed with a 2:1 ratio.  Each block of 4-bytes
  * becomes 4 16-bits samples.  Reading the 4 bytes as a *little-endian*
  * 32bits values, the structure is:
- * <p>
+ * <pre>
  * 42222222 51111111 60000000 ssss3333
- * <p>
+ * </pre>
  * 's' is a 4-bit scale value.  '0000000', '1111111', '2222222' and
  * '6543333' are signed 7-bits values corresponding to the 4 samples.
  * To compute the final 16bits value, left-align and shift right by s.
  * Yes, that simple.
- * <p>
- * ---
- * <p>
+ * <hr/>
+ *
  * TODO
- * - Filter and ramping behavior might not be perfect.
- * - clicking / popping noises in gdarius, raystorm: maybe the sample ROMs are bad dumps?
- * - memory reads out of range sometimes
+ *  <li> Filter and ramping behavior might not be perfect.
+ *  <li> clicking / popping noises in gdarius, raystorm: maybe the sample ROMs are bad dumps?
+ *  <li> memory reads out of range sometimes
  *
  * @author Olivier Galibert
  * @author R. Belmont

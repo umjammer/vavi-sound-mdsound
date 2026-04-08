@@ -8,6 +8,7 @@ import mdsound.Instrument;
 import mdsound.fmgen.PSG;
 
 
+/** PSG fmgen */
 public class Ay8910Inst extends Instrument.BaseInstrument {
 
     public static final int DefaultClockValue = 1789750;
@@ -66,8 +67,6 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
         assert chipId < chips.length;
 
         int[] buffer = new int[2];
-        buffer[0] = 0;
-        buffer[1] = 0;
         chips[chipId].mix(buffer, 1);
         for (int i = 0; i < 1; i++) {
             outputs[0][i] = buffer[i * 2 + 0];

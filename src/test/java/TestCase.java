@@ -75,7 +75,7 @@ Debug.println(filename);
     /**
      * @param args
      */
-    public static void main(String[] args) throws Exception {
+    static void main(String[] args) throws Exception {
         Path path = Paths.get(TestCase.class.getResource("/test_data").toURI());
         short[][] d;
         List<String> ls = Files.readAllLines(path);

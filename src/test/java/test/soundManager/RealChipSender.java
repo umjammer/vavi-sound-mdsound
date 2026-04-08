@@ -2,6 +2,7 @@
 package test.soundManager;
 
 import test.soundManager.SoundManager.Snd;
+import vavi.util.Debug;
 
 
 public class RealChipSender extends ChipSender {
@@ -54,7 +55,7 @@ public class RealChipSender extends ChipSender {
                             actionOfChip.accept(counter, dev, typ, adr, val, ex);
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        Debug.printStackTrace(e);
                     }
 
                     synchronized (lockObj) {
@@ -69,7 +70,7 @@ public class RealChipSender extends ChipSender {
 
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            Debug.printStackTrace(e);
             synchronized (lockObj) {
                 isRunning = false;
                 start = false;
