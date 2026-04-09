@@ -54,7 +54,7 @@ public class Emu2149 {
                     0x16, 0x16, 0x1f, 0x1f, 0x2d, 0x2d, 0x3f, 0x3f, 0x5a, 0x5a, 0x7f, 0x7f, 0xb4, 0xb4, 0xff, 0xff}
     };
 
-    static class Psg {
+    public static class Psg {
 
         private static int PSG_MASK_CH(int x) {
             return 1 << x;
@@ -119,6 +119,14 @@ public class Emu2149 {
             } else {
                 this.baseIncr = (int) ((double) this.clk * (1 << GETA_BITS) / (16 * this.rate));
             }
+        }
+
+        public void init(int c, int r) {
+            this.volTbl = VolTbl[VOL_DEFAULT];
+            this.clk = c;
+            this.rate = r != 0 ? r : 44100;
+            this.setQuality(0);
+            internalRefresh();
         }
 
         public void setRate(int r) {
@@ -188,7 +196,7 @@ public class Emu2149 {
                 this.adr = val & 0x1f;
         }
 
-        public int calc() {
+        private int calc() {
 
             int mix = 0;
 

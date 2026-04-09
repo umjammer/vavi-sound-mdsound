@@ -31,7 +31,7 @@ public class Emu2413Inst extends BaseInstrument {
 
     @Override
     public String getName() {
-        return "EMU2413";
+        return "YM2413emu";
     }
 
     @Override

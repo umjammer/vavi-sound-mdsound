@@ -76,7 +76,7 @@ package mdsound.np.chip;
 public class Emu2413 {
 
     /** opll */
-    static class Opll {
+    public static class Opll {
 
         public enum Tone {
             VRC7_RW,
@@ -638,7 +638,7 @@ public class Emu2413 {
                 s2e(24.0), s2e(27.0), s2e(30.0), s2e(33.0), s2e(36.0), s2e(39.0), s2e(42.0), s2e(48.0)
         };
 
-        public Opll(int clk, int rate) {
+        public void init(int clk, int rate) {
 
             defaultPatch = new Slot.Patch[OPLL_TONE_NUM][][];
             for (int i = 0; i < OPLL_TONE_NUM; i++) {
@@ -937,7 +937,7 @@ public class Emu2413 {
         }
 
         /** I/O Ctrl */
-        private void writeReg(int reg, int data) {
+        public void writeReg(int reg, int data) {
 //logger.log(Level.TRACE, "OPLL_writeReg:reg:%d:data:%d".formatted(reg,data));
 
             data = data & 0xff;
@@ -1157,11 +1157,11 @@ public class Emu2413 {
         }
 
         /** STEREO MODE (OPT) */
-        private void setPan(int ch, int pan) {
+        public void setPan(int ch, int pan) {
             this.pan[ch & 15] = pan & 3;
         }
 
-        private void calcStereo(int[] out) {
+        public void calcStereo(int[] out) {
             int[] b = {0, 0, 0, 0}; // Ignore, Right, Left, Center */
             int[] r = {0, 0, 0, 0}; // Ignore, Right, Left, Center */
 
@@ -1914,37 +1914,40 @@ public class Emu2413 {
                 internalRefresh();
             }
         }
-    }
 
-    public Emu2413() {
-        Opll.waveForm[0] = Opll.fullSinTable;
-        Opll.waveForm[1] = Opll.halfSinTable;
+        static {
+            waveForm[0] = fullSinTable;
+            waveForm[1] = halfSinTable;
 
-        Opll.tllTable = new int[16][][][];
-        for (int i = 0; i < 16; i++) {
-            Opll.tllTable[i] = new int[8][][];
-            for (int j = 0; j < 8; j++) {
-                Opll.tllTable[i][j] = new int[(1 << Opll.TL_BITS)][];
-                for (int k = 0; k < (1 << Opll.TL_BITS); k++) {
-                    Opll.tllTable[i][j][k] = new int[4];
+            tllTable = new int[16][][][];
+            for (int i = 0; i < 16; i++) {
+                tllTable[i] = new int[8][][];
+                for (int j = 0; j < 8; j++) {
+                    tllTable[i][j] = new int[(1 << TL_BITS)][];
+                    for (int k = 0; k < (1 << TL_BITS); k++) {
+                        tllTable[i][j][k] = new int[4];
+                    }
+                }
+            }
+
+            rksTable = new int[2][][];
+            for (int i = 0; i < 2; i++) {
+                rksTable[i] = new int[8][];
+                for (int j = 0; j < 8; j++) {
+                    rksTable[i][j] = new int[2];
+                }
+            }
+
+            dphaseTable = new int[512][][];
+            for (int i = 0; i < 512; i++) {
+                dphaseTable[i] = new int[8][];
+                for (int j = 0; j < 8; j++) {
+                    dphaseTable[i][j] = new int[16];
                 }
             }
         }
+    }
 
-        Opll.rksTable = new int[2][][];
-        for (int i = 0; i < 2; i++) {
-            Opll.rksTable[i] = new int[8][];
-            for (int j = 0; j < 8; j++) {
-                Opll.rksTable[i][j] = new int[2];
-            }
-        }
-
-        Opll.dphaseTable = new int[512][][];
-        for (int i = 0; i < 512; i++) {
-            Opll.dphaseTable[i] = new int[8][];
-            for (int j = 0; j < 8; j++) {
-                Opll.dphaseTable[i][j] = new int[16];
-            }
-        }
+    public Emu2413() {
     }
 }

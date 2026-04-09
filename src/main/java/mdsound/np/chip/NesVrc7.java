@@ -19,7 +19,6 @@ public class NesVrc7 implements SoundChip {
     protected final int[][] sm = {new int[6], new int[6]}; // stereo mix
     protected short[] buf = new short[2];
     protected Emu2413.Opll opll;
-    protected Emu2413 emu2413 = new Emu2413();
     protected int divider; // clock divider
     protected double clock, rate;
     protected final BasicTrackInfo[] trkInfo = new BasicTrackInfo[6];
@@ -27,7 +26,8 @@ public class NesVrc7 implements SoundChip {
     public NesVrc7() {
         patchSet = Emu2413.Opll.Tone.VRC7_RW.ordinal();
 
-        opll = new Emu2413.Opll(3579545, Common.SampleRate);
+        opll = new Emu2413.Opll();
+        opll.init(3579545, Common.SampleRate);
         opll.resetPatch(patchSet);
         setClock(Common.NsfClock); // DEFAULT_CLOCK);
 
