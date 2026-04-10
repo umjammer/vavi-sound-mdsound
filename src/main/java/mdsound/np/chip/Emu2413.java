@@ -750,7 +750,7 @@ public class Emu2413 {
             this.mask = 0;
 
             reset();
-            resetPatch(0);
+            resetPatch(6); // original was 0, that makes no drums
         }
 
         /** Reset patch data by system default. */
@@ -789,7 +789,7 @@ public class Emu2413 {
             this.opllStep = (1 << 31) / (clk / 72);
             this.opllTime = 0;
             for (int i = 0; i < 14; i++) {
-                this.pan[i] = 2;
+                this.pan[i] = 3; // original was 2, that makes monaural
             }
             this.sPrev[0] = this.sPrev[1] = 0;
             this.sNext[0] = this.sNext[1] = 0;
