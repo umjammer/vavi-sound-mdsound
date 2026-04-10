@@ -46,7 +46,7 @@ public class NpYm2149Inst extends Instrument.BaseInstrument {
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        chips[chipId].init(clock, samplingRate);
+        chips[chipId].init(DefaultClockValue * 2, samplingRate); // TODO clock is 4 times than others
         return samplingRate;
     }
 
@@ -67,9 +67,8 @@ public class NpYm2149Inst extends Instrument.BaseInstrument {
         assert chipId < chips.length;
 
         for (int i = 0; i < 1; i++) {
-            int v = chips[chipId].calcPsg();
+            int v = chips[chipId].calcPsg(); // TODO is this correct? do this twice and half clock seems to work.
             outputs[0][i] = v;
-            v = chips[chipId].calcPsg();
             outputs[1][i] = v;
         }
 
