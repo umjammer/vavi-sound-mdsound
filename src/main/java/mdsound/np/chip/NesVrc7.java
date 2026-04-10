@@ -54,8 +54,8 @@ public class NesVrc7 implements SoundChip {
         //rate = r ? r : DEFAULT_RATE;
         //(void)r; // rate is ignored
         rate = 49716;
-        opll.set_quality(1); // quality always on (not really a CPU hog)
-        opll.set_rate((int) rate);
+        opll.setQuality(1); // quality always on (not really a CPU hog)
+        opll.setRate((int) rate);
     }
 
     @Override
@@ -152,7 +152,7 @@ public class NesVrc7 implements SoundChip {
         divider += clocks;
         while (divider >= 36) {
             divider -= 36;
-            opll._calc();
+            opll.calc();
         }
     }
 

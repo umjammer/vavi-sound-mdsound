@@ -53,14 +53,14 @@ public class NpYm2413Inst extends Instrument.BaseInstrument {
         return 0;
     }
 
-    int[][] b = new int[2][2];
+    private int[][] b = new int[2][2];
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
         chips[chipId].calcStereo(b[chipId]);
 
-        outputs[0][0] = b[chipId][0];
-        outputs[1][0] = b[chipId][1];
+        outputs[0][0] = b[chipId][0] << 1;
+        outputs[1][0] = b[chipId][1] << 1;
 
         visVolume[chipId][0][0] = b[0][0];
         visVolume[chipId][0][1] = b[1][0];

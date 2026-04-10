@@ -69,6 +69,7 @@ public class NpYm2149Inst extends Instrument.BaseInstrument {
         for (int i = 0; i < 1; i++) {
             int v = chips[chipId].calcPsg();
             outputs[0][i] = v;
+            v = chips[chipId].calcPsg();
             outputs[1][i] = v;
         }
 

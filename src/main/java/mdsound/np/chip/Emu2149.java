@@ -126,7 +126,6 @@ public class Emu2149 {
             this.clk = c;
             this.rate = r != 0 ? r : 44100;
             this.setQuality(0);
-            internalRefresh();
         }
 
         public void setRate(int r) {
@@ -201,7 +200,7 @@ public class Emu2149 {
             int mix = 0;
 
             this.baseCount += this.baseIncr;
-            int incr = (this.baseCount >> GETA_BITS);
+            int incr = (this.baseCount >>> GETA_BITS);
             this.baseCount &= (1 << GETA_BITS) - 1;
 
             // Envelope
@@ -238,7 +237,7 @@ public class Emu2149 {
             }
             int noise = this.noiseSeed & 1;
 
-            // Tone/
+            // Tone
             for (int i = 0; i < 3; i++) {
                 this.count[i] += incr;
                 if ((this.count[i] & 0x1000) != 0) {
@@ -281,7 +280,7 @@ public class Emu2149 {
 
             this.psgTime = this.psgTime - this.realStep;
 
-            return this._out << 4;
+            return (short) (this._out << 4);
         }
 
         public void writeReg(int reg, int val) {
@@ -305,12 +304,12 @@ public class Emu2149 {
                 break;
 
             case 7:
-                this.tMask[0] = (val & 1);
-                this.tMask[1] = (val & 2);
-                this.tMask[2] = (val & 4);
-                this.nMask[0] = (val & 8);
-                this.nMask[1] = (val & 16);
-                this.nMask[2] = (val & 32);
+                this.tMask[0] = val & 1;
+                this.tMask[1] = val & 2;
+                this.tMask[2] = val & 4;
+                this.nMask[0] = val & 8;
+                this.nMask[1] = val & 16;
+                this.nMask[2] = val & 32;
                 break;
 
             case 8:
