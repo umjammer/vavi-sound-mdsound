@@ -174,16 +174,6 @@ public class MDSound {
     }
 
     /** */
-    public MDSound() {
-        this(Resampler.DefaultSamplingRate, Resampler.DefaultSamplingBuffer, null);
-    }
-
-    /** */
-    public MDSound(int samplingRate, int samplingBuffer, List<Chip> insts) {
-        init(samplingRate, samplingBuffer, insts);
-    }
-
-    /** */
     public synchronized void init(int samplingRate, int samplingBuffer, List<Chip> chips) {
 notContains.clear();
         if (chips == null) {

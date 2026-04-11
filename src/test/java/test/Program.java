@@ -101,7 +101,7 @@ public class Program {
 
     /** */
     public Program() {
-        mds = new MDSound(SamplingRate, SamplingBuffer, null);
+        mds = new MDSound();
 
         try {
             audioOutput = AudioSystem.getSourceDataLine(new AudioFormat(SamplingRate, 16, 2, true, false));
