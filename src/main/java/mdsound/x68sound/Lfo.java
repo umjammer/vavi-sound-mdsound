@@ -230,14 +230,14 @@ public class Lfo {
             lfoSmallCounter += lfoSmallCounterStep;
             switch (lfoWaveForm) {
             case 0: {
-                int idxAdd = lfoSmallCounter >> 4;
+                int idxAdd = lfoSmallCounter >>> 4;
                 lfoIdx = (lfoIdx + idxAdd) & (SIZELFOTBL - 1);
                 pmTblValue = pmTbl0[lfoIdx];
                 amTblValue = amTbl0[lfoIdx];
                 break;
             }
             case 1: {
-                int idxAdd = lfoSmallCounter >> 4;
+                int idxAdd = lfoSmallCounter >>> 4;
                 lfoIdx = (lfoIdx + idxAdd) & (SIZELFOTBL - 1);
                 if ((lfoIdx & (SIZELFOTBL / 2 - 1)) < SIZELFOTBL / 4) {
                     pmTblValue = 128;
@@ -249,14 +249,14 @@ public class Lfo {
             }
             break;
             case 2: {
-                int idxAdd = lfoSmallCounter >> 4;
+                int idxAdd = lfoSmallCounter >>> 4;
                 lfoIdx = (lfoIdx + idxAdd + idxAdd) & (SIZELFOTBL - 1);
                 pmTblValue = pmTbl2[lfoIdx];
                 amTblValue = amTbl2[lfoIdx];
                 break;
             }
             case 3: {
-                lfoIdx = work.irnd() >> (32 - SIZELFOTBL_BITS);
+                lfoIdx = work.irnd() >>> (32 - SIZELFOTBL_BITS);
                 pmTblValue = pmTbl0[lfoIdx];
                 amTblValue = amTbl0[lfoIdx];
                 break;
