@@ -81,22 +81,23 @@ this is a fork of [MDSound](https://github.com/kuma4649/MDSound)
 | NES_APU               |             | PSG   |   ✅    | np:vgm                   | Klax_(NES)/01 Title Screen.vgz                                                                                               |
 | NES_DMC               |             | PCM   |   ✅    | np:vgm                   | ditto                                                                                                                        |
 | NES_FDS (has FM-like) |             | WTS   |   ✅    | np:vgm                   | ditto                                                                                                                        |
-| N106                  |             | WTS   |   ✅    | np                       | Thunder Force IV - Sand Hell [5-N163].nsf                                                                                    |
+| N106                  |             | WTS   |   ✅    | np                       | Thunder Force IV - Sand Hell \[5-N163].nsf                                                                                   |
 | Vrc6                  |             |       |   ⏳️   | np                       |                                                                                                                              |
-| YM2149                |             | PSG   |   ⏳️   | np:okaxaki               |                                                                                                                              |
-| YM2143                | OPLL        | FM    |   ⏳️   | np:okaxaki               |                                                                                                                              |
-| Vrc7                  |             |       |   ⏳️   | mdplayer                 |                                                                                                                              |
+| YM2149                |             | PSG   |   ✅️   | np:okaxaki               | L.E.D._Storm_(ZX_Spectrum_128)/01 Title Theme.vgz                                                                            |
+| YM2143                | OPLL        | FM    |   ✅    | np:okaxaki               | Sonyc_FM/01_Title.vgm                                                                                                        |
+| Vrc7                  |             |       | 🚧️  ️ | mdplayer                 | Sonyc_FM/01_Title.vgm                                                                                                        |
 | Dmg                   |             |       |   ✅    | gb                       | Beatmania_GB2_Gatcha_Mix_(Game_Boy,_Color)/11 Friends.vgz                                                                    |
-| Gigatron              |             |       |        | zgm                      |                                                                                                                              |
+| Gigatron              |             |       |        | ?:zgm                    |                                                                                                                              |
 | PCM8                  | PCM8        | PCM   |   ✅️   | x68sound                 | Arrange/RUNUPC.MDX                                                                                                           |
-| PCM8PP                | PCM8        | PCM   |   ⏳️   | mercuryunit              |                                                                                                                              |
+| PCM8PP (mercuryunit)  | PCM8        | PCM   |   ⏳️   | wachoman                 |                                                                                                                              |
 | MPCM (OKIM6258)       | MPCM        | PCM   |   ⏳️   | x68sound                 |                                                                                                                              |
-| MPCMPP                | MPCM        | PCM   |   ⏳️   | mercuryunit              |                                                                                                                              |
-| MSM5232               |             |       |   🥚   |                          |                                                                                                                              |
-| ES5503                |             |       |   ✅    | vgm                      | Space_Fox_(Apple_IIgs)/01 Title.vgz                                                                                          |
-| ES5505                |             |       |   🥚   |                          |                                                                                                                              |
-| μPD7759               |             | PCM   |   🥚   | vgm                      |                                                                                                                              |
+| MPCMPP (mercuryunit)  | MPCM        | PCM   |   ⏳️   | wachoman                 |                                                                                                                              |
+| MSM5232               |             |       |   🥚   | mame                     |                                                                                                                              |
+| ES5503                |             |       |   ✅    | mame:vgm                 | Space_Fox_(Apple_IIgs)/01 Title.vgz                                                                                          |
+| ES5505                |             |       |   🥚   | mame:zgm                 |                                                                                                                              |
+| μPD7759               |             | PCM   |   🥚   | ?:vgm                    |                                                                                                                              |
 | MDPCM                 | MDPCM       | PCM   |   ✅*   | mdsdrv                   | (*) not perfect                                                                                                              |
+| ZXBeep                |             |       |   ✅    |                          | Spectrum/Demos/Beeper Demo part 1.ay                                                                                         |
 
 <sub>* WTS ... [wavetable synthesis](https://ja.wikipedia.org/wiki/%E6%B3%A2%E5%BD%A2%E3%83%A1%E3%83%A2%E3%83%AA%E9%9F%B3%E6%BA%90)</sub><br/>
 
@@ -152,8 +153,12 @@ this is a fork of [MDSound](https://github.com/kuma4649/MDSound)
    * ~~pwn laud noise~~
    * ~~ymf262 (nuked) little bit different?~~
    * ~~c219 (my impl is something wrong)~~ ... system2x is not supported, use c140inst
+   * ~~ym2413 (np) no drums~~ ... but the original might set those intentionally
+   * vrc7 ~~no drums~~, skips first few notes
+   * ~~ym2149 (np) not correct~~
  * instrument class should handle one chip
  * pcm i/o should use chip register
+ * zmusic `lzz.r`. how can i get it?
 
 ---
 
