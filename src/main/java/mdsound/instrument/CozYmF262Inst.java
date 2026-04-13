@@ -65,8 +65,8 @@ public class CozYmF262Inst extends Instrument.BaseInstrument {
 
     private void writeInternal(int chipId, int adr, int data) {
         switch (adr) {
-            case 0, 2 -> { this.address = data; }
-            case 1, 3 -> { chips[chipId].write((adr & 2) >> 1, address, data); }
+            case 0, 2 -> this.address = data;
+            case 1, 3 -> chips[chipId].write((adr & 2) >> 1, address, data);
         }
     }
 

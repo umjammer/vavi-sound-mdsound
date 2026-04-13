@@ -76,7 +76,7 @@ package mdsound.np.chip;
 public class Emu2413 {
 
     /** opll */
-    static class Opll {
+    public static class Opll {
 
         public enum Tone {
             VRC7_RW,
@@ -92,17 +92,31 @@ public class Emu2413 {
         /** slot */
         static class Slot {
 
-            private static int DB_POS(double x) {
+            /**
+             * Opll internal interfaces
+             */
+            private static final int BD1 = 12;
+            private static final int BD2 = 13;
+            private static final int HH = 14;
+            private static final int SD = 15;
+            private static final int TOM = 16;
+            private static final int CYM = 17;
+
+            private static int dbPos(double x) {
                 return (int) (x / DB_STEP);
             }
 
-            private static int DB_NEG(double x) {
+            private static int dbNeg(double x) {
                 return (int) (DB_MUTE + DB_MUTE + x / DB_STEP);
             }
 
             /** Convert Amp(0 to EG_HEIGHT) to Phase(0 to 8PI). */
             private static int wave2_8pi(int e) {
                 return e << (2 + PG_BITS - SLOT_AMP_BITS);
+            }
+
+            private static int eg2Db(int d) {
+                return (d * (int) (EG_STEP / DB_STEP));
             }
 
             /** Voice data */
@@ -153,76 +167,8 @@ public class Emu2413 {
             /** output */
             private int egOut;
 
-            /**
-             * Calc Parameters
-             */
-            private int calcEgDPhase() {
-                return this.egMode.calcEgDPhase(this);
-            }
-
-            /**
-             * Opll internal interfaces
-             */
-            private static final int SLOT_BD1 = 12;
-            private static final int SLOT_BD2 = 13;
-            private static final int SLOT_HH = 14;
-            private static final int SLOT_SD = 15;
-            private static final int SLOT_TOM = 16;
-            private static final int SLOT_CYM = 17;
-
-            private void updatePg() {
-                this.dPhase = dphaseTable[this.fNum][this.block][this.patch.ml];
-            }
-
-            private void updateTll() {
-                this.tll = (this.type == 0) ? tllTable[this.fNum >> 5][this.block][this.patch.tl][this.patch.kl] : tllTable[this.fNum >> 5][this.block][this.volume][this.patch.kl];
-            }
-
-            private void updateRks() {
-                this.rks = rksTable[this.fNum >> 8][this.block][this.patch.kr];
-            }
-
-            private void updateWf() {
-                this.sinTbl = waveForm[this.patch.wf];
-            }
-
-            private void updateEg() {
-                this.egDPhase = this.calcEgDPhase();
-            }
-
-            private void updateAll() {
-                this.updatePg();
-                this.updateTll();
-                this.updateRks();
-                this.updateWf();
-                this.updateEg(); // EG should be updated last.
-            }
-
-            /** Slot key on  */
-            private void slotOn() {
-                this.egMode = EgState.ATTACK;
-                this.egPhase = 0;
-                this.phase = 0;
-                this.updateEg();
-            }
-
-            /** Slot key on without resetting the phase */
-            private void slotOn2() {
-                this.egMode = EgState.ATTACK;
-                this.egPhase = 0;
-                this.updateEg();
-            }
-
-            /* Slot key off */
-            private void slotOff() {
-                if (this.egMode == EgState.ATTACK)
-                    this.egPhase = expandBits(AR_ADJUST_TABLE[highBits(this.egPhase, EG_DP_BITS - EG_BITS)], EG_BITS, EG_DP_BITS);
-                this.egMode = EgState.RELEASE;
-                this.updateEg();
-            }
-
             /** Initializing */
-            private void OPLL_SLOT_reset(int type) {
+            private void reset(int type) {
                 this.type = type;
                 this.sinTbl = Opll.waveForm[0];
                 this.phase = 0;
@@ -241,20 +187,160 @@ public class Emu2413 {
                 this.volume = 0;
                 this.pgOut = 0;
                 this.egOut = 0;
-                this.patch = Opll.null_patch;
+                this.patch = Opll.NullPatch;
             }
 
-            /* Change a rhythm Voice */
-            private void setSlotPatch(Patch patch) {
-                this.patch = patch;
+            /** Slot key on  */
+            public void slotOn() {
+                this.egMode = EgState.ATTACK;
+                this.egPhase = 0;
+                this.phase = 0;
+                this.updateEg();
             }
 
-            private void setVolume(int volume) {
+            /** Slot key on without resetting the phase */
+            public void slotOnStayingPhase() {
+                this.egMode = EgState.ATTACK;
+                this.egPhase = 0;
+                this.updateEg();
+            }
+
+            /* Slot key off */
+            public void slotOff() {
+                if (this.egMode == EgState.ATTACK)
+                    this.egPhase = expandBits(AR_ADJUST_TABLE[highBits(this.egPhase, EG_DP_BITS - EG_BITS)], EG_BITS, EG_DP_BITS);
+                this.egMode = EgState.RELEASE;
+                this.updateEg();
+            }
+
+            public void setVolume(int volume) {
                 this.volume = volume;
             }
 
+            /** EG */
+            public void calcEnvelope(int lfo) {
+                int egout;
+
+                switch (egMode) {
+                    case ATTACK:
+                        egout = AR_ADJUST_TABLE[highBits(egPhase, EG_DP_BITS - EG_BITS)];
+                        egPhase += egDPhase;
+                        if ((EG_DP_WIDTH & egPhase) != 0 || (Slot.this.patch.ar == 15)) {
+                            egout = 0;
+                            egPhase = 0;
+                            egMode = EgState.DECAY;
+                            updateEg();
+                        }
+                        break;
+
+                    case DECAY:
+                        egout = highBits(egPhase, EG_DP_BITS - EG_BITS);
+                        egPhase += egDPhase;
+                        if (egPhase >= sl[Slot.this.patch.sl]) {
+                            if ((Slot.this.patch.eg) != 0) {
+                                egPhase = sl[Slot.this.patch.sl];
+                                egMode = EgState.SUSHOLD;
+                                updateEg();
+                            } else {
+                                egPhase = sl[Slot.this.patch.sl];
+                                egMode = EgState.SUSTAIN;
+                                updateEg();
+                            }
+                        }
+                        break;
+
+                    case SUSHOLD:
+                        egout = highBits(egPhase, EG_DP_BITS - EG_BITS);
+                        if (Slot.this.patch.eg == 0) {
+                            egMode = EgState.SUSTAIN;
+                            updateEg();
+                        }
+                        break;
+
+                    case SUSTAIN:
+                    case RELEASE:
+                        egout = highBits(egPhase, EG_DP_BITS - EG_BITS);
+                        egPhase += egDPhase;
+                        if (egout >= (1 << EG_BITS)) {
+                            egMode = EgState.FINISH;
+                            egout = (1 << EG_BITS) - 1;
+                        }
+                        break;
+
+                    case SETTLE:
+                        egout = highBits(egPhase, EG_DP_BITS - EG_BITS);
+                        egPhase += egDPhase;
+                        if (egout >= (1 << EG_BITS)) {
+                            egMode = EgState.ATTACK;
+                            egout = (1 << EG_BITS) - 1;
+                            updateEg();
+                        }
+                        break;
+
+                    case FINISH:
+                        egout = (1 << EG_BITS) - 1;
+                        break;
+
+                    default:
+                        egout = (1 << EG_BITS) - 1;
+                        break;
+                }
+
+                if (Slot.this.patch.am != 0)
+                    egout = eg2Db(egout + tll) + lfo;
+                else {
+                    egout = eg2Db(egout + tll);
+                    //logger.log(Level.TRACE, "egOut %d slot.tll %d (e_int32)(EG_STEP/DB_STEP) %d".formatted(egOut, slot.tll, (int) (EG_STEP / DB_STEP)));
+                }
+
+                if (egout >= DB_MUTE)
+                    egout = DB_MUTE - 1;
+
+                egOut = egout | 3;
+            }
+
+            /**
+             * Calc Parameters
+             */
+            public int calcEgDPhase() {
+                return this.egMode.calcEgDPhase(this);
+            }
+
+            public void updatePg() {
+                this.dPhase = dphaseTable[this.fNum][this.block][this.patch.ml];
+            }
+
+            public void updateTll() {
+                this.tll = (this.type == 0) ? tllTable[this.fNum >> 5][this.block][this.patch.tl][this.patch.kl] : tllTable[this.fNum >> 5][this.block][this.volume][this.patch.kl];
+            }
+
+            public void updateRks() {
+                this.rks = rksTable[this.fNum >> 8][this.block][this.patch.kr];
+            }
+
+            public void updateWf() {
+                this.sinTbl = waveForm[this.patch.wf];
+            }
+
+            public void updateEg() {
+                this.egDPhase = this.calcEgDPhase();
+            }
+
+            public void updateAll() {
+                this.updatePg();
+                this.updateTll();
+                this.updateRks();
+                this.updateWf();
+                this.updateEg(); // EG should be updated last.
+            }
+
+            /* Change a rhythm Voice */
+            public void setSlotPatch(Patch patch) {
+                this.patch = patch;
+            }
+
             /** CARRIER */
-            private int calcCar(int fm) {
+            public int calcCar(int fm) {
                 if (this.egOut >= (DB_MUTE - 1)) {
                     //logger.log(Level.TRACE, "calc_slot_car: output over");
                     this.output[0] = 0;
@@ -268,15 +354,13 @@ public class Emu2413 {
             }
 
             /** MODULATOR */
-            private int calcMod() {
-                int fm;
-
+            public int calcMod() {
                 this.output[1] = this.output[0];
 
                 if (this.egOut >= (DB_MUTE - 1)) {
                     this.output[0] = 0;
                 } else if (this.patch.fb != 0) {
-                    fm = wave2_4pi(this.feedback) >> (7 - this.patch.fb);
+                    int fm = wave2_4pi(this.feedback) >> (7 - this.patch.fb);
                     this.output[0] = db2linTable[this.sinTbl[(this.pgOut + fm) & (PG_WIDTH - 1)] + this.egOut];
                 } else {
                     this.output[0] = db2linTable[this.sinTbl[this.pgOut] + this.egOut];
@@ -288,7 +372,7 @@ public class Emu2413 {
             }
 
             /** TOM */
-            private int calcTom() {
+            public int calcTom() {
                 if (this.egOut >= (DB_MUTE - 1))
                     return 0;
 
@@ -296,18 +380,18 @@ public class Emu2413 {
             }
 
             /** SNARE */
-            private int calcSnare(int noise) {
+            public int calcSnare(int noise) {
                 if (this.egOut >= (DB_MUTE - 1))
                     return 0;
 
                 if (bit(this.pgOut, 7) != 0)
-                    return db2linTable[(noise != 0 ? DB_POS(0.0) : DB_POS(15.0)) + this.egOut];
+                    return db2linTable[(noise != 0 ? dbPos(0.0) : dbPos(15.0)) + this.egOut];
                 else
-                    return db2linTable[(noise != 0 ? DB_NEG(0.0) : DB_NEG(15.0)) + this.egOut];
+                    return db2linTable[(noise != 0 ? dbNeg(0.0) : dbNeg(15.0)) + this.egOut];
             }
 
             /** TOP-CYM */
-            private int calcCym(int pgOut_hh) {
+            public int calcCym(int pgOut_hh) {
                 int dbOut;
 
                 if (this.egOut >= (DB_MUTE - 1))
@@ -318,15 +402,15 @@ public class Emu2413 {
                                 // different from fmopl.c
                                 (bit(this.pgOut, PG_BITS - 7) & ~bit(this.pgOut, PG_BITS - 5))) != 0
                 )
-                    dbOut = DB_NEG(3.0);
+                    dbOut = dbNeg(3.0);
                 else
-                    dbOut = DB_POS(3.0);
+                    dbOut = dbPos(3.0);
 
                 return db2linTable[dbOut + this.egOut];
             }
 
             /** HI-HAT */
-            private int calcHat(int pgout_cym, int noise) {
+            public int calcHat(int pgOutCym, int noise) {
                 int dbout;
 
                 if (this.egOut >= (DB_MUTE - 1))
@@ -335,24 +419,24 @@ public class Emu2413 {
                         // the same as fmopl.c
                         ((bit(this.pgOut, PG_BITS - 8) ^ bit(this.pgOut, PG_BITS - 1)) | bit(this.pgOut, PG_BITS - 7)) ^
                                 // different from fmopl.c
-                                (bit(pgout_cym, PG_BITS - 7) & ((~bit(pgout_cym, PG_BITS - 5)) & 1))) != 0
+                                (bit(pgOutCym, PG_BITS - 7) & ((~bit(pgOutCym, PG_BITS - 5)) & 1))) != 0
                 ) {
                     if (noise != 0)
-                        dbout = DB_NEG(12.0);
+                        dbout = dbNeg(12.0);
                     else
-                        dbout = DB_NEG(24.0);
+                        dbout = dbNeg(24.0);
                 } else {
                     if (noise != 0)
-                        dbout = DB_POS(12.0);
+                        dbout = dbPos(12.0);
                     else
-                        dbout = DB_POS(24.0);
+                        dbout = dbPos(24.0);
                 }
 
                 return db2linTable[dbout + this.egOut];
             }
 
             /** PG */
-            private void calcPhase(int lfo) {
+            public void calcPhase(int lfo) {
                 if (this.patch.pm != 0)
                     this.phase += (this.dPhase * lfo) >> PM_AMP_BITS;
                 else
@@ -405,11 +489,11 @@ public class Emu2413 {
 
         // Pitch Modulator
         private int pmPhase;
-        private int lfo_pm;
+        private int lfoPm;
 
         // Amp Modulator
         private int amPhase;
-        private int lfo_am;
+        private int lfoAm;
 
         private int quality;
 
@@ -460,52 +544,52 @@ public class Emu2413 {
             this.keyStatus[i] = 0;
         }
 
-        private void keyOn_BD() {
+        private void keyOnBD() {
             this.keyOn(6);
         }
 
-        private void keyOn_SD() {
-            if (this.slotOnFlag[Slot.SLOT_SD] == 0)
+        private void keyOnSD() {
+            if (this.slotOnFlag[Slot.SD] == 0)
                 this.car(7).slotOn();
         }
 
-        private void keyOn_TOM() {
-            if (this.slotOnFlag[Slot.SLOT_TOM] == 0)
+        private void keyOnTOM() {
+            if (this.slotOnFlag[Slot.TOM] == 0)
                 this.mod(8).slotOn();
         }
 
-        private void keyOn_HH() {
-            if (this.slotOnFlag[Slot.SLOT_HH] == 0)
-                this.mod(7).slotOn2();
+        private void keyOnHH() {
+            if (this.slotOnFlag[Slot.HH] == 0)
+                this.mod(7).slotOnStayingPhase();
         }
 
-        private void keyOn_CYM() {
-            if (this.slotOnFlag[Slot.SLOT_CYM] == 0)
-                this.car(8).slotOn2();
+        private void keyOnCYM() {
+            if (this.slotOnFlag[Slot.CYM] == 0)
+                this.car(8).slotOnStayingPhase();
         }
 
         // Drum key off
-        private void keyOff_BD() {
+        private void keyOffBD() {
             this.keyOff(6);
         }
 
-        private void keyOff_SD() {
-            if (this.slotOnFlag[Slot.SLOT_SD] != 0)
+        private void keyOffSD() {
+            if (this.slotOnFlag[Slot.SD] != 0)
                 this.car(7).slotOff();
         }
 
-        private void keyOff_TOM() {
-            if (this.slotOnFlag[Slot.SLOT_TOM] != 0)
+        private void keyOffTOM() {
+            if (this.slotOnFlag[Slot.TOM] != 0)
                 this.mod(8).slotOff();
         }
 
-        private void keyOff_HH() {
-            if (this.slotOnFlag[Slot.SLOT_HH] != 0)
+        private void keyOffHH() {
+            if (this.slotOnFlag[Slot.HH] != 0)
                 this.mod(7).slotOff();
         }
 
-        private void keyOff_CYM() {
-            if (this.slotOnFlag[Slot.SLOT_CYM] != 0)
+        private void keyOffCYM() {
+            if (this.slotOnFlag[Slot.CYM] != 0)
                 this.car(8).slotOff();
         }
 
@@ -517,10 +601,10 @@ public class Emu2413 {
         }
 
         /** Set sustain parameter */
-        private void setSustine(int c, int sustine) {
-            this.car(c).sustain = sustine;
+        private void setSustain(int c, int sustain) {
+            this.car(c).sustain = sustain;
             if (this.mod(c).type != 0)
-                this.mod(c).sustain = sustine;
+                this.mod(c).sustain = sustain;
         }
 
         /** Volume : 6bit ( Volume register << 2 ) */
@@ -529,12 +613,12 @@ public class Emu2413 {
         }
 
         /** Set F-Number ( fNum : 9bit ) */
-        private void setFNumber(int c, int fnum) {
-            this.car(c).fNum = fnum;
-            this.mod(c).fNum = fnum;
+        private void setFNumber(int c, int fNum) {
+            this.car(c).fNum = fNum;
+            this.mod(c).fNum = fNum;
         }
 
-        /** Set Bsynchronized data (block : 3bit ) */
+        /** Set synchronized data (block : 3bit ) */
         private void setBlock(int c, int block) {
             this.car(c).block = block;
             this.mod(c).block = block;
@@ -543,49 +627,49 @@ public class Emu2413 {
         /** Change Rhythm Mode */
         private void updateRhythmMode() {
             if ((this.patchNumber[6] & 0x10) != 0) {
-                if ((this.slotOnFlag[Slot.SLOT_BD2] | (this.reg[0x0e] & 0x20)) == 0) {
-                    this.slot[Slot.SLOT_BD1].egMode = EgState.FINISH;
-                    this.slot[Slot.SLOT_BD2].egMode = EgState.FINISH;
+                if ((this.slotOnFlag[Slot.BD2] | (this.reg[0x0e] & 0x20)) == 0) {
+                    this.slot[Slot.BD1].egMode = EgState.FINISH;
+                    this.slot[Slot.BD2].egMode = EgState.FINISH;
                     this.setPatch(6, this.reg[0x36] >> 4);
                 }
             } else if ((this.reg[0x0e] & 0x20) != 0) {
                 this.patchNumber[6] = 16;
-                this.slot[Slot.SLOT_BD1].egMode = EgState.FINISH;
-                this.slot[Slot.SLOT_BD2].egMode = EgState.FINISH;
-                this.slot[Slot.SLOT_BD1].setSlotPatch(this.patch[16][0]);
-                this.slot[Slot.SLOT_BD2].setSlotPatch(this.patch[16][1]);
+                this.slot[Slot.BD1].egMode = EgState.FINISH;
+                this.slot[Slot.BD2].egMode = EgState.FINISH;
+                this.slot[Slot.BD1].setSlotPatch(this.patch[16][0]);
+                this.slot[Slot.BD2].setSlotPatch(this.patch[16][1]);
             }
 
             if ((this.patchNumber[7] & 0x10) != 0) {
-                if (!((this.slotOnFlag[Slot.SLOT_HH] != 0 && this.slotOnFlag[Slot.SLOT_SD] != 0) || (this.reg[0x0e] & 0x20) != 0)) {
-                    this.slot[Slot.SLOT_HH].type = 0;
-                    this.slot[Slot.SLOT_HH].egMode = EgState.FINISH;
-                    this.slot[Slot.SLOT_SD].egMode = EgState.FINISH;
+                if (!((this.slotOnFlag[Slot.HH] != 0 && this.slotOnFlag[Slot.SD] != 0) || (this.reg[0x0e] & 0x20) != 0)) {
+                    this.slot[Slot.HH].type = 0;
+                    this.slot[Slot.HH].egMode = EgState.FINISH;
+                    this.slot[Slot.SD].egMode = EgState.FINISH;
                     this.setPatch(7, this.reg[0x37] >> 4);
                 }
             } else if ((this.reg[0x0e] & 0x20) != 0) {
                 this.patchNumber[7] = 17;
-                this.slot[Slot.SLOT_HH].type = 1;
-                this.slot[Slot.SLOT_HH].egMode = EgState.FINISH;
-                this.slot[Slot.SLOT_SD].egMode = EgState.FINISH;
-                this.slot[Slot.SLOT_HH].setSlotPatch(this.patch[17][0]);
-                this.slot[Slot.SLOT_SD].setSlotPatch(this.patch[17][1]);
+                this.slot[Slot.HH].type = 1;
+                this.slot[Slot.HH].egMode = EgState.FINISH;
+                this.slot[Slot.SD].egMode = EgState.FINISH;
+                this.slot[Slot.HH].setSlotPatch(this.patch[17][0]);
+                this.slot[Slot.SD].setSlotPatch(this.patch[17][1]);
             }
 
             if ((this.patchNumber[8] & 0x10) != 0) {
-                if (!((this.slotOnFlag[Slot.SLOT_CYM] != 0 && this.slotOnFlag[Slot.SLOT_TOM] != 0) || (this.reg[0x0e] & 0x20) != 0)) {
-                    this.slot[Slot.SLOT_TOM].type = 0;
-                    this.slot[Slot.SLOT_TOM].egMode = EgState.FINISH;
-                    this.slot[Slot.SLOT_CYM].egMode = EgState.FINISH;
+                if (!((this.slotOnFlag[Slot.CYM] != 0 && this.slotOnFlag[Slot.TOM] != 0) || (this.reg[0x0e] & 0x20) != 0)) {
+                    this.slot[Slot.TOM].type = 0;
+                    this.slot[Slot.TOM].egMode = EgState.FINISH;
+                    this.slot[Slot.CYM].egMode = EgState.FINISH;
                     this.setPatch(8, this.reg[0x38] >> 4);
                 }
             } else if ((this.reg[0x0e] & 0x20) != 0) {
                 this.patchNumber[8] = 18;
-                this.slot[Slot.SLOT_TOM].type = 1;
-                this.slot[Slot.SLOT_TOM].egMode = EgState.FINISH;
-                this.slot[Slot.SLOT_CYM].egMode = EgState.FINISH;
-                this.slot[Slot.SLOT_TOM].setSlotPatch(this.patch[18][0]);
-                this.slot[Slot.SLOT_CYM].setSlotPatch(this.patch[18][1]);
+                this.slot[Slot.TOM].type = 1;
+                this.slot[Slot.TOM].egMode = EgState.FINISH;
+                this.slot[Slot.CYM].egMode = EgState.FINISH;
+                this.slot[Slot.TOM].setSlotPatch(this.patch[18][0]);
+                this.slot[Slot.CYM].setSlotPatch(this.patch[18][1]);
             }
         }
 
@@ -594,12 +678,12 @@ public class Emu2413 {
                 this.slotOnFlag[ch * 2] = this.slotOnFlag[ch * 2 + 1] = (this.reg[0x20 + ch]) & 0x10;
 
             if ((this.reg[0x0e] & 0x20) != 0) {
-                this.slotOnFlag[Slot.SLOT_BD1] |= (this.reg[0x0e] & 0x10);
-                this.slotOnFlag[Slot.SLOT_BD2] |= (this.reg[0x0e] & 0x10);
-                this.slotOnFlag[Slot.SLOT_SD] |= (this.reg[0x0e] & 0x08);
-                this.slotOnFlag[Slot.SLOT_HH] |= (this.reg[0x0e] & 0x01);
-                this.slotOnFlag[Slot.SLOT_TOM] |= (this.reg[0x0e] & 0x04);
-                this.slotOnFlag[Slot.SLOT_CYM] |= (this.reg[0x0e] & 0x02);
+                this.slotOnFlag[Slot.BD1] |= (this.reg[0x0e] & 0x10);
+                this.slotOnFlag[Slot.BD2] |= (this.reg[0x0e] & 0x10);
+                this.slotOnFlag[Slot.SD] |= (this.reg[0x0e] & 0x08);
+                this.slotOnFlag[Slot.HH] |= (this.reg[0x0e] & 0x01);
+                this.slotOnFlag[Slot.TOM] |= (this.reg[0x0e] & 0x04);
+                this.slotOnFlag[Slot.CYM] |= (this.reg[0x0e] & 0x02);
             }
         }
 
@@ -638,7 +722,7 @@ public class Emu2413 {
                 s2e(24.0), s2e(27.0), s2e(30.0), s2e(33.0), s2e(36.0), s2e(39.0), s2e(42.0), s2e(48.0)
         };
 
-        public Opll(int clk, int rate) {
+        public void init(int clk, int rate) {
 
             defaultPatch = new Slot.Patch[OPLL_TONE_NUM][][];
             for (int i = 0; i < OPLL_TONE_NUM; i++) {
@@ -666,20 +750,17 @@ public class Emu2413 {
             this.mask = 0;
 
             reset();
-            resetPatch(0);
+            resetPatch(6); // original was 0, that makes no drums
         }
 
-        public void delete() {
-        }
-
-        /* Reset patch datas by system default. */
+        /** Reset patch data by system default. */
         public void resetPatch(int type) {
             for (int i = 0; i < 19; i++) {
                 this.copyPatch(i, defaultPatch[type][i]);
             }
         }
 
-        /* Reset whole of Opll except patch datas. */
+        /** Reset whole of Opll except patch data. */
         public void reset() {
             this.adr = 0;
             this._out = 0;
@@ -692,7 +773,7 @@ public class Emu2413 {
 
             for (int i = 0; i < 18; i++) {
                 this.slot[i] = new Slot();
-                this.slot[i].OPLL_SLOT_reset(i % 2);
+                this.slot[i].reset(i % 2);
             }
 
             for (int i = 0; i < 9; i++) {
@@ -708,7 +789,7 @@ public class Emu2413 {
             this.opllStep = (1 << 31) / (clk / 72);
             this.opllTime = 0;
             for (int i = 0; i < 14; i++) {
-                this.pan[i] = 2;
+                this.pan[i] = 3; // original was 2, that makes monaural
             }
             this.sPrev[0] = this.sPrev[1] = 0;
             this.sNext[0] = this.sNext[1] = 0;
@@ -729,7 +810,7 @@ public class Emu2413 {
             }
         }
 
-        public void set_rate(int r) {
+        public void setRate(int r) {
             if (this.quality != 0)
                 rate = 49716;
             else
@@ -738,9 +819,9 @@ public class Emu2413 {
             rate = r;
         }
 
-        public void set_quality(int q) {
+        public void setQuality(int q) {
             this.quality = q;
-            set_rate(rate);
+            setRate(rate);
         }
 
         // Generate wave data
@@ -756,11 +837,11 @@ public class Emu2413 {
         }
 
         /** Update AM, PM unit */
-        private void updateAmpm() {
+        private void updateAmPm() {
             this.pmPhase = (this.pmPhase + pmDPhase) & (PM_DP_WIDTH - 1);
             this.amPhase = (this.amPhase + amDPhase) & (AM_DP_WIDTH - 1);
-            this.lfo_am = amTable[highBits(this.amPhase, AM_DP_BITS - AM_PG_BITS)];
-            this.lfo_pm = pmTable[highBits(this.pmPhase, PM_DP_BITS - PM_PG_BITS)];
+            this.lfoAm = amTable[highBits(this.amPhase, AM_DP_BITS - AM_PG_BITS)];
+            this.lfoPm = pmTable[highBits(this.pmPhase, PM_DP_BITS - PM_PG_BITS)];
         }
 
         /** Update Noise unit */
@@ -773,98 +854,16 @@ public class Emu2413 {
             return sl2eg((int) (x / SL_STEP)) << (EG_DP_BITS - EG_BITS);
         }
 
-        /** EG */
-        private static void calc_envelope(Slot slot, int lfo) {
-            int egout;
-
-            switch (slot.egMode) {
-            case ATTACK:
-                egout = AR_ADJUST_TABLE[highBits(slot.egPhase, EG_DP_BITS - EG_BITS)];
-                slot.egPhase += slot.egDPhase;
-                if ((EG_DP_WIDTH & slot.egPhase) != 0 || (slot.patch.ar == 15)) {
-                    egout = 0;
-                    slot.egPhase = 0;
-                    slot.egMode = EgState.DECAY;
-                    slot.updateEg();
-                }
-                break;
-
-            case DECAY:
-                egout = highBits(slot.egPhase, EG_DP_BITS - EG_BITS);
-                slot.egPhase += slot.egDPhase;
-                if (slot.egPhase >= sl[slot.patch.sl]) {
-                    if ((slot.patch.eg) != 0) {
-                        slot.egPhase = sl[slot.patch.sl];
-                        slot.egMode = EgState.SUSHOLD;
-                        slot.updateEg();
-                    } else {
-                        slot.egPhase = sl[slot.patch.sl];
-                        slot.egMode = EgState.SUSTAIN;
-                        slot.updateEg();
-                    }
-                }
-                break;
-
-            case SUSHOLD:
-                egout = highBits(slot.egPhase, EG_DP_BITS - EG_BITS);
-                if (slot.patch.eg == 0) {
-                    slot.egMode = EgState.SUSTAIN;
-                    slot.updateEg();
-                }
-                break;
-
-            case SUSTAIN:
-            case RELEASE:
-                egout = highBits(slot.egPhase, EG_DP_BITS - EG_BITS);
-                slot.egPhase += slot.egDPhase;
-                if (egout >= (1 << EG_BITS)) {
-                    slot.egMode = EgState.FINISH;
-                    egout = (1 << EG_BITS) - 1;
-                }
-                break;
-
-            case SETTLE:
-                egout = highBits(slot.egPhase, EG_DP_BITS - EG_BITS);
-                slot.egPhase += slot.egDPhase;
-                if (egout >= (1 << EG_BITS)) {
-                    slot.egMode = EgState.ATTACK;
-                    egout = (1 << EG_BITS) - 1;
-                    slot.updateEg();
-                }
-                break;
-
-            case FINISH:
-                egout = (1 << EG_BITS) - 1;
-                break;
-
-            default:
-                egout = (1 << EG_BITS) - 1;
-                break;
-            }
-
-            if (slot.patch.am != 0)
-                egout = EG2DB(egout + slot.tll) + lfo;
-            else {
-                egout = EG2DB(egout + slot.tll);
-//logger.log(Level.TRACE, "egOut %d slot.tll %d (e_int32)(EG_STEP/DB_STEP) %d".formatted(egOut, slot.tll, (int) (EG_STEP / DB_STEP)));
-            }
-
-            if (egout >= DB_MUTE)
-                egout = DB_MUTE - 1;
-
-            slot.egOut = egout | 3;
-        }
-
-        private int calc() {
+        private int calcInternal() {
             int inst = 0, perc = 0, _out = 0;
             int i;
 
-            updateAmpm();
+            updateAmPm();
             updateNoise();
 
             for (i = 0; i < 18; i++) {
-                this.slot[i].calcPhase(this.lfo_pm);
-                calc_envelope(this.slot[i], this.lfo_am);
+                this.slot[i].calcPhase(this.lfoPm);
+                this.slot[i].calcEnvelope(this.lfoAm);
             }
 
             for (i = 0; i < 6; i++)
@@ -907,14 +906,14 @@ public class Emu2413 {
             return _out << 3;
         }
 
-        public int _calc() {
+        public int calc() {
             if (this.quality == 0)
-                return calc();
+                return calcInternal();
 
             while (this.realStep > this.opllTime) {
                 this.opllTime += this.opllStep;
                 this.prev = this.next;
-                this.next = calc();
+                this.next = calcInternal();
             }
 
             this.opllTime -= this.realStep;
@@ -937,7 +936,7 @@ public class Emu2413 {
         }
 
         /** I/O Ctrl */
-        private void writeReg(int reg, int data) {
+        public void writeReg(int reg, int data) {
 //logger.log(Level.TRACE, "OPLL_writeReg:reg:%d:data:%d".formatted(reg,data));
 
             data = data & 0xff;
@@ -1042,25 +1041,25 @@ public class Emu2413 {
                 this.updateRhythmMode();
                 if ((data & 0x20) != 0) {
                     if ((data & 0x10) != 0)
-                        this.keyOn_BD();
+                        this.keyOnBD();
                     else
-                        this.keyOff_BD();
+                        this.keyOffBD();
                     if ((data & 0x8) != 0)
-                        this.keyOn_SD();
+                        this.keyOnSD();
                     else
-                        this.keyOff_SD();
+                        this.keyOffSD();
                     if ((data & 0x4) != 0)
-                        this.keyOn_TOM();
+                        this.keyOnTOM();
                     else
-                        this.keyOff_TOM();
+                        this.keyOffTOM();
                     if ((data & 0x2) != 0)
-                        this.keyOn_CYM();
+                        this.keyOnCYM();
                     else
-                        this.keyOff_CYM();
+                        this.keyOffCYM();
                     if ((data & 0x1) != 0)
-                        this.keyOn_HH();
+                        this.keyOnHH();
                     else
-                        this.keyOff_HH();
+                        this.keyOffHH();
                 }
                 this.updateKeyStatus();
 
@@ -1103,7 +1102,7 @@ public class Emu2413 {
                 ch = reg - 0x20;
                 this.setFNumber(ch, ((data & 1) << 8) + this.reg[0x10 + ch]);
                 this.setBlock(ch, (data >> 1) & 7);
-                this.setSustine(ch, (data >> 5) & 1);
+                this.setSustain(ch, (data >> 5) & 1);
                 if ((data & 0x10) != 0)
                     this.keyOn(ch);
                 else
@@ -1157,20 +1156,20 @@ public class Emu2413 {
         }
 
         /** STEREO MODE (OPT) */
-        private void setPan(int ch, int pan) {
+        public void setPan(int ch, int pan) {
             this.pan[ch & 15] = pan & 3;
         }
 
-        private void calcStereo(int[] out) {
+        private void calcStereoInternal(int[] out) {
             int[] b = {0, 0, 0, 0}; // Ignore, Right, Left, Center */
             int[] r = {0, 0, 0, 0}; // Ignore, Right, Left, Center */
 
-            updateAmpm();
+            updateAmPm();
             updateNoise();
 
             for (int i = 0; i < 18; i++) {
-                this.slot[i].calcPhase(this.lfo_pm);
-                calc_envelope(this.slot[i], this.lfo_am);
+                this.slot[i].calcPhase(this.lfoPm);
+                this.slot[i].calcEnvelope(this.lfoAm);
             }
 
             for (int i = 0; i < 6; i++)
@@ -1209,9 +1208,9 @@ public class Emu2413 {
             out[0] = (b[2] + b[3] + ((r[2] + r[3]) << 1)) << 3;
         }
 
-        private void _calcStereo(int[] out) {
+        public void calcStereo(int[] out) {
             if (this.quality == 0) {
-                calcStereo(out);
+                calcStereoInternal(out);
                 return;
             }
 
@@ -1219,7 +1218,7 @@ public class Emu2413 {
                 this.opllTime += this.opllStep;
                 this.sPrev[0] = this.sNext[0];
                 this.sPrev[1] = this.sNext[1];
-                calcStereo(this.sNext);
+                calcStereoInternal(this.sNext);
             }
 
             this.opllTime -= this.realStep;
@@ -1470,10 +1469,6 @@ public class Emu2413 {
         private static final int SL_BITS = 4;
         private static final int SL_MUTE = (1 << SL_BITS);
 
-        private static int EG2DB(int d) {
-            return (d * (int) (EG_STEP / DB_STEP));
-        }
-
         private static int TL2EG(int d) {
             return (d * (int) (TL_STEP / EG_STEP));
         }
@@ -1564,7 +1559,7 @@ public class Emu2413 {
         private static final int[] AR_ADJUST_TABLE = new int[1 << EG_BITS];
 
         /** Empty Voice data */
-        private static final Slot.Patch null_patch = new Slot.Patch();
+        private static final Slot.Patch NullPatch = new Slot.Patch();
 
         /** Basic Voice data */
         private Slot.Patch[][][] defaultPatch = null;
@@ -1914,37 +1909,40 @@ public class Emu2413 {
                 internalRefresh();
             }
         }
-    }
 
-    public Emu2413() {
-        Opll.waveForm[0] = Opll.fullSinTable;
-        Opll.waveForm[1] = Opll.halfSinTable;
+        static {
+            waveForm[0] = fullSinTable;
+            waveForm[1] = halfSinTable;
 
-        Opll.tllTable = new int[16][][][];
-        for (int i = 0; i < 16; i++) {
-            Opll.tllTable[i] = new int[8][][];
-            for (int j = 0; j < 8; j++) {
-                Opll.tllTable[i][j] = new int[(1 << Opll.TL_BITS)][];
-                for (int k = 0; k < (1 << Opll.TL_BITS); k++) {
-                    Opll.tllTable[i][j][k] = new int[4];
+            tllTable = new int[16][][][];
+            for (int i = 0; i < 16; i++) {
+                tllTable[i] = new int[8][][];
+                for (int j = 0; j < 8; j++) {
+                    tllTable[i][j] = new int[(1 << TL_BITS)][];
+                    for (int k = 0; k < (1 << TL_BITS); k++) {
+                        tllTable[i][j][k] = new int[4];
+                    }
+                }
+            }
+
+            rksTable = new int[2][][];
+            for (int i = 0; i < 2; i++) {
+                rksTable[i] = new int[8][];
+                for (int j = 0; j < 8; j++) {
+                    rksTable[i][j] = new int[2];
+                }
+            }
+
+            dphaseTable = new int[512][][];
+            for (int i = 0; i < 512; i++) {
+                dphaseTable[i] = new int[8][];
+                for (int j = 0; j < 8; j++) {
+                    dphaseTable[i][j] = new int[16];
                 }
             }
         }
+    }
 
-        Opll.rksTable = new int[2][][];
-        for (int i = 0; i < 2; i++) {
-            Opll.rksTable[i] = new int[8][];
-            for (int j = 0; j < 8; j++) {
-                Opll.rksTable[i][j] = new int[2];
-            }
-        }
-
-        Opll.dphaseTable = new int[512][][];
-        for (int i = 0; i < 512; i++) {
-            Opll.dphaseTable[i] = new int[8][];
-            for (int j = 0; j < 8; j++) {
-                Opll.dphaseTable[i][j] = new int[16];
-            }
-        }
+    public Emu2413() {
     }
 }

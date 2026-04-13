@@ -7,12 +7,17 @@
 package mdsound.fmgen;
 
 
+import java.lang.System.Logger;
+
+
 /**
  * A sound source unit that produces sounds similar to Psg.
  *
  * @author cisc
  */
 public class PSG {
+
+    private static final Logger logger = System.getLogger(PSG.class.getName());
 
     /** If you want to reduce memory usage, reduce it. */
     public static final int noiseTableSize = 1 << 11;
@@ -38,62 +43,19 @@ public class PSG {
     protected int volume;
     protected int mask;
 
-    protected static final int[][] envelopTable = {
+    protected final int[][] envelopTable = {
             new int[64], new int[64], new int[64], new int[64], new int[64], new int[64], new int[64], new int[64],
             new int[64], new int[64], new int[64], new int[64], new int[64], new int[64], new int[64], new int[64]
     };
 
     protected static final int[] noiseTable = new int[noiseTableSize];
-    protected static final int[] emitTable = {-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
+    protected final int[] emitTable = {-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
 
     public int visVolume = 0;
 
-    /*
-     * Creating a Noise Table
-     */
-    static {
-        if (noiseTable[0] == 0) {
-            int noise = 14321;
-            for (int i = 0; i < noiseTableSize; i++) {
-                int n = 0;
-                for (int j = 0; j < 32; j++) {
-                    n = n * 2 + (noise & 1);
-                    noise = (noise >> 1) | (((noise << 14) ^ (noise << 16)) & 0x10000);
-                }
-                noiseTable[i] = n;
-            }
-        }
-    }
-
-    /*
-     * Envelope Wavetable
-     */
-    static {
-        // 0 lo  1 up 2 down 3 hi
-        int[] table1 = {
-                2, 0, 2, 0, 2, 0, 2, 0, 1, 0, 1, 0, 1, 0, 1, 0,
-                2, 2, 2, 0, 2, 1, 2, 3, 1, 1, 1, 3, 1, 2, 1, 0
-        };
-        int[] table2 = {0, 0, 31, 31};
-        int[] table3 = {0, 1, 255, 0};
-
-        //(int)* ptr = enveloptable[0];
-        int ptr = 0;
-
-        for (int i = 0; i < 16 * 2; i++) {
-            int v = table2[table1[i]];
-
-            for (int j = 0; j < 32; j++) {
-                envelopTable[ptr / 64][ptr % 64] = emitTable[v];
-                ptr++;
-                v += table3[table1[i]];
-                v &= 0xff;
-            }
-        }
-    }
-
     public PSG() {
         setVolume(0);
+        makeNoiseTable();
         reset();
         mask = 0x3f;
     }
@@ -136,6 +98,23 @@ public class PSG {
     }
 
     /**
+     * Creating a Noise Table
+     */
+    private static void makeNoiseTable() {
+        if (noiseTable[0] == 0) {
+            int noise = 14321;
+            for (int i = 0; i < noiseTableSize; i++) {
+                int n = 0;
+                for (int j = 0; j < 32; j++) {
+                    n = n * 2 + (noise & 1);
+                    noise = (noise >> 1) | (((noise << 14) ^ (noise << 16)) & 0x10000);
+                }
+                noiseTable[i] = n;
+            }
+        }
+    }
+
+    /**
      * Adjusts the volume of each sound source.
      * - The unit is approximately 1/2 dB.
      * - Creates the output table.
@@ -149,6 +128,7 @@ public class PSG {
         }
         emitTable[1] = 0;
         emitTable[0] = 0;
+        makeEnvelopTable();
 
         setChannelMask(~mask);
     }
@@ -157,6 +137,33 @@ public class PSG {
         mask = ~c;
         for (int i = 0; i < 3; i++)
             oLevel[i] = (mask & (1 << i)) != 0 ? emitTable[(reg[8 + i] & 15) * 2 + 1] : 0;
+    }
+
+    /**
+     * Envelope Wavetable
+     */
+    private void makeEnvelopTable() {
+        // 0 lo  1 up 2 down 3 hi
+        int[] table1 = {
+                2, 0, 2, 0, 2, 0, 2, 0, 1, 0, 1, 0, 1, 0, 1, 0,
+                2, 2, 2, 0, 2, 1, 2, 3, 1, 1, 1, 3, 1, 2, 1, 0
+        };
+        int[] table2 = {0, 0, 31, 31};
+        int[] table3 = {0, 1, 255, 0};
+
+        //(int)* ptr = enveloptable[0];
+        int ptr = 0;
+
+        for (int i = 0; i < 16 * 2; i++) {
+            int v = table2[table1[i]];
+
+            for (int j = 0; j < 32; j++) {
+                envelopTable[ptr / 64][ptr % 64] = emitTable[v];
+                ptr++;
+                v += table3[table1[i]];
+                v &= 0xff;
+            }
+        }
     }
 
     /**
@@ -264,8 +271,8 @@ public class PSG {
                             sCount[2] += sPeriod[2];
                         }
                         sample /= (1 << overSampling);
-                        sample = Math.clamp(dest[ptrDest + 0] + sample, -0x8000, 0x7fff);
-                        sample = Math.clamp(dest[ptrDest + 1] + sample, -0x8000, 0x7fff);
+                        dest[ptrDest + 0] = Math.clamp(dest[ptrDest + 0] + sample, -0x8000, 0x7fff);
+                        dest[ptrDest + 1] = Math.clamp(dest[ptrDest + 1] + sample, -0x8000, 0x7fff);
                         ptrDest += 2;
 
                         visVolume = sample;
@@ -278,7 +285,7 @@ public class PSG {
                         int sample = 0;
                         for (int j = 0; j < (1 << overSampling); j++) {
                             int noise = noiseTable[(nCount >>> (noiseShift + overSampling + 6)) & (noiseTableSize - 1)] >>
-                                    (nCount >> (noiseShift + overSampling + 1) & 31);
+                                    (nCount >>> (noiseShift + overSampling + 1) & 31);
                             nCount += nPeriod;
 
                             int x = (((sCount[0] >> (toneShift + overSampling)) & chEnable[0]) | (nEnable[0] & noise)) - 1; // 0 or -1
@@ -294,8 +301,8 @@ public class PSG {
                             sCount[2] += sPeriod[2];
                         }
                         sample /= (1 << overSampling);
-                        sample = Math.clamp(dest[ptrDest + 0] + sample, -0x8000, 0x7fff);
-                        sample = Math.clamp(dest[ptrDest + 1] + sample, -0x8000, 0x7fff);
+                        dest[ptrDest + 0] = Math.clamp(dest[ptrDest + 0] + sample, -0x8000, 0x7fff);
+                        dest[ptrDest + 1] = Math.clamp(dest[ptrDest + 1] + sample, -0x8000, 0x7fff);
                         ptrDest += 2;
 
                         visVolume = sample;
@@ -303,7 +310,7 @@ public class PSG {
                 }
 
                 // Balancing the accounts by skipping the envelope calculations
-                eCount = (eCount >> 8) + (ePeriod >> (8 - overSampling)) * nSamples;
+                eCount = (eCount >>> 8) + (ePeriod >> (8 - overSampling)) * nSamples;
                 if (eCount >= (1 << (envShift + 6 + overSampling - 8))) {
                     if ((reg[0x0d] & 0x0b) != 0x0a)
                         eCount |= (1 << (envShift + 5 + overSampling - 8));
@@ -323,25 +330,24 @@ public class PSG {
                                 eCount |= (1 << (envShift + 5 + overSampling));
                             eCount &= (1 << (envShift + 6 + overSampling)) - 1;
                         }
-                        int noise = noiseTable[(nCount >> (noiseShift + overSampling + 6)) & (noiseTableSize - 1)] >>
-                                (nCount >> (noiseShift + overSampling + 1) & 31);
+                        int noise = noiseTable[(nCount >>> (noiseShift + overSampling + 6)) & (noiseTableSize - 1)] >>
+                                (nCount >>> (noiseShift + overSampling + 1) & 31);
                         nCount += nPeriod;
 
-                        int x = (((sCount[0] >> (toneShift + overSampling)) & chEnable[0]) | (nEnable[0] & noise)) - 1;
+                        int x = (((sCount[0] >>> (toneShift + overSampling)) & chEnable[0]) | (nEnable[0] & noise)) - 1;
                         // 0 or -1
                         sample += ((p1 ? env : oLevel[0]) + x) ^ x;
                         sCount[0] += sPeriod[0];
-                        int y = (((sCount[1] >> (toneShift + overSampling)) & chEnable[1]) | (nEnable[1] & noise)) - 1;
+                        int y = (((sCount[1] >>> (toneShift + overSampling)) & chEnable[1]) | (nEnable[1] & noise)) - 1;
                         sample += ((p2 ? env : oLevel[1]) + y) ^ y;
                         sCount[1] += sPeriod[1];
-                        int z = (((sCount[2] >> (toneShift + overSampling)) & chEnable[2]) | (nEnable[2] & noise)) - 1;
+                        int z = (((sCount[2] >>> (toneShift + overSampling)) & chEnable[2]) | (nEnable[2] & noise)) - 1;
                         sample += ((p3 ? env : oLevel[2]) + z) ^ z;
                         sCount[2] += sPeriod[2];
-
                     }
                     sample /= (1 << overSampling);
-                    sample = Math.clamp(dest[ptrDest + 0] + sample, -0x8000, 0x7fff);
-                    sample = Math.clamp(dest[ptrDest + 1] + sample, -0x8000, 0x7fff);
+                    dest[ptrDest + 0] = Math.clamp(dest[ptrDest + 0] + sample, -0x8000, 0x7fff);
+                    dest[ptrDest + 1] = Math.clamp(dest[ptrDest + 1] + sample, -0x8000, 0x7fff);
                     ptrDest += 2;
 
                     visVolume = sample;

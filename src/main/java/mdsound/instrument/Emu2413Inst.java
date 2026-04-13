@@ -21,9 +21,9 @@ public class Emu2413Inst extends BaseInstrument {
 
     public static final int DefaultClockValue = 3579545;
 
-    private final Emu2413[] opll_ = {new Emu2413(), new Emu2413()};
+    private final Emu2413[] chips = {new Emu2413(), new Emu2413()};
 
-    private final int[] buffers = new int[2];
+    private final int[][] buffers = new int[2][2];
 
     public Emu2413Inst() {
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
@@ -31,7 +31,7 @@ public class Emu2413Inst extends BaseInstrument {
 
     @Override
     public String getName() {
-        return "EMU2413";
+        return "YM2413emu";
     }
 
     @Override
@@ -41,7 +41,7 @@ public class Emu2413Inst extends BaseInstrument {
 
     @Override
     public int start(int chipId, int SamplingRate, int FMClockValue, Object... option) {
-        opll_[chipId].OPLL_init(FMClockValue, SamplingRate);
+        chips[chipId].init(FMClockValue, SamplingRate);
         return SamplingRate;
     }
 
@@ -52,17 +52,17 @@ public class Emu2413Inst extends BaseInstrument {
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        assert chipId < opll_.length;
-        opll_[chipId].OPLL_writeReg(adr, data);
+        assert chipId < chips.length;
+        chips[chipId].writeReg(adr, data);
         return 0;
     }
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
         for (int i = 0; i < samples; i++) {
-            opll_[chipId].OPLL_calcStereo(buffers);
-            outputs[0][i] = buffers[0] << 1;
-            outputs[1][i] = buffers[1] << 1;
+            chips[chipId].calcStereo(buffers[chipId]);
+            outputs[0][i] = buffers[chipId][0] << 1;
+            outputs[1][i] = buffers[chipId][1] << 1;
         }
 
         visVolume[chipId][0][0] = outputs[0][0];
@@ -71,7 +71,7 @@ public class Emu2413Inst extends BaseInstrument {
 
     @Override
     public void stop(int chipId) {
-        opll_[chipId] = null;
+        chips[chipId] = null;
     }
 
     @Override

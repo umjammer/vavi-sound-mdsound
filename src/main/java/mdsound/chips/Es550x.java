@@ -289,10 +289,10 @@ public abstract class Es550x {
     // CONSTANTS
     //
 
-    private int LOG_SERIAL = (1 << 1);
-    private int VERBOSE = 0;
+    private static final int LOG_SERIAL = (1 << 1);
+    private static final int VERBOSE = 0;
 
-    private int RAINE_CHECK = 0;
+    private static final int RAINE_CHECK = 0;
 
     private static final int FINE_FILTER_BIT = 16;
     private static final int FILTER_BIT = 12;

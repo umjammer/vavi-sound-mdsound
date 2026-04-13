@@ -19,7 +19,6 @@ public class NesVrc7 implements SoundChip {
     protected final int[][] sm = {new int[6], new int[6]}; // stereo mix
     protected short[] buf = new short[2];
     protected Emu2413.Opll opll;
-    protected Emu2413 emu2413 = new Emu2413();
     protected int divider; // clock divider
     protected double clock, rate;
     protected final BasicTrackInfo[] trkInfo = new BasicTrackInfo[6];
@@ -27,17 +26,14 @@ public class NesVrc7 implements SoundChip {
     public NesVrc7() {
         patchSet = Emu2413.Opll.Tone.VRC7_RW.ordinal();
 
-        opll = new Emu2413.Opll(3579545, Common.SampleRate);
-        opll.resetPatch(patchSet);
+        opll = new Emu2413.Opll();
+        opll.init(3579545, Common.SampleRate);
+        opll.resetPatch(patchSet); // 0, this makes drum off
         setClock(Common.NsfClock); // DEFAULT_CLOCK);
 
         for (int c = 0; c < 2; ++c)
             for (int t = 0; t < 6; ++t)
                 sm[c][t] = 128;
-    }
-
-    protected void finalinze() {
-        opll = null;
     }
 
     public void setPatchSet(int p) {
@@ -54,8 +50,8 @@ public class NesVrc7 implements SoundChip {
         //rate = r ? r : DEFAULT_RATE;
         //(void)r; // rate is ignored
         rate = 49716;
-        opll.set_quality(1); // quality always on (not really a CPU hog)
-        opll.set_rate((int) rate);
+        opll.setQuality(1); // quality always on (not really a CPU hog)
+        opll.setRate((int) rate);
     }
 
     @Override
@@ -120,7 +116,7 @@ public class NesVrc7 implements SoundChip {
     }
 
     @Override
-    public boolean write(int adr, int val, int id/* = 0*/) {
+    public boolean write(int adr, int val, int id /* = 0 */) {
         if (adr == 0x9010) {
             opll.writeIO(0, val);
             return true;
@@ -152,7 +148,7 @@ public class NesVrc7 implements SoundChip {
         divider += clocks;
         while (divider >= 36) {
             divider -= 36;
-            opll._calc();
+            opll.calc();
         }
     }
 
@@ -188,6 +184,7 @@ public class NesVrc7 implements SoundChip {
         throw new UnsupportedOperationException();
     }
 
+    /** volumes for view */
     private Consumer<int[]> listener;
 
     public void setListener(Consumer<int[]> listener) {

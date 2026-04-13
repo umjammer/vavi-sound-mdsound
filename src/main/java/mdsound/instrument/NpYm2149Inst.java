@@ -5,31 +5,31 @@ import java.util.Map;
 
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
-import mdsound.fmgen.PSG;
+import mdsound.np.chip.Emu2149.Psg;
 
 
-/** PSG fmgen */
-public class Ay8910Inst extends Instrument.BaseInstrument {
+/** PSG np emu */
+public class NpYm2149Inst extends Instrument.BaseInstrument {
 
     public static final int DefaultClockValue = 1789750;
 
-    private final PSG[] chips = {new PSG(), new PSG()};
+    private final Psg[] chips = {new Psg(), new Psg()};
 
     private final int[] mask = {0, 0};
 
-    public Ay8910Inst() {
+    public NpYm2149Inst() {
         // 0..Main
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
 
     @Override
     public String getName() {
-        return "AY8910";
+        return "Ym2149np";
     }
 
     @Override
     public String getShortName() {
-        return "AY10";
+        return "PSGnp";
     }
 
     @Override
@@ -46,7 +46,7 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
 
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
-        chips[chipId].setClock(clock, samplingRate);
+        chips[chipId].init(DefaultClockValue * 2, samplingRate); // TODO clock is 4 times than others
         return samplingRate;
     }
 
@@ -58,7 +58,7 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
     @Override
     public int write(int chipId, int port, int adr, int data) {
         assert chipId < chips.length;
-        chips[chipId].setReg(adr, data);
+        chips[chipId].writeReg(adr, data);
         return 0;
     }
 
@@ -66,12 +66,10 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
     public void update(int chipId, int[][] outputs, int samples) {
         assert chipId < chips.length;
 
-        int[] buffer = new int[2];
-        chips[chipId].mix(buffer, 1);
         for (int i = 0; i < 1; i++) {
-            outputs[0][i] = buffer[i * 2 + 0];
-            outputs[1][i] = buffer[i * 2 + 1];
-//logger.log(Level.TRACE, "[%8d] : [%8d] [%d]".formatted(outputs[0][i], outputs[1][i], i));
+            int v = chips[chipId].calcPsg(); // TODO is this correct? do this twice and half clock seems to work.
+            outputs[0][i] = v;
+            outputs[1][i] = v;
         }
 
         visVolume[chipId][0][0] = outputs[0][0];
@@ -97,12 +95,10 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
 
     public void setVolume(int chipId, int db) {
         assert chipId < chips.length;
-        chips[chipId].setVolume(db);
     }
 
     private void setMute(int chipId, int val) {
         assert chipId < chips.length;
-        chips[chipId].setChannelMask(val);
     }
 
     //----

@@ -51,7 +51,7 @@ public class C140Inst extends Instrument.BaseInstrument implements PcmEnabledIns
     }
 
     /**
-     * @param option 0: C140.Type
+     * @param option 0: (int) c140 type
      */
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
@@ -65,7 +65,7 @@ logger.log(Level.WARNING, "sampleRate: " + sampleRate);
             return 0;
         }
 
-        type = (C140.Type) option[0];
+        type = C140.Type.valueOf((int) option[0]);
         chips[chipId].start(clock, sampleRate, type);
 
         return sampleRate;
