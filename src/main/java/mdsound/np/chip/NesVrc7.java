@@ -28,16 +28,12 @@ public class NesVrc7 implements SoundChip {
 
         opll = new Emu2413.Opll();
         opll.init(3579545, Common.SampleRate);
-        opll.resetPatch(patchSet);
+        opll.resetPatch(patchSet); // 0, this makes drum off
         setClock(Common.NsfClock); // DEFAULT_CLOCK);
 
         for (int c = 0; c < 2; ++c)
             for (int t = 0; t < 6; ++t)
                 sm[c][t] = 128;
-    }
-
-    protected void finalinze() {
-        opll = null;
     }
 
     public void setPatchSet(int p) {
@@ -120,7 +116,7 @@ public class NesVrc7 implements SoundChip {
     }
 
     @Override
-    public boolean write(int adr, int val, int id/* = 0*/) {
+    public boolean write(int adr, int val, int id /* = 0 */) {
         if (adr == 0x9010) {
             opll.writeIO(0, val);
             return true;
@@ -188,6 +184,7 @@ public class NesVrc7 implements SoundChip {
         throw new UnsupportedOperationException();
     }
 
+    /** volumes for view */
     private Consumer<int[]> listener;
 
     public void setListener(Consumer<int[]> listener) {

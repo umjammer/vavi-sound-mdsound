@@ -190,7 +190,16 @@ public class C140 {
     public enum Type {
         SYSTEM2,
         SYSTEM21,
-        ASIC219
+        ASIC219;
+
+        public static Type valueOf(int v) {
+            return switch (v) {
+                case 0x00 -> SYSTEM2;
+                case 0x01 -> SYSTEM21;
+                case 0x02 -> ASIC219;
+                default -> ASIC219;
+            };
+        }
     }
 
     public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData) {
