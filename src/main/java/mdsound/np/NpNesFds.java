@@ -7,6 +7,8 @@
 package mdsound.np;
 
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 import mdsound.np.Device.Counter;
 
@@ -459,5 +461,35 @@ public class NpNesFds {
         this.sm[1] = 128;
 
         this.reset();
+    }
+
+    public Map<String, Object> serialize() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("freq", this.lastFreq);
+        map.put("vol", this.lastVol);
+        map.put("wave", this.wave);
+
+        map.put("VolDir", this.envMode[1]);
+        map.put("VolSpd", this.envSpeed[1]);
+        map.put("VolGain", this.envOut[1]);
+        map.put("VolDi", this.envHalt);
+        map.put("VolFrq", this.freq[1]);
+        map.put("VolHlR", this.wavHalt);
+
+        map.put("ModDir", this.envMode[0]);
+        map.put("ModSpd", this.envSpeed[0]);
+        map.put("ModGain", this.envOut[0]);
+        map.put("ModDi", this.modHalt);
+        map.put("ModFrq", this.freq[0]);
+        map.put("ModCnt", this.modPos);
+
+        map.put("EnvSpd", (int) this.masterEnvSpeed);
+        map.put("EnvVolSw", !this.envDisable[1]);
+        map.put("EnvModSw", !this.envDisable[0]);
+
+        map.put("MasterVol", this.masterVol);
+        map.put("WE", this.wavWrite);
+
+        return map;
     }
 }

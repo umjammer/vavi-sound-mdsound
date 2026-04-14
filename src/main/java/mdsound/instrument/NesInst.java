@@ -9,7 +9,6 @@ import java.util.function.Consumer;
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
 import mdsound.chips.Nes;
-import mdsound.np.NpNesFds;
 
 import static mdsound.MDSound.Chip.MAIN_TAG;
 
@@ -31,7 +30,7 @@ public class NesInst extends Instrument.BaseInstrument implements Instrument.Pcm
 
     @Override
     public String getName() {
-        return "NES";
+        return "NesAPU";
     }
 
     @Override
@@ -122,15 +121,15 @@ logger.log(Level.DEBUG, "PCM: offset: " + offset + ", length: " + length + ", da
     }
 
     public synchronized int[] readApu(int chipId) {
-        return chips[chipId].readApu();
+        return chips[chipId].readApu().reg;
     }
 
     public synchronized int[] readDmc(int chipId) {
-        return chips[chipId].readDmc();
+        return chips[chipId].readDmc().reg;
     }
 
-    public synchronized NpNesFds readFds(int chipId) {
-        return chips[chipId].readDds();
+    public synchronized Map<String, Object> readFds(int chipId) {
+        return chips[chipId].readFds().serialize();
     }
 
     public void setVolume(String tag, int vol, double ignored) {
@@ -150,23 +149,24 @@ logger.log(Level.DEBUG, "tag: " + tag + ", vol: " + vol);
         if (ds[0] != -1) np_nes_apu_volume = ds[0];
         if (ds[1] != -1) np_nes_dmc_volume = ds[1];
         if (ds[2] != -1) np_nes_fds_volume = ds[2];
-        if (ds[3] != -1) np_nes_fme7_volume = ds[3];
-        if (ds[4] != -1) np_nes_mmc5_volume = ds[4];
-        if (ds[5] != -1) np_nes_n106_volume = ds[5];
-        if (ds[6] != -1) np_nes_vrc6_volume = ds[6];
-        if (ds[7] != -1) np_nes_vrc7_volume = ds[7];
     };
 
     public int np_nes_apu_volume;
     public int np_nes_dmc_volume;
     public int np_nes_fds_volume;
-    public int np_nes_fme7_volume;
-    public int np_nes_mmc5_volume;
-    public int np_nes_n106_volume;
-    public int np_nes_vrc6_volume;
-    public int np_nes_vrc7_volume;
 
-    public static class DMC extends NesInst {
+    // vgm
+    public static class DmcInst extends NesInst {
+        @Override
+        public String getName() {
+            return "NesDMC";
+        }
+
+        @Override
+        public String getShortName() {
+            return "DMC";
+        }
+
         @Override
         public Map<String, Object> getView(String key, Map<String, Object> args) {
             Map<String, Object> result = new HashMap<>();
@@ -174,6 +174,7 @@ logger.log(Level.DEBUG, "tag: " + tag + ", vol: " + vol);
             result.put("volume", vol != 0 ? vol : np_nes_dmc_volume);
             return result;
         }
+
         private void setDMCVolume(int db) {
             for (Nes chip : chips) chip.setVolumeDMC(db);
         }
@@ -184,7 +185,18 @@ logger.log(Level.DEBUG, "tag: " + tag + ", vol: " + vol);
         }
     }
 
-    public static class FDS extends NesInst {
+    // vgm
+    public static class FdsInst extends NesInst {
+        @Override
+        public String getName() {
+            return "NesFDS";
+        }
+
+        @Override
+        public String getShortName() {
+            return "FDS";
+        }
+
         @Override
         public Map<String, Object> getView(String key, Map<String, Object> args) {
             Map<String, Object> result = new HashMap<>();
@@ -192,6 +204,7 @@ logger.log(Level.DEBUG, "tag: " + tag + ", vol: " + vol);
             result.put("volume", vol != 0 ? vol : np_nes_fds_volume);
             return result;
         }
+
         private void setFDSVolume(int db) {
             for (Nes chip : chips) chip.setVolumeFDS(db);
         }
@@ -199,56 +212,6 @@ logger.log(Level.DEBUG, "tag: " + tag + ", vol: " + vol);
         // TODO automatic wired, use annotation?
         public void setVolume(int vol, double ignored) {
             setFDSVolume(vol);
-        }
-    }
-
-    public static class MMC5 extends NesInst {
-        @Override
-        public Map<String, Object> getView(String key, Map<String, Object> args) {
-            Map<String, Object> result = new HashMap<>();
-            int vol = getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]);
-            result.put("volume", vol != 0 ? vol : np_nes_mmc5_volume);
-            return result;
-        }
-    }
-
-    public static class N160 extends NesInst {
-        @Override
-        public Map<String, Object> getView(String key, Map<String, Object> args) {
-            Map<String, Object> result = new HashMap<>();
-            int vol = getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]);
-            result.put("volume", vol != 0 ? vol : np_nes_n106_volume);
-            return result;
-        }
-    }
-
-    public static class VRC6 extends NesInst {
-        @Override
-        public Map<String, Object> getView(String key, Map<String, Object> args) {
-            Map<String, Object> result = new HashMap<>();
-            int vol = getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]);
-            result.put("volume", vol != 0 ? vol : np_nes_vrc6_volume);
-            return result;
-        }
-    }
-
-    public static class VRC7 extends NesInst {
-        @Override
-        public Map<String, Object> getView(String key, Map<String, Object> args) {
-            Map<String, Object> result = new HashMap<>();
-            int vol = getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]);
-            result.put("volume", vol != 0 ? vol : np_nes_vrc7_volume);
-            return result;
-        }
-    }
-
-    public static class FME7 extends NesInst {
-        @Override
-        public Map<String, Object> getView(String key, Map<String, Object> args) {
-            Map<String, Object> result = new HashMap<>();
-            int vol = getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]);
-            result.put("volume", vol != 0 ? vol : np_nes_fme7_volume);
-            return result;
         }
     }
 

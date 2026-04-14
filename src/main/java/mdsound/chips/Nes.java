@@ -198,15 +198,15 @@ public class Nes {
         }
     }
 
-    public int[] readApu() {
-        return this.nesApu.reg;
+    public NpNesApu readApu() {
+        return this.nesApu;
     }
 
-    public int[] readDmc() {
-        return this.nesDmc.reg;
+    public NpNesDmc readDmc() {
+        return this.nesDmc;
     }
 
-    public NpNesFds readDds() {
+    public NpNesFds readFds() {
         return this.nesFds;
     }
 
