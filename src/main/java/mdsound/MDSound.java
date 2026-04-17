@@ -171,6 +171,61 @@ public class MDSound {
             int n = (((int) (16384.0 * Math.pow(10.0, this.volume / 40.0)) * this.tVolumeBalance) >> 8);
             this.tVolume = Math.clamp((int) (n * volumeMul), Short.MIN_VALUE, Short.MAX_VALUE);
         }
+
+        /** */
+        public void setup(int resampleMode, int samplingRate) {
+            if (this.samplingRate == 0) {
+                this.resampler = 0xff;
+                return;
+            }
+
+            if (this.samplingRate < samplingRate) {
+                this.resampler = 0x01;
+            } else if (this.samplingRate == samplingRate) {
+                this.resampler = 0x02;
+            } else if (this.samplingRate > samplingRate) {
+                this.resampler = 0x03;
+            }
+            if (this.resampler == 0x01 || this.resampler == 0x03) {
+                if (resampleMode == 0x02 || (resampleMode == 0x01 && this.resampler == 0x03))
+                    this.resampler = 0x00;
+            }
+
+            this.smpP = 0x00;
+            this.smpLast = 0x00;
+            this.smpNext = 0x00;
+            this.lSmpl = new int[2];
+            this.lSmpl[0] = 0x00;
+            this.lSmpl[1] = 0x00;
+            this.nSmpl = new int[2];
+            if (this.resampler == 0x01) {
+                // Pregenerate first Sample (the upsampler is always one too late)
+                int[][] buf = new int[][] {new int[1], new int[1]};
+                this.instrument.update(this.id, buf, 1);
+                this.nSmpl[0] = buf[0x00][0x00];
+                this.nSmpl[1] = buf[0x01][0x00];
+            } else {
+                this.nSmpl[0] = 0x00;
+                this.nSmpl[1] = 0x00;
+            }
+        }
+
+        public void changeChipSampleRate(int samplingRate, int newSmplRate) {
+            if (this.samplingRate == newSmplRate)
+                return;
+
+            // quick and dirty hack to make sample rate changes work
+            this.samplingRate = newSmplRate;
+            if (this.samplingRate < samplingRate)
+                this.resampler = 0x01;
+            else if (this.samplingRate == samplingRate)
+                this.resampler = 0x02;
+            else if (this.samplingRate > samplingRate)
+                this.resampler = 0x03;
+            this.smpP = 1;
+            this.smpNext -= this.smpLast;
+            this.smpLast = 0x00;
+        }
     }
 
     /** */
@@ -212,7 +267,7 @@ logger.log(Level.DEBUG, "instrument start/reset: %s[%d], %d, %d, @%x, %s".format
                 instruments.put(chip.instrument.getClass(), new ArrayList<>(List.of(chip.instrument)));
             }
 
-            resampler.setup(chip);
+            chip.setup(resampler.getResampleMode(), samplingRate);
         }
 instruments.keySet().forEach(k -> logger.log(Level.DEBUG, "instrument: " + k.getSimpleName().replace("Inst", "") + ": chips: " + instruments.get(k).stream().map(Instrument::getName).collect(Collectors.joining(", ", "[", "]"))));
 

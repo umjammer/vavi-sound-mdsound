@@ -33,7 +33,7 @@ public class NpNesInst extends Instrument.BaseInstrument implements Instrument.P
 
     @Override
     public String getName() {
-        return "NesApu";
+        return "NpNesapu";
     }
 
     @Override

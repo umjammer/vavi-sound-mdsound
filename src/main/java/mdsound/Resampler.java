@@ -28,7 +28,7 @@ class Resampler {
     private static final int FIXPNT_FACT = (1 << FIXPNT_BITS);
     private static final int FIXPNT_MASK = (FIXPNT_FACT - 1);
 
-    private static final int resampleMode = 0;
+    private int resampleMode = 0;
 
     private int samplingRate = DefaultSamplingRate;
     private int samplingBuffer = DefaultSamplingBuffer;
@@ -66,50 +66,16 @@ class Resampler {
         return (int) ((x + FIXPNT_MASK) / FIXPNT_FACT);
     }
 
+    public int getResampleMode() {
+        return resampleMode;
+    }
+
     /** */
     public void init(List<Chip> insts, int samplingRate, int samplingBuffer) {
         this.insts = insts;
         this.samplingRate = samplingRate;
         this.samplingBuffer = samplingBuffer;
         streamBufs = new int[][] {new int[0x100], new int[0x100]};
-    }
-
-    /** */
-    public void setup(Chip chip) {
-        if (chip.samplingRate == 0) {
-            chip.resampler = 0xff;
-            return;
-        }
-
-        if (chip.samplingRate < samplingRate) {
-            chip.resampler = 0x01;
-        } else if (chip.samplingRate == samplingRate) {
-            chip.resampler = 0x02;
-        } else if (chip.samplingRate > samplingRate) {
-            chip.resampler = 0x03;
-        }
-        if (chip.resampler == 0x01 || chip.resampler == 0x03) {
-            if (resampleMode == 0x02 || (resampleMode == 0x01 && chip.resampler == 0x03))
-                chip.resampler = 0x00;
-        }
-
-        chip.smpP = 0x00;
-        chip.smpLast = 0x00;
-        chip.smpNext = 0x00;
-        chip.lSmpl = new int[2];
-        chip.lSmpl[0] = 0x00;
-        chip.lSmpl[1] = 0x00;
-        chip.nSmpl = new int[2];
-        if (chip.resampler == 0x01) {
-            // Pregenerate first Sample (the upsampler is always one too late)
-            int[][] buf = new int[][] {new int[1], new int[1]};
-            chip.instrument.update(chip.id, buf, 1);
-            chip.nSmpl[0] = buf[0x00][0x00];
-            chip.nSmpl[1] = buf[0x01][0x00];
-        } else {
-            chip.nSmpl[0] = 0x00;
-            chip.nSmpl[1] = 0x00;
-        }
     }
 
 int CC = 0;
@@ -162,7 +128,7 @@ if (!noInst) {
             curBufL = streamBufs[0x00];
             curBufR = streamBufs[0x01];
 
-            inst = chip;
+            this.inst = chip;
             mul = inst.tVolume;
 
 //if (i != 0 && chips[i].LSmpl[0] != 0) logger.log(Level.DEBUG, "%d %d".formatted(chips[i].LSmpl[0], chips[0].LSmpl == chips[i].LSmpl));

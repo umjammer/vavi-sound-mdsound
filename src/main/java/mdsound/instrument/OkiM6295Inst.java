@@ -7,8 +7,6 @@ import java.util.function.BiConsumer;
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
 import mdsound.Instrument.PcmEnabledInstrument;
-import mdsound.MDSound;
-import mdsound.MDSound.Chip;
 import mdsound.chips.OkiM6295;
 
 
@@ -40,9 +38,14 @@ public class OkiM6295Inst extends Instrument.BaseInstrument implements PcmEnable
         chips[chipId].reset();
     }
 
+    /** @param option 0: (BiConsumer<Integer, Integer>) fn, 1: (int) sampleRate */
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
         assert chipId < MAX_CHIPS;
+
+        BiConsumer<Integer, Integer> callbackFunc = (BiConsumer<Integer, Integer>) option[0];
+        int oldSampleRate = (int) option[1];
+        chips[chipId].setCallback(newSamplingRate -> callbackFunc.accept(oldSampleRate, newSamplingRate));
 
         return chips[chipId].start(clock);
     }
@@ -88,10 +91,6 @@ public class OkiM6295Inst extends Instrument.BaseInstrument implements PcmEnable
 
     private void setMuteMask(int chipId, int muteMask) {
         chips[chipId].setMuteMask(muteMask);
-    }
-
-    public void setCallback(int chipId, BiConsumer<Chip, Integer> callbackFunc, MDSound.Chip dataPtr) {
-        chips[chipId].setCallback(samplingRate -> callbackFunc.accept(dataPtr, samplingRate));
     }
 
     /** @param extras 0: srcOffset, 1: romSize */
