@@ -9,6 +9,7 @@ import java.util.function.Consumer;
 import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
 import mdsound.chips.Nes;
+import mdsound.np.NpNesFds;
 
 import static mdsound.MDSound.Chip.MAIN_TAG;
 
@@ -128,8 +129,38 @@ logger.log(Level.DEBUG, "PCM: offset: " + offset + ", length: " + length + ", da
         return chips[chipId].readDmc().reg;
     }
 
-    public synchronized Map<String, Object> readFds(int chipId) {
-        return chips[chipId].readFds().serialize();
+    public synchronized Map<String, Object> getInfo(int chipId) {
+        return toInfo(chips[chipId].readFds());
+    }
+
+    public static Map<String, Object> toInfo(NpNesFds fds) {
+        Map<String, Object> info = new HashMap<>();
+        info.put("freq", fds.lastFreq);
+        info.put("vol", fds.lastVol);
+        info.put("wave", fds.wave);
+
+        info.put("VolDir", fds.envMode[1]);
+        info.put("VolSpd", fds.envSpeed[1]);
+        info.put("VolGain", fds.envOut[1]);
+        info.put("VolDi", fds.envHalt);
+        info.put("VolFrq", fds.freq[1]);
+        info.put("VolHlR", fds.wavHalt);
+
+        info.put("ModDir", fds.envMode[0]);
+        info.put("ModSpd", fds.envSpeed[0]);
+        info.put("ModGain", fds.envOut[0]);
+        info.put("ModDi", fds.modHalt);
+        info.put("ModFrq", fds.freq[0]);
+        info.put("ModCnt", fds.modPos);
+
+        info.put("EnvSpd", (int) fds.masterEnvSpeed);
+        info.put("EnvVolSw", !fds.envDisable[1]);
+        info.put("EnvModSw", !fds.envDisable[0]);
+
+        info.put("MasterVol", fds.masterVol);
+        info.put("WE", fds.wavWrite);
+
+        return info;
     }
 
     public void setVolume(String tag, int vol, double ignored) {

@@ -122,8 +122,20 @@ public class OkiM6258Inst extends Instrument.BaseInstrument {
 
     //----
 
-    public synchronized OkiM6258 getChip(int chipId) {
-        return chips[chipId];
+    public synchronized Map<String, Object> getInfo(int chipId) {
+        OkiM6258 chip = chips[chipId];
+
+        Map<String, Object> info = new HashMap<>();
+        info.put("pan", chip.getPan());
+        info.put("masterFreq", chip.getMasterClock() / 1000);
+        info.put("divider", chip.getDivider());
+        if (chip.getDivider() == 0) info.put("pbFreq", 0);
+        else info.put("pbFreq", chip.getMasterClock() / chip.getDivider() / 1000);
+
+        info.put("dataIn", chip.getDataIn());
+        info.put("status", chip.getStatus());
+
+        return info;
     }
 
     //----

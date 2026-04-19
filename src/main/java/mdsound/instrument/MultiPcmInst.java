@@ -99,8 +99,48 @@ public class MultiPcmInst extends Instrument.BaseInstrument implements PcmEnable
         chips[chipId].writeRom(romSize, offset, length, buf, srcOffset);
     }
 
-    public synchronized MultiPCM getChip(int chipId) {
-        return chips[chipId];
+    public synchronized Map<String, Object> getInfo(int chipId) {
+        MultiPCM chip = chips[chipId];
+
+        Map<String, Object> info = new HashMap<>();
+        for (int ch = 0; ch < 28; ch++) {
+            int oct = ((chip.getSlot(ch).regs[3] >> 4) - 1) & 0xf;
+            oct = ((oct & 0x8) != 0) ? (oct - 16) : oct;
+            oct = oct + 4; // The fundamental tone is o5.
+            int pitch = ((chip.getSlot(ch).regs[3] & 0xf) << 6) | (chip.getSlot(ch).regs[2] >> 2);
+
+            int nt = Math.clamp(oct * 12 + pitch / 85, 0, 7 * 12);
+            info.put("channels." + ch + ".note",  nt);
+
+            int d = chip.getSlot(ch).pan;
+            d = (d == 0) ? 0xf : d;
+            info.put("channels." + ch + ".pan", ((((d & 0xc) >> 2) * 4) << 4) | (((d & 0x3) * 4) << 0));
+
+            info.put("channels." + ch + ".bit.0", (chip.getSlot(ch).regs[4] & 0x80) != 0);
+            info.put("channels." + ch + ".freq", ((chip.getSlot(ch).regs[3] & 0xf) << 6) | (chip.getSlot(ch).regs[2] >> 2));
+            info.put("channels." + ch + ".bit.1", (chip.getSlot(ch).regs[5] & 1) != 0); // TL Interpolation
+            info.put("channels." + ch + ".inst.1", (chip.getSlot(ch).regs[5] >> 1) & 0x7f); // TL
+            info.put("channels." + ch + ".inst.2", (chip.getSlot(ch).regs[6] >> 3) & 7); // LFO freq
+            info.put("channels." + ch + ".inst.3", (chip.getSlot(ch).regs[6]) & 7); // PLFO
+            info.put("channels." + ch + ".inst.4", (chip.getSlot(ch).regs[7]) & 7); // ALFO
+
+            if (chip.getSlot(ch).sample != null) {
+                info.put("channels." + ch + ".inst.0", chip.getSlot(ch).regs[1]);
+                info.put("channels." + ch + ".sadr", chip.getSlot(ch).sample.start);
+                info.put("channels." + ch + ".eadr", chip.getSlot(ch).sample.end);
+                info.put("channels." + ch + ".ladr", chip.getSlot(ch).sample.loop);
+                info.put("channels." + ch + ".inst.5", chip.getSlot(ch).sample.lfoVib);
+                info.put("channels." + ch + ".inst.6", chip.getSlot(ch).sample.ar);
+                info.put("channels." + ch + ".inst.7", chip.getSlot(ch).sample.dr1);
+                info.put("channels." + ch + ".inst.8", chip.getSlot(ch).sample.dr2);
+                info.put("channels." + ch + ".inst.9", chip.getSlot(ch).sample.dl);
+                info.put("channels." + ch + ".inst.10", chip.getSlot(ch).sample.rr);
+                info.put("channels." + ch + ".inst.11", chip.getSlot(ch).sample.krs);
+                info.put("channels." + ch + ".inst.12", chip.getSlot(ch).sample.am);
+            }
+        }
+
+        return info;
     }
 
     // ----

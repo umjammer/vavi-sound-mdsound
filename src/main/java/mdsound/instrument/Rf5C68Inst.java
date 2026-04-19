@@ -88,8 +88,19 @@ public class Rf5C68Inst extends Instrument.BaseInstrument implements PcmEnabledI
         chips[chipId].writeMemory(adr, data);
     }
 
-    public synchronized Rf5C68 getChip(int chipId) {
-        return chips[chipId];
+    public synchronized Map<String, Object> getInfo(int chipId) {
+        Rf5C68 chip = chips[chipId];
+
+        Map<String, Object> info = new HashMap<>();
+        for (int ch = 0; ch < 8; ch++) {
+            info.put("Channel" + ch + ".enable", chip.getChannel(ch).enable != 0);
+            info.put("Channel" + ch + ".step", chip.getChannel(ch).step);
+            info.put("Channel" + ch + ".keyOn", chip.getChannel(ch).keyOn);
+            info.put("Channel" + ch + ".env", chip.getChannel(ch).env);
+            info.put("Channel" + ch + ".key", chip.getChannel(ch).key);
+            info.put("Channel" + ch + ".pan", chip.getChannel(ch).pan);
+        }
+        return info;
     }
 
     //----

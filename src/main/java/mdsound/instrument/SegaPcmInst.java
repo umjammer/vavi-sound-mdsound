@@ -1,5 +1,6 @@
 package mdsound.instrument;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -95,8 +96,10 @@ public class SegaPcmInst extends Instrument.BaseInstrument {
         chips[chipId].writeRom2(romSize, dataStart, dataLength, romData, srcStartAdr);
     }
 
-    public synchronized SegaPcm getChip(int chipId) {
-        return chips[chipId];
+    public synchronized Map<String, Object> getInfo(int chipId) {
+        SegaPcm chip = chips[chipId];
+        // TODO
+        return Collections.emptyMap();
     }
 
     // ----

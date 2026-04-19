@@ -96,8 +96,40 @@ public class HuC6280Inst extends Instrument.BaseInstrument {
 
     //----
 
-    public synchronized OotakeHuC6280 getChip(int chipId) {
-        return chips[chipId];
+    public synchronized Map<String, Object> getInfo(int chipId) {
+        OotakeHuC6280 chip = chips[chipId];
+
+        Map<String, Object> newParam = new HashMap<>();
+        for (int ch = 0; ch < 6; ch++) {
+            OotakeHuC6280.Psg psg = chip.getPsg(ch);
+            if (psg == null) continue;
+            newParam.put("channels." + ch + ".volumeL", psg.outVolumeL >> 10);
+            newParam.put("channels." + ch + ".volumeR", psg.outVolumeR >> 10);
+
+            newParam.put("channels." + ch + ".pan",  (psg.volumeL & 0xf) | ((psg.volumeR & 0xf) << 4));
+
+            newParam.put("channels." + ch + ".inst",  psg.wave);
+
+            newParam.put("channels." + ch + ".dda",  psg.dda);
+
+            int tp = psg.frq;
+            if (tp == 0) tp = 1;
+
+            float ftone = 3579545.0f / 32.0f / (float) tp;
+            newParam.put("channels." + ch + ".ftone", ftone);
+
+            if (ch < 4) continue;
+
+            newParam.put("channels." + ch + ".noise",  psg.bNoiseOn);
+            newParam.put("channels." + ch + ".nfrq",  psg.noiseFrq);
+        }
+
+        newParam.put("mvolL", chip.mainVolumeL);
+        newParam.put("mvolR", chip.mainVolumeR);
+        newParam.put("LfoCtrl", chip.lfoControl);
+        newParam.put("LfoFrq", chip.lfoFreq);
+
+        return newParam;
     }
 
     //----

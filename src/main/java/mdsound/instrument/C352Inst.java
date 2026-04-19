@@ -93,9 +93,9 @@ public class C352Inst extends Instrument.BaseInstrument implements PcmEnabledIns
 
     //----
 
-    public synchronized int[] readFlags(int chipId) {
+    public synchronized Map<String, Object> getInfo(int chipId) {
         C352 chip = chips[chipId];
-        return chip.getFlags();
+        return Map.of("flags", chip.getFlags());
     }
 
     /**

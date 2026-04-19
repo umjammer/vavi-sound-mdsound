@@ -138,8 +138,37 @@ public class Ppz8Inst extends Instrument.BaseInstrument {
         chips[chipId].loadPcm(address, data, pcmData);
     }
 
-    public synchronized PPZ8.Channel[] readStatus(int chipId) {
-        return chips[chipId].getChannels();
+    public synchronized Map<String, Object> getInfo(int chipId) {
+        PPZ8.Channel[] channels = chips[chipId].getChannels();
+
+        Map<String, Object> info = new HashMap<>();
+        for (int ch = 0; ch < 8; ch++) {
+            if (channels.length < ch + 1) continue;
+            if (channels[ch] == null) continue;
+
+            info.put("channels." + ch + ".pan", channels[ch].pan);
+
+            info.put("channels." + ch + ".keyOn", channels[ch].KeyOn);
+            info.put("channels." + ch + ".volume", channels[ch].volume);
+
+            info.put("channels." + ch + ".srcFreq", channels[ch].srcFrequency);
+            info.put("channels." + ch + ".freq", channels[ch].frequency);
+
+            info.put("channels." + ch + ".frequency", channels[ch].frequency);
+            info.put("channels." + ch + ".playing", channels[ch].playing);
+
+            info.put("channels." + ch + ".dda", channels[ch].bank != 0);
+            info.put("channels." + ch + ".flg16", channels[ch].num);
+
+            info.put("channels." + ch + ".sadr", channels[ch].ptr);
+            info.put("channels." + ch + ".eadr", channels[ch].end);
+            info.put("channels." + ch + ".ladr", channels[ch].loopStartOffset);
+            info.put("channels." + ch + ".leadr", channels[ch].loopEndOffset);
+            info.put("channels." + ch + ".volumeRL", channels[ch].volume);
+            info.put("channels." + ch + ".volumeRR", channels[ch].pan);
+        }
+
+        return info;
     }
 
     // ----

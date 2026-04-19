@@ -86,8 +86,74 @@ public class YmF271Inst extends Instrument.BaseInstrument implements PcmEnabledI
 
     //----
 
-    public synchronized YmF271 getChip(int chipId) {
-        return chips[chipId];
+    public static final int[] slotTbl = {
+            0, 24, 12, 36,
+            1, 25, 13, 37,
+            2, 26, 14, 38,
+            3, 27, 15, 39,
+
+            4, 28, 16, 40,
+            5, 29, 17, 41,
+            6, 30, 18, 42,
+            7, 31, 19, 43,
+
+            8, 32, 20, 44,
+            9, 33, 21, 45,
+            10, 34, 22, 46,
+            11, 35, 23, 47,
+    };
+
+    public synchronized Map<String, Object> getInfo(int chipId) {
+        YmF271 chip = chips[chipId];
+
+        Map<String, Object> newParam = new HashMap<>();
+        for (int i = 0; i < 48; i++) {
+            int slot = slotTbl[i];
+
+            YmF271.Slot slt = chip.getSlot(slot);
+            newParam.put("slots." + slot + ".volume", slt.volume);
+            newParam.put("slots." + slot + ".ch0Level", slt.ch0Level);
+            newParam.put("slots." + slot + ".ch1Level", slt.ch1Level);
+            newParam.put("slots." + slot + ".pan", (slt.ch1Level << 4) | (slt.ch0Level & 0xf));
+            newParam.put("slots." + slot + ".pantp", (slt.ch3Level & 0xf0) | ((slt.ch2Level >> 4) & 0xf));
+            newParam.put("slots." + slot + ".inst.0", slt.ar);
+            newParam.put("slots." + slot + ".inst.1", slt.decay1rate);
+            newParam.put("slots." + slot + ".inst.2", slt.decay2rate);
+            newParam.put("slots." + slot + ".inst.3", slt.relrate);
+            newParam.put("slots." + slot + ".inst.4", slt.decay1lvl);
+            newParam.put("slots." + slot + ".inst.5", slt.tl);
+            newParam.put("slots." + slot + ".inst.6", slt.keyScale);
+            newParam.put("slots." + slot + ".inst.7", slt.multiple);
+            newParam.put("slots." + slot + ".inst.8", slt.detune);
+            newParam.put("slots." + slot + ".inst.9", slt.waveForm);
+            newParam.put("slots." + slot + ".inst.10", slt.feedback);
+            newParam.put("slots." + slot + ".inst.11", slt.accon);
+            newParam.put("slots." + slot + ".inst.12", slt.algorithm);
+
+            newParam.put("slots." + slot + ".inst.13", slt.block);
+            newParam.put("slots." + slot + ".inst.14", slt.fns);
+
+            newParam.put("slots." + slot + ".inst.15", slt.startAddr);
+            newParam.put("slots." + slot + ".inst.16", slt.endAddr);
+            newParam.put("slots." + slot + ".inst.17", slt.loopAddr);
+
+            newParam.put("slots." + slot + ".inst.18", slt.fs);
+            newParam.put("slots." + slot + ".inst.19", slt.bits == 12 ? 1 : 0);
+            newParam.put("slots." + slot + ".inst.20", slt.srcNote);
+            newParam.put("slots." + slot + ".inst.21", slt.srcb);
+
+            newParam.put("slots." + slot + ".inst.22", slt.lfoFreq);
+            newParam.put("slots." + slot + ".inst.23", slt.lfoWave);
+            newParam.put("slots." + slot + ".inst.24", slt.pms);
+            newParam.put("slots." + slot + ".inst.25", slt.ams);
+
+            newParam.put("slots." + slot + ".active", slt.active != 0);
+
+            if (i % 4 == 0) {
+                newParam.put("slots." + slot + ".sync", chip.getSync(i / 4));
+            }
+        }
+        return newParam;
     }
 
     //----

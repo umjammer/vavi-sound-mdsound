@@ -103,13 +103,26 @@ public class OkiM6295Inst extends Instrument.BaseInstrument implements PcmEnable
 
     //----
 
-    public synchronized OkiM6295 getChip(int chipId) {
-        return chips[chipId];
-    }
-
-    public synchronized OkiM6295.ChannelInfo getChInfo(int chipId) {
+    public synchronized Map<String, Object> getInfo(int chipId) {
         OkiM6295 chip = chips[chipId];
-        return chip.readChInfo();
+        OkiM6295.ChannelInfo info = chip.readChInfo();
+
+        Map<String, Object> newParam = new HashMap<>();
+        for (int c = 0; c < 4; c++) {
+
+            newParam.put("channels." + c + ".keyon", info.keyon[c]);
+            newParam.put("channels." + c + ".sadr", info.chInfo[c].stAdr);
+            newParam.put("channels." + c + ".eadr", info.chInfo[c].edAdr);
+        }
+
+        newParam.put("masterClock", info.masterClock);
+        newParam.put("pin7State", info.pin7State);
+        newParam.put("nmkBank.0", info.nmkBank[0]);
+        newParam.put("nmkBank.1", info.nmkBank[1]);
+        newParam.put("nmkBank.2", info.nmkBank[2]);
+        newParam.put("nmkBank.3", info.nmkBank[3]);
+
+        return newParam;
     }
 
     //----
