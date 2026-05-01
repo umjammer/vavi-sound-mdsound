@@ -12,8 +12,8 @@ package mdsound.mame;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-import dotnet4j.util.compat.QuadConsumer;
-import dotnet4j.util.compat.TriConsumer;
+import vavi.util.compat.QuadConsumer;
+import vavi.util.compat.TriConsumer;
 
 
 /**

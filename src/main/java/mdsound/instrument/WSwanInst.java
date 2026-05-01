@@ -1,6 +1,6 @@
 package mdsound.instrument;
 
-import dotnet4j.util.compat.Tuple;
+import vavi.util.compat.Tuple;
 import mdsound.Instrument;
 import mdsound.chips.WSwan;
 

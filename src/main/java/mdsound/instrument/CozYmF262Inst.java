@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import de.quippy.opl.OPL3;
-import dotnet4j.util.compat.Tuple;
+import vavi.util.compat.Tuple;
 import mdsound.Instrument;
 
 import static java.lang.System.getLogger;

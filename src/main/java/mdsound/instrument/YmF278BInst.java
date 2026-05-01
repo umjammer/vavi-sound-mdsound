@@ -1,14 +1,14 @@
 package mdsound.instrument;
 
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-import dotnet4j.io.Stream;
-import dotnet4j.util.compat.Tuple;
 import mdsound.Instrument;
 import mdsound.Instrument.PcmEnabledInstrument;
 import mdsound.chips.YmF278B;
+import vavi.util.compat.Tuple;
 
 
 public class YmF278BInst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
@@ -44,7 +44,7 @@ public class YmF278BInst extends Instrument.BaseInstrument implements PcmEnabled
         assert chipId < MAX_CHIPS;
 
         String romPath = null;
-        Function<String, Stream> romStream = null;
+        Function<String, InputStream> romStream = null;
         if (option != null && option.length > 0) {
             if (option[0] instanceof String) {
                 romPath = (String) option[0];
@@ -52,7 +52,7 @@ public class YmF278BInst extends Instrument.BaseInstrument implements PcmEnabled
             }
             if (option[0] instanceof Function /*<String, Stream>*/) {
                 romPath = null;
-                romStream = (Function<String, Stream>) option[0];
+                romStream = (Function<String, InputStream>) option[0];
             }
         }
 

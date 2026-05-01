@@ -15,9 +15,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import dotnet4j.util.compat.QuadConsumer;
-import dotnet4j.util.compat.TriConsumer;
 import mdsound.instrument.NesInst;
+import vavi.util.compat.QuadConsumer;
+import vavi.util.compat.TriConsumer;
 
 import static java.lang.System.getLogger;
 

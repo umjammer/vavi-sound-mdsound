@@ -1,6 +1,7 @@
 package mdsound.chips;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
@@ -11,9 +12,7 @@ import java.util.Arrays;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import dotnet4j.io.Stream;
-import dotnet4j.util.compat.Tuple;
-import mdsound.Common;
+import vavi.util.compat.Tuple;
 
 import static java.lang.System.getLogger;
 
@@ -1061,7 +1060,7 @@ public class YmF278B {
         Arrays.fill(this.ram, 0, this.ramSize, (byte) 0);
     }
 
-    private void loadRom(String romPath, Function<String, Stream> romStream) {
+    private void loadRom(String romPath, Function<String, InputStream> romStream) {
         Path romFilename = Paths.get("yrw801.rom");
         if (romPath != null && !romPath.isEmpty()) {
             romFilename = Paths.get(romPath).resolve(romFilename);
@@ -1081,8 +1080,8 @@ public class YmF278B {
                     }
                 }
             } else {
-                try (Stream st = romStream.apply(romFilename.toString())) {
-                    romFile = Common.readAllBytes(st);
+                try (InputStream st = romStream.apply(romFilename.toString())) {
+                    romFile = st != null ? st.readAllBytes() : null;
                 } catch (IOException e) {
                     throw new UncheckedIOException(e);
                 }
@@ -1102,7 +1101,7 @@ public class YmF278B {
         }
     }
 
-    private int init(int clock, Callback cb, String romPath, Function<String, Stream> romStream) {
+    private int init(int clock, Callback cb, String romPath, Function<String, InputStream> romStream) {
         int rate;
 
         rate = clock / 768;
@@ -1126,7 +1125,7 @@ public class YmF278B {
         return rate;
     }
 
-    public int start(int clock, String romPath, Function<String, Stream> romStream) {
+    public int start(int clock, String romPath, Function<String, InputStream> romStream) {
         Interface intf = new Interface();
         //this.device = device;
         //intf = (device.static_config != NULL) ? (final Interface *)device.static_config : &defintrf;

@@ -6,9 +6,9 @@
 
 package mdsound.instrument;
 
+import java.io.InputStream;
 import java.util.function.Function;
 
-import dotnet4j.io.Stream;
 import mdsound.Instrument;
 import mdsound.Instrument.AdpcmAEnabled;
 import mdsound.fmvgen.OPNA2;
@@ -59,7 +59,7 @@ public class Ym2609Inst extends Instrument.BaseInstrument implements AdpcmAEnabl
 
         if (option != null && option.length > 0 && option[0] instanceof Function) { //<String, Stream>
             if (option[0] instanceof Function) // <String, Stream>
-                chips[chipId].init(clock, samplingRate, false, (Function<String, Stream>) option[0], null, 0);
+                chips[chipId].init(clock, samplingRate, false, (Function<String, InputStream>) option[0], null, 0);
             else if (option[0] instanceof String)
                 chips[chipId].init(clock, samplingRate, false, (String) option[0]);
         } else {

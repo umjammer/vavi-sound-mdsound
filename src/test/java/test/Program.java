@@ -1,14 +1,17 @@
 package test;
 
+import java.io.IOException;
+import java.lang.System.Logger;
+import java.lang.System.Logger.Level;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
-import java.util.logging.Level;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.SourceDataLine;
 
-import dotnet4j.io.File;
 import mdsound.Instrument;
 import mdsound.MDSound;
 import mdsound.chips.C140;
@@ -20,6 +23,8 @@ import static vavi.sound.SoundUtil.volume;
 
 
 public class Program {
+
+    private static final Logger logger = System.getLogger(Program.class.getName());
 
     static String[] args;
 
@@ -110,11 +115,11 @@ public class Program {
             volume(audioOutput, Double.parseDouble(System.getProperty("mdsound.volume", "0.2")));
             audioOutput.start();
         } catch (Exception e) {
-            Debug.printStackTrace(e);
+            logger.log(Level.ERROR, e.getMessage(), e);
         }
     }
 
-    public void prePlay(String fileName) {
+    public void prePlay(String fileName) throws IOException {
         stop();
         play(fileName);
         start();
@@ -170,9 +175,9 @@ public class Program {
         }
     }
 
-    private void play(String fileName) {
+    private void play(String fileName) throws IOException {
 
-        vgmBuf = File.readAllBytes(fileName);
+        vgmBuf = Files.readAllBytes(Path.of(fileName));
 //Debug.println("\n" + StringUtil.getDump(vgmBuf, 128));
 
         for (int i = 0; i < pcmBanks.length; i++) {
@@ -1187,7 +1192,7 @@ Debug.println("eof: vgmAdr: " + vgmAdr + ", vgmBuf.length: " + vgmBuf.length + "
             break;
         default:
             // Unknown command
-            Debug.printf(Level.WARNING, "%02x", vgmBuf[vgmAdr++]);
+            logger.log(Level.WARNING, "%02x".formatted(vgmBuf[vgmAdr++]));
         }
     }
 
