@@ -1,6 +1,6 @@
 package mdsound.chips;
 
-import dotnet4j.util.compat.QuadFunction;
+import vavi.util.compat.QuadFunction;
 
 
 public class Xgm {

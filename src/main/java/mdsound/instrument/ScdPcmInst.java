@@ -3,7 +3,7 @@ package mdsound.instrument;
 import java.util.HashMap;
 import java.util.Map;
 
-import dotnet4j.util.compat.Tuple;
+import vavi.util.compat.Tuple;
 import mdsound.Instrument;
 import mdsound.Instrument.PcmEnabledInstrument;
 import mdsound.chips.ScdPcm;
@@ -111,8 +111,18 @@ public class ScdPcmInst extends Instrument.BaseInstrument implements PcmEnabledI
         return volumes[chipId];
     }
 
-    public synchronized ScdPcm getChip(int chipId) {
-        return chips[chipId];
+    public synchronized Map<String, Object> getInfo(int chipId) {
+        ScdPcm rf5c164Register = chips[chipId];
+
+        Map<String, Object> newParam = new HashMap<>();
+        for (int ch = 0; ch < 8; ch++) {
+            newParam.put("channels." + ch + ".enable", rf5c164Register.getChannel(ch).enable != 0);
+            newParam.put("channels." + ch + ".stepB", rf5c164Register.getChannel(ch).stepB);
+            newParam.put("channels." + ch + ".mulL", rf5c164Register.getChannel(ch).mulL);
+            newParam.put("channels." + ch + ".mulR", rf5c164Register.getChannel(ch).mulR);
+            newParam.put("channels." + ch + ".pan",  rf5c164Register.getChannel(ch).pan);
+        }
+        return newParam;
     }
 
     //----

@@ -4,10 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
-import dotnet4j.util.compat.Tuple;
+import vavi.util.compat.Tuple;
 import mdsound.Instrument;
-import mdsound.MDSound;
-import mdsound.MDSound.Chip;
 import mdsound.chips.OkiM6258;
 
 
@@ -37,14 +35,18 @@ public class OkiM6258Inst extends Instrument.BaseInstrument {
         chips[chipId].reset();
     }
 
-    /** @param option int[1] */
+    /** @param option 0: (int) type, 1: (BiConsumer<Integer, Integer>) fn, 2: (int) sampleRate */
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
         assert chipId < MAX_CHIPS;
 
-        int divider = ((int) option[0] & 0x03) >> 0;
-        int adpcmType = ((int) option[0] & 0x04) >> 2;
-        int output12Bits = ((int) option[0] & 0x08) >> 3;
+        int type = (int) option[0];
+        int divider = (type & 0x03) >> 0;
+        int adpcmType = (type & 0x04) >> 2;
+        int output12Bits = (type & 0x08) >> 3;
+        BiConsumer<Integer, Integer> callbackFunc = (BiConsumer<Integer, Integer>) option[1];
+        int oldSampleRate = (int) option[2];
+        chips[chipId].setCallback(newSamplingRate -> callbackFunc.accept(oldSampleRate, newSamplingRate));
 
         return chips[chipId].start(clock, divider, adpcmType, output12Bits);
     }
@@ -118,14 +120,22 @@ public class OkiM6258Inst extends Instrument.BaseInstrument {
         OkiM6258.setOptions(options);
     }
 
-    public void setCallback(int chipId, BiConsumer<Chip, Integer> callbackFunc, MDSound.Chip dataPtr) {
-        chips[chipId].setCallback(samplingRate -> callbackFunc.accept(dataPtr, samplingRate));
-    }
-
     //----
 
-    public synchronized OkiM6258 getChip(int chipId) {
-        return chips[chipId];
+    public synchronized Map<String, Object> getInfo(int chipId) {
+        OkiM6258 chip = chips[chipId];
+
+        Map<String, Object> info = new HashMap<>();
+        info.put("pan", chip.getPan());
+        info.put("masterFreq", chip.getMasterClock() / 1000);
+        info.put("divider", chip.getDivider());
+        if (chip.getDivider() == 0) info.put("pbFreq", 0);
+        else info.put("pbFreq", chip.getMasterClock() / chip.getDivider() / 1000);
+
+        info.put("dataIn", chip.getDataIn());
+        info.put("status", chip.getStatus());
+
+        return info;
     }
 
     //----

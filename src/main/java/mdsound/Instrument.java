@@ -8,7 +8,7 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.ServiceLoader;
 
-import dotnet4j.util.compat.Tuple;
+import vavi.util.compat.Tuple;
 
 
 /**

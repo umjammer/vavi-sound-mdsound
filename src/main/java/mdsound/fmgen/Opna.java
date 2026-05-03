@@ -6,6 +6,9 @@
 
 package mdsound.fmgen;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
 import java.nio.file.Files;
@@ -13,12 +16,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.function.Function;
-
-import dotnet4j.io.FileAccess;
-import dotnet4j.io.FileMode;
-import dotnet4j.io.FileStream;
-import dotnet4j.io.Stream;
-import mdsound.Common;
 
 import static java.lang.System.getLogger;
 
@@ -1324,7 +1321,7 @@ logger.log(Level.INFO, Arrays.toString(ch));
             return init(c, r, ipFlag, chipId, fName -> createRhythmFileStream(path, fName));
         }
 
-        public boolean init(int c, int r, boolean ipFlag, int chipId, Function<String, Stream> appendFileReaderCallback /* = null */) {
+        public boolean init(int c, int r, boolean ipFlag, int chipId, Function<String, InputStream> appendFileReaderCallback /* = null */) {
             rate = 8000;
             loadRhythmSample(chipId, appendFileReaderCallback);
 
@@ -1356,10 +1353,14 @@ logger.log(Level.INFO, Arrays.toString(ch));
             public int size;
         }
 
-        private static FileStream createRhythmFileStream(String dir, String fname) {
-            Path path = dir == null || dir.isEmpty() ? Paths.get(fname) : Paths.get(dir, fname);
+        private static InputStream createRhythmFileStream(String dir, String fname) {
+            try {
+                Path path = dir == null || dir.isEmpty() ? Paths.get(fname) : Paths.get(dir, fname);
 logger.log(Level.DEBUG, path + ", " + Files.exists(path));
-            return Files.exists(path) ? new FileStream(path.toString(), FileMode.Open, FileAccess.Read) : null;
+                return Files.exists(path) ? Files.newInputStream(path) : null;
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
+            }
         }
 
         public boolean loadRhythmSample(int chipId, String path) {
@@ -1369,7 +1370,7 @@ logger.log(Level.DEBUG, path + ", " + Files.exists(path));
         /**
          * Loading rhythm sounds.
          */
-        public boolean loadRhythmSample(int chipId, Function<String, Stream> appendFileReaderCallback) {
+        public boolean loadRhythmSample(int chipId, Function<String, InputStream> appendFileReaderCallback) {
             String[] rhythmNames = {
                     "bd", "sd", "top", "hh", "tom", "rim",
             };
@@ -1388,24 +1389,24 @@ logger.log(Level.DEBUG, path + ", " + Files.exists(path));
                     String rymBuf2 = "2608_rym.wav";
                     byte[] file;
 
-                    try (Stream st = appendFileReaderCallback.apply(buf1)) {
-                        file = Common.readAllBytes(st);
+                    try (InputStream st = appendFileReaderCallback.apply(buf1)) {
+                        file = st != null ? st.readAllBytes() : null;
                     }
                     if (file == null) {
-                        try (Stream st = appendFileReaderCallback.apply(buf2)) {
-                            file = Common.readAllBytes(st);
+                        try (InputStream st = appendFileReaderCallback.apply(buf2)) {
+                            file = st != null ? st.readAllBytes() : null;
                         }
                     }
 
                     if (file == null) {
                         f = false;
                         if (i == 5) {
-                            try (Stream st = appendFileReaderCallback.apply(rymBuf1)) {
-                                file = Common.readAllBytes(st);
+                            try (InputStream st = appendFileReaderCallback.apply(rymBuf1)) {
+                                file = st != null ? st.readAllBytes() : null;
                             }
                             if (file == null) {
-                                try (Stream st = appendFileReaderCallback.apply(rymBuf2)) {
-                                    file = Common.readAllBytes(st);
+                                try (InputStream st = appendFileReaderCallback.apply(rymBuf2)) {
+                                    file = st != null ? st.readAllBytes() : null;
                                 }
                             }
                             if (file != null) {
@@ -1521,7 +1522,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
             switch (addr) {
             case 0x29:
                 reg29 = data;
-                // updateStatus(); // ?
+                //updateStatus(); // ?
                 break;
 
             // Rhythm
@@ -1601,7 +1602,6 @@ logger.log(Level.ERROR, e.getMessage(), e);
             db = Math.min(db, 20);
             rhythm[index].volume = -(db * 2 / 3);
         }
-
 
         public byte[] getADPCMBuffer() {
             return adpcmBuf;

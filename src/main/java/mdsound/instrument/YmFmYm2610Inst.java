@@ -9,7 +9,7 @@ package mdsound.instrument;
 import java.util.HashMap;
 import java.util.Map;
 
-import dotnet4j.util.compat.Tuple;
+import vavi.util.compat.Tuple;
 import mdsound.Instrument;
 import mdsound.Instrument.AdpcmEnabledInstrument;
 import vavi.sound.ymfm.Opn.Ym2610;

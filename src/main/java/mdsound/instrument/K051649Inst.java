@@ -3,7 +3,7 @@ package mdsound.instrument;
 import java.util.HashMap;
 import java.util.Map;
 
-import dotnet4j.util.compat.Tuple;
+import vavi.util.compat.Tuple;
 import mdsound.Instrument;
 import mdsound.chips.K051649;
 
@@ -121,8 +121,24 @@ public class K051649Inst extends Instrument.BaseInstrument {
 
     //----
 
-    public synchronized K051649 getChip(int chipId) {
-        return chips[chipId];
+    public synchronized Map<String, Object> getInfo(int chipId) {
+        K051649 chip = chips[chipId];
+
+        Map<String, Object> newParam = new HashMap<>();
+        for (int ch = 0; ch < 5; ch++) {
+            K051649.Channel psg = chip.getChannel(ch);
+            if (psg == null) continue;
+
+            for (int i = 0; i < 32; i++) newParam.put("channels." + ch + ".inst. " + i, chip.getWaveRam(ch, i));
+            newParam.put("channels." + ch + ".freq",  psg.frequency);
+            newParam.put("channels." + ch + ".volume",  psg.key != 0 ? (int) (psg.volume * 1.33) : 0);
+            newParam.put("channels." + ch + ".volumeL",  psg.volume);
+            newParam.put("channels." + ch + ".frequency", psg.frequency);
+            newParam.put("channels." + ch + ".key", psg.key);
+            newParam.put("channels." + ch + ".dda",  psg.key != 0);
+        }
+
+        return newParam;
     }
 
     //----

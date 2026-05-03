@@ -20,7 +20,7 @@ package mdsound.chips;
 import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
 
-import dotnet4j.util.compat.TriConsumer;
+import vavi.util.compat.TriConsumer;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import static java.lang.System.getLogger;

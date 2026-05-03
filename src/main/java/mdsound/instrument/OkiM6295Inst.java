@@ -4,11 +4,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
-import dotnet4j.util.compat.Tuple;
+import vavi.util.compat.Tuple;
 import mdsound.Instrument;
 import mdsound.Instrument.PcmEnabledInstrument;
-import mdsound.MDSound;
-import mdsound.MDSound.Chip;
 import mdsound.chips.OkiM6295;
 
 
@@ -40,9 +38,14 @@ public class OkiM6295Inst extends Instrument.BaseInstrument implements PcmEnable
         chips[chipId].reset();
     }
 
+    /** @param option 0: (BiConsumer<Integer, Integer>) fn, 1: (int) sampleRate */
     @Override
     public int start(int chipId, int samplingRate, int clock, Object... option) {
         assert chipId < MAX_CHIPS;
+
+        BiConsumer<Integer, Integer> callbackFunc = (BiConsumer<Integer, Integer>) option[0];
+        int oldSampleRate = (int) option[1];
+        chips[chipId].setCallback(newSamplingRate -> callbackFunc.accept(oldSampleRate, newSamplingRate));
 
         return chips[chipId].start(clock);
     }
@@ -90,10 +93,6 @@ public class OkiM6295Inst extends Instrument.BaseInstrument implements PcmEnable
         chips[chipId].setMuteMask(muteMask);
     }
 
-    public void setCallback(int chipId, BiConsumer<Chip, Integer> callbackFunc, MDSound.Chip dataPtr) {
-        chips[chipId].setCallback(samplingRate -> callbackFunc.accept(dataPtr, samplingRate));
-    }
-
     /** @param extras 0: srcOffset, 1: romSize */
     @Override
     public synchronized void writePcm(int chipId, byte[] buf, int offset, int length, Object... extras) {
@@ -104,13 +103,26 @@ public class OkiM6295Inst extends Instrument.BaseInstrument implements PcmEnable
 
     //----
 
-    public synchronized OkiM6295 getChip(int chipId) {
-        return chips[chipId];
-    }
-
-    public synchronized OkiM6295.ChannelInfo getChInfo(int chipId) {
+    public synchronized Map<String, Object> getInfo(int chipId) {
         OkiM6295 chip = chips[chipId];
-        return chip.readChInfo();
+        OkiM6295.ChannelInfo info = chip.readChInfo();
+
+        Map<String, Object> newParam = new HashMap<>();
+        for (int c = 0; c < 4; c++) {
+
+            newParam.put("channels." + c + ".keyon", info.keyon[c]);
+            newParam.put("channels." + c + ".sadr", info.chInfo[c].stAdr);
+            newParam.put("channels." + c + ".eadr", info.chInfo[c].edAdr);
+        }
+
+        newParam.put("masterClock", info.masterClock);
+        newParam.put("pin7State", info.pin7State);
+        newParam.put("nmkBank.0", info.nmkBank[0]);
+        newParam.put("nmkBank.1", info.nmkBank[1]);
+        newParam.put("nmkBank.2", info.nmkBank[2]);
+        newParam.put("nmkBank.3", info.nmkBank[3]);
+
+        return newParam;
     }
 
     //----

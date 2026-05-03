@@ -6,7 +6,7 @@
 
 package mdsound.instrument;
 
-import dotnet4j.util.compat.Tuple;
+import vavi.util.compat.Tuple;
 import mdsound.Instrument.BaseInstrument;
 import mdsound.chips.Emu2413;
 

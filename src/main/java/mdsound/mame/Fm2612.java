@@ -13,7 +13,7 @@ package mdsound.mame;
 import java.util.Arrays;
 import java.util.function.BiConsumer;
 
-import dotnet4j.util.compat.QuadConsumer;
+import vavi.util.compat.QuadConsumer;
 import mdsound.mame.Fm.BaseChip;
 
 

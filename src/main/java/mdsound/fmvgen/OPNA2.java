@@ -5,16 +5,12 @@
 package mdsound.fmvgen;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UncheckedIOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.function.Function;
 
-import dotnet4j.io.File;
-import dotnet4j.io.FileAccess;
-import dotnet4j.io.FileMode;
-import dotnet4j.io.FileStream;
-import dotnet4j.io.Path;
-import dotnet4j.io.Stream;
-import mdsound.Common;
 import mdsound.fmgen.Opna;
 import mdsound.fmvgen.Fmvgen.Effects;
 import mdsound.fmvgen.effect.ReversePhase;
@@ -156,8 +152,8 @@ public class OPNA2 extends Opna.OPNABase {
     }
 
     public boolean init(int c, int r, boolean ipFlag,
-                        Function<String, Stream> appendFileReaderCallback /* = null */,
-                        byte[] adpcmA/* = null*/, int adpcmaSize /* = 0 */) {
+                        Function<String, InputStream> appendFileReaderCallback /* = null */,
+                        byte[] adpcmA /* = null */, int adpcmaSize /* = 0 */) {
         rate = 8000;
         try {
             loadRhythmSample(appendFileReaderCallback);
@@ -206,7 +202,7 @@ public class OPNA2 extends Opna.OPNABase {
     /**
      * Sampling rate change
      */
-    public boolean setRate(int c, int r, boolean ipflag /* = false*/) {
+    public boolean setRate(int c, int r, boolean ipflag /* = false */) {
         if (!super.setRate(c, r, ipflag))
             return false;
 
@@ -272,7 +268,7 @@ public class OPNA2 extends Opna.OPNABase {
         super.rebuildTimeTable();
 
         int p = prescale;
-        prescale = (byte) 0xff;//-1;
+        prescale = (byte) 0xff; // -1;
         setPreScaler(p);
     }
 
@@ -424,7 +420,6 @@ public class OPNA2 extends Opna.OPNABase {
         }
     }
 
-
     public int getReg(int addr) {
         return 0;
     }
@@ -539,9 +534,13 @@ public class OPNA2 extends Opna.OPNABase {
         }
     }
 
-    private static FileStream createRhythmFileStream(String dir, String fname) {
-        String path = dir == null || dir.isEmpty() ? fname : Path.combine(dir, fname);
-        return File.exists(path) ? new FileStream(path, FileMode.Open, FileAccess.Read) : null;
+    private static InputStream createRhythmFileStream(String dir, String fname) {
+        try {
+            Path path = dir == null || dir.isEmpty() ? Path.of(fname) : Path.of(dir, fname);
+            return Files.exists(path) ? Files.newInputStream(path) : null;
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
     }
 
     public boolean loadRhythmSample(String path) throws IOException {
@@ -551,7 +550,7 @@ public class OPNA2 extends Opna.OPNABase {
     /**
      * Loading rhythm sounds
      */
-    public boolean loadRhythmSample(Function<String, Stream> appendFileReaderCallback) throws IOException {
+    public boolean loadRhythmSample(Function<String, InputStream> appendFileReaderCallback) throws IOException {
         String[] rhythmName = {
                 "bd", "sd", "top", "hh", "tom", "rim",
         };
@@ -567,16 +566,16 @@ public class OPNA2 extends Opna.OPNABase {
             int fSize;
             String fileName = "2608_%s.wav".formatted(rhythmName[i]);
 
-            try (Stream st = appendFileReaderCallback.apply(fileName)) {
-                buf = Common.readAllBytes(st);
+            try (InputStream st = appendFileReaderCallback.apply(fileName)) {
+                buf = st != null ? st.readAllBytes() : null;
             }
 
             if (buf == null) {
                 if (i != 5)
                     break;
                 String fileNameRym = "2608_rym.wav";
-                try (Stream st = appendFileReaderCallback.apply(fileNameRym)) {
-                    buf = Common.readAllBytes(st);
+                try (InputStream st = appendFileReaderCallback.apply(fileNameRym)) {
+                    buf = st != null ? st.readAllBytes() : null;
                 }
             }
 

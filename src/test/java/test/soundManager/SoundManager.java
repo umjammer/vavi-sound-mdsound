@@ -1,9 +1,8 @@
-
 package test.soundManager;
 
-import dotnet4j.util.compat.HexaConsumer;
-import dotnet4j.util.compat.HexaFunction;
 import vavi.util.Debug;
+import vavi.util.compat.HexaConsumer;
+import vavi.util.compat.HexaFunction;
 
 
 public class SoundManager {

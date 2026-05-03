@@ -4,7 +4,7 @@ package mdsound.instrument;
 import java.util.HashMap;
 import java.util.Map;
 
-import dotnet4j.util.compat.Tuple;
+import vavi.util.compat.Tuple;
 import mdsound.Instrument;
 import mdsound.Instrument.PcmEnabledInstrument;
 import mdsound.chips.C352;
@@ -93,9 +93,9 @@ public class C352Inst extends Instrument.BaseInstrument implements PcmEnabledIns
 
     //----
 
-    public synchronized int[] readFlags(int chipId) {
+    public synchronized Map<String, Object> getInfo(int chipId) {
         C352 chip = chips[chipId];
-        return chip.getFlags();
+        return Map.of("flags", chip.getFlags());
     }
 
     /**

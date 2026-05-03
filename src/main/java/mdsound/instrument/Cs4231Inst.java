@@ -44,7 +44,7 @@ public class Cs4231Inst extends Instrument.BaseInstrument {
 
     @Override
     public int read(int chipId, int adr) {
-        return chips[chipId].readReg(adr);
+        return readReg(chipId, adr);
     }
 
     @Override
@@ -117,7 +117,7 @@ public class Cs4231Inst extends Instrument.BaseInstrument {
         chip.EMS_AllocMemory(ah, dx, bx);
     }
 
-    public int readReg(int chipId, int adr) {
+    private int readReg(int chipId, int adr) {
         Cs4231 chip = chips[chipId & 1];
         return chip.readReg(adr);
     }
