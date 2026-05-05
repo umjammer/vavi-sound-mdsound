@@ -23,21 +23,21 @@ public class Gigatron {
     private double audioSampleRate = 44100;
     private byte channelMask = 0x3;
 
-    public void Reset() {
-        Stop();
+    public void reset() {
+        stop();
         resetSample();
     }
 
-    public int Start(int sampleRate, int clock) {
+    public int start(int sampleRate, int clock) {
         this.audioSampleRate = sampleRate;
         this.bClock = clock * 2;
 
-        Reset();
+        reset();
 
         return sampleRate;
     }
 
-    public void Stop() {
+    public void stop() {
         for (Channel ch : this.ch) {
             ch.osc = 0;
             ch.key = 0;
@@ -46,7 +46,7 @@ public class Gigatron {
         }
     }
 
-    public void Update(int[][] outputs, int samples) {
+    public void update(int[][] outputs, int samples) {
         // Synthesis
         for (int p = 0; p < samples; p++) {
 
@@ -81,7 +81,7 @@ public class Gigatron {
         }
     }
 
-    public int Write(int port, int adr, int data) {
+    public int write(int port, int adr, int data) {
         short ad = (short) adr;
         byte dat = (byte) data;
 

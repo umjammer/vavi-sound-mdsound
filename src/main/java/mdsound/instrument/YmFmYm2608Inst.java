@@ -15,10 +15,10 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
-import vavi.util.compat.Tuple;
 import mdsound.Instrument;
 import vavi.sound.ymfm.Opn.Ym2608;
 import vavi.sound.ymfm.YmFm.VgmChip;
+import vavi.util.compat.Tuple;
 
 import static java.lang.System.getLogger;
 import static vavi.sound.ymfm.YmFm.AccessClass.ADPCM_A;
@@ -32,7 +32,7 @@ import static vavi.sound.ymfm.YmFm.AccessClass.ADPCM_A;
  */
 public class YmFmYm2608Inst extends Instrument.BaseInstrument {
 
-    private static final Logger logger = getLogger(Ym2608Inst.class.getName());
+    private static final Logger logger = getLogger(YmFmYm2608Inst.class.getName());
 
     public static final int DefaultClockValue = 8000000;
 

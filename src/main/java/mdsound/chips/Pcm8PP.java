@@ -230,7 +230,7 @@ logger.log(Level.INFO, "sampleRate: " + sampleRate);
                         valL <<= 2;
                         valR = valL;
                         break;
-                    // 7以降は新規実装
+                    // Newly implemented from version 7 onwards.
                     default:
                         // Processing of pcm8pp
                         switch (st.type) {

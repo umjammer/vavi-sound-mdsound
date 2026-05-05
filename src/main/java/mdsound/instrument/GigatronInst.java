@@ -32,12 +32,12 @@ public class GigatronInst extends BaseInstrument {
 
     @Override
     public void reset(int chipId) {
-        gig[chipId].Reset();
+        gig[chipId].reset();
     }
 
     @Override
     public int start(int chipId, int sampleRate, int clock, Object... option) {
-        gig[chipId].Start(sampleRate, clock);
+        gig[chipId].start(sampleRate, clock);
         return sampleRate;
     }
 
@@ -53,12 +53,12 @@ public class GigatronInst extends BaseInstrument {
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
-        gig[chipId].Update(outputs, samples);
+        gig[chipId].update(outputs, samples);
     }
 
     @Override
     public void stop(int chipId) {
-        gig[chipId].Stop();
+        gig[chipId].stop();
     }
 
     @Override
