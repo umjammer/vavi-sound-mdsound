@@ -58,7 +58,7 @@ public class C140Inst extends Instrument.BaseInstrument implements PcmEnabledIns
         assert chipId < MAX_CHIPS;
 
         int sampleRate = clock;
-        if ((CHIP_SAMPLING_MODE == 0x01 && sampleRate < CHIP_SAMPLE_RATE) || CHIP_SAMPLING_MODE == 0x02)
+        if (((CHIP_SAMPLING_MODE & 0x01) != 0 && sampleRate < CHIP_SAMPLE_RATE) || CHIP_SAMPLING_MODE == 0x02)
             sampleRate = CHIP_SAMPLE_RATE;
         if (sampleRate >= 0x100_0000) { // limit to 16 MHz sample rate (32 MB buffer)
 logger.log(Level.WARNING, "sampleRate: " + sampleRate);
