@@ -20,7 +20,9 @@ public class Util {
 
     /** */
     public static String changeExtension(String path, String extension) {
-        return Path.of(path).getParent().resolve(getFileNameWithoutExtension(Path.of(path).getFileName().toString()) + extension).toString();
+        Path parent = Path.of(path).getParent();
+        String name = getFileNameWithoutExtension(Path.of(path).getFileName().toString()) + extension;
+        return parent != null ? parent.resolve(name).toString() : name;
     }
 
     /** */
