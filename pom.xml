@@ -88,13 +88,13 @@
     <dependency>
       <groupId>com.github.umjammer</groupId> <!-- com.github.umjammer / vavi -->
       <artifactId>vavi-commons</artifactId>
-      <version>1.1.16</version>
+      <version>1.1.17</version>
     </dependency>
 
     <dependency>
       <groupId>com.github.umjammer</groupId>
       <artifactId>vavi-sound</artifactId>
-      <version>1.0.24</version>
+      <version>1.0.25</version>
       <scope>test</scope>
     </dependency>
 
@@ -106,8 +106,8 @@
 
     <dependency>
       <groupId>com.github.umjammer</groupId> <!-- com.github.umjammer / net.sourceforge.javamod -->
-      <artifactId>JavaMod</artifactId> <!-- javamod / JavaMod -->
-      <version>3.9.17</version>
+      <artifactId>javamod</artifactId> <!-- javamod / JavaMod -->
+      <version>3.9.18b</version>
       <exclusions>
         <exclusion>
           <groupId>com.github.umjammer</groupId>
