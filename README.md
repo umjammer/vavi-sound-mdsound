@@ -97,7 +97,7 @@ this is a fork of [MDSound](https://github.com/kuma4649/MDSound)
 | ES5505                |             |       |   🥚   | mame:zgm                 |                                                                                                                              |
 | μPD7759               |             | PCM   |   🥚   | ?:vgm                    |                                                                                                                              |
 | MDPCM                 | MDPCM       | PCM   |   ✅*   | mdsdrv                   | (*) not perfect                                                                                                              |
-| ZXBeep                |             |       |   ✅    |                          | Spectrum/Demos/Beeper Demo part 1.ay                                                                                         |
+| ZXBeep                |             |       |   ✅    | ay                       | Spectrum/Demos/Beeper Demo part 1.ay                                                                                         |
 
 <sub>* WTS ... [wavetable synthesis](https://ja.wikipedia.org/wiki/%E6%B3%A2%E5%BD%A2%E3%83%A1%E3%83%A2%E3%83%AA%E9%9F%B3%E6%BA%90)</sub><br/>
 

@@ -51,11 +51,11 @@ public class C140 {
         private int ptOffset;
         private int pos;
         private int key;
-        //--work
+        // work
         private int lastDt;
         private int prevDt;
         private int dltDt;
-        //--reg
+        // reg
         private int rVol;
         private int lVol;
         private int frequency;
@@ -83,7 +83,7 @@ public class C140 {
 
     private int sampleRate;
     private Type bankingType;
-    /** internal buffers */
+    // internal buffers
     private int[] mixerBufferLeft;
     private int[] mixerBufferRight;
 
@@ -125,18 +125,14 @@ public class C140 {
         adrs = (bank << 16) + adrs;
 
         return switch (bankingType) {
-            case SYSTEM2 ->
-                // System 2 banking
-                    ((adrs & 0x20_0000) >> 2) | (adrs & 0x7_ffff);
-            case SYSTEM21 ->
-                // System 21 banking.
-                // similar to System 2's.
-                    ((adrs & 0x30_0000) >> 1) | (adrs & 0x7_ffff);
-            case ASIC219 ->
-                // ASIC219's banking is fairly simple
-                    ((this.reg[asic219banks[voice / 4]] & 0x3) * 0x2_0000) | adrs;
+            // System 2 banking
+            case SYSTEM2 -> ((adrs & 0x20_0000) >> 2) | (adrs & 0x7_ffff);
+            // System 21 banking.
+            // similar to System 2's.
+            case SYSTEM21 -> ((adrs & 0x30_0000) >> 1) + (adrs & 0x7_ffff);
+            // ASIC219's banking is fairly simple
+            case ASIC219 -> ((this.reg[asic219banks[voice / 4]] & 0x3) * 0x2_0000) + adrs;
         };
-
     }
 
     public void write(int offset, int data) {
@@ -153,7 +149,7 @@ public class C140 {
 
             if ((offset & 0xf) == 0x5) {
                 if ((data & 0x80) != 0) {
-                    //voice_registers vreg = (voice_registers)this.REG[offset & 0x1f0];
+                    //voice_registers vreg = (voice_registers) this.REG[offset & 0x1f0];
                     int vreg = offset & 0x1f0;
                     v.key = 1;
                     v.ptOffset = 0;
@@ -166,15 +162,15 @@ public class C140 {
 
                     // on the 219 asic, addresses are in words
                     if (this.bankingType == Type.ASIC219) {
-                        v.sample_loop = (((this.reg[vreg + 10] & 0xff) * 256) | (this.reg[vreg + 11] & 0xff)) * 2;
-                        v.sample_start = (((this.reg[vreg + 6] & 0xff) * 256) | (this.reg[vreg + 7] & 0xff)) * 2;
-                        v.sample_end = (((this.reg[vreg + 8] & 0xff) * 256) | (this.reg[vreg + 9] & 0xff)) * 2;
+                        v.sample_loop = (((this.reg[vreg + 10] & 0xff) * 256) + (this.reg[vreg + 11] & 0xff)) * 2;
+                        v.sample_start = (((this.reg[vreg + 6] & 0xff) * 256) + (this.reg[vreg + 7] & 0xff)) * 2;
+                        v.sample_end = (((this.reg[vreg + 8] & 0xff) * 256) + (this.reg[vreg + 9] & 0xff)) * 2;
 
 //logger.log(Level.TRACE, "219: play v %d mode %02x start %x loop %x end %x".formatted(
 // offset >> 4, v.mode,
 // find_sample(info, v.sample_start, v.bank, offset >> 4),
 // find_sample(info, v.sample_loop, v.bank, offset >> 4),
-// find_sample(info, v.sample_end, v.bank, offset >> 4));
+// find_sample(info, v.sample_end, v.bank, offset >> 4)));
                     } else {
                         v.sample_loop = ((this.reg[vreg + 10] & 0xff) << 8) | (this.reg[vreg + 11] & 0xff);
                         v.sample_start = ((this.reg[vreg + 6] & 0xff) << 8) | (this.reg[vreg + 7] & 0xff);
@@ -254,7 +250,7 @@ public class C140 {
         // get the number of voices to update
         voiceCnt = (this.bankingType == Type.ASIC219) ? 16 : 24;
 
-        //--- audio update
+        // audio update
         for (int i = 0; i < voiceCnt; i++) {
             Voice v = this.voi[i];
             int vReg = i * 16;
@@ -316,7 +312,7 @@ public class C140 {
                     // Read the chosen sample byte
                     dt = this.pRom[pSampleData + pos];
 
-                    // decompress to 13bit range         //2000.06.26 CAB
+                    // decompress to 13bit range 2000.06.26 CAB
                     sdt = dt >> 3; // signed
                     if (sdt < 0) sdt = (sdt << (dt & 7)) - this.pcmTbl[dt & 7];
                     else sdt = (sdt << (dt & 7)) + this.pcmTbl[dt & 7];
@@ -325,7 +321,7 @@ public class C140 {
                     lastdt = sdt;
                     dltdt = (lastdt - prevdt);
 
-                    // Caclulate the sample value
+                    // Calculate the sample value
                     dt = ((dltdt * offset) >> 16) + prevdt;
 
                     // Write the data to the sample buffers
@@ -373,7 +369,7 @@ public class C140 {
                         dltdt = lastdt - prevdt;
                     }
 
-                    // Caclulate the sample value
+                    // Calculate the sample value
                     dt = ((dltdt * offset) >> 16) + prevdt;
 
                     // Write the data to the sample buffers
@@ -410,7 +406,7 @@ public class C140 {
         if (clockValue < 1000000)
             this.baseRate = clockValue;
         else
-            this.baseRate = clockValue / 384; // based on MAME's notes on Namco System II
+            this.baseRate = clockValue / 576; // based on MAME's notes on Namco System II
         this.sampleRate = sampleRate;
         this.bankingType = bankingType;
 
