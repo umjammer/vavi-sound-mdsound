@@ -77,7 +77,6 @@ public class OkiM6258Inst extends Instrument.BaseInstrument {
 
     @Override
     public void stop(int chipId) {
-        chips[chipId] = null;
     }
 
     @Override

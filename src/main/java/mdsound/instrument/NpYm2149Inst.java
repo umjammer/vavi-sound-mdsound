@@ -78,7 +78,6 @@ public class NpYm2149Inst extends Instrument.BaseInstrument {
 
     @Override
     public void stop(int chipId) {
-        chips[chipId] = null;
     }
 
     @Override

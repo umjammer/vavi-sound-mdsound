@@ -65,6 +65,7 @@ public class SegaPcmInst extends Instrument.BaseInstrument {
         chips[chipId].write(adr, data);
         return 0;
     }
+
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
         chips[chipId].update(outputs, samples);
