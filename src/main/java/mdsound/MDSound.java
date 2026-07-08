@@ -18,6 +18,9 @@ import java.util.stream.Collectors;
 import mdsound.instrument.NesInst;
 import vavi.util.compat.QuadConsumer;
 import vavi.util.compat.TriConsumer;
+import vavi.util.event.GenericEvent;
+import vavi.util.event.GenericListener;
+import vavi.util.event.GenericSupport;
 
 import static java.lang.System.getLogger;
 
@@ -64,9 +67,6 @@ public class MDSound {
 
     private boolean incFlag = false;
     private double volumeMul;
-
-    /** view */
-    public final VisWaveBuffer visWaveBuffer = new VisWaveBuffer();
 
     /** */
     public static class Chip {
@@ -312,7 +312,7 @@ instruments.keySet().forEach(k -> logger.log(Level.DEBUG, "instrument: " + k.get
             buf[offset + i + 0] = (short) a[0];
             buf[offset + i + 1] = (short) b[0];
 logger.log(Level.TRACE, "[%d] %+04d, %+04d".formatted(i, a[0], b[0]));
-            visWaveBuffer.enq((short) a[0], (short) b[0]);
+            fireEventHappened(this, "visWaveBuffer", (short) a[0], (short) b[0]);
         }
 
         return Math.min(i, sampleCount);
@@ -370,6 +370,20 @@ if (!notContains.contains(i)) {
 //#endregion
 
 //#region VisVolume
+
+    protected final GenericSupport viewSupport = new GenericSupport();
+
+    public void addViewListener(GenericListener listener) {
+        viewSupport.addGenericListener(listener);
+    }
+
+    /**
+     *
+     * @param name
+     */
+    public void fireEventHappened(Object src, String name, Object... args) {
+        viewSupport.fireEventHappened(new GenericEvent(src, name, args));
+    }
 
     public Set<Instrument> getFirstInstruments() {
         return instruments.values().stream().map(List::getFirst).collect(Collectors.toSet());

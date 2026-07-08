@@ -5,6 +5,7 @@
 package mdsound;
 
 
+@Deprecated
 public class VisWaveBuffer {
 
     private final short[][] buf;
