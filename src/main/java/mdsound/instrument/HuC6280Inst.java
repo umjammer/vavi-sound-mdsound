@@ -69,8 +69,6 @@ public class HuC6280Inst extends Instrument.BaseInstrument {
 
     @Override
     public void stop(int chipId) {
-        assert chipId < chips.length;
-        chips[chipId] = null;
     }
 
     @Override
