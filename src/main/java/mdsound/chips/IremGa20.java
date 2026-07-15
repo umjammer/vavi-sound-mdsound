@@ -99,6 +99,7 @@ public class IremGa20 {
 
     private byte[] rom;
     private int romSize;
+    private int clock;
     private final int[] regs = new int[0x40];
     private final Channel[] channel = new Channel[] {
             new Channel(),
@@ -106,6 +107,36 @@ public class IremGa20 {
             new Channel(),
             new Channel()
     };
+
+    /** for the view: the raw value of register {@code i} (0x00..0x3f). */
+    public int getReg(int i) {
+        return this.regs[i];
+    }
+
+    /** for the view: sample start address of channel {@code ch}. */
+    public int getStart(int ch) {
+        return this.channel[ch].start;
+    }
+
+    /** for the view: sample end address of channel {@code ch}. */
+    public int getEnd(int ch) {
+        return this.channel[ch].end;
+    }
+
+    /** for the view: current playback position of channel {@code ch}. */
+    public int getPos(int ch) {
+        return this.channel[ch].pos;
+    }
+
+    /** for the view: whether channel {@code ch} is currently sounding. */
+    public boolean isPlaying(int ch) {
+        return this.channel[ch].play != 0;
+    }
+
+    /** for the view: the chip clock, needed to turn a rate into a note. */
+    public int getClock() {
+        return this.clock;
+    }
 
     public void update(int[][] outputs, int samples) {
         class Update {
@@ -207,6 +238,7 @@ public class IremGa20 {
         /* Initialize our chips structure */
         this.rom = null;
         this.romSize = 0x00;
+        this.clock = clock;
 
         resetChannels();
 

@@ -84,6 +84,23 @@ public class Ga20Inst extends Instrument.BaseInstrument implements PcmEnabledIns
         chips[chipId].writeRom(romSize, offset, length, buf, srcOffset);
     }
 
+    /** what the GA20 keyboard view reads each frame: raw per-channel register state. */
+    public synchronized Map<String, Object> getInfo(int chipId) {
+        IremGa20 chip = chips[chipId];
+
+        Map<String, Object> info = new HashMap<>();
+        info.put("clock", chip.getClock());
+        for (int ch = 0; ch < 4; ch++) {
+            info.put("channels." + ch + ".freq", chip.getReg(4 + (ch << 3)));
+            info.put("channels." + ch + ".volume", chip.getReg(5 + (ch << 3)));
+            info.put("channels." + ch + ".sadr", chip.getStart(ch));
+            info.put("channels." + ch + ".eadr", chip.getEnd(ch));
+            info.put("channels." + ch + ".ladr", chip.getPos(ch));
+            info.put("channels." + ch + ".play", chip.isPlaying(ch));
+        }
+        return info;
+    }
+
     //----
 
     @Override

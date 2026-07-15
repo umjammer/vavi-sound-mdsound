@@ -162,11 +162,72 @@ public class K053260 {
     }
 
     private int mode;
+    private int clock;
     private final int[] regs = new int[0x30];
     private byte[] rom;
     private int romSize;
     private int[] deltaTable;
     private final Channel[] channels = new Channel[] {new Channel(), new Channel(), new Channel(), new Channel()};
+
+    /** for the view: the chip clock, needed to turn a rate into a note. */
+    public int getClock() {
+        return this.clock;
+    }
+
+    /** for the view: sample rate register of channel {@code ch}. */
+    public int getRate(int ch) {
+        return this.channels[ch].rate;
+    }
+
+    /** for the view: sample size of channel {@code ch}. */
+    public int getSize(int ch) {
+        return this.channels[ch].size;
+    }
+
+    /** for the view: sample start address of channel {@code ch}. */
+    public int getStart(int ch) {
+        return this.channels[ch].start;
+    }
+
+    /** for the view: bank of channel {@code ch}. */
+    public int getBank(int ch) {
+        return this.channels[ch].bank;
+    }
+
+    /** for the view: volume of channel {@code ch}. */
+    public int getVolume(int ch) {
+        return this.channels[ch].volume;
+    }
+
+    /** for the view: pan of channel {@code ch}. */
+    public int getPan(int ch) {
+        return this.channels[ch].pan;
+    }
+
+    /** for the view: whether channel {@code ch} is sounding. */
+    public int getPlay(int ch) {
+        return this.channels[ch].play;
+    }
+
+    /** for the view: playback direction of channel {@code ch}. */
+    public int getDir(int ch) {
+        return this.channels[ch].dir;
+    }
+
+    /** for the view: loop flag of channel {@code ch}. */
+    public int getLoop(int ch) {
+        return this.channels[ch].loop;
+    }
+
+    /** for the view: 4bit-PCM flag of channel {@code ch}. */
+    public int getPpcm(int ch) {
+        return this.channels[ch].ppcm;
+    }
+
+    /** for the view: the pitch delta of channel {@code ch}, for the note display. */
+    public int getDelta(int ch) {
+        return this.deltaTable[this.channels[ch].rate];
+    }
 
     private void initDeltaTable(int rate, int clock) {
         double base = rate;
@@ -318,6 +379,7 @@ public class K053260 {
         // Initialize our chips structure
 
         this.mode = 0;
+        this.clock = clock;
 
         this.rom = null;
         this.romSize = 0x00;

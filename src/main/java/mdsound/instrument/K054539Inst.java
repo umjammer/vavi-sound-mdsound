@@ -97,6 +97,19 @@ public class K054539Inst extends Instrument.BaseInstrument implements PcmEnabled
         chips[chipId].writeRom(romSize, offset, length, buf, srcOffset);
     }
 
+    /**
+     * what the K054539 keyboard view reads each frame. Unlike the other PCM chips this one is
+     * register-file addressed, so the view reads {@code regs} directly the way the driver wrote it.
+     */
+    public synchronized Map<String, Object> getInfo(int chipId) {
+        K054539 chip = chips[chipId];
+
+        Map<String, Object> info = new HashMap<>();
+        info.put("clock", chip.getClock());
+        info.put("regs", chip.getRegs());
+        return info;
+    }
+
     //----
 
     @Override

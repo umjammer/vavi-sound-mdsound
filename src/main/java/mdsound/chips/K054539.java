@@ -127,6 +127,20 @@ public class K054539 {
 
     private int clock;
 
+    /** for the view: a copy of the whole register file (0x230 bytes). */
+    public int[] getRegs() {
+        int[] copy = new int[this.regs.length];
+        for (int i = 0; i < this.regs.length; i++) {
+            copy[i] = this.regs[i] & 0xff;
+        }
+        return copy;
+    }
+
+    /** for the view: the chip clock, needed to turn a pitch into a note. */
+    public int getClock() {
+        return this.clock;
+    }
+
     private int updateReg() {
         return this.regs[0x22f] & 0x80;
     }

@@ -83,6 +83,28 @@ public class K053260Inst extends Instrument.BaseInstrument implements PcmEnabled
         chips[chipId].writeRom(romSize, offset, length, buf, srcOffset);
     }
 
+    /** what the K053260 keyboard view reads each frame: raw per-channel register state. */
+    public synchronized Map<String, Object> getInfo(int chipId) {
+        K053260 chip = chips[chipId];
+
+        Map<String, Object> info = new HashMap<>();
+        info.put("clock", chip.getClock());
+        for (int ch = 0; ch < 4; ch++) {
+            info.put("channels." + ch + ".freq", chip.getRate(ch));
+            info.put("channels." + ch + ".size", chip.getSize(ch));
+            info.put("channels." + ch + ".start", chip.getStart(ch));
+            info.put("channels." + ch + ".bank", chip.getBank(ch));
+            info.put("channels." + ch + ".volume", chip.getVolume(ch));
+            info.put("channels." + ch + ".pan", chip.getPan(ch));
+            info.put("channels." + ch + ".play", chip.getPlay(ch));
+            info.put("channels." + ch + ".dir", chip.getDir(ch));
+            info.put("channels." + ch + ".loop", chip.getLoop(ch));
+            info.put("channels." + ch + ".ppcm", chip.getPpcm(ch));
+            info.put("channels." + ch + ".delta", chip.getDelta(ch));
+        }
+        return info;
+    }
+
     // ----
 
     @Override
