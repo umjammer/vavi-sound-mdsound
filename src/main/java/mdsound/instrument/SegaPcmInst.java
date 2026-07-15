@@ -99,8 +99,13 @@ public class SegaPcmInst extends Instrument.BaseInstrument {
 
     public synchronized Map<String, Object> getInfo(int chipId) {
         SegaPcm chip = chips[chipId];
-        // TODO
-        return Collections.emptyMap();
+        Map<String, Object> info = new HashMap<>();
+        byte[] register = new byte[0x200];
+        for (int i = 0; i < 0x200; i++) {
+            register[i] = (byte) chip.read(i);
+        }
+        info.put("register", register);
+        return info;
     }
 
     // ----
