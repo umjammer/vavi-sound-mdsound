@@ -81,7 +81,7 @@ public class ZelMusicInst implements Instrument {
     }
 
     @Override
-    public Map<String, Object> getView(String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
         return Map.of();
     }
 }

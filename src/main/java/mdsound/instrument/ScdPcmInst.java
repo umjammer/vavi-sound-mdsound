@@ -101,17 +101,13 @@ public class ScdPcmInst extends Instrument.BaseInstrument implements PcmEnabledI
         chips[chipId].setRate(rate);
     }
 
-    // ----
-
     public synchronized void writeMemory(int chipId, int adr, int data) {
         chips[chipId].writeMem(adr, data);
     }
 
-    public synchronized int[][] readVolumes(int chipId) {
-        return volumes[chipId];
-    }
+    // ----
 
-    public synchronized Map<String, Object> getInfo(int chipId) {
+    private synchronized Map<String, Object> getInfo(int chipId) {
         ScdPcm rf5c164Register = chips[chipId];
 
         Map<String, Object> newParam = new HashMap<>();
@@ -133,11 +129,13 @@ public class ScdPcmInst extends Instrument.BaseInstrument implements PcmEnabledI
     }
 
     @Override
-    public Map<String, Object> getView(String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+            case "info" -> { return getInfo(chipId); }
+            case "volumes" -> result.put(getName(), volumes[chipId]);
         }
         return result;
     }

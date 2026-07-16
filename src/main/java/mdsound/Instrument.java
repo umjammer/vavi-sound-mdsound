@@ -19,7 +19,7 @@ import vavi.util.compat.Tuple;
 public interface Instrument {
 
     /** for view */
-    Map<String, Object> getView(String key, Map<String, Object> args);
+    Map<String, Object> getView(int chipId, String key, Map<String, Object> args);
 
     /**
      * Returns type name.
@@ -74,7 +74,7 @@ public interface Instrument {
         protected int[][][] visVolume;
 
         @Override
-        public Map<String, Object> getView(String key, Map<String, Object> args) {
+        public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
             return Collections.emptyMap();
         }
 

@@ -129,11 +129,11 @@ logger.log(Level.DEBUG, "PCM: offset: " + offset + ", length: " + length + ", da
         return chips[chipId].readDmc().reg;
     }
 
-    public synchronized Map<String, Object> getInfo(int chipId) {
+    private synchronized Map<String, Object> getInfo(int chipId) {
         return toInfo(chips[chipId].readFds());
     }
 
-    public static Map<String, Object> toInfo(NpNesFds fds) {
+    public static Map<String, Object> toInfo(NpNesFds fds) { // TODO public
         Map<String, Object> info = new HashMap<>();
         info.put("freq", fds.lastFreq);
         info.put("vol", fds.lastVol);
@@ -199,7 +199,7 @@ logger.log(Level.DEBUG, "tag: " + tag + ", vol: " + vol);
         }
 
         @Override
-        public Map<String, Object> getView(String key, Map<String, Object> args) {
+        public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
             Map<String, Object> result = new HashMap<>();
             int vol = getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]);
             result.put("volume", vol != 0 ? vol : np_nes_dmc_volume);
@@ -229,7 +229,7 @@ logger.log(Level.DEBUG, "tag: " + tag + ", vol: " + vol);
         }
 
         @Override
-        public Map<String, Object> getView(String key, Map<String, Object> args) {
+        public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
             Map<String, Object> result = new HashMap<>();
             int vol = getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]);
             result.put("volume", vol != 0 ? vol : np_nes_fds_volume);
@@ -252,13 +252,14 @@ logger.log(Level.DEBUG, "tag: " + tag + ", vol: " + vol);
     }
 
     @Override
-    public Map<String, Object> getView(String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" -> {
                 int vol = getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]);
                 result.put("APU", vol != 0 ? vol : np_nes_apu_volume);
             }
+            case "info" -> result.put(getName(), getInfo(chipId));
         }
         return result;
     }

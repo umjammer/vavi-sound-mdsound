@@ -84,7 +84,7 @@ public class K053260Inst extends Instrument.BaseInstrument implements PcmEnabled
     }
 
     /** what the K053260 keyboard view reads each frame: raw per-channel register state. */
-    public synchronized Map<String, Object> getInfo(int chipId) {
+    private synchronized Map<String, Object> getInfo(int chipId) {
         K053260 chip = chips[chipId];
 
         Map<String, Object> info = new HashMap<>();
@@ -113,7 +113,7 @@ public class K053260Inst extends Instrument.BaseInstrument implements PcmEnabled
     }
 
     @Override
-    public Map<String, Object> getView(String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" ->
@@ -122,6 +122,7 @@ public class K053260Inst extends Instrument.BaseInstrument implements PcmEnabled
             case "FAMILY" -> result.put(getName(), "Konami custom");
             case "VERSION" -> result.put(getName(), "1.0");
             case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
+            case "info" -> { return  getInfo(chipId); }
         }
         return result;
     }

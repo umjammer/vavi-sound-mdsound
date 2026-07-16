@@ -101,7 +101,7 @@ public class K054539Inst extends Instrument.BaseInstrument implements PcmEnabled
      * what the K054539 keyboard view reads each frame. Unlike the other PCM chips this one is
      * register-file addressed, so the view reads {@code regs} directly the way the driver wrote it.
      */
-    public synchronized Map<String, Object> getInfo(int chipId) {
+    private synchronized Map<String, Object> getInfo(int chipId) {
         K054539 chip = chips[chipId];
 
         Map<String, Object> info = new HashMap<>();
@@ -118,7 +118,7 @@ public class K054539Inst extends Instrument.BaseInstrument implements PcmEnabled
     }
 
     @Override
-    public Map<String, Object> getView(String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" ->
@@ -127,6 +127,7 @@ public class K054539Inst extends Instrument.BaseInstrument implements PcmEnabled
             case "FAMILY" -> result.put(getName(), "Konami custom");
             case "VERSION" -> result.put(getName(), "1.0");
             case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
+            case "info" -> { return getInfo(chipId); }
         }
         return result;
     }

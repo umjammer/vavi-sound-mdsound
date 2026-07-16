@@ -103,7 +103,7 @@ public class OkiM6295Inst extends Instrument.BaseInstrument implements PcmEnable
 
     //----
 
-    public synchronized Map<String, Object> getInfo(int chipId) {
+    private synchronized Map<String, Object> getInfo(int chipId) {
         OkiM6295 chip = chips[chipId];
         OkiM6295.ChannelInfo info = chip.readChInfo();
 
@@ -133,7 +133,7 @@ public class OkiM6295Inst extends Instrument.BaseInstrument implements PcmEnable
     }
 
     @Override
-    public Map<String, Object> getView(String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" ->
@@ -142,6 +142,7 @@ public class OkiM6295Inst extends Instrument.BaseInstrument implements PcmEnable
             case "FAMILY" -> result.put(getName(), "OKI ADPCM");
             case "VERSION" -> result.put(getName(), "1.0");
             case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
+            case "info" -> { return getInfo(chipId); }
         }
         return result;
     }

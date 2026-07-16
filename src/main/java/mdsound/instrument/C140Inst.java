@@ -121,10 +121,6 @@ logger.log(Level.WARNING, "sampleRate: " + sampleRate);
         chips[chipId].setBase(base);
     }
 
-    public synchronized C140 getRegister(int cur) {
-        return chips[cur];
-    }
-
     //----
 
     @Override
@@ -133,11 +129,12 @@ logger.log(Level.WARNING, "sampleRate: " + sampleRate);
     }
 
     @Override
-    public Map<String, Object> getView(String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" ->
-                    result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+                    result.put(getName(), getMonoVolume(visVolume[chipId][0][0], visVolume[chipId][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+            case "info" -> result.put(getName(), Map.of("register", chips[chipId]));
         }
         return result;
     }

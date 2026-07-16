@@ -138,7 +138,7 @@ public class Ppz8Inst extends Instrument.BaseInstrument {
         chips[chipId].loadPcm(address, data, pcmData);
     }
 
-    public synchronized Map<String, Object> getInfo(int chipId) {
+    private synchronized Map<String, Object> getInfo(int chipId) {
         PPZ8.Channel[] channels = chips[chipId].getChannels();
 
         Map<String, Object> info = new HashMap<>();
@@ -174,11 +174,12 @@ public class Ppz8Inst extends Instrument.BaseInstrument {
     // ----
 
     @Override
-    public Map<String, Object> getView(String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+            case "info" -> { return getInfo(chipId); }
         }
         return result;
     }

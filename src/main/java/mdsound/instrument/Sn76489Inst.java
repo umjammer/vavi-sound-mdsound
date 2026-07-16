@@ -90,19 +90,13 @@ public class Sn76489Inst extends Instrument.BaseInstrument implements PannableIn
 
     // ----
 
-    public synchronized int[] readRegister() {
-//        return chips[0].registers;
-        return new int[4];
-    }
-
-    // ----
-
     @Override
-    public Map<String, Object> getView(String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+            case "register" -> result.put(getName(), chips[0].registers);
         }
         return result;
     }

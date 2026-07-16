@@ -82,13 +82,13 @@ public class Rf5C68Inst extends Instrument.BaseInstrument implements PcmEnabledI
         chips[chipId].writeRam(offset, length, buf, srcOffset);
     }
 
-    //----
-
     public synchronized void writeMemory(int chipId, int adr, int data) {
         chips[chipId].writeMemory(adr, data);
     }
 
-    public synchronized Map<String, Object> getInfo(int chipId) {
+    //----
+
+    private synchronized Map<String, Object> getInfo(int chipId) {
         Rf5C68 chip = chips[chipId];
 
         Map<String, Object> info = new HashMap<>();
@@ -111,7 +111,7 @@ public class Rf5C68Inst extends Instrument.BaseInstrument implements PcmEnabledI
     }
 
     @Override
-    public Map<String, Object> getView(String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" ->
@@ -120,6 +120,7 @@ public class Rf5C68Inst extends Instrument.BaseInstrument implements PcmEnabledI
             case "FAMILY" -> result.put(getName(), "Ricoh PCM");
             case "VERSION" -> result.put(getName(), "1.0");
             case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
+            case "info" -> { return getInfo(chipId); }
         }
         return result;
     }

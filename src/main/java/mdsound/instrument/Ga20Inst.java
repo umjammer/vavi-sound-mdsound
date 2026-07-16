@@ -85,7 +85,7 @@ public class Ga20Inst extends Instrument.BaseInstrument implements PcmEnabledIns
     }
 
     /** what the GA20 keyboard view reads each frame: raw per-channel register state. */
-    public synchronized Map<String, Object> getInfo(int chipId) {
+    private synchronized Map<String, Object> getInfo(int chipId) {
         IremGa20 chip = chips[chipId];
 
         Map<String, Object> info = new HashMap<>();
@@ -109,11 +109,14 @@ public class Ga20Inst extends Instrument.BaseInstrument implements PcmEnabledIns
     }
 
     @Override
-    public Map<String, Object> getView(String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+            case "info" -> {
+                return getInfo(chipId);
+            }
         }
         return result;
     }
