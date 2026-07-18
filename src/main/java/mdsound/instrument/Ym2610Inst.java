@@ -120,13 +120,6 @@ public class Ym2610Inst extends Instrument.BaseInstrument implements AdpcmEnable
 
     // ----
 
-    public synchronized int[] readKeyOn(int chipId) {
-        for (int i = 0; i < 11; i++) {
-            //keyOn[chipId][i] = chips[chipId].CHANNEL[i].KeyOn;
-        }
-        return keyOn[chipId];
-    }
-
     @Override
     public synchronized void writeAdpcmA(int chipId, byte[] Buf) {
         assert chipId < chips.length;
@@ -147,7 +140,7 @@ public class Ym2610Inst extends Instrument.BaseInstrument implements AdpcmEnable
     }
 
     @Override
-    public Map<String, Object> getView(String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
         // TODO tag commonize
         Map<String, Object> result = new HashMap<>();
         switch (key) {
@@ -157,6 +150,12 @@ public class Ym2610Inst extends Instrument.BaseInstrument implements AdpcmEnable
                 result.put("ym2610:SSG", getMonoVolume(visVolume[0][2][0], visVolume[0][2][1], visVolume[1][2][0], visVolume[1][2][1]));
                 result.put("ym2610:ADPCMA", getMonoVolume(visVolume[0][3][0], visVolume[0][3][1], visVolume[1][3][0], visVolume[1][3][1]));
                 result.put("ym2610:ADPCMB", getMonoVolume(visVolume[0][4][0], visVolume[0][4][1], visVolume[1][4][0], visVolume[1][4][1]));
+            }
+            case "keyOn" -> {
+                for (int i = 0; i < 11; i++) {
+                    //keyOn[chipId][i] = chips[chipId].CHANNEL[i].KeyOn;
+                }
+                result.put(getName(), keyOn[chipId]);
             }
         }
         return result;

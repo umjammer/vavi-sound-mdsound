@@ -107,10 +107,6 @@ logger.log(Level.TRACE, "option: " + Arrays.toString(option));
         chips[0].update(dummyBuf, 0);
     }
 
-    public int readStatus(int chipId, int offset) {
-        return read(chipId, 0);
-    }
-
     public void writeRegisterA(int chipId, int offset, int data) {
         chips[chipId].write(0, data);
     }
@@ -146,7 +142,7 @@ logger.log(Level.TRACE, "option: " + Arrays.toString(option));
     }
 
     @Override
-    public Map<String, Object> getView(String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" ->
@@ -155,6 +151,7 @@ logger.log(Level.TRACE, "option: " + Arrays.toString(option));
             case "FAMILY" -> result.put(getName(), "Yamaha FM");
             case "VERSION" -> result.put(getName(), "1.0");
             case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
+            case "status" -> result.put(getName(), read(chipId, 0));
         }
         return result;
     }

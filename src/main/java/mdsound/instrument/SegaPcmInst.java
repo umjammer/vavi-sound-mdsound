@@ -1,6 +1,5 @@
 package mdsound.instrument;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -91,16 +90,21 @@ public class SegaPcmInst extends Instrument.BaseInstrument {
         chips[chipId].setMuteMask(mask[chipId]);
     }
 
-    // ----
-
     public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {
         chips[chipId].writeRom2(romSize, dataStart, dataLength, romData, srcStartAdr);
     }
 
-    public synchronized Map<String, Object> getInfo(int chipId) {
+    // ----
+
+    private synchronized Map<String, Object> getInfo(int chipId) {
         SegaPcm chip = chips[chipId];
-        // TODO
-        return Collections.emptyMap();
+        Map<String, Object> info = new HashMap<>();
+        byte[] register = new byte[0x200];
+        for (int i = 0; i < 0x200; i++) {
+            register[i] = (byte) chip.read(i);
+        }
+        info.put("register", register);
+        return info;
     }
 
     // ----
@@ -111,7 +115,7 @@ public class SegaPcmInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public Map<String, Object> getView(String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" ->
@@ -120,6 +124,7 @@ public class SegaPcmInst extends Instrument.BaseInstrument {
             case "FAMILY" -> result.put(getName(), "Sega custom");
             case "VERSION" -> result.put(getName(), "1.0");
             case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
+            case "info" -> { return getInfo(chipId); }
         }
         return result;
     }

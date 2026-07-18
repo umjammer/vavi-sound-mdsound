@@ -91,14 +91,6 @@ public class Ym3812Inst extends Instrument.BaseInstrument {
         chips[0].updateStream(dummyBuf, 0); // TODO
     }
 
-    public int readStatusPort(int chipId, int offset) {
-        return read(chipId, 0);
-    }
-
-    public int readPort(int chipId, int offset) {
-        return read(chipId, 1);
-    }
-
     public void setEmuCore(int Emulator) {
         emuCore = (Emulator < 0x02) ? Emulator : 0x00;
     }
@@ -111,7 +103,7 @@ public class Ym3812Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public Map<String, Object> getView(String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" ->
@@ -120,6 +112,8 @@ public class Ym3812Inst extends Instrument.BaseInstrument {
             case "FAMILY" -> result.put(getName(), "Yamaha FM");
             case "VERSION" -> result.put(getName(), "1.0");
             case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
+            case "statusPort" -> result.put(getName(), read(chipId, 0));
+            case "port" -> result.put(getName(), read(chipId, 1));
         }
         return result;
     }

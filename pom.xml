@@ -3,7 +3,7 @@
 
   <groupId>vavi</groupId>
   <artifactId>vavi-sound-mdsound</artifactId>
-  <version>0.0.19</version>
+  <version>0.0.20</version>
 
   <profiles>
     <profile>
@@ -88,13 +88,13 @@
     <dependency>
       <groupId>com.github.umjammer</groupId> <!-- com.github.umjammer / vavi -->
       <artifactId>vavi-commons</artifactId>
-      <version>1.1.17</version>
+      <version>1.1.18</version>
     </dependency>
 
     <dependency>
       <groupId>com.github.umjammer</groupId>
       <artifactId>vavi-sound</artifactId>
-      <version>1.0.25</version>
+      <version>1.0.27</version>
       <scope>test</scope>
     </dependency>
 

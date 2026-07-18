@@ -83,6 +83,28 @@ public class K053260Inst extends Instrument.BaseInstrument implements PcmEnabled
         chips[chipId].writeRom(romSize, offset, length, buf, srcOffset);
     }
 
+    /** what the K053260 keyboard view reads each frame: raw per-channel register state. */
+    private synchronized Map<String, Object> getInfo(int chipId) {
+        K053260 chip = chips[chipId];
+
+        Map<String, Object> info = new HashMap<>();
+        info.put("clock", chip.getClock());
+        for (int ch = 0; ch < 4; ch++) {
+            info.put("channels." + ch + ".freq", chip.getRate(ch));
+            info.put("channels." + ch + ".size", chip.getSize(ch));
+            info.put("channels." + ch + ".start", chip.getStart(ch));
+            info.put("channels." + ch + ".bank", chip.getBank(ch));
+            info.put("channels." + ch + ".volume", chip.getVolume(ch));
+            info.put("channels." + ch + ".pan", chip.getPan(ch));
+            info.put("channels." + ch + ".play", chip.getPlay(ch));
+            info.put("channels." + ch + ".dir", chip.getDir(ch));
+            info.put("channels." + ch + ".loop", chip.getLoop(ch));
+            info.put("channels." + ch + ".ppcm", chip.getPpcm(ch));
+            info.put("channels." + ch + ".delta", chip.getDelta(ch));
+        }
+        return info;
+    }
+
     // ----
 
     @Override
@@ -91,7 +113,7 @@ public class K053260Inst extends Instrument.BaseInstrument implements PcmEnabled
     }
 
     @Override
-    public Map<String, Object> getView(String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" ->
@@ -100,6 +122,7 @@ public class K053260Inst extends Instrument.BaseInstrument implements PcmEnabled
             case "FAMILY" -> result.put(getName(), "Konami custom");
             case "VERSION" -> result.put(getName(), "1.0");
             case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
+            case "info" -> { return  getInfo(chipId); }
         }
         return result;
     }

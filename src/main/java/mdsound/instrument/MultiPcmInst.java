@@ -99,7 +99,7 @@ public class MultiPcmInst extends Instrument.BaseInstrument implements PcmEnable
         chips[chipId].writeRom(romSize, offset, length, buf, srcOffset);
     }
 
-    public synchronized Map<String, Object> getInfo(int chipId) {
+    private synchronized Map<String, Object> getInfo(int chipId) {
         MultiPCM chip = chips[chipId];
 
         Map<String, Object> info = new HashMap<>();
@@ -151,7 +151,7 @@ public class MultiPcmInst extends Instrument.BaseInstrument implements PcmEnable
     }
 
     @Override
-    public Map<String, Object> getView(String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" ->
@@ -160,6 +160,7 @@ public class MultiPcmInst extends Instrument.BaseInstrument implements PcmEnable
             case "FAMILY" -> result.put(getName(), "Sega custom");
             case "VERSION" -> result.put(getName(), "2.0");
             case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
+            case "info" -> { return getInfo(chipId); }
         }
         return result;
     }

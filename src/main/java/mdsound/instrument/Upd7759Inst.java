@@ -94,10 +94,6 @@ public class Upd7759Inst extends Instrument.BaseInstrument implements PcmEnabled
         chips[chipId].writeRom(romSize, offset, length, buf, srcOffset);
     }
 
-    public Upd7759 getChip(int ChipID) {
-        return chips[ChipID];
-    }
-
     //----
 
     @Override
@@ -106,7 +102,7 @@ public class Upd7759Inst extends Instrument.BaseInstrument implements PcmEnabled
     }
 
     @Override
-    public Map<String, Object> getView(String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" ->
@@ -115,6 +111,7 @@ public class Upd7759Inst extends Instrument.BaseInstrument implements PcmEnabled
             case "FAMILY" -> result.put(getName(), "NEC ADPCM");
             case "VERSION" -> result.put(getName(), "1.0");
             case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
+            case "info" -> result.put(getName(), chips[chipId]); // TOD abstract
         }
         return result;
     }

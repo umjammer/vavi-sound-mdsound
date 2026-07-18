@@ -86,7 +86,7 @@ public class YmF271Inst extends Instrument.BaseInstrument implements PcmEnabledI
 
     //----
 
-    public static final int[] slotTbl = {
+    public static final int[] slotTbl = { // TODO public
             0, 24, 12, 36,
             1, 25, 13, 37,
             2, 26, 14, 38,
@@ -103,7 +103,7 @@ public class YmF271Inst extends Instrument.BaseInstrument implements PcmEnabledI
             11, 35, 23, 47,
     };
 
-    public synchronized Map<String, Object> getInfo(int chipId) {
+    private synchronized Map<String, Object> getInfo(int chipId) {
         YmF271 chip = chips[chipId];
 
         Map<String, Object> newParam = new HashMap<>();
@@ -164,7 +164,7 @@ public class YmF271Inst extends Instrument.BaseInstrument implements PcmEnabledI
     }
 
     @Override
-    public Map<String, Object> getView(String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" ->
@@ -173,6 +173,7 @@ public class YmF271Inst extends Instrument.BaseInstrument implements PcmEnabledI
             case "FAMILY" -> result.put(getName(), "Yamaha FM");
             case "VERSION" -> result.put(getName(), "1.0");
             case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
+            case "info" -> { return getInfo(chipId); }
         }
         return result;
     }

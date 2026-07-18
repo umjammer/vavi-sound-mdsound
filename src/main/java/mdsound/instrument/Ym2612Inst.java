@@ -114,24 +114,15 @@ logger.log(Level.DEBUG, "option: " + flags);
 
     //----
 
-    public synchronized int[][] readRegister(int chipId) {
-        return chips[chipId].getRegisters();
-    }
-
-    public synchronized int[] readKeyOn(int chipId) {
-        return chips[chipId].keyStatuses();
-    }
-
-    //----
-
     @Override
-    public Map<String, Object> getView(String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
             case "registers" ->
                     result.put(getName(), new int[][][] {chips[0].getRegisters(), chips[0].getRegisters()});
+            case "keyOn" -> result.put(getName(), chips[chipId].keyStatuses());
         }
         return result;
     }

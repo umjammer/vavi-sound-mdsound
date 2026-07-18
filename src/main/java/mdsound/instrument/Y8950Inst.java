@@ -173,7 +173,7 @@ public class Y8950Inst extends Instrument.BaseInstrument implements PcmEnabledIn
     }
 
     @Override
-    public Map<String, Object> getView(String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" ->

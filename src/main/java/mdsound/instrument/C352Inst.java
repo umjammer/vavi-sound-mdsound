@@ -93,11 +93,6 @@ public class C352Inst extends Instrument.BaseInstrument implements PcmEnabledIns
 
     //----
 
-    public synchronized Map<String, Object> getInfo(int chipId) {
-        C352 chip = chips[chipId];
-        return Map.of("flags", chip.getFlags());
-    }
-
     /**
      * used for volume also
      * @see mdsound.MDSound.Chip.SetVolume
@@ -114,11 +109,12 @@ public class C352Inst extends Instrument.BaseInstrument implements PcmEnabledIns
     }
 
     @Override
-    public Map<String, Object> getView(String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+            case "flags" -> result.put("flags", chips[chipId].getFlags());
         }
         return result;
     }

@@ -83,8 +83,8 @@ public class Vrc6Inst extends Instrument.BaseInstrument {
         chips[chipId].tick(apu_clocks);
         chips[chipId].render(b);
 
-        outputs[0][0] += (short) ((limit(b[0], 0x7fff, -0x8000) * volume) >> 12); // If it's below 12, the sound will distort.
-        outputs[1][0] += (short) ((limit(b[1], 0x7fff, -0x8000) * volume) >> 12); // If it's below 12, the sound will distort.
+        outputs[0][0] += (short) ((Math.clamp(b[0], -0x8000, 0x7fff) * volume) >> 12); // If it's below 12, the sound will distort.
+        outputs[1][0] += (short) ((Math.clamp(b[1], -0x8000, 0x7fff) * volume) >> 12); // If it's below 12, the sound will distort.
     }
 
     @Override
@@ -98,10 +98,6 @@ public class Vrc6Inst extends Instrument.BaseInstrument {
 
     @Override
     public void resetMask(int chipId, int ch) {
-    }
-
-    private static int limit(int v, int max, int min) {
-        return v > max ? max : Math.max(v, min);
     }
 
     // ----

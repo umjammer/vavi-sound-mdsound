@@ -106,8 +106,6 @@ public class Sn76496Inst extends Instrument.BaseInstrument implements PannableIn
     public void resetMask(int chipId, int ch) {
     }
 
-    // ----
-
     @Override
     public synchronized void setPan(int chipId, int data) {
         assert chipId < chips.size();
@@ -117,7 +115,7 @@ public class Sn76496Inst extends Instrument.BaseInstrument implements PannableIn
     // ----
 
     @Override
-    public Map<String, Object> getView(String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "NAME" -> result.put(getName(), "Sn76496");

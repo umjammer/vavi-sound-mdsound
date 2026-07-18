@@ -108,14 +108,6 @@ public class Ym3526Inst extends Instrument.BaseInstrument {
         }
     }
 
-    public int readStatusPort(int chipId, int offset) {
-        return read(chipId, 0);
-    }
-
-    public int readPort(int chipId, int offset) {
-        return read(chipId, 1);
-    }
-
     public void writeControlPort(int chipId, int offset, byte data) {
         chips[chipId].write(0, data);
     }
@@ -132,11 +124,13 @@ public class Ym3526Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public Map<String, Object> getView(String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+            case "statusPort" -> result.put(getName(), read(chipId, 0));
+            case "port" -> result.put(getName(), read(chipId, 1));
         }
         return result;
     }

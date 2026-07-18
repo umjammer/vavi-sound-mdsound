@@ -104,13 +104,6 @@ public class Ym2203Inst extends Instrument.BaseInstrument {
 
     // ----
 
-    public synchronized int[] readKeyOn(int chipId) {
-//        for (int i = 0; i < 6; i++) {
-//            keyOn[chipId][i] = chips[chipId].CHANNEL[i].KeyOn;
-//        }
-        return keyOn[chipId];
-    }
-
     public void setVolume(String tag, int vol, double ignored) {
         switch (tag) {
             case "FM" -> {
@@ -133,13 +126,19 @@ public class Ym2203Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public Map<String, Object> getView(String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" -> {
                 result.put("ym2203", getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
                 result.put("ym2203:FM", getMonoVolume(visVolume[0][1][0], visVolume[0][1][1], visVolume[1][1][0], visVolume[1][1][1]));
                 result.put("ym2203:SSG", getMonoVolume(visVolume[0][2][0], visVolume[0][2][1], visVolume[1][2][0], visVolume[1][2][1]));
+            }
+            case "keyOn" -> {
+//                for (int i = 0; i < 6; i++) {
+//                    keyOn[chipId][i] = chips[chipId].CHANNEL[i].KeyOn;
+//                }
+                result.put(getName(), keyOn[chipId]);
             }
         }
         return result;
