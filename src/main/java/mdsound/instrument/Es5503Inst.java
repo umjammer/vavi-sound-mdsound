@@ -83,4 +83,22 @@ public class Es5503Inst extends BaseInstrument implements PcmEnabledInstrument {
     public void writePcm(int chipId, byte[] buf, int offset, int length, Object... extras) {
         chips[chipId].writeRam(buf, offset, length);
     }
+
+    @Override
+    public java.util.Map<String, Object> getView(int chipId, String key, java.util.Map<String, Object> args) {
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        switch (key) {
+            case "info" -> {
+                Es5503 chip = chips[chipId];
+                for (int osc = 0; osc < Es5503.OSCILLATORS; osc++) {
+                    result.put("channels." + osc + ".enable", chip.isEnabled(osc));
+                    result.put("channels." + osc + ".frequency", chip.getFrequency(osc));
+                    result.put("channels." + osc + ".volume", chip.getVolume(osc));
+                    result.put("channels." + osc + ".output", chip.getOutput(osc));
+                    result.put("channels." + osc + ".mute", chip.isMuted(osc));
+                }
+            }
+        }
+        return result;
+    }
 }

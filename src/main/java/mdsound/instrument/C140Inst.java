@@ -134,7 +134,14 @@ logger.log(Level.WARNING, "sampleRate: " + sampleRate);
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[chipId][0][0], visVolume[chipId][0][1], visVolume[1][0][0], visVolume[1][0][1]));
-            case "info" -> result.put(getName(), Map.of("register", chips[chipId]));
+            case "info" -> {
+                C140 chip = chips[chipId];
+                result.put("register", chip.getRegisters());
+                for (int v = 0; v < C140.VOICES; v++) {
+                    result.put("channels." + v + ".keyOn", chip.isKeyOn(v));
+                    result.put("channels." + v + ".mute", chip.isMuted(v));
+                }
+            }
         }
         return result;
     }

@@ -38,6 +38,21 @@ public class Opna {
             chip = new Fmgen.Channel4.Chip();
         }
 
+        /** the SSG section's registers, which the PSG keeps itself */
+        public int[] getSsgRegisters() {
+            return psg.getRegisters();
+        }
+
+        /** the ch3 special mode: {@code 0x40} in the timer control, CSM keying as normal */
+        public boolean isCh3Extended() {
+            return (getTimerControl() & 0xc0) == 0x40;
+        }
+
+        /** the value register {@code 0x26} holds, which paces the display's clock */
+        public int getTimerB() {
+            return getTimerBRegister();
+        }
+
         /** Initializes. */
         public boolean init(int c, int r) {
             clock = c;
@@ -1046,6 +1061,70 @@ stop:
         protected int rhythmMask_;
 
         protected final Fmgen.Channel4[] ch = new Fmgen.Channel4[6];
+        /** the ADPCM control register {@code 0x100}: bit 7 starts, bit 0 resets */
+        public int getAdpcmControl() {
+            return control1;
+        }
+
+        /** the ADPCM output enables, register {@code 0x101} bits 6-7 */
+        public int getAdpcmPan() {
+            return (control2 >>> 6) & 3;
+        }
+
+        /** the ADPCM step, which sets its playback rate */
+        public int getAdpcmDeltaN() {
+            return deltaN;
+        }
+
+        /** the ADPCM level register, {@code 0x10b} */
+        public int getAdpcmLevel() {
+            return adpcmLevel & 0xff;
+        }
+
+        public static final int CHANNELS = 6;
+
+        /** whether any operator of the channel is keyed down */
+        public boolean isKeyOn(int c) {
+            return ch[c] != null && ch[c].isKeyOn();
+        }
+
+        /** whether the operator is keyed down, for channel 3's extended mode */
+        public boolean isKeyOn(int c, int slot) {
+            return ch[c] != null && ch[c].isKeyOn(slot);
+        }
+
+        /**
+         * The channel's eleven bit F-number. The chip keeps the low byte and the {@code 0xa4}
+         * value together, so the block rides in the top of the same word.
+         */
+        public int getFnum(int c) {
+            return fNum[c] & 0x7ff;
+        }
+
+        public int getBlock(int c) {
+            return (fNum[c] >> 11) & 0x07;
+        }
+
+        /** channel 3's extended mode gives each operator its own pitch */
+        public int getSlotFnum(int c, int slot) {
+            return slot < 3 ? fNum3[slot] & 0x7ff : getFnum(c);
+        }
+
+        public int getSlotBlock(int c, int slot) {
+            return slot < 3 ? (fNum3[slot] >> 11) & 0x07 : getBlock(c);
+        }
+
+        /** the softest carrier's level, 0 loudest to 127 */
+        public int getCarrierTotalLevel(int c) {
+            return ch[c] == null ? 127 : ch[c].getCarrierTotalLevel();
+        }
+
+        /** the output enables of register {@code 0xb4}: bit 0 right, bit 1 left */
+        public int getPan(int c) {
+            return pan[c];
+        }
+
+
 
         public static final int[] amTable = new int[Fmgen.FM_LFOENTS];
         public static final int[] pmTable = new int[Fmgen.FM_LFOENTS];
@@ -1293,10 +1372,54 @@ logger.log(Level.INFO, Arrays.toString(ch));
         private final Fmgen.Channel4[] ch = new Fmgen.Channel4[] {
                 new Fmgen.Channel4(), new Fmgen.Channel4(), new Fmgen.Channel4()
         };
+
+        public static final int CHANNELS = 3;
+
+        /** whether any operator of the channel is keyed down */
+        public boolean isKeyOn(int c) {
+            return ch[c].isKeyOn();
+        }
+
+        /** whether the operator is keyed down, for channel 3's extended mode */
+        public boolean isKeyOn(int c, int slot) {
+            return ch[c].isKeyOn(slot);
+        }
+
+        public int getFnum(int c) {
+            return fNum[c] & 0x7ff;
+        }
+
+        public int getBlock(int c) {
+            return (fNum[c] >> 11) & 0x07;
+        }
+
+        /** channel 3's extended mode gives each operator its own pitch */
+        public int getSlotFnum(int c, int slot) {
+            return slot < 3 ? fNum3[slot] & 0x7ff : getFnum(c);
+        }
+
+        public int getSlotBlock(int c, int slot) {
+            return slot < 3 ? (fNum3[slot] >> 11) & 0x07 : getBlock(c);
+        }
+
+        /** the softest carrier's level, 0 loudest to 127 */
+        public int getCarrierTotalLevel(int c) {
+            return ch[c].getCarrierTotalLevel();
+        }
+
+        /** the OPN has no panning of its own; both sides always */
+        public int getPan(int c) {
+            return 3;
+        }
     }
 
     /** YM2608(OPNA) */
     public static class OPNA extends OPNABase {
+
+        /** the rhythm key register {@code 0x10}: a bit a voice, bit 7 being the key off */
+        public int getRhythmKey() {
+            return rhythmKey;
+        }
         /**
          * Constructs.
          */

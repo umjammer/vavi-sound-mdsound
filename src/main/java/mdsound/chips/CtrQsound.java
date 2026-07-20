@@ -884,4 +884,20 @@ public class CtrQsound {
         if (offset == 2 && (data & 0xff) == 0xe3)
             waitBusy();
     }
+
+    public static final int VOICES = 16;
+
+    /**
+     * The DSP's register file as it stands, which is where this emulator keeps everything: a voice
+     * has eight registers at {@code voice << 3} - {@code +1} the address, {@code +2} the rate,
+     * {@code +5} the end address and {@code +6} the volume - its bank sits in {@code +0} of the
+     * voice before it, and its pan at {@code 0x80 + voice}.
+     */
+    public int[] getRegisterMap() {
+        return registerMap;
+    }
+
+    public boolean isMuted(int voice) {
+        return (this.muteMask & (1 << voice)) != 0;
+    }
 }

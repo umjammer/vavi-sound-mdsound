@@ -577,6 +577,7 @@ logger.log(Level.TRACE, "keyOff:eCnt: " + eCnt);
         /** Maxim: channel mute flag */
         private int mute;
 
+        /** the slots keyed down, as bits 4 to 7 - the shape register {@code 0x28} uses */
         private int keyOn;
         private final int[] fmVol = new int[2];
         private final int[] fmSlotVol = new int[4];
@@ -1014,6 +1015,10 @@ logger.log(Level.TRACE, "controlCsmKey");
             ch = this.channels[nch];
 
             updateSpecial();
+
+            // remember which slots are down; the field is what keyStatuses() hands out, and
+            // without this it stays zero and every reader of it sees silence
+            ch.keyOn = data & 0xf0;
 
             if ((data & 0x10) != 0) ch.keyOn(S0); // Press the key for slot 1
             else ch.keyOff(S0); // Release the key for slot 1
@@ -2189,6 +2194,22 @@ logger.log(Level.INFO, "Ym2612: clock: %d, rate: %d".formatted(clock, rate));
     }
 
     // mds
+    public static final int CHANNELS = 6;
+
+    /** the level the channel is putting out, left or right, as the chip mixes it */
+    public int getChannelVolume(int ch, int lr) {
+        return this.channels[ch].fmVol[lr];
+    }
+
+    /** channel 3's four slots have their own levels when it is in extended mode */
+    public int getSlotVolume(int ch, int slot) {
+        return this.channels[ch].fmSlotVol[slot];
+    }
+
+    public boolean isMuted(int ch) {
+        return this.channels[ch].mute != 0;
+    }
+
     public void setMute(int val) {
         for (int i = 0; i < 6; ++i) {
             this.channels[i].mute = (val >> i) & 1;

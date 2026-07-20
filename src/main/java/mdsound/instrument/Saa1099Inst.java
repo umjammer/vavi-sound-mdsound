@@ -95,6 +95,19 @@ public class Saa1099Inst extends Instrument.BaseInstrument {
             case "FAMILY" -> result.put(getName(), "Philips");
             case "VERSION" -> result.put(getName(), "1.0");
             case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
+            case "channels" -> {
+                Saa1099 chip = chips[chipId];
+                result.put("enabled", chip.isEnabled());
+                for (int ch = 0; ch < Saa1099.CHANNELS; ch++) {
+                    result.put("channels." + ch + ".volumeL", chip.getAmplitude(ch, Saa1099.LEFT));
+                    result.put("channels." + ch + ".volumeR", chip.getAmplitude(ch, Saa1099.RIGHT));
+                    result.put("channels." + ch + ".frequency", chip.getFrequency(ch));
+                    result.put("channels." + ch + ".octave", chip.getOctave(ch));
+                    result.put("channels." + ch + ".tone", chip.isFrequencyEnabled(ch));
+                    result.put("channels." + ch + ".noise", chip.isNoiseEnabled(ch));
+                    result.put("channels." + ch + ".mute", chip.isMuted(ch));
+                }
+            }
         }
         return result;
     }

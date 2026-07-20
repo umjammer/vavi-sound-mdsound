@@ -2516,6 +2516,47 @@ public class Opl {
         return this.status >> 7;
     }
 
+    /**
+     * Whether the operator is a carrier, from the channel's connection bit. In connection 1 both
+     * operators reach the output; otherwise only the second does.
+     */
+    public boolean isCarrier(int ch, int slot) {
+        return slot == 1 || this.channels[ch].slots[0].con != 0;
+    }
+
+    /** whether the rhythm section is switched on - register {@code 0xbd} bit 5 */
+    public boolean isRhythm() {
+        return (this.rhythm & 0x20) != 0;
+    }
+
+    public static final int CHANNELS = 9;
+
+    /**
+     * Whether the channel is keyed down. The slots hold this themselves, so it says what the chip
+     * is doing rather than what the last write to {@code 0xb0} asked for.
+     */
+    public boolean isKeyOn(int ch) {
+        return this.channels[ch].slots[0].key != 0 || this.channels[ch].slots[1].key != 0;
+    }
+
+    /** the eleven bit F-number */
+    public int getFnum(int ch) {
+        return this.channels[ch].blockFNum & 0x3ff;
+    }
+
+    public int getBlock(int ch) {
+        return (this.channels[ch].blockFNum >> 10) & 0x07;
+    }
+
+    /** the carrier's total level, 0 loudest to 63, three quarters of a dB a step */
+    public int getTotalLevel(int ch) {
+        return this.channels[ch].slots[1].tl >> (ENV_BITS - 1 - 7);
+    }
+
+    public boolean isMuted(int ch) {
+        return this.channels[ch].muted != 0;
+    }
+
     public void setMuteMask(int muteMask) {
         for (int curChn = 0; curChn < 9; curChn++)
             this.channels[curChn].muted = (muteMask >> curChn) & 0x01;

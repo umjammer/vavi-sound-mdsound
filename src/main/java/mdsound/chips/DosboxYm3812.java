@@ -1431,7 +1431,9 @@ public class DosboxYm3812 {
         case EC_MAME:
             break;
         case EC_DBOPL:
-            opl.write(offset & 1, data);
+            // the core is only built when the chip starts; a write before that has nowhere to go,
+            // and the player does send one when it stops a song this chip was never used for
+            if (opl != null) opl.write(offset & 1, data);
             break;
         }
     }
@@ -1444,5 +1446,13 @@ public class DosboxYm3812 {
             opl.setMuteMask(muteMask);
             break;
         }
+    }
+
+    public static final int CHANNELS = 9;
+
+    /** the register file as the chip has it; OPL registers are only ever written */
+    public byte[] getRegisters() {
+        // the core is only built when the chip starts; before that it has nothing to say
+        return this.opl == null ? new byte[256] : this.opl.adlibReg;
     }
 }

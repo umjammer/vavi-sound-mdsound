@@ -140,4 +140,13 @@ public class MameAy8910Inst extends Instrument.BaseInstrument {
 //        int n = (((int) (16384.0 * Math.pow(10.0, c.volume / 40.0)) * c.tVolumeBalance) >> 8);
 //        c.tVolume = Math.max(Math.min((int) (n * volumeMul), Short.MAX_VALUE), Short.MIN_VALUE);
     }
+
+    @Override
+    public java.util.Map<String, Object> getView(int chipId, String key, java.util.Map<String, Object> args) {
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        switch (key) {
+            case "register" -> result.put("register", chips[chipId].getRegisters());
+        }
+        return result;
+    }
 }

@@ -102,6 +102,18 @@ public class X1_010Inst extends Instrument.BaseInstrument implements PcmEnabledI
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "NAME" -> result.put(getName(), "X1-010");
+            case "info" -> {
+                X1_010 chip = chips[chipId];
+                result.put("clock", chip.getClock());
+                for (int ch = 0; ch < X1_010.CHANNELS; ch++) {
+                    result.put("channels." + ch + ".enable", chip.isEnabled(ch));
+                    result.put("channels." + ch + ".frequency", chip.getFrequency(ch));
+                    result.put("channels." + ch + ".volumeL", chip.getVolumeL(ch));
+                    result.put("channels." + ch + ".volumeR", chip.getVolumeR(ch));
+                    result.put("channels." + ch + ".waveform", chip.isWaveform(ch));
+                    result.put("channels." + ch + ".mute", chip.isMuted(ch));
+                }
+            }
             case "FAMILY" -> result.put(getName(), "Seta custom");
             case "VERSION" -> result.put(getName(), "1.0");
             case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");

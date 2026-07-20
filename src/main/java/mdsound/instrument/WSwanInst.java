@@ -99,4 +99,26 @@ public class WSwanInst extends Instrument.BaseInstrument {
     public Tuple<Integer, Double> getRegulationVolume() {
         return new Tuple<>(0x100, 1d);
     }
+
+    @Override
+    public java.util.Map<String, Object> getView(int chipId, String key, java.util.Map<String, Object> args) {
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        switch (key) {
+            case "NAME" -> result.put(getName(), "WonderSwan");
+            case "FAMILY" -> result.put(getName(), "Bandai custom");
+            case "VERSION" -> result.put(getName(), "1.0");
+            case "info" -> {
+                WSwan chip = chips[chipId];
+                result.put("clock", chip.getClock());
+                for (int ch = 0; ch < WSwan.CHANNELS; ch++) {
+                    result.put("channels." + ch + ".enable", chip.isEnabled(ch));
+                    result.put("channels." + ch + ".divider", chip.getDivider(ch));
+                    result.put("channels." + ch + ".volumeL", chip.getVolumeL(ch));
+                    result.put("channels." + ch + ".volumeR", chip.getVolumeR(ch));
+                    result.put("channels." + ch + ".mute", chip.isMuted(ch));
+                }
+            }
+        }
+        return result;
+    }
 }

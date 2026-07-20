@@ -73,4 +73,9 @@ public class Ym3812 {
     public void update(int[][] buffer, int length) {
         opl.updateOne(buffer, length);
     }
+
+    /** the shared OPL core behind this chip, for reading its channel state back */
+    public Opl getOpl() {
+        return this.opl;
+    }
 }

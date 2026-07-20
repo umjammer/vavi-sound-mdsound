@@ -112,4 +112,14 @@ public abstract class Timer {
     private int timerA, timerACount;
     private int timerB, timerBCount;
     private int timerStep;
+
+    /** the value register {@code 0x26} was set to, worked back out of the timer period */
+    public int getTimerBRegister() {
+        return timerStep == 0 ? 0 : 256 - timerB / timerStep;
+    }
+
+    /** the timer control register, {@code 0x27}: bits 6-7 pick channel 3's mode */
+    public int getTimerControl() {
+        return this.regTc;
+    }
 }

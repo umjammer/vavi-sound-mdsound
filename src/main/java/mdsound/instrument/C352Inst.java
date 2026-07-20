@@ -16,6 +16,9 @@ public class C352Inst extends Instrument.BaseInstrument implements PcmEnabledIns
 
     private final C352[] chips = {new C352(), new C352()};
 
+    /** the buffer the "register" view is read back into, one per chip */
+    private final int[][] registers = {new int[0x203], new int[0x203]};
+
     public C352Inst() {
         // 0..Main
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
@@ -115,7 +118,22 @@ public class C352Inst extends Instrument.BaseInstrument implements PcmEnabledIns
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
             case "flags" -> result.put("flags", chips[chipId].getFlags());
+            case "register" -> result.put("register", readRegisters(chipId));
         }
         return result;
+    }
+
+    /**
+     * The channel registers as the chip holds them now, eight per channel, plus the control
+     * register at {@code 0x200}. The buffer is reused, so a caller that wants to keep the values
+     * has to copy them.
+     */
+    private int[] readRegisters(int chipId) {
+        int[] buf = registers[chipId];
+        for (int adr = 0; adr < 0x100; adr++) {
+            buf[adr] = chips[chipId].read(adr);
+        }
+        buf[0x200] = chips[chipId].read(0x200);
+        return buf;
     }
 }

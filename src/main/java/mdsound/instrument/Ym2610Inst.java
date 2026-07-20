@@ -5,6 +5,7 @@ import java.util.Map;
 
 import vavi.util.compat.Tuple;
 import mdsound.Instrument;
+import mdsound.fmgen.Opna;
 import mdsound.Instrument.AdpcmEnabledInstrument;
 import mdsound.fmgen.Opna.OPNB;
 
@@ -156,6 +157,24 @@ public class Ym2610Inst extends Instrument.BaseInstrument implements AdpcmEnable
                     //keyOn[chipId][i] = chips[chipId].CHANNEL[i].KeyOn;
                 }
                 result.put(getName(), keyOn[chipId]);
+            }
+            case "info" -> {
+                OPNB chip = chips[chipId];
+                result.put("ch3ex", chip.isCh3Extended());
+                result.put("ssg.register", chip.getSsgRegisters());
+                result.put("timerB", chip.getTimerB());
+                for (int ch = 0; ch < Opna.OPNABase.CHANNELS; ch++) {
+                    result.put("channels." + ch + ".keyOn", chip.isKeyOn(ch));
+                    result.put("channels." + ch + ".fnum", chip.getFnum(ch));
+                    result.put("channels." + ch + ".block", chip.getBlock(ch));
+                    result.put("channels." + ch + ".totalLevel", chip.getCarrierTotalLevel(ch));
+                    result.put("channels." + ch + ".pan", chip.getPan(ch));
+                }
+                for (int slot = 0; slot < 4; slot++) {
+                    result.put("channels.2.slots." + slot + ".keyOn", chip.isKeyOn(2, slot));
+                    result.put("channels.2.slots." + slot + ".fnum", chip.getSlotFnum(2, slot));
+                    result.put("channels.2.slots." + slot + ".block", chip.getSlotBlock(2, slot));
+                }
             }
         }
         return result;

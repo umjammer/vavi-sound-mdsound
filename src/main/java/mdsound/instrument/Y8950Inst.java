@@ -5,6 +5,7 @@ import java.util.Map;
 
 import vavi.util.compat.Tuple;
 import mdsound.Instrument;
+import mdsound.chips.Opl;
 import mdsound.Instrument.PcmEnabledInstrument;
 import mdsound.chips.Y8950;
 
@@ -182,6 +183,16 @@ public class Y8950Inst extends Instrument.BaseInstrument implements PcmEnabledIn
             case "FAMILY" -> result.put(getName(), "Yamaha FM");
             case "VERSION" -> result.put(getName(), "1.0");
             case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
+            case "info" -> {
+                Opl chip = chips[chipId].getOpl();
+                for (int ch = 0; ch < Opl.CHANNELS; ch++) {
+                    result.put("channels." + ch + ".keyOn", chip.isKeyOn(ch));
+                    result.put("channels." + ch + ".fnum", chip.getFnum(ch));
+                    result.put("channels." + ch + ".block", chip.getBlock(ch));
+                    result.put("channels." + ch + ".totalLevel", chip.getTotalLevel(ch));
+                    result.put("channels." + ch + ".mute", chip.isMuted(ch));
+                }
+            }
         }
         return result;
     }

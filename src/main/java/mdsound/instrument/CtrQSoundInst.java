@@ -103,4 +103,24 @@ public class CtrQSoundInst extends Instrument.BaseInstrument implements PcmEnabl
     public Tuple<Integer, Double> getRegulationVolume() {
         return new Tuple<>(0x100, 1d);
     }
+
+    @Override
+    public java.util.Map<String, Object> getView(int chipId, String key, java.util.Map<String, Object> args) {
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        switch (key) {
+            case "NAME" -> result.put(getName(), "Q-Sound");
+            case "info" -> {
+                CtrQsound chip = chips[chipId];
+                int[] regs = chip.getRegisterMap();
+                for (int v = 0; v < CtrQsound.VOICES; v++) {
+                    result.put("channels." + v + ".rate", regs[(v << 3) + 2]);
+                    result.put("channels." + v + ".volume", regs[(v << 3) + 6]);
+                    result.put("channels." + v + ".bank", regs[(((v - 1 + 16) % 16) << 3) + 0]);
+                    result.put("channels." + v + ".pan", regs[v + 0x80]);
+                    result.put("channels." + v + ".mute", chip.isMuted(v));
+                }
+            }
+        }
+        return result;
+    }
 }

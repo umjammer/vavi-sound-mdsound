@@ -724,6 +724,40 @@ public class WSwan {
         return this.internalRam[offset & 0x3fff] & 0xff;
     }
 
+    public static final int CHANNELS = 4;
+
+    /** whether the channel is switched on - {@code SNDMOD} bit 0 to 3, one a channel */
+    public boolean isEnabled(int ch) {
+        return (this.ioRam[SNDMOD] & (1 << ch)) != 0;
+    }
+
+    /** the left level, four bits */
+    public int getVolumeL(int ch) {
+        return this.audios[ch].lVol;
+    }
+
+    /** the right level, four bits */
+    public int getVolumeR(int ch) {
+        return this.audios[ch].rVol;
+    }
+
+    /**
+     * The channel's pitch divider as written, eleven bits. A channel counts
+     * {@code clock / 128 / (2048 - divider)} Hz.
+     */
+    public int getDivider(int ch) {
+        int i = ((this.ioRam[0x81 + ch * 2] & 0xff) << 8) + (this.ioRam[0x80 + ch * 2] & 0xff);
+        return i == 0xffff ? 0 : i & 0x7ff;
+    }
+
+    public int getClock() {
+        return this.clock;
+    }
+
+    public boolean isMuted(int ch) {
+        return this.audios[ch].muted != 0;
+    }
+
     private void setMuteMask(int muteMask) {
         for (int c = 0; c < 4; c++)
             this.audios[c].muted = (muteMask >> c) & 0x01;

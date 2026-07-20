@@ -1511,4 +1511,9 @@ public class Ay8910 {
 //        return vol3DTable[indx];
 //    }
 //#endif
+
+    /** the register file as the chip has it; the PSG's registers are only ever written */
+    public int[] getRegisters() {
+        return this.regs;
+    }
 }

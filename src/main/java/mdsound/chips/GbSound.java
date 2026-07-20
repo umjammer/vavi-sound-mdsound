@@ -144,6 +144,16 @@ public class GbSound {
         // Common
         public final int[] registers = new int[5];
         private boolean on;
+
+        /** whether the channel is sounding; the length counter and the envelope both clear it */
+        public boolean isOn() {
+            return this.on;
+        }
+
+        public boolean isMuted() {
+            return this.muted != 0;
+        }
+
         private int channel;
         public int length;
         private int lengthMask;

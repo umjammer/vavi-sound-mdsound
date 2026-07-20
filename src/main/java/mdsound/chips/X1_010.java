@@ -242,6 +242,46 @@ public class X1_010 {
             System.arraycopy(romData, romDataStartAddress, this.rom, dataStart, dataLength);
     }
 
+    public static final int CHANNELS = SETA_NUM_CHANNELS;
+
+    /** whether the channel is keyed on - bit 0 of its status register */
+    public boolean isEnabled(int ch) {
+        return (this.reg[ch * 8 + 0] & 1) != 0;
+    }
+
+    /** the left level, four bits */
+    public int getVolumeL(int ch) {
+        return (this.reg[ch * 8 + 1] >>> 4) & 0xf;
+    }
+
+    /** the right level, four bits */
+    public int getVolumeR(int ch) {
+        return this.reg[ch * 8 + 1] & 0xf;
+    }
+
+    /**
+     * The pitch register. A sampled channel steps at {@code clock / 8192 * freq}, and a wave form
+     * one counts {@code clock / 128 / (1024 - freq)} where the register is sixteen bits.
+     */
+    public int getFrequency(int ch) {
+        return isWaveform(ch)
+                ? ((this.reg[ch * 8 + 2] & 0xff) | ((this.reg[ch * 8 + 3] & 0xff) << 8))
+                : (this.reg[ch * 8 + 2] & 0xff);
+    }
+
+    /** whether the channel plays a wave form rather than a sample - bit 1 of the status */
+    public boolean isWaveform(int ch) {
+        return (this.reg[ch * 8 + 0] & 2) != 0;
+    }
+
+    public int getClock() {
+        return this.baseClock;
+    }
+
+    public boolean isMuted(int ch) {
+        return this.muted[ch] != 0;
+    }
+
     public void setMuteMask(int muteMask) {
         for (int curChn = 0; curChn < SETA_NUM_CHANNELS; curChn++)
             this.muted[curChn] = (muteMask >> curChn) & 0x01;

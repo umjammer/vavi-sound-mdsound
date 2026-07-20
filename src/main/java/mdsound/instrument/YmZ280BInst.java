@@ -106,6 +106,16 @@ public class YmZ280BInst extends Instrument.BaseInstrument implements PcmEnabled
             case "FAMILY" -> result.put(getName(), "Yamaha Wavetable");
             case "VERSION" -> result.put(getName(), "1.0");
             case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
+            case "info" -> {
+                YmZ280B chip = chips[chipId];
+                for (int ch = 0; ch < YmZ280B.VOICES; ch++) {
+                    result.put("channels." + ch + ".playing", chip.isPlaying(ch));
+                    result.put("channels." + ch + ".frequency", chip.getFrequency(ch));
+                    result.put("channels." + ch + ".level", chip.getLevel(ch));
+                    result.put("channels." + ch + ".pan", chip.getPan(ch));
+                    result.put("channels." + ch + ".mute", chip.isMuted(ch));
+                }
+            }
         }
         return result;
     }

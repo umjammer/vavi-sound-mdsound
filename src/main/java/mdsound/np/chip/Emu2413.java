@@ -485,6 +485,11 @@ public class Emu2413 {
 
         /** Register */
         final int[] reg = new int[0x40];
+
+        /** the register file as the chip has it; OPLL registers are only ever written */
+        public int[] getRegisters() {
+            return this.reg;
+        }
         private final int[] slotOnFlag = new int[18];
 
         // Pitch Modulator

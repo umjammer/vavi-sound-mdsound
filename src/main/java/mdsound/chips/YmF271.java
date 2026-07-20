@@ -96,6 +96,16 @@ public class YmF271 {
         private static final double[] pow_table = new double[] {128, 256, 512, 1024, 2048, 4096, 8192, 16384, 0.5, 1, 2, 4, 8, 16, 32, 64};
         private static final double[] fs_frequency = new double[] {1.0 / 1.0, 1.0 / 2.0, 1.0 / 4.0, 1.0 / 8.0};
 
+        /**
+         * The frequency this slot sounds at, given the rate the chip is clocked at. One cycle
+         * takes {@code SIN_LEN} steps of the wave table, so running the increment back through
+         * that gives the note.
+         */
+        private double frequency(double rate) {
+            return (double) this.fns * multiple_table[this.multiple] * rate
+                    * Math.pow(2, this.block - 21);
+        }
+
         private void calculateStep() {
             double st;
 
@@ -1630,5 +1640,16 @@ public class YmF271 {
 
     public int getSync(int g) {
         return groups[g].sync;
+    }
+
+    /**
+     * The frequency a slot is sounding at, in Hz.
+     * <p>
+     * The chip steps its wave table by an increment worked out from the F-number, the block and
+     * the multiple, and one cycle takes {@code SIN_LEN} steps of the table. Running that back
+     * through the rate the chip itself is clocked at - a 384th of its crystal - gives the note.
+     */
+    public double getFrequency(int slot) {
+        return this.slots[slot].frequency(this.clock / 384.0);
     }
 }

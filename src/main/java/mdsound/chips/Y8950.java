@@ -104,4 +104,9 @@ public class Y8950 {
     public void setMuteMask(int muteMask) {
         opl.setMuteMask(muteMask);
     }
+
+    /** the shared OPL core behind this chip, for reading its channel state back */
+    public Opl getOpl() {
+        return this.opl;
+    }
 }

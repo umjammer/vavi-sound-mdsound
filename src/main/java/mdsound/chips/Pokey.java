@@ -1007,6 +1007,27 @@ LOG_RAND.log(Level.DEBUG, "%05x: %02x".formatted(x, rng[i]));
         }
     }
 
+    public static final int CHANNELS = 4;
+
+    /** whether the channel makes a sound at all - the emulator works this out from the control */
+    public boolean isAudible(int ch) {
+        return this.audible[ch] != 0;
+    }
+
+    /** the four bit level */
+    public int getVolume(int ch) {
+        return this.volume[ch] / POKEY_DEFAULT_GAIN;
+    }
+
+    /** the divider the channel counts down; the base clock over it is the pitch */
+    public int getDivisor(int ch) {
+        return this.divisor[ch];
+    }
+
+    public boolean isMuted(int ch) {
+        return this.muted[ch] != 0;
+    }
+
     public void setMuteMask(int muteMask) {
         for (int c = 0; c < 4; c++)
             this.muted[c] = (muteMask >> c) & 0x01;

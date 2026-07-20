@@ -6,6 +6,7 @@ import java.util.Map;
 import vavi.util.compat.Tuple;
 import mdsound.Instrument;
 import mdsound.chips.Ym3526;
+import mdsound.chips.Ym3526;
 
 
 public class Ym3526Inst extends Instrument.BaseInstrument {
@@ -131,7 +132,27 @@ public class Ym3526Inst extends Instrument.BaseInstrument {
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
             case "statusPort" -> result.put(getName(), read(chipId, 0));
             case "port" -> result.put(getName(), read(chipId, 1));
+            case "info" -> {
+                Ym3526 chip = chips[chipId];
+                for (int ch = 0; ch < Ym3526.CHANNELS; ch++) {
+                    result.put("channels." + ch + ".keyOn", chip.isKeyOn(ch));
+                    result.put("channels." + ch + ".fnum", chip.getFnum(ch));
+                    result.put("channels." + ch + ".block", chip.getBlock(ch));
+                    result.put("channels." + ch + ".totalLevel", chip.getTotalLevel(ch));
+                    result.put("channels." + ch + ".mute", chip.isMuted(ch));
+                }
+            }
         }
         return result;
+    }
+
+    /** whether the operator is a carrier, as the chip has its connection set */
+    public boolean isCarrier(int chipId, int ch, int slot) {
+        return chips[chipId].isCarrier(ch, slot);
+    }
+
+    /** whether the rhythm section is on, as the chip has it */
+    public boolean isRhythm(int chipId) {
+        return chips[chipId].isRhythm();
     }
 }

@@ -327,4 +327,19 @@ public class Pwm {
             }
         }
     }
+
+    /** the level the left side of the DAC sits at */
+    public int getOutputL() {
+        return this.outL;
+    }
+
+    /** the level the right side of the DAC sits at */
+    public int getOutputR() {
+        return this.outR;
+    }
+
+    /** the PWM cycle, which sets how fast the driver has to feed the chip */
+    public int getCycle() {
+        return this.cycle;
+    }
 }

@@ -123,6 +123,21 @@ logger.log(Level.DEBUG, "option: " + flags);
             case "registers" ->
                     result.put(getName(), new int[][][] {chips[0].getRegisters(), chips[0].getRegisters()});
             case "keyOn" -> result.put(getName(), chips[chipId].keyStatuses());
+            case "info" -> {
+                Ym2612 chip = chips[chipId];
+                result.put("register", chip.getRegisters());
+                result.put("keyOn", chip.keyStatuses());
+                for (int ch = 0; ch < Ym2612.CHANNELS; ch++) {
+                    // the level the chip is actually putting out, which beats any decay a view
+                    // could invent from the key ons alone
+                    result.put("channels." + ch + ".volumeL", chip.getChannelVolume(ch, 0));
+                    result.put("channels." + ch + ".volumeR", chip.getChannelVolume(ch, 1));
+                    result.put("channels." + ch + ".mute", chip.isMuted(ch));
+                }
+                for (int slot = 0; slot < 4; slot++) {
+                    result.put("channels.2.slots." + slot + ".volume", chip.getSlotVolume(2, slot));
+                }
+            }
         }
         return result;
     }

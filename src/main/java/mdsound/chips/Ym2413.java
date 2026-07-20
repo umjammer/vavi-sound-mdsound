@@ -1903,4 +1903,9 @@ public class Ym2413 {
     private static void centrePanning(float[] channels) {
         channels[0] = channels[1] = 1.0f;
     }
+
+    /** the register file as the chip has it; OPLL registers are only ever written */
+    public int[] getRegisters() {
+        return this.reg;
+    }
 }

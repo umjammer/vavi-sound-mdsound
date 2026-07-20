@@ -126,6 +126,18 @@ logger.log(Level.DEBUG, "sampleRate: " + sampleRete);
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+            case "info" -> {
+                C219 chip = chips[chipId];
+                int[] regs = chip.getRegisters();
+                // the C140 side of this pair reports bytes, so hand back the same shape
+                byte[] copy = new byte[regs.length];
+                for (int i = 0; i < regs.length; i++) copy[i] = (byte) regs[i];
+                result.put("register", copy);
+                for (int v = 0; v < C219.VOICES; v++) {
+                    result.put("channels." + v + ".keyOn", chip.isKeyOn(v));
+                    result.put("channels." + v + ".mute", chip.isMuted(v));
+                }
+            }
         }
         return result;
     }

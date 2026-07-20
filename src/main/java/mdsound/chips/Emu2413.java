@@ -1817,4 +1817,9 @@ logger.log(Level.TRACE, "[slot#{0} state:{1} fNum:{2:03x} rate:{3}-{4}]",
         this.mask ^= mask;
         return ret;
     }
+
+    /** the register file as the chip has it; OPLL registers are only ever written */
+    public int[] getRegisters() {
+        return this.reg;
+    }
 }

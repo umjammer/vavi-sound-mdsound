@@ -377,6 +377,23 @@ public class MultiPCM {
 
         private int muted;
 
+        /**
+         * Whether the slot is sounding. This is not the key on bit the driver wrote: the envelope
+         * clears it when it has run out, so a slot keyed on long ago may well be silent by now.
+         */
+        public boolean isPlaying() {
+            return this.playing != 0;
+        }
+
+        public boolean isMuted() {
+            return this.muted != 0;
+        }
+
+        /** the total level as it stands, 0 loudest to 127 - it ramps towards what was written */
+        public int getTotalLevel() {
+            return this.tl >> TL_SHIFT;
+        }
+
         Slot() {
             this.eg = new Eg();
             this.aLfo = new Lfo();
