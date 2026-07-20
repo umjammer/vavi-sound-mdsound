@@ -32,13 +32,23 @@ public interface LoopDetector extends Device {
     }
 
     class BasicDetector implements LoopDetector {
+
+        private static final System.Logger logger = System.getLogger(BasicDetector.class.getName());
+
         protected final int bufSize;
         protected final int bufMask;
         protected final int[] streamBuf;
         protected final int[] timeBuf;
-        protected int bIdx;
+        /**
+         * How many writes have been recorded, ever - not a position in the ring. {@link #isLooped}
+         * reads it as a running total, both to tell that new writes have arrived at all and to
+         * measure how fast they do; masking it here, as a position, made it wrap back below
+         * {@link #bLast} and detection stopped for good after the first 64k writes. The masking
+         * belongs at each use as an index, which is what the C++ this came from does.
+         */
+        protected long bIdx;
         // bIdx last time checked
-        protected int bLast;
+        protected long bLast;
         protected int wSpeed;
         protected int currentTime;
         protected int loopStart, loopEnd;
@@ -71,9 +81,9 @@ public interface LoopDetector extends Device {
         @Override
         public boolean write(int adr, int val, int id /* = 0 */) {
             empty = false;
-            timeBuf[bIdx] = currentTime;
-            streamBuf[bIdx] = ((adr & 0xffff) << 8) | (val & 0xff);
-            bIdx = (bIdx + 1) & bufMask;
+            timeBuf[(int) (bIdx & bufMask)] = currentTime;
+            streamBuf[(int) (bIdx & bufMask)] = ((adr & 0xffff) << 8) | (val & 0xff);
+            bIdx++;
             return false;
         }
 
@@ -91,32 +101,39 @@ public interface LoopDetector extends Device {
 
             if (bIdx <= bLast)
                 return false;
+            int written = (int) Math.min(bIdx - bLast, bufSize);
             if (wSpeed != 0)
-                wSpeed = (wSpeed + bIdx - bLast) / 2;
+                wSpeed = (wSpeed + written) / 2;
             else
-                wSpeed = bIdx - bLast; // first time
+                wSpeed = written; // first time
             bLast = bIdx;
 
             int match_size = wSpeed * match_second / match_interval;
             int match_length = bufSize - match_size;
 
-            if (match_length < 0)
+            if (match_length < 0) {
+                // the song writes faster than the ring can hold the signature it wants to match:
+                // nothing can be detected until it is given a bigger one
+                logger.log(System.Logger.Level.DEBUG,
+                        "loop signature does not fit: %d writes wanted, buffer holds %d"
+                                .formatted(match_size, bufSize));
                 return false;
+            }
 
             //logger.log(Level.TRACE, "match_length:%d".formatted(match_length));
             //logger.log(Level.TRACE, "match_size  :%d".formatted(match_size));
             for (int i = 0; i < match_length; i++) {
                 int j;
                 for (j = 0; j < match_size; j++) {
-                    if (streamBuf[(bIdx + j + match_length) & bufMask] !=
-                            streamBuf[(bIdx + i + j) & bufMask]) {
+                    if (streamBuf[(int) ((bIdx + j + match_length) & bufMask)] !=
+                            streamBuf[(int) ((bIdx + i + j) & bufMask)]) {
                         //logger.log(Level.TRACE, "j  :%d".formatted(j));
                         break;
                     }
                 }
                 if (j == match_size) {
-                    loopStart = timeBuf[(bIdx + i) & bufMask];
-                    loopEnd = timeBuf[(bIdx + match_length) & bufMask];
+                    loopStart = timeBuf[(int) ((bIdx + i) & bufMask)];
+                    loopEnd = timeBuf[(int) ((bIdx + match_length) & bufMask)];
                     return true;
                 }
             }
