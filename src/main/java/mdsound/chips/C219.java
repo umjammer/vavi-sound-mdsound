@@ -345,6 +345,22 @@ public class C219 {
 Debug.println("rom: " + length);
     }
 
+    public static final int VOICES = 16;
+
+    /** whether the voice is sounding; the chip clears this when a sample runs out */
+    public boolean isKeyOn(int voice) {
+        return this.voices[voice].key != 0;
+    }
+
+    public boolean isMuted(int voice) {
+        return this.voices[voice].muted != 0;
+    }
+
+    /** the register file as it stands, sixteen bytes a voice; the buffer is reused */
+    public int[] getRegisters() {
+        return this.regs;
+    }
+
     public void setMuteMask(int muteMask) {
         for (int curChn = 0; curChn < MAX_VOICE; curChn++)
             this.voices[curChn].muted = (muteMask >>> curChn) & 0x01;

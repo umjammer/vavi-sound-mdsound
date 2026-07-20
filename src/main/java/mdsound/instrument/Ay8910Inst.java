@@ -117,6 +117,7 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+            case "register" -> result.put("register", chips[chipId].getRegisters());
         }
         return result;
     }

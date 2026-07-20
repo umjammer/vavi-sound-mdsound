@@ -452,6 +452,32 @@ public class Es5503 {
         if (length >= 0) System.arraycopy(data, 0, this.docRam, offset + 0, length);
     }
 
+    public static final int OSCILLATORS = 32;
+
+    /** whether the oscillator is running - bit 0 of its control register halts it when set */
+    public boolean isEnabled(int osc) {
+        return (this.oscillators[osc].control & 1) == 0;
+    }
+
+    /** the frequency register, a step of the chip's own rate */
+    public int getFrequency(int osc) {
+        return this.oscillators[osc].freq;
+    }
+
+    /** the eight bit level */
+    public int getVolume(int osc) {
+        return this.oscillators[osc].vol;
+    }
+
+    /** the output channel the oscillator is routed to, from its control register */
+    public int getOutput(int osc) {
+        return (this.oscillators[osc].control >> 4) & 0x0f;
+    }
+
+    public boolean isMuted(int osc) {
+        return this.oscillators[osc].muted != 0;
+    }
+
     public void setMuteMask(int muteMask) {
         for (int curChn = 0; curChn < 32; curChn++)
             this.oscillators[curChn].muted = (muteMask >> curChn) & 0x01;

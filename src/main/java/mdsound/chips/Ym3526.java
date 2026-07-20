@@ -1789,4 +1789,38 @@ public class Ym3526 {
         for (int c = 0; c < 6; c++)
             chip.muteSpc[c] = (byte) ((muteMask >> (9 + c)) & 0x01);
     }
+
+    public static final int CHANNELS = 9;
+
+    /** whether either slot of the channel is keyed down, as the chip has it */
+    public boolean isKeyOn(int ch) {
+        return this.chip.chs[ch].slots[0].key != 0 || this.chip.chs[ch].slots[1].key != 0;
+    }
+
+    public int getFnum(int ch) {
+        return this.chip.chs[ch].blockFNum & 0x3ff;
+    }
+
+    public int getBlock(int ch) {
+        return (this.chip.chs[ch].blockFNum >> 10) & 0x07;
+    }
+
+    /** the carrier's total level, 0 loudest to 63 */
+    public int getTotalLevel(int ch) {
+        return this.chip.chs[ch].slots[1].tl >> 3;
+    }
+
+    /** whether the operator is a carrier, from the channel's connection bit */
+    public boolean isCarrier(int ch, int slot) {
+        return slot == 1 || this.chip.chs[ch].slots[0].CON != 0;
+    }
+
+    /** whether the rhythm section is on - register {@code 0xbd} bit 5 */
+    public boolean isRhythm() {
+        return (this.chip.rhythm & 0x20) != 0;
+    }
+
+    public boolean isMuted(int ch) {
+        return this.chip.chs[ch].muted != 0;
+    }
 }

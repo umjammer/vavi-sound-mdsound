@@ -571,4 +571,9 @@ public class Sn76496 {
         for (int curChn = 0; curChn < 4; curChn++)
             this.muteMsk[curChn] = (muteMask & (1 << curChn)) != 0 ? 0 : ~0;
     }
+
+    /** the eight registers as they stand: a period and a level for each of the four voices */
+    public int[] getRegisters() {
+        return this.register;
+    }
 }

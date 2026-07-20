@@ -158,6 +158,29 @@ public class Ym2608Inst extends Instrument.BaseInstrument {
             }
             case "adpcm" -> result.put(getName(), chips[chipId].getADPCMBuffer());
             case "statusEx" -> result.put(getName(), chips[chipId].readStatusEx());
+            case "info" -> {
+                Opna.OPNA chip = chips[chipId];
+                result.put("ch3ex", chip.isCh3Extended());
+                result.put("ssg.register", chip.getSsgRegisters());
+                result.put("timerB", chip.getTimerB());
+                for (int ch = 0; ch < Opna.OPNABase.CHANNELS; ch++) {
+                    result.put("channels." + ch + ".keyOn", chip.isKeyOn(ch));
+                    result.put("channels." + ch + ".fnum", chip.getFnum(ch));
+                    result.put("channels." + ch + ".block", chip.getBlock(ch));
+                    result.put("channels." + ch + ".totalLevel", chip.getCarrierTotalLevel(ch));
+                    result.put("channels." + ch + ".pan", chip.getPan(ch));
+                }
+                result.put("rhythm.key", chip.getRhythmKey());
+                result.put("adpcm.control", chip.getAdpcmControl());
+                result.put("adpcm.pan", chip.getAdpcmPan());
+                result.put("adpcm.deltaN", chip.getAdpcmDeltaN());
+                result.put("adpcm.level", chip.getAdpcmLevel());
+                for (int slot = 0; slot < 4; slot++) {
+                    result.put("channels.2.slots." + slot + ".keyOn", chip.isKeyOn(2, slot));
+                    result.put("channels.2.slots." + slot + ".fnum", chip.getSlotFnum(2, slot));
+                    result.put("channels.2.slots." + slot + ".block", chip.getSlotBlock(2, slot));
+                }
+            }
         }
         return result;
     }

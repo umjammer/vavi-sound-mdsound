@@ -73,8 +73,8 @@ package mdsound.chips;
  */
 public class Saa1099 {
 
-    private static final int LEFT = 0x00;
-    private static final int RIGHT = 0x01;
+    public static final int LEFT = 0x00;
+    public static final int RIGHT = 0x01;
 
     /** this structure defines a channel */
     private static class Channel {
@@ -517,5 +517,44 @@ public class Saa1099 {
     public void setMuteMask(int muteMask) {
         for (int curChn = 0; curChn < 6; curChn++)
             this.channels[curChn].muted = (byte) ((muteMask >> curChn) & 0x01);
+    }
+
+    public static final int CHANNELS = 6;
+
+    /**
+     * The amplitude nibble a channel was last set to, 0 - 15. The channel keeps the level the
+     * nibble looks up to rather than the nibble itself, and that table is linear, so the nibble
+     * divides back out exactly.
+     *
+     * @param lr {@link #LEFT} or {@link #RIGHT}
+     */
+    public int getAmplitude(int ch, int lr) {
+        return this.channels[ch].amplitude[lr] / amplitudeLookup[1];
+    }
+
+    /** the eight bit frequency divider, the tone rising as it approaches 511 */
+    public int getFrequency(int ch) {
+        return this.channels[ch].frequency;
+    }
+
+    public int getOctave(int ch) {
+        return this.channels[ch].octave;
+    }
+
+    public boolean isFrequencyEnabled(int ch) {
+        return this.channels[ch].freqEnable != 0;
+    }
+
+    public boolean isNoiseEnabled(int ch) {
+        return this.channels[ch].noiseEnable != 0;
+    }
+
+    /** whether the chip is enabled at all - register {@code 0x1c} bit 0 */
+    public boolean isEnabled() {
+        return this.allChEnable != 0;
+    }
+
+    public boolean isMuted(int ch) {
+        return this.channels[ch].muted != 0;
     }
 }

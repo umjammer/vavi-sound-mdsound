@@ -890,6 +890,37 @@ public class YmZ280B {
         System.arraycopy(romData, srcStartAddress, this.regionBase, dataStart, dataLength);
     }
 
+    public static final int VOICES = 8;
+
+    /** whether the voice is sounding; it stops itself at the end of a sample that does not loop */
+    public boolean isPlaying(int ch) {
+        return this.voices[ch].playing != 0;
+    }
+
+    /**
+     * The rate the voice plays its sample at, in Hz. The chip runs at a 384th of its clock and the
+     * frequency register is a step of a 256th of that.
+     */
+    public double getFrequency(int ch) {
+        Voice voice = this.voices[ch];
+        int fNum = voice.mode == 1 ? voice.fNum & 0x0ff : voice.fNum & 0x1ff;
+        return this.masterClock * (fNum + 1) / 256.0;
+    }
+
+    /** the output level, eight bits */
+    public int getLevel(int ch) {
+        return this.voices[ch].level;
+    }
+
+    /** the pan, 0 to 15 across the field with 8 in the middle */
+    public int getPan(int ch) {
+        return this.voices[ch].pan;
+    }
+
+    public boolean isMuted(int ch) {
+        return this.voices[ch].muted != 0;
+    }
+
     public void setMuteMask(int muteMask) {
         for (int c = 0; c < 8; c++)
             this.voices[c].muted = (muteMask >> c) & 0x01;

@@ -57,8 +57,15 @@ public class YmZ280BInst extends Instrument.BaseInstrument implements PcmEnabled
     public void update(int chipId, int[][] outputs, int samples) {
         chips[chipId].update(outputs, samples);
 
-        visVolume[chipId][0][0] = outputs[0][0];
-        visVolume[chipId][0][1] = outputs[1][0];
+        // the loudest sample of the block, not the first one: a single sample lands wherever the
+        // waveform happens to be, so a meter fed from it reads far under what is being heard
+        int left = 0, right = 0;
+        for (int i = 0; i < samples; i++) {
+            left = Math.max(left, Math.abs(outputs[0][i]));
+            right = Math.max(right, Math.abs(outputs[1][i]));
+        }
+        visVolume[chipId][0][0] = left;
+        visVolume[chipId][0][1] = right;
     }
 
     @Override
@@ -106,6 +113,16 @@ public class YmZ280BInst extends Instrument.BaseInstrument implements PcmEnabled
             case "FAMILY" -> result.put(getName(), "Yamaha Wavetable");
             case "VERSION" -> result.put(getName(), "1.0");
             case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
+            case "info" -> {
+                YmZ280B chip = chips[chipId];
+                for (int ch = 0; ch < YmZ280B.VOICES; ch++) {
+                    result.put("channels." + ch + ".playing", chip.isPlaying(ch));
+                    result.put("channels." + ch + ".frequency", chip.getFrequency(ch));
+                    result.put("channels." + ch + ".level", chip.getLevel(ch));
+                    result.put("channels." + ch + ".pan", chip.getPan(ch));
+                    result.put("channels." + ch + ".mute", chip.isMuted(ch));
+                }
+            }
         }
         return result;
     }

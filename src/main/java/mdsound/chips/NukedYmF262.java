@@ -117,6 +117,35 @@ public class NukedYmF262 {
         int ch_num;
     }
 
+    public static final int CHANNELS = 9;
+
+    /** whether either slot of the channel is keyed down */
+    public static boolean isKeyOn(Chip chip, int ch) {
+        return chip.channel[ch].slots[0].key != 0 || chip.channel[ch].slots[1].key != 0;
+    }
+
+    public static int getFnum(Chip chip, int ch) {
+        return chip.channel[ch].f_num;
+    }
+
+    public static int getBlock(Chip chip, int ch) {
+        return chip.channel[ch].block;
+    }
+
+    /** the carrier's total level, 0 loudest to 63 */
+    public static int getTotalLevel(Chip chip, int ch) {
+        return chip.channel[ch].slots[1].reg_tl;
+    }
+
+    /** the OPL3's two output enables, which are all the panning it has */
+    public static boolean isLeft(Chip chip, int ch) {
+        return chip.channel[ch].cha != 0;
+    }
+
+    public static boolean isRight(Chip chip, int ch) {
+        return chip.channel[ch].chb != 0;
+    }
+
     public static class WriteBuf {
 
         long time;

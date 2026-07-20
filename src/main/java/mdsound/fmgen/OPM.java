@@ -47,6 +47,33 @@ public class OPM extends Timer {
     private final int[] pan = new int[8];
 
     private final Fmgen.Channel4[] ch = new Fmgen.Channel4[8];
+
+    public static final int CHANNELS = 8;
+
+    /** whether any operator of the channel is keyed down */
+    public boolean isKeyOn(int c) {
+        return ch[c] != null && ch[c].isKeyOn();
+    }
+
+    /** the key code, which the OPM keeps as its pitch: octave in bits 4-6, note in bits 0-3 */
+    public int getKeyCode(int c) {
+        return kc[c] & 0x7f;
+    }
+
+    /** the softest carrier's level, 0 loudest to 127 */
+    public int getCarrierTotalLevel(int c) {
+        return ch[c] == null ? 127 : ch[c].getCarrierTotalLevel();
+    }
+
+    /** the output enables of register {@code 0x20}: bit 0 right, bit 1 left */
+    public int getPan(int c) {
+        return pan[c];
+    }
+
+    /** the value register {@code 0x12} holds, which paces the display's clock */
+    public int getTimerB() {
+        return getTimerBRegister();
+    }
     private final Fmgen.Channel4.Chip chip = new Fmgen.Channel4.Chip();
 
     private static final int[][] amTable = {new int[OPM_LFOENTS], new int[OPM_LFOENTS], new int[OPM_LFOENTS], new int[OPM_LFOENTS]};

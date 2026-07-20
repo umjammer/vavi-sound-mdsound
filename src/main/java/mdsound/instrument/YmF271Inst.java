@@ -148,6 +148,7 @@ public class YmF271Inst extends Instrument.BaseInstrument implements PcmEnabledI
             newParam.put("slots." + slot + ".inst.25", slt.ams);
 
             newParam.put("slots." + slot + ".active", slt.active != 0);
+            newParam.put("slots." + slot + ".frequency", chip.getFrequency(slot));
 
             if (i % 4 == 0) {
                 newParam.put("slots." + slot + ".sync", chip.getSync(i / 4));

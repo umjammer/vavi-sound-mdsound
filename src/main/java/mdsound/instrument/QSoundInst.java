@@ -112,6 +112,18 @@ public class QSoundInst extends Instrument.BaseInstrument implements PcmEnabledI
             case "FAMILY" -> result.put(getName(), "Capcom custom");
             case "VERSION" -> result.put(getName(), "1.0");
             case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
+            case "info" -> {
+                QSound chip = chips[chipId];
+                for (int ch = 0; ch < QSound.CHANNELS; ch++) {
+                    result.put("channels." + ch + ".enable", chip.isEnabled(ch));
+                    result.put("channels." + ch + ".freq", chip.getFreq(ch));
+                    result.put("channels." + ch + ".volume", chip.getVolume(ch));
+                    result.put("channels." + ch + ".volumeL", chip.getVolumeL(ch));
+                    result.put("channels." + ch + ".volumeR", chip.getVolumeR(ch));
+                    result.put("channels." + ch + ".bank", chip.getBank(ch));
+                    result.put("channels." + ch + ".mute", chip.isMuted(ch));
+                }
+            }
         }
         return result;
     }

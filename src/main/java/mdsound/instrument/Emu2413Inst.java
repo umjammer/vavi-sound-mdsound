@@ -92,4 +92,13 @@ public class Emu2413Inst extends BaseInstrument {
     public Tuple<Integer, Double> getRegulationVolume() {
         return new Tuple<>(0x200 /* 0x155 */, 0.5);
     }
+
+    @Override
+    public java.util.Map<String, Object> getView(int chipId, String key, java.util.Map<String, Object> args) {
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        switch (key) {
+            case "register" -> result.put("register", chips[chipId].getRegisters());
+        }
+        return result;
+    }
 }

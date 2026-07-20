@@ -85,6 +85,15 @@ public class PokeyInst extends Instrument.BaseInstrument {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
             case "NAME" -> result.put(getName(), "POKEY");
+            case "info" -> {
+                Pokey chip = chips[chipId];
+                for (int ch = 0; ch < Pokey.CHANNELS; ch++) {
+                    result.put("channels." + ch + ".audible", chip.isAudible(ch));
+                    result.put("channels." + ch + ".volume", chip.getVolume(ch));
+                    result.put("channels." + ch + ".divisor", chip.getDivisor(ch));
+                    result.put("channels." + ch + ".mute", chip.isMuted(ch));
+                }
+            }
             case "FAMILY" -> result.put(getName(), "Atari custom");
             case "VERSION" -> result.put(getName(), "4.51");
             case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");

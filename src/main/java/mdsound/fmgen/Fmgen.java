@@ -788,9 +788,22 @@ public class Fmgen {
                 }
             }
 
-            /** Is the operator up and running? */
+            /** the total level as written, 0 loudest to 127 */
+            public int getTotalLevel() {
+                return this.tl;
+            }
+
+            /** Is the operator up and running? - true through the release tail as well */
             public boolean isOn() {
                 return egPhase != EGPhase.Off;
+            }
+
+            /**
+             * Whether the key is down. Unlike {@link #isOn} this goes false the moment the driver
+             * lets go, which is what a key display wants - a note ringing out is not a key.
+             */
+            public boolean isKeyDown() {
+                return this.keyOn;
             }
 
             /** Detune (0-7) */
@@ -1096,6 +1109,42 @@ public class Fmgen {
             op[2].setDPBN(dp, bn);
             op[3].setDPBN(dp, bn);
             //logger.log(Level.TRACE, " %.8x".formatted(dp));
+        }
+
+        /** whether any operator of the channel is keyed down */
+        public boolean isKeyOn() {
+            return op[0].isKeyDown() || op[1].isKeyDown() || op[2].isKeyDown() || op[3].isKeyDown();
+        }
+
+        /** whether the operator's key is down, for the channel 3 extended mode */
+        public boolean isKeyOn(int slot) {
+            return op[slot].isKeyDown();
+        }
+
+        public int getAlgorithm() {
+            return this.algo;
+        }
+
+        /**
+         * The softest carrier's level, which is what the display meters. Which operators reach the
+         * output depends on the algorithm: only the last in a chain until algorithm 4, then more.
+         */
+        public int getCarrierTotalLevel() {
+            int tl = 127;
+            for (int i = carriersOf(this.algo); i < 4; i++) {
+                tl = Math.min(tl, op[i].getTotalLevel());
+            }
+            return tl;
+        }
+
+        /** the first operator that reaches the output, per algorithm */
+        private static int carriersOf(int algo) {
+            return switch (algo) {
+                case 0, 1, 2, 3 -> 3;
+                case 4 -> 2;
+                case 5, 6 -> 1;
+                default -> 0;
+            };
         }
 
         /** Key Control */

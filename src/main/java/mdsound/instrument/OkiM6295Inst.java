@@ -113,8 +113,14 @@ public class OkiM6295Inst extends Instrument.BaseInstrument implements PcmEnable
             newParam.put("channels." + c + ".keyon", info.keyon[c]);
             newParam.put("channels." + c + ".sadr", info.chInfo[c].stAdr);
             newParam.put("channels." + c + ".eadr", info.chInfo[c].edAdr);
+            // the key on above is an edge and reading it takes it; these are levels, and a second
+            // view reading them takes nothing away from the first
+            newParam.put("channels." + c + ".playing", chip.isPlaying(c));
+            newParam.put("channels." + c + ".volume", chip.getVolume(c));
+            newParam.put("channels." + c + ".mute", chip.isMuted(c));
         }
 
+        newParam.put("sampleRate", chip.getSampleRate());
         newParam.put("masterClock", info.masterClock);
         newParam.put("pin7State", info.pin7State);
         newParam.put("nmkBank.0", info.nmkBank[0]);

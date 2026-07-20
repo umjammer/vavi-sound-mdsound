@@ -10,6 +10,10 @@ import mdsound.chips.DosboxYm3812;
 
 public class Ym3812Inst extends Instrument.BaseInstrument {
 
+    /** the carrier operator's offset from 0x40, per channel */
+    private static final int[] CARRIER = {3, 4, 5, 11, 12, 13, 19, 20, 21};
+
+
     public static final int MAX_CHIPS = 0x02;
     public static final int DefaultClockValue = 3579545;
 
@@ -114,7 +118,35 @@ public class Ym3812Inst extends Instrument.BaseInstrument {
             case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
             case "statusPort" -> result.put(getName(), read(chipId, 0));
             case "port" -> result.put(getName(), read(chipId, 1));
+            case "info" -> {
+                // this core keeps the register file, so the channel state is decoded from it
+                byte[] regs = chips[chipId].getRegisters();
+                for (int ch = 0; ch < DosboxYm3812.CHANNELS; ch++) {
+                    int regB = regs[0xb0 + ch] & 0xff;
+                    result.put("channels." + ch + ".keyOn", (regB & 0x20) != 0);
+                    result.put("channels." + ch + ".fnum", ((regB & 0x03) << 8) | (regs[0xa0 + ch] & 0xff));
+                    result.put("channels." + ch + ".block", (regB >> 2) & 0x07);
+                    result.put("channels." + ch + ".totalLevel", regs[0x40 + CARRIER[ch]] & 0x3f);
+                    result.put("channels." + ch + ".mute", false);
+                }
+            }
+            case "register" -> {
+                byte[] raw = chips[chipId].getRegisters();
+                int[] copy = new int[raw.length];
+                for (int i = 0; i < raw.length; i++) copy[i] = raw[i] & 0xff;
+                result.put("register", copy);
+            }
         }
         return result;
+    }
+
+    /** whether the operator is a carrier, from the connection bit the chip holds */
+    public boolean isCarrier(int chipId, int ch, int slot) {
+        return slot == 1 || (chips[chipId].getRegisters()[0xc0 + ch] & 1) != 0;
+    }
+
+    /** whether the rhythm section is on - register {@code 0xbd} bit 5 */
+    public boolean isRhythm(int chipId) {
+        return (chips[chipId].getRegisters()[0xbd] & 0x20) != 0;
     }
 }

@@ -173,6 +173,16 @@ public class DmgInst extends Instrument.BaseInstrument {
             info.put("wf." + i * 2 + 1, (byte) (chip.registers[0x20 + i] & 0xf));
         }
 
+        // what each channel is actually doing: the length counter and the envelope both stop it
+        info.put("channels.0.playing", chip.sound1.isOn());
+        info.put("channels.1.playing", chip.sound2.isOn());
+        info.put("channels.2.playing", chip.sound3.isOn());
+        info.put("channels.3.playing", chip.sound4.isOn());
+        info.put("channels.0.mute", chip.sound1.isMuted());
+        info.put("channels.1.mute", chip.sound2.isMuted());
+        info.put("channels.2.mute", chip.sound3.isMuted());
+        info.put("channels.3.mute", chip.sound4.isMuted());
+
         int r = 10;
         info.put("channels.0.volumeL",  Math.min((chip.sound1.envelopeValue * chip.controller.mode1Left) * 16 / r, 19));
         info.put("channels.0.volumeR",  Math.min((chip.sound1.envelopeValue * chip.controller.mode1Right) * 16 / r, 19));

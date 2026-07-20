@@ -449,7 +449,7 @@ public class OkiM6295 {
                             // also reset the ADPCM parameters
                             voice.adpcm.reset();
                             voice.volume = volumeTable[data & 0x0f];
-                            chInfo.keyon[i] = true;
+                            keyOn[i] = true;
                         } else {
 //logger.log(Level.TRACE, "OKIM6295:'%s' requested to play sample %02x on non-stopped Voice".formatted(device.tag(), this.command));
                             // just displays warnings when seeking
@@ -588,12 +588,42 @@ logger.log(Level.WARNING, dataStart + " > " +  romSize);
         public final ChannelInfo.Channel[] chInfo = new ChannelInfo.Channel[] {new ChannelInfo.Channel(), new ChannelInfo.Channel(), new ChannelInfo.Channel(), new ChannelInfo.Channel()};
     }
 
+    /**
+     * The channel state, with the key ons that have happened since it was last asked - reading
+     * takes them, so only one caller can see any given one. A caller that cannot afford to race
+     * another for them should watch {@link #isPlaying} instead and find its own edges.
+     */
     public ChannelInfo readChInfo() {
-        chInfo.keyon[0] = false;
-        chInfo.keyon[1] = false;
-        chInfo.keyon[2] = false;
-        chInfo.keyon[3] = false;
+        for (int i = 0; i < VOICES; i++) {
+            chInfo.keyon[i] = keyOn[i];
+            keyOn[i] = false;
+        }
         return chInfo;
+    }
+
+    /** key ons waiting to be collected by {@link #readChInfo} */
+    private final boolean[] keyOn = new boolean[VOICES];
+
+    /** whether a voice still has sample left to play; it clears itself at the end */
+    public boolean isPlaying(int ch) {
+        return this.voices[ch].playing != 0;
+    }
+
+    /** the voice's output volume, 0 to 32, from the four bit attenuation the key on carried */
+    public int getVolume(int ch) {
+        return this.voices[ch].volume;
+    }
+
+    public boolean isMuted(int ch) {
+        return this.voices[ch].muted != 0;
+    }
+
+    /**
+     * The rate every voice plays at - the chip has the one, divided from its clock by the pin 7
+     * state. There is no per voice pitch to be had.
+     */
+    public int getSampleRate() {
+        return this.masterClock / (this.pin7State != 0 ? 132 : 165);
     }
 
     private final ChannelInfo chInfo = new ChannelInfo();

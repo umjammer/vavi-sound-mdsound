@@ -218,6 +218,25 @@ public class C140 {
 //logger.log(Level.TRACE, "c140_write_rom2:%d:%d:%d:%d".formatted(romSize, dataStart, dataLength, srcStartAdr));
     }
 
+    public static final int VOICES = 24;
+
+    /**
+     * Whether the voice is sounding. The chip clears this itself when a sample that does not loop
+     * runs out, so it says more than the key on bit the driver wrote.
+     */
+    public boolean isKeyOn(int voice) {
+        return this.voi[voice].key != 0;
+    }
+
+    public boolean isMuted(int voice) {
+        return this.voi[voice].muted != 0;
+    }
+
+    /** the register file as it stands, sixteen bytes a voice; the buffer is reused */
+    public byte[] getRegisters() {
+        return this.reg;
+    }
+
     public void setMuteMask(int muteMask) {
         for (int curChn = 0; curChn < MAX_VOICE; curChn++)
             this.voi[curChn].muted = (muteMask >> curChn) & 0x01;

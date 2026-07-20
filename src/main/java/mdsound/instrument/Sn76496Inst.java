@@ -119,6 +119,7 @@ public class Sn76496Inst extends Instrument.BaseInstrument implements PannableIn
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "NAME" -> result.put(getName(), "Sn76496");
+            case "register" -> result.put(getName(), chips.get(chipId).getRegisters());
             case "FAMILY" -> result.put(getName(), "TI Psg");
             case "VERSION" -> result.put(getName(), "1.1");
             case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");

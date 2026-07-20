@@ -97,6 +97,16 @@ public class Ym2151Inst extends Instrument.BaseInstrument {
                 }
                 result.put(getName(), keyOn[chipId]);
             }
+            case "info" -> {
+                OPM chip = chips[chipId];
+                result.put("timerB", chip.getTimerB());
+                for (int ch = 0; ch < OPM.CHANNELS; ch++) {
+                    result.put("channels." + ch + ".keyOn", chip.isKeyOn(ch));
+                    result.put("channels." + ch + ".keyCode", chip.getKeyCode(ch));
+                    result.put("channels." + ch + ".totalLevel", chip.getCarrierTotalLevel(ch));
+                    result.put("channels." + ch + ".pan", chip.getPan(ch));
+                }
+            }
         }
         return result;
     }

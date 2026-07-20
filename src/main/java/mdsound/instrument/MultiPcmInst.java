@@ -65,14 +65,19 @@ public class MultiPcmInst extends Instrument.BaseInstrument implements PcmEnable
         chips[chipId].stop();
     }
 
+    /** the channels muted on each chip, as a bit a channel */
+    private final int[] mask = {0, 0};
+
     @Override
-    public void setMask(int chipId, int ch) {
-//        chips[chipId].setMuteMask(ch); // TODO
+    public synchronized void setMask(int chipId, int ch) {
+        mask[chipId] |= ch;
+        chips[chipId].setMuteMask(mask[chipId]);
     }
 
     @Override
-    public void resetMask(int chipId, int ch) {
-//        chips[chipId].setMuteMask(~ch); // TODO
+    public synchronized void resetMask(int chipId, int ch) {
+        mask[chipId] &= ~ch;
+        chips[chipId].setMuteMask(mask[chipId]);
     }
 
     // ----
@@ -115,8 +120,14 @@ public class MultiPcmInst extends Instrument.BaseInstrument implements PcmEnable
             int d = chip.getSlot(ch).pan;
             d = (d == 0) ? 0xf : d;
             info.put("channels." + ch + ".pan", ((((d & 0xc) >> 2) * 4) << 4) | (((d & 0x3) * 4) << 0));
+            // the panpot as written: 0 centre, 8 silent, 1-7 leftwards, 9-15 rightwards
+            info.put("channels." + ch + ".panpot", chip.getSlot(ch).pan);
 
             info.put("channels." + ch + ".bit.0", (chip.getSlot(ch).regs[4] & 0x80) != 0);
+            // the key on bit above is what was asked for; these are what the slot is actually doing
+            info.put("channels." + ch + ".playing", chip.getSlot(ch).isPlaying());
+            info.put("channels." + ch + ".mute", chip.getSlot(ch).isMuted());
+            info.put("channels." + ch + ".totalLevel", chip.getSlot(ch).getTotalLevel());
             info.put("channels." + ch + ".freq", ((chip.getSlot(ch).regs[3] & 0xf) << 6) | (chip.getSlot(ch).regs[2] >> 2));
             info.put("channels." + ch + ".bit.1", (chip.getSlot(ch).regs[5] & 1) != 0); // TL Interpolation
             info.put("channels." + ch + ".inst.1", (chip.getSlot(ch).regs[5] >> 1) & 0x7f); // TL

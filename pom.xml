@@ -3,7 +3,7 @@
 
   <groupId>vavi</groupId>
   <artifactId>vavi-sound-mdsound</artifactId>
-  <version>0.0.20</version>
+  <version>0.0.21</version>
 
   <profiles>
     <profile>
@@ -107,13 +107,13 @@
     <dependency>
       <groupId>com.github.umjammer</groupId> <!-- com.github.umjammer / net.sourceforge.javamod -->
       <artifactId>javamod</artifactId> <!-- javamod / JavaMod -->
-      <version>3.9.18b</version>
-      <exclusions>
-        <exclusion>
-          <groupId>com.github.umjammer</groupId>
-          <artifactId>javamod</artifactId>
-        </exclusion>
-      </exclusions>
+<!-- exclusions>
+  <exclusion>
+    <groupId>com.github.umjammer</groupId>
+    <artifactId>javamod</artifactId>
+  </exclusion>
+</exclusions -->
+      <version>3.9.19</version>
     </dependency>
 
     <dependency>

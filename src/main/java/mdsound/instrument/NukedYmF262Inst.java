@@ -118,6 +118,17 @@ public class NukedYmF262Inst extends Instrument.BaseInstrument {
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
+            case "info" -> {
+                for (int ch = 0; ch < NukedYmF262.CHANNELS; ch++) {
+                    result.put("channels." + ch + ".keyOn", NukedYmF262.isKeyOn(chip, ch));
+                    result.put("channels." + ch + ".fnum", NukedYmF262.getFnum(chip, ch));
+                    result.put("channels." + ch + ".block", NukedYmF262.getBlock(chip, ch));
+                    result.put("channels." + ch + ".totalLevel", NukedYmF262.getTotalLevel(chip, ch));
+                    result.put("channels." + ch + ".panL", NukedYmF262.isLeft(chip, ch));
+                    result.put("channels." + ch + ".panR", NukedYmF262.isRight(chip, ch));
+                    result.put("channels." + ch + ".mute", false);
+                }
+            }
         }
         return result;
     }

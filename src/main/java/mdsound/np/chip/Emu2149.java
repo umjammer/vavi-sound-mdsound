@@ -64,6 +64,11 @@ public class Emu2149 {
         int[] volTbl;
 
         private final int[] reg = new int[0x20];
+
+        /** the register file as the chip has it; the PSG's registers are only ever written */
+        public int[] getRegisters() {
+            return this.reg;
+        }
         private int _out;
         final int[] cout = new int[3];
 

@@ -47,7 +47,7 @@ public class QSound {
 
     /** Clock divider */
     private static final int CLOCKDIV = 166;
-    private static final int CHANNELS = 16;
+    public static final int CHANNELS = 16;
 
     private static class Channel {
         // bank
@@ -305,6 +305,38 @@ public class QSound {
             dataLength = romSize - dataStart;
 
         System.arraycopy(romData, 0 + srcStartAddress, this.sampleRom, 0 + dataStart, dataLength);
+    }
+
+    /** whether the channel is keyed on */
+    public boolean isEnabled(int ch) {
+        return this.channel[ch].enabled != 0;
+    }
+
+    /** the pitch increment, 12.4 fixed point, so 0x1000 plays a sample at the chip's own rate */
+    public int getFreq(int ch) {
+        return this.channel[ch].freq;
+    }
+
+    /** the master volume as written */
+    public int getVolume(int ch) {
+        return this.channel[ch].vol;
+    }
+
+    public int getVolumeL(int ch) {
+        return this.channel[ch].lVol;
+    }
+
+    public int getVolumeR(int ch) {
+        return this.channel[ch].rVol;
+    }
+
+    /** the sample bank, the chip's nearest thing to an instrument */
+    public int getBank(int ch) {
+        return this.channel[ch].bank;
+    }
+
+    public boolean isMuted(int ch) {
+        return this.channel[ch].muted != 0;
     }
 
     public void setMuteMask(int muteMask) {

@@ -362,4 +362,11 @@ public class PSG {
     public int getReg(int regNum) {
         return reg[regNum & 0x0f] & 0xff;
     }
+
+    /** the register file as the chip has it; the PSG's registers are only ever written */
+    public int[] getRegisters() {
+        int[] copy = new int[this.reg.length];
+        for (int i = 0; i < copy.length; i++) copy[i] = this.reg[i] & 0xff;
+        return copy;
+    }
 }
