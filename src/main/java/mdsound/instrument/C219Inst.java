@@ -121,7 +121,7 @@ logger.log(Level.DEBUG, "sampleRate: " + sampleRete);
     }
 
     @Override
-    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Object... args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" ->

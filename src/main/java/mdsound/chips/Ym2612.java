@@ -21,7 +21,6 @@ import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
 
 import vavi.util.compat.TriConsumer;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 import static java.lang.System.getLogger;
 
@@ -697,7 +696,6 @@ logger.log(Level.TRACE, "controlCsmKey");
         this.channels[2].keyOn(3);
     }
 
-    @SuppressFBWarnings("SF_SWITCH_NO_DEFAULT")
     private int setSlot(int adr, int data) {
         int nch;
 

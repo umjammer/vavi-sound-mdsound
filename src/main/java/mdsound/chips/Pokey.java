@@ -17,8 +17,6 @@ package mdsound.chips;
 import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
 
-import mdsound.instrument.PokeyInst;
-
 
 /**
  * POKEY chips emulator 4.51
@@ -133,11 +131,11 @@ public class Pokey {
      */
     private static final int POKEY_DEFAULT_GAIN = (32767 / 11 / 4);
 
-    private final Logger logger = System.getLogger(PokeyInst.class.getName());
-    private final Logger LOG_SOUND = System.getLogger(PokeyInst.class.getName() + ".SOUND");
-    private final Logger LOG_TIMER = System.getLogger(PokeyInst.class.getName() + ".TIMER");
-    private final Logger LOG_POLY = System.getLogger(PokeyInst.class.getName() + ".POLY");
-    private final Logger LOG_RAND = System.getLogger(PokeyInst.class.getName() + ".RAND");
+    private final Logger logger = System.getLogger(Pokey.class.getName());
+    private final Logger LOG_SOUND = System.getLogger(Pokey.class.getName() + ".SOUND");
+    private final Logger LOG_TIMER = System.getLogger(Pokey.class.getName() + ".TIMER");
+    private final Logger LOG_POLY = System.getLogger(Pokey.class.getName() + ".POLY");
+    private final Logger LOG_RAND = System.getLogger(Pokey.class.getName() + ".RAND");
 
     private static final int CHAN1 = 0;
     private static final int CHAN2 = 1;

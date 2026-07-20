@@ -128,7 +128,6 @@ public class DosboxYm3812 {
                 0, 1, 2, 0, 1, 2, 0, 0, 3, 4, 5, 3, 4, 5, 0, 0, 6, 7, 8, 6, 7, 8
         };
 
-
         // map a channel number to the register offset of the modulator (=register base)
         private static final int[] modulatorBase = {
                 0, 1, 2,

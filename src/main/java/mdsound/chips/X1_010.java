@@ -48,7 +48,7 @@ Registers:
  offset 0x0000 - 0x0fff  Wave form data
  offset 0x1000 - 0x1fff  Envelope data
 
- *1 : when 0 is specified, hardware interrupt is caused(allways return soon)
+ *1 : when 0 is specified, hardware interrupt is caused (always return soon)
  </pre>
 */
 public class X1_010 {

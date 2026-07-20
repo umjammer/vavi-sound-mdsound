@@ -7,8 +7,6 @@
 package mdsound.np;
 
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
 
 import mdsound.np.Device.Counter;
 

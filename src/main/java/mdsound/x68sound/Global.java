@@ -11,9 +11,11 @@
 package mdsound.x68sound;
 
 import java.lang.System.Logger;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Scanner;
 import java.util.function.Function;
-
-import mdsound.Common;
+import java.util.stream.IntStream;
 
 
 /**
@@ -381,8 +383,8 @@ class Global {
 
     static {
         try {
-            OPMLOWPASS_44 = Common.readArrays("/mdsound/x68sound/opmlowpass_44.dat");
-            OPMLOWPASS_48 = Common.readArrays("/mdsound/x68sound/opmlowpass_48.dat");
+            OPMLOWPASS_44 = readArrays("/mdsound/x68sound/opmlowpass_44.dat");
+            OPMLOWPASS_48 = readArrays("/mdsound/x68sound/opmlowpass_48.dat");
         } catch (Exception e) {
             throw new IllegalStateException(e);
         }
@@ -526,5 +528,18 @@ class Global {
                 (int) buf1[buf1Ptr + 63] * p[63];
         result[1] >>= (16 - 1);
     }
-}
 
+    private static short[][] readArrays(String name) {
+        Scanner s = new Scanner(Global.class.getResourceAsStream(name));
+        List<String> ls = new ArrayList<>();
+        while (s.hasNextLine()) ls.add(s.nextLine());
+        s.close();
+        short[][] d = new short[ls.size()][];
+        IntStream.range(0, ls.size()).forEach(i -> {
+            String[] ps = ls.get(i).trim().split("[\\s,]+");
+            d[i] = new short[ps.length];
+            IntStream.range(0, ps.length).forEach(j -> d[i][j] = Short.parseShort(ps[j]));
+        });
+        return d;
+    }
+}

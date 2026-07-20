@@ -12,6 +12,8 @@ import mdsound.chips.MultiPCM;
 // TODO check SHIFT in all classes
 public class MultiPcmInst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
+    public static final int CHANNELS = 28;
+
     public static final int MAX_CHIPS = 0x02;
 
     private final MultiPCM[] chips = {new MultiPCM(), new MultiPCM()};
@@ -162,7 +164,7 @@ public class MultiPcmInst extends Instrument.BaseInstrument implements PcmEnable
     }
 
     @Override
-    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Object... args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" ->
@@ -171,7 +173,7 @@ public class MultiPcmInst extends Instrument.BaseInstrument implements PcmEnable
             case "FAMILY" -> result.put(getName(), "Sega custom");
             case "VERSION" -> result.put(getName(), "2.0");
             case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
-            case "info" -> { return getInfo(chipId); }
+            case "info" -> result.putAll(getInfo(chipId));
         }
         return result;
     }

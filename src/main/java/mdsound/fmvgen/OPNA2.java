@@ -143,6 +143,7 @@ public class OPNA2 extends Opna.OPNABase {
         }
     }
 
+    @Override
     public boolean init(int c, int r) {
         return init(c, r, false, "");
     }
@@ -202,6 +203,7 @@ public class OPNA2 extends Opna.OPNABase {
     /**
      * Sampling rate change
      */
+    @Override
     public boolean setRate(int c, int r, boolean ipflag /* = false */) {
         if (!super.setRate(c, r, ipflag))
             return false;
@@ -243,6 +245,7 @@ public class OPNA2 extends Opna.OPNABase {
     /**
      * Reset
      */
+    @Override
     public void reset() {
         reg29 = 0x1f;
         rhythmKey = 0;
@@ -264,6 +267,7 @@ public class OPNA2 extends Opna.OPNABase {
         }
     }
 
+    @Override
     protected void rebuildTimeTable() {
         super.rebuildTimeTable();
 
@@ -272,6 +276,7 @@ public class OPNA2 extends Opna.OPNABase {
         setPreScaler(p);
     }
 
+    @Override
     public void setPreScaler(int p) {
         super.setPreScaler(p);
 
@@ -309,6 +314,7 @@ public class OPNA2 extends Opna.OPNABase {
     /**
      * Set data in the register array
      */
+    @Override
     public void setReg(int addr, int data) {
         addr &= 0x3ff;
 
@@ -420,12 +426,14 @@ public class OPNA2 extends Opna.OPNABase {
         }
     }
 
+    @Override
     public int getReg(int addr) {
         return 0;
     }
 
     // Volume Settings
 
+    @Override
     public void setVolumeFM(int db) {
         db = Math.min(db, 20);
         if (db > -192) {
@@ -437,6 +445,7 @@ public class OPNA2 extends Opna.OPNABase {
         }
     }
 
+    @Override
     public void setVolumePSG(int db) {
         psg2[0].setVolume(db);
         psg2[1].setVolume(db);
@@ -464,6 +473,7 @@ public class OPNA2 extends Opna.OPNABase {
     /**
      * Channel Mask Settings
      */
+    @Override
     public void setChannelMask(int mask) {
         for (int i = 0; i < 6; i++) {
             fm6[0].ch[i].mute(!((mask & (1 << i)) == 0));
@@ -650,14 +660,17 @@ public class OPNA2 extends Opna.OPNABase {
         rhythm[index].volume = -(db * 2 / 3);
     }
 
+    @Override
     public void setTimerA(int addr, int data) {
         super.setTimerA(addr, data);
     }
 
+    @Override
     public void setTimerB(int data) {
         super.setTimerB(data);
     }
 
+    @Override
     public void setTimerControl(int data) {
         super.setTimerControl(data);
     }

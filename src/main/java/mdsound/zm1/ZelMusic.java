@@ -11,7 +11,7 @@ public class ZelMusic {
 
     private Operator[] ope = null;
 
-    private commonParam cp = new commonParam();
+    private final commonParam cp = new commonParam();
 
     public static class commonParam {
 
@@ -120,8 +120,8 @@ public class ZelMusic {
 
         if (opTyp == 0) {
             int d = ope[opNum / 3].getNoteByteMatrix();
-            d &= (int) ~(0x0000_00ff << ((adr % 3) * 8));
-            d |= (int) ((byte) data << ((adr % 3) * 8));
+            d &= ~(0x0000_00ff << ((adr % 3) * 8));
+            d |= (byte) data << ((adr % 3) * 8);
             ope[opNum / 3].setNoteByteMatrix(d);
         } else {
             Operator o = ope[opNum % 48];

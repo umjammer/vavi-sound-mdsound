@@ -4,8 +4,8 @@ package mdsound.zm1;
 public abstract class ChipElement {
 
     // from fmgen
-    private static int[] kftable = new int[64];
-    private static int[] kctable = {
+    private static final int[] kftable = new int[64];
+    private static final int[] kctable = {
             5197, 5506, 5833, 6180, 6180, 6547, 6937, 7349,
             7349, 7786, 8249, 8740, 8740, 9259, 9810, 10394,
     };
@@ -23,13 +23,13 @@ public abstract class ChipElement {
      * from fmgen
      */
     public void setKCKF(int kc, int kf) {
-        int oct = (int) (19 - ((kc >> 4) & 7));
+        int oct = 19 - ((kc >> 4) & 7);
 
         //printf("%p", this);
         int kcv = kctable[kc & 0x0f];
         kcv = (kcv + 2) / 4 * 4;
         //printf(" %.4x", kcv);
-        int dp = (int) (kcv * kftable[kf & 0x3f]);
+        int dp = kcv * kftable[kf & 0x3f];
         //printf(" %.4x %.4x %.8x", kcv, kftable[kf & 0x3f], dp >> oct);
         dp >>= 16 + 3;
         dp <<= 16 + 3;

@@ -9,12 +9,14 @@ package mdsound.np.chip;
 
 public class DeviceInfo {
 
+    @Override
     public DeviceInfo clone() {
         return null;
     }
 
     public static class TrackInfo extends DeviceInfo {
 
+        @Override
         public DeviceInfo clone() {
             return null;
         }
@@ -146,30 +148,37 @@ public class DeviceInfo {
             return tib;
         }
 
+        @Override
         public int getOutput() {
             return output;
         }
 
+        @Override
         public double getFreqHz() {
             return freq;
         }
 
+        @Override
         public int getFreq() {
             return _freq;
         }
 
+        @Override
         public boolean getKeyStatus() {
             return key;
         }
 
+        @Override
         public int getVolume() {
             return volume;
         }
 
+        @Override
         public int getMaxVolume() {
             return maxVolume;
         }
 
+        @Override
         public int getTone() {
             return tone;
         }

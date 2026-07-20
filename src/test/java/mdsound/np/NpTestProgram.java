@@ -88,7 +88,7 @@ public class NpTestProgram {
 
     private double cpuClockRest;
     private double apuClockRest;
-    private double vgmSpeed = 1.0;
+    private final double vgmSpeed = 1.0;
 
     public static void main(String[] args) throws Exception {
         if (args.length == 0) {

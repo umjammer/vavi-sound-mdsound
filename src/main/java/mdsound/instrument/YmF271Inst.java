@@ -165,7 +165,7 @@ public class YmF271Inst extends Instrument.BaseInstrument implements PcmEnabledI
     }
 
     @Override
-    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Object... args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" ->
@@ -174,7 +174,7 @@ public class YmF271Inst extends Instrument.BaseInstrument implements PcmEnabledI
             case "FAMILY" -> result.put(getName(), "Yamaha FM");
             case "VERSION" -> result.put(getName(), "1.0");
             case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
-            case "info" -> { return getInfo(chipId); }
+            case "info" -> result.putAll(getInfo(chipId));
         }
         return result;
     }

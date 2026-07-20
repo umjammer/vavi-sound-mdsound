@@ -8,7 +8,6 @@ package mdsound.chips;
 
 import java.util.Arrays;
 
-import mdsound.Common;
 import vavi.util.Debug;
 
 
@@ -328,7 +327,7 @@ public class C219 {
 
         this.pRom = new byte[memsize];
         this.pRomSize = memsize;
-        this.pRomMask = Common.pow2_mask(memsize);
+        this.pRomMask = pow2_mask(memsize);
         Arrays.fill(this.pRom, (byte) 0xff);
     }
 
@@ -364,5 +363,17 @@ Debug.println("rom: " + length);
     public void setMuteMask(int muteMask) {
         for (int curChn = 0; curChn < MAX_VOICE; curChn++)
             this.voices[curChn].muted = (muteMask >>> curChn) & 0x01;
+    }
+
+    private static int pow2_mask(int v) {
+        if (v == 0)
+            return 0;
+        v--;
+        v |= (v >> 1);
+        v |= (v >> 2);
+        v |= (v >> 4);
+        v |= (v >> 8);
+        v |= (v >> 16);
+        return v;
     }
 }

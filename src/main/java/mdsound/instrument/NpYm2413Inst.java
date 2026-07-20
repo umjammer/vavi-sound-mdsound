@@ -53,7 +53,7 @@ public class NpYm2413Inst extends Instrument.BaseInstrument {
         return 0;
     }
 
-    private int[][] b = new int[2][2];
+    private final int[][] b = new int[2][2];
 
     @Override
     public void update(int chipId, int[][] outputs, int samples) {
@@ -86,7 +86,7 @@ public class NpYm2413Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Object... args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" ->

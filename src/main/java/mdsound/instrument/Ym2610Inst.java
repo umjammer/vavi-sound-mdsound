@@ -141,7 +141,7 @@ public class Ym2610Inst extends Instrument.BaseInstrument implements AdpcmEnable
     }
 
     @Override
-    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Object... args) {
         // TODO tag commonize
         Map<String, Object> result = new HashMap<>();
         switch (key) {

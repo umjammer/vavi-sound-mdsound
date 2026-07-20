@@ -11,7 +11,7 @@ public class Operator {
     public int number;
     public ZelMusic.commonParam cp;
 
-    private List<Byte> pCMData;
+    private final List<Byte> pCMData;
 
     public Operator(int number, ZelMusic.commonParam cp) { //, List<byte> pCMData, int playClock, int chipClock)
         this.cp = cp;

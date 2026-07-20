@@ -61,6 +61,7 @@ public class Opna {
             return true;
         }
 
+        @Override
         public void reset() {
             status = 0;
             setPreScaler(0);
@@ -680,6 +681,7 @@ public class Opna {
         /**
          * Status Flag Settings
          */
+        @Override
         protected void setStatus(int bits) {
             if ((status & bits) == 0) {
 //logger.log(Level.TRACE, "SetStatus(%.2x %.2x)".formatted(bits, stmask));
@@ -690,6 +692,7 @@ public class Opna {
 //logger.log(Level.TRACE, "SetStatus(%.2x) - ignored".formatted(bits));
         }
 
+        @Override
         protected void resetStatus(int bits) {
             status &= ~bits;
 //logger.log(Level.TRACE, "ResetStatus(%.2x)".formatted(bits));
@@ -1174,6 +1177,7 @@ stop:
         }
 
         /** Rests */
+        @Override
         public void reset() {
             for (int i = 0x20; i < 0x28; i++) setReg(i, 0);
             for (int i = 0x30; i < 0xc0; i++) setReg(i, 0);
@@ -1352,6 +1356,7 @@ logger.log(Level.INFO, Arrays.toString(ch));
         }
 
         /** Status Flag Settings */
+        @Override
         protected void setStatus(int bits) {
             if ((status & bits) == 0) {
                 status |= bits;
@@ -1359,6 +1364,7 @@ logger.log(Level.INFO, Arrays.toString(ch));
             }
         }
 
+        @Override
         protected void resetStatus(int bit) {
             status &= ~bit;
             if (status == 0)
@@ -1604,6 +1610,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
         /**
          * Sampling rate change
          */
+        @Override
         public boolean setRate(int c, int r, boolean ipFlag /* = false */) {
             if (!super.setRate(c, r, ipFlag))
                 return false;
@@ -1629,6 +1636,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
         /**
          * Resets.
          */
+        @Override
         public void reset() {
             reg29 = 0x1f;
             rhythmKey = 0;
@@ -1639,6 +1647,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
         /**
          * Sets data in the register array.
          */
+        @Override
         public void setReg(int addr, int data) {
             addr &= 0x1ff;
 
@@ -1699,6 +1708,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
             }
         }
 
+        @Override
         public int getReg(int addr) {
             return 0;
         }
@@ -1875,6 +1885,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
         /**
          * Changes sampling rate.
          */
+        @Override
         public boolean setRate(int c, int r, boolean ipFlag /* = false */) {
             if (!super.setRate(c, r, ipFlag))
                 return false;
@@ -1898,6 +1909,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
         /**
          * Resets.
          */
+        @Override
         public void reset() {
             super.reset();
 
@@ -1913,6 +1925,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
         /**
          * Set data in the register array.
          */
+        @Override
         public void setReg(int addr, int data) {
             addr &= 0x1ff;
 
@@ -2054,6 +2067,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
         /**
          * Register Acquisition
          */
+        @Override
         public int getReg(int addr) {
             if (addr < 0x10)
                 return psg.getReg(addr);
@@ -2064,6 +2078,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
         /**
          * Read Extended Status
          */
+        @Override
         public int readStatusEx() {
             return (status & stMask) >> 8;
         }

@@ -1572,26 +1572,32 @@ public class Emu2413 {
         /** Definition of envelope mode */
         public enum EgState {
             READY {
+                @Override
                 int calcEgDPhase(Slot slot) {
                     return 0;
                 }
             }, ATTACK {
+                @Override
                 int calcEgDPhase(Slot slot) {
                     return dPhaseARTable[slot.patch.ar][slot.rks];
                 }
             }, DECAY {
+                @Override
                 int calcEgDPhase(Slot slot) {
                     return dPhaseDRTable[slot.patch.dr][slot.rks];
                 }
             }, SUSHOLD {
+                @Override
                 int calcEgDPhase(Slot slot) {
                     return 0;
                 }
             }, SUSTAIN {
+                @Override
                 int calcEgDPhase(Slot slot) {
                     return dPhaseDRTable[slot.patch.rr][slot.rks];
                 }
             }, RELEASE {
+                @Override
                 int calcEgDPhase(Slot slot) {
                     if (slot.sustain != 0)
                         return dPhaseDRTable[5][slot.rks];
@@ -1601,10 +1607,12 @@ public class Emu2413 {
                         return dPhaseDRTable[7][slot.rks];
                 }
             }, SETTLE {
+                @Override
                 int calcEgDPhase(Slot slot) {
                     return dPhaseDRTable[15][0];
                 }
             }, FINISH {
+                @Override
                 int calcEgDPhase(Slot slot) {
                     return 0;
                 }
@@ -1625,12 +1633,12 @@ public class Emu2413 {
         };
 
         // KSL + TL Table
-        private static int[][][][] tllTable;
+        private static final int[][][][] tllTable;
 
-        private static int[][][] rksTable;
+        private static final int[][][] rksTable;
 
         /** Phase incR table for PG */
-        private static int[][][] dphaseTable;
+        private static final int[][][] dphaseTable;
 
         //
         // Create tables

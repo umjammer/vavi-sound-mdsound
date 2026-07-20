@@ -6,6 +6,7 @@
 
 package mdsound.np;
 
+
 //
 // Excerpt from filter.h
 //

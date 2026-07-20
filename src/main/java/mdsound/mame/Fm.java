@@ -3791,6 +3791,7 @@ public class Fm {
         //
 
         // Generate samples for one of the YM2608s 
+        @Override
         public void updateOne(int[][] buffer, int length) {
             FM_OPN opn = this.opn;
             YmDeltaT deltaT = this.deltaT;
@@ -3950,6 +3951,7 @@ public class Fm {
             this.deltaT.postLoad(this.regs, 0x100);
         }
 
+        @Override
         public void saveState(DeviceConfig device) {
 
             DeviceConfig.state_save_register_device_item_array(0, this.regs);
@@ -4004,11 +4006,13 @@ public class Fm {
         }
 
         /** shut down emulator */
+        @Override
         public void shutdown() {
             this.deltaT.memory = null;
         }
 
         /** reset one of chips */
+        @Override
         public void reset() {
 
             this.opn.reset2608(this);
@@ -4025,6 +4029,7 @@ public class Fm {
             this.deltaT.reset2608(this.opn.st.freqBase, this.opn.outDelta);
         }
 
+        @Override
         public int read(int a) {
             int addr = this.opn.st.address;
             int ret = 0;
@@ -4061,8 +4066,9 @@ public class Fm {
             return ret;
         }
 
+        @Override
         public void writePcmRom(int rom_id, int romSize, int dataStart,
-                         int dataLength, byte[] romData) {
+                                int dataLength, byte[] romData) {
             switch (rom_id) {
                 case 0x01: // ADPCM
                     // unused, it's constant
@@ -4085,6 +4091,7 @@ public class Fm {
             }
         }
 
+        @Override
         public void setMuteMask(int muteMask) {
             for (int curChn = 0; curChn < 6; curChn++)
                 this.ch[curChn].muted = (muteMask >> curChn) & 0x01;
@@ -4093,10 +4100,12 @@ public class Fm {
             this.muteDeltaT = (muteMask >> 12) & 0x01;
         }
 
+        @Override
         public void setDeltaTStatus(int changeBits) {
             opn.st.setStatus(changeBits);
         }
 
+        @Override
         public void resetDelTatStatus(int changeBits) {
             opn.st.resetStatus(changeBits);
         }

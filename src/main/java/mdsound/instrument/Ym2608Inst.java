@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Function;
 
-import mdsound.x68sound.Adpcm;
 import vavi.util.compat.Tuple;
 import mdsound.Instrument;
 import mdsound.fmgen.Opna;
@@ -140,7 +139,7 @@ public class Ym2608Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Object... args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" -> {

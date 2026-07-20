@@ -447,4 +447,18 @@ public class C352 {
     public int[] getFlags() {
         return flags;
     }
+
+    /**
+     * The channel registers as the chip holds them now, eight per channel, plus the control
+     * register at {@code 0x200}. The buffer is reused, so a caller that wants to keep the values
+     * has to copy them.
+     */
+    public int[] readRegisters() {
+        int[] buf = new int[0x203];
+        for (int adr = 0; adr < 0x100; adr++) {
+            buf[adr] = read(adr);
+        }
+        buf[0x200] = read(0x200);
+        return buf;
+    }
 }

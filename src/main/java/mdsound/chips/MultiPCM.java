@@ -6,8 +6,6 @@ import java.util.Arrays;
 import java.util.StringJoiner;
 import java.util.function.Function;
 
-import mdsound.Common;
-
 import static java.lang.System.getLogger;
 
 
@@ -716,7 +714,7 @@ logger.log(Level.DEBUG, "sega_banking: %02x".formatted(offset));
         this.romSize = romSize;
         Arrays.fill(this.rom, 0, romSize, (byte) 0xff);
 
-        this.romMask = Common.pow2_mask(romSize);
+        this.romMask = pow2_mask(romSize);
     }
 
     public void writeRom(int romSize, int offset, int length, byte[] data) {
@@ -744,5 +742,17 @@ logger.log(Level.DEBUG, "sega_banking: %02x".formatted(offset));
 
     public Slot getSlot(int ch) {
         return slots[ch];
+    }
+
+    private static int pow2_mask(int v) {
+        if (v == 0)
+            return 0;
+        v--;
+        v |= (v >> 1);
+        v |= (v >> 2);
+        v |= (v >> 4);
+        v |= (v >> 8);
+        v |= (v >> 16);
+        return v;
     }
 }

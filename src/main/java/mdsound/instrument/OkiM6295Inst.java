@@ -139,7 +139,7 @@ public class OkiM6295Inst extends Instrument.BaseInstrument implements PcmEnable
     }
 
     @Override
-    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Object... args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" ->
@@ -148,7 +148,7 @@ public class OkiM6295Inst extends Instrument.BaseInstrument implements PcmEnable
             case "FAMILY" -> result.put(getName(), "OKI ADPCM");
             case "VERSION" -> result.put(getName(), "1.0");
             case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
-            case "info" -> { return getInfo(chipId); }
+            case "info" -> result.putAll(getInfo(chipId));
         }
         return result;
     }

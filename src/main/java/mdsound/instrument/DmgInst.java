@@ -205,12 +205,12 @@ public class DmgInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Object... args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
-            case "info" -> { return getInfo(chipId); }
+            case "info" -> result.putAll(getInfo(chipId));
         }
         return result;
     }

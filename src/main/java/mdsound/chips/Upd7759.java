@@ -122,7 +122,7 @@ public class Upd7759 {
     // step value fractional bits
     private static final int FRAC_BITS = 20;
     private static final int FRAC_ONE = (1 << FRAC_BITS);
-    private final int FRAC_MASK = (FRAC_ONE - 1);
+    private static final int FRAC_MASK = (FRAC_ONE - 1);
 
     /** chip states */
     public enum STATE {

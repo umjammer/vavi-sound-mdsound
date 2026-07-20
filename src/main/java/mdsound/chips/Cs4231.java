@@ -8,14 +8,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-//
-// This CS4231 emulator was developed based on and ported from the following sources and materials:
-//
-// My App/iv, primarily PLAY4
-// CS4231A data sheet
-//
-// PC-9801-118
-// PCM (Windows Sound System)
+/**
+ * This CS4231 emulator was developed based on and ported from the following sources and materials:
+ *
+ * My App/iv, primarily PLAY4
+ * CS4231A data sheet
+ *
+ * PC-9801-118
+ * PCM (Windows Sound System)
+ */
 public class Cs4231 {
 
     int indexAddress;
@@ -398,7 +399,7 @@ public class Cs4231 {
 
         }
 
-        private void change_ptr(int[] ax) {
+        private static void change_ptr(int[] ax) {
             ax[0] += FIFO_SIZE * 2;
             if (ax[0] >= fifofin) {
                 ax[0] = 0;
