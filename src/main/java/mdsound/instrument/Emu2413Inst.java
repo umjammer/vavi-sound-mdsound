@@ -6,6 +6,9 @@
 
 package mdsound.instrument;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import vavi.util.compat.Tuple;
 import mdsound.Instrument.BaseInstrument;
 import mdsound.chips.Emu2413;
@@ -94,8 +97,8 @@ public class Emu2413Inst extends BaseInstrument {
     }
 
     @Override
-    public java.util.Map<String, Object> getView(int chipId, String key, java.util.Map<String, Object> args) {
-        java.util.Map<String, Object> result = new java.util.HashMap<>();
+    public Map<String, Object> getView(int chipId, String key, Object... args) {
+        Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "register" -> result.put("register", chips[chipId].getRegisters());
         }

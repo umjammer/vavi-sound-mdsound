@@ -76,10 +76,10 @@ public class Nes {
             for (int curSmpl = 0x00; curSmpl < samples; curSmpl++) {
                 this.nesApu.render(bufferA);
                 this.nesDmc.render(bufferD);
-                outputs[0][curSmpl] = (short) ((limit(bufferA[0], 0x7fff, -0x8000) * apuVolume) >> 14);
-                outputs[1][curSmpl] = (short) ((limit(bufferA[1], 0x7fff, -0x8000) * apuVolume) >> 14);
-                outputs[0][curSmpl] += (short) ((limit(bufferD[0], 0x7fff, -0x8000) * dmcVolume) >> 14);
-                outputs[1][curSmpl] += (short) ((limit(bufferD[1], 0x7fff, -0x8000) * dmcVolume) >> 14);
+                outputs[0][curSmpl] = (short) ((Math.clamp(bufferA[0], -0x8000, 0x7fff) * apuVolume) >> 14);
+                outputs[1][curSmpl] = (short) ((Math.clamp(bufferA[1], -0x8000, 0x7fff) * apuVolume) >> 14);
+                outputs[0][curSmpl] += (short) ((Math.clamp(bufferD[0], -0x8000, 0x7fff) * dmcVolume) >> 14);
+                outputs[1][curSmpl] += (short) ((Math.clamp(bufferD[1], -0x8000, 0x7fff) * dmcVolume) >> 14);
                 if (listener != null) listener.accept(new int[] {Math.abs(bufferA[0]), Math.abs(bufferD[0]), -1, -1, -1, -1, -1, -1});
             }
 //            break;
@@ -88,15 +88,11 @@ public class Nes {
         if (nesFds != null) {
             for (int curSmpl = 0x00; curSmpl < samples; curSmpl++) {
                 this.nesFds.render(bufferF);
-                outputs[0][curSmpl] += (short) ((limit(bufferF[0], 0x7fff, -0x8000) * fdsVolume) >> 14);
-                outputs[1][curSmpl] += (short) ((limit(bufferF[1], 0x7fff, -0x8000) * fdsVolume) >> 14);
+                outputs[0][curSmpl] += (short) ((Math.clamp(bufferF[0], -0x8000, 0x7fff) * fdsVolume) >> 14);
+                outputs[1][curSmpl] += (short) ((Math.clamp(bufferF[1], -0x8000, 0x7fff) * fdsVolume) >> 14);
                 if (listener != null) listener.accept(new int[] {-1, -1, Math.abs(bufferF[0]), -1, -1, -1, -1, -1});
             }
         }
-    }
-
-    private static int limit(int v, int max, int min) {
-        return v > max ? max : (v < min ? min : v);
     }
 
     public void start(int clock, int rate) {

@@ -311,6 +311,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
 
     private Consumer<int[]> listener;
 
+    @Override
     public void setListener(Consumer<int[]> listener) {
         this.listener = listener;
     }

@@ -134,6 +134,8 @@ public class OkiM6258Inst extends Instrument.BaseInstrument {
         info.put("dataIn", chip.getDataIn());
         info.put("status", chip.getStatus());
 
+        info.put("keyOn", chip.getKeyOn());
+
         return info;
     }
 
@@ -145,7 +147,7 @@ public class OkiM6258Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Object... args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" ->
@@ -154,7 +156,7 @@ public class OkiM6258Inst extends Instrument.BaseInstrument {
             case "FAMILY" -> result.put(getName(), "OKI ADPCM");
             case "VERSION" -> result.put(getName(), "1.0");
             case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
-            case "info" -> { return getInfo(chipId); }
+            case "info" -> result.putAll(getInfo(chipId));
         }
         return result;
     }

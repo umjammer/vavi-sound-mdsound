@@ -8,8 +8,6 @@ package mdsound.np.chip;
 
 import java.util.function.Consumer;
 
-import mdsound.Common;
-import mdsound.Instrument;
 import mdsound.np.Device.SoundChip;
 import mdsound.np.NpNesFds;
 
@@ -20,7 +18,7 @@ public class NesFds implements SoundChip {
 
     public NesFds() {
         fds = new NpNesFds();
-        fds.init(Common.NsfClock, Instrument.BaseInstrument.CHIP_SAMPLE_RATE);
+        fds.init(NsfClock, SampleRate);
     }
 
     @Override
@@ -77,6 +75,7 @@ public class NesFds implements SoundChip {
 
     private Consumer<int[]> listener;
 
+    @Override
     public void setListener(Consumer<int[]> listener) {
         this.listener = listener;
     }

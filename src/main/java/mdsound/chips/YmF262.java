@@ -1576,6 +1576,7 @@ public class YmF262 {
         }
 
         /** YMF262 I/O interface */
+        @Override
         public int write(int a, int v) {
             // data bus is 8 bits
             v &= 0xff;
@@ -3601,6 +3602,7 @@ assert frn >> 6 < 16 : "%08x, %x, %x".formatted(frn, adlibReg[ARC_KON_BNUM + cha
             }
         }
 
+        @Override
         public int read(int port) {
             // opl3-detection routines require ret&6 to be zero
 //#if defined(OPLTYPE_IS_OPL3)
@@ -4385,6 +4387,7 @@ assert frn >> 6 < 16 : "%08x, %x, %x".formatted(frn, adlibReg[ARC_KON_BNUM + cha
             }
         }
 
+        @Override
         public void setMuteMask(int muteMask) {
             for (int curChn = 0; curChn < NUM_CHANNELS + 5; curChn++)
                 this.muteChn[curChn] = (muteMask >> curChn) & 0x01;

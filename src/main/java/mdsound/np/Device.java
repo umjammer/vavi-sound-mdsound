@@ -52,6 +52,9 @@ public interface Device {
      */
     interface SoundChip extends Renderable {
 
+        int SampleRate = 44100;
+        int NsfClock = 1789773;
+
         /**
          * Sound chip clocked by M2 (NTSC = ~1.789MHz)
          */

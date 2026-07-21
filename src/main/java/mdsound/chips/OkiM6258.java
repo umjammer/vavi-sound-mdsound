@@ -107,7 +107,7 @@ public class OkiM6258 {
     }
 
     /* step size index shift table */
-    private static final int[] indexShift = new int[] {-1, -1, -1, -1, 2, 4, 6, 8};
+    private static final int[] indexShift = {-1, -1, -1, -1, 2, 4, 6, 8};
 
     /* lookup table for the precomputed difference */
     private static final int[] diffLookup = new int[49 * 16];
@@ -119,11 +119,11 @@ public class OkiM6258 {
      */
     static {
         // nibble to bit map
-        int[][] nbl2bit = new int[][] {
-                new int[] {1, 0, 0, 0}, new int[] {1, 0, 0, 1}, new int[] {1, 0, 1, 0}, new int[] {1, 0, 1, 1},
-                new int[] {1, 1, 0, 0}, new int[] {1, 1, 0, 1}, new int[] {1, 1, 1, 0}, new int[] {1, 1, 1, 1},
-                new int[] {-1, 0, 0, 0}, new int[] {-1, 0, 0, 1}, new int[] {-1, 0, 1, 0}, new int[] {-1, 0, 1, 1},
-                new int[] {-1, 1, 0, 0}, new int[] {-1, 1, 0, 1}, new int[] {-1, 1, 1, 0}, new int[] {-1, 1, 1, 1}
+        int[][] nbl2bit = {
+                {1, 0, 0, 0}, {1, 0, 0, 1}, {1, 0, 1, 0}, {1, 0, 1, 1},
+                {1, 1, 0, 0}, {1, 1, 0, 1}, {1, 1, 1, 0}, {1, 1, 1, 1},
+                {-1, 0, 0, 0}, {-1, 0, 0, 1}, {-1, 0, 1, 0}, {-1, 0, 1, 1},
+                {-1, 1, 0, 0}, {-1, 1, 0, 1}, {-1, 1, 1, 0}, {-1, 1, 1, 1}
         };
 
         // loop over all possible steps
@@ -366,6 +366,10 @@ public class OkiM6258 {
         switch (port) {
         case 0x00:
             writeControl(/* 0x00, */ data);
+
+            // TODO view, consider more
+            if ((data & 0x2) != 0)
+                keyOn = true;
             break;
         case 0x01:
             write(0x00, data);
@@ -415,5 +419,13 @@ public class OkiM6258 {
 
     public int getStatus() {
         return status;
+    }
+
+    // for view
+    private boolean keyOn;
+
+    // TODO retrieve from register directly
+    public boolean getKeyOn() {
+        return keyOn;
     }
 }

@@ -7,6 +7,9 @@
 
 package mdsound.instrument;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import mdsound.Instrument;
 import mdsound.chips.Ay8910;
 
@@ -142,8 +145,8 @@ public class MameAy8910Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public java.util.Map<String, Object> getView(int chipId, String key, java.util.Map<String, Object> args) {
-        java.util.Map<String, Object> result = new java.util.HashMap<>();
+    public Map<String, Object> getView(int chipId, String key, Object... args) {
+        Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "register" -> result.put("register", chips[chipId].getRegisters());
         }

@@ -184,6 +184,7 @@ public class NesFme7 implements SoundChip {
 
     private Consumer<int[]> listener;
 
+    @Override
     public void setListener(Consumer<int[]> listener) {
         this.listener = listener;
     }

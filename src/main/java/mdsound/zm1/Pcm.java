@@ -84,9 +84,9 @@ public class Pcm extends ChipElement {
         effectConfiguration = value;
     }
 
-    private List<Byte> pCMData;
+    private final List<Byte> pCMData;
 
-    private static int[] deltaKcTable = {
+    private static final int[] deltaKcTable = {
             76296, 80784, 85540, 90580, 90580, 95920, 101576, 107568,
             53784 * 2, 56958 * 2, 60322 * 2, 63724 * 2, 63724 * 2, 67660 * 2, 71658 * 2, 76296 * 2
     };
@@ -115,29 +115,29 @@ public class Pcm extends ChipElement {
             case 0x02:
             case 0x03:
             case 0x04:
-                playAddress &= (int) ~(0x0000_00ff << ((address - 1) * 8));
-                playAddress |= (int) ((byte) data << ((address - 1) * 8));
+                playAddress &= ~(0x0000_00ff << ((address - 1) * 8));
+                playAddress |= (byte) data << ((address - 1) * 8);
                 break;
             case 0x05:
             case 0x06:
             case 0x07:
             case 0x08:
-                stopAddress &= (int) ~(0x0000_00ff << ((address - 5) * 8));
-                stopAddress |= (int) ((byte) data << ((address - 5) * 8));
+                stopAddress &= ~(0x0000_00ff << ((address - 5) * 8));
+                stopAddress |= (byte) data << ((address - 5) * 8);
                 break;
             case 0x09:
             case 0x0a:
             case 0x0b:
             case 0x0c:
-                loopAddress &= (int) ~(0x0000_00ff << ((address - 9) * 8));
-                loopAddress |= (int) ((byte) data << ((address - 9) * 8));
+                loopAddress &= ~(0x0000_00ff << ((address - 9) * 8));
+                loopAddress |= (byte) data << ((address - 9) * 8);
                 break;
             case 0x0d:
             case 0x0e:
             case 0x0f:
             case 0x10:
-                keyOffAddress &= (int) ~(0x0000_00ff << ((address - 13) * 8));
-                keyOffAddress |= (int) ((byte) data << ((address - 13) * 8));
+                keyOffAddress &= ~(0x0000_00ff << ((address - 13) * 8));
+                keyOffAddress |= (byte) data << ((address - 13) * 8);
                 break;
             case 0x12:
                 pcmConfig = (byte) data;

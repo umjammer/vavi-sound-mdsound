@@ -10,7 +10,6 @@
 
 package mdsound.x68sound;
 
-
 import mdsound.x68sound.Global.Work;
 
 

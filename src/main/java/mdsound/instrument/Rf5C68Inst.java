@@ -93,12 +93,12 @@ public class Rf5C68Inst extends Instrument.BaseInstrument implements PcmEnabledI
 
         Map<String, Object> info = new HashMap<>();
         for (int ch = 0; ch < 8; ch++) {
-            info.put("Channel" + ch + ".enable", chip.getChannel(ch).enable != 0);
-            info.put("Channel" + ch + ".step", chip.getChannel(ch).step);
-            info.put("Channel" + ch + ".keyOn", chip.getChannel(ch).keyOn);
-            info.put("Channel" + ch + ".env", chip.getChannel(ch).env);
-            info.put("Channel" + ch + ".key", chip.getChannel(ch).key);
-            info.put("Channel" + ch + ".pan", chip.getChannel(ch).pan);
+            info.put("channel." + ch + ".enable", chip.getChannel(ch).enable != 0);
+            info.put("channel." + ch + ".step", chip.getChannel(ch).step);
+            info.put("channel." + ch + ".keyOn", chip.getChannel(ch).keyOn);
+            info.put("channel." + ch + ".env", chip.getChannel(ch).env);
+            info.put("channel." + ch + ".key", chip.getChannel(ch).key);
+            info.put("channel." + ch + ".pan", chip.getChannel(ch).pan);
         }
         return info;
     }
@@ -111,7 +111,7 @@ public class Rf5C68Inst extends Instrument.BaseInstrument implements PcmEnabledI
     }
 
     @Override
-    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Object... args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" ->
@@ -120,7 +120,7 @@ public class Rf5C68Inst extends Instrument.BaseInstrument implements PcmEnabledI
             case "FAMILY" -> result.put(getName(), "Ricoh PCM");
             case "VERSION" -> result.put(getName(), "1.0");
             case "CREDITS" -> result.put(getName(), "Copyright Nicola Salmoria and the MAME Team");
-            case "info" -> { return getInfo(chipId); }
+            case "info" -> result.putAll(getInfo(chipId));
         }
         return result;
     }

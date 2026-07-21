@@ -16,7 +16,7 @@ public class WSwan {
     /**
      * Initial I/O values
      */
-    private static final int[] initialIoValue = new int[] {
+    private static final int[] initialIoValue = {
             0x00, // 0
             0x00, // 1
             0x9d, // 2
@@ -309,7 +309,7 @@ public class WSwan {
     // 16KHz = 0.75HBlank = 192 cycles interval
     // 20KHz = 0.60HBlank = 154 cycles interval
     // 24KHz = 0.50HBlank = 128 cycles interval
-    private static final int[] DMACycles = new int[] {256, 192, 154, 128};
+    private static final int[] DMACycles = {256, 192, 154, 128};
 
     private static class Channel {
         private int wave;

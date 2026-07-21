@@ -1,5 +1,6 @@
 package mdsound.chips;
 
+
 public class Gigatron {
 
     private static class Channel {

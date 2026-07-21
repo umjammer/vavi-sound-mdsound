@@ -8,7 +8,6 @@ package mdsound.np.chip;
 
 import java.util.function.Consumer;
 
-import mdsound.Common;
 import mdsound.np.Device.SoundChip;
 import mdsound.np.chip.DeviceInfo.BasicTrackInfo;
 
@@ -27,9 +26,9 @@ public class NesVrc7 implements SoundChip {
         patchSet = Emu2413.Opll.Tone.VRC7_RW.ordinal();
 
         opll = new Emu2413.Opll();
-        opll.init(3579545, Common.SampleRate);
+        opll.init(3579545, SampleRate);
         opll.resetPatch(patchSet); // 0, this makes drum off
-        setClock(Common.NsfClock); // DEFAULT_CLOCK);
+        setClock(NsfClock); // DEFAULT_CLOCK);
 
         for (int c = 0; c < 2; ++c)
             for (int t = 0; t < 6; ++t)
@@ -187,6 +186,7 @@ public class NesVrc7 implements SoundChip {
     /** volumes for view */
     private Consumer<int[]> listener;
 
+    @Override
     public void setListener(Consumer<int[]> listener) {
         this.listener = listener;
     }

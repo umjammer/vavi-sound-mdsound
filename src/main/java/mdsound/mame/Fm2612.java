@@ -2892,7 +2892,7 @@ public abstract class Fm2612 {
 //    }
 
     static class RunningDevice {
-        private void saveState(Ym2612 f2612) {
+        private static void saveState(Ym2612 f2612) {
             RunningDevice.state_save_register_device_item_array(0, f2612.regs);
             RunningDevice.saveState(f2612.opn.st);
             saveChannel(f2612.ch, 6);

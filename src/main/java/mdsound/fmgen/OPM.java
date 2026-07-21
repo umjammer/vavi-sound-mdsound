@@ -134,6 +134,7 @@ public class OPM extends Timer {
     }
 
     /** Resetting (initializing) the sound source */
+    @Override
     public void reset() {
         for (int i = 0x0; i < 0x100; i++) setReg(i, 0);
         setReg(0x19, 0x80);
@@ -183,6 +184,7 @@ public class OPM extends Timer {
             fmVolume = 0;
     }
 
+    @Override
     public void setStatus(int bits) {
         if ((status & bits) == 0) {
             status |= bits;
@@ -190,6 +192,7 @@ public class OPM extends Timer {
         }
     }
 
+    @Override
     public void resetStatus(int bits) {
         if ((status & bits) != 0) {
             status &= ~bits;

@@ -199,7 +199,7 @@ logger.log(Level.DEBUG, "tag: " + tag + ", vol: " + vol);
         }
 
         @Override
-        public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
+        public Map<String, Object> getView(int chipId, String key, Object... args) {
             Map<String, Object> result = new HashMap<>();
             int vol = getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]);
             result.put("volume", vol != 0 ? vol : np_nes_dmc_volume);
@@ -229,7 +229,7 @@ logger.log(Level.DEBUG, "tag: " + tag + ", vol: " + vol);
         }
 
         @Override
-        public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
+        public Map<String, Object> getView(int chipId, String key, Object... args) {
             Map<String, Object> result = new HashMap<>();
             int vol = getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]);
             result.put("volume", vol != 0 ? vol : np_nes_fds_volume);
@@ -252,7 +252,7 @@ logger.log(Level.DEBUG, "tag: " + tag + ", vol: " + vol);
     }
 
     @Override
-    public Map<String, Object> getView(int chipId, String key, Map<String, Object> args) {
+    public Map<String, Object> getView(int chipId, String key, Object... args) {
         Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "volume" -> {

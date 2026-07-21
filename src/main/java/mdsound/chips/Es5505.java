@@ -1,5 +1,6 @@
 package mdsound.chips;
 
+
 public class Es5505 extends Es550x {
 
     private static final int VOLUME_BIT_ES5505 = 8;

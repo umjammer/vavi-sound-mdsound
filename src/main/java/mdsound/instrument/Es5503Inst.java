@@ -6,6 +6,8 @@
 
 package mdsound.instrument;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import mdsound.Instrument.BaseInstrument;
@@ -85,8 +87,8 @@ public class Es5503Inst extends BaseInstrument implements PcmEnabledInstrument {
     }
 
     @Override
-    public java.util.Map<String, Object> getView(int chipId, String key, java.util.Map<String, Object> args) {
-        java.util.Map<String, Object> result = new java.util.HashMap<>();
+    public Map<String, Object> getView(int chipId, String key, Object... args) {
+        Map<String, Object> result = new HashMap<>();
         switch (key) {
             case "info" -> {
                 Es5503 chip = chips[chipId];
