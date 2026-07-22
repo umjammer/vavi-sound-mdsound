@@ -60,9 +60,72 @@ public class OPM extends Timer {
         return kc[c] & 0x7f;
     }
 
+    /**
+     * The key fraction of register {@code 0x30}, 0 to 63: the pitch between the key code's note and
+     * the next one, in sixty-fourths of a semitone. This is where a driver's detune ends up.
+     */
+    public int getKeyFraction(int c) {
+        return kf[c] & 0x3f;
+    }
+
+    /** how deep the LFO swings, register {@code 0x19}: PMD for the pitch, AMD for the level */
+    public int getPmd() {
+        return pmd & 0x7f;
+    }
+
+    /** @see #getPmd */
+    public int getAmd() {
+        return amd & 0x7f;
+    }
+
+    /**
+     * How far the LFO reaches a channel, register {@code 0x38}: PMS in bits 0-2 and AMS in bits
+     * 4-5, the OPN layout the chip already swaps them into.
+     */
+    public int getSensitivity(int c) {
+        return ch[c] == null ? 0 : ch[c].getSensitivity();
+    }
+
+    /** whether a channel follows the LFO's amplitude modulation */
+    public boolean isAmOn(int c) {
+        return ch[c] != null && ch[c].isAmOn();
+    }
+
     /** the softest carrier's level, 0 loudest to 127 */
     public int getCarrierTotalLevel(int c) {
         return ch[c] == null ? 127 : ch[c].getCarrierTotalLevel();
+    }
+
+    /**
+     * One operator's total level, {@code slot} in the register order M1, M2, C1, C2.
+     *
+     * @see Fmgen.Channel4#getTotalLevel(int)
+     */
+    public int getTotalLevel(int c, int slot) {
+        return ch[c] == null ? 127 : ch[c].getTotalLevel(slot);
+    }
+
+    /**
+     * How far one operator's envelope has it attenuated below that.
+     *
+     * @see Fmgen.Channel4#getEnvelope(int)
+     */
+    public int getEnvelope(int c, int slot) {
+        return ch[c] == null ? Fmgen.FM_EG_BOTTOM : ch[c].getEnvelope(slot);
+    }
+
+    /**
+     * Which part of its envelope one operator is in.
+     *
+     * @see Fmgen.Channel4#getEnvelopePhase(int)
+     */
+    public Fmgen.Channel4.Operator.EGPhase getEnvelopePhase(int c, int slot) {
+        return ch[c] == null ? Fmgen.Channel4.Operator.EGPhase.Off : ch[c].getEnvelopePhase(slot);
+    }
+
+    /** whether one operator is heard directly rather than only modulating another */
+    public boolean isCarrier(int c, int slot) {
+        return ch[c] != null && ch[c].isCarrier(slot);
     }
 
     /** the output enables of register {@code 0x20}: bit 0 right, bit 1 left */

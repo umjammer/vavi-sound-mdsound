@@ -1815,6 +1815,19 @@ public class Ym3526 {
         return slot == 1 || this.chip.chs[ch].slots[0].CON != 0;
     }
 
+    /**
+     * Whether either operator of the channel follows the chip's vibrato, register {@code 0x20}
+     * bit 6. The OPL's LFO runs at a fixed rate and an operator only chooses to hear it or not.
+     */
+    public boolean isVibrato(int ch) {
+        return this.chip.chs[ch].slots[0].vib != 0 || this.chip.chs[ch].slots[1].vib != 0;
+    }
+
+    /** whether either operator follows the chip's tremolo, register {@code 0x20} bit 7 */
+    public boolean isTremolo(int ch) {
+        return this.chip.chs[ch].slots[0].amMask != 0 || this.chip.chs[ch].slots[1].amMask != 0;
+    }
+
     /** whether the rhythm section is on - register {@code 0xbd} bit 5 */
     public boolean isRhythm() {
         return (this.chip.rhythm & 0x20) != 0;

@@ -2553,6 +2553,19 @@ public class Opl {
         return this.channels[ch].slots[1].tl >> (ENV_BITS - 1 - 7);
     }
 
+    /**
+     * Whether either operator of the channel follows the chip's vibrato, register {@code 0x20}
+     * bit 6. The OPL's LFO runs at a fixed rate and an operator only chooses to hear it or not.
+     */
+    public boolean isVibrato(int ch) {
+        return this.channels[ch].slots[0].vib != 0 || this.channels[ch].slots[1].vib != 0;
+    }
+
+    /** whether either operator follows the chip's tremolo, register {@code 0x20} bit 7 */
+    public boolean isTremolo(int ch) {
+        return this.channels[ch].slots[0].amMask != 0 || this.channels[ch].slots[1].amMask != 0;
+    }
+
     public boolean isMuted(int ch) {
         return this.channels[ch].muted != 0;
     }

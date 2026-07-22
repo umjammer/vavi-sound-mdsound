@@ -122,7 +122,7 @@ public class Fmgen {
     public static class Channel4 {
 
         // Operator
-        static class Operator {
+        public static class Operator {
             public static final int[] noteTable = {
                     0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 3, 3, 3,
                     4, 4, 4, 4, 4, 4, 4, 5, 6, 7, 7, 7, 7, 7, 7, 7,
@@ -793,6 +793,22 @@ public class Fmgen {
                 return this.tl;
             }
 
+            /**
+             * How far the envelope generator has this operator attenuated below its
+             * {@linkplain #getTotalLevel total level} right now, 0 (wide open) to
+             * {@link Fmgen#FM_EG_BOTTOM} (silent). It counts in the same 1024 steps over 96 dB
+             * that the total level counts in eighths of, so the whole attenuation of an operator
+             * is {@code getTotalLevel() * 8 + getEnvelope()}.
+             */
+            public int getEnvelope() {
+                return this.egLevel;
+            }
+
+            /** which part of its envelope the operator is in */
+            public EGPhase getEnvelopePhase() {
+                return this.egPhase;
+            }
+
             /** Is the operator up and running? - true through the release tail as well */
             public boolean isOn() {
                 return egPhase != EGPhase.Off;
@@ -1121,6 +1137,20 @@ public class Fmgen {
             return op[slot].isKeyDown();
         }
 
+        /**
+         * How far the chip's LFO reaches this channel, the register {@code 0xb4} sensitivity:
+         * PMS in bits 0-2 for the pitch, AMS in bits 4-5 for the level. Both zero and the LFO
+         * runs on without this channel hearing it.
+         */
+        public int getSensitivity() {
+            return op[0].ms;
+        }
+
+        /** whether any operator follows the amplitude modulation, which AMS needs as well */
+        public boolean isAmOn() {
+            return op[0].amOn || op[1].amOn || op[2].amOn || op[3].amOn;
+        }
+
         public int getAlgorithm() {
             return this.algo;
         }
@@ -1135,6 +1165,37 @@ public class Fmgen {
                 tl = Math.min(tl, op[i].getTotalLevel());
             }
             return tl;
+        }
+
+        /**
+         * The operators in the order the register file has them, which is how a display and a
+         * driver both number them - M1, M2, C1, C2 - where this class keeps them in the order the
+         * algorithm chains them, M1, C1, M2, C2.
+         */
+        private static final int[] slotTable = {0, 2, 1, 3};
+
+        /** {@link Operator#getTotalLevel} of one operator, {@code slot} in register order */
+        public int getTotalLevel(int slot) {
+            return op[slotTable[slot & 3]].getTotalLevel();
+        }
+
+        /** {@link Operator#getEnvelope} of one operator, {@code slot} in register order */
+        public int getEnvelope(int slot) {
+            return op[slotTable[slot & 3]].getEnvelope();
+        }
+
+        /** {@link Operator#getEnvelopePhase} of one operator, {@code slot} in register order */
+        public Operator.EGPhase getEnvelopePhase(int slot) {
+            return op[slotTable[slot & 3]].getEnvelopePhase();
+        }
+
+        /**
+         * Whether one operator reaches the output rather than only modulating another,
+         * {@code slot} in register order. It is the algorithm that decides, see
+         * {@link #getCarrierTotalLevel}.
+         */
+        public boolean isCarrier(int slot) {
+            return slotTable[slot & 3] >= carriersOf(this.algo);
         }
 
         /** the first operator that reaches the output, per algorithm */

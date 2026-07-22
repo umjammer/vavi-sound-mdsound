@@ -127,6 +127,10 @@ public class Ym3812Inst extends Instrument.BaseInstrument {
                     result.put("channels." + ch + ".fnum", ((regB & 0x03) << 8) | (regs[0xa0 + ch] & 0xff));
                     result.put("channels." + ch + ".block", (regB >> 2) & 0x07);
                     result.put("channels." + ch + ".totalLevel", regs[0x40 + CARRIER[ch]] & 0x3f);
+                    // register 0x20: bit 6 is the vibrato, bit 7 the tremolo, per operator
+                    int mod = 0x20 + CARRIER[ch] - 3, car = 0x20 + CARRIER[ch];
+                    result.put("channels." + ch + ".lfoPitch", ((regs[mod] | regs[car]) & 0x40) != 0);
+                    result.put("channels." + ch + ".lfoVolume", ((regs[mod] | regs[car]) & 0x80) != 0);
                     result.put("channels." + ch + ".mute", false);
                 }
             }

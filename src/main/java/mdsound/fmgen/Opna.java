@@ -1084,6 +1084,24 @@ stop:
             return adpcmLevel & 0xff;
         }
 
+        /**
+         * Where in its RAM the ADPCM part starts, as a byte address. The core counts the ADPCM
+         * memory in nibbles, which is two to a byte and the 32 the address registers step in.
+         */
+        public int getAdpcmStart() {
+            return startAddr >> 1;
+        }
+
+        /** the last byte of it, {@link #getAdpcmStart the same way} */
+        public int getAdpcmStop() {
+            return (stopAddr >> 1) - 1;
+        }
+
+        /** how far into it the part has played, {@link #getAdpcmStart the same way} */
+        public int getAdpcmPointer() {
+            return memAddr >> 1;
+        }
+
         public static final int CHANNELS = 6;
 
         /** whether any operator of the channel is keyed down */
@@ -1122,9 +1140,56 @@ stop:
             return ch[c] == null ? 127 : ch[c].getCarrierTotalLevel();
         }
 
+        /**
+         * One operator's total level, {@code slot} in the register order M1, M2, C1, C2.
+         *
+         * @see Fmgen.Channel4#getTotalLevel(int)
+         */
+        public int getTotalLevel(int c, int slot) {
+            return ch[c] == null ? 127 : ch[c].getTotalLevel(slot);
+        }
+
+        /**
+         * How far one operator's envelope has it attenuated below that.
+         *
+         * @see Fmgen.Channel4#getEnvelope(int)
+         */
+        public int getEnvelope(int c, int slot) {
+            return ch[c] == null ? Fmgen.FM_EG_BOTTOM : ch[c].getEnvelope(slot);
+        }
+
+        /**
+         * Which part of its envelope one operator is in.
+         *
+         * @see Fmgen.Channel4#getEnvelopePhase(int)
+         */
+        public Fmgen.Channel4.Operator.EGPhase getEnvelopePhase(int c, int slot) {
+            return ch[c] == null ? Fmgen.Channel4.Operator.EGPhase.Off : ch[c].getEnvelopePhase(slot);
+        }
+
+        /** whether one operator is heard directly rather than only modulating another */
+        public boolean isCarrier(int c, int slot) {
+            return ch[c] != null && ch[c].isCarrier(slot);
+        }
+
         /** the output enables of register {@code 0xb4}: bit 0 right, bit 1 left */
         public int getPan(int c) {
             return pan[c];
+        }
+
+        /** the LFO register {@code 0x22}: bit 3 runs it, bits 0-2 are its rate */
+        public int getLfo() {
+            return reg22 & 0xff;
+        }
+
+        /** how far the LFO reaches a channel, see {@link Fmgen.Channel4#getSensitivity} */
+        public int getSensitivity(int c) {
+            return ch[c] == null ? 0 : ch[c].getSensitivity();
+        }
+
+        /** whether a channel follows the LFO's amplitude modulation */
+        public boolean isAmOn(int c) {
+            return ch[c] != null && ch[c].isAmOn();
         }
 
 
@@ -1411,6 +1476,38 @@ logger.log(Level.INFO, Arrays.toString(ch));
         /** the softest carrier's level, 0 loudest to 127 */
         public int getCarrierTotalLevel(int c) {
             return ch[c].getCarrierTotalLevel();
+        }
+
+        /**
+         * One operator's total level, {@code slot} in the register order M1, M2, C1, C2.
+         *
+         * @see Fmgen.Channel4#getTotalLevel(int)
+         */
+        public int getTotalLevel(int c, int slot) {
+            return ch[c] == null ? 127 : ch[c].getTotalLevel(slot);
+        }
+
+        /**
+         * How far one operator's envelope has it attenuated below that.
+         *
+         * @see Fmgen.Channel4#getEnvelope(int)
+         */
+        public int getEnvelope(int c, int slot) {
+            return ch[c] == null ? Fmgen.FM_EG_BOTTOM : ch[c].getEnvelope(slot);
+        }
+
+        /**
+         * Which part of its envelope one operator is in.
+         *
+         * @see Fmgen.Channel4#getEnvelopePhase(int)
+         */
+        public Fmgen.Channel4.Operator.EGPhase getEnvelopePhase(int c, int slot) {
+            return ch[c] == null ? Fmgen.Channel4.Operator.EGPhase.Off : ch[c].getEnvelopePhase(slot);
+        }
+
+        /** whether one operator is heard directly rather than only modulating another */
+        public boolean isCarrier(int c, int slot) {
+            return ch[c] != null && ch[c].isCarrier(slot);
         }
 
         /** the OPN has no panning of its own; both sides always */

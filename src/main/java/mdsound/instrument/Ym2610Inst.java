@@ -163,12 +163,25 @@ public class Ym2610Inst extends Instrument.BaseInstrument implements AdpcmEnable
                 result.put("ch3ex", chip.isCh3Extended());
                 result.put("ssg.register", chip.getSsgRegisters());
                 result.put("timerB", chip.getTimerB());
+                result.put("lfo", chip.getLfo());
                 for (int ch = 0; ch < Opna.OPNABase.CHANNELS; ch++) {
                     result.put("channels." + ch + ".keyOn", chip.isKeyOn(ch));
                     result.put("channels." + ch + ".fnum", chip.getFnum(ch));
                     result.put("channels." + ch + ".block", chip.getBlock(ch));
                     result.put("channels." + ch + ".totalLevel", chip.getCarrierTotalLevel(ch));
                     result.put("channels." + ch + ".pan", chip.getPan(ch));
+                    result.put("channels." + ch + ".sensitivity", chip.getSensitivity(ch));
+                    result.put("channels." + ch + ".amOn", chip.isAmOn(ch));
+                    // the operators, in the register order M1, M2, C1, C2. The phase goes over as
+                    // its own name rather than the enum, so that reading this map needs nothing
+                    // out of fmgen
+                    for (int slot = 0; slot < 4; slot++) {
+                        String op = "channels." + ch + ".slots." + slot;
+                        result.put(op + ".totalLevel", chip.getTotalLevel(ch, slot));
+                        result.put(op + ".envelope", chip.getEnvelope(ch, slot));
+                        result.put(op + ".phase", chip.getEnvelopePhase(ch, slot).name());
+                        result.put(op + ".carrier", chip.isCarrier(ch, slot));
+                    }
                 }
                 for (int slot = 0; slot < 4; slot++) {
                     result.put("channels.2.slots." + slot + ".keyOn", chip.isKeyOn(2, slot));

@@ -138,6 +138,8 @@ public class Ym3526Inst extends Instrument.BaseInstrument {
                     result.put("channels." + ch + ".fnum", chip.getFnum(ch));
                     result.put("channels." + ch + ".block", chip.getBlock(ch));
                     result.put("channels." + ch + ".totalLevel", chip.getTotalLevel(ch));
+                    result.put("channels." + ch + ".lfoPitch", chip.isVibrato(ch));
+                    result.put("channels." + ch + ".lfoVolume", chip.isTremolo(ch));
                     result.put("channels." + ch + ".mute", chip.isMuted(ch));
                 }
             }

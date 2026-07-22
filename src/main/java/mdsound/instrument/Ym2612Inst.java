@@ -120,9 +120,6 @@ logger.log(Level.DEBUG, "option: " + flags);
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
-            case "registers" ->
-                    result.put(getName(), new int[][][] {chips[0].getRegisters(), chips[0].getRegisters()});
-            case "keyOn" -> result.put(getName(), chips[chipId].keyStatuses());
             case "info" -> {
                 Ym2612 chip = chips[chipId];
                 result.put("register", chip.getRegisters());

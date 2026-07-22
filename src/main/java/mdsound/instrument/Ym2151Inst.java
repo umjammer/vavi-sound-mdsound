@@ -100,11 +100,26 @@ public class Ym2151Inst extends Instrument.BaseInstrument {
             case "info" -> {
                 OPM chip = chips[chipId];
                 result.put("timerB", chip.getTimerB());
+                result.put("pmd", chip.getPmd());
+                result.put("amd", chip.getAmd());
                 for (int ch = 0; ch < OPM.CHANNELS; ch++) {
                     result.put("channels." + ch + ".keyOn", chip.isKeyOn(ch));
                     result.put("channels." + ch + ".keyCode", chip.getKeyCode(ch));
+                    result.put("channels." + ch + ".keyFraction", chip.getKeyFraction(ch));
                     result.put("channels." + ch + ".totalLevel", chip.getCarrierTotalLevel(ch));
                     result.put("channels." + ch + ".pan", chip.getPan(ch));
+                    result.put("channels." + ch + ".sensitivity", chip.getSensitivity(ch));
+                    result.put("channels." + ch + ".amOn", chip.isAmOn(ch));
+                    // the operators, in the register order M1, M2, C1, C2. The phase goes over as
+                    // its own name rather than the enum, so that reading this map needs nothing
+                    // out of fmgen
+                    for (int slot = 0; slot < 4; slot++) {
+                        String op = "channels." + ch + ".slots." + slot;
+                        result.put(op + ".totalLevel", chip.getTotalLevel(ch, slot));
+                        result.put(op + ".envelope", chip.getEnvelope(ch, slot));
+                        result.put(op + ".phase", chip.getEnvelopePhase(ch, slot).name());
+                        result.put(op + ".carrier", chip.isCarrier(ch, slot));
+                    }
                 }
             }
         }
