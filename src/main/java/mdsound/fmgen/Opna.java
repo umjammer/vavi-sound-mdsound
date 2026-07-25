@@ -543,13 +543,16 @@ public class Opna {
             case 0x09: // delta-N L
             case 0x0a: // delta-N H
                 adpcmReg[addr - 0x09 + 4] = (byte) data;
-                deltaN = adpcmReg[5] * 256 + adpcmReg[4];
+                deltaN = (adpcmReg[5] & 0xff) * 256 + (adpcmReg[4] & 0xff);
                 deltaN = Math.max(256, deltaN);
                 adplD = deltaN * adplBase >> 16;
                 break;
 
             case 0x0b: // Level Controller
-                adpcmLevel = (byte) data;
+                // C#'s byte is unsigned, so the original truncates here where this would sign
+                // extend - and every level from 0x80 up, which is most of them, would come out
+                // negative and turn the part inside out
+                adpcmLevel = data & 0xff;
                 adpcmVolume = (adpcmVol * adpcmLevel) >> 12;
                 break;
 
@@ -2144,7 +2147,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
                 break;
 
             case 0x1b: // Level Controller
-                adpcmLevel = (byte) data;
+                adpcmLevel = data & 0xff; // unsigned, see the OPNA's own level controller
                 adpcmVolume = (adpcmVol * adpcmLevel) >> 12;
                 break;
 
