@@ -51,6 +51,11 @@ public class X68kYm2151Inst extends Instrument.BaseInstrument implements PcmEnab
 
         soundIocs[chipId] = new SoundIocs(chips[chipId]);
 
+        // this instrument is a reused singleton, so everything the last song set has to go
+        // before the new one is read: the driver callback in particular, or a song that brings
+        // none (zms) keeps clocking the driver of the song before it (mxdrv)
+        this.clocks[chipId] = null;
+
         if (option != null) {
             if (option.length > 0 && option[0] != null)
                 opmFlag = (int) option[0];
@@ -63,6 +68,11 @@ public class X68kYm2151Inst extends Instrument.BaseInstrument implements PcmEnab
         }
 logger.log(Level.INFO, "opmFlag: %d, adpcmFlag: %d, pcmBuf: %d, clock: %s, @%08x".formatted(opmFlag, adpcmFlag, pcmBuf, this.clocks[chipId], chips[chipId].hashCode()));
 
+        // X68Sound refuses a second start (SNDERR_ALREADYACTIVE) and keeps running as the
+        // previous song left it - the flags above, the OPM/ADPCM state, and the driver clock
+        // it calls. Freeing first makes this start what it says it is: a song that follows a
+        // zms would otherwise never be clocked at all and play nothing.
+        chips[chipId].free();
         chips[chipId].startPcm(samplingRate, opmFlag, adpcmFlag, pcmBuf);
         if (this.clocks[chipId] != null) // means not from mxdrv pcm8
             chips[chipId].opmClock(clock);
