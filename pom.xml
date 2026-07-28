@@ -3,7 +3,7 @@
 
   <groupId>vavi</groupId>
   <artifactId>vavi-sound-mdsound</artifactId>
-  <version>0.0.22</version>
+  <version>0.0.23</version>
 
   <profiles>
     <profile>
