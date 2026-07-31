@@ -1060,9 +1060,23 @@ public class YmF278B {
         Arrays.fill(this.ram, 0, this.ramSize, (byte) 0);
     }
 
+    /** the OPL4's wave ROM, whose samples every wave number under 384 is one of */
+    private static final String ROM_NAME = "yrw801.rom";
+
+    /**
+     * Where the chip ROMs are kept, the same property {@code YmFmYm2608Inst} finds its ADPCM ROM
+     * by: a directory, and the file in it is named for the chip. It wins over the path the caller
+     * passes, which is only ever the application folder - a ROM that cannot be shipped does not
+     * live where the program does.
+     */
+    private static final String ROM_PATH_PROPERTY = "mdsound.pcm.path";
+
     private void loadRom(String romPath, Function<String, InputStream> romStream) {
-        Path romFilename = Paths.get("yrw801.rom");
-        if (romPath != null && !romPath.isEmpty()) {
+        Path romFilename = Paths.get(ROM_NAME);
+        String property = System.getProperty(ROM_PATH_PROPERTY, "");
+        if (!property.isEmpty() && Files.exists(Paths.get(property).resolve(ROM_NAME))) {
+            romFilename = Paths.get(property).resolve(ROM_NAME);
+        } else if (romPath != null && !romPath.isEmpty()) {
             romFilename = Paths.get(romPath).resolve(romFilename);
         }
 
@@ -1097,6 +1111,12 @@ public class YmF278B {
                 else this.rom[i] = 0;
             }
         } else {
+            // The wave ROM is the chip's own sample set - every sample under 384 is in it - so
+            // without it a song that plays them is silent, with its registers and its display
+            // looking perfectly alive. Say so once rather than leaving that to be worked out.
+            logger.log(Level.WARNING, "no opl4 wave rom at " + romFilename.toAbsolutePath()
+                    + ": its built-in samples will be silent (set -D" + ROM_PATH_PROPERTY
+                    + " to the directory holding " + ROM_NAME + ")");
             this.rom = new byte[this.romSize];
         }
     }
