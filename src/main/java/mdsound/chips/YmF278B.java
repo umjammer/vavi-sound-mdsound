@@ -354,7 +354,7 @@ public class YmF278B {
         }
 
         private int computeVib() {
-            return (((this.lfoStep << 8) / this.lfoMax) * vibDepth[this.vib]) >> 24;
+            return Math.toIntExact(((((long) this.lfoStep << 8) / this.lfoMax) * vibDepth[this.vib]) >> 24);
         }
 
         private int computeAm() {
@@ -373,7 +373,7 @@ public class YmF278B {
         }
     }
 
-    private final Slot[] slots = new Slot[] {
+    private final Slot[] slots = {
             new Slot(), new Slot(), new Slot(), new Slot(),
             new Slot(), new Slot(), new Slot(), new Slot(),
             new Slot(), new Slot(), new Slot(), new Slot(),
@@ -726,13 +726,13 @@ public class YmF278B {
                 buf = this.readMemAddr(base);
 
                 slot.bits = (buf.getItem1()[buf.getItem2() + 0] & 0xC0) >> 6;
-                slot.setLfo((buf.getItem1()[buf.getItem2() + 7] >> 3) & 7);
+                slot.setLfo(((buf.getItem1()[buf.getItem2() + 7] & 0xff) >> 3) & 7);
                 slot.vib = buf.getItem1()[buf.getItem2() + 7] & 7;
                 slot.ar = (buf.getItem1()[buf.getItem2() + 8] >> 4) & 0xff;
                 slot.d1R = buf.getItem1()[buf.getItem2() + 8] & 0xF;
-                slot.dl = dl_tab[buf.getItem1()[buf.getItem2() + 9] >> 4] & 0xff;
+                slot.dl = dl_tab[(buf.getItem1()[buf.getItem2() + 9] & 0xff) >> 4] & 0xff;
                 slot.d2R = buf.getItem1()[buf.getItem2() + 9] & 0xF;
-                slot.rc = (buf.getItem1()[buf.getItem2() + 10] >> 4) & 0xff;
+                slot.rc = ((buf.getItem1()[buf.getItem2() + 10] & 0xff) >> 4) & 0xff;
                 slot.rr = buf.getItem1()[buf.getItem2() + 10] & 0xF;
                 slot.am = buf.getItem1()[buf.getItem2() + 11] & 7;
                 slot.startAddr = (buf.getItem1()[buf.getItem2() + 2] & 0xff) | ((buf.getItem1()[buf.getItem2() + 1] & 0xff) << 8) | ((buf.getItem1()[buf.getItem2() + 0] & 0x3F) << 16);
