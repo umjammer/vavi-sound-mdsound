@@ -1226,6 +1226,11 @@ public class Ym2413 {
         }
 
         makeTables(clock, samplingRate);
+        // The instrument definitions the chip has in ROM, which the blank array above has just
+        // thrown away: makeTables only rebuilds them when the clock changes, so on a second init
+        // at the same clock - which is what playing a second song is - every preset instrument
+        // was left empty and any part not using a user tone played silence.
+        makeDefaultPatch();
 
         this.vrc7Mode = 0x00;
 
