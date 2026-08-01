@@ -728,7 +728,7 @@ public class YmF278B {
                 slot.bits = (buf.getItem1()[buf.getItem2() + 0] & 0xC0) >> 6;
                 slot.setLfo(((buf.getItem1()[buf.getItem2() + 7] & 0xff) >> 3) & 7);
                 slot.vib = buf.getItem1()[buf.getItem2() + 7] & 7;
-                slot.ar = (buf.getItem1()[buf.getItem2() + 8] >> 4) & 0xff;
+                slot.ar = (buf.getItem1()[buf.getItem2() + 8] & 0xff) >> 4;
                 slot.d1R = buf.getItem1()[buf.getItem2() + 8] & 0xF;
                 slot.dl = dl_tab[(buf.getItem1()[buf.getItem2() + 9] & 0xff) >> 4] & 0xff;
                 slot.d2R = buf.getItem1()[buf.getItem2() + 9] & 0xF;
