@@ -23,7 +23,7 @@ public class Distortion {
     private final int maxCh;
     private ChInfo[] chInfo = null;
 
-    private final float[] fbuf = new float[] {
+    private final float[] fbuf = {
         0f, 0f
     };
 

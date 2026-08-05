@@ -171,7 +171,7 @@ public class Es5503 {
             if ((pOsc.control & 1) == 0 && pOsc.muted == 0) {
                 int wtPtr = pOsc.waveTblPointer & waveMasks[pOsc.waveTblSize];
                 int altRam;
-                int[] acc = new int[] {pOsc.accumulator};
+                int[] acc = {pOsc.accumulator};
                 int wtSize = pOsc.wtSize - 1;
                 int freq = pOsc.freq;
                 int vol = pOsc.vol;

@@ -431,7 +431,7 @@ public class DosboxYm3812 {
                 generatorPos += generatorAdd;
             }
 
-            private static final int[] stepSkipMask = new int[] {0xff, 0xfe, 0xee, 0xba, 0xaa};
+            private static final int[] stepSkipMask = {0xff, 0xfe, 0xee, 0xba, 0xaa};
 
             public void changeAttackRate(int attackRate, double recIpSamp) {
                 if (attackRate != 0) {

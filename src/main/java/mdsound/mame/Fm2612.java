@@ -286,13 +286,13 @@ public abstract class Fm2612 {
          * OPN key frequency number . key code follow table
          * fNum higher 4bit . keycode lower 2bit
          */
-        private static final byte[] opnFkTable = new byte[] {0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 3, 3, 3};
+        private static final byte[] opnFkTable = {0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 3, 3, 3};
 
         /**
          * 8 LFO speed parameters
          * each value represents number of samples that one LFO level will last for
          */
-        private static final int[] lfoSamplesPerStep = new int[] {108, 77, 71, 67, 62, 44, 8, 5};
+        private static final int[] lfoSamplesPerStep = {108, 77, 71, 67, 62, 44, 8, 5};
 
         /**
          * There are 4 different LFO AM depths available, they are:
@@ -312,7 +312,7 @@ public abstract class Fm2612 {
          *  1 for 5.9 dB
          *  0 for 11.8 dB
          */
-        private static final byte[] lfoAmsDepthShift = new byte[] {8, 3, 1, 0};
+        private static final byte[] lfoAmsDepthShift = {8, 3, 1, 0};
 
         /**
          * There are 8 different LFO PM depths available, they are:

@@ -92,9 +92,9 @@ public class YmF271 {
         private int lfoAmplitude;
         private double lfoPhaseMod;
 
-        private static final double[] multiple_table = new double[] {0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-        private static final double[] pow_table = new double[] {128, 256, 512, 1024, 2048, 4096, 8192, 16384, 0.5, 1, 2, 4, 8, 16, 32, 64};
-        private static final double[] fs_frequency = new double[] {1.0 / 1.0, 1.0 / 2.0, 1.0 / 4.0, 1.0 / 8.0};
+        private static final double[] multiple_table = {0.5, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+        private static final double[] pow_table = {128, 256, 512, 1024, 2048, 4096, 8192, 16384, 0.5, 1, 2, 4, 8, 16, 32, 64};
+        private static final double[] fs_frequency = {1.0 / 1.0, 1.0 / 2.0, 1.0 / 4.0, 1.0 / 8.0};
 
         /**
          * The frequency this slot sounds at, given the rate the chip is clocked at. One cycle

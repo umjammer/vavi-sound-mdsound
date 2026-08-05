@@ -192,8 +192,8 @@ public class PSG2 extends mdsound.fmgen.PSG {
                         for (int j = 0; j < (1 << overSampling); j++) {
                             for (int k = 0; k < 3; k++) {
                                 sample = tblGetSample[duty[k]].apply(k, oLevel[k]);
-                                int[] l = new int[] {sample};
-                                int[] r = new int[] {sample};
+                                int[] l = {sample};
+                                int[] r = {sample};
                                 effects.distortion.mix(efcStartCh + k, l, r);
                                 effects.chorus.mix(efcStartCh + k, l, r);
                                 effects.hpflpf.mix(efcStartCh + k, l, r);
@@ -238,8 +238,8 @@ public class PSG2 extends mdsound.fmgen.PSG {
 
                             for (int k = 0; k < 3; k++) {
                                 sample = tblGetSample[duty[k]].apply(k, oLevel[k]);
-                                int[] l = new int[] {sample};
-                                int[] r = new int[] {sample};
+                                int[] l = {sample};
+                                int[] r = {sample};
 
                                 // noise
                                 nv = ((sCount[k] >> (toneShift + overSampling)) & 0 | (nEnable[k] & noise)) - 1;
@@ -306,8 +306,8 @@ public class PSG2 extends mdsound.fmgen.PSG {
                         for (int k = 0; k < 3; k++) {
                             int lv = (p[k] == null ? env : oLevel[k]);
                             sample = tblGetSample[duty[k]].apply(k, lv);
-                            int[] l = new int[] {sample};
-                            int[] r = new int[] {sample};
+                            int[] l = {sample};
+                            int[] r = {sample};
 
                             // noise
                             nv = ((sCount[k] >> (toneShift + overSampling)) & 0 | (nEnable[k] & noise)) - 1;

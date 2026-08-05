@@ -16,7 +16,7 @@ public class NpNesInst extends Instrument.BaseInstrument implements Instrument.P
 
     public static final byte MAX_CHIPS = 0x02;
 
-    private final int[] mask = new int[] {0, 0};
+    private final int[] mask = {0, 0};
 
     public NpNesInst() {
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};

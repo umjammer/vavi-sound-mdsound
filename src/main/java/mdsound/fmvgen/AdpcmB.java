@@ -104,8 +104,8 @@ public class AdpcmB {
                     }
 
                     int s = (adplC * apOut0 + (8192 - adplC) * apOut1) >> 13;
-                    int[] sL = new int[] {s & maskL};
-                    int[] sR = new int[] {s & maskR};
+                    int[] sL = {s & maskL};
+                    int[] sR = {s & maskR};
                     effects.distortion.mix(efcCh, sL, sR);
                     effects.chorus.mix(efcCh, sL, sR);
                     effects.hpflpf.mix(efcCh, sL, sR);
@@ -130,8 +130,8 @@ public class AdpcmB {
                         adplC += 8192;
                     }
                     int s = (adplC * apOut1) >> 13;
-                    int[] sL = new int[] {s & maskL};
-                    int[] sR = new int[] {s & maskR};
+                    int[] sL = {s & maskL};
+                    int[] sR = {s & maskR};
                     effects.distortion.mix(efcCh, sL, sR);
                     effects.chorus.mix(efcCh, sL, sR);
                     effects.hpflpf.mix(efcCh, sL, sR);
@@ -163,8 +163,8 @@ stop:
                     }
                     adplC -= 8192;
                     s >>= 13;
-                    int[] sL = new int[] {s & maskL};
-                    int[] sR = new int[] {s & maskR};
+                    int[] sL = {s & maskL};
+                    int[] sR = {s & maskR};
                     effects.distortion.mix(efcCh, sL, sR);
                     effects.chorus.mix(efcCh, sL, sR);
                     effects.hpflpf.mix(efcCh, sL, sR);

@@ -74,11 +74,11 @@ public class PPZ8 {
         }
     }
 
-    private Channel[] chWk = new Channel[] {
+    private Channel[] chWk = {
             new Channel(), new Channel(), new Channel(), new Channel(),
             new Channel(), new Channel(), new Channel(), new Channel()
     };
-    private final Channel[] chWkBk = new Channel[] {
+    private final Channel[] chWkBk = {
             new Channel(), new Channel(), new Channel(), new Channel(),
             new Channel(), new Channel(), new Channel(), new Channel()
     };

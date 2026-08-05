@@ -609,7 +609,7 @@ public class Ym2151 {
     };
 
     // these variables stay here for speedup purposes only
-    private final RInt[] chanOut = new RInt[] {new RInt(), new RInt(), new RInt(), new RInt(), new RInt(), new RInt(), new RInt(), new RInt()};
+    private final RInt[] chanOut = {new RInt(), new RInt(), new RInt(), new RInt(), new RInt(), new RInt(), new RInt(), new RInt()};
     // Phase Modulation input for operators 2,3,4
     private final RInt m2 = new RInt();
     private final RInt c1 = new RInt();

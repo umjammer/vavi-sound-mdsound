@@ -111,7 +111,7 @@ public class C140 {
         return this.reg[offset];
     }
 
-    private static final int[] asic219banks = new int[] {0x1f7, 0x1f1, 0x1f3, 0x1f5};
+    private static final int[] asic219banks = {0x1f7, 0x1f1, 0x1f3, 0x1f5};
 
     /**
      * compute the actual address of a sample given its

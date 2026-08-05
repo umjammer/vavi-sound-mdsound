@@ -31,7 +31,7 @@ public class FM6 {
 //    protected boolean[] ac = new boolean[6];
     protected int lfoCount;
     protected int lfoDCount;
-    public final int[] visVolume = new int[] {0, 0};
+    public final int[] visVolume = {0, 0};
     protected int regTc;
     public final Fmgen.Channel4.Chip chip;
     public int waveType = 0;

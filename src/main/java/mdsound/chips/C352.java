@@ -116,7 +116,7 @@ public class C352 {
 
         private int volF = 0;
         private int volR = 0;
-        private final int[] currVol = new int[] {0, 0, 0, 0};
+        private final int[] currVol = {0, 0, 0, 0};
         private int freq = 0;
         private int flags = 0;
 

@@ -570,7 +570,7 @@ logger.log(Level.TRACE, "keyOff:eCnt: " + eCnt);
         /** Key Code = value depending on frequency (see KSR for slots, KSR = KC >> KSR_S) */
         private final int[] kc = new int[4];
         /** four slot operators = the 4 slots of the track */
-        private final Slot[] slots = new Slot[] {new Slot(), new Slot(), new Slot(), new Slot()};
+        private final Slot[] slots = {new Slot(), new Slot(), new Slot(), new Slot()};
         /** Frequency step recalculation flag */
         private int fFlag;
         /** Maxim: channel mute flag */
@@ -670,7 +670,7 @@ logger.log(Level.TRACE, "keyOff:eCnt: " + eCnt);
     /** Interpolation Step */
     private long interStep;
     /** The 6 channels of the Ym2612 */
-    private final Channel[] channels = new Channel[] {new Channel(), new Channel(), new Channel(), new Channel(), new Channel(), new Channel()};
+    private final Channel[] channels = {new Channel(), new Channel(), new Channel(), new Channel(), new Channel(), new Channel()};
     /** Saving the values of all registers is optional */
     private final int[][] regs = new int[][] {new int[0x100], new int[0x100]};
 //    /** This makes debugging easier for us */

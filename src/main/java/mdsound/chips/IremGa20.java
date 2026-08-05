@@ -101,7 +101,7 @@ public class IremGa20 {
     private int romSize;
     private int clock;
     private final int[] regs = new int[0x40];
-    private final Channel[] channel = new Channel[] {
+    private final Channel[] channel = {
             new Channel(),
             new Channel(),
             new Channel(),

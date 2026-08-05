@@ -30,7 +30,7 @@ public class OkiM6295 {
 
     private static final int VOICES = 4;
 
-    private final Voice[] voices = new Voice[] {
+    private final Voice[] voices = {
             new Voice(), new Voice(), new Voice(), new Voice()
     };
 

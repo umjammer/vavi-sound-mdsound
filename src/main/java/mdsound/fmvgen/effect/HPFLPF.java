@@ -22,7 +22,7 @@ public class HPFLPF {
 
     private ChInfo[] chInfo = null;
 
-    private final float[] fBuf = new float[] {
+    private final float[] fBuf = {
             0f, 0f
     };
 

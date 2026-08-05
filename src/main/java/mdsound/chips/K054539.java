@@ -112,7 +112,7 @@ public class K054539 {
     private int romSize;
     private int romMask;
 
-    private final Channel[] channels = new Channel[] {
+    private final Channel[] channels = {
             new Channel(),
             new Channel(),
             new Channel(),
@@ -355,7 +355,7 @@ public class K054539 {
     public void update(int[][] outputs, int samples) {
         final double VOL_CAP = 1.80;
 
-        short[] dPcm = new short[] {
+        short[] dPcm = {
                 0 << 8, 1 << 8, 2 << 8, 4 << 8, 8 << 8, 16 << 8, 32 << 8, 64 << 8,
                 0 << 8, -64 << 8, -32 << 8, -16 << 8, -8 << 8, -4 << 8, -2 << 8, -1 << 8
         };

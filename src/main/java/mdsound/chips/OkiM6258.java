@@ -28,7 +28,7 @@ public class OkiM6258 {
     private static final int STATUS_PLAYING = 1 << 1;
     private static final int STATUS_RECORDING = 1 << 2;
 
-    private static final int[] dividers = new int[] {1024, 768, 512, 512};
+    private static final int[] dividers = {1024, 768, 512, 512};
 
     private static final int QUEUE_SIZE = (1 << 1);
     private static final int QUEUE_MASK = (QUEUE_SIZE - 1);

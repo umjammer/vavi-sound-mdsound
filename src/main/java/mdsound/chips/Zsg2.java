@@ -306,7 +306,7 @@ public class Zsg2 {
                         elem.emphasis_filter_state = EMPHASIS_INITIAL_BIAS;
 
                     elem.step_ptr &= 0xffff;
-                    Channel[] tmp = new Channel[] {elem};
+                    Channel[] tmp = {elem};
                     filter_samples(/* ref */ tmp);
                     elem = tmp[0];
                 }

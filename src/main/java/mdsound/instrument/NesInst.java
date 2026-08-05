@@ -23,7 +23,7 @@ public class NesInst extends Instrument.BaseInstrument implements Instrument.Pcm
 
     protected final Nes[] chips = {new Nes(), new Nes()};
 
-    private final int[] mask = new int[] {0, 0};
+    private final int[] mask = {0, 0};
 
     public NesInst() {
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
