@@ -140,7 +140,7 @@ public class Es5505 extends Es550x {
             // loop over voices
             int[] cursample = new int[12];
             for (int v = 0; v <= m_active_voices; v++) {
-                es550x_voice[] voice = new es550x_voice[] {m_voice[v]};
+                es550x_voice[] voice = {m_voice[v]};
 
                 // This special case does not appear to match the behaviour observed in the es5505 in
                 // actual Ensoniq synthesizers: those, it turns out, do set loop start and end to the
@@ -474,7 +474,7 @@ public class Es5505 extends Es550x {
     }
 
     private void write(int offset, short data, short mem_mask) {
-        es550x_voice[] voice = new es550x_voice[] {m_voice[m_current_page & 0x1f]};
+        es550x_voice[] voice = {m_voice[m_current_page & 0x1f]};
 
 //logger.log(Level.TRACE, "%s:ES5505 write %02x/%02x = %04x & %04x\n", machine().describe_context(), m_current_page, offset, data, mem_mask);
 
@@ -676,7 +676,7 @@ public class Es5505 extends Es550x {
     }
 
     private short read(int offset) {
-        es550x_voice[] voice = new es550x_voice[] {m_voice[m_current_page & 0x1f]};
+        es550x_voice[] voice = {m_voice[m_current_page & 0x1f]};
         short result;
 
         //logger.log(Level.TRACE, "read from %02x/%02x . ", m_current_page, offset);

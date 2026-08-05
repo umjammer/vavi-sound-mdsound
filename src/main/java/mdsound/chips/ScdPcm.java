@@ -63,7 +63,7 @@ public class ScdPcm {
     private int curChan;
     private int bank;
 
-    private final Channel[] channels = new Channel[] {
+    private final Channel[] channels = {
             new Channel(), new Channel(), new Channel(), new Channel(),
             new Channel(), new Channel(), new Channel(), new Channel()
     };

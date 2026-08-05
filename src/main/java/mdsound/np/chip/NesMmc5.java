@@ -366,7 +366,7 @@ public class NesMmc5 implements SoundChip {
         // in PCM read mode, reads from $8000-$C000 automatically load the PCM output
         if (pcmMode && (0x8000 <= adr) && (adr < 0xC000) && cpu != null) {
             pcmMode = false; // prevent recursive entry
-            int[] pcm_read = new int[] { 0 };
+            int[] pcm_read = {0};
             cpu.read(adr, pcm_read, id);
             if (pcm_read[0] != 0)
                 pcm = pcm_read[0];

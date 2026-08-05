@@ -201,13 +201,13 @@ public class YmDeltaT {
 
     /** Forecast to next Forecast (rate = *8) */
     // 1/8 , 3/8 , 5/8 , 7/8 , 9/8 , 11/8 , 13/8 , 15/8
-    private static final int[] decodeTableB1 = new int[] {
+    private static final int[] decodeTableB1 = {
             1, 3, 5, 7, 9, 11, 13, 15,
             -1, -3, -5, -7, -9, -11, -13, -15,
     };
     /** delta to next delta (rate= *64) */
     // 0.9 , 0.9 , 0.9 , 0.9 , 1.2 , 1.6 , 2.0 , 2.4
-    private static final int[] decodeTableB2 = new int[] {
+    private static final int[] decodeTableB2 = {
             57, 57, 57, 57, 77, 102, 128, 153,
             57, 57, 57, 57, 77, 102, 128, 153
     };
@@ -256,7 +256,7 @@ public class YmDeltaT {
     }
 
     /** 0-DRAM x1, 1-ROM, 2-DRAM x8, 3-ROM (3 is bad setting - not allowed by the manual) */
-    private static final int[] dramRightShift = new int[] {3, 0, 0, 0};
+    private static final int[] dramRightShift = {3, 0, 0, 0};
 
     /** DELTA-T ADPCM write register */
     public void writeAdpcm(int r, int v) {

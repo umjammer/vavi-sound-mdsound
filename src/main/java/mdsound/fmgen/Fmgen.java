@@ -1029,7 +1029,7 @@ public class Fmgen {
 
             private void makeTable() {
                 // PG Part
-                float[] dt2lv = new float[] {1.0f, 1.414f, 1.581f, 1.732f};
+                float[] dt2lv = {1.0f, 1.414f, 1.581f, 1.732f};
                 for (int h = 0; h < 4; h++) {
                     //assert(2 + FM_RATIOBITS - FM_PGBITS >= 0);
                     double rr = dt2lv[h] * (double) (ratio) / (1 << (2 + FM_RATIOBITS - FM_PGBITS));
@@ -1065,7 +1065,7 @@ public class Fmgen {
         private int algo;
         private Chip chip;
 
-        final Operator[] op = new Operator[] {
+        final Operator[] op = {
                 new Operator(), new Operator(), new Operator(), new Operator()
         };
 

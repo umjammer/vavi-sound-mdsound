@@ -632,7 +632,7 @@ public class YmF262 {
             private static final double DV = 0.1875 / 2.0;
 
             /** table is 3dB/octave , DV converts this into 6dB/octave  */
-            private static final int[] kslTab = new int[] {
+            private static final int[] kslTab = {
                     // OCT 0
                     (int) (0.000 / DV), (int) (0.000 / DV), (int) (0.000 / DV), (int) (0.000 / DV),
                     (int) (0.000 / DV), (int) (0.000 / DV), (int) (0.000 / DV), (int) (0.000 / DV),
@@ -676,7 +676,7 @@ public class YmF262 {
             };
 
             /** 0 / 3.0 / 1.5 / 6.0 dB/OCT  */
-            private static final int[] kslShift = new int[] {31, 1, 2, 0};
+            private static final int[] kslShift = {31, 1, 2, 0};
 
             protected final Slot[] slots = {new Slot(), new Slot()};
 
@@ -3235,7 +3235,7 @@ assert frn >> 6 < 16 : "%08x, %x, %x".formatted(frn, adlibReg[ARC_KON_BNUM + cha
         private interface Operators extends Consumer<Operator> {
         }
 
-        private final Operators[] opFuncs = new Operators[] {
+        private final Operators[] opFuncs = {
                 Operator::attack,
                 Operator::decay,
                 Operator::release,

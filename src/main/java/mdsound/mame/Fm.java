@@ -308,13 +308,13 @@ public class Fm {
          * OPN key frequency number . key code follow table
          * fNum higher 4bit . keycode lower 2bit
          */
-        private static final int[] opn_fkTable = new int[] {0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 3, 3, 3};
+        private static final int[] opn_fkTable = {0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 3, 3, 3};
 
         /**
          * 8 LFO speed parameters
          * each value represents number of samples that one LFO level will last for
          */
-        private static final int[] lfo_samples_per_step = new int[] {108, 77, 71, 67, 62, 44, 8, 5};
+        private static final int[] lfo_samples_per_step = {108, 77, 71, 67, 62, 44, 8, 5};
 
         /*
          * There are 4 different LFO AM depths available, they are:
@@ -334,7 +334,7 @@ public class Fm {
          *    1 for 5.9 dB
          *    0 for 11.8 dB
          */
-        private static final int[] lfo_ams_depth_shift = new int[] {8, 3, 1, 0};
+        private static final int[] lfo_ams_depth_shift = {8, 3, 1, 0};
 
         /*
          * There are 8 different LFO PM depths available, they are:
@@ -1610,8 +1610,8 @@ public class Fm {
          * </pre>
          */
         private void setPreScaler(int addr, int preDivider) {
-            int[] opnPreS = new int[] {2 * 12, 2 * 12, 6 * 12, 3 * 12};
-            int[] ssgPreS = new int[] {1, 1, 4, 2};
+            int[] opnPreS = {2 * 12, 2 * 12, 6 * 12, 3 * 12};
+            int[] ssgPreS = {1, 1, 4, 2};
             int sel;
 
             switch (addr) {

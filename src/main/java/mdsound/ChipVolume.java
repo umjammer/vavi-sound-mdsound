@@ -12,7 +12,7 @@ public class ChipVolume {
         //  Bit 7 - Is Paired Chip
         // chipNum: chips number (0 - first chips, 1 - second chips)
         // chipCnt: chips volume divider (number of used chips)
-        int[] CHIP_VOLS = new int[] { // CHIP_COUNT
+        int[] CHIP_VOLS = { // CHIP_COUNT
                 0x80, 0x200 /* 0x155 */, 0x100, 0x100, 0x180, 0xB0, 0x100, 0x80, // 00-07
                 0x80, 0x100, 0x100, 0x100, 0x100, 0x100, 0x100, 0x98,            // 08-0F
                 0x80, 0xE0 /* 0xCD */, 0x100, 0xC0, 0x100, 0x40, 0x11E, 0x1C0,   // 10-17

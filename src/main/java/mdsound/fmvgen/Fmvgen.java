@@ -965,10 +965,10 @@ public class Fmvgen extends Fmgen {
         private boolean ac = false;
         private byte carrier;
         /** Operator Calculation Order */
-        private static final int[] oAlg = new int[] {2, 1, 3, 0};
+        private static final int[] oAlg = {2, 1, 3, 0};
         private int ch = 0;
 
-        public final Operator[] op = new Operator[] {
+        public final Operator[] op = {
                 new Operator(), new Operator(), new Operator(), new Operator()
         };
 
@@ -1015,7 +1015,7 @@ public class Fmvgen extends Fmgen {
                 op[i].setFNum(f);
         }
 
-        static final int[] kcTable = new int[] {
+        static final int[] kcTable = {
                 5197, 5506, 5833, 6180, 6180, 6547, 6937, 7349,
                 7349, 7786, 8249, 8740, 8740, 9259, 9810, 10394,
         };
@@ -1308,7 +1308,7 @@ public class Fmvgen extends Fmgen {
 
         public void buildAlg() {
             byte mask = 0xf;
-            boolean[] use = new boolean[] {false, false, false, false};
+            boolean[] use = {false, false, false, false};
 
             carrier = 0xf;
 

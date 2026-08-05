@@ -156,7 +156,7 @@ public interface Device {
         @Override
         public boolean read(int adr, /* ref */ int[] val, int id /* = 0 */) {
             boolean ret = false;
-            int[] vtmp = new int[] { 0 };
+            int[] vtmp = {0};
 
             val[0] = 0;
             for (Device it : vd) {

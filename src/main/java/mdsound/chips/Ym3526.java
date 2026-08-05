@@ -233,7 +233,7 @@ public class Ym3526 {
             };
 
             /** 0 / 3.0 / 1.5 / 6.0 dB/OCT */
-            private static final int[] kslShift = new int[] {31, 1, 2, 0};
+            private static final int[] kslShift = {31, 1, 2, 0};
 
             /**
              * sustain level table (3dB per step)

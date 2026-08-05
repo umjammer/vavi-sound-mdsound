@@ -570,7 +570,7 @@ public class Ay8910 {
     private static final int AY8910_ZX_STEREO = 0x80;
 
     private static final int DEVCB_TYPE_NULL = 0;
-    private static final int[] DEVCB_NULL = new int[] {DEVCB_TYPE_NULL};
+    private static final int[] DEVCB_NULL = {DEVCB_TYPE_NULL};
 
     // AY-3-8910A: 2 I/O ports
     // AY-3-8912A: 1 I/O port
@@ -594,7 +594,7 @@ public class Ay8910 {
      * The macro should be used in AY8910interface if
      * the real values are unknown.
      */
-    private static final int[] AY8910_DEFAULT_LOADS = new int[] {1000, 1000, 1000};
+    private static final int[] AY8910_DEFAULT_LOADS = {1000, 1000, 1000};
 
     /**
      * The following is used by all drivers not reviewed yet.

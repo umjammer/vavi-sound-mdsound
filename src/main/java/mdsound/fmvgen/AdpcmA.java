@@ -67,7 +67,7 @@ public class AdpcmA {
         }
     }
 
-    public final Channel[] channel = new Channel[] {
+    public final Channel[] channel = {
             new Channel(), new Channel(), new Channel(),
             new Channel(), new Channel(), new Channel()
     };
@@ -88,12 +88,12 @@ public class AdpcmA {
     private final int revStartCh;
     private final int num;
 
-    private static final byte[] table2 = new byte[] {
+    private static final byte[] table2 = {
             1, 3, 5, 7, 9, 11, 13, 15,
             -1, -3, -5, -7, -9, -11, -13, -15,
     };
 
-    private static final int[] decodeTableA1 = new int[] {
+    private static final int[] decodeTableA1 = {
             -1 * 16, -1 * 16, -1 * 16, -1 * 16, 2 * 16, 5 * 16, 7 * 16, 9 * 16,
             -1 * 16, -1 * 16, -1 * 16, -1 * 16, 2 * 16, 5 * 16, 7 * 16, 9 * 16
     };
@@ -168,8 +168,8 @@ public class AdpcmA {
                             r.adpcmD = (short) Math.clamp((int) r.adpcmD, 0, 48 * 16);
                         }
 
-                        int[] sampleL = new int[] { (r.adpcmX * vol) >> 10 };
-                        int[] sampleR = new int[] { (r.adpcmX * vol) >> 10 };
+                        int[] sampleL = { (r.adpcmX * vol) >> 10 };
+                        int[] sampleR = { (r.adpcmX * vol) >> 10 };
                         effects.distortion.mix(revStartCh + i, sampleL, sampleR);
                         effects.chorus.mix(revStartCh + i, sampleL, sampleR);
                         effects.hpflpf.mix(revStartCh + i, sampleL, sampleR);

@@ -2927,7 +2927,7 @@ public class Km6502 implements Device {
     }
 
     private int readByte(int adr) {
-        int[] val = new int[] { 0 };
+        int[] val = {0};
         read(adr, /* ref */ val, 0);
         return val[0];
     }

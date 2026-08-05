@@ -274,7 +274,7 @@ public class Adpcm {
         return 0;
     }
 
-    private static final int[] MACTBL = new int[] {0, 1, -1, 1};
+    private static final int[] MACTBL = {0, 1, -1, 1};
 
     public int dmaGetByte() {
         if (((dmaReg[0x00] & 0x08) == 0) || ((dmaReg[0x07] & 0x20) != 0)) { // ACT==0 || HLT==1 ?

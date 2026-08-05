@@ -490,13 +490,13 @@ public abstract class Es550x {
     private static void apply_filters(/* ref */ es550x_voice[] voice, /* ref */ int[] sample) {
         // pole 1 is always low-pass using K1
         sample[0] = apply_lowpass(sample[0], voice[0].k1, voice[0].o1n1);
-        int[] tmp = new int[] {voice[0].o1n1};
+        int[] tmp = {voice[0].o1n1};
         update_pole(/* ref */ tmp, sample[0]);
         voice[0].o1n1 = tmp[0];
 
         // pole 2 is always low-pass using K1
         sample[0] = apply_lowpass(sample[0], voice[0].k1, voice[0].o2n1);
-        tmp[0] = voice[0].o2n2; int[] tmp2 = new int[] {voice[0].o2n1};
+        tmp[0] = voice[0].o2n2; int[] tmp2 = {voice[0].o2n1};
         update_2_pole(/* ref */ tmp, /* ref */ tmp2, sample[0]);
         voice[0].o2n2 = tmp[0]; voice[0].o2n1 = tmp2[0];
 
@@ -580,7 +580,7 @@ public abstract class Es550x {
                 accum = (accum + freqCount) & m_address_acc_mask;
 
                 // apply filters
-                int[] tmp = new int[] {val1};
+                int[] tmp = {val1};
                 apply_filters(/* ref */ voice, /* ref */ tmp);
                 val1 = tmp[0];
 
@@ -611,7 +611,7 @@ public abstract class Es550x {
                 accum = (accum - freqCount) & m_address_acc_mask;
 
                 // apply filters
-                int[] tmp = new int[] {val1};
+                int[] tmp = {val1};
                 apply_filters(/* ref */ voice, /* ref */ tmp);
                 val1 = tmp[0];
 
@@ -655,7 +655,7 @@ public abstract class Es550x {
                 accum = (accum + freqCount) & m_address_acc_mask;
 
                 // apply filters
-                int[] tmp = new int[] {val1};
+                int[] tmp = {val1};
                 apply_filters(/* ref */ voice, /* ref */ tmp);
                 val1 = tmp[0];
 
@@ -682,7 +682,7 @@ public abstract class Es550x {
                 accum = (accum - freqCount) & m_address_acc_mask;
 
                 // apply filters
-                int[] tmp = new int[] {val1};
+                int[] tmp = {val1};
                 apply_filters(/* ref */ voice, /* ref */ tmp);
                 val1 = tmp[0];
 

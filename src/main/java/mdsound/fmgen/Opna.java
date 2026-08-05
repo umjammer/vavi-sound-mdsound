@@ -189,7 +189,7 @@ public class Opna {
         protected int status;
         protected Fmgen.Channel4 csmCh;
 
-        public final int[] visVolume = new int[] {0, 0};
+        public final int[] visVolume = {0, 0};
 
         protected final int[] lfoTable = new int[8];
 
@@ -209,8 +209,8 @@ public class Opna {
 
     /** OPN2 Base */
     public static class OPNABase extends OPNBase {
-        public final int[] visRtmVolume = new int[] {0, 0};
-        public final int[] visAPCMVolume = new int[] {0, 0};
+        public final int[] visRtmVolume = {0, 0};
+        public final int[] visAPCMVolume = {0, 0};
 
         public OPNABase() {
             amTable[0] = -1;
@@ -1905,7 +1905,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
         }
 
         /** Rhythm Sound Source */
-        private final Rhythm[] rhythm = new Rhythm[] {new Rhythm(), new Rhythm(), new Rhythm(), new Rhythm(), new Rhythm(), new Rhythm()};
+        private final Rhythm[] rhythm = {new Rhythm(), new Rhythm(), new Rhythm(), new Rhythm(), new Rhythm(), new Rhythm()};
 
         /** Overall rhythm volume */
         private int rhythmTl;
@@ -2244,7 +2244,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
             return -1;
         }
 
-        static final int[] decodeTableA1 = new int[] {
+        static final int[] decodeTableA1 = {
                 -1 * 16, -1 * 16, -1 * 16, -1 * 16, 2 * 16, 5 * 16, 7 * 16, 9 * 16,
                 -1 * 16, -1 * 16, -1 * 16, -1 * 16, 2 * 16, 5 * 16, 7 * 16, 9 * 16
         };

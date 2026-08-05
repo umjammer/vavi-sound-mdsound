@@ -167,7 +167,7 @@ public class K053260 {
     private byte[] rom;
     private int romSize;
     private int[] deltaTable;
-    private final Channel[] channels = new Channel[] {new Channel(), new Channel(), new Channel(), new Channel()};
+    private final Channel[] channels = {new Channel(), new Channel(), new Channel(), new Channel()};
 
     /** for the view: the chip clock, needed to turn a rate into a note. */
     public int getClock() {
@@ -263,7 +263,7 @@ public class K053260 {
     private static final int MAXOUT = 0x8000;
     private static final int MINOUT = -0x8000;
 
-    private static final byte[] dPcmCnv = new byte[] {0, 1, 2, 4, 8, 16, 32, 64, -128, -64, -32, -16, -8, -4, -2, -1};
+    private static final byte[] dPcmCnv = {0, 1, 2, 4, 8, 16, 32, 64, -128, -64, -32, -16, -8, -4, -2, -1};
     private final int[] lVol = new int[4];
     private final int[] rVol = new int[4];
     private final int[] play = new int[4];

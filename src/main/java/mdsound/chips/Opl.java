@@ -333,7 +333,7 @@ public class Opl {
         /**
          * 0-DRAM x1, 1-ROM, 2-DRAM x8, 3-ROM (3 is bad setting - not allowed by the manual)
          */
-        private static final int[] dramRightShift = new int[] {3, 0, 0, 0};
+        private static final int[] dramRightShift = {3, 0, 0, 0};
 
         /**
          * ADPCM write register
@@ -961,7 +961,7 @@ public class Opl {
     private static class Channel {
 
         /** FM channel slots */
-        private final Slot[] slots = new Slot[] {new Slot(), new Slot()};
+        private final Slot[] slots = {new Slot(), new Slot()};
 
         // phase generator state
 
@@ -1004,7 +1004,7 @@ public class Opl {
     }
 
     /** OPL/OPL2 chips have 9 channels */
-    private final Channel[] channels = new Channel[] {
+    private final Channel[] channels = {
             new Channel(), new Channel(), new Channel(), new Channel(), new Channel(),
             new Channel(), new Channel(), new Channel(), new Channel()
     };
@@ -1101,7 +1101,7 @@ public class Opl {
     private final int[] outputDeltaT = new int[4];
 
     /** mapping of register number (offset) to slot number used by the emulator */
-    private static final int[] slot_array = new int[] {
+    private static final int[] slot_array = {
             0, 2, 4, 1, 3, 5, -1, -1,
             6, 8, 10, 7, 9, 11, -1, -1,
             12, 14, 16, 13, 15, 17, -1, -1,
@@ -1114,7 +1114,7 @@ public class Opl {
      * 0.1875 is bit 0 weight of the envelope counter (volume) expressed in the 'decibel' scale
      */
     private static final double DV = 0.1875 / 2.0;
-    private static final int[] kslTab = new int[] {
+    private static final int[] kslTab = {
             // OCT 0
             (int) (0.000 / DV), (int) (0.000 / DV), (int) (0.000 / DV), (int) (0.000 / DV),
             (int) (0.000 / DV), (int) (0.000 / DV), (int) (0.000 / DV), (int) (0.000 / DV),
@@ -1158,7 +1158,7 @@ public class Opl {
     };
 
     /** 0 / 3.0 / 1.5 / 6.0 dB/OCT */
-    private static final int[] ksl_shift = new int[] {31, 1, 2, 0};
+    private static final int[] ksl_shift = {31, 1, 2, 0};
 
     /**
      * sustain level table (3dB per step)
@@ -1168,13 +1168,13 @@ public class Opl {
         return (int) (db * (2.0 / ENV_STEP));
     }
 
-    private static final int[] slTab = new int[] {
+    private static final int[] slTab = {
             sc(0), sc(1), sc(2), sc(3), sc(4), sc(5), sc(6), sc(7),
             sc(8), sc(9), sc(10), sc(11), sc(12), sc(13), sc(14), sc(31)
     };
 
     private static final int RATE_STEPS = 8;
-    private static final int[] egInc = new int[] {
+    private static final int[] egInc = {
             // cycle: 0  1  2  3  4  5  6  7
             /*  0 */ 0, 1, 0, 1, 0, 1, 0, 1, // rates 00..12 0 (increment by 0 or 1)
             /*  1 */ 0, 1, 0, 1, 1, 1, 0, 1, // rates 00..12 1
@@ -1204,7 +1204,7 @@ public class Opl {
      * Envelope Generator rates (16 + 64 rates + 16 RKS)
      * note that there is no o(13) in this table - it's directly in the code
      */
-    private static final int[] egRateSelect = new int[] {
+    private static final int[] egRateSelect = {
             // 16 infinite time rates
             o(14), o(14), o(14), o(14), o(14), o(14), o(14), o(14),
             o(14), o(14), o(14), o(14), o(14), o(14), o(14), o(14),
@@ -1250,7 +1250,7 @@ public class Opl {
      * shift 12,   11,   10,   9,   8,   7,   6,  5,  4,  3,  2,  1,  0,  0,  0,  0
      * mask  4095, 2047, 1023, 511, 255, 127, 63, 31, 15, 7,  3,  1,  0,  0,  0,  0
      */
-    private static final int[] egRateShift = new int[] {
+    private static final int[] egRateShift = {
             // 16 infinite time rates
             o2(0), o2(0), o2(0), o2(0), o2(0), o2(0), o2(0), o2(0),
             o2(0), o2(0), o2(0), o2(0), o2(0), o2(0), o2(0), o2(0),
@@ -1287,7 +1287,7 @@ public class Opl {
     private static final byte ML = 2;
 
     /** multiple table */
-    private static final int[] mulTab = new int[] {
+    private static final int[] mulTab = {
             // 1/2, 1, 2, 3, 4, 5, 6, 7, 8, 9,10,10,12,12,15,15
             (int) (0.50 * ML), (int) (1.00 * ML), (int) (2.00 * ML), (int) (3.00 * ML), (int) (4.00 * ML), (int) (5.00 * ML), (int) (6.00 * ML), (int) (7.00 * ML),
             (int) (8.00 * ML), (int) (9.00 * ML), (int) (10.00 * ML), (int) (10.00 * ML), (int) (12.00 * ML), (int) (12.00 * ML), (int) (15.00 * ML), (int) (15.00 * ML)
@@ -1326,7 +1326,7 @@ public class Opl {
      * When AM = 1 data is used directly
      * When AM = 0 data is divided by 4 before being used (losing precision is important)
      */
-    private static final int[] lfoAmTable = new int[] {
+    private static final int[] lfoAmTable = {
             0, 0, 0, 0, 0, 0, 0,
             1, 1, 1, 1,
             2, 2, 2, 2,
@@ -1382,7 +1382,7 @@ public class Opl {
     };
 
     /** LFO Phase Modulation table (verified on real YM3812) */
-    private static final int[] lfoPmTable = new int[] {
+    private static final int[] lfoPmTable = {
             // FNUM2/FNUM = 00 0xxxxxxx (0x0000)
             0, 0, 0, 0, 0, 0, 0, 0, // LFO PM depth = 0
             0, 0, 0, 0, 0, 0, 0, 0, // LFO PM depth = 1

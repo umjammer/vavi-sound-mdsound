@@ -729,7 +729,7 @@ public class Ym2413 {
 
     /** Phase increment counter table */
     private void makeDPhaseTable() {
-        int[] mlTable = new int[] {
+        int[] mlTable = {
                 1, 1 * 2, 2 * 2, 3 * 2, 4 * 2, 5 * 2, 6 * 2, 7 * 2, 8 * 2,
                 9 * 2, 10 * 2, 10 * 2, 12 * 2, 12 * 2, 15 * 2, 15 * 2
         };
@@ -1360,7 +1360,7 @@ public class Ym2413 {
         return sl2eg((int) (x / SL_STEP)) << (EG_DP_BITS - EG_BITS);
     }
 
-    private static final int[] sl = new int[] {
+    private static final int[] sl = {
             s2e(0.0), s2e(3.0), s2e(6.0), s2e(9.0),
             s2e(12.0), s2e(15.0), s2e(18.0), s2e(21.0),
             s2e(24.0), s2e(27.0), s2e(30.0), s2e(33.0),

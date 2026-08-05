@@ -639,9 +639,9 @@ public class OotakeHuC6280 {
         for (int i = 0; i < samples; i++) {
             // Added by Kitao. A buffer for adding 6ch samples. Necessary to maintain accuracy.
             // After the total for all 6 channels has been calculated, this is converted to Sint16 and written.
-            int[] sampleAllL = new int[] {0};
+            int[] sampleAllL = {0};
             // Added by Kitao. R channel of the above.
-            int[] sampleAllR = new int[] {0};
+            int[] sampleAllR = {0};
             for (int c = 0; c < N_CHANNEL; c++) {
                 Psg psg = this.psgs[c];
                 psg.mix(c, sampleAllL, sampleAllR);

@@ -19,7 +19,7 @@ import mdsound.fmvgen.effect.ReversePhase;
 /** YM2609(OPNA2) */
 public class OPNA2 extends Opna.OPNABase {
 
-    public static final float[] panTable = new float[] {1.0f, 0.7512f, 0.4512f, 0.0500f};
+    public static final float[] panTable = {1.0f, 0.7512f, 0.4512f, 0.0500f};
 
     /** Rhythm Sound Source */
     private Rhythm[] rhythm;
@@ -280,8 +280,8 @@ public class OPNA2 extends Opna.OPNABase {
     public void setPreScaler(int p) {
         super.setPreScaler(p);
 
-        byte[][] table = new byte[][] {new byte[] {6, 4}, new byte[] {3, 2}, new byte[] {2, 1}};
-        byte[] table2 = new byte[] {108, 77, 71, 67, 62, 44, 8, 5};
+        byte[][] table = {{6, 4}, {3, 2}, {2, 1}};
+        byte[] table2 = {108, 77, 71, 67, 62, 44, 8, 5};
         // 512
         if (prescale != p) {
             prescale = (byte) p;
@@ -520,8 +520,8 @@ public class OPNA2 extends Opna.OPNABase {
                         int sample = (r.sample[r.pos / 1024] * vol) >> 12;
                         r.pos += r.step;
 
-                        int[] sL = new int[] {sample};
-                        int[] sR = new int[] {sample};
+                        int[] sL = {sample};
+                        int[] sR = {sample};
                         effects.distortion.mix(r.efcCh, sL, sR);
                         effects.chorus.mix(r.efcCh, sL, sR);
                         effects.hpflpf.mix(r.efcCh, sL, sR);

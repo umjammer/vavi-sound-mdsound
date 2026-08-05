@@ -231,7 +231,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
         return 2;
     }
 
-    private static final int[] cmap = new int[] {0, 0, 1, 2};
+    private static final int[] cmap = {0, 0, 1, 2};
 
     @Override
     public boolean write(int adr, int val, int id /* = 0 */) {
