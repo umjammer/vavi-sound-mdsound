@@ -263,16 +263,16 @@ public class Zsg2 {
     }
 
     /** Fill the buffer with filtered samples */
-    private void filter_samples(/* ref */ Channel[] ch) {
+    private void filter_samples(Channel ch) {
         int[] ptr = new int[1];
-        short[] raw_samples = prepare_samples(ch[0].page | ch[0].cur_pos, /* out */ ptr);
-        ch[0].samples[0] = ch[0].samples[4]; // we want to remember the last sample
+        short[] raw_samples = prepare_samples(ch.page | ch.cur_pos, /* out */ ptr);
+        ch.samples[0] = ch.samples[4]; // we want to remember the last sample
 
         for (int i = 0; i < 4; i++) {
-            ch[0].emphasis_filter_state += raw_samples[ptr[0] + i] - ((ch[0].emphasis_filter_state + EMPHASIS_ROUNDING) >> EMPHASIS_FILTER_SHIFT);
+            ch.emphasis_filter_state += raw_samples[ptr[0] + i] - ((ch.emphasis_filter_state + EMPHASIS_ROUNDING) >> EMPHASIS_FILTER_SHIFT);
 
-            int sample = ch[0].emphasis_filter_state >> EMPHASIS_OUTPUT_SHIFT;
-            ch[0].samples[i + 1] = (short) Math.clamp(sample, -32768, 32767);
+            int sample = ch.emphasis_filter_state >> EMPHASIS_OUTPUT_SHIFT;
+            ch.samples[i + 1] = (short) Math.clamp(sample, -32768, 32767);
         }
     }
 
@@ -306,9 +306,7 @@ public class Zsg2 {
                         elem.emphasis_filter_state = EMPHASIS_INITIAL_BIAS;
 
                     elem.step_ptr &= 0xffff;
-                    Channel[] tmp = {elem};
-                    filter_samples(/* ref */ tmp);
-                    elem = tmp[0];
+                    filter_samples(elem);
                 }
 
                 int sample_pos = elem.step_ptr >> 14 & 3;
@@ -454,19 +452,16 @@ public class Zsg2 {
 
     private int chan_r(int ch, int reg) {
         return switch (reg) {
-            case 0x3 ->
-                // no games read from this.
-                    m_chan[ch].status;
-            case 0x9 ->
-                // pretty certain, though no games actually read from this.
-                    m_chan[ch].output_cutoff;
-            case 0xb -> // Only later games (taitogn) read this register...
-                // GNet games use some of the flags to decide which channels to kill when
-                // all the channels are busy. (take raycris song #23 as an example)
-                    m_chan[ch].vol;
+            // no games read from this.
+            case 0x3 -> m_chan[ch].status;
+            // pretty certain, though no games actually read from this.
+            case 0x9 -> m_chan[ch].output_cutoff;
+            // Only later games (taitogn) read this register...
+            // GNet games use some of the flags to decide which channels to kill when
+            // all the channels are busy. (take raycris song #23 as an example)
+            case 0xb -> m_chan[ch].vol;
             default -> m_chan[ch].v[reg];
         };
-
     }
 
     // Convert ramping register value to something more usable.
@@ -585,7 +580,7 @@ public class Zsg2 {
     public void write(int offset, int data, int mem_mask) {
         // we only support full 16-bit accesses
         if (mem_mask != 0xffff) {
-            //popmessage("ZSG2 write mask %04X, contact MAMEdev", mem_mask);
+            //logger.log(Level.INFO, "ZSG2 write mask %04X, contact MAMEdev".formatted(mem_mask));
             return;
         }
 
@@ -604,7 +599,7 @@ public class Zsg2 {
     public int read(int offset, int mem_mask) {
         // we only support full 16-bit accesses
         if (mem_mask != 0xffff) {
-            //popmessage("ZSG2 read mask %04X, contact MAMEdev", mem_mask);
+            //logger.log(Level.INFO, "ZSG2 read mask %04X, contact MAMEdev".formatted(mem_mask));
             return 0;
         }
 

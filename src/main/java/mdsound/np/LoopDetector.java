@@ -6,6 +6,8 @@
 
 package mdsound.np;
 
+import java.lang.System.Logger.Level;
+
 
 public interface LoopDetector extends Device {
 
@@ -114,8 +116,7 @@ public interface LoopDetector extends Device {
             if (match_length < 0) {
                 // the song writes faster than the ring can hold the signature it wants to match:
                 // nothing can be detected until it is given a bigger one
-                logger.log(System.Logger.Level.DEBUG,
-                        "loop signature does not fit: %d writes wanted, buffer holds %d"
+                logger.log(Level.DEBUG, "loop signature does not fit: %d writes wanted, buffer holds %d"
                                 .formatted(match_size, bufSize));
                 return false;
             }

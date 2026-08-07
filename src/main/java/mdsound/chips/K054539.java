@@ -236,15 +236,15 @@ public class K054539 {
                         this.keyOff(ch);
                 break;
 
-            /*case 0x227: {
-                attotime period = attotime::from_hz((float)(38 + data) * (clock()/384.0f/14400.0f)) / 2.0f;
-
-                m_timer.adjust(period, 0, period);
-
-                m_timer_state = 0;
-                m_timer_handler(m_timer_state);
-            }*/
-            //break;
+//            case 0x227: {
+//                attotime period = attotime::from_hz ((float) (38 + data) * (clock() / 384.0f / 14400.0f)) / 2.0f;
+//
+//                m_timer.adjust(period, 0, period);
+//
+//                m_timer_state = 0;
+//                m_timer_handler(m_timer_state);
+//            }
+//            break;
 
             case 0x22d:
                 if ((regBase[0x22e] & 0xff) == 0x80)
