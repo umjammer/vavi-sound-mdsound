@@ -8,7 +8,6 @@ package mdsound.instrument;
 
 import mdsound.Instrument.BaseInstrument;
 import mdsound.chips.MPcmPP;
-import mdsound.chips.MPcmPP.SETPCM;
 
 
 /**
@@ -87,7 +86,16 @@ public class MPcmPPInst extends BaseInstrument {
         chips[chipId].keyOff(ch);
     }
 
-    public void setPcm(int chipId, int ch, SETPCM ptr) {
+    public void setPcm(int chipId, int ch, byte[] memory, byte type, byte orig, int adrsPtr, int size, int start, int end, int count) {
+        MPcmPP.SETPCM ptr = new MPcmPP.SETPCM();
+        ptr.adrs_buf = memory;
+        ptr.type = type;
+        ptr.orig = orig;
+        ptr.adrs_ptr = adrsPtr;
+        ptr.size = size;
+        ptr.start = start;
+        ptr.end = end;
+        ptr.count = count;
         chips[chipId].setPcm(ch, ptr);
     }
 
