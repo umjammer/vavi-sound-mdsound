@@ -73,7 +73,16 @@ public class X68kMPcmInst extends Instrument.BaseInstrument {
         chips[chipId].keyOff(ch);
     }
 
-    public boolean writePcm(int chipId, int ch, MPcm.PCM ptr) {
+    public boolean writePcm(int chipId, int ch, byte[] memory, byte type, byte orig, int adrsPtr, int size, int start, int end, int count) {
+        MPcm.PCM ptr = new MPcm.PCM();
+        ptr.adrsBuf = memory;
+        ptr.type = type;
+        ptr.orig = orig;
+        ptr.adrsPtr = adrsPtr;
+        ptr.size = size;
+        ptr.start = start;
+        ptr.end = end;
+        ptr.count = count;
         return chips[chipId].setPcm(ch, ptr);
     }
 
