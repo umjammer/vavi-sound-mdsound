@@ -23,25 +23,25 @@ public class Chorus {
     private ChInfo[] chInfo = null;
     private int currentCh = 0;
 
-    public static class ChInfo {
+    static class ChInfo {
 
-        public boolean sw;
+        boolean sw;
 
         /** Chorus effect level. Between 0.0 and 1.0 */
-        public float mix = 0.3f;
+        float mix = 0.3f;
         /** Chorus fluctuation interval. 0Hz to 16Hz */
-        public float rate = 3.0f;
+        float rate = 3.0f;
         /** Depth of chorus fluctuation. Approximately 5.0 to 200.0 samples */
-        public float depth = 10.0f;
+        float depth = 10.0f;
         /** Chorus feedback amount. Between 0.0 and 1.0 */
-        public float feedback = 0.3f;
+        float feedback = 0.3f;
 
         /**
          * Ring Buffer
          * @see "https://vstcpp.wpblog.jp/?p=1505"
          */
-        public final RingBuffer ringBufL;
-        public final RingBuffer ringBufR;
+        final RingBuffer ringBufL;
+        final RingBuffer ringBufR;
 
         /**
          * Set the delay time by converting it into a number of samples
@@ -50,12 +50,12 @@ public class Chorus {
          * For now, let’s take about 1000 samples.
          * (Interval is a ring buffer. See https://vstcpp.wpblog.jp/?p=1505)
          */
-        public final int delaySample;
+        final int delaySample;
 
-        public float theta;
+        float theta;
 //        public float speed;
 
-        public ChInfo(int clock) {
+        ChInfo(int clock) {
             delaySample = 10;
             theta = 0; // The angle θ of the sine function to fluctuate the delay reading position. The initial value is 0.
 
@@ -73,7 +73,7 @@ public class Chorus {
         init();
     }
 
-    public void init() {
+    private void init() {
         chInfo = new ChInfo[maxCh];
         for (int i = 0; i < chInfo.length; i++) {
             chInfo[i] = new ChInfo((int) clock);

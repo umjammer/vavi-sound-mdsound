@@ -42,30 +42,31 @@ public class NesN106 implements SoundChip {
         }
     }
 
-    public static final double DEFAULT_CLOCK = 1789772.0;
-    public static final int DEFAULT_RATE = 44100;
+    private static final double DEFAULT_CLOCK = 1789772.0;
+    private static final int DEFAULT_RATE = 44100;
 
     public enum OPT {
         SERIAL;
         static final int END = values().length;
     }
 
-    protected double rate, clock;
-    protected int mask;
-    protected final int[][] sm = {new int[8], new int[8]}; // stereo mix
-    protected final int[] fOut = new int[8]; // current output
-    protected final TrackInfo[] trkInfo = new TrackInfo[8];
-    protected final int[] option = new int[OPT.END];
+    private double rate;
+    private double clock;
+    private int mask;
+    private final int[][] sm = {new int[8], new int[8]}; // stereo mix
+    private final int[] fOut = new int[8]; // current output
+    private final TrackInfo[] trkInfo = new TrackInfo[8];
+    private final int[] option = new int[OPT.END];
 
-    protected boolean master_disable;
-    protected final int[] reg = new int[0x80]; // all state is contained here
-    protected int regSelect;
-    protected boolean regAdvance;
-    protected int tickChannel;
-    protected int tickClock;
-    protected int renderChannel;
-    protected int renderClock;
-    protected int renderSubClock;
+    private boolean master_disable;
+    private final int[] reg = new int[0x80]; // all state is contained here
+    private int regSelect;
+    private boolean regAdvance;
+    private int tickChannel;
+    private int tickClock;
+    private int renderChannel;
+    private int renderClock;
+    private int renderSubClock;
 
     public NesN106() {
         option[OPT.SERIAL.ordinal()] = 0;
@@ -87,7 +88,7 @@ public class NesN106 implements SoundChip {
         sm[1][trk] = mixR;
     }
 
-    public DeviceInfo.TrackInfo getTrackInfo(int trk) {
+    private DeviceInfo.TrackInfo getTrackInfo(int trk) {
         int channels = getChannels();
         int channel = 7 - trk; // invert the track display
 
@@ -163,7 +164,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
         if (id < OPT.END) option[id] = val;
     }
 
-boolean INIT;
+private boolean INIT;
     @Override
     public void reset() {
 INIT = true;

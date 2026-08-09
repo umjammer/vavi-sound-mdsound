@@ -7,7 +7,7 @@ package mdsound.chips;
  */
 public class P86 {
 
-    public double samplingRate = 44100.0;
+    private double samplingRate = 44100.0;
     private byte[] pcmData = null;
     private static final int MAXInst = 256;
     private final Inst[] inst = new Inst[MAXInst];
@@ -66,10 +66,10 @@ public class P86 {
     private static final int[] rateTable = {4135, 5513, 8270, 11025, 16540, 22050, 33080, 44100};
 
     private static class Inst {
-        public final int start;
-        public final int size;
+        final int start;
+        final int size;
 
-        public Inst(byte[] pcmData, int i) {
+        Inst(byte[] pcmData, int i) {
             this.start =
                     (pcmData[i * 6 + 0 + 12 + 1 + 3] & 0xff) +
                     (pcmData[i * 6 + 1 + 12 + 1 + 3] & 0xff) * 0x100 +

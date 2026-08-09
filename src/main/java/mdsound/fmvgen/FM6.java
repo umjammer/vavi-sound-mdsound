@@ -10,36 +10,36 @@ import mdsound.fmvgen.Fmvgen.Effects;
 import mdsound.fmvgen.effect.ReversePhase;
 
 
-public class FM6 {
+class FM6 {
 
     public OPNA2 parent = null;
 
     public int fmVolume;
-    protected final Channel4 csmCh;
-    protected final int[] fNum = new int[6];
-    protected final int[] fNum3 = new int[3];
+    private final Channel4 csmCh;
+    private final int[] fNum = new int[6];
+    private final int[] fNum3 = new int[3];
     public final Channel4[] ch = new Channel4[6];
 
-    protected final int[] fNum2 = new int[9];
+    private final int[] fNum2 = new int[9];
 
-    protected int reg22;
-    protected int reg29; // OPNA only?
-    protected final int[] pan = new int[6];
+    private int reg22;
+    private int reg29; // OPNA only?
+    private final int[] pan = new int[6];
 //    protected float[] panTable = new float[4] { 1.0f, 0.5012f, 0.2512f, 0.1000f };
-    protected final float[] panL = new float[6];
-    protected final float[] panR = new float[6];
+    private final float[] panL = new float[6];
+    private final float[] panR = new float[6];
 //    protected boolean[] ac = new boolean[6];
-    protected int lfoCount;
-    protected int lfoDCount;
-    public final int[] visVolume = {0, 0};
-    protected int regTc;
+private int lfoCount;
+    private int lfoDCount;
+    private final int[] visVolume = {0, 0};
+    private int regTc;
     public final Fmgen.Channel4.Chip chip;
-    public int waveType = 0;
-    public int waveCh = 0;
-    public int waveCounter = 0;
+    private int waveType = 0;
+    private int waveCh = 0;
+    private int waveCounter = 0;
     private final ReversePhase reversePhase = ReversePhase.getInstance();
 
-    protected final int[] lfoTable = new int[8];
+    private final int[] lfoTable = new int[8];
     private final Effects effects;
     private final int efcStartCh;
     private final int num;
@@ -239,7 +239,7 @@ public class FM6 {
         }
     }
 
-    protected void setParameter(Fmvgen.Channel4 ch, int addr, int data) {
+    private void setParameter(Fmvgen.Channel4 ch, int addr, int data) {
         int[] slotTable = {0, 2, 1, 3};
         int[] slTable = {
                 0, 4, 8, 12, 16, 20, 24, 28,
@@ -324,7 +324,7 @@ public class FM6 {
     private final int[] iBuf = new int[4];
     private final int[] iDest = new int[6];
 
-    protected void mix6(int[] buffer, int nsamples, int activech) {
+    private void mix6(int[] buffer, int nsamples, int activech) {
 
         // Mix
         iDest[0] = pan[0];
@@ -362,7 +362,7 @@ public class FM6 {
         }
     }
 
-    protected void mixSubS(int activeCh, int[] dest, int[] buf) {
+    private void mixSubS(int activeCh, int[] dest, int[] buf) {
         int v;
         int[] l, r;
         if ((activeCh & 0x001) != 0) {
@@ -460,7 +460,7 @@ public class FM6 {
         }
     }
 
-    protected void mixSubSL(int activeCh, int[] dest, int[] buf) {
+    private void mixSubSL(int activeCh, int[] dest, int[] buf) {
         int v;
         int[] l, r;
         if ((activeCh & 0x001) != 0) {
@@ -547,7 +547,7 @@ public class FM6 {
         }
     }
 
-    protected void lfo() {
+    private void lfo() {
         // logger.log(Level.TRACE, "%4d - %8d, %8d".formatted(c, lfocount, lfodcount));
 
         chip.setPML(OPNA2.pmTable[(lfoCount >> (Fmvgen.FM_LFOCBITS + 1)) & 0xff]);

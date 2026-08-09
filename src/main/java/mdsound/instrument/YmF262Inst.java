@@ -18,7 +18,7 @@ public class YmF262Inst extends Instrument.BaseInstrument {
     private static final Logger logger = getLogger(YmF262Inst.class.getName());
 
     public static final int DefaultClockValue = 14318180;
-    public static final int MAX_CHIPS = 0x02;
+    private static final int MAX_CHIPS = 0x02;
 
     private final YmF262[] chips = {new YmF262(), new YmF262()};
 

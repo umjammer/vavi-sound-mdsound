@@ -10,7 +10,7 @@ import mdsound.chips.Pwm;
 
 public class PwmInst extends Instrument.BaseInstrument {
 
-    public static final int MAX_CHIPS = 0x02;
+    private static final int MAX_CHIPS = 0x02;
 
     private final Pwm[] chips = {new Pwm(), new Pwm()};
 

@@ -30,7 +30,7 @@ class Global {
     static class Work {
 
         Work() {
-            OPMLOWPASS = OPMLOWPASS_44;
+            opmLowPass = OPMLOWPASS_44;
         }
 
         private byte[] memory = null;
@@ -38,69 +38,69 @@ class Global {
         public Opm opm;
 
         // gross!
-        public void mountMemory(byte[] mem) {
+        void mountMemory(byte[] mem) {
             memory = mem;
             int len = Integer.toHexString(memory.length).length();
             mask = Integer.parseInt("f".repeat(len), 16);
         }
 
-        public int DebugValue = 0;
-        public int ErrorCode = 0;
+        int debugValue = 0;
+        int errorCode = 0;
 
         public int sampleRate = 44100;
-        public int waveOutSamp = 44100;
-        public int opmWait = 240; // 24.0μｓ
-        public int opmRate = 62500; // Input clock ÷ 64
+        int waveOutSamp = 44100;
+        int opmWait = 240; // 24.0μｓ
+        int opmRate = 62500; // Input clock ÷ 64
 
-        public int memReadDefault(int adrs) {
+        int memReadDefault(int adrs) {
             adrs &= mask;
             if (memory.length <= adrs) return -1;
             return memory[adrs] & 0xff;
         }
 
-        public Function<Integer, Integer> memRead = this::memReadDefault;
+        Function<Integer, Integer> memRead = this::memReadDefault;
 
         int seed = 1;
 
-        public int irnd() {
+        int irnd() {
             seed = (int) (seed * 1566083941L + 1);
             return seed;
         }
 
-        public int totalVolume; // Volume x/256
+        int totalVolume; // Volume x/256
 
         //public int semaphore = 0;
-        public int timerSemaphore = 0;
+        int timerSemaphore = 0;
 
-        public int OPMLPF_ROW = OPMLPF_ROW_44;
-        public short[][] OPMLOWPASS; // Implemented in the constructor
+        int opmLPF_ROW = OPMLPF_ROW_44;
+        short[][] opmLowPass; // Implemented in the constructor
 
-        public int betwTime; // 5 ms
-        public int lateTime; // (200+Bet_time) ms
-        public int lateSamples; // (44100*lateTime/1000)
-        public int blkSamples; // 44100/N_WaveBlk
-        public int betwSamplesSlower; // floor(44100.0*5/1000.0-rev)
-        public int betwSamplesFaster; // ceil(44100.0*5/1000.0+rev)
-        public int betwSamplesVerySlower; // floor(44100.0*5/1000.0-rev)/4.0
-        public int slowerLimit, fasterLimit;
-        //public HWAVEOUT hwo = null;
-//    public LPWAVEHDR lpwh = null;
+        int betwTime; // 5 ms
+        int lateTime; // (200+Bet_time) ms
+        int lateSamples; // (44100*lateTime/1000)
+        int blkSamples; // 44100/N_WaveBlk
+        int betwSamplesSlower; // floor(44100.0*5/1000.0-rev)
+        int betwSamplesFaster; // ceil(44100.0*5/1000.0+rev)
+        int betwSamplesVerySlower; // floor(44100.0*5/1000.0-rev)/4.0
+        int slowerLimit, fasterLimit;
+        //public hWAVEOUT hwo = null;
+//        public lpWAVEHDR lpwh = null;
         public int N_WaveHdr = 0;
-        //public WAVEFORMATEX wfx;
-        public int timerResolution = 1;
-        //int SamplesCounter = 0;
-//    int SamplesCounterRev = 0;
-        public int nSamples;
+        //public waveFORMATEX wfx;
+        int timerResolution = 1;
+        //int samplesCounter = 0;
+//        int samplesCounterRev = 0;
+        int nSamples;
 
         //public HANDLE thread_handle = null;
         public int threadId = 0;
         public int threadFlag = 0;
-        public int timerStartFlag = 0;
+        int timerStartFlag = 0;
 //    final int N_WaveBlk = 8;
 
-        public int waveblk = 0;
-        public int playingBlk = 0, playingBlkNext = 1;
-        public int setPcmBufPtr = -1;
+        int waveblk = 0;
+        int playingBlk = 0, playingBlkNext = 1;
+        int setPcmBufPtr = -1;
 
         // Multimedia Timer
         public int procOpmTimer(short[] buffer, int offset, int sampleCount) {
@@ -146,22 +146,22 @@ class Global {
         }
     }
 
-    public static final int N_CH = 8;
+    static final int N_CH = 8;
 
-    public static final int PRECISION_BITS = 10;
-    public static final int PRECISION = 1 << PRECISION_BITS;
-    public static final int SIZEALPHATBL_BITS = 10;
-    public static final int SIZEALPHATBL = 1 << SIZEALPHATBL_BITS;
+    static final int PRECISION_BITS = 10;
+    static final int PRECISION = 1 << PRECISION_BITS;
+    private static final int SIZEALPHATBL_BITS = 10;
+    static final int SIZEALPHATBL = 1 << SIZEALPHATBL_BITS;
 
-    public static final int SIZESINTBL_BITS = 10;
-    public static final int SIZESINTBL = 1 << SIZESINTBL_BITS;
-    public static final int MAXSINVAL = 1 << (SIZESINTBL_BITS + 2);
+    static final int SIZESINTBL_BITS = 10;
+    static final int SIZESINTBL = 1 << SIZESINTBL_BITS;
+    static final int MAXSINVAL = 1 << (SIZESINTBL_BITS + 2);
 
-    public static final int[] STEPTBL = new int[11 * 12 * 64];
-    public static final int ALPHAZERO = (SIZEALPHATBL * 3);
-    public static final int[] ALPHATBL = new int[ALPHAZERO + SIZEALPHATBL + 1];
-    public static final short[] SINTBL = new short[SIZESINTBL];
-    public static final int[] STEPTBL_O2 = {
+    static final int[] STEPTBL = new int[11 * 12 * 64];
+    static final int ALPHAZERO = (SIZEALPHATBL * 3);
+    static final int[] ALPHATBL = new int[ALPHAZERO + SIZEALPHATBL + 1];
+    static final short[] SINTBL = new short[SIZESINTBL];
+    static final int[] STEPTBL_O2 = {
             1299, 1300, 1301, 1302, 1303, 1304, 1305, 1306,
             1308, 1309, 1310, 1311, 1313, 1314, 1315, 1316,
             1318, 1319, 1320, 1321, 1322, 1323, 1324, 1325,
@@ -259,10 +259,10 @@ class Global {
             2561, 2563, 2565, 2567, 2568, 2571, 2572, 2575,
             2577, 2579, 2581, 2583, 2586, 2589, 2590, 2593,
     };
-    public static final int[] D1LTBL = new int[16];
+    static final int[] D1LTBL = new int[16];
 
-    public static final int[] DT1TBL = new int[128 + 4];
-    public static final int[] DT1TBL_org = {
+    static final int[] DT1TBL = new int[128 + 4];
+    static final int[] DT1TBL_org = {
             0, 0, 1, 2,
             0, 0, 1, 2,
             0, 0, 1, 2,
@@ -302,13 +302,13 @@ class Global {
         public final int and;
         public final int add;
 
-        public XR_ELE(int and, int add) {
+        XR_ELE(int and, int add) {
             this.and = and;
             this.add = add;
         }
     }
 
-    public static final XR_ELE[] XRTBL = {
+    static final XR_ELE[] XRTBL = {
             new XR_ELE(4095, 8),
             new XR_ELE(2047, 5), new XR_ELE(2047, 6), new XR_ELE(2047, 7), new XR_ELE(2047, 8),
             new XR_ELE(1023, 5), new XR_ELE(1023, 6), new XR_ELE(1023, 7), new XR_ELE(1023, 8),
@@ -336,34 +336,34 @@ class Global {
             new XR_ELE(0, 64), new XR_ELE(0, 64), new XR_ELE(0, 64), new XR_ELE(0, 64),
     };
 
-    public static final int[] DT2TBL = {0, 384, 500, 608};
-    public static final int[] NOISEALPHATBL = new int[ALPHAZERO + SIZEALPHATBL + 1];
+    static final int[] DT2TBL = {0, 384, 500, 608};
+    static final int[] NOISEALPHATBL = new int[ALPHAZERO + SIZEALPHATBL + 1];
 
-    public static final int[] dltLTBL = {
+    static final int[] dltLTBL = {
             16, 17, 19, 21, 23, 25, 28, 31, 34, 37, 41, 45, 50, 55, 60, 66,
             73, 80, 88, 97, 107, 118, 130, 143, 157, 173, 190, 209, 230, 253, 279, 307,
             337, 371, 408, 449, 494, 544, 598, 658, 724, 796, 876, 963, 1060, 1166, 1282, 1411, 1552,
     };
 
-    public static final int[] DCT = {
+    static final int[] DCT = {
             -1, -1, -1, -1, 2, 4, 6, 8,
             -1, -1, -1, -1, 2, 4, 6, 8,
     };
 
-    public static final int[][] ADPCMRATETBL = {
+    static final int[][] ADPCMRATETBL = {
             {2, 3, 4, 4},
             {0, 1, 2, 2}
     };
 
-    public static final int[] ADPCMRATEADDTBL = {
+    static final int[] ADPCMRATEADDTBL = {
             46875, 62500, 93750, 125000, 15625 * 12, 15625 * 12, 15625 * 12, 0,
     };
 
-    public static final int[] PCM8VOLTBL = {
+    static final int[] PCM8VOLTBL = {
             2, 3, 4, 5, 6, 8, 10, 12, 16, 20, 24, 32, 40, 48, 64, 80,
     };
 
-    public static final int PCM8_NCH = 8;
+    static final int PCM8_NCH = 8;
 
     public static int bswapl(int adrs) {
         return (adrs << 24) + ((adrs << 8) & 0xff_0000) + ((adrs >> 8) & 0xff00) + (adrs >> 24);
@@ -373,13 +373,13 @@ class Global {
         return (data << 8) + (data >> 8);
     }
 
-    public static final int OPMLPF_COL = 64;
-    public static final int OPMLPF_ROW_44 = 441;
+    static final int OPMLPF_COL = 64;
+    static final int OPMLPF_ROW_44 = 441;
 
-    public static final short[][] OPMLOWPASS_44;
+    static final short[][] OPMLOWPASS_44;
 
-    public static final int OPMLPF_ROW_48 = 96;
-    public static final short[][] OPMLOWPASS_48;
+    static final int OPMLPF_ROW_48 = 96;
+    static final short[][] OPMLOWPASS_48;
 
     static {
         try {
@@ -390,13 +390,13 @@ class Global {
         }
     }
 
-    public static final int N_WaveBlk = 4;
+    static final int N_WaveBlk = 4;
 
-    public static final int WM_USER = 0x0400;
+    private static final int WM_USER = 0x0400;
     public static final int THREADMES_WAVEOUTDONE = WM_USER + 1;
     public static final int THREADMES_KILL = WM_USER + 2;
 
-    public static void firOpm(short[] p, short[] buf0, int buf0Ptr, short[] buf1, int buf1Ptr, int[] result) {
+    static void firOpm(short[] p, short[] buf0, int buf0Ptr, short[] buf1, int buf1Ptr, int[] result) {
         result[0] = (int) buf0[buf0Ptr + 0] * p[0] +
                 (int) buf0[buf0Ptr + 1] * p[1] +
                 (int) buf0[buf0Ptr + 2] * p[2] +

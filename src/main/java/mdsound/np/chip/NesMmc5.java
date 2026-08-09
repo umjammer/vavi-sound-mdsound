@@ -16,54 +16,55 @@ import mdsound.np.cpu.Km6502;
 
 public class NesMmc5 implements SoundChip {
 
-    public static final double DEFAULT_CLOCK = 1789772.0;
-    public static final int DEFAULT_RATE = 44100;
+    private static final double DEFAULT_CLOCK = 1789772.0;
+    private static final int DEFAULT_RATE = 44100;
 
     public enum OPT {
         NONLINEAR_MIXER, PHASE_REFRESH, END
     }
 
-    protected final int[] option = new int[OPT.END.ordinal()];
-    protected int mask;
-    protected final int[][] sm = {new int[3], new int[3]}; // stereo panning
-    protected final byte[] ram = new byte[0x6000 - 0x5c00];
-    protected final byte[] reg = new byte[8];
-    protected final int[] mReg = new int[2];
+    private final int[] option = new int[OPT.END.ordinal()];
+    private int mask;
+    private final int[][] sm = {new int[3], new int[3]}; // stereo panning
+    private final byte[] ram = new byte[0x6000 - 0x5c00];
+    private final byte[] reg = new byte[8];
+    private final int[] mReg = new int[2];
     /** PCM channel */
     public int pcm;
     /** PCM channel */
     public boolean pcmMode;
     /** PCM channel reads need CPU access */
-    protected Km6502 cpu;
+    private Km6502 cpu;
 
     /** frequency divider */
-    protected final int[] sCounter = new int[2];
+    private final int[] sCounter = new int[2];
     /** phase counter */
-    protected final int[] sPhase = new int[2];
+    private final int[] sPhase = new int[2];
 
-    protected final int[] duty = new int[2];
-    protected final int[] volume = new int[2];
-    protected final int[] freq = new int[2];
-    protected final int[] out = new int[3];
-    protected final boolean[] enable = new boolean[2];
+    private final int[] duty = new int[2];
+    private final int[] volume = new int[2];
+    private final int[] freq = new int[2];
+    private final int[] out = new int[3];
+    private final boolean[] enable = new boolean[2];
 
     // Envelope Enabled Flag
-    protected final boolean[] envelopeDisable = new boolean[2];
+    private final boolean[] envelopeDisable = new boolean[2];
     // Envelope Loop
-    protected final boolean[] envelopeLoop = new boolean[2];
-    protected final boolean[] envelopeWrite = new boolean[2];
-    protected final int[] envelopeDivPeriod = new int[2];
-    protected final int[] envelopeDiv = new int[2];
-    protected final int[] envelopeCounter = new int[2];
+    private final boolean[] envelopeLoop = new boolean[2];
+    private final boolean[] envelopeWrite = new boolean[2];
+    private final int[] envelopeDivPeriod = new int[2];
+    private final int[] envelopeDiv = new int[2];
+    private final int[] envelopeCounter = new int[2];
 
-    protected final int[] lengthCounter = new int[2];
+    private final int[] lengthCounter = new int[2];
 
-    protected int frameSequenceCount;
+    private int frameSequenceCount;
 
-    protected double clock, rate;
-    protected final int[] squareTable = new int[32];
-    protected final int[] pcmTable = new int[256];
-    protected final BasicTrackInfo[] trackInfo = new BasicTrackInfo[3];
+    private double clock;
+    private double rate;
+    private final int[] squareTable = new int[32];
+    private final int[] pcmTable = new int[256];
+    private final BasicTrackInfo[] trackInfo = new BasicTrackInfo[3];
 
     public NesMmc5() {
         cpu = null;
@@ -140,7 +141,7 @@ public class NesMmc5 implements SoundChip {
         rate = r != 0 ? r : DEFAULT_RATE;
     }
 
-    public void frameSequence() {
+    private void frameSequence() {
         // 240hz clock
         for (int i = 0; i < 2; ++i) {
             boolean divider = false;
@@ -262,7 +263,7 @@ public class NesMmc5 implements SoundChip {
         return 2;
     }
 
-    public static final int[] length_table = {
+    private static final int[] length_table = {
             0x0a, 0xfe,
             0x14, 0x02,
             0x28, 0x04,

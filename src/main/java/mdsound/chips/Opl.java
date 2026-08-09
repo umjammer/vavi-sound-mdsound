@@ -154,7 +154,7 @@ public class Opl {
         private static final int EMULATION_MODE_NORMAL = 0;
         private static final int EMULATION_MODE_YM2610 = 1;
 
-        public void reset(double freqBase, int[] outputDeltaT) {
+        void reset(double freqBase, int[] outputDeltaT) {
             this.freqVase = freqBase;
             this.outputPointer = outputDeltaT;
             this.outputPointerP = 0;
@@ -163,7 +163,7 @@ public class Opl {
             this.reset(0, EMULATION_MODE_NORMAL);
         }
 
-        public void init() {
+        void init() {
             this.memory = null;
             this.memorySize = 0x00;
             this.memoryMask = 0x00;
@@ -288,7 +288,7 @@ public class Opl {
                 57, 57, 57, 57, 77, 102, 128, 153
         };
 
-        public int read() {
+        int read() {
             int v = 0;
 
             // external memory read
@@ -338,7 +338,7 @@ public class Opl {
         /**
          * ADPCM write register
          */
-        public void write(int r, int v) {
+        void write(int r, int v) {
             if (r >= 0x10) return;
             this.reg[r] = (byte) v; // stock data
 
@@ -560,7 +560,7 @@ public class Opl {
             }
         }
 
-        public void reset(int pan, int emulation_mode) {
+        void reset(int pan, int emulation_mode) {
             this.now_addr = 0;
             this.now_step = 0;
             this.step = 0;
@@ -745,7 +745,7 @@ public class Opl {
         }
 
         /** ADPCM B (Delta-T control type) */
-        public void calcAdpcm() {
+        void calcAdpcm() {
 
             // some examples:
             // value:   START, REC, MEMDAT, REPEAT, SPOFF, x,x,RESET   meaning:
@@ -772,7 +772,7 @@ public class Opl {
             //if ( (this.portstate & 0xe0)==0xe0 )
         }
 
-        public void calcMemMask() {
+        void calcMemMask() {
             int maskSize = 0x01;
             while (maskSize < this.memorySize)
                 maskSize <<= 1;
@@ -943,7 +943,7 @@ public class Opl {
             }
         }
 
-        public void setMul(int v) {
+        void setMul(int v) {
             this.mul = mulTab[v & 0x0f] & 0xff;
             this.KSR = (v & 0x10) != 0 ? 0 : 2;
             this.egType = v & 0x20;
@@ -951,7 +951,7 @@ public class Opl {
             this.amMask = (v & 0x80) != 0 ? ~0 : 0;
         }
 
-        public void reset() {
+        void reset() {
             this.waveTable = 0;
             this.state = EG_OFF;
             this.volume = MAX_ATT_INDEX;
@@ -975,7 +975,7 @@ public class Opl {
         private int kCode;
         private int muted;
 
-        public void reset() {
+        void reset() {
             for (int s = 0; s < 2; s++) {
                 // wave table
                 this.slots[s].reset();

@@ -18,29 +18,29 @@ import mdsound.x68sound.Global.Work;
  *
  * @author m_puusan
  */
-public class Op {
+class Op {
 
     Work work;
 
     public static final int KEYON = -1;
-    public static final int ATACK = 0;
-    public static final int DECAY = 1;
-    public static final int SUSTAIN = 2;
-    public static final int SUSTAIN_MAX = 3;
-    public static final int RELEASE = 4;
-    public static final int RELEASE_MAX = 5;
+    private static final int ATACK = 0;
+    private static final int DECAY = 1;
+    private static final int SUSTAIN = 2;
+    private static final int SUSTAIN_MAX = 3;
+    private static final int RELEASE = 4;
+    private static final int RELEASE_MAX = 5;
 
-    public static final int CULC_DELTA_T = 0x7fff_ffff;
-    public static final int CULC_ALPHA = 0x7fff_ffff;
+    private static final int CULC_DELTA_T = 0x7fff_ffff;
+    private static final int CULC_ALPHA = 0x7fff_ffff;
 
-    public static int IS_ZERO_CLOSS(int a, int b) {
+    private static int IS_ZERO_CLOSS(int a, int b) {
         return ((a < 0 && b >= 0) || (a > 0 && b <= 0)) ? 1 : 0;
     }
 
-    static final int[] NEXTSTAT = {
+    private static final int[] NEXTSTAT = {
             DECAY, SUSTAIN, SUSTAIN_MAX, SUSTAIN_MAX, RELEASE_MAX, RELEASE_MAX,
     };
-    static final int[] MAXSTAT = {
+    private static final int[] MAXSTAT = {
             ATACK, SUSTAIN_MAX, SUSTAIN_MAX, SUSTAIN_MAX, RELEASE_MAX, RELEASE_MAX,
     };
 
@@ -87,7 +87,7 @@ public class Op {
     /** Feedback Masking (0,-1) */
     private int flMask;
     /** AR-only t */
-    int arTime = 0;
+    private int arTime = 0;
 
     /** Noise counter */
     private int noiseCounter;
@@ -130,7 +130,7 @@ public class Op {
     /** Noiseflag,NFRQ value */
     private int nfrq;
 
-    public static class _StatTbl {
+    static class _StatTbl {
         int and, cmp, add, limit;
     }
 

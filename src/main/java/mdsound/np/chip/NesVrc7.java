@@ -13,14 +13,15 @@ import mdsound.np.chip.DeviceInfo.BasicTrackInfo;
 
 
 public class NesVrc7 implements SoundChip {
-    protected int mask;
-    protected int patchSet;
-    protected final int[][] sm = {new int[6], new int[6]}; // stereo mix
+    private int mask;
+    private int patchSet;
+    private final int[][] sm = {new int[6], new int[6]}; // stereo mix
     protected short[] buf = new short[2];
-    protected Emu2413.Opll opll;
-    protected int divider; // clock divider
-    protected double clock, rate;
-    protected final BasicTrackInfo[] trkInfo = new BasicTrackInfo[6];
+    private final Emu2413.Opll opll;
+    private int divider; // clock divider
+    private double clock;
+    private double rate;
+    private final BasicTrackInfo[] trkInfo = new BasicTrackInfo[6];
 
     public NesVrc7() {
         patchSet = Emu2413.Opll.Tone.VRC7_RW.ordinal();
@@ -95,7 +96,7 @@ public class NesVrc7 implements SoundChip {
         public final boolean[] on;
         public final boolean[] off;
 
-        public ChipKeyInfo(int n) {
+        ChipKeyInfo(int n) {
             on = new boolean[n];
             off = new boolean[n];
             //for (int i = 0; i < n; i++) Off[i] = true;

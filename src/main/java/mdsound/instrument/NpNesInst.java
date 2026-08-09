@@ -14,7 +14,7 @@ public class NpNesInst extends Instrument.BaseInstrument implements Instrument.P
 
     private static final Logger logger = System.getLogger(NpNesInst.class.getName());
 
-    public static final byte MAX_CHIPS = 0x02;
+    private static final byte MAX_CHIPS = 0x02;
 
     private final int[] mask = {0, 0};
 
@@ -104,13 +104,13 @@ public class NpNesInst extends Instrument.BaseInstrument implements Instrument.P
         if (ds[7] != -1) np_nes_vrc7_volume = ds[7];
     };
 
-    public int np_nes_apu_volume;
-    public int np_nes_dmc_volume;
-    public int np_nes_fds_volume;
-    public int np_nes_fme7_volume;
-    public int np_nes_mmc5_volume;
-    public int np_nes_n106_volume;
-    public int np_nes_vrc6_volume;
+    private int np_nes_apu_volume;
+    int np_nes_dmc_volume;
+    int np_nes_fds_volume;
+    int np_nes_fme7_volume;
+    int np_nes_mmc5_volume;
+    int np_nes_n106_volume;
+    int np_nes_vrc6_volume;
     public int np_nes_vrc7_volume;
 
     // vgm

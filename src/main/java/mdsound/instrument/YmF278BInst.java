@@ -13,7 +13,7 @@ import vavi.util.compat.Tuple;
 
 public class YmF278BInst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
-    public static final int MAX_CHIPS = 0x10;
+    private static final int MAX_CHIPS = 0x10;
 
     private final YmF278B[] chips = {new YmF278B(), new YmF278B()};
 

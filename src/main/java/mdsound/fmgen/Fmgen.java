@@ -40,7 +40,7 @@ public class Fmgen {
      * Static table size
      */
     public static final int FM_EG_BOTTOM = 955;
-    public static final int FM_LFOBITS = 8; // Not changeable
+    private static final int FM_LFOBITS = 8; // Not changeable
     public static final int FM_TLBITS = 7;
     /**
      *
@@ -49,25 +49,25 @@ public class Fmgen {
     public static final int FM_LFOENTS = 1 << FM_LFOBITS;
     public static final int FM_TLPOS = FM_TLENTS / 4;
     // The precision of a sine wave is 2^(1/256)
-    public static final int FM_CLENTS = 0x1000 * 2; // sin + TL + LFO
+    protected static final int FM_CLENTS = 0x1000 * 2; // sin + TL + LFO
     // Difference in accuracy between EG and sine wave 0(low)-2(high)
     public static final int FM_SINEPRESIS = 2;
-    public static final int FM_OPSINBITS = 10;
+    protected static final int FM_OPSINBITS = 10;
     public static final int FM_OPSINENTS = 1 << FM_OPSINBITS;
     // eg shift value of count
     public static final int FM_EGCBITS = 18;
     public static final int FM_LFOCBITS = 14;
-    public static final int FM_PGBITS = 9;
+    protected static final int FM_PGBITS = 9;
     public static final int FM_RATIOBITS = 7; // Around 8-12?
     public static final int FM_EGBITS = 16;
 
     // fixed equation-based tables
-    public static final int[][][] pmTable = {
+    protected static final int[][][] pmTable = {
             {new int[FM_LFOENTS], new int[FM_LFOENTS], new int[FM_LFOENTS], new int[FM_LFOENTS], new int[FM_LFOENTS], new int[FM_LFOENTS], new int[FM_LFOENTS], new int[FM_LFOENTS]},
             {new int[FM_LFOENTS], new int[FM_LFOENTS], new int[FM_LFOENTS], new int[FM_LFOENTS], new int[FM_LFOENTS], new int[FM_LFOENTS], new int[FM_LFOENTS], new int[FM_LFOENTS]}
     };
 
-    public static final int[][][] amTable = {
+    protected static final int[][][] amTable = {
             {new int[FM_LFOENTS], new int[FM_LFOENTS], new int[FM_LFOENTS], new int[FM_LFOENTS]},
             {new int[FM_LFOENTS], new int[FM_LFOENTS], new int[FM_LFOENTS], new int[FM_LFOENTS]}
     };
@@ -123,7 +123,7 @@ public class Fmgen {
 
         // Operator
         public static class Operator {
-            public static final int[] noteTable = {
+            static final int[] noteTable = {
                     0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 3, 3, 3,
                     4, 4, 4, 4, 4, 4, 4, 5, 6, 7, 7, 7, 7, 7, 7, 7,
                     8, 8, 8, 8, 8, 8, 8, 9, 10, 11, 11, 11, 11, 11, 11, 11,
@@ -134,7 +134,7 @@ public class Fmgen {
                     28, 28, 28, 28, 28, 28, 28, 29, 30, 31, 31, 31, 31, 31, 31, 31,
             };
 
-            public static final int[] dtTable = {
+            static final int[] dtTable = {
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 4, 4, 4, 4,
@@ -153,7 +153,7 @@ public class Fmgen {
                     -16, -16, -18, -20, -22, -24, -26, -28, -32, -34, -38, -40, -44, -44, -44, -44,
             };
 
-            public static final int[][] decayTable1 = {
+            static final int[][] decayTable1 = {
                     {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0},
                     {1, 1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 1, 1, 1},
                     {1, 1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 1, 1, 1},
@@ -188,11 +188,11 @@ public class Fmgen {
                     {16, 16, 16, 16, 16, 16, 16, 16}, {16, 16, 16, 16, 16, 16, 16, 16}
             };
 
-            public static final int[] decayTable2 = {
+            static final int[] decayTable2 = {
                     1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2047, 2047, 2047, 2047, 2047
             };
 
-            public static final int[][] attackTable = {
+            static final int[][] attackTable = {
                     {-1, -1, -1, -1, -1, -1, -1, -1}, {-1, -1, -1, -1, -1, -1, -1, -1},
                     {4, 4, 4, 4, 4, 4, 4, 4}, {4, 4, 4, 4, 4, 4, 4, 4},
                     {4, 4, 4, 4, 4, 4, 4, 4}, {4, 4, 4, 4, 4, 4, 4, 4},
@@ -227,7 +227,7 @@ public class Fmgen {
                     {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0}
             };
 
-            public static final int[][][][] ssgEnvTable = {
+            static final int[][][][] ssgEnvTable = {
                     {
                            {{1, 1}, {1, 1}, {1, 1}}, // 08
                            {{0, 1}, {1, 1}, {1, 1}}  // 08 56~
@@ -268,7 +268,7 @@ public class Fmgen {
             static final int[] clTable = new int[FM_CLENTS];
 
             /** OP type (MPcm, N...) */
-            public Chip.OpType type;
+            Chip.OpType type;
             /** Block/Note */
             private int bn;
             /** EG output value */
@@ -295,7 +295,7 @@ public class Fmgen {
             private int keyScaleRate;
             private EGPhase egPhase;
             private int[] ams;
-            public int ms;
+            int ms;
 
             /** Total Level (0-127) */
             private int tl;
@@ -318,18 +318,19 @@ public class Fmgen {
 
             private boolean keyOn;
             /** enable Amplitude Modulation */
-            public boolean amOn;
+            boolean amOn;
             // The parameters were updated
-            public boolean paramChanged;
+            boolean paramChanged;
             private boolean mute_;
 
             // 1. Sample synthesis
 
             /** Shift amount to convert ISample to envelope count (2π) */
-            public static final int IS2EC_SHIFT = ((20 + FM_PGBITS) - 13);
+            static final int IS2EC_SHIFT = ((20 + FM_PGBITS) - 13);
 
             private Chip chip;
-            public int out, out2;
+            int out;
+            int out2;
             private int in2;
 
             // Phase Generator
@@ -367,7 +368,7 @@ public class Fmgen {
             public int dbgPgOut;
 
             /** Constructs */
-            public Operator() {
+            Operator() {
                 // EG Part
                 ar = dr = sr = rr = keyScaleRate = 0;
                 ams = amTable[0][0];
@@ -387,7 +388,7 @@ public class Fmgen {
             }
 
             /** Initializes */
-            public void reset() {
+            void reset() {
                 // EG part
                 tl = tlLatch = 127;
                 shiftPhase(EGPhase.Off);
@@ -435,14 +436,14 @@ public class Fmgen {
                 }
             }
 
-            public void setDPBN(int dp, int bn) {
+            void setDPBN(int dp, int bn) {
                 this.dp = dp;
                 this.bn = bn;
                 paramChanged = true;
             }
 
             /** Prepares */
-            public void prepare() {
+            void prepare() {
                 if (paramChanged) {
                     paramChanged = false;
                     // PG Part
@@ -489,7 +490,7 @@ public class Fmgen {
             }
 
             /** Change egPhase of envelope */
-            public void shiftPhase(EGPhase nextPhase) {
+            void shiftPhase(EGPhase nextPhase) {
                 switch (nextPhase) {
                 case Attack:
                     tl = tlLatch;
@@ -595,11 +596,11 @@ public class Fmgen {
                 return sineTable[(s >>> (20 + FM_PGBITS - FM_OPSINBITS)) & (FM_OPSINENTS - 1)];
             }
 
-            public int sine(int s) {
+            int sine(int s) {
                 return sineTable[s & (FM_OPSINENTS - 1)];
             }
 
-            public int logToLin(int a) {
+            int logToLin(int a) {
 //#if 1 // FM_CLENTS < 0xc00  // 400 for TL, 400 for ENV, 400 for LFO.
                 return (a < FM_CLENTS) ? clTable[a] : 0;
 //#else
@@ -607,7 +608,7 @@ public class Fmgen {
 //#endif
             }
 
-            public void egUpdate() {
+            void egUpdate() {
                 if (ssgType == 0) {
                     egOut = Math.min(tlOut + egLevel, 0x3ff) << (1 + 2);
                 } else {
@@ -615,13 +616,13 @@ public class Fmgen {
                 }
             }
 
-            public void setEGRate(int rate) {
+            void setEGRate(int rate) {
                 egRate = rate;
                 egCountDiff = decayTable2[rate / 4] * chip.getRatio();
             }
 
             /** EG Calculation */
-            public void egCalc() {
+            void egCalc() {
                 egCount = (2047 * 3) << FM_RATIOBITS; // TODO This shortcut reduces reproducibility
 
                 if (egPhase == EGPhase.Attack) {
@@ -659,7 +660,7 @@ public class Fmgen {
                 egCurveCount++;
             }
 
-            public void egStep() {
+            void egStep() {
                 egCount -= egCountDiff;
 
                 // It is rumored that the EG changes are synchronized across all slots.
@@ -671,14 +672,14 @@ public class Fmgen {
              * PG calculation
              * ret:2^(20+PGBITS) / cycle
              */
-            public int pgCalc() {
+            int pgCalc() {
                 int ret = pgCount;
                 pgCount += pgDiff;
                 dbgPgOut = ret;
                 return ret;
             }
 
-            public int pgCalcL() {
+            int pgCalcL() {
                 int ret = pgCount;
                 pgCount += pgDiff + ((pgDiffLfo * chip.getPmV()) >> 5);
                 dbgPgOut = ret;
@@ -689,7 +690,7 @@ public class Fmgen {
              * OP calculation
              * @param in ISample (up to 8π)
              */
-            public int calc(int in) {
+            int calc(int in) {
                 egStep();
                 out2 = out;
 
@@ -701,7 +702,7 @@ public class Fmgen {
                 return out;
             }
 
-            public int calcL(int In) {
+            int calcL(int In) {
                 egStep();
 
                 int pgin = pgCalcL() >> (20 + FM_PGBITS - FM_OPSINBITS);
@@ -712,7 +713,7 @@ public class Fmgen {
                 return out;
             }
 
-            public int calcN(int noise) {
+            int calcN(int noise) {
                 egStep();
 
                 int lv = Math.max(0, 0x3ff - (tlOut + egLevel)) << 1;
@@ -729,7 +730,7 @@ public class Fmgen {
              * OP (FB) Calculation
              * Self Feedback Modulation Max = 4π
              */
-            public int calcFB(int fb) {
+            int calcFB(int fb) {
                 egStep();
 
                 int In = out + out2;
@@ -745,7 +746,7 @@ public class Fmgen {
                 return out2;
             }
 
-            public int calcFBL(int fb) {
+            int calcFBL(int fb) {
                 egStep();
 
                 int In = out + out2;
@@ -762,12 +763,12 @@ public class Fmgen {
                 return out;
             }
 
-            public void resetFB() {
+            void resetFB() {
                 out = out2 = 0;
             }
 
             /** Key On */
-            public void keyOn() {
+            void keyOn() {
                 if (!keyOn) {
                     keyOn = true;
                     if (egPhase == EGPhase.Off || egPhase == EGPhase.Release) {
@@ -789,7 +790,7 @@ public class Fmgen {
             }
 
             /** the total level as written, 0 loudest to 127 */
-            public int getTotalLevel() {
+            int getTotalLevel() {
                 return this.tl;
             }
 
@@ -800,17 +801,17 @@ public class Fmgen {
              * that the total level counts in eighths of, so the whole attenuation of an operator
              * is {@code getTotalLevel() * 8 + getEnvelope()}.
              */
-            public int getEnvelope() {
+            int getEnvelope() {
                 return this.egLevel;
             }
 
             /** which part of its envelope the operator is in */
-            public EGPhase getEnvelopePhase() {
+            EGPhase getEnvelopePhase() {
                 return this.egPhase;
             }
 
             /** Is the operator up and running? - true through the release tail as well */
-            public boolean isOn() {
+            boolean isOn() {
                 return egPhase != EGPhase.Off;
             }
 
@@ -818,7 +819,7 @@ public class Fmgen {
              * Whether the key is down. Unlike {@link #isOn} this goes false the moment the driver
              * lets go, which is what a key display wants - a note ringing out is not a key.
              */
-            public boolean isKeyDown() {
+            boolean isKeyDown() {
                 return this.keyOn;
             }
 
@@ -898,17 +899,17 @@ public class Fmgen {
                 paramChanged = true;
             }
 
-            public void mute(boolean mute) {
+            void mute(boolean mute) {
                 mute_ = mute;
                 paramChanged = true;
             }
 
-            public void setMS(int ms) {
+            void setMS(int ms) {
                 this.ms = ms;
                 paramChanged = true;
             }
 
-            public void setChip(Chip chip) {
+            void setChip(Chip chip) {
                 this.chip = chip;
             }
 
@@ -921,7 +922,7 @@ public class Fmgen {
 //            static void SetAML(int l);
 //            static void SetPML(int l);
 
-            public int out() {
+            int out() {
                 return out;
             }
 
@@ -929,7 +930,7 @@ public class Fmgen {
                 return in2;
             }
 
-            public void dbgStopPG() {
+            void dbgStopPG() {
                 pgDiff = 0;
                 pgDiffLfo = 0;
             }
@@ -969,7 +970,7 @@ public class Fmgen {
             private int amL;
             private int pmL;
             private int pmV;
-            public final OpType opType;
+            final OpType opType;
             private final int[][] mulTable = {new int[16], new int[16], new int[16], new int[16]};
 
             /**

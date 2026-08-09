@@ -8,18 +8,18 @@ import mdsound.fmgen.PSG;
 
 public class Psg2Light extends PSG {
 
-    protected final byte[] panpot = new byte[3];
-    protected final byte[] panpotLM = new byte[3];
-    protected final byte[] panpotRM = new byte[3];
-    public static final float[] panTable = {1.0f, 0.8756f, 0.7512f, 0.6012f, 0.4512f, 0.2506f, 0.0500f, 0.0250f};
-    protected final byte[] phaseReset = new byte[3];
-    protected final boolean[] phaseResetBefore = new boolean[3];
-    protected final byte[] duty = new byte[3];
+    private final byte[] panpot = new byte[3];
+    private final byte[] panpotLM = new byte[3];
+    private final byte[] panpotRM = new byte[3];
+    private static final float[] panTable = {1.0f, 0.8756f, 0.7512f, 0.6012f, 0.4512f, 0.2506f, 0.0500f, 0.0250f};
+    private final byte[] phaseReset = new byte[3];
+    private final boolean[] phaseResetBefore = new boolean[3];
+    private final byte[] duty = new byte[3];
     private final byte[][] user = {new byte[64], new byte[64], new byte[64], new byte[64], new byte[64], new byte[64]};
     private int userDefCounter = 0;
     private int userDefNum = 0;
     private BiFunction<Integer, Integer, Integer>[] tblGetSample;
-    protected double ncountDbl;
+    private double ncountDbl;
     private static final double ncountDiv = 32.0;
 
     public Psg2Light() {

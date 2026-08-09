@@ -29,7 +29,7 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
  * @version 0.00 2022-05-26 nsano initial version <br>
  */
 @PropsEntity(url = "file:local.properties")
-public class TestCase {
+class TestCase {
 
     static boolean localPropertiesExists() {
         return Files.exists(Paths.get("local.properties"));

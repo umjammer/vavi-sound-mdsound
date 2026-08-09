@@ -26,7 +26,7 @@ public class RealChip {
 
     private Nc86ctl nc86ctl;
 
-    public RealChip() {
+    private RealChip() {
         logger.log(Level.INFO, "RealChip:Ctr:STEP 00(start)");
 
         int n;
@@ -83,7 +83,7 @@ public class RealChip {
         }
     }
 
-    public void getScciInstances() {
+    private void getScciInstances() {
         int ifc = NScci.NSoundInterfaceManager().getInterfaceCount();
 
         for (int i = 0; i < ifc; i++) {
@@ -197,7 +197,7 @@ public class RealChip {
             int iCount = nc86ctl.getNumberOfChip();
             for (int i = 0; i < iCount; i++) {
                 NIRealChip rc = nc86ctl.getChipInterface(i);
-                NIGimic2 gm = rc.QueryInterface();
+                NIGimic2 gm = rc.queryInterface();
                 ChipType cct = gm.getModuleType();
 
                 if (cct != ChipType.CHIP_YM2608 && cct != ChipType.CHIP_YMF288) {
@@ -225,15 +225,15 @@ public class RealChip {
     }
 
     public static class RSoundChip {
-        protected final int SoundLocation;
+        final int SoundLocation;
 
-        protected final int BusID;
+        final int BusID;
 
-        protected final int SoundChip;
+        final int SoundChip;
 
-        public int dClock = 3579545;
+        int dClock = 3579545;
 
-        public RSoundChip(int soundLocation, int busID, int soundChip) {
+        RSoundChip(int soundLocation, int busID, int soundChip) {
             SoundLocation = soundLocation;
             BusID = busID;
             SoundChip = soundChip;
@@ -265,11 +265,11 @@ public class RealChip {
     }
 
     public static class RScciSoundChip extends RSoundChip {
-        public NScci scci = null;
+        NScci scci = null;
 
         private NSoundChip realChip = null;
 
-        public RScciSoundChip(int soundLocation, int busID, int soundChip) {
+        RScciSoundChip(int soundLocation, int busID, int soundChip) {
             super(soundLocation, busID, soundChip);
         }
 
@@ -325,13 +325,13 @@ public class RealChip {
     }
 
     public static class RC86ctlSoundChip extends RSoundChip {
-        public Nc86ctl c86ctl = null;
+        Nc86ctl c86ctl = null;
 
-        public Nc86ctl.NIRealChip realChip = null;
+        Nc86ctl.NIRealChip realChip = null;
 
-        public Nc86ctl.ChipType chiptype = ChipType.CHIP_UNKNOWN;
+        Nc86ctl.ChipType chiptype = ChipType.CHIP_UNKNOWN;
 
-        public RC86ctlSoundChip(int soundLocation, int busID, int soundChip) {
+        RC86ctlSoundChip(int soundLocation, int busID, int soundChip) {
             super(soundLocation, busID, soundChip);
         }
 
@@ -340,7 +340,7 @@ public class RealChip {
             NIRealChip rc = c86ctl.getChipInterface(BusID);
             rc.reset();
             realChip = rc;
-            NIGimic2 gm = rc.QueryInterface();
+            NIGimic2 gm = rc.queryInterface();
             dClock = gm.getPLLClock();
             chiptype = gm.getModuleType();
             if (chiptype == ChipType.CHIP_YM2608) {
@@ -373,7 +373,7 @@ public class RealChip {
          */
         @Override
         public int SetMasterClock(int mClock) {
-            NIGimic2 gm = realChip.QueryInterface();
+            NIGimic2 gm = realChip.queryInterface();
             int nowClock = gm.getPLLClock();
             if (nowClock != mClock) {
                 gm.setPLLClock(mClock);
@@ -384,7 +384,7 @@ public class RealChip {
 
         @Override
         public void setSSGVolume(int vol) {
-            NIGimic2 gm = realChip.QueryInterface();
+            NIGimic2 gm = realChip.queryInterface();
             gm.setSSGVolume(vol);
         }
     }

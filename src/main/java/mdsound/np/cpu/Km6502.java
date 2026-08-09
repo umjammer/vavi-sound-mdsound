@@ -32,35 +32,35 @@ public class Km6502 implements Device {
     private static final Logger logger = getLogger(Km6502.class.getName());
 
     /** Accumulator */
-    public int a;
+    private int a;
     /** Status register */
     public int p;
     /** X register */
-    public int x;
+    private int x;
     /** Y register */
-    public int y;
+    private int y;
     /** Stack pointer */
-    public int s;
+    private int s;
     /** Program Counter */
-    public int pc;
+    private int pc;
     /** interrupt request */
-    public int iRequest;
+    private int iRequest;
     /** interrupt mask */
-    public int iMask;
+    private int iMask;
     /** (incremental) cycle counter */
-    public int clock;
-    public int lastCode;
+    private int clock;
+    private int lastCode;
 
-    public int illegal;
+    private int illegal;
 
     // pointer to Callback functions
-    interface ReadHandler extends Function<Integer, Integer> {}
-    interface WriterHandler extends BiConsumer<Integer, Integer>{}
+    private interface ReadHandler extends Function<Integer, Integer> {}
+    private interface WriterHandler extends BiConsumer<Integer, Integer>{}
 
-    public ReadHandler readByte;
-    public WriterHandler writeByte;
+    private ReadHandler readByte;
+    private WriterHandler writeByte;
 
-    enum Flags {
+    private enum Flags {
         C(0x01),
         Z(0x02),
         I(0x04),
@@ -91,15 +91,15 @@ public class Km6502 implements Device {
         }
     }
 
-    public final int C_FLAG = Flags.C.v;
-    public final int Z_FLAG = Flags.Z.v;
-    public final int I_FLAG = Flags.I.v;
-    public final int D_FLAG = Flags.D.v;
-    public final int B_FLAG = Flags.B.v;
-    public final int R_FLAG = Flags.R.v;
-    public final int V_FLAG = Flags.V.v;
-    public final int N_FLAG = Flags.N.v;
-    public static final int T_FLAG = 0;
+    private final int C_FLAG = Flags.C.v;
+    private final int Z_FLAG = Flags.Z.v;
+    private final int I_FLAG = Flags.I.v;
+    private final int D_FLAG = Flags.D.v;
+    private final int B_FLAG = Flags.B.v;
+    private final int R_FLAG = Flags.R.v;
+    private final int V_FLAG = Flags.V.v;
+    private final int N_FLAG = Flags.N.v;
+    private static final int T_FLAG = 0;
 
     private static final int BASE_OF_ZERO = 0x0000;
     private static final int VEC_RESET = 0xfffc;
@@ -112,15 +112,15 @@ public class Km6502 implements Device {
     private static final int IRQ_BRK = IRQ.BRK.v;
     private static final int IRQ_INT = IRQ.INT.v;
 
-    int K_READ(int adr) {
+    private int K_READ(int adr) {
         return readByte.apply(adr);
     }
 
-    void K_WRITE(int adr, int value) {
+    private void K_WRITE(int adr, int value) {
         writeByte.accept(adr, value);
     }
 
-    static final byte[] fl_table = {
+    private static final byte[] fl_table = {
         0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -170,133 +170,133 @@ public class Km6502 implements Device {
         (byte) 0x81, (byte) 0x81,
     };
 
-    public int FLAG_NZ(int w) {
+    private int FLAG_NZ(int w) {
         return fl_table[w & 0xff];
     }
 
-    public int FLAG_NZC(int w) {
+    private int FLAG_NZC(int w) {
         return fl_table[w & 0x01ff];
     }
 
-    public void KI_ADDCLOCK(int cycle) {
+    private void KI_ADDCLOCK(int cycle) {
         this.clock += cycle;
     }
 
-    public int KI_READWORD(int adr) {
+    private int KI_READWORD(int adr) {
         int ret = K_READ(adr);
         return (ret + ((K_READ(adr + 1) & 0xffff) << 8)) & 0xffff;
     }
 
-    public int KI_READWORDZP(int adr) {
+    private int KI_READWORDZP(int adr) {
         int ret = K_READ(BASE_OF_ZERO + adr);
         return (ret + (K_READ(BASE_OF_ZERO + ((adr + 1) & 0xff)) << 8)) & 0xffff;
     }
 
-    public int KAI_IMM() {
+    private int KAI_IMM() {
         int ret = this.pc;
         this.pc = (this.pc + 1) & 0xffff;
         return ret;
     }
 
-    public int KAI_IMM16() {
+    private int KAI_IMM16() {
         int ret = this.pc;
         this.pc = (this.pc + 2) & 0xffff;
         return ret;
     }
 
-    public int KAI_ABS() {
+    private int KAI_ABS() {
         return KI_READWORD(KAI_IMM16());
     }
 
-    public int KAI_ABSX() {
+    private int KAI_ABSX() {
         return (KAI_ABS() + this.x) & 0xffff;
     }
 
-    public int KAI_ABSY() {
+    private int KAI_ABSY() {
         return (KAI_ABS() + this.y) & 0xffff;
     }
 
-    public int KAI_ZP() {
+    private int KAI_ZP() {
         return K_READ(KAI_IMM());
     }
 
-    public int KAI_ZPX() {
+    private int KAI_ZPX() {
         return (KAI_ZP() + this.x) & 0xff;
     }
 
-    public int KAI_INDY() {
+    private int KAI_INDY() {
         return (KI_READWORDZP(KAI_ZP()) + this.y) & 0xffff;
     }
 
-    public int KA_IMM() {
+    private int KA_IMM() {
         int ret = this.pc;
         this.pc = (this.pc + 1) & 0xffff;
         return ret;
     }
 
-    public int KA_IMM16() {
+    private int KA_IMM16() {
         int ret = this.pc;
         this.pc = (this.pc + 2) & 0xffff;
         return ret;
     }
 
-    public int KA_ABS() {
+    private int KA_ABS() {
         return KI_READWORD(KAI_IMM16());
     }
 
-    public int KA_ABSX() {
+    private int KA_ABSX() {
         return (KAI_ABS() + this.x) & 0xffff;
     }
 
-    public int KA_ABSY() {
+    private int KA_ABSY() {
         return (KAI_ABS() + this.y) & 0xffff;
     }
 
-    public int KA_ZP() {
+    private int KA_ZP() {
         return BASE_OF_ZERO + K_READ(KAI_IMM());
     }
 
-    public int KA_ZPX() {
+    private int KA_ZPX() {
         return BASE_OF_ZERO + ((KAI_ZP() + this.x) & 0xff);
     }
 
-    public int KA_ZPY() {
+    private int KA_ZPY() {
         return BASE_OF_ZERO + ((KAI_ZP() + this.y) & 0xff);
     }
 
-    public int KA_INDX() {
+    private int KA_INDX() {
         return KI_READWORDZP(KAI_ZPX());
     }
 
-    public int KA_INDY() {
+    private int KA_INDY() {
         return (KI_READWORDZP(KAI_ZP()) + this.y) & 0xffff;
     }
 
-    public int KI_READWORDBUG(int adr) {
+    private int KI_READWORDBUG(int adr) {
         int ret = K_READ(adr);
         return ret + (K_READ((adr & 0xff00) + ((adr + 1) & 0xff)) << 8);
     }
 
-    public int KA_ABSX_() {
+    private int KA_ABSX_() {
         if (((this.pc) & 0xff) == 0xff)
             KI_ADDCLOCK(1); // page break
         return KAI_ABSX();
     }
 
-    public int KA_ABSY_() {
+    private int KA_ABSY_() {
         if (((this.pc) & 0xff) == 0xff)
             KI_ADDCLOCK(1); // page break
         return KAI_ABSY();
     }
 
-    public int KA_INDY_() {
+    private int KA_INDY_() {
         int adr = KAI_INDY();
         if ((adr & 0xff) == 0xff)
             KI_ADDCLOCK(1); // page break
         return adr;
     }
 
-    public void KM_ALUADDER(int src) {
+    private void KM_ALUADDER(int src) {
         int w = this.a + src + (this.p & C_FLAG);
         this.p &= ~(N_FLAG | V_FLAG | Z_FLAG | C_FLAG);
         this.p += FLAG_NZC(w) + ((((~this.a ^ src) & (this.a ^ w)) >> 1) & V_FLAG);
@@ -304,7 +304,7 @@ public class Km6502 implements Device {
         this.a = (w & 0xff);
     }
 
-    public void KM_ALUADDER_D(int src) {
+    private void KM_ALUADDER_D(int src) {
         int wl = (this.a & 0x0f) + (src & 0x0f) + (this.p & C_FLAG);
         int w = this.a + src + (this.p & C_FLAG);
         this.p &= ~C_FLAG;
@@ -319,65 +319,65 @@ public class Km6502 implements Device {
         KI_ADDCLOCK(1);
     }
 
-    public void KMI_ADC(int src) {
+    private void KMI_ADC(int src) {
         KM_ALUADDER(src);
     }
 
-    public void KMI_ADC_D(int src) {
+    private void KMI_ADC_D(int src) {
         KM_ALUADDER_D(src);
     }
 
-    public void KMI_SBC(int src) {
+    private void KMI_SBC(int src) {
         KM_ALUADDER(src ^ 0xff);
     }
 
-    public void KMI_SBC_D(int src) {
+    private void KMI_SBC_D(int src) {
         KM_ALUADDER_D(((src ^ 0xff) + (0x100 - 0x66)) & 0xff);
     }
 
-    public void KM_CMP(int src) {
+    private void KM_CMP(int src) {
         int w = this.a + (src ^ 0xff) + 1;
         this.p &= ~(N_FLAG | Z_FLAG | C_FLAG);
         this.p += FLAG_NZC(w);
         this.p &= 0xff;
     }
 
-    public void KM_CPX(int src) {
+    private void KM_CPX(int src) {
         int w = this.x + (src ^ 0xff) + 1;
         this.p &= ~(N_FLAG | Z_FLAG | C_FLAG);
         this.p += FLAG_NZC(w);
         this.p &= 0xff;
     }
 
-    public void KM_CPY(int src) {
+    private void KM_CPY(int src) {
         int w = this.y + (src ^ 0xff) + 1;
         this.p &= ~(N_FLAG | Z_FLAG | C_FLAG);
         this.p += FLAG_NZC(w);
         this.p &= 0xff;
     }
 
-    public void KM_BIT(int src) {
+    private void KM_BIT(int src) {
         int w = this.a & src;
         this.p &= ~(N_FLAG | V_FLAG | Z_FLAG);
         this.p += (src & (N_FLAG | V_FLAG)) + (w != 0 ? 0 : Z_FLAG);
         this.p &= 0xff;
     }
 
-    public void KM_AND(int src) {
+    private void KM_AND(int src) {
         this.a &= src;
         this.p &= ~(N_FLAG | Z_FLAG);
         this.p += FLAG_NZ(this.a);
         this.p &= 0xff;
     }
 
-    public void KM_ORA(int src) {
+    private void KM_ORA(int src) {
         this.a |= src;
         this.p &= ~(N_FLAG | Z_FLAG);
         this.p += FLAG_NZ(this.a);
         this.p &= 0xff;
     }
 
-    public void KM_EOR(int src) {
+    private void KM_EOR(int src) {
         this.a ^= src;
         this.p &= ~(N_FLAG | Z_FLAG);
         this.p += FLAG_NZ(this.a);
@@ -392,7 +392,7 @@ public class Km6502 implements Device {
         return w & 0xff;
     }
 
-    public int KM_INC(int des) {
+    private int KM_INC(int des) {
         int w = des + 1;
         this.p &= ~(N_FLAG | Z_FLAG);
         this.p += FLAG_NZ(w);
@@ -400,7 +400,7 @@ public class Km6502 implements Device {
         return w & 0xff;
     }
 
-    public int KM_ASL(int des) {
+    private int KM_ASL(int des) {
         int w = des << 1;
         this.p &= ~(N_FLAG | Z_FLAG | C_FLAG);
         this.p += FLAG_NZ(w) + ((des >> 7) /* & C_FLAG */);
@@ -408,7 +408,7 @@ public class Km6502 implements Device {
         return w & 0xff;
     }
 
-    public int KM_LSR(int des) {
+    private int KM_LSR(int des) {
         int w = des >> 1;
         this.p &= ~(N_FLAG | Z_FLAG | C_FLAG);
         this.p += FLAG_NZ(w) + (des & C_FLAG);
@@ -416,14 +416,14 @@ public class Km6502 implements Device {
         return w;
     }
 
-    public int KM_LD(int src) {
+    private int KM_LD(int src) {
         this.p &= ~(N_FLAG | Z_FLAG);
         this.p += FLAG_NZ(src);
         this.p &= 0xff;
         return src;
     }
 
-    public int KM_ROL(int des) {
+    private int KM_ROL(int des) {
         int w = (des << 1) + (this.p & C_FLAG);
         this.p &= ~(N_FLAG | Z_FLAG | C_FLAG);
         this.p += FLAG_NZ(w) + ((des >> 7) /* & C_FLAG */);
@@ -431,7 +431,7 @@ public class Km6502 implements Device {
         return w & 0xff;
     }
 
-    public int KM_ROR(int des) {
+    private int KM_ROR(int des) {
         int w = (des >> 1) + ((this.p & C_FLAG) << 7);
         this.p &= ~(N_FLAG | Z_FLAG | C_FLAG);
         this.p += FLAG_NZ(w) + (des & C_FLAG);
@@ -439,25 +439,25 @@ public class Km6502 implements Device {
         return w & 0xff;
     }
 
-    public void KM_BRA(int rel) {
+    private void KM_BRA(int rel) {
         int oldPage = this.pc & 0xff00;
         this.pc = (this.pc + (rel ^ 0x80) - 0x80) & 0xffff;
         KI_ADDCLOCK(1 + ((oldPage != (this.pc & 0xff00)) ? 1 : 0));
     }
 
-    public void KM_PUSH(int src) {
+    private void KM_PUSH(int src) {
         K_WRITE(BASE_OF_ZERO + 0x100 + this.s, src);
         this.s = (this.s - 1) & 0xff;
     }
 
-    public int KM_POP() {
+    private int KM_POP() {
         this.s = (this.s + 1) & 0xff;
         return K_READ(BASE_OF_ZERO + 0x100 + this.s);
     }
 
     // ADC
 
-    public void opCode61() {
+    private void opCode61() {
         KMI_ADC(K_READ(KA_INDX()));
     }
 
@@ -465,7 +465,7 @@ public class Km6502 implements Device {
         KMI_ADC_D(K_READ(KA_INDX()));
     }
 
-    public void opCode65() {
+    private void opCode65() {
         KMI_ADC(K_READ(KA_ZP()));
     }
 
@@ -473,7 +473,7 @@ public class Km6502 implements Device {
         KMI_ADC_D(K_READ(KA_ZP()));
     }
 
-    public void opCode69() {
+    private void opCode69() {
         KMI_ADC(K_READ(KA_IMM()));
     }
 
@@ -481,7 +481,7 @@ public class Km6502 implements Device {
         KMI_ADC_D(K_READ(KA_IMM()));
     }
 
-    public void opCode6D() {
+    private void opCode6D() {
         KMI_ADC(K_READ(KA_ABS()));
     }
 
@@ -489,7 +489,7 @@ public class Km6502 implements Device {
         KMI_ADC_D(K_READ(KA_ABS()));
     }
 
-    public void opCode71() {
+    private void opCode71() {
         KMI_ADC(K_READ(KA_INDY()));
     }
 
@@ -497,7 +497,7 @@ public class Km6502 implements Device {
         KMI_ADC_D(K_READ(KA_INDY()));
     }
 
-    public void opCode75() {
+    private void opCode75() {
         KMI_ADC(K_READ(KA_ZPX()));
     }
 
@@ -505,7 +505,7 @@ public class Km6502 implements Device {
         KMI_ADC_D(K_READ(KA_ZPX()));
     }
 
-    public void opCode79() {
+    private void opCode79() {
         KMI_ADC(K_READ(KA_ABSY()));
     }
 
@@ -513,7 +513,7 @@ public class Km6502 implements Device {
         KMI_ADC_D(K_READ(KA_ABSY()));
     }
 
-    public void opCode7D() {
+    private void opCode7D() {
         KMI_ADC(K_READ(KA_ABSX()));
     }
 
@@ -523,61 +523,61 @@ public class Km6502 implements Device {
 
     // AND
 
-    public void opCode21() {
+    private void opCode21() {
         KM_AND(K_READ(KA_INDX()));
     }
 
-    public void opCode25() {
+    private void opCode25() {
         KM_AND(K_READ(KA_ZP()));
     }
 
-    public void opCode29() {
+    private void opCode29() {
         KM_AND(K_READ(KA_IMM()));
     }
 
-    public void opCode2D() {
+    private void opCode2D() {
         KM_AND(K_READ(KA_ABS()));
     }
 
-    public void opCode31() {
+    private void opCode31() {
         KM_AND(K_READ(KA_INDY()));
     }
 
-    public void opCode35() {
+    private void opCode35() {
         KM_AND(K_READ(KA_ZPX()));
     }
 
-    public void opCode39() {
+    private void opCode39() {
         KM_AND(K_READ(KA_ABSY()));
     }
 
-    public void opCode3D() {
+    private void opCode3D() {
         KM_AND(K_READ(KA_ABSX()));
     }
 
     // --- ASL ---
 
-    public void opCode06() {
+    private void opCode06() {
         int adr = KA_ZP();
         K_WRITE(adr, KM_ASL(K_READ(adr)));
     }
 
-    public void opCode0E() {
+    private void opCode0E() {
         int adr = KA_ABS();
         K_WRITE(adr, KM_ASL(K_READ(adr)));
     }
 
-    public void opCode16() {
+    private void opCode16() {
         int adr = KA_ZPX();
         K_WRITE(adr, KM_ASL(K_READ(adr)));
     }
 
-    public void opCode1E() {
+    private void opCode1E() {
         int adr = KA_ABSX();
         K_WRITE(adr, KM_ASL(K_READ(adr)));
     }
 
-    public void opCode0A() { // 0A - ASL - Accumulator
+    private void opCode0A() { // 0A - ASL - Accumulator
         this.a = KM_ASL(this.a);
     }
 
@@ -585,59 +585,59 @@ public class Km6502 implements Device {
 
     // --- BIT ---
 
-    public void opCode24() {
+    private void opCode24() {
         KM_BIT(K_READ(KA_ZP()));
     }
 
-    public void opCode2C() {
+    private void opCode2C() {
         KM_BIT(K_READ(KA_ABS()));
     }
 
     // --- Bcc ---
 
-    public void opCode10() {
+    private void opCode10() {
         int rel = K_READ(KA_IMM());
         if (((this.p & N_FLAG) == 0))
             KM_BRA(rel);
     }
 
-    public void opCode30() {
+    private void opCode30() {
         int rel = K_READ(KA_IMM());
         if (((this.p & N_FLAG) != 0))
             KM_BRA(rel);
     }
 
-    public void opCode50() {
+    private void opCode50() {
         int rel = K_READ(KA_IMM());
         if (((this.p & V_FLAG) == 0))
             KM_BRA(rel);
     }
 
-    public void opCode70() {
+    private void opCode70() {
         int rel = K_READ(KA_IMM());
         if (((this.p & V_FLAG) != 0))
             KM_BRA(rel);
     }
 
-    public void opCode90() {
+    private void opCode90() {
         int rel = K_READ(KA_IMM());
         if (((this.p & C_FLAG) == 0))
             KM_BRA(rel);
     }
 
-    public void opCodeB0() {
+    private void opCodeB0() {
         int rel = K_READ(KA_IMM());
         if (((this.p & C_FLAG) != 0))
             KM_BRA(rel);
     }
 
-    public void opCodeD0() {
+    private void opCodeD0() {
         int rel = K_READ(KA_IMM());
         if (((this.p & Z_FLAG) == 0))
             KM_BRA(rel);
     }
 
-    public void opCodeF0() {
+    private void opCodeF0() {
         int rel = K_READ(KA_IMM());
         if (((this.p & Z_FLAG) != 0))
             KM_BRA(rel);
@@ -645,7 +645,7 @@ public class Km6502 implements Device {
 
     // --- BRK ---
 
-    public void opCode00() {
+    private void opCode00() {
         this.pc = (this.pc + 1) & 0xffff;
         this.iRequest |= IRQ_BRK;
     }
@@ -653,187 +653,187 @@ public class Km6502 implements Device {
     // --- BSR ---
 
     // --- CLC ---
-    public void opCode18() { // 18 - CLC
+    private void opCode18() { // 18 - CLC
         this.p &= ~C_FLAG;
     }
 
     // CLD
-    public void opCodeD8() { // D8 - CLD
+    private void opCodeD8() { // D8 - CLD
         this.p &= ~D_FLAG;
     }
 
     // CLI
-    public void opCode58() { // 58 - CLI
+    private void opCode58() { // 58 - CLI
         this.p &= ~I_FLAG;
     }
 
     // CLV
-    public void opCodeB8() { // B8 - CLV
+    private void opCodeB8() { // B8 - CLV
         this.p &= ~V_FLAG;
     }
 
     // CMP
-    public void opCodeC1() {
+    private void opCodeC1() {
         KM_CMP(K_READ(KA_INDX()));
     }
 
-    public void opCodeC5() {
+    private void opCodeC5() {
         KM_CMP(K_READ(KA_ZP()));
     }
 
-    public void opCodeC9() {
+    private void opCodeC9() {
         KM_CMP(K_READ(KA_IMM()));
     }
 
-    public void opCodeCD() {
+    private void opCodeCD() {
         KM_CMP(K_READ(KA_ABS()));
     }
 
-    public void opCodeD1() {
+    private void opCodeD1() {
         KM_CMP(K_READ(KA_INDY()));
     }
 
-    public void opCodeD5() {
+    private void opCodeD5() {
         KM_CMP(K_READ(KA_ZPX()));
     }
 
-    public void opCodeD9() {
+    private void opCodeD9() {
         KM_CMP(K_READ(KA_ABSY()));
     }
 
-    public void opCodeDD() {
+    private void opCodeDD() {
         KM_CMP(K_READ(KA_ABSX()));
     }
 
     // CPX
-    public void opCodeE0() {
+    private void opCodeE0() {
         KM_CPX(K_READ(KA_IMM()));
     }
 
-    public void opCodeE4() {
+    private void opCodeE4() {
         KM_CPX(K_READ(KA_ZP()));
     }
 
-    public void opCodeEC() {
+    private void opCodeEC() {
         KM_CPX(K_READ(KA_ABS()));
     }
 
     // CPY
-    public void opCodeC0() {
+    private void opCodeC0() {
         KM_CPY(K_READ(KA_IMM()));
     }
 
-    public void opCodeC4() {
+    private void opCodeC4() {
         KM_CPY(K_READ(KA_ZP()));
     }
 
-    public void opCodeCC() {
+    private void opCodeCC() {
         KM_CPY(K_READ(KA_ABS()));
     }
 
     // DEC
-    public void opCodeC6() {
+    private void opCodeC6() {
         int adr = KA_ZP();
         K_WRITE(adr, KM_DEC(K_READ(adr)));
     }
 
-    public void opCodeCE() {
+    private void opCodeCE() {
         int adr = KA_ABS();
         K_WRITE(adr, KM_DEC(K_READ(adr)));
     }
 
-    public void opCodeD6() {
+    private void opCodeD6() {
         int adr = KA_ZPX();
         K_WRITE(adr, KM_DEC(K_READ(adr)));
     }
 
-    public void opCodeDE() {
+    private void opCodeDE() {
         int adr = KA_ABSX();
         K_WRITE(adr, KM_DEC(K_READ(adr)));
     }
 
-    public void opCodeCA() { // CA - DEX
+    private void opCodeCA() { // CA - DEX
         this.x = KM_DEC(this.x);
     }
 
-    public void opCode88() { // 88 - DEY
+    private void opCode88() { // 88 - DEY
         this.y = KM_DEC(this.y);
     }
 
     // EOR
 
-    public void opCode41() {
+    private void opCode41() {
         KM_EOR(K_READ(KA_INDX()));
     }
 
-    public void opCode45() {
+    private void opCode45() {
         KM_EOR(K_READ(KA_ZP()));
     }
 
-    public void opCode49() {
+    private void opCode49() {
         KM_EOR(K_READ(KA_IMM()));
     }
 
-    public void opCode4D() {
+    private void opCode4D() {
         KM_EOR(K_READ(KA_ABS()));
     }
 
-    public void opCode51() {
+    private void opCode51() {
         KM_EOR(K_READ(KA_INDY()));
     }
 
-    public void opCode55() {
+    private void opCode55() {
         KM_EOR(K_READ(KA_ZPX()));
     }
 
-    public void opCode59() {
+    private void opCode59() {
         KM_EOR(K_READ(KA_ABSY()));
     }
 
-    public void opCode5D() {
+    private void opCode5D() {
         KM_EOR(K_READ(KA_ABSX()));
     }
 
     // INC
-    public void opCodeE6() {
+    private void opCodeE6() {
         int adr = KA_ZP();
         K_WRITE(adr, KM_INC(K_READ(adr)));
     }
 
-    public void opCodeEE() {
+    private void opCodeEE() {
         int adr = KA_ABS();
         K_WRITE(adr, KM_INC(K_READ(adr)));
     }
 
-    public void opCodeF6() {
+    private void opCodeF6() {
         int adr = KA_ZPX();
         K_WRITE(adr, KM_INC(K_READ(adr)));
     }
 
-    public void opCodeFE() {
+    private void opCodeFE() {
         int adr = KA_ABSX();
         K_WRITE(adr, KM_INC(K_READ(adr)));
     }
 
-    public void opCodeE8() { // E8 - INX
+    private void opCodeE8() { // E8 - INX
         this.x = KM_INC(this.x);
     }
 
-    public void opCodeC8() { // C8 - INY
+    private void opCodeC8() { // C8 - INY
         this.y = KM_INC(this.y);
     }
 
     // JMP
-    public void opCode4C() {
+    private void opCode4C() {
         this.pc = KI_READWORD(KA_IMM16());
     }
 
-    public void opCode6C() {
+    private void opCode6C() {
         this.pc = KI_READWORDBUG(KA_ABS());
     }
 
     // JSR
-    public void opCode20() { // 20 - JSR
+    private void opCode20() { // 20 - JSR
         int adr = KA_IMM();
         KM_PUSH((this.pc >> 8) & 0xff); // !!! PC = NEXT - 1; !!!
         KM_PUSH((this.pc) & 0xff);
@@ -841,156 +841,156 @@ public class Km6502 implements Device {
     }
 
     // LDA
-    public void opCodeA1() {
+    private void opCodeA1() {
         this.a = KM_LD(K_READ(KA_INDX()));
     }
 
-    public void opCodeA5() {
+    private void opCodeA5() {
         this.a = KM_LD(K_READ(KA_ZP()));
     }
 
-    public void opCodeA9() {
+    private void opCodeA9() {
         this.a = KM_LD(K_READ(KA_IMM()));
     }
 
-    public void opCodeAD() {
+    private void opCodeAD() {
         this.a = KM_LD(K_READ(KA_ABS()));
     }
 
-    public void opCodeB1() {
+    private void opCodeB1() {
         this.a = KM_LD(K_READ(KA_INDY()));
     }
 
-    public void opCodeB5() {
+    private void opCodeB5() {
         this.a = KM_LD(K_READ(KA_ZPX()));
     }
 
-    public void opCodeB9() {
+    private void opCodeB9() {
         this.a = KM_LD(K_READ(KA_ABSY()));
     }
 
-    public void opCodeBD() {
+    private void opCodeBD() {
         this.a = KM_LD(K_READ(KA_ABSX()));
     }
 
     // LDX
-    public void opCodeA2() {
+    private void opCodeA2() {
         this.x = KM_LD(K_READ(KA_IMM()));
     }
 
-    public void opCodeA6() {
+    private void opCodeA6() {
         this.x = KM_LD(K_READ(KA_ZP()));
     }
 
-    public void opCodeAE() {
+    private void opCodeAE() {
         this.x = KM_LD(K_READ(KA_ABS()));
     }
 
-    public void opCodeB6() {
+    private void opCodeB6() {
         this.x = KM_LD(K_READ(KA_ZPY()));
     }
 
-    public void opCodeBE() {
+    private void opCodeBE() {
         this.x = KM_LD(K_READ(KA_ABSY()));
     }
 
     // LDY
-    public void opCodeA0() {
+    private void opCodeA0() {
         this.y = KM_LD(K_READ(KA_IMM()));
     }
 
-    public void opCodeA4() {
+    private void opCodeA4() {
         this.y = KM_LD(K_READ(KA_ZP()));
     }
 
-    public void opCodeAC() {
+    private void opCodeAC() {
         this.y = KM_LD(K_READ(KA_ABS()));
     }
 
-    public void opCodeB4() {
+    private void opCodeB4() {
         this.y = KM_LD(K_READ(KA_ZPX()));
     }
 
-    public void opCodeBC() {
+    private void opCodeBC() {
         this.y = KM_LD(K_READ(KA_ABSX()));
     }
 
     // LSR
-    public void opCode46() {
+    private void opCode46() {
         int adr = KA_ZP();
         K_WRITE(adr, KM_LSR(K_READ(adr)));
     }
 
-    public void opCode4E() {
+    private void opCode4E() {
         int adr = KA_ABS();
         K_WRITE(adr, KM_LSR(K_READ(adr)));
     }
 
-    public void opCode56() {
+    private void opCode56() {
         int adr = KA_ZPX();
         K_WRITE(adr, KM_LSR(K_READ(adr)));
     }
 
-    public void opCode5E() {
+    private void opCode5E() {
         int adr = KA_ABSX();
         K_WRITE(adr, KM_LSR(K_READ(adr)));
     }
 
-    public void opCode4A() { // 4A - LSR - Accumulator
+    private void opCode4A() { // 4A - LSR - Accumulator
         this.a = KM_LSR(this.a);
     }
 
     // NOP
-    public void opCodeEA() { // EA - NOP
+    private void opCodeEA() { // EA - NOP
     }
 
     // ORA
-    public void opCode01() {
+    private void opCode01() {
         KM_ORA(K_READ(KA_INDX()));
     }
 
-    public void opCode05() {
+    private void opCode05() {
         KM_ORA(K_READ(KA_ZP()));
     }
 
-    public void opCode09() {
+    private void opCode09() {
         KM_ORA(K_READ(KA_IMM()));
     }
 
-    public void opCode0D() {
+    private void opCode0D() {
         KM_ORA(K_READ(KA_ABS()));
     }
 
-    public void opCode11() {
+    private void opCode11() {
         KM_ORA(K_READ(KA_INDY()));
     }
 
-    public void opCode15() {
+    private void opCode15() {
         KM_ORA(K_READ(KA_ZPX()));
     }
 
-    public void opCode19() {
+    private void opCode19() {
         KM_ORA(K_READ(KA_ABSY()));
     }
 
-    public void opCode1D() {
+    private void opCode1D() {
         KM_ORA(K_READ(KA_ABSX()));
     }
 
     /** PHr PLr */
-    public void opCode48() { // 48 - PHA
+    private void opCode48() { // 48 - PHA
         KM_PUSH(this.a);
     }
 
-    public void opCode08() { // 08 - PHP
+    private void opCode08() { // 08 - PHP
         KM_PUSH((this.p | B_FLAG | R_FLAG) & ~T_FLAG);
     }
 
-    public void opCode68() { // 68 - PLA
+    private void opCode68() { // 68 - PLA
         this.a = KM_LD(KM_POP());
     }
 
-    public void opCode28() { // 28 - PLP
+    private void opCode28() { // 28 - PLP
         this.p = KM_POP() & ~T_FLAG;
     }
 
@@ -998,69 +998,69 @@ public class Km6502 implements Device {
     // SMBi
 
     // ROL
-    public void opCode26() {
+    private void opCode26() {
         int adr = KA_ZP();
         K_WRITE(adr, KM_ROL(K_READ(adr)));
     }
 
-    public void opCode2E() {
+    private void opCode2E() {
         int adr = KA_ABS();
         K_WRITE(adr, KM_ROL(K_READ(adr)));
     }
 
-    public void opCode36() {
+    private void opCode36() {
         int adr = KA_ZPX();
         K_WRITE(adr, KM_ROL(K_READ(adr)));
     }
 
-    public void opCode3E() {
+    private void opCode3E() {
         int adr = KA_ABSX();
         K_WRITE(adr, KM_ROL(K_READ(adr)));
     }
 
-    public void opCode2A() { // 2A - ROL - Accumulator
+    private void opCode2A() { // 2A - ROL - Accumulator
         this.a = KM_ROL(this.a);
     }
 
     // ROR
-    public void opCode66() {
+    private void opCode66() {
         int adr = KA_ZP();
         K_WRITE(adr, KM_ROR(K_READ(adr)));
     }
 
-    public void opCode6E() {
+    private void opCode6E() {
         int adr = KA_ABS();
         K_WRITE(adr, KM_ROR(K_READ(adr)));
     }
 
-    public void opCode76() {
+    private void opCode76() {
         int adr = KA_ZPX();
         K_WRITE(adr, KM_ROR(K_READ(adr)));
     }
 
-    public void opCode7E() {
+    private void opCode7E() {
         int adr = KA_ABSX();
         K_WRITE(adr, KM_ROR(K_READ(adr)));
     }
 
-    public void opCode6A() { // 6A - ROR - Accumulator
+    private void opCode6A() { // 6A - ROR - Accumulator
         this.a = KM_ROR(this.a);
     }
 
-    public void opCode40() { // 40 - RTI
+    private void opCode40() { // 40 - RTI
         this.p = KM_POP();
         this.pc = KM_POP();
         this.pc += KM_POP() << 8;
     }
 
-    public void opCode60() { // 60 - RTS
+    private void opCode60() { // 60 - RTS
         this.pc = KM_POP();
         this.pc += KM_POP() << 8;
         this.pc = (this.pc + 1) & 0xffff;
     }
 
     // SBC
-    public void opCodeE1() {
+    private void opCodeE1() {
         KMI_SBC(K_READ(KA_INDX()));
     }
 
@@ -1068,7 +1068,7 @@ public class Km6502 implements Device {
         KMI_SBC_D(K_READ(KA_INDX()));
     }
 
-    public void opCodeE5() {
+    private void opCodeE5() {
         KMI_SBC(K_READ(KA_ZP()));
     }
 
@@ -1076,7 +1076,7 @@ public class Km6502 implements Device {
         KMI_SBC_D(K_READ(KA_ZP()));
     }
 
-    public void opCodeE9() {
+    private void opCodeE9() {
         KMI_SBC(K_READ(KA_IMM()));
     }
 
@@ -1084,7 +1084,7 @@ public class Km6502 implements Device {
         KMI_SBC_D(K_READ(KA_IMM()));
     }
 
-    public void opCodeED() {
+    private void opCodeED() {
         KMI_SBC(K_READ(KA_ABS()));
     }
 
@@ -1092,7 +1092,7 @@ public class Km6502 implements Device {
         KMI_SBC_D(K_READ(KA_ABS()));
     }
 
-    public void opCodeF1() {
+    private void opCodeF1() {
         KMI_SBC(K_READ(KA_INDY()));
     }
 
@@ -1100,7 +1100,7 @@ public class Km6502 implements Device {
         KMI_SBC_D(K_READ(KA_INDY()));
     }
 
-    public void opCodeF5() {
+    private void opCodeF5() {
         KMI_SBC(K_READ(KA_ZPX()));
     }
 
@@ -1108,7 +1108,7 @@ public class Km6502 implements Device {
         KMI_SBC_D(K_READ(KA_ZPX()));
     }
 
-    public void opCodeF9() {
+    private void opCodeF9() {
         KMI_SBC(K_READ(KA_ABSY()));
     }
 
@@ -1116,7 +1116,7 @@ public class Km6502 implements Device {
         KMI_SBC_D(K_READ(KA_ABSY()));
     }
 
-    public void opCodeFD() {
+    private void opCodeFD() {
         KMI_SBC(K_READ(KA_ABSX()));
     }
 
@@ -1125,74 +1125,74 @@ public class Km6502 implements Device {
     }
 
     // SEC
-    public void opCode38() { // 38 - SEC
+    private void opCode38() { // 38 - SEC
         this.p |= C_FLAG;
     }
 
     // SED
-    public void opCodeF8() { // F8 - SED
+    private void opCodeF8() { // F8 - SED
         this.p |= D_FLAG;
     }
 
     // SEI
-    public void opCode78() { // 78 - SEI
+    private void opCode78() { // 78 - SEI
         this.p |= I_FLAG;
     }
 
     // SET ---
 
     // STA
-    public void opCode81() {
+    private void opCode81() {
         K_WRITE(KA_INDX(), this.a);
     }
 
-    public void opCode85() {
+    private void opCode85() {
         K_WRITE(KA_ZP(), this.a);
     }
 
-    public void opCode8D() {
+    private void opCode8D() {
         K_WRITE(KA_ABS(), this.a);
     }
 
-    public void opCode91() {
+    private void opCode91() {
         K_WRITE(KA_INDY(), this.a);
     }
 
-    public void opCode95() {
+    private void opCode95() {
         K_WRITE(KA_ZPX(), this.a);
     }
 
-    public void opCode99() {
+    private void opCode99() {
         K_WRITE(KA_ABSY(), this.a);
     }
 
-    public void opCode9D() {
+    private void opCode9D() {
         K_WRITE(KA_ABSX(), this.a);
     }
 
     // STX
-    public void opCode86() {
+    private void opCode86() {
         K_WRITE(KA_ZP(), this.x);
     }
 
-    public void opCode8E() {
+    private void opCode8E() {
         K_WRITE(KA_ABS(), this.x);
     }
 
-    public void opCode96() {
+    private void opCode96() {
         K_WRITE(KA_ZPY(), this.x);
     }
 
     // STY
-    public void opCode84() {
+    private void opCode84() {
         K_WRITE(KA_ZP(), this.y);
     }
 
-    public void opCode8C() {
+    private void opCode8C() {
         K_WRITE(KA_ABS(), this.y);
     }
 
-    public void opCode94() {
+    private void opCode94() {
         K_WRITE(KA_ZPX(), this.y);
     }
 
@@ -1203,204 +1203,204 @@ public class Km6502 implements Device {
     // TST ---
 
     // TAX
-    public void opCodeAA() { // AA - TAX
+    private void opCodeAA() { // AA - TAX
         this.x = KM_LD(this.a);
     }
 
     // TAY
-    public void opCodeA8() { // A8 - TAY
+    private void opCodeA8() { // A8 - TAY
         this.y = KM_LD(this.a);
     }
 
     // TSX
-    public void opCodeBA() { // BA - TSX
+    private void opCodeBA() { // BA - TSX
         this.x = KM_LD(this.s);
     }
 
     // TXA
-    public void opCode8A() { // 8A - TXA
+    private void opCode8A() { // 8A - TXA
         this.a = KM_LD(this.x);
     }
 
     // TXS
-    public void opCode9A() { // 9A - TXS
+    private void opCode9A() { // 9A - TXS
         this.s = this.x;
     }
 
     // TYA
-    public void opCode98() { // 98 - TYA
+    private void opCode98() { // 98 - TYA
         this.a = KM_LD(this.y);
     }
 
     // KIL
     // halts CPU
-    public void opCode02() {
+    private void opCode02() {
         this.pc = (this.pc - 1) & 0xffff;
         this.p |= I_FLAG;
     }
 
-    public void opCode12() {
+    private void opCode12() {
         this.pc = (this.pc - 1) & 0xffff;
         this.p |= I_FLAG;
     }
 
-    public void opCode22() {
+    private void opCode22() {
         this.pc = (this.pc - 1) & 0xffff;
         this.p |= I_FLAG;
     }
 
-    public void opCode32() {
+    private void opCode32() {
         this.pc = (this.pc - 1) & 0xffff;
         this.p |= I_FLAG;
     }
 
-    public void opCode42() {
+    private void opCode42() {
         this.pc = (this.pc - 1) & 0xffff;
         this.p |= I_FLAG;
     }
 
-    public void opCode52() {
+    private void opCode52() {
         this.pc = (this.pc - 1) & 0xffff;
         this.p |= I_FLAG;
     }
 
-    public void opCode62() {
+    private void opCode62() {
         this.pc = (this.pc - 1) & 0xffff;
         this.p |= I_FLAG;
     }
 
-    public void opCode72() {
+    private void opCode72() {
         this.pc = (this.pc - 1) & 0xffff;
         this.p |= I_FLAG;
     }
 
-    public void opCode92() {
+    private void opCode92() {
         this.pc = (this.pc - 1) & 0xffff;
         this.p |= I_FLAG;
     }
 
-    public void opCodeB2() {
+    private void opCodeB2() {
         this.pc = (this.pc - 1) & 0xffff;
         this.p |= I_FLAG;
     }
 
-    public void opCodeD2() {
+    private void opCodeD2() {
         this.pc = (this.pc - 1) & 0xffff;
         this.p |= I_FLAG;
     }
 
-    public void opCodeF2() {
+    private void opCodeF2() {
         this.pc = (this.pc - 1) & 0xffff;
         this.p |= I_FLAG;
     }
 
     // NOP
     // does nothing
-    public void opCode80() {
+    private void opCode80() {
         KAI_IMM();
     }
 
-    public void opCode82() {
+    private void opCode82() {
         KAI_IMM();
     }
 
-    public void opCodeC2() {
+    private void opCodeC2() {
         KAI_IMM();
     }
 
-    public void opCodeE2() {
+    private void opCodeE2() {
         KAI_IMM();
     }
 
-    public void opCode04() {
+    private void opCode04() {
         KAI_ZP();
     }
 
-    public void opCode14() {
+    private void opCode14() {
         KAI_ZPX();
     }
 
-    public void opCode34() {
+    private void opCode34() {
         KAI_ZPX();
     }
 
-    public void opCode44() {
+    private void opCode44() {
         KAI_ZP();
     }
 
-    public void opCode54() {
+    private void opCode54() {
         KAI_ZPX();
     }
 
-    public void opCode64() {
+    private void opCode64() {
         KAI_ZP();
     }
 
-    public void opCode74() {
+    private void opCode74() {
         KAI_ZPX();
     }
 
-    public void opCodeD4() {
+    private void opCodeD4() {
         KAI_ZPX();
     }
 
-    public void opCodeF4() {
+    private void opCodeF4() {
         KAI_ZPX();
     }
 
-    public void opCode89() {
+    private void opCode89() {
         KAI_IMM();
     }
 
-    public void opCode1A() {
+    private void opCode1A() {
     }
 
-    public void opCode3A() {
+    private void opCode3A() {
     }
 
-    public void opCode5A() {
+    private void opCode5A() {
     }
 
-    public void opCode7A() {
+    private void opCode7A() {
     }
 
-    public void opCodeDA() {
+    private void opCodeDA() {
     }
 
-    public void opCodeFA() {
+    private void opCodeFA() {
     }
 
-    public void opCode0C() {
+    private void opCode0C() {
         KAI_ABS();
     }
 
-    public void opCode1C() {
+    private void opCode1C() {
         KA_ABSX_();
     }
 
-    public void opCode3C() {
+    private void opCode3C() {
         KA_ABSX_();
     }
 
-    public void opCode5C() {
+    private void opCode5C() {
         KA_ABSX_();
     }
 
-    public void opCode7C() {
+    private void opCode7C() {
         KA_ABSX_();
     }
 
-    public void opCodeDC() {
+    private void opCodeDC() {
         KA_ABSX_();
     }
 
-    public void opCodeFC() {
+    private void opCodeFC() {
         KA_ABSX_();
     }
 
     // SLO
     // shift left, OR result
-    public int KM_SLO(int src) {
+    private int KM_SLO(int src) {
         int w = (src << 1) & 0xff;
         this.a |= w;
         this.p &= (~(N_FLAG | Z_FLAG | C_FLAG));
@@ -1410,43 +1410,43 @@ public class Km6502 implements Device {
     }
 
     // macro
-    public void opCode03() {
+    private void opCode03() {
         int adr = KA_INDX();
         int src = K_READ(adr);
         K_WRITE(adr, KM_SLO(src));
     }
 
-    public void opCode13() {
+    private void opCode13() {
         int adr = KA_INDY();
         int src = K_READ(adr);
         K_WRITE(adr, KM_SLO(src));
     }
 
-    public void opCode07() {
+    private void opCode07() {
         int adr = KA_ZP();
         int src = K_READ(adr);
         K_WRITE(adr, KM_SLO(src));
     }
 
-    public void opCode17() {
+    private void opCode17() {
         int adr = KA_ZPX();
         int src = K_READ(adr);
         K_WRITE(adr, KM_SLO(src));
     }
 
-    public void opCode1B() {
+    private void opCode1B() {
         int adr = KA_ABSY();
         int src = K_READ(adr);
         K_WRITE(adr, KM_SLO(src));
     }
 
-    public void opCode0F() {
+    private void opCode0F() {
         int adr = KA_ABS();
         int src = K_READ(adr);
         K_WRITE(adr, KM_SLO(src));
     }
 
-    public void opCode1F() {
+    private void opCode1F() {
         int adr = KA_ABSX();
         int src = K_READ(adr);
         K_WRITE(adr, KM_SLO(src));
@@ -1454,7 +1454,7 @@ public class Km6502 implements Device {
 
     // RLA
     // rotate left, AND result
-    public int KM_RLA(int src) {
+    private int KM_RLA(int src) {
         int w = ((src << 1) | (this.p & C_FLAG)) & 0xff;
         this.a &= w;
         this.p &= ~(N_FLAG | Z_FLAG | C_FLAG);
@@ -1464,43 +1464,43 @@ public class Km6502 implements Device {
     }
 
     // macro
-    public void opCode23() {
+    private void opCode23() {
         int adr = KA_INDX();
         int src = K_READ(adr);
         K_WRITE(adr, KM_RLA(src));
     }
 
-    public void opCode33() {
+    private void opCode33() {
         int adr = KA_INDY();
         int src = K_READ(adr);
         K_WRITE(adr, KM_RLA(src));
     }
 
-    public void opCode27() {
+    private void opCode27() {
         int adr = KA_ZP();
         int src = K_READ(adr);
         K_WRITE(adr, KM_RLA(src));
     }
 
-    public void opCode37() {
+    private void opCode37() {
         int adr = KA_ZPX();
         int src = K_READ(adr);
         K_WRITE(adr, KM_RLA(src));
     }
 
-    public void opCode3B() {
+    private void opCode3B() {
         int adr = KA_ABSY();
         int src = K_READ(adr);
         K_WRITE(adr, KM_RLA(src));
     }
 
-    public void opCode2F() {
+    private void opCode2F() {
         int adr = KA_ABS();
         int src = K_READ(adr);
         K_WRITE(adr, KM_RLA(src));
     }
 
-    public void opCode3F() {
+    private void opCode3F() {
         int adr = KA_ABSX();
         int src = K_READ(adr);
         K_WRITE(adr, KM_RLA(src));
@@ -1508,7 +1508,7 @@ public class Km6502 implements Device {
 
     // SRE
     // shift right, EOR result
-    public int KM_SRE(int src) {
+    private int KM_SRE(int src) {
         int w = (src >> 1) & 0xff;
         this.a ^= w;
         this.p &= ~(N_FLAG | Z_FLAG | C_FLAG);
@@ -1518,43 +1518,43 @@ public class Km6502 implements Device {
     }
 
     // macro
-    public void opCode43() {
+    private void opCode43() {
         int adr = KA_INDX();
         int src = K_READ(adr);
         K_WRITE(adr, KM_SRE(src));
     }
 
-    public void opCode53() {
+    private void opCode53() {
         int adr = KA_INDY();
         int src = K_READ(adr);
         K_WRITE(adr, KM_SRE(src));
     }
 
-    public void opCode47() {
+    private void opCode47() {
         int adr = KA_ZP();
         int src = K_READ(adr);
         K_WRITE(adr, KM_SRE(src));
     }
 
-    public void opCode57() {
+    private void opCode57() {
         int adr = KA_ZPX();
         int src = K_READ(adr);
         K_WRITE(adr, KM_SRE(src));
     }
 
-    public void opCode5B() {
+    private void opCode5B() {
         int adr = KA_ABSY();
         int src = K_READ(adr);
         K_WRITE(adr, KM_SRE(src));
     }
 
-    public void opCode4F() {
+    private void opCode4F() {
         int adr = KA_ABS();
         int src = K_READ(adr);
         K_WRITE(adr, KM_SRE(src));
     }
 
-    public void opCode5F() {
+    private void opCode5F() {
         int adr = KA_ABSX();
         int src = K_READ(adr);
         K_WRITE(adr, KM_SRE(src));
@@ -1563,7 +1563,7 @@ public class Km6502 implements Device {
     // RRA
 
     // rotate right, ADC result
-    public int KM_RRA(int src) {
+    private int KM_RRA(int src) {
         int w = ((src >> 1) | ((this.p & C_FLAG) << 7)) & 0xff;
         this.p &= ~(C_FLAG);
         this.p |= src & C_FLAG;
@@ -1572,43 +1572,43 @@ public class Km6502 implements Device {
     }
 
     // macro
-    public void opCode63() {
+    private void opCode63() {
         int adr = KA_INDX();
         int src = K_READ(adr);
         K_WRITE(adr, KM_RRA(src));
     }
 
-    public void opCode73() {
+    private void opCode73() {
         int adr = KA_INDY();
         int src = K_READ(adr);
         K_WRITE(adr, KM_RRA(src));
     }
 
-    public void opCode67() {
+    private void opCode67() {
         int adr = KA_ZP();
         int src = K_READ(adr);
         K_WRITE(adr, KM_RRA(src));
     }
 
-    public void opCode77() {
+    private void opCode77() {
         int adr = KA_ZPX();
         int src = K_READ(adr);
         K_WRITE(adr, KM_RRA(src));
     }
 
-    public void opCode7B() {
+    private void opCode7B() {
         int adr = KA_ABSY();
         int src = K_READ(adr);
         K_WRITE(adr, KM_RRA(src));
     }
 
-    public void opCode6F() {
+    private void opCode6F() {
         int adr = KA_ABS();
         int src = K_READ(adr);
         K_WRITE(adr, KM_RRA(src));
     }
 
-    public void opCode7F() {
+    private void opCode7F() {
         int adr = KA_ABSX();
         int src = K_READ(adr);
         K_WRITE(adr, KM_RRA(src));
@@ -1617,50 +1617,50 @@ public class Km6502 implements Device {
     // DCP
 
     // decrement, CMP
-    public int KM_DCP(int src) {
+    private int KM_DCP(int src) {
         int w = (src - 1) & 0xff;
         KM_CMP(w);
         return w;
     }
 
     // macro
-    public void opCodeC3() {
+    private void opCodeC3() {
         int adr = KA_INDX();
         int src = K_READ(adr);
         K_WRITE(adr, KM_DCP(src));
     }
 
-    public void opCodeD3() {
+    private void opCodeD3() {
         int adr = KA_INDY();
         int src = K_READ(adr);
         K_WRITE(adr, KM_DCP(src));
     }
 
-    public void opCodeC7() {
+    private void opCodeC7() {
         int adr = KA_ZP();
         int src = K_READ(adr);
         K_WRITE(adr, KM_DCP(src));
     }
 
-    public void opCodeD7() {
+    private void opCodeD7() {
         int adr = KA_ZPX();
         int src = K_READ(adr);
         K_WRITE(adr, KM_DCP(src));
     }
 
-    public void opCodeDB() {
+    private void opCodeDB() {
         int adr = KA_ABSY();
         int src = K_READ(adr);
         K_WRITE(adr, KM_DCP(src));
     }
 
-    public void opCodeCF() {
+    private void opCodeCF() {
         int adr = KA_ABS();
         int src = K_READ(adr);
         K_WRITE(adr, KM_DCP(src));
     }
 
-    public void opCodeDF() {
+    private void opCodeDF() {
         int adr = KA_ABSX();
         int src = K_READ(adr);
         K_WRITE(adr, KM_DCP(src));
@@ -1668,50 +1668,50 @@ public class Km6502 implements Device {
 
     // ISC
     // increment, SBC
-    public int KM_ISC(int src) {
+    private int KM_ISC(int src) {
         int w = (src + 1) & 0xff;
         KMI_SBC(w);
         return w;
     }
 
     // macro
-    public void opCodeE3() {
+    private void opCodeE3() {
         int adr = KA_INDX();
         int src = K_READ(adr);
         K_WRITE(adr, KM_ISC(src));
     }
 
-    public void opCodeF3() {
+    private void opCodeF3() {
         int adr = KA_INDY();
         int src = K_READ(adr);
         K_WRITE(adr, KM_ISC(src));
     }
 
-    public void opCodeE7() {
+    private void opCodeE7() {
         int adr = KA_ZP();
         int src = K_READ(adr);
         K_WRITE(adr, KM_ISC(src));
     }
 
-    public void opCodeF7() {
+    private void opCodeF7() {
         int adr = KA_ZPX();
         int src = K_READ(adr);
         K_WRITE(adr, KM_ISC(src));
     }
 
-    public void opCodeFB() {
+    private void opCodeFB() {
         int adr = KA_ABSY();
         int src = K_READ(adr);
         K_WRITE(adr, KM_ISC(src));
     }
 
-    public void opCodeEF() {
+    private void opCodeEF() {
         int adr = KA_ABS();
         int src = K_READ(adr);
         K_WRITE(adr, KM_ISC(src));
     }
 
-    public void opCodeFF() {
+    private void opCodeFF() {
         int adr = KA_ABSX();
         int src = K_READ(adr);
         K_WRITE(adr, KM_ISC(src));
@@ -1719,7 +1719,7 @@ public class Km6502 implements Device {
 
     // LAX
     // load A and X
-    public void KM_LAX(int src) {
+    private void KM_LAX(int src) {
         this.a = src;
         this.x = src;
         this.p &= ~(N_FLAG | Z_FLAG);
@@ -1727,43 +1727,43 @@ public class Km6502 implements Device {
     }
 
     /* macro */
-    public void opCodeA3() {
+    private void opCodeA3() {
         int adr = KA_INDX();
         int src = K_READ(adr);
         KM_LAX(src);
     }
 
-    public void opCodeB3() {
+    private void opCodeB3() {
         int adr = KA_INDY_();
         int src = K_READ(adr);
         KM_LAX(src);
     }
 
-    public void opCodeA7() {
+    private void opCodeA7() {
         int adr = KA_ZP();
         int src = K_READ(adr);
         KM_LAX(src);
     }
 
-    public void opCodeB7() {
+    private void opCodeB7() {
         int adr = KA_ZPY();
         int src = K_READ(adr);
         KM_LAX(src);
     }
 
-    public void opCodeAB() {
+    private void opCodeAB() {
         int adr = KA_IMM();
         int src = K_READ(adr);
         KM_LAX(src);
     }
 
-    public void opCodeAF() {
+    private void opCodeAF() {
         int adr = KA_ABS();
         int src = K_READ(adr);
         KM_LAX(src);
     }
 
-    public void opCodeBF() {
+    private void opCodeBF() {
         int adr = KA_ABSY_();
         int src = K_READ(adr);
         KM_LAX(src);
@@ -1771,37 +1771,37 @@ public class Km6502 implements Device {
 
     // SAX
     /* store A AND X */
-    public void opCode83() {
+    private void opCode83() {
         K_WRITE(KA_INDX(), (this.a & this.x));
     }
 
-    public void opCode87() {
+    private void opCode87() {
         K_WRITE(KA_ZP(), (this.a & this.x));
     }
 
-    public void opCode97() {
+    private void opCode97() {
         K_WRITE(KA_ZPY(), (this.a & this.x));
     }
 
-    public void opCode8F() {
+    private void opCode8F() {
         K_WRITE(KA_ABS(), (this.a & this.x));
     }
 
     // AHX
     /* store A AND X AND high address (somewhat unstable) */
-    public void opCode93() {
+    private void opCode93() {
         int adr = KA_ZPY();
         K_WRITE(adr, (this.a & this.x & ((adr >> 8) + 1)) & 0xff);
     }
 
-    public void opCode9F() {
+    private void opCode9F() {
         int adr = KA_ABSY();
         K_WRITE(adr, (this.a & this.x & ((adr >> 8) + 1)) & 0xff);
     }
 
     // TAS
     /* transfer A AND X to S, store A AND X AND high address */
-    public void opCode9B() {
+    private void opCode9B() {
         int adr = KA_ABSY();
         this.s = this.a & this.x;
         K_WRITE(adr, (this.s & ((adr >> 8) + 1)) & 0xff);
@@ -1809,21 +1809,21 @@ public class Km6502 implements Device {
 
     // SHY
     /* store Y AND high address (somewhat unstable) */
-    public void opCode9C() {
+    private void opCode9C() {
         int adr = KA_ABSX();
         K_WRITE(adr, (this.y & ((adr >> 8) + 1)) & 0xff);
     }
 
     // SHX
     /* store X AND high address (somewhat unstable) */
-    public void opCode9E() {
+    private void opCode9E() {
         int adr = KA_ABSY();
         K_WRITE(adr, (this.x & ((adr >> 8) + 1)) & 0xff);
     }
 
     // ANC
     /* a = A AND immediate */
-    public void opCode0B() {
+    private void opCode0B() {
         int adr = KA_IMM();
         this.a = (this.a & K_READ(adr)) & 0xff;
         this.p &= ~(N_FLAG | Z_FLAG | C_FLAG);
@@ -1831,7 +1831,7 @@ public class Km6502 implements Device {
         this.p |= (this.a >> 7); /* C_FLAG */
     }
 
-    public void opCode2B() {
+    private void opCode2B() {
         int adr = KA_IMM();
         this.a = (this.a & K_READ(adr)) & 0xff;
         this.p &= ~(N_FLAG | Z_FLAG | C_FLAG);
@@ -1841,7 +1841,7 @@ public class Km6502 implements Device {
 
     // XAA
     /* a = X AND immediate (unstable) */
-    public void opCode8B() {
+    private void opCode8B() {
         int adr = KA_IMM();
         this.a = (this.x & K_READ(adr)) & 0xff;
         this.p &= ~(N_FLAG | Z_FLAG);
@@ -1850,7 +1850,7 @@ public class Km6502 implements Device {
 
     // ALR
     // A AND immediate (unstable), shift right
-    public void opCode4B() {
+    private void opCode4B() {
         int adr = KA_IMM();
         int res = (this.a & K_READ(adr)) & 0xff;
         this.a = res >> 1;
@@ -1861,7 +1861,7 @@ public class Km6502 implements Device {
 
     // ARR
     /* A AND immediate (unstable), rotate right, weird carry */
-    public void opCode6B() {
+    private void opCode6B() {
         int adr = KA_IMM();
         int res = (this.a & K_READ(adr)) & 0xff;
         this.a = (res >> 1) + ((this.p & C_FLAG) << 7);
@@ -1873,7 +1873,7 @@ public class Km6502 implements Device {
 
     // LAS
     /* stack AND immediate, copy to A and X */
-    public void opCodeBB() {
+    private void opCodeBB() {
         int adr = KA_ABSY_();
         this.s &= (K_READ(adr)) & 0xff;
         this.a = this.s;
@@ -1884,7 +1884,7 @@ public class Km6502 implements Device {
 
     // AXS
     /* (A & X) - immediate, result in X */
-    public void opCodeCB() {
+    private void opCodeCB() {
         int adr = KA_IMM();
         int res = (this.a & this.x) - (K_READ(adr) & 0xff);
         this.x = (res) & 0xff;
@@ -1895,7 +1895,7 @@ public class Km6502 implements Device {
 
     // SBC
     /* EB is alternate opCode for SBC E9 */
-    public void opCodeEB() {
+    private void opCodeEB() {
         opCodeE9();
     }
 
@@ -1904,7 +1904,7 @@ public class Km6502 implements Device {
      * boundary case BRK(#$00) +7 by interrupt BS - corrected NOP timings for
      * undefined opCodes
      */
-    public final byte[] cl_table = {
+    private final byte[] cl_table = {
         // L 0 1 2 3 4 5 6 7 8 9 A B C D E F H
         0, 6, (2), (8), (3), 3, 5, (5), 3, 2, 2, (2), (4), 4, 6, (6), // 0
         2, +5, (2), (8), (4), 4, 6, (6), 2, +4, (2), (7), (4), +4, 7, (7), // 1
@@ -1927,7 +1927,7 @@ public class Km6502 implements Device {
     /* BS - allowing illegal opCode implementation */
 
 //int CC;
-    public void K_OPEXEC() {
+private void K_OPEXEC() {
         int opCode = this.lastCode = K_READ(KAI_IMM());
         KI_ADDCLOCK(cl_table[opCode]);
 //if (CC++ < 300) { logger.log(Level.DEBUG, "pc: %04x: op: %02x".formatted(pc, opCode)); }
@@ -2824,7 +2824,7 @@ public class Km6502 implements Device {
         }
     }
 
-    public void exec() {
+    private void exec() {
         if (this.iRequest != 0) {
             if ((this.iRequest & IRQ_INIT) != 0) {
                 this.a = 0;
@@ -2876,15 +2876,15 @@ public class Km6502 implements Device {
         K_OPEXEC();
     }
 
-    protected int intAddress;
-    protected boolean broken;
-    protected int clockPerFrame;
-    protected int clockOfFrame;
-    protected int frameQuarter;
-    protected int breakPoint;
-    protected int irqs;
-    protected final boolean enableIrq;
-    protected Device bus;
+    private int intAddress;
+    private boolean broken;
+    private int clockPerFrame;
+    private int clockOfFrame;
+    private int frameQuarter;
+    private int breakPoint;
+    private int irqs;
+    private final boolean enableIrq;
+    private Device bus;
 
     public final double NES_BASECYCLES;
 
@@ -2915,7 +2915,7 @@ public class Km6502 implements Device {
         this(enableIRQ, DEFAULT_CLOCK);
     }
 
-    public Km6502(boolean enableIRQ, double clock /* = DEFAULT_CLOCK */) {
+    private Km6502(boolean enableIRQ, double clock /* = DEFAULT_CLOCK */) {
         NES_BASECYCLES = clock;
         bus = null;
         irqs = 0;
@@ -2932,7 +2932,7 @@ public class Km6502 implements Device {
         return val[0];
     }
 
-    public void startup(int address) {
+    private void startup(int address) {
         broken = false;
         this.pc = 0x4100;
         breakPoint = this.pc + 3;

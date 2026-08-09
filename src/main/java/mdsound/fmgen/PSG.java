@@ -19,12 +19,12 @@ public class PSG {
     private static final Logger logger = System.getLogger(PSG.class.getName());
 
     /** If you want to reduce memory usage, reduce it. */
-    public static final int noiseTableSize = 1 << 11;
-    public static final int toneShift = 24;
-    public static final int envShift = 22;
-    public static final int noiseShift = 14;
+    protected static final int noiseTableSize = 1 << 11;
+    protected static final int toneShift = 24;
+    protected static final int envShift = 22;
+    protected static final int noiseShift = 14;
     /** If speed is more important than sound quality, you may want to reduce it. */
-    public static final int overSampling = 2;
+    protected static final int overSampling = 2;
 
     protected final byte[] reg = new byte[16];
 
@@ -35,7 +35,8 @@ public class PSG {
     protected final int[] sCount = new int[3];
     protected final int[] sPeriod = new int[3];
     protected int eCount, ePeriod;
-    protected int nCount, nPeriod;
+    private int nCount;
+    protected int nPeriod;
     protected int tPeriodBase;
     protected int ePeriodBase;
     protected int nPeriodBase;

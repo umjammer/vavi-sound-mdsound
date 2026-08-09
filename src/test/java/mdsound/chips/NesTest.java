@@ -5,7 +5,7 @@ import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class NesTest {
+class NesTest {
 
     private final Consumer<int[]> listener = ds -> {
         if (ds[0] != -1) np_nes_apu_volume = ds[0];
@@ -18,7 +18,7 @@ public class NesTest {
     public int np_nes_fds_volume;
 
     @Test
-    public void testOutput() {
+    void testOutput() {
         Nes nes = new Nes();
         int clock = 1789772;
         int rate = 44100;

@@ -21,8 +21,8 @@ class Resampler {
 
     private static final Logger logger = getLogger(Resampler.class.getName());
 
-    public static final int DefaultSamplingRate = 44100;
-    public static final int DefaultSamplingBuffer = 512;
+    private static final int DefaultSamplingRate = 44100;
+    private static final int DefaultSamplingBuffer = 512;
 
     private static final int FIXPNT_BITS = 11;
     private static final int FIXPNT_FACT = (1 << FIXPNT_BITS);
@@ -78,8 +78,8 @@ class Resampler {
         streamBufs = new int[][] {new int[0x100], new int[0x100]};
     }
 
-int CC = 0;
-static int INTERVAL = 1024;
+private int CC = 0;
+private static int INTERVAL = 1024;
 
     private Chip inst;
     private int[] curBufL;
@@ -102,7 +102,7 @@ static int INTERVAL = 1024;
 
     private int mul;
 
-boolean noInst = false;
+private boolean noInst = false;
 
     /** */
     public void resample(int[][] retSample, int length) {

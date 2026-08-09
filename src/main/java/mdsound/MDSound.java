@@ -31,7 +31,7 @@ public class MDSound {
 
     private final Resampler resampler = new Resampler();
 
-    public DacControl dacControl = null;
+    private DacControl dacControl = null;
 
     /** Registered chips */
     private List<Chip> chips = null;
@@ -119,7 +119,7 @@ public class MDSound {
             return tVolumeBalance;
         }
 
-        public void setVolume(String tag, int vol, double volumeMul) {
+        void setVolume(String tag, int vol, double volumeMul) {
             SetVolume setVolume = setVolumes.get(tag);
             if (setVolume != null)
                 setVolumes.get(tag).accept(tag, vol, volumeMul);
@@ -155,7 +155,7 @@ public class MDSound {
         }
 
         // TODO naming
-        public int volume1(double[] mul, int size) {
+        int volume1(double[] mul, int size) {
             if (this.instrument instanceof NesInst) this.volume = 0; // TODO nes tight coupled
             int balance = this.getRegulationVolume(mul);
             //16384 = 0x4000 = short.MAXValue + 1
@@ -163,7 +163,7 @@ public class MDSound {
         }
 
         // TODO naming
-        public void volume2(double[] mul, double volumeMul) {
+        void volume2(double[] mul, double volumeMul) {
             if ((this.volumeBalance & 0x8000) != 0)
                 this.tVolumeBalance = (this.getRegulationVolume(mul) * (this.volumeBalance & 0x7fff) + 0x80) >> 8;
             else
@@ -173,7 +173,7 @@ public class MDSound {
         }
 
         /** */
-        public void setup(int resampleMode, int samplingRate) {
+        void setup(int resampleMode, int samplingRate) {
             if (this.samplingRate == 0) {
                 this.resampler = 0xff;
                 return;
@@ -339,7 +339,7 @@ logger.log(Level.TRACE, "[%d] %+04d, %+04d".formatted(i, a[0], b[0]));
         write(i, 0, chipId, port, adr, data);
     }
 
-final Set<Class<? extends Instrument>> notContains = new HashSet<>();
+private final Set<Class<? extends Instrument>> notContains = new HashSet<>();
 
     public synchronized void write(Class<? extends Instrument> i, int chipIndex, int chipId, int port, int adr, int data) {
         if (!instruments.containsKey(i)) {
@@ -371,7 +371,7 @@ if (!notContains.contains(i)) {
 
 //#region VisVolume
 
-    protected final GenericSupport viewSupport = new GenericSupport();
+    private final GenericSupport viewSupport = new GenericSupport();
 
     public void addViewListener(GenericListener listener) {
         viewSupport.addGenericListener(listener);
@@ -381,7 +381,7 @@ if (!notContains.contains(i)) {
      *
      * @param name
      */
-    public void fireEventHappened(Object src, String name, Object... args) {
+    private void fireEventHappened(Object src, String name, Object... args) {
         viewSupport.fireEventHappened(new GenericEvent(src, name, args));
     }
 

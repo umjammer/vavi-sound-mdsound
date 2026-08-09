@@ -12,7 +12,7 @@ import mdsound.chips.CtrQsound;
 public class CtrQSoundInst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
     public static final int DefaultClockValue = 4000000;
-    public static final int MAX_CHIPS = 0x02;
+    private static final int MAX_CHIPS = 0x02;
 
     private final CtrQsound[] chips = {new CtrQsound(), new CtrQsound()};
 

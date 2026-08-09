@@ -1387,7 +1387,7 @@ public class Ym3526 {
         }
 
         /** write a value v to register r on opl chips */
-        public void writeReg(int r, int v) {
+        void writeReg(int r, int v) {
             int slotNo;
 
             //logger.log(Level.TRACE, "writeReg:%d:%d".formatted(r, v));
@@ -1580,7 +1580,7 @@ public class Ym3526 {
             }
         }
 
-        public void reset() {
+        void reset() {
 
             this.egTimer = 0;
             this.egCnt = 0;
@@ -1614,7 +1614,7 @@ public class Ym3526 {
          * @param clock is chips clock in Hz
          * @param rate  is sampling rate
          */
-        public void create(int clock, int rate, int type) {
+        void create(int clock, int rate, int type) {
 
             this.type = type;
             this.clock = clock;
@@ -1626,19 +1626,19 @@ public class Ym3526 {
 
         // Optional handlers
 
-        public void setTimerHandler(Opl.TimerHandler timerHandler) {
+        void setTimerHandler(Opl.TimerHandler timerHandler) {
             this.timer_handler = timerHandler;
         }
 
-        public void setIRQHandler(Opl.IRQHandler irqHandler) {
+        void setIRQHandler(Opl.IRQHandler irqHandler) {
             this.IRQHandler = irqHandler;
         }
 
-        public void setUpdateHandler(Opl.UpdateHandler updateHandler) {
+        void setUpdateHandler(Opl.UpdateHandler updateHandler) {
             this.updateHandler = updateHandler;
         }
 
-        public int write(int a, int v) {
+        int write(int a, int v) {
             if ((a & 1) == 0) { // address port
                 this.address = v & 0xff;
             } else { // data port
@@ -1648,7 +1648,7 @@ public class Ym3526 {
             return this.status >> 7;
         }
 
-        public int read(int a) {
+        int read(int a) {
             if ((a & 1) == 0) {
                 // status port
 

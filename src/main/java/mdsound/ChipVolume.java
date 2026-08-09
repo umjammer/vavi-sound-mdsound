@@ -5,7 +5,7 @@
 package mdsound;
 
 
-public class ChipVolume {
+class ChipVolume {
 
     private static int getChipVolume(VGMX_CHP_EXTRA16 tempCX, int chipId, int chipNum, int chipCnt, int sn76496VGMHeaderClock, String strSystemNameE, boolean doubleSSGVol) {
         // chipId: ID of Chip
@@ -74,14 +74,14 @@ public class ChipVolume {
         return volume;
     }
 
-    public static class VGMX_CHIP_DATA16 {
-        public int type;
-        public int flags;
-        public int data;
+    static class VGMX_CHIP_DATA16 {
+        int type;
+        int flags;
+        int data;
     }
 
-    public static class VGMX_CHP_EXTRA16 {
-        public int chipCnt;
-        public VGMX_CHIP_DATA16[] ccData;
+    static class VGMX_CHP_EXTRA16 {
+        int chipCnt;
+        VGMX_CHIP_DATA16[] ccData;
     }
 }

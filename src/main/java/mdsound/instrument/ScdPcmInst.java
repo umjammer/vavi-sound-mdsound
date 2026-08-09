@@ -14,7 +14,7 @@ import mdsound.chips.ScdPcm;
  */
 public class ScdPcmInst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
-    public static final int MAX_CHIPS = 0x02;
+    private static final int MAX_CHIPS = 0x02;
 
     private final ScdPcm[] chips = {new ScdPcm(), new ScdPcm()};
 

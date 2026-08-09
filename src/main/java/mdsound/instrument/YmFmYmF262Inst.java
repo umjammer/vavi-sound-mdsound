@@ -24,13 +24,13 @@ import vavi.sound.ymfm.YmFm.VgmChip;
 public class YmFmYmF262Inst extends Instrument.BaseInstrument {
 
     public static final int DefaultClockValue = 14318180;
-    public static final int MAX_CHIPS = 0x02;
+    private static final int MAX_CHIPS = 0x02;
 
     private final VgmChip[] chips = new VgmChip[2];
 
     // TODO similar variables in VgmChip class, those can be eliminated?
-    long output_pos;
-    long output_step;
+    private long output_pos;
+    private long output_step;
 
     public YmFmYmF262Inst() {
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};

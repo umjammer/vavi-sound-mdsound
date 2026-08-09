@@ -34,74 +34,74 @@ import mdsound.instrument.YmZ280BInst;
 import vavi.util.ByteUtil;
 
 
-public class DacControl {
+class DacControl {
 
-    public static class PcmData {
-        public int dataSize;
-        public byte[] data;
-        public int dataStart;
+    static class PcmData {
+        int dataSize;
+        byte[] data;
+        int dataStart;
     }
 
-    public static class PcmBank {
-        public int bankCount;
-        public final List<PcmData> bank = new ArrayList<>();
-        public int dataSize;
-        public byte[] data;
-        public int dataPos;
-        public int bnkPos;
+    static class PcmBank {
+        int bankCount;
+        final List<PcmData> bank = new ArrayList<>();
+        int dataSize;
+        byte[] data;
+        int dataPos;
+        int bnkPos;
     }
 
-    public static class ControlData {
-        public boolean enable;
-        public int bank;
+    static class ControlData {
+        boolean enable;
+        int bank;
     }
 
-    public static class PcmBankTable {
-        public int comprType;
-        public int cmpSubType;
-        public int bitDec;
-        public int bitCmp;
-        public int entryCount;
-        public byte[] entries;
+    static class PcmBankTable {
+        int comprType;
+        int cmpSubType;
+        int bitDec;
+        int bitCmp;
+        int entryCount;
+        byte[] entries;
     }
 
-    public static class Control {
+    static class Control {
         // Commands sent to dest-chips
-        public int dstChipType;
-        public int dstEmuType;
-        public int dstChipIndex;
-        public int dstchipId;
-        public int dstCommand;
-        public int cmdSize;
+        int dstChipType;
+        int dstEmuType;
+        int dstChipIndex;
+        int dstchipId;
+        int dstCommand;
+        int cmdSize;
 
         /** Frequency (Hz) at which the commands are sent */
-        public int frequency;
+        int frequency;
         /** to protect from reading beyond End Of data */
-        public int dataLen;
-        public byte[] data;
+        int dataLen;
+        byte[] data;
         /** Position where to start */
-        public int dataStart;
+        int dataStart;
         /** usually 1, set to 2 for L/R interleaved data */
-        public int stepSize;
+        int stepSize;
         /** usually 0, set to 0/1 for L/R interleaved data */
-        public int stepBase;
-        public int cmdsToSend;
+        int stepBase;
+        int cmdsToSend;
 
         // Running Bits: 0 (01) - is playing
         //     2 (04) - loop sample (simple loop from start to end)
         //     4 (10) - already sent this command
         //     7 (80) - disabled
-        public int running;
-        public int reverse;
+        int running;
+        int reverse;
         /** Position in Player SampleRate */
-        public int step;
+        int step;
         /** Position in data SampleRate */
-        public int pos;
-        public int remainCmds;
+        int pos;
+        int remainCmds;
         /** true Position in data (== Pos, if Reverse is off) */
-        public int realPos;
+        int realPos;
         /** always StepSize * CmdSize */
-        public int dataStep;
+        int dataStep;
     }
 
     private static final int DCTRL_LMODE_IGNORE = 0x00;
@@ -122,14 +122,14 @@ public class DacControl {
     private int dacCtrlUsed;
     private final byte[] dacCtrlUsg = new byte[MAX_CHIPS];
     private final ControlData[] dacCtrl = new ControlData[0xff];
-    public PcmBank[] pcmBank = null;
+    private PcmBank[] pcmBank = null;
     private final PcmBankTable pcmTbl = new PcmBankTable();
 
     public DacControl(int samplingRate, MDSound mds) {
         init(samplingRate, mds, null);
     }
 
-    public void init(int samplingRate, MDSound mds, PcmBank[] pcmBank) {
+    private void init(int samplingRate, MDSound mds, PcmBank[] pcmBank) {
         this.mds = mds;
         this.samplingRate = samplingRate;
         pcmStep = samplingRate / (double) DAC_SMPL_RATE;
@@ -305,7 +305,7 @@ public class DacControl {
         return dataPos;
     }
 
-    public void refresh() {
+    private void refresh() {
         synchronized (lock) {
             for (int i = 0; i < MAX_CHIPS; i++) dacData[i] = new Control();
         }

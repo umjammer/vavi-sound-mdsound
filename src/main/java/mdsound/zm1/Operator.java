@@ -5,11 +5,11 @@ import java.util.List;
 
 public class Operator {
 
-    public Fm fm;
-    public Pcm pcm;
-    public SlotConfiguration sc;
-    public int number;
-    public ZelMusic.commonParam cp;
+    public final Fm fm;
+    public final Pcm pcm;
+    public final SlotConfiguration sc;
+    private final int number;
+    public final ZelMusic.commonParam cp;
 
     private final List<Byte> pCMData;
 

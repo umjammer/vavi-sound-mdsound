@@ -16,7 +16,7 @@ import mdsound.chips.Ay8910;
 
 public class MameAy8910Inst extends Instrument.BaseInstrument {
 
-    public static final int DefaultClockValue = 1789750;
+    private static final int DefaultClockValue = 1789750;
 
     private int sampleRate = 44100;
 
@@ -27,7 +27,7 @@ public class MameAy8910Inst extends Instrument.BaseInstrument {
     private final int[][] frm = {new int[1], new int[1]};
     private final int[][] before = {new int[1], new int[1]};
 
-    public final int[] mask = {0, 0};
+    private final int[] mask = {0, 0};
 
     @Override
     public String getName() {

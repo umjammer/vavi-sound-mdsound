@@ -66,7 +66,7 @@ public interface Nc86ctl extends Library {
 
         }
 
-        public NIGimic2 QueryInterface() {
+        public NIGimic2 queryInterface() {
             return null;
         }
 

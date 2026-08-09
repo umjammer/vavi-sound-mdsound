@@ -34,8 +34,8 @@ public class YmFmYm2151Inst extends Instrument.BaseInstrument {
     private final VgmChip[] chips = new VgmChip[2];
 
     // TODO similar variables in VgmChip class, those can be eliminated?
-    long output_pos;
-    long output_step;
+    private long output_pos;
+    private long output_step;
 
     public YmFmYm2151Inst() {
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};

@@ -156,19 +156,19 @@ public class Fm {
 
         }
 
-        public Write write;
+        Write write;
 
         public interface Read extends Function<BaseChip, Short> {
 
         }
 
-        public Read read;
+        Read read;
 
         public interface Reset extends Function<BaseChip, Short> {
 
         }
 
-        public Reset reset;
+        Reset reset;
     }
 
     // external Callback funstions for realtime update
@@ -181,7 +181,7 @@ public class Fm {
 
     // in 2608intf.c
 
-    public UpdateRequestCallback ym2608_update_request;
+    private UpdateRequestCallback ym2608_update_request;
 
     private void ym2608_update_req(int chipId, YM2608 chip) {
         ym2608_update_request.run();
@@ -189,7 +189,7 @@ public class Fm {
 
     // in 2610intf.c
 
-    public UpdateRequestCallback ym2610_update_request;
+    private UpdateRequestCallback ym2610_update_request;
 
     private void ym2610_update_req(int chipId, YM2610 chip) {
         ym2610_update_request.run();
@@ -197,7 +197,7 @@ public class Fm {
 
     // in 2612intf.c
 
-    public UpdateRequestCallback ym2612_update_request;
+    private UpdateRequestCallback ym2612_update_request;
 
     private void ym2612_update_req(int chipId, Fm2612.Ym2612 chip) {
         ym2612_update_request.run();
@@ -781,7 +781,7 @@ public class Fm {
                     this.egSelRr = egRateSelect[this.rr + this.ksr];
                 }
 
-                public void reset() {
+                void reset() {
                     this.incr = -1;
                     this.key = 0;
                     this.phase = 0;
@@ -936,7 +936,7 @@ public class Fm {
                     return this.volOut + (am & this.amMask);
                 }
 
-                public void keyOn() {
+                void keyOn() {
                     if (this.key == 0) {
                         this.key = 1;
                         this.phase = 0; // restart Phase Generator
@@ -945,7 +945,7 @@ public class Fm {
                     }
                 }
 
-                public void keyOff() {
+                void keyOff() {
                     if (this.key != 0) {
                         this.key = 0;
                         if (this.state > EG_REL)
@@ -1030,7 +1030,7 @@ public class Fm {
                 }
             }
 
-            public void reset() {
+            void reset() {
                 this.memValue = 0;
                 this.op1Out[0] = 0;
                 this.op1Out[1] = 0;
@@ -1053,61 +1053,61 @@ public class Fm {
             }
         }
 
-        public static class State {
+        static class State {
 
             /** this chips parameter */
-            public BaseChip param;
+            BaseChip param;
             /** master clock  (Hz) */
-            public int clock;
+            int clock;
             /** sampling rate (Hz) */
-            public int rate;
+            int rate;
             /** frequency base */
-            public double freqBase;
+            double freqBase;
             /** timer prescaler */
-            public int timerPrescaler;
+            int timerPrescaler;
             /** address register */
-            public int address;
+            int address;
             /** interrupt level */
-            public int irq;
+            int irq;
             /** irq mask */
-            public int irqmask;
+            int irqmask;
             /** status flag */
-            public int status;
+            int status;
             /** mode  CSM / 3SLOT */
-            public int mode;
+            int mode;
             /** prescaler selector */
-            public int prescaler_sel;
+            int prescaler_sel;
             /** freq latch */
-            public int fn_h;
+            int fn_h;
             /** timer a */
-            public int ta;
+            int ta;
             /** timer a counter */
-            public int tac;
+            int tac;
             /** timer b */
-            public int tb;
+            int tb;
             /** timer b counter */
-            public int tbc;
+            int tbc;
 
             // local timetables
 
             /** DeTune table */
-            public final int[][] dt_tab = new int[][] {
+            final int[][] dt_tab = new int[][] {
                     new int[32], new int[32], new int[32], new int[32],
                     new int[32], new int[32], new int[32], new int[32]};
 
             /** Extention Timer and IRQ handler */
-            public interface TimerHandler extends QuadConsumer<Object, Integer, Integer, Integer> {
+            interface TimerHandler extends QuadConsumer<Object, Integer, Integer, Integer> {
 
             }
 
-            public TimerHandler timerHandler;
+            TimerHandler timerHandler;
 
-            public interface IrqHandler extends BiConsumer<BaseChip, Integer> {
+            interface IrqHandler extends BiConsumer<BaseChip, Integer> {
 
             }
 
-            public IrqHandler irqHandler;
-            public Callbacks ssg;
+            IrqHandler irqHandler;
+            Callbacks ssg;
 
             /** initialize time tables */
             private void initTimeTables(int[] dtTable) {
@@ -1260,58 +1260,60 @@ public class Fm {
         }
 
         /** chips type */
-        public int type;
+        int type;
         /** general state */
-        public State st;
+        State st;
         /** 3 slot mode state */
-        public _3Slot sl3;
+        _3Slot sl3;
         /** pointer of CH */
-        public Channel[] pCh;
+        Channel[] pCh;
         /** Fm channels output masks (0xffffffff = enable) */
-        public final int[] pan = new int[6 * 2];
+        final int[] pan = new int[6 * 2];
 
         /** Global envelope generator counter */
-        public int egCnt;
+        int egCnt;
         /** Global envelope generator counter works at frequency = chipclock/64/3 */
-        public int egTimer;
+        int egTimer;
         /** step of eg_timer */
-        public int egTimerAdd;
+        int egTimerAdd;
         /** envelope generator timer overlfows every 3 samples (on real chips) */
-        public int egTimerOverflow;
+        int egTimerOverflow;
 
         // there are 2048 FNUMs that can be generated using FNUM/BLK registers
         // but LFO works with one more bit of a precision so we really need 4096 elements 
 
         /** fnumber.increment counter */
-        public final int[] fnTable = new int[4096];
+        final int[] fnTable = new int[4096];
         /** maximal phase increment (used for phase overflow) */
-        public int fnMax;
+        int fnMax;
 
         // LFO
 
         /** runtime LFO calculations helper */
-        public int lfoAm;
+        int lfoAm;
         /** runtime LFO calculations helper */
-        public int lfoPm;
+        int lfoPm;
 
-        public int lfoCnt;
-        public int lfoInc;
+        int lfoCnt;
+        int lfoInc;
 
         /** LFO FREQ table */
-        public final int[] lfo_freq = new int[8];
+        final int[] lfo_freq = new int[8];
 
         /** Phase Modulation input for operators 2,3,4 */
-        public int m2, c1, c2;
+        int m2;
+        int c1;
+        int c2;
         /** one sample delay memory */
-        public int mem;
+        int mem;
 
         /** outputs of working channels */
-        public final int[] outFm = new int[8];
+        final int[] outFm = new int[8];
 
         /** channel output NONE,LEFT,RIGHT or CENTER for YM2608/YM2610 ADPCM */
-        public final int[] outAdpcm = new int[4];
+        final int[] outAdpcm = new int[4];
         /** channel output NONE,LEFT,RIGHT or CENTER for YM2608/YM2610 DeltaT */
-        public final int[] outDelta = new int[4];
+        final int[] outDelta = new int[4];
 
         /** register number to channel number , slot offset */
         private static int channel(int N) {
@@ -1927,7 +1929,7 @@ public class Fm {
 
         private static final short[] tl_tab = new short[TL_TAB_LEN];
 
-        protected static final int ENV_QUIET = TL_TAB_LEN >> 3;
+        static final int ENV_QUIET = TL_TAB_LEN >> 3;
 
         /* initialize generic tables */
         static {
@@ -2125,39 +2127,39 @@ public class Fm {
         }
     }
 
-    protected abstract static class BaseChip {
+    abstract static class BaseChip {
 
         // globals
 
         /** SSG support */
-        protected static final int TYPE_SSG = 0x01;
+        static final int TYPE_SSG = 0x01;
         /** OPN type LFO and PAN */
-        protected static final int TYPE_LFOPAN = 0x02;
+        static final int TYPE_LFOPAN = 0x02;
         /** FM 6CH / 3CH */
-        protected static final int TYPE_6CH = 0x04;
+        static final int TYPE_6CH = 0x04;
         /** Ym2612Inst's DAC device */
         protected static final int TYPE_DAC = 0x08;
         /** two ADPCM units */
-        protected static final int TYPE_ADPCM = 0x10;
+        static final int TYPE_ADPCM = 0x10;
         /** bogus flag to differentiate 2608 from 2610 */
-        protected static final int TYPE_2610 = 0x20;
+        static final int TYPE_2610 = 0x20;
 
-        public static final int TYPE_YM2203 = TYPE_SSG;
-        public static final int TYPE_YM2608 = TYPE_SSG | TYPE_LFOPAN | TYPE_6CH | TYPE_ADPCM;
-        public static final int TYPE_YM2610 = TYPE_SSG | TYPE_LFOPAN | TYPE_6CH | TYPE_ADPCM | TYPE_2610;
+        static final int TYPE_YM2203 = TYPE_SSG;
+        static final int TYPE_YM2608 = TYPE_SSG | TYPE_LFOPAN | TYPE_6CH | TYPE_ADPCM;
+        static final int TYPE_YM2610 = TYPE_SSG | TYPE_LFOPAN | TYPE_6CH | TYPE_ADPCM | TYPE_2610;
 
         // slot number
-        protected static final int SLOT1 = 0;
-        protected static final int SLOT2 = 2;
-        protected static final int SLOT3 = 1;
-        protected static final int SLOT4 = 3;
+        static final int SLOT1 = 0;
+        static final int SLOT2 = 2;
+        static final int SLOT3 = 1;
+        static final int SLOT4 = 3;
 
         // bit0 = Right enable , bit1 = Left enable
-        protected static final int OUTD_RIGHT = 1;
-        protected static final int OUTD_LEFT = 2;
-        protected static final int OUTD_CENTER = 3;
+        static final int OUTD_RIGHT = 1;
+        static final int OUTD_LEFT = 2;
+        static final int OUTD_CENTER = 3;
 
-        protected static final int FINAL_SH = 0;
+        static final int FINAL_SH = 0;
     }
 
     /*
@@ -2165,7 +2167,7 @@ public class Fm {
      */
 
     /** here's the virtual YM2203(OPN) */
-    public static class YM2203 extends BaseChip {
+    static class YM2203 extends BaseChip {
 
         /** registers */
         private final int[] regs = new int[256];
@@ -2386,7 +2388,7 @@ public class Fm {
     }
 
     /** here's the virtual YM2610 */
-    public static class YM2610 extends BaseChip {
+    static class YM2610 extends BaseChip {
 
         /**
          * write
@@ -3196,7 +3198,7 @@ public class Fm {
                 return a;
             }
 
-            public void reset(int ch, double freqBase, int[] out_adpcm) {
+            void reset(int ch, double freqBase, int[] out_adpcm) {
                 this.step = (int) ((1 << AdpcmA.SHIFT) * freqBase / 3.0);
                 this.nowAddr = 0;
                 this.nowStep = 0;
@@ -3213,7 +3215,7 @@ public class Fm {
                 this.adpcmOut = 0;
             }
 
-            public void reset2608(int ch, double freqBase, int[] outAdpcm) {
+            void reset2608(int ch, double freqBase, int[] outAdpcm) {
                 if (ch <= 3) // channels 0,1,2,3
                     this.step = (int) ((1 << AdpcmA.SHIFT) * freqBase / 3.0);
                 else // channels 4 and 5 work with slower clock
@@ -3774,11 +3776,11 @@ public class Fm {
             this.muteDeltaT = (muteMask >> 12) & 0x01;
         }
 
-        public void setDeltaTStatus(int changeBits) {
+        void setDeltaTStatus(int changeBits) {
             adpcmArrivedEndAddress |= changeBits;
         }
 
-        public void resetDelTatStatus(int changeBits) {
+        void resetDelTatStatus(int changeBits) {
             adpcmArrivedEndAddress &= ~changeBits;
         }
     }
@@ -4101,12 +4103,12 @@ public class Fm {
         }
 
         @Override
-        public void setDeltaTStatus(int changeBits) {
+        void setDeltaTStatus(int changeBits) {
             opn.st.setStatus(changeBits);
         }
 
         @Override
-        public void resetDelTatStatus(int changeBits) {
+        void resetDelTatStatus(int changeBits) {
             opn.st.resetStatus(changeBits);
         }
 

@@ -320,7 +320,7 @@ public class WSwan {
         private int pos;
         private int muted;
 
-        public void reset() {
+        void reset() {
             this.wave = 0;
             this.lVol = 0;
             this.rVol = 0;

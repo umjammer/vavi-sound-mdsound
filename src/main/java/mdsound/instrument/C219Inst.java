@@ -29,7 +29,7 @@ public class C219Inst extends Instrument.BaseInstrument implements PcmEnabledIns
 
     private static final Logger logger = getLogger(C219Inst.class.getName());
 
-    public static final int MAX_CHIPS = 0x02;
+    private static final int MAX_CHIPS = 0x02;
 
     private final C219[] chips = {new C219(), new C219()};
 

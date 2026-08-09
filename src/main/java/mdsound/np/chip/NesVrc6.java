@@ -21,31 +21,31 @@ public class NesVrc6 implements SoundChip {
 
     private static final Logger logger = getLogger(NesVrc6.class.getName());
 
-    public static final double DEFAULT_CLOCK = 1789772.0;
-    public static final int DEFAULT_RATE = 44100;
+    private static final double DEFAULT_CLOCK = 1789772.0;
+    private static final int DEFAULT_RATE = 44100;
 
     /** frequency divider */
-    protected final int[] counter = new int[3];
+    private final int[] counter = new int[3];
     /** phase counter */
-    protected final int[] phase = new int[3];
+    private final int[] phase = new int[3];
     /** adjusted frequency */
-    protected final int[] freq2 = new int[3];
+    private final int[] freq2 = new int[3];
     /** saw 14-stage counter */
-    protected int count14;
+    private int count14;
 
-    protected int mask;
+    private int mask;
     /** stereo mix */
-    protected final int[][] sm = {new int[3], new int[3]};
-    protected final int[] duty = new int[2];
-    protected final int[] volume = new int[3];
-    protected final int[] enable = new int[3];
-    protected final int[] gate = new int[3];
-    protected final int[] freq = new int[3];
-    protected boolean halt;
-    protected int freqShift;
+    private final int[][] sm = {new int[3], new int[3]};
+    private final int[] duty = new int[2];
+    private final int[] volume = new int[3];
+    private final int[] enable = new int[3];
+    private final int[] gate = new int[3];
+    private final int[] freq = new int[3];
+    private boolean halt;
+    private int freqShift;
     public double clock, rate;
-    protected final int[] out = new int[3];
-    protected final BasicTrackInfo[] trkInfo = new BasicTrackInfo[3];
+    private final int[] out = new int[3];
+    private final BasicTrackInfo[] trkInfo = new BasicTrackInfo[3];
 
     public NesVrc6() {
         setClock(DEFAULT_CLOCK);
@@ -73,7 +73,7 @@ public class NesVrc6 implements SoundChip {
         sm[1][trk] = mixR;
     }
 
-    public DeviceInfo.TrackInfo getTrackInfo(int trk) {
+    private DeviceInfo.TrackInfo getTrackInfo(int trk) {
         if (trk < 2) {
             trkInfo[trk].maxVolume = 15;
             trkInfo[trk].volume = volume[trk];
@@ -139,7 +139,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
         phase[2] = 2;
     }
 
-    static final short[][] sqrTbl = {
+    private static final short[][] sqrTbl = {
             {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1},
             {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1},
             {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1},

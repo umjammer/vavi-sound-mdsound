@@ -23,16 +23,16 @@ public class Compressor {
 
     private static class ChInfo {
 
-        public boolean sw;
+        boolean sw;
 
         // Effector parameters
 
         /** The sound pressure at which compression begins. Approximately 0.1 to 1.0 */
-        public float threshold;
+        float threshold;
         /** Compression ratio: 2.0 to 10.0 */
-        public float ratio;
+        float ratio;
         /** Final volume. Approximately 1.0 to 3.0 */
-        public float volume;
+        float volume;
 
         // Internal variables
 
@@ -40,16 +40,16 @@ public class Compressor {
          * A low-pass filter used to detect sound pressure
          * @see "https://vstcpp.wpblog.jp/?page_id=728"
          */
-        public final Filter envfilterL;
-        public final Filter envfilterR;
+        final Filter envfilterL;
+        final Filter envfilterR;
         // Low-pass filter to avoid sudden volume changes
-        public final Filter gainfilterL;
-        public final Filter gainfilterR;
+        final Filter gainfilterL;
+        final Filter gainfilterR;
 
-        public float envFreq;
-        public float envQ;
-        public float gainFreq;
-        public float gainQ;
+        float envFreq;
+        float envQ;
+        float gainFreq;
+        float gainQ;
 
         ChInfo() {
             this.sw = false;
@@ -68,7 +68,7 @@ public class Compressor {
             this.gainfilterR = new Filter(); // Low-pass filter to avoid sudden volume changes
         }
 
-        public void setReg(int adr, byte data, int sampleRate) {
+        void setReg(int adr, byte data, int sampleRate) {
             if (adr == 1) {
                 this.sw = ((data & 0x80) != 0);
                 this.volume = (data & 0x7f) / (127.0f / 4.0f);
@@ -95,7 +95,7 @@ public class Compressor {
             }
         }
 
-        public void setLowPass(float envFreq, float envQ, float gainFreq, float gainQ, int sampleRate) {
+        void setLowPass(float envFreq, float envQ, float gainFreq, float gainQ, int sampleRate) {
             // The higher the cutoff frequency, the more sensitive it is to changes in sound pressure.
             // A good guideline is around 10 to 50 Hz.
             this.envfilterL.lowPass(envFreq, envQ, sampleRate);
@@ -113,7 +113,7 @@ public class Compressor {
         init();
     }
 
-    public void init() {
+    private void init() {
         currentCh = 0;
         chInfo = new ChInfo[maxCh];
         for (int i = 0; i < chInfo.length; i++) {
@@ -126,7 +126,7 @@ public class Compressor {
         mix(ch, inL, inR, 1);
     }
 
-    public void mix(int ch, int[] inL, int[] inR, int waveLength) {
+    private void mix(int ch, int[] inL, int[] inR, int waveLength) {
         if (ch < 0) return;
         if (ch >= maxCh) return;
         if (chInfo == null) return;

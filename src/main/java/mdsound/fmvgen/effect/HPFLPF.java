@@ -29,17 +29,17 @@ public class HPFLPF {
     private int currentCh = 0;
 
     private static class ChInfo {
-        public Filter highPassL = new Filter();
-        public Filter highPassR = new Filter();
-        public Filter lowPassL = new Filter();
-        public Filter lowPassR = new Filter();
+        Filter highPassL = new Filter();
+        Filter highPassR = new Filter();
+        Filter lowPassL = new Filter();
+        Filter lowPassR = new Filter();
 
-        public boolean hsw = false;
-        public float hFreq = 1000f;
-        public float hQ = (float) (1.0f / Math.sqrt(2.0f));
-        public boolean lsw = false;
-        public float lFreq = 300f;
-        public float lQ = (float) (1.0f / Math.sqrt(2.0f));
+        boolean hsw = false;
+        float hFreq = 1000f;
+        float hQ = (float) (1.0f / Math.sqrt(2.0f));
+        boolean lsw = false;
+        float lFreq = 300f;
+        float lQ = (float) (1.0f / Math.sqrt(2.0f));
     }
 
     public HPFLPF(int clock, int maxCh) {
@@ -48,7 +48,7 @@ public class HPFLPF {
         init();
     }
 
-    public void init() {
+    private void init() {
         chInfo = new ChInfo[maxCh];
         for (int i = 0; i < chInfo.length; i++) {
             chInfo[i] = new ChInfo();
@@ -95,7 +95,7 @@ public class HPFLPF {
         mix(ch, inL, inR, 1);
     }
 
-    public void mix(int ch, int[] inL, int[] inR, int waveLength) {
+    private void mix(int ch, int[] inL, int[] inR, int waveLength) {
         if (ch < 0)
             return;
         if (ch >= maxCh)

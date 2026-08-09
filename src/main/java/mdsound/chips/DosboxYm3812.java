@@ -364,7 +364,7 @@ public class DosboxYm3812 {
             /** bitmask that determines if a step is skipped (respective bit is zero then) */
             private int envStepSkipA;
 
-            public void reset() {
+            void reset() {
                 this.opState = OF_TYPE_OFF;
                 this.actState = OP_ACT_OFF;
                 this.amp = 0.0;
@@ -387,7 +387,7 @@ public class DosboxYm3812 {
                 this.envStepSkipA = 0;
             }
 
-            public static void advanceDrums(Opl.Op op1, int vib1, Opl.Op op2, int vib2, Opl.Op op3, int vib3, int generatorAdd) {
+            static void advanceDrums(Opl.Op op1, int vib1, Opl.Op op2, int vib2, Opl.Op op3, int vib3, int generatorAdd) {
                 int c1 = op1.tCount / FIXEDPT;
                 int c3 = op3.tCount / FIXEDPT;
                 int phaseBit = (((c1 & 0x88) ^ ((c1 << 5) & 0x80)) | ((c3 ^ (c3 << 2)) & 0x20)) != 0 ? 0x02 : 0x00;
@@ -421,7 +421,7 @@ public class DosboxYm3812 {
                 op3.generatorPos += generatorAdd;
             }
 
-            public void advance(int vib, int generatorAdd) {
+            void advance(int vib, int generatorAdd) {
                 wfPos = tCount; // waveForm position
 
                 // advance waveForm time
@@ -433,7 +433,7 @@ public class DosboxYm3812 {
 
             private static final int[] stepSkipMask = {0xff, 0xfe, 0xee, 0xba, 0xaa};
 
-            public void changeAttackRate(int attackRate, double recIpSamp) {
+            void changeAttackRate(int attackRate, double recIpSamp) {
                 if (attackRate != 0) {
                     double f = Math.pow(FL2, (double) attackRate + (tOff >> 2) - 1) * attackConst[tOff & 3] * recIpSamp;
                     // attack rate coefficients
@@ -466,7 +466,7 @@ public class DosboxYm3812 {
                 }
             }
 
-            public void changeDecayRate(int decayRate, double recIpSamp) {
+            void changeDecayRate(int decayRate, double recIpSamp) {
                 // decayMul should be 1.0 when decayRate==0
                 if (decayRate != 0) {
                     double f = -7.4493 * decRelConst[tOff & 3] * recIpSamp;
@@ -479,7 +479,7 @@ public class DosboxYm3812 {
                 }
             }
 
-            public void changeReleaseRate(int releaseRate, double recIpSamp) {
+            void changeReleaseRate(int releaseRate, double recIpSamp) {
                 // releaseMul should be 1.0 when releaseRate==0
                 if (releaseRate != 0) {
                     int steps;
@@ -494,7 +494,7 @@ public class DosboxYm3812 {
                 }
             }
 
-            public void changeSustainLevel(int sustainLevel) {
+            void changeSustainLevel(int sustainLevel) {
                 // sustainLevel should be 0.0 when sustainLevel==15 (max)
                 if (sustainLevel < 15) {
                     this.sustainLevel = Math.pow(FL2, (double) sustainLevel * (-FL05));
@@ -503,7 +503,7 @@ public class DosboxYm3812 {
                 }
             }
 
-            public void changeKeepSustain(boolean susKeep) {
+            void changeKeepSustain(boolean susKeep) {
                 if (opState == OF_TYPE_SUS) {
                     if (!susKeep)
                         opState = OF_TYPE_SUS_NOKEEP;
@@ -513,7 +513,7 @@ public class DosboxYm3812 {
                 }
             }
 
-            public void changeWaveForm(int regBase, byte[] waveSel) {
+            void changeWaveForm(int regBase, byte[] waveSel) {
                 // waveForm selection
                 curWMask = waveMask[waveSel[regBase]];
                 curWForm = wavTable;
@@ -522,20 +522,20 @@ public class DosboxYm3812 {
             }
 
             // enable/disable vibrato/tremolo LFO effects
-            public void changeVibrato(int regBase, byte[] adlibReg) {
+            void changeVibrato(int regBase, byte[] adlibReg) {
                 this.vibrato = (adlibReg[ARC_TVS_KSR_MUL + regBase] & 0x40) != 0;
                 this.tremolo = (adlibReg[ARC_TVS_KSR_MUL + regBase] & 0x80) != 0;
             }
 
             // change amount of self-feedback
-            public void changeFeedback(int feedback) {
+            void changeFeedback(int feedback) {
                 if (feedback != 0)
                     mfbi = (int) (Math.pow(FL2, (feedback >> 1) + 8));
                 else
                     mfbi = 0;
             }
 
-            public void changeFrequency(int chanBase, int regBase, byte[] adlibReg, double[] frqMul, double recIpSamp) {
+            void changeFrequency(int chanBase, int regBase, byte[] adlibReg, double[] frqMul, double recIpSamp) {
                 // frequency
                 int frn = (((adlibReg[ARC_KON_BNUM + chanBase]) & 3) << 8) + (adlibReg[ARC_FREQ_NUM + chanBase] & 0xff);
                 // block number/octave
@@ -563,7 +563,7 @@ public class DosboxYm3812 {
                 this.changeReleaseRate(adlibReg[ARC_SUSL_RELR + regBase] & 15, recIpSamp);
             }
 
-            public void enable(int regBase, int act_type, byte[] wave_sel) {
+            void enable(int regBase, int act_type, byte[] wave_sel) {
                 // check if this is really an off-on transition
                 if (actState == OP_ACT_OFF) {
                     int wselbase = regBase;
@@ -578,7 +578,7 @@ public class DosboxYm3812 {
                 }
             }
 
-            public void disable(int act_type) {
+            void disable(int act_type) {
                 // check if this is really an on-off transition
                 if (actState != OP_ACT_OFF) {
                     actState &= (~act_type);
@@ -593,7 +593,7 @@ public class DosboxYm3812 {
              * output level is sustained, mode changes only when Operator is turned off (.release)
              * or when the keep-sustained bit is turned off (.sustain_nokeep)
              */
-            public void output(int modulator, int trem) {
+            void output(int modulator, int trem) {
                 if (this.opState != OF_TYPE_OFF) {
                     this.lastCVal = this.cVal;
                     int i = (this.wfPos + modulator) / FIXEDPT;
@@ -608,14 +608,14 @@ public class DosboxYm3812 {
             }
 
             /** no action, Operator is off */
-            public void off() {
+            void off() {
             }
 
             /**
              * Operator in attack mode, if full output level is reached,
              * the Operator is switched into decay mode
              */
-            public void attack() {
+            void attack() {
                 this.amp = ((this.a3 * this.amp + this.a2) * this.amp + this.a1) * this.amp + this.a0;
 
                 int numStepsAdd = this.generatorPos / FIXEDPT; // number of (standardized) samples
@@ -642,7 +642,7 @@ public class DosboxYm3812 {
              * Operator in decay mode, if sustain level is reached the output level is either
              * kept (sustain level keep enabled) or the Operator is switched into release mode
              */
-            public void decay() {
+            void decay() {
                 if (this.amp > this.sustainLevel) {
                     // decay phase
                     this.amp *= this.decayMul;
@@ -673,7 +673,7 @@ public class DosboxYm3812 {
              * output level is sustained, mode changes only when Operator is turned off (.release)
              * or when the keep-sustained bit is turned off (.sustain_nokeep)
              */
-            public void sustain() {
+            void sustain() {
                 int numStepsAdd = this.generatorPos / FIXEDPT; // number of (standardized) samples
                 int ct;
                 for (ct = 0; ct < numStepsAdd; ct++) {
@@ -683,7 +683,7 @@ public class DosboxYm3812 {
             }
 
             // Operator in release mode, if output level reaches zero the Operator is turned off
-            public void release() {
+            void release() {
                 // ??? boundary?
                 if (this.amp > 0.00000001) {
                     // release phase
@@ -707,7 +707,7 @@ public class DosboxYm3812 {
                 this.generatorPos -= numStepsAdd * FIXEDPT;
             }
 
-            public void checkEgAttack() {
+            void checkEgAttack() {
                 if (((this.curEnvStep + 1) & this.envStepA) == 0) {
                     // check if next step already reached
                     if (this.a0 >= 1.0) {
@@ -774,10 +774,10 @@ public class DosboxYm3812 {
             this.tremTabPos = 0;
         }
 
-        public void stop() {
+        void stop() {
         }
 
-        public void reset() {
+        void reset() {
 
             Arrays.fill(this.adlibReg, (byte) 0);
             for (int ind = 0; ind < this.ops.length; ind++) this.ops[ind] = new Op();
@@ -792,7 +792,7 @@ public class DosboxYm3812 {
             this.oplAddr = 0;
         }
 
-        public void write(int addr, int val) {
+        void write(int addr, int val) {
             if ((addr & 1) != 0)
                 writeInternal(this.oplAddr, val);
             else
@@ -1004,7 +1004,7 @@ public class DosboxYm3812 {
             }
         }
 
-        public int read(int port) {
+        int read(int port) {
             if ((port & 1) == 0) {
                 return this.status | 6;
             }

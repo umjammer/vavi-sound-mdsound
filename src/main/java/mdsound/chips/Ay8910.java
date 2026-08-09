@@ -685,17 +685,17 @@ public class Ay8910 {
     }
 
     private static class YmParam {
-        protected double rUp;
-        protected double rDown;
-        protected int resCount;
-        protected double[] res = new double[32];
+        double rUp;
+        double rDown;
+        int resCount;
+        double[] res = new double[32];
     }
 
     private static class MosfetParam {
-        protected double vth;
-        protected double vg;
-        protected int count;
-        protected double[] kn = new double[32];
+        double vth;
+        double vg;
+        int count;
+        double[] kn = new double[32];
     }
 
     // internal state
@@ -1274,7 +1274,7 @@ public class Ay8910 {
         }
     }
 
-    public interface ChangeStateCallback extends BiConsumer<Object, Integer> {
+    private interface ChangeStateCallback extends BiConsumer<Object, Integer> {
     }
 
     //

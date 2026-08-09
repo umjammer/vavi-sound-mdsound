@@ -8,17 +8,17 @@ import dotnet4j.threading.CancellationTokenSource;
 import dotnet4j.threading.ThreadingTools;
 
 
-public abstract class BaseMakerSender {
-    public static final int DATA_SEQUENCE_FREQUENCE = 44100;
+abstract class BaseMakerSender {
+    static final int DATA_SEQUENCE_FREQUENCE = 44100;
 
     private CancellationTokenSource tokenSource;
     private CancellationToken cancellationToken;
-    protected CompletableFuture<Void> task = null;
-    protected RingBuffer ringBuffer = null;
-    protected Runnable action = null;
-    protected volatile boolean start = false;
-    protected volatile boolean isRunning = false;
-    protected final Object lockObj = new Object();
+    private CompletableFuture<Void> task = null;
+    RingBuffer ringBuffer = null;
+    Runnable action = null;
+    volatile boolean start = false;
+    volatile boolean isRunning = false;
+    final Object lockObj = new Object();
     public SoundManager parent = null;
 
     public long GetRingBufferCounter() {
@@ -66,7 +66,7 @@ public abstract class BaseMakerSender {
         }
     }
 
-    protected boolean getStart() {
+    boolean getStart() {
         synchronized (lockObj) {
             return start;
         }

@@ -12,7 +12,7 @@ import mdsound.chips.Pokey;
 public class PokeyInst extends Instrument.BaseInstrument {
 
     public static final int DefaultClockValue = 1789772;
-    public static final int MAX_CHIPS = 0x02;
+    private static final int MAX_CHIPS = 0x02;
 
     private final Pokey[] chips = {new Pokey(), new Pokey()};
 

@@ -30,14 +30,14 @@ public class OPNA2 extends Opna.OPNABase {
     /** Rhythm Key */
     private byte rhythmKey;
 
-    protected FM6[] fm6;
-    protected PSG2[] psg2;
-    protected AdpcmB[] adpcmB;
-    protected AdpcmA adpcmA;
+    private FM6[] fm6;
+    private PSG2[] psg2;
+    private AdpcmB[] adpcmB;
+    private AdpcmA adpcmA;
 
-    protected byte prescale;
+    private byte prescale;
 
-    public Effects effects;
+    private Effects effects;
 
     private final ReversePhase reversePhase = ReversePhase.getInstance();
 
@@ -58,26 +58,26 @@ public class OPNA2 extends Opna.OPNABase {
         private int step;
         /** sampling rate */
         private int rate;
-        public final int efcCh;
-        public final int num;
-        public final Effects effects;
+        final int efcCh;
+        final int num;
+        final Effects effects;
 
-        public Rhythm(int num, Effects effects, int efcCh) {
+        Rhythm(int num, Effects effects, int efcCh) {
             this.effects = effects;
             this.efcCh = efcCh;
             this.num = num;
         }
     }
 
-    public static class Whdr {
-        public int chunkSize;
-        public int tag;
-        public int nch;
-        public int rate;
-        public int avgbytes;
-        public int align;
-        public int bps;
-        public int size;
+    static class Whdr {
+        int chunkSize;
+        int tag;
+        int nch;
+        int rate;
+        int avgbytes;
+        int align;
+        int bps;
+        int size;
     }
 
     /**
@@ -204,7 +204,7 @@ public class OPNA2 extends Opna.OPNABase {
      * Sampling rate change
      */
     @Override
-    public boolean setRate(int c, int r, boolean ipflag /* = false */) {
+    protected boolean setRate(int c, int r, boolean ipflag /* = false */) {
         if (!super.setRate(c, r, ipflag))
             return false;
 
@@ -227,7 +227,7 @@ public class OPNA2 extends Opna.OPNABase {
      * @param buffer Destination
      * @param samples Number of composite samples
      */
-    public void mix(int[] buffer, int samples) {
+    private void mix(int[] buffer, int samples) {
         fm6[0].mix(buffer, samples, regTc);
         fm6[1].mix(buffer, samples, regTc);
         psg2[0].mix(buffer, samples);
@@ -385,15 +385,15 @@ public class OPNA2 extends Opna.OPNABase {
         }
     }
 
-    public void fmSetReg(int ch, int addr, byte data) {
+    private void fmSetReg(int ch, int addr, byte data) {
         fm6[ch].setReg(addr, data);
     }
 
-    public void adpcmbSetReg(int ch, int addr, byte data) {
+    private void adpcmbSetReg(int ch, int addr, byte data) {
         adpcmB[ch].setReg(addr, data);
     }
 
-    public void rhythmSetReg(int addr, byte data) {
+    private void rhythmSetReg(int addr, byte data) {
         switch (addr) {
         // Rhythm
         case 0x10: // DM/KEYON
@@ -474,7 +474,7 @@ public class OPNA2 extends Opna.OPNABase {
      * Channel Mask Settings
      */
     @Override
-    public void setChannelMask(int mask) {
+    protected void setChannelMask(int mask) {
         for (int i = 0; i < 6; i++) {
             fm6[0].ch[i].mute(!((mask & (1 << i)) == 0));
             fm6[1].ch[i].mute(!((mask & (1 << i)) == 0));
@@ -560,7 +560,7 @@ public class OPNA2 extends Opna.OPNABase {
     /**
      * Loading rhythm sounds
      */
-    public boolean loadRhythmSample(Function<String, InputStream> appendFileReaderCallback) throws IOException {
+    private boolean loadRhythmSample(Function<String, InputStream> appendFileReaderCallback) throws IOException {
         String[] rhythmName = {
                 "bd", "sd", "top", "hh", "tom", "rim",
         };
@@ -655,7 +655,7 @@ public class OPNA2 extends Opna.OPNABase {
         rhythmTVol = -(db * 2 / 3);
     }
 
-    public void setVolumeRhythm(int index, int db) {
+    private void setVolumeRhythm(int index, int db) {
         db = Math.min(db, 20);
         rhythm[index].volume = -(db * 2 / 3);
     }

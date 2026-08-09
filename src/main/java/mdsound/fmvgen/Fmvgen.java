@@ -67,7 +67,7 @@ public class Fmvgen extends Fmgen {
 
     // Operator
     public static class Operator {
-        public static final byte[] noteTable = {
+        static final byte[] noteTable = {
                 0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 3, 3, 3, 3, 3, 3,
                 4, 4, 4, 4, 4, 4, 4, 5, 6, 7, 7, 7, 7, 7, 7, 7,
                 8, 8, 8, 8, 8, 8, 8, 9, 10, 11, 11, 11, 11, 11, 11, 11,
@@ -78,7 +78,7 @@ public class Fmvgen extends Fmgen {
                 28, 28, 28, 28, 28, 28, 28, 29, 30, 31, 31, 31, 31, 31, 31, 31,
         };
 
-        public static final byte[] dtTable = {
+        static final byte[] dtTable = {
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                 0, 0, 0, 0, 2, 2, 2, 2, 2, 2, 2, 2, 4, 4, 4, 4,
@@ -97,7 +97,7 @@ public class Fmvgen extends Fmgen {
                 -16, -16, -18, -20, -22, -24, -26, -28, -32, -34, -38, -40, -44, -44, -44, -44,
         };
 
-        public static final byte[][] decayTable1 = {
+        static final byte[][] decayTable1 = {
                 {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0},
                 {1, 1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 1, 1, 1},
                 {1, 1, 1, 1, 1, 1, 1, 1}, {1, 1, 1, 1, 1, 1, 1, 1},
@@ -132,11 +132,11 @@ public class Fmvgen extends Fmgen {
                 {16, 16, 16, 16, 16, 16, 16, 16}, {16, 16, 16, 16, 16, 16, 16, 16}
         };
 
-        public static final int[] decayTable2 = {
+        static final int[] decayTable2 = {
                 1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2047, 2047, 2047, 2047, 2047
         };
 
-        public static final byte[][] attackTable = {
+        static final byte[][] attackTable = {
                 {-1, -1, -1, -1, -1, -1, -1, -1}, {-1, -1, -1, -1, -1, -1, -1, -1},
                 {4, 4, 4, 4, 4, 4, 4, 4}, {4, 4, 4, 4, 4, 4, 4, 4},
                 {4, 4, 4, 4, 4, 4, 4, 4}, {4, 4, 4, 4, 4, 4, 4, 4},
@@ -171,7 +171,7 @@ public class Fmvgen extends Fmgen {
                 {0, 0, 0, 0, 0, 0, 0, 0}, {0, 0, 0, 0, 0, 0, 0, 0}
         };
 
-        public static final int[][][][] ssgEnvTable = {
+        static final int[][][][] ssgEnvTable = {
                 {
                         {new int[] {1, 1}, new int[] {1, 1}, new int[] {1, 1}},      // 08
                         {new int[] {0, 1}, new int[] {1, 1}, new int[] {1, 1}}      // 08 56~
@@ -210,7 +210,7 @@ public class Fmvgen extends Fmgen {
         static final int[] clTable = new int[FM_CLENTS];
 
         /** OP type (MPcm, N...) */
-        public OpType type;
+        OpType type;
         /** Block/Note */
         private int bn;
         /** EG output value */
@@ -241,7 +241,7 @@ public class Fmvgen extends Fmgen {
         private int keyScaleRate;
         private EGPhase egPhase;
         private int[] ams;
-        public int ms;
+        int ms;
 
         /** Total Level  (0-127) */
         private int tl;
@@ -264,24 +264,25 @@ public class Fmvgen extends Fmgen {
         /** phaseReset(0/1) */
         private int phaseReset;
 
-        public int fb;
-        public int algLink;
-        public int wt;
+        int fb;
+        int algLink;
+        int wt;
 
         private boolean keyOn;
         /** enable Amplitude Modulation */
-        public boolean amOn;
+        boolean amOn;
         /** The parameters were updated */
-        public boolean paramChanged;
+        boolean paramChanged;
         private boolean mute;
 
         // 1 Sample Synthesis
 
         /** Shift amount to convert ISample to envelope count (2π) */
-        public static final int IS2EC_SHIFT = ((20 + FM_PGBITS) - 13);
+        static final int IS2EC_SHIFT = ((20 + FM_PGBITS) - 13);
 
         private Fmgen.Channel4.Chip chip;
-        public int out, out2;
+        int out;
+        int out2;
         private int in2;
 
         // Phase Generator this.
@@ -313,11 +314,11 @@ public class Fmvgen extends Fmgen {
         private final int[] rateTable = new int[16];
         private final int[][] mulTable = {new int[16], new int[16], new int[16], new int[16]};
 
-        public int dbgOpOut;
-        public int dbgPgOut;
+        int dbgOpOut;
+        int dbgPgOut;
 
         /** construction */
-        public Operator() {
+        Operator() {
             // EG Part
             ar = dr = sr = rr = keyScaleRate = 0;
             ams = amTable[0][0];
@@ -339,7 +340,7 @@ public class Fmvgen extends Fmgen {
         }
 
         /** Initialization */
-        public void reset() {
+        void reset() {
             // EG part
             tl = tlLatch = 127;
             shiftPhase(EGPhase.Off);
@@ -398,14 +399,14 @@ public class Fmvgen extends Fmgen {
             //}
         }
 
-        public void setDPBN(int dp, int bn) {
+        void setDPBN(int dp, int bn) {
             this.dp = dp;
             this.bn = bn;
             paramChanged = true;
         }
 
         /** Preparation */
-        public void prepare() {
+        void prepare() {
             if (paramChanged) {
                 paramChanged = false;
                 // PG Part
@@ -451,7 +452,7 @@ public class Fmvgen extends Fmgen {
         }
 
         /** Change eg_phase_ of envelope */
-        public void shiftPhase(EGPhase nextphase) {
+        void shiftPhase(EGPhase nextphase) {
             switch (nextphase) {
             case Attack: // Attack Phase
                 tl = tlLatch;
@@ -556,15 +557,15 @@ public class Fmvgen extends Fmgen {
             return sineTable[c][wt][((s) >> (20 + FM_PGBITS - FM_OPSINBITS)) & (FM_OPSINENTS - 1)];
         }
 
-        public int SINE(int c, int s) {
+        int SINE(int c, int s) {
             return sineTable[c][wt][(s) & (FM_OPSINENTS - 1)];
         }
 
-        public int logToLin(int a) {
+        int logToLin(int a) {
             return (a < FM_CLENTS) ? clTable[a] : 0;
         }
 
-        public void egUpdate() {
+        void egUpdate() {
             if (ssgType == 0) {
                 egOut = Math.min(tlOut + egLevel, 0x3ff) << (1 + 2);
             } else {
@@ -572,13 +573,13 @@ public class Fmvgen extends Fmgen {
             }
         }
 
-        public void setEGRate(int rate) {
+        void setEGRate(int rate) {
             egRate = rate;
             egCountDiff = decayTable2[rate / 4] * chip.getRatio();
         }
 
         /** EG Calculation */
-        public void egCalc() {
+        void egCalc() {
             egCount = (2047 * 3) << FM_RATIOBITS; // This shortcut reduces reproducibility
 
             if (egPhase == EGPhase.Attack) {
@@ -616,7 +617,7 @@ public class Fmvgen extends Fmgen {
             egCurveCount++;
         }
 
-        public void egStep() {
+        void egStep() {
             egCount -= egCountDiff;
 
             // It is rumored that the EG changes are synchronized across all slots.
@@ -628,14 +629,14 @@ public class Fmvgen extends Fmgen {
          * PG calculation
          * ret:2^(20+PGBITS) / cycle
          */
-        public int pgCalc() {
+        int pgCalc() {
             int ret = pgCount;
             pgCount += pgDiff;
             dbgPgOut = ret;
             return ret;
         }
 
-        public int pgCalcL() {
+        int pgCalcL() {
             int ret = pgCount;
             pgCount += pgDiff + ((pgDiffLfo * chip.getPmV()) >> 5);
             dbgPgOut = ret;
@@ -646,7 +647,7 @@ public class Fmvgen extends Fmgen {
          * OP calculation
          * in: ISample (max 8π)
          */
-        public int calc(int ch, int In) {
+        int calc(int ch, int In) {
             egStep();
             int In2 = In + out + out2;
             out2 = out;
@@ -664,7 +665,7 @@ public class Fmvgen extends Fmgen {
             return out2;
         }
 
-        public int calcL(int ch, int In) {
+        int calcL(int ch, int In) {
             egStep();
             int In2 = In + out + out2;
             out2 = out;
@@ -683,7 +684,7 @@ public class Fmvgen extends Fmgen {
             return out2;
         }
 
-        public int calcN(int noise) {
+        int calcN(int noise) {
             egStep();
 
             int lv = Math.max(0, 0x3ff - (tlOut + egLevel)) << 1;
@@ -700,7 +701,7 @@ public class Fmvgen extends Fmgen {
          * OP (FB) calculation
          * Self Feedback Modulation Max = 4π
          */
-        public int calcFB(int ch, int fb) {
+        int calcFB(int ch, int fb) {
             egStep();
 
             int In = out + out2;
@@ -717,7 +718,7 @@ public class Fmvgen extends Fmgen {
             return out2;
         }
 
-        public int calcFBL(int ch, int fb) {
+        int calcFBL(int ch, int fb) {
             egStep();
 
             int in = out + out2;
@@ -734,12 +735,12 @@ public class Fmvgen extends Fmgen {
             return out;
         }
 
-        public void resetFB() {
+        void resetFB() {
             out = out2 = 0;
         }
 
         /** key on */
-        public void keyOn() {
+        void keyOn() {
             if (keyOn) return;
 
             keyOn = true;
@@ -771,7 +772,7 @@ public class Fmvgen extends Fmgen {
         }
 
         /** key off */
-        public void keyOff() {
+        void keyOff() {
             if (keyOn) {
                 keyOn = false;
                 shiftPhase(EGPhase.Release);
@@ -779,7 +780,7 @@ public class Fmvgen extends Fmgen {
         }
 
         /** Is the operator up and running? */
-        public boolean isOn() {
+        boolean isOn() {
             return egPhase != EGPhase.Off;
         }
 
@@ -884,17 +885,17 @@ public class Fmvgen extends Fmgen {
             paramChanged = true;
         }
 
-        public void mute(boolean mute) {
+        void mute(boolean mute) {
             this.mute = mute;
             paramChanged = true;
         }
 
-        public void setMS(int ms) {
+        void setMS(int ms) {
             this.ms = ms;
             paramChanged = true;
         }
 
-        public void setChip(Fmgen.Channel4.Chip chip) {
+        void setChip(Fmgen.Channel4.Chip chip) {
             this.chip = chip;
         }
 
@@ -904,7 +905,7 @@ public class Fmvgen extends Fmgen {
         public void setMode(boolean modulator) {
         }
 
-        public int out() {
+        int out() {
             return out;
         }
 
@@ -912,7 +913,7 @@ public class Fmvgen extends Fmgen {
             return in2;
         }
 
-        public void dbgStopPG() {
+        void dbgStopPG() {
             pgDiff = 0;
             pgDiffLfo = 0;
         }
@@ -949,7 +950,7 @@ public class Fmvgen extends Fmgen {
 
     /** 4-Op Channel */
     public static class Channel4 {
-        public static final byte[] fbtable = {31, 7, 6, 5, 4, 3, 2, 1};
+        static final byte[] fbtable = {31, 7, 6, 5, 4, 3, 2, 1};
 
         private static final boolean tableHasMade = false;
         private static final int[] kftable = new int[64];
@@ -981,7 +982,7 @@ public class Fmvgen extends Fmgen {
             this.ch = ch;
         }
 
-        public void makeTable() {
+        void makeTable() {
             // 100 / 64 cent = 2 ^ (i * 100 / 64 * 1200)
             for (int i = 0; i < 64; i++) {
                 kftable[i] = (int) (0x10000 * Math.pow(2.0, i / 768.0));

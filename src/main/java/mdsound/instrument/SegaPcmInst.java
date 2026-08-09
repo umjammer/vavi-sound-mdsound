@@ -10,7 +10,7 @@ import mdsound.chips.SegaPcm;
 
 public class SegaPcmInst extends Instrument.BaseInstrument {
 
-    public static final int MAX_CHIPS = 0x02;
+    private static final int MAX_CHIPS = 0x02;
 
     private final SegaPcm[] chips = {new SegaPcm(), new SegaPcm()};
 

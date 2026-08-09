@@ -4,7 +4,7 @@ import test.soundManager.SoundManager.Enq;
 import vavi.util.Debug;
 
 
-public class DataSender extends BaseSender {
+class DataSender extends BaseSender {
     private static long sw = System.currentTimeMillis();
     private static final double swFreq = DATA_SEQUENCE_FREQUENCE;
     private final int frq;
@@ -15,10 +15,10 @@ public class DataSender extends BaseSender {
     private final Pack[] startData;
     private final Pack[] stopData;
 
-    public DataSender(Enq emuEnq,
-                      Enq realEnq,
-                      Pack[] startData,
-                      Pack[] stopData) {
+    DataSender(Enq emuEnq,
+               Enq realEnq,
+               Pack[] startData,
+               Pack[] stopData) {
         this(emuEnq,
              realEnq,
              startData,
@@ -27,7 +27,7 @@ public class DataSender extends BaseSender {
              DATA_SEQUENCE_FREQUENCE);
     }
 
-    public DataSender(Enq emuEnq,
+    DataSender(Enq emuEnq,
             Enq realEnq,
             Pack[] startData,
             Pack[] stopData,
@@ -51,7 +51,7 @@ public class DataSender extends BaseSender {
         }
     }
 
-    public int getSeqCounter() {
+    int getSeqCounter() {
         synchronized (lockObj) {
             return seqCounter;
         }

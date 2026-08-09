@@ -3,7 +3,7 @@ package vavi.util.compat;
 
 public class Tuple6<A, B, C, D, E, F> extends Tuple5<A, B, C, D, E> {
 
-    protected F Item6;
+    private F Item6;
 
     public Tuple6(A a, B b, C c, D d, E e, F f) {
         super(a, b, c, d, e);

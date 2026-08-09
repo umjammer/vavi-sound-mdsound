@@ -12,7 +12,7 @@ import mdsound.chips.OkiM6295;
 
 public class OkiM6295Inst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
-    public static final int MAX_CHIPS = 0x02;
+    private static final int MAX_CHIPS = 0x02;
 
     private final OkiM6295[] chips = {new OkiM6295(), new OkiM6295()};
 

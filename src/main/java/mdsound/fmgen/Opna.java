@@ -32,7 +32,7 @@ public class Opna {
 
     /** OPN Base */
     static class OPNBase extends Timer {
-        public OPNBase() {
+        OPNBase() {
             preScale = 0;
             psg = new PSG();
             chip = new Fmgen.Channel4.Chip();
@@ -54,7 +54,7 @@ public class Opna {
         }
 
         /** Initializes. */
-        public boolean init(int c, int r) {
+        protected boolean init(int c, int r) {
             clock = c;
             psgRate = r;
 
@@ -62,7 +62,7 @@ public class Opna {
         }
 
         @Override
-        public void reset() {
+        void reset() {
             status = 0;
             setPreScaler(0);
             super.reset();
@@ -98,7 +98,7 @@ public class Opna {
         public void setLPFCutoff(int freq) {
         }
 
-        protected void setParameter(Fmgen.Channel4 ch, int addr, int data) {
+        void setParameter(Fmgen.Channel4 ch, int addr, int data) {
             int[] slotTable = {0, 2, 1, 3};
             int[] slTable = {
                     0, 4, 8, 12, 16, 20, 24, 28,
@@ -178,7 +178,7 @@ public class Opna {
             setPreScaler(p);
         }
 
-        protected int fmVolume;
+        int fmVolume;
 
         // OPN Clock
         protected int clock;
@@ -186,7 +186,7 @@ public class Opna {
         protected int rate;
         // FMGen Output Rate
         protected int psgRate;
-        protected int status;
+        int status;
         protected Fmgen.Channel4 csmCh;
 
         public final int[] visVolume = {0, 0};
@@ -201,9 +201,9 @@ public class Opna {
             }
         }
 
-        protected int preScale;
+        int preScale;
 
-        protected final Fmgen.Channel4.Chip chip;
+        final Fmgen.Channel4.Chip chip;
         public final PSG psg;
     }
 
@@ -212,7 +212,7 @@ public class Opna {
         public final int[] visRtmVolume = {0, 0};
         public final int[] visAPCMVolume = {0, 0};
 
-        public OPNABase() {
+        protected OPNABase() {
             amTable[0] = -1;
             tableHasMade = false;
 
@@ -254,7 +254,7 @@ public class Opna {
         /**
          * Channel Mask Settings.
          */
-        public void setChannelMask(int mask) {
+        protected void setChannelMask(int mask) {
             for (int i = 0; i < 6; i++)
                 ch[i].mute(!((mask & (1 << i)) == 0));
             psg.setChannelMask(mask >> 6);
@@ -495,7 +495,7 @@ public class Opna {
         /**
          * ADPCM B
          */
-        protected void setADPCMBReg(int addr, int data) {
+        void setADPCMBReg(int addr, int data) {
             switch (addr) {
             case 0x00: // Controller Register 1
                 if (((data & 0x80) != 0) && !adpcmPlay) {
@@ -606,7 +606,7 @@ public class Opna {
          * @param buffer  Destination
          * @param nSamples Number of composite samples
          */
-        protected void fmMix(int[] buffer, int nSamples) {
+        void fmMix(int[] buffer, int nSamples) {
             if (fmVolume > 0) {
                 // Preparation
                 // Set F-Number
@@ -632,7 +632,7 @@ public class Opna {
             }
         }
 
-        protected void mix6(int[] buffer, int nSamples, int activeCh) {
+        void mix6(int[] buffer, int nSamples, int activeCh) {
             // Mix
             int[] ibuf = new int[6];
             int[] idest = new int[6];
@@ -663,7 +663,7 @@ public class Opna {
             }
         }
 
-        protected void mixSubS(int activeCh, int[] dest, int[] buf) {
+        void mixSubS(int activeCh, int[] dest, int[] buf) {
             if ((activeCh & 0x001) != 0) buf[dest[0]] = ch[0].calc();
             if ((activeCh & 0x004) != 0) buf[dest[1]] += ch[1].calc();
             if ((activeCh & 0x010) != 0) buf[dest[2]] += ch[2].calc();
@@ -672,7 +672,7 @@ public class Opna {
             if ((activeCh & 0x400) != 0) buf[dest[5]] += ch[5].calc();
         }
 
-        protected void mixSubSL(int activeCh, int[] dest, int[] buf) {
+        void mixSubSL(int activeCh, int[] dest, int[] buf) {
             if ((activeCh & 0x001) != 0) buf[dest[0]] = ch[0].calcL();
             if ((activeCh & 0x004) != 0) buf[dest[1]] += ch[1].calcL();
             if ((activeCh & 0x010) != 0) buf[dest[2]] += ch[2].calcL();
@@ -685,7 +685,7 @@ public class Opna {
          * Status Flag Settings
          */
         @Override
-        protected void setStatus(int bits) {
+        void setStatus(int bits) {
             if ((status & bits) == 0) {
 //logger.log(Level.TRACE, "SetStatus(%.2x %.2x)".formatted(bits, stmask));
                 status |= bits & stMask;
@@ -696,18 +696,18 @@ public class Opna {
         }
 
         @Override
-        protected void resetStatus(int bits) {
+        void resetStatus(int bits) {
             status &= ~bits;
 //logger.log(Level.TRACE, "ResetStatus(%.2x)".formatted(bits));
             updateStatus();
         }
 
-        protected void updateStatus() {
+        void updateStatus() {
 //logger.log(Level.TRACE, "%d:INT = %d".formatted(Diag.GetCPUTick(), (status & stmask & reg29) != 0));
             intr((status & stMask & reg29) != 0);
         }
 
-        protected void lfo() {
+        void lfo() {
 //logger.log(Level.TRACE, "%4d - %8d, %8d".formatted(c, lfocount, lfodcount));
 
             chip.setPML(pmTable[(lfoCount >>> (Fmgen.FM_LFOCBITS + 1)) & 0xff]);
@@ -715,7 +715,7 @@ public class Opna {
             lfoCount += lfoDCount;
         }
 
-        protected static void buildLFOTable() {
+        static void buildLFOTable() {
             if (amTable[0] == -1) {
                 for (int c = 0; c < 256; c++) {
                     int v;
@@ -734,7 +734,7 @@ public class Opna {
         /**
          * Decodes ADPCM
          */
-        protected void decodeADPCMB() {
+        void decodeADPCMB() {
             apOut0 = apOut1;
             int n = (readRAMN() * adpcmVolume) >> 13;
             apOut1 = adpcmOut + n;
@@ -744,7 +744,7 @@ public class Opna {
         /**
          * Mix ADPCM
          */
-        protected void adpcmBMix(int[] dest, int count) {
+        void adpcmBMix(int[] dest, int count) {
             int maskL = (control2 & 0x80) != 0 ? -1 : 0;
             int maskR = (control2 & 0x40) != 0 ? -1 : 0;
             if (adpcmMask_) {
@@ -815,7 +815,7 @@ stop:
         /**
          * Write operation to ADPCM RAM
          */
-        protected void writeRAM(int data) {
+        void writeRAM(int data) {
             if (NO_BITTYPE_EMULATION) {
                 if ((control2 & 2) == 0) {
                     // 1 bit mode
@@ -866,7 +866,7 @@ stop:
         /**
          * Read operation from ADPCM RAM
          */
-        protected int readRAM() {
+        int readRAM() {
             int data;
             if (NO_BITTYPE_EMULATION) {
                 if ((control2 & 2) == 0) {
@@ -913,7 +913,7 @@ stop:
         /**
          * Read nibble from ADPCM RAM and decompress ADPCM
          */
-        protected int readRAMN() {
+        int readRAMN() {
             int data;
             if (granularity > 0) {
                 if (NO_BITTYPE_EMULATION) {
@@ -976,7 +976,7 @@ stop:
             return adpcmX;
         }
 
-        protected int decodeADPCMBSample(int data) {
+        int decodeADPCMBSample(int data) {
             int[] table1 = {
                     1, 3, 5, 7, 9, 11, 13, 15,
                     -1, -3, -5, -7, -9, -11, -13, -15,
@@ -992,77 +992,77 @@ stop:
             return adpcmX;
         }
 
-        public static final boolean NO_BITTYPE_EMULATION = false;
+        static final boolean NO_BITTYPE_EMULATION = false;
 
         // FM Sound Source
 
-        protected final int[] pan = new int[6];
-        protected final int[] fNum2 = new int[9];
+        final int[] pan = new int[6];
+        final int[] fNum2 = new int[9];
 
-        protected int reg22;
+        int reg22;
         protected int reg29; // OPNA only?
 
-        protected int stMask;
-        protected int statusNext;
+        int stMask;
+        int statusNext;
 
-        protected int lfoCount;
-        protected int lfoDCount;
+        int lfoCount;
+        int lfoDCount;
 
-        protected final int[] fNum = new int[6];
-        protected final int[] fNum3 = new int[3];
+        final int[] fNum = new int[6];
+        final int[] fNum3 = new int[3];
 
         // ADPCM related
 
         /** ADPCM RAM */
         protected byte[] adpcmBuf;
         /** A bit mask for memory addresses */
-        protected int adpcmMask;
+        int adpcmMask;
         /** ADPCM playback end bit */
-        protected int adpcmNotice;
+        int adpcmNotice;
         /** Start address */
-        protected int startAddr;
+        int startAddr;
         /** Stop address */
-        protected int stopAddr;
+        int stopAddr;
         /** Playing address */
-        protected int memAddr;
+        int memAddr;
         /** Limit address/mask */
         protected int limitAddr;
         // ADPCM Volume
-        protected int adpcmLevel;
-        protected int adpcmVolume;
-        protected int adpcmVol;
+        int adpcmLevel;
+        int adpcmVolume;
+        int adpcmVol;
         /** ⊿ N */
-        protected int deltaN;
+        int deltaN;
         /** Frequency conversion variables */
-        protected int adplC;
+        int adplC;
         /** Frequency conversion variable difference value */
-        protected int adplD;
+        int adplD;
         /** Originally from adpld */
-        protected int adplBase;
+        int adplBase;
         /** ADPCM synthesis x */
-        protected int adpcmX;
+        int adpcmX;
         /** ADPCM synthesis ⊿ */
-        protected int adpcmD;
+        int adpcmD;
         /** ADPCM synthesis output */
-        protected int adpcmOut;
+        int adpcmOut;
         /** out(t - 2) + out(t - 1) */
-        protected int apOut0;
+        int apOut0;
         /** out(t - 1) + out(t) */
-        protected int apOut1;
+        int apOut1;
 
         /** ADPCM read buffer */
-        protected int adpcmReadBuf;
+        int adpcmReadBuf;
         /** ADPCM Playing */
-        protected boolean adpcmPlay;
-        protected int granularity;
-        protected boolean adpcmMask_;
+        boolean adpcmPlay;
+        int granularity;
+        boolean adpcmMask_;
 
         /** ADPCM Control Register 1 */
-        protected int control1;
+        int control1;
         /** ADPCM Control Register 2 */
-        protected int control2;
+        int control2;
         /** ADPCM Part of a register */
-        protected final byte[] adpcmReg = new byte[8];
+        final byte[] adpcmReg = new byte[8];
 
         protected int rhythmMask_;
 
@@ -1200,7 +1200,7 @@ stop:
         public static final int[] amTable = new int[Fmgen.FM_LFOENTS];
         public static final int[] pmTable = new int[Fmgen.FM_LFOENTS];
         public static final int[] tlTable = new int[Fmgen.FM_TLENTS + Fmgen.FM_TLPOS];
-        protected static boolean tableHasMade;
+        static boolean tableHasMade;
     }
 
     /** YM2203(OPN) */
@@ -1225,7 +1225,7 @@ stop:
         }
 
         /** Initializes. */
-        public boolean init(int c, int r, boolean ip /* = false */, String s /* = "" */) {
+        boolean init(int c, int r, boolean ip /* = false */, String s /* = "" */) {
             if (!setRate(c, r, ip))
                 return false;
 
@@ -1238,7 +1238,7 @@ stop:
         }
 
         /** Sampling rate change */
-        public boolean setRate(int c, int r, boolean f /* = false */) {
+        boolean setRate(int c, int r, boolean f /* = false */) {
             super.init(c, r);
             rebuildTimeTable();
             return true;
@@ -1571,15 +1571,15 @@ logger.log(Level.INFO, Arrays.toString(ch));
             return true;
         }
 
-        public static class Whdr {
-            public int chunkSize;
-            public int tag;
-            public int nch;
-            public int rate;
-            public int avgBytes;
-            public int align;
-            public int bps;
-            public int size;
+        static class Whdr {
+            int chunkSize;
+            int tag;
+            int nch;
+            int rate;
+            int avgBytes;
+            int align;
+            int bps;
+            int size;
         }
 
         private static InputStream createRhythmFileStream(String dir, String fname) {
@@ -1599,7 +1599,7 @@ logger.log(Level.DEBUG, path + ", " + Files.exists(path));
         /**
          * Loading rhythm sounds.
          */
-        public boolean loadRhythmSample(int chipId, Function<String, InputStream> appendFileReaderCallback) {
+        boolean loadRhythmSample(int chipId, Function<String, InputStream> appendFileReaderCallback) {
             String[] rhythmNames = {
                     "bd", "sd", "top", "hh", "tom", "rim",
             };
@@ -1711,7 +1711,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
          * Sampling rate change
          */
         @Override
-        public boolean setRate(int c, int r, boolean ipFlag /* = false */) {
+        protected boolean setRate(int c, int r, boolean ipFlag /* = false */) {
             if (!super.setRate(c, r, ipFlag))
                 return false;
 
@@ -1831,7 +1831,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
             rhythmTVol = -(db * 2 / 3);
         }
 
-        public void setVolumeRhythm(int index, int db) {
+        void setVolumeRhythm(int index, int db) {
             db = Math.min(db, 20);
             rhythm[index].volume = -(db * 2 / 3);
         }
@@ -1852,23 +1852,23 @@ logger.log(Level.ERROR, e.getMessage(), e);
             return ch[c];
         }
 
-        public static class Rhythm {
+        static class Rhythm {
             /** pan */
-            public int pan;
+            int pan;
             /** volume level */
-            public int level;
+            int level;
             /** volume */
-            public int volume;
+            int volume;
             /** sample */
-            public int[] sample;
+            int[] sample;
             /** size */
-            public int size;
+            int size;
             /** position */
-            public int pos;
+            int pos;
             /** stop */
-            public int step;
+            int step;
             /** sample rate */
-            public int rate;
+            int rate;
         }
 
         /**
@@ -1986,7 +1986,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
          * Changes sampling rate.
          */
         @Override
-        public boolean setRate(int c, int r, boolean ipFlag /* = false */) {
+        protected boolean setRate(int c, int r, boolean ipFlag /* = false */) {
             if (!super.setRate(c, r, ipFlag))
                 return false;
 
@@ -2188,7 +2188,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
             adpcmATVol = -(db * 2 / 3);
         }
 
-        public void setVolumeADPCMA(int index, int db) {
+        void setVolumeADPCMA(int index, int db) {
             db = Math.min(db, 20);
             adpcmA[index].volume = -(db * 2 / 3);
         }
@@ -2203,30 +2203,30 @@ logger.log(Level.ERROR, e.getMessage(), e);
 
 //        void SetChannelMask(int mask);
 
-        public static class ADPCMA {
+        static class ADPCMA {
             // pan
-            public int pan;
+            int pan;
             // volume level
-            public int level;
+            int level;
             // volume
-            public int volume;
+            int volume;
             // position
-            public int pos;
+            int pos;
             // number of steps
-            public int step;
+            int step;
 
             // start
-            public int start;
+            int start;
             // stop
-            public int stop;
+            int stop;
             // next 4 bit
-            public int nibble;
+            int nibble;
             // for decoding
-            public short adpcmX;
+            short adpcmX;
             // for decoding
-            public short adpcmD;
+            short adpcmD;
 
-            public void reset() {
+            void reset() {
                 this.pan = 0;
                 this.level = 0;
                 this.volume = 0;
@@ -2252,7 +2252,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
         /**
          * AdpcmA synthesis
          */
-        public void adpcmAMix(int[] buffer, int count) {
+        void adpcmAMix(int[] buffer, int count) {
 
             if (adpcmATVol < 128 && (adpcmAKey & 0x3f) != 0) {
                 //Sample* limit = buffer + count * 2;
@@ -2311,7 +2311,7 @@ logger.log(Level.ERROR, e.getMessage(), e);
         };
 
 
-        public static void initADPCMATable() {
+        static void initADPCMATable() {
             for (int i = 0; i <= 48; i++) {
                 int s = (int) (16.0 * Math.pow(1.1, i) * 3);
                 for (int j = 0; j < 16; j++) {
@@ -2323,20 +2323,20 @@ logger.log(Level.ERROR, e.getMessage(), e);
         // AdpcmA related
 
         // AdpcmA ROM
-        public byte[] adpcmABuf;
-        public int adpcmASize;
-        public final ADPCMA[] adpcmA = {
+        byte[] adpcmABuf;
+        int adpcmASize;
+        final ADPCMA[] adpcmA = {
                 new ADPCMA(), new ADPCMA(), new ADPCMA(), new ADPCMA(), new ADPCMA(), new ADPCMA()
         };
         // AdpcmA Overall Volume
-        public int adpcmATl;
-        public int adpcmATVol;
+        int adpcmATl;
+        int adpcmATVol;
         // AdpcmA key
-        public int adpcmAKey;
-        public int adpcmAStep;
-        public final byte[] adpcmAReg = new byte[32];
+        int adpcmAKey;
+        int adpcmAStep;
+        final byte[] adpcmAReg = new byte[32];
 
-        public static final short[] jedi_table = new short[(48 + 1) * 16];
+        static final short[] jedi_table = new short[(48 + 1) * 16];
 
 //        public new Fmgen.Channel4[] ch = new Fmgen.Channel4[6];
     }

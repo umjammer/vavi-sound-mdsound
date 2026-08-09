@@ -15,17 +15,18 @@ import mdsound.np.chip.DeviceInfo.BasicTrackInfo;
 public class NesFme7 implements SoundChip {
 
     // stereo mix
-    protected final int[][] sm = {new int[3], new int[3]};
+    private final int[][] sm = {new int[3], new int[3]};
     protected short[] buf = new short[2];
-    protected final Emu2149 emu2149;
+    private final Emu2149 emu2149;
     // clock divider
-    protected int divider;
-    protected double clock, rate;
-    protected final BasicTrackInfo[] trackInfo = new BasicTrackInfo[5];
+    private int divider;
+    private double clock;
+    private double rate;
+    private final BasicTrackInfo[] trackInfo = new BasicTrackInfo[5];
 
-    protected static final int DIVIDER = 8 * 2;
-    public static final double DEFAULT_CLOCK = 1789772.0;
-    public static final int DEFAULT_RATE = 44100;
+    private static final int DIVIDER = 8 * 2;
+    private static final double DEFAULT_CLOCK = 1789772.0;
+    private static final int DEFAULT_RATE = 44100;
 
     public NesFme7() {
         emu2149 = new Emu2149((int) DEFAULT_CLOCK, DEFAULT_RATE);

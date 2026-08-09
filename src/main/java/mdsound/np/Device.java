@@ -100,7 +100,7 @@ public interface Device {
 
     class Bus implements Device {
 
-        protected final List<Device> vd = new ArrayList<>();
+        final List<Device> vd = new ArrayList<>();
 
         /**
          * Reset
@@ -220,8 +220,9 @@ public interface Device {
         // Note: For increased speed, I'll inline all of NSFPlay's Counter member functions.
         private static final int COUNTER_SHIFT = 24;
 
-        public double ratio;
-        public long val, step;
+        double ratio;
+        long val;
+        long step;
 
         void setCycle(int s) {
             this.step = (long) (this.ratio / (s + 1));

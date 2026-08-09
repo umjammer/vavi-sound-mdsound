@@ -87,7 +87,7 @@ public class SoundIocs {
         return x68Sound.opmPeek();
     }
 
-    public Runnable opmIntProc = null; // OPM timer interrupt processing address
+    private Runnable opmIntProc = null; // OPM timer interrupt processing address
 
     /**
      * Processing IOCS _OPMINTST ($6A)

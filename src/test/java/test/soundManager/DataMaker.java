@@ -8,7 +8,7 @@ import vavi.util.Debug;
  * Data Generator
  * Run the music driver and send the generated data to the DataSender
  */
-public class DataMaker extends BaseMakerSender {
+class DataMaker extends BaseMakerSender {
     private final DriverAction actionOfDriver;
     private boolean pause = false;
 

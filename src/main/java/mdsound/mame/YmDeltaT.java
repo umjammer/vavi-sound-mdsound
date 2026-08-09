@@ -75,14 +75,14 @@ import static mdsound.mame.Fm.BaseChip.OUTD_CENTER;
  * @author Jarek Burczynski
  * @version 0.72
  */
-public class YmDeltaT {
+class YmDeltaT {
 
     private static final Logger logger = getLogger(YmDeltaT.class.getName());
 
     private static final int SHIFT = 16;
 
-    public static final int EMULATION_MODE_NORMAL = 0;
-    public static final int EMULATION_MODE_YM2610 = 1;
+    private static final int EMULATION_MODE_NORMAL = 0;
+    private static final int EMULATION_MODE_YM2610 = 1;
 
     public void reset2610(double freqBase, int[] outDelta) {
         this.freqBase = freqBase;

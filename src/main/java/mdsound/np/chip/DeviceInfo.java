@@ -70,21 +70,21 @@ public class DeviceInfo {
     }
 
     /** Buffering TrackInfo */
-    public static class InfoBuffer {
-        public static class Pair {
-            public int first;
-            public DeviceInfo second;
+    static class InfoBuffer {
+        static class Pair {
+            int first;
+            DeviceInfo second;
             Pair(int first, DeviceInfo second) {
                 this.first = first;
                 this.second = second;
             }
         }
 
-        public final int bufMax;
+        final int bufMax;
 
-        public int index;
+        int index;
 
-        public final Pair[] buffer;
+        final Pair[] buffer;
 
         public InfoBuffer(int max /* = 60 * 10 */) {
             index = 0;

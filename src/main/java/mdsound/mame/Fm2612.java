@@ -454,16 +454,16 @@ public abstract class Fm2612 {
             this.muteDAC = (muteMask >> 6) & 0x01;
         }
 
-        public void updateReq() {
+        void updateReq() {
             updateRequest.run();
         }
 
         /**
          * OPN/A/B common state
          */
-        public static class Opn {
+        static class Opn {
 
-            public void reset() {
+            void reset() {
                 this.setPreS(6 * 24, 6 * 24, 0);
                 // status clear
                 this.st.setIrqMask(0x03);
@@ -506,7 +506,7 @@ public abstract class Fm2612 {
             private static class Channel {
 
                 static class Op {
-                    public int val = 0;
+                    int val = 0;
 
                     private int calc(int phase, int env) {
                         int p = (env << 3) + sinTab[(((phase & ~FREQ_MASK) + (this.val << 15)) >> FREQ_SH) & SIN_MASK];
@@ -746,7 +746,7 @@ public abstract class Fm2612 {
                         for (int i = 0; i < 16; i++) slTable[i] = sc(i == 15 ? 31 : i);
                     }
 
-                    public void keyOffCsm() {
+                    void keyOffCsm() {
                         if (this.key == 0) {
                             if (isVGMInit != 0) {
                                 this.state = EG_OFF;
@@ -774,7 +774,7 @@ public abstract class Fm2612 {
                         }
                     }
 
-                    public void keyOn(boolean enabled) {
+                    void keyOn(boolean enabled) {
                         // Note by Valley Bell:
                         //  I assume that the CSM mode shouldn't affect channels
                         //  other than FM3, so I added a check for it here.
@@ -805,7 +805,7 @@ public abstract class Fm2612 {
                         this.key = 1;
                     }
 
-                    public void keyOnScm(boolean enabled) {
+                    void keyOnScm(boolean enabled) {
                         if (this.key == 0 && enabled) {
                             // restart Phase Generator
                             this.phase = 0;
@@ -831,7 +831,7 @@ public abstract class Fm2612 {
                         }
                     }
 
-                    public void keyOff(boolean enabled) {
+                    void keyOff(boolean enabled) {
                         if (this.key != 0 && enabled) {
                             if (isVGMInit != 0) { // workaround for VGMs trimmed with VGMTool
                                 this.state = EG_OFF;
@@ -861,7 +861,7 @@ public abstract class Fm2612 {
                         this.key = 0;
                     }
 
-                    public void reset() {
+                    void reset() {
                         this.incr = -1;
                         this.key = 0;
                         this.phase = 0;
@@ -1213,7 +1213,7 @@ public abstract class Fm2612 {
                     this.slots[s].keyOffCsm();
                 }
 
-                public void reset() {
+                void reset() {
                     this.memValue = 0;
                     this.op1Out[0] = 0;
                     this.op1Out[1] = 0;
@@ -1496,12 +1496,12 @@ public abstract class Fm2612 {
                 /**
                  * Extention Timer and IRQ handler
                  */
-                public interface TimerHandler extends QuadConsumer<Object, Integer, Integer, Integer> {
+                interface TimerHandler extends QuadConsumer<Object, Integer, Integer, Integer> {
                 }
 
                 private TimerHandler timerHandler;
 
-                public interface IrqHandler extends BiConsumer<BaseChip, Integer> {
+                interface IrqHandler extends BiConsumer<BaseChip, Integer> {
                 }
 
                 private IrqHandler irqHandler;
@@ -1602,7 +1602,7 @@ public abstract class Fm2612 {
                         this.timerHandler.accept(this.param, 1, this.tbc * this.timer_prescaler, this.clock);
                 }
 
-                public void setTimers(BaseChip n, int v) {
+                void setTimers(BaseChip n, int v) {
                     // reset Timer b flag
                     if ((v & 0x20) != 0)
                         this.resetStatus(0x02);

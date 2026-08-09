@@ -11,8 +11,8 @@ import mdsound.np.Device;
 
 public class NesMem implements Device {
 
-    protected final byte[] image = new byte[0x1_0000];
-    protected boolean fdsEnabled;
+    private final byte[] image = new byte[0x1_0000];
+    private boolean fdsEnabled;
 
     public NesMem() {
         fdsEnabled = true;
