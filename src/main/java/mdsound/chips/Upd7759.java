@@ -219,7 +219,7 @@ public class Upd7759 {
     /** ROM offset to make save/restore easier */
     private int romoffset;
     /** 0 - Master, 1 - Slave */
-    private int ChipMode;
+    private int chipMode;
 
     // Valley Bell: Added a FIFO buffer based on Sega Pico.
     private final byte[] data_buf = new byte[0x40];
@@ -291,7 +291,7 @@ logger.log(Level.DEBUG, "Warning: UPD7759 reading empty FIFO!");
             case DROP_DRQ:
                 this.drq = 0;
 
-                if (this.ChipMode != 0)
+                if (this.chipMode != 0)
                     get_fifo_data();    // Slave Mode only
                 this.clocks_left = this.post_drq_clocks;
                 this.state = this.post_drq_state;
@@ -505,7 +505,7 @@ logger.log(Level.DEBUG, "UPD7759: nibble_count = %d, requesting next byte".forma
                 pos += step;
 
                 // handle clocks, but only in standalone mode
-                if (this.ChipMode == 0) {
+                if (this.chipMode == 0) {
                     while (this.rom != null && pos >= FRAC_ONE) {
                         int clocks_this_time = pos >> FRAC_BITS;
                         if (clocks_this_time > clocks_left)
@@ -613,7 +613,7 @@ logger.log(Level.DEBUG, "UPD7759: nibble_count = %d, requesting next byte".forma
         // turn off any timer
         //if (this.timer)
         //	timer_adjust_oneshot(this.timer, attotime_never, 0);
-        if (this.ChipMode != 0)
+        if (this.chipMode != 0)
             this.clocks_left = -1;
     }
 
@@ -626,7 +626,7 @@ logger.log(Level.DEBUG, "UPD7759: nibble_count = %d, requesting next byte".forma
     //static DEVICE_START( upd7759 )
     public int device_start_upd7759(int clock) {
         //this.device = device;
-        this.ChipMode = (byte) ((clock & 0x8000_0000) >> 31);
+        this.chipMode = (byte) ((clock & 0x8000_0000) >> 31);
         clock &= 0x7fff_ffff;
 
         // allocate a stream channel
@@ -674,7 +674,7 @@ logger.log(Level.DEBUG, "UPD7759: nibble_count = %d, requesting next byte".forma
     /**
      * I/O handlers
      */
-    public void upd7759_reset_w(int data) {
+    private void upd7759_reset_w(int data) {
         // update the reset value
         int oldreset = this.reset;
         this.reset = (byte) ((data != 0) ? 1 : 0);
@@ -687,7 +687,7 @@ logger.log(Level.DEBUG, "UPD7759: nibble_count = %d, requesting next byte".forma
             upd7759_reset();
     }
 
-    public void upd7759_start_w(int data) {
+    private void upd7759_start_w(int data) {
         // update the start value
         int oldstart = this.start;
         this.start = (byte) ((data != 0) ? 1 : 0);
@@ -707,10 +707,10 @@ logger.log(Level.DEBUG, "upd7759_start_w: %d->%d".formatted(oldstart, this.start
         }
     }
 
-    public void upd7759_port_w(int offset, int data) {
+    private void upd7759_port_w(int offset, int data) {
         // update the FIFO value
 
-        if (this.ChipMode == 0) {
+        if (this.chipMode == 0) {
             this.fifo_in = data;
         } else {
             // Valley Bell: added FIFO buffer for Slave mode
@@ -727,7 +727,7 @@ logger.log(Level.DEBUG, "upd7759_start_w: %d->%d".formatted(oldstart, this.start
     }
 
     //void upd7759_set_bank_base(running_device *device, int base)
-    public void upd7759_set_bank_base(int base_) {
+    private void upd7759_set_bank_base(int base_) {
         this.rom = this.rombase;
         this.romPtr = base_;
         this.romoffset = base_;

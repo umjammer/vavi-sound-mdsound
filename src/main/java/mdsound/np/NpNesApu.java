@@ -60,7 +60,7 @@ public class NpNesApu {
     // Master Clock: 21477272 (NTSC)
     // APU Clock = Master Clock / 12
     public static final double DEFAULT_CLOCK = 1789772.0; // not sure if this shouldn't be 1789772,667 instead
-    public static final int DEFAULT_RATE = 44100;
+    private static final int DEFAULT_RATE = 44100;
 
     /**
      * Upper half of APU

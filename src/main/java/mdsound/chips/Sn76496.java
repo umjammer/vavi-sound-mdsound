@@ -165,7 +165,7 @@ public class Sn76496 {
     private Sn76496 ngpChip2;
 
     public static Sn76496 lastChipInit = null;
-    public static int fNumLimit;
+    private static int fNumLimit;
 
     private byte readyR(int offset) {
         return (byte) (this.cyclestoReady != 0 ? 0 : 1);
@@ -236,8 +236,8 @@ public class Sn76496 {
         }
     }
 
-    final int[] vol = new int[4];
-    final int[] ggst = new int[2];
+    private final int[] vol = new int[4];
+    private final int[] ggst = new int[2];
 
     public void update(int[][] outputs, int samples) {
         int i;

@@ -93,9 +93,9 @@ Ensoniq OTIS - ES5505                                            Ensoniq OTTO - 
  *
  * @author Aaron Giles
  */
-public abstract class Es550x {
+abstract class Es550x {
 
-    protected int clock() {
+    public int clock() {
         return 0;
     }
 
@@ -138,63 +138,63 @@ public abstract class Es550x {
         return null;
     }
 
-    protected static final int LP3 = 1;
-    protected static final int LP4 = 2;
+    private static final int LP3 = 1;
+    private static final int LP4 = 2;
     protected static final int LP_MASK = LP3 | LP4;
     /** constants for volumes */
-    protected static final int VOLUME_ACC_BIT = 20;
+    private static final int VOLUME_ACC_BIT = 20;
     /** constants for address */
-    protected static final int ADDRESS_FRAC_BIT = 11;
+    private static final int ADDRESS_FRAC_BIT = 11;
 
     /** struct describing a single playing voice */
-    protected static class es550x_voice {
+    static class es550x_voice {
 
         // external state
         /** control register */
-        protected int control = 0;
+        int control = 0;
         /** frequency count register */
-        protected long freqCount = 0;
+        long freqCount = 0;
         /** start register */
-        protected long start = 0;
+        long start = 0;
         /** left volume register */
-        protected int lvol = 0;
+        int lvol = 0;
         /** end register */
-        protected long end = 0;
+        long end = 0;
         /** left volume ramp register */
         protected int lvRamp = 0;
         /** accumulator register */
-        protected long accum = 0;
+        long accum = 0;
         /** right volume register */
-        protected int rVol = 0;
+        int rVol = 0;
         /** right volume ramp register */
         protected int rvRamp = 0;
         /** envelope count register */
-        protected int eCount = 0;
+        int eCount = 0;
         /** k2 register */
-        protected int k2 = 0;
+        int k2 = 0;
         /** k2 ramp register */
         protected int k2Ramp = 0;
         /** k1 register */
-        protected int k1 = 0;
+        int k1 = 0;
         /** k1 ramp register */
         protected int k1Ramp = 0;
         /** filter storage O4(n-1) */
-        protected int o4n1 = 0;
+        int o4n1 = 0;
         /** filter storage O3(n-1) */
-        protected int o3n1 = 0;
+        int o3n1 = 0;
         /** filter storage O3(n-2) */
-        protected int o3n2 = 0;
+        int o3n2 = 0;
         /** filter storage O2(n-1) */
-        protected int o2n1 = 0;
+        int o2n1 = 0;
         /** filter storage O2(n-2) */
-        protected int o2n2 = 0;
+        int o2n2 = 0;
         /** filter storage O1(n-1) */
-        protected int o1n1 = 0;
+        int o1n1 = 0;
         /** external address bank */
         protected long exBank = 0;
         // internal state
         /** index of this voice */
-        protected byte index = 0;
+        byte index = 0;
         /** filter count */
         protected byte filtCount = 0;
     }
@@ -212,23 +212,23 @@ public abstract class Es550x {
         return (shift >= 0) ? val >> shift : val << (-shift);
     }
 
-    protected long get_volume(int volume) {
+    private long get_volume(int volume) {
         return m_volume_lookup.get((int) rShift_signed(volume, m_volume_shift));
     }
 
-    protected long get_address_acc_shifted_val(long val, int bias /* = 0 */) {
+    long get_address_acc_shifted_val(long val, int bias /* = 0 */) {
         return lShift_signed(val, m_address_acc_shift - bias);
     }
 
-    protected long get_address_acc_res(long val, int bias /* = 0 */) {
+    long get_address_acc_res(long val, int bias /* = 0 */) {
         return rShift_signed(val, m_address_acc_shift - bias);
     }
 
-    protected long get_integer_addr(long accum, int bias /* = 0 */) {
+    long get_integer_addr(long accum, int bias /* = 0 */) {
         return ((accum + ((long) bias << ADDRESS_FRAC_BIT)) & m_address_acc_mask) >> ADDRESS_FRAC_BIT;
     }
 
-    protected long get_sample(int sample, int volume) {
+    private long get_sample(int sample, int volume) {
         return rShift_signed((long) sample * get_volume(volume), (int) m_volume_acc_shift);
     }
 
@@ -241,37 +241,37 @@ public abstract class Es550x {
     protected abstract void generate_samples(int[][] outputs);
 
     //       inline void update_index(es550x_voice* voice) { m_voice_index = voice->index; }
-    protected short read_sample(/* ref */ es550x_voice[] voice, int addr) {
+    short read_sample(/* ref */ es550x_voice[] voice, int addr) {
         return 0;
     }
 
     //        internal state
     //       sound_stream* m_stream;               // which stream are we using
     /** current sample rate */
-    protected int m_sample_rate;
+    int m_sample_rate;
     /** master clock frequency */
-    protected int m_master_clock;
+    int m_master_clock;
     /** right shift accumulator for generate integer address */
     private int m_address_acc_shift;
     /** accumulator mask */
-    protected long m_address_acc_mask;
+    long m_address_acc_mask;
     /** right shift volume for generate integer volume */
     private int m_volume_shift;
     /** right shift output for output normalizing */
     private long m_volume_acc_shift;
     /** current register page */
-    protected int m_current_page;
+    int m_current_page;
     /** number of active voices */
-    protected int m_active_voices;
+    int m_active_voices;
     /** MODE register */
-    protected short m_mode;
+    short m_mode;
     /** IRQV register */
-    protected int m_irqv;
+    int m_irqv;
     /** current voice index value */
     private int m_voice_index;
 
     /** the 32 voices */
-    protected final es550x_voice[] m_voice = new es550x_voice[32];
+    final es550x_voice[] m_voice = new es550x_voice[32];
 
     private List<Short> m_ulaw_lookup;
     private List<Integer> m_volume_lookup;
@@ -280,7 +280,7 @@ public abstract class Es550x {
 //    optional_memory_region m_region1; // memory region where the sample ROM lives
 //    optional_memory_region m_region2; // memory region where the sample ROM lives
 //    optional_memory_region m_region3; // memory region where the sample ROM lives
-    protected int m_channels; // number of output channels: 1 .. 6
+int m_channels; // number of output channels: 1 .. 6
 //    devcb_write_line m_irq_cb; // irq callback
 //    devcb_read16 m_read_port_cb; // input port read
 //    devcb_write32 m_sample_rate_changed_cb; // callback for when sample rate is changed
@@ -299,32 +299,32 @@ public abstract class Es550x {
     private static final int FILTER_SHIFT = FINE_FILTER_BIT - FILTER_BIT;
     private static final int ULAW_MAXBITS = 8;
 
-    protected static final int CONTROL_BS1 = 0x8000;
-    protected static final int CONTROL_BS0 = 0x4000;
+    private static final int CONTROL_BS1 = 0x8000;
+    private static final int CONTROL_BS0 = 0x4000;
     protected static final int CONTROL_CMPD = 0x2000;
-    protected static final int CONTROL_CA2 = 0x1000;
-    protected static final int CONTROL_CA1 = 0x0800;
-    protected static final int CONTROL_CA0 = 0x0400;
-    protected static final int CONTROL_LP4 = 0x0200;
-    protected static final int CONTROL_LP3 = 0x0100;
-    protected static final int CONTROL_IRQ = 0x0080;
-    protected static final int CONTROL_DIR = 0x0040;
-    protected static final int CONTROL_IRQE = 0x0020;
-    protected static final int CONTROL_BLE = 0x0010;
-    protected static final int CONTROL_LPE = 0x0008;
+    private static final int CONTROL_CA2 = 0x1000;
+    private static final int CONTROL_CA1 = 0x0800;
+    private static final int CONTROL_CA0 = 0x0400;
+    private static final int CONTROL_LP4 = 0x0200;
+    private static final int CONTROL_LP3 = 0x0100;
+    static final int CONTROL_IRQ = 0x0080;
+    static final int CONTROL_DIR = 0x0040;
+    static final int CONTROL_IRQE = 0x0020;
+    static final int CONTROL_BLE = 0x0010;
+    static final int CONTROL_LPE = 0x0008;
     protected static final int CONTROL_LEI = 0x0004;
-    protected static final int CONTROL_STOP1 = 0x0002;
-    protected static final int CONTROL_STOP0 = 0x0001;
+    private static final int CONTROL_STOP1 = 0x0002;
+    static final int CONTROL_STOP0 = 0x0001;
     protected static final int CONTROL_BSMASK = (CONTROL_BS1 | CONTROL_BS0);
     protected static final int CONTROL_CAMASK = (CONTROL_CA2 | CONTROL_CA1 | CONTROL_CA0);
     protected static final int CONTROL_LPMASK = (CONTROL_LP4 | CONTROL_LP3);
-    protected static final int CONTROL_LOOPMASK = (CONTROL_BLE | CONTROL_LPE);
-    protected static final int CONTROL_STOPMASK = (CONTROL_STOP1 | CONTROL_STOP0);
+    static final int CONTROL_LOOPMASK = (CONTROL_BLE | CONTROL_LPE);
+    static final int CONTROL_STOPMASK = (CONTROL_STOP1 | CONTROL_STOP0);
     // ES5505 has sightly different control bit
-    protected static final int CONTROL_5505_LP4 = 0x0800;
-    protected static final int CONTROL_5505_LP3 = 0x0400;
-    protected static final int CONTROL_5505_CA1 = 0x0200;
-    protected static final int CONTROL_5505_CA0 = 0x0100;
+    private static final int CONTROL_5505_LP4 = 0x0800;
+    private static final int CONTROL_5505_LP3 = 0x0400;
+    private static final int CONTROL_5505_CA1 = 0x0200;
+    private static final int CONTROL_5505_CA0 = 0x0100;
     protected static final int CONTROL_5505_LPMASK = (CONTROL_5505_LP4 | CONTROL_5505_LP3);
     protected static final int CONTROL_5505_CAMASK = (CONTROL_5505_CA1 | CONTROL_5505_CA0);
 
@@ -334,7 +334,7 @@ public abstract class Es550x {
     /**
      * device-specific startup
      */
-    public void device_start() {
+    void device_start() {
         // initialize the rest of the structure
         m_master_clock = clock();
         m_irqv = 0x80;
@@ -368,7 +368,7 @@ public abstract class Es550x {
     /**
      * update the IRQ state
      */
-    public void update_irq_state() {
+    private void update_irq_state() {
         // ES5505/6 irq line has been set high - inform the host
         //m_irq_cb(1); // IRQB set high
     }
@@ -389,7 +389,7 @@ public abstract class Es550x {
     /**
      * compute static tables
      */
-    public void compute_tables(int total_volume_bit, int exponent_bit, int mantissa_bit) {
+    void compute_tables(int total_volume_bit, int exponent_bit, int mantissa_bit) {
         // allocate ulaw lookup table
         m_ulaw_lookup = new ArrayList<>();
         for (int i = 0; i < (1 << ULAW_MAXBITS); i++)
@@ -445,7 +445,7 @@ public abstract class Es550x {
     /**
      * get address accumulator mask
      */
-    public void get_accum_mask(int address_integer, int address_frac) {
+    void get_accum_mask(int address_integer, int address_frac) {
         m_address_acc_shift = ADDRESS_FRAC_BIT - address_frac;
         m_address_acc_mask = lShift_signed(
                 (((1L << address_integer) - 1) << address_frac) | ((1L << address_frac) - 1),
@@ -709,7 +709,7 @@ public abstract class Es550x {
     /**
      * general interrupt handling routine
      */
-    protected void generate_irq(/* ref */ es550x_voice[] voice, int v) {
+    void generate_irq(/* ref */ es550x_voice[] voice, int v) {
         // does this voice have it's IRQ bit raised?
         if ((voice[0].control & CONTROL_IRQ) != 0) {
             //LOG("es5506: IRQ raised on voice %d!!\n", v);

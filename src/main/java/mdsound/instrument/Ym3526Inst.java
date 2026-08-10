@@ -13,7 +13,7 @@ public class Ym3526Inst extends Instrument.BaseInstrument {
     private static final int CHIP_SAMPLING_MODE = 0;
 
     public static final int DefaultClockValue = 3579545;
-    public static final int MAX_CHIPS = 0x02;
+    private static final int MAX_CHIPS = 0x02;
 
     private final Ym3526[] chips = {new Ym3526(), new Ym3526()};
 

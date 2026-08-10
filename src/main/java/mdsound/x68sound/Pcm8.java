@@ -23,7 +23,7 @@ import static java.lang.System.getLogger;
  *
  * @author m_puusan
  */
-public class Pcm8 {
+class Pcm8 {
 
     private static final Logger logger = getLogger(Pcm8.class.getName());
 
@@ -52,18 +52,18 @@ public class Pcm8 {
     /** 0-4: ADPCM 5: 16bit PCM 6: 8bit PCM 7: Mystery */
     private int pcmKind;
 
-    public int dmaLastValue;
-    public int adpcmReg;
+    private int dmaLastValue;
+    private int adpcmReg;
 
-    public byte[] dmaMarBuf;
-    public int dmaMarPtr;
+    private byte[] dmaMarBuf;
+    private int dmaMarPtr;
 
-    public int dmaMtc;
-    public byte[] dmaBarBuf;
-    public int dmaBarPtr;
-    public int dmaBtc;
+    private int dmaMtc;
+    private byte[] dmaBarBuf;
+    private int dmaBarPtr;
+    private int dmaBtc;
     /** 0: No chain operation 0x08: Array chain 0x0C: Link array chain */
-    public int dmaOcr;
+    private int dmaOcr;
 
     public Pcm8() {
         mode = 0x0008_0403;
@@ -108,7 +108,7 @@ public class Pcm8 {
         n1DataFlag = 0;
     }
 
-    public int dmaArrayChainSetNextMtcMar() {
+    private int dmaArrayChainSetNextMtcMar() {
         if (dmaBtc == 0) {
             return 1;
         }
@@ -136,7 +136,7 @@ public class Pcm8 {
         return 0;
     }
 
-    public int dmaLinkArrayChainSetNextMtcMar() {
+    private int dmaLinkArrayChainSetNextMtcMar() {
         if (dmaBarPtr == 0) {
             return 1;
         }
@@ -168,7 +168,7 @@ public class Pcm8 {
         return 0;
     }
 
-    public int dmaGetByte() {
+    private int dmaGetByte() {
         if (dmaMtc == 0) {
             return 0x8000_0000;
         }
@@ -212,7 +212,7 @@ public class Pcm8 {
      * -2047<<(4+4) <= InpPcm <= +2047<<(4+4)
      * </pre>
      */
-    public void adpcm2pcm(byte adpcm) {
+    private void adpcm2pcm(byte adpcm) {
 
         int dltL = Global.dltLTBL[scale];
         dltL = (dltL & ((adpcm & 4) != 0 ? -1 : 0)) +

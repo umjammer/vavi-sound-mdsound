@@ -6,7 +6,7 @@ import mdsound.mame.Fm2612.Ym2612;
 
 public class MameYm2612Inst extends Instrument.BaseInstrument {
 
-    public static final int MAX_CHIPS = 2;
+    private static final int MAX_CHIPS = 2;
     public static final int DefaultClockValue = 7670454;
 
     private final Ym2612[] chips = {new Ym2612(), new Ym2612()};

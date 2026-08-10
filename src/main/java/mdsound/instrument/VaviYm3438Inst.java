@@ -28,11 +28,11 @@ public class VaviYm3438Inst extends Instrument.BaseInstrument {
     private final Ym3438[] chips = {new Ym3438(), new Ym3438()};
 
     private final int[][] ym3438_accm = new int[24][2];
-    int ym3438_cycles = 0;
-    final int[] ym3438_sample = new int[2];
+    private int ym3438_cycles = 0;
+    private final int[] ym3438_sample = new int[2];
 
-    double rateRatioAcc = 0;
-    double sampleRateCalcAcc = 0;
+    private double rateRatioAcc = 0;
+    private double sampleRateCalcAcc = 0;
 
     private final Queue<Integer> commandQueue = new ConcurrentLinkedQueue<>();
     private final AtomicLong queueSize = new AtomicLong();

@@ -14,13 +14,15 @@ import mdsound.np.Device.Renderable;
 //
 public class Filter {
 
-    protected Renderable target;
+    private Renderable target;
     protected int type;
-    protected final int[] _out = new int[2];
-    protected double a;
-    protected double rate, r, C;
-    protected final boolean disable;
-    protected final int getaBits;
+    private final int[] _out = new int[2];
+    private double a;
+    private double rate;
+    private double r;
+    private double C;
+    private final boolean disable;
+    private final int getaBits;
 
     public Filter() {
         this.getaBits = 20;
@@ -77,7 +79,7 @@ public class Filter {
         updateFactor();
     }
 
-    public void updateFactor() {
+    private void updateFactor() {
         if (r != 0.0 && C != 0.0 && rate != 0.0)
             this.a = (1.0 / rate) / ((r * C) + (1.0 / rate));
         else

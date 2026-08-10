@@ -7,71 +7,72 @@ package mdsound.fmvgen;
 import mdsound.fmvgen.effect.ReversePhase;
 
 
-public class AdpcmB {
+class AdpcmB {
+
     public OPNA2 parent = null;
 
-    public static final boolean NO_BITTYPE_EMULATION = false;
+    private static final boolean NO_BITTYPE_EMULATION = false;
 
-    public int stMask;
-    public int statusNext;
+    private int stMask;
+    private int statusNext;
 
     /** ADPCM RAM */
-    public byte[] adpcmBuf;
+    byte[] adpcmBuf;
     /** A bit mask for memory addresses */
-    public int adpcmMask;
+    int adpcmMask;
     /** ADPCM playback end bit */
-    public int adpcmNotice;
+    int adpcmNotice;
     /** Start address */
-    protected int startAddr;
+    private int startAddr;
     /** Stop address */
-    protected int stopAddr;
+    private int stopAddr;
     /** Playing address */
-    public int memAddr;
+    private int memAddr;
     /** Limit address/mask */
-    protected int limitAddr;
+    private int limitAddr;
     // ADPCM Volume
-    public int adpcmLevel;
-    public int adpcmVolume;
-    public int adpcmVol;
+    int adpcmLevel;
+    int adpcmVolume;
+    int adpcmVol;
     /** ⊿N */
-    public int deltaN;
+    int deltaN;
     /** Frequency conversion variables */
-    public int adplC;
+    private int adplC;
     /** Frequency conversion variable difference value */
-    public int adplD;
+    int adplD;
     /** Originally from adpld */
-    public int adplBase;
+    int adplBase;
     /** For ADPCM synthesis x */
-    public int adpcMx;
+    private int adpcMx;
     /** For ADPCM synthesis ⊿ */
-    public int adpcmD;
+    private int adpcmD;
     /** ADPCM synthesis output */
-    protected int adpcmOut;
+    private int adpcmOut;
     /** out(t-2)+out(t-1) */
-    protected int apOut0;
+    private int apOut0;
     /** out(t-1)+out(t) */
-    protected int apOut1;
+    private int apOut1;
 
     // Memory
-    public int shiftBit = 6;
+    int shiftBit = 6;
 
-    protected int status;
+    private int status;
 
     /** ADPCM read buffer */
     protected int adpcmReadBuf;
     /** ADPCM Playing */
-    public boolean adpcmPlay;
-    protected byte granuality;
-    public boolean adpcmMask_;
+    private boolean adpcmPlay;
+    private byte granuality;
+    boolean adpcmMask_;
 
     /** ADPCM Control Register 1 */
-    protected byte control1;
+    private byte control1;
     /** ADPCM Control Register 2 */
-    public byte control2;
+    byte control2;
     /** Part of the ADPCM register */
-    protected final byte[] adpcmReg = new byte[8];
-    protected float panL = 1.0f;
-    protected float panR = 1.0f;
+    private final byte[] adpcmReg = new byte[8];
+    private float panL = 1.0f;
+    private float panR = 1.0f;
     private final Fmvgen.Effects effects;
     private final int efcCh;
     private final int num;
@@ -270,7 +271,7 @@ stop:
     /**
      * Write operation to ADPCM RAM
      */
-    protected void writeRam(int data) {
+    private void writeRam(int data) {
         if (NO_BITTYPE_EMULATION) {
             if ((control2 & 2) == 0) {
                 // 1 bit mode
@@ -320,7 +321,7 @@ stop:
     /**
      * ADPCM Deployment
      */
-    protected void decode() {
+    private void decode() {
         apOut0 = apOut1;
         int n = (readRam() * adpcmVolume) >> 13;
         apOut1 = adpcmOut + n;
@@ -330,7 +331,7 @@ stop:
     /**
      * Read nibble from ADPCM RAM and decompress ADPCM
      */
-    protected int readRam() {
+    private int readRam() {
         int data;
         if (granuality > 0) {
             if (NO_BITTYPE_EMULATION) {
@@ -402,7 +403,7 @@ stop:
             57, 57, 57, 57, 77, 102, 128, 153,
     };
 
-    protected int decodeSample(int data) {
+    private int decodeSample(int data) {
         adpcMx = Math.clamp(adpcMx + table1[data] * adpcmD / 8, -32768, 32767);
         adpcmD = Math.clamp(adpcmD * table2[data] / 64, 127, 24576);
         return adpcMx;
@@ -411,7 +412,7 @@ stop:
     /**
      * Status Flag Settings
      */
-    protected void setStatus(int bits) {
+    private void setStatus(int bits) {
         if ((status & bits) == 0) {
 //logger.log(Level.TRACE, "SetStatus(%.2x %.2x)".formatted(bits, stmask));
             status |= bits & stMask;
@@ -421,13 +422,13 @@ stop:
 // logger.log(Level.TRACE, "SetStatus(%.2x) - ignored".formatted(bits));
     }
 
-    protected void resetStatus(int bits) {
+    private void resetStatus(int bits) {
         status &= ~bits;
 // logger.log(Level.TRACE, "ResetStatus(%.2x)".formatted(bits));
         updateStatus();
     }
 
-    protected void updateStatus() {
+    private void updateStatus() {
 //logger.log(Level.TRACE, "%d:INT = %d".formatted(Diag::GetCPUTick(), (status & stmask & reg29) != 0));
         //intr((status & stmask & reg29) != 0);
     }

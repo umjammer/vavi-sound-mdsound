@@ -54,10 +54,10 @@ public class NukedYmF262 {
 
     private static final Logger logger = getLogger(NukedYmF262.class.getName());
 
-    static final boolean OPL_ENABLE_STEREOEXT = false;
+    private static final boolean OPL_ENABLE_STEREOEXT = false;
 
-    static final int OPL_WRITEBUF_SIZE = 1024;
-    static final int OPL_WRITEBUF_DELAY = 2;
+    private static final int OPL_WRITEBUF_SIZE = 1024;
+    private static final int OPL_WRITEBUF_DELAY = 2;
 
     private static class Slot {
 
@@ -146,10 +146,10 @@ public class NukedYmF262 {
         return chip.channel[ch].chb != 0;
     }
 
-    public static class WriteBuf {
+    static class WriteBuf {
 
         long time;
-        public int reg;
+        int reg;
         int data;
     }
 
@@ -187,16 +187,16 @@ public class NukedYmF262 {
 //#endif
 
         // OPL3L
-        public int rateRatio;
-        public int sampleCnt;
+        int rateRatio;
+        int sampleCnt;
         final short[] oldSamples = new short[4];
-        public final short[] samples = new short[4];
+        final short[] samples = new short[4];
 
         long writeBuf_sampleCnt;
-        public int writeBuf_cur;
+        int writeBuf_cur;
         int writeBuf_last;
         long writeBuf_lastTime;
-        public final WriteBuf[] writeBuf = new WriteBuf[OPL_WRITEBUF_SIZE];
+        final WriteBuf[] writeBuf = new WriteBuf[OPL_WRITEBUF_SIZE];
 
         public Chip() {
             for (int i = 0; i < channel.length; i++) {
@@ -224,7 +224,7 @@ public class NukedYmF262 {
     /* Quirk: Some FM channels are output one sample later on the left side than the right. */
     private static final boolean OPL_QUIRK_CHANNELSAMPLEDELAY = !OPL_ENABLE_STEREOEXT;
 
-    public static final int RSM_FRAC = 10;
+    private static final int RSM_FRAC = 10;
 
     /** Channel types */
     private static final int ch_2op = 0;

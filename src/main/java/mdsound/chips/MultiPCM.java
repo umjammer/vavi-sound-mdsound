@@ -126,7 +126,7 @@ public class MultiPCM {
 //logger.log(Level.INFO, "eg init: " + Arrays.toString(lin2expVol));
         }
 
-        public int update(Runnable whenRelease) {
+        int update(Runnable whenRelease) {
             switch (this.state) {
             case ATTACK:
                 this.volume += this.ar;
@@ -174,7 +174,7 @@ public class MultiPCM {
             return steps[r];
         }
 
-        public void calc(int rate, Slot.Sample sample) {
+        void calc(int rate, Slot.Sample sample) {
             this.ar = getRate(arStep, rate, sample.ar);
             this.d1r = getRate(drStep, rate, sample.dr1);
             this.d2r = getRate(drStep, rate, sample.dr2);
@@ -540,7 +540,7 @@ public class MultiPCM {
     private final Slot[] slots = new Slot[28];
     private int curSlot;
     private int address;
-    public int sega_banking;
+    private int sega_banking;
     private int bankR, bankL;
     private float rate;
 

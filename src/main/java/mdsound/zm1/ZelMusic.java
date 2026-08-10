@@ -6,7 +6,7 @@ import java.util.List;
 
 public class ZelMusic {
 
-    public static final int MAX_OPERATOR = 48;
+    private static final int MAX_OPERATOR = 48;
     public static final long MAX_PCMDATASIZE = 0x1_0000_0000L;
 
     private Operator[] ope = null;

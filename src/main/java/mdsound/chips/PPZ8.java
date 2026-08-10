@@ -37,7 +37,7 @@ public class PPZ8 {
     private int volume;
 
     public static class Channel {
-        public int startAddress;
+        int startAddress;
         public int loopStartOffset;
         public int loopEndOffset;
         public boolean playing;
@@ -48,7 +48,7 @@ public class PPZ8 {
         public int volume;
         public int frequency;
         public boolean KeyOn;
-        public boolean mask;
+        boolean mask;
 
         private int _loopStartOffset;
         private int _loopEndOffset;

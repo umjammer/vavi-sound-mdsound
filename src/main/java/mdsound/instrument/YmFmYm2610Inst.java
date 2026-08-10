@@ -29,8 +29,8 @@ public class YmFmYm2610Inst extends Instrument.BaseInstrument implements AdpcmEn
     private final VgmChip[] chips = new VgmChip[2];
 
     // TODO similar variables in VgmChip class, those can be eliminated?
-    long output_pos;
-    long output_step;
+    private long output_pos;
+    private long output_step;
 
     @Override
     public String getName() {

@@ -15,9 +15,9 @@ package vavi.util.compat;
  */
 public class Tuple<A, B> {
 
-    protected A Item1;
+    private A Item1;
 
-    protected B Item2;
+    B Item2;
 
     public Tuple(A a, B b) {
         Item1 = a;

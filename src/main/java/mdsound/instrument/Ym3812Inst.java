@@ -14,7 +14,7 @@ public class Ym3812Inst extends Instrument.BaseInstrument {
     private static final int[] CARRIER = {3, 4, 5, 11, 12, 13, 19, 20, 21};
 
 
-    public static final int MAX_CHIPS = 0x02;
+    private static final int MAX_CHIPS = 0x02;
     public static final int DefaultClockValue = 3579545;
 
     private final DosboxYm3812[] chips = {new DosboxYm3812(), new DosboxYm3812()};

@@ -18,7 +18,7 @@ import mdsound.chips.Gigatron;
  */
 public class GigatronInst extends BaseInstrument {
 
-    public final Gigatron[] gig = {new Gigatron(), new Gigatron()};
+    private final Gigatron[] gig = {new Gigatron(), new Gigatron()};
 
     @Override
     public String getName() {

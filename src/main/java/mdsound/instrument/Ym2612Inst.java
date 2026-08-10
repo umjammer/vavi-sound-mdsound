@@ -15,8 +15,8 @@ public class Ym2612Inst extends Instrument.BaseInstrument {
 
     private static final Logger logger = getLogger(Ym2612Inst.class.getName());
 
-    public static final int DefaultFMClockValue = 7670454;
-    public static final int MAX_CHIPS = 2;
+    private static final int DefaultFMClockValue = 7670454;
+    private static final int MAX_CHIPS = 2;
 
     private final Ym2612[] chips = {new Ym2612(), new Ym2612()};
 

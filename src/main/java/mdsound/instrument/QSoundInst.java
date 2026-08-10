@@ -12,7 +12,7 @@ import mdsound.chips.QSound;
 public class QSoundInst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
     public static final int DefaultClockValue = QSound.CLOCK;
-    public static final int MAX_CHIPS = 0x02;
+    private static final int MAX_CHIPS = 0x02;
 
     private final QSound[] chips = {new QSound(), new QSound()};
 

@@ -138,7 +138,7 @@ public class Emu2149 {
             internalRefresh();
         }
 
-        public void setQuality(int q) {
+        void setQuality(int q) {
             this.quality = q;
             internalRefresh();
         }
@@ -359,7 +359,7 @@ public class Emu2149 {
         psg.setQuality(0);
     }
 
-    public void setVolumeMode(int type) {
+    private void setVolumeMode(int type) {
         switch (type) {
         case 1:
             psg.volTbl = VolTbl[VOL_YM2149];

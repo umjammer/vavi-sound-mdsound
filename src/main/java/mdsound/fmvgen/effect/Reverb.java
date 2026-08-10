@@ -22,7 +22,7 @@ public class Reverb {
         initParams();
     }
 
-    public void initParams() {
+    private void initParams() {
         this.pos = 0;
         this.currentCh = 0;
         setDelta(64);
@@ -38,11 +38,11 @@ public class Reverb {
         };
     }
 
-    public void setDelta(int n) {
+    private void setDelta(int n) {
         this.delta = buf[0].length / 128 * Math.clamp(n, 0, 127);
     }
 
-    public void setSendLevel(int ch, int n) {
+    private void setSendLevel(int ch, int n) {
         if (n == 0) {
             sendLevel[ch] = 0;
             return;

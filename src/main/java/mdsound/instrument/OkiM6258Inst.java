@@ -11,7 +11,7 @@ import mdsound.chips.OkiM6258;
 
 public class OkiM6258Inst extends Instrument.BaseInstrument {
 
-    public static final int MAX_CHIPS = 0x02;
+    private static final int MAX_CHIPS = 0x02;
 
     private final OkiM6258[] chips = {new OkiM6258(), new OkiM6258()};
 

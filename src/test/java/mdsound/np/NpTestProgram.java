@@ -88,7 +88,7 @@ public class NpTestProgram {
 
     private double cpuClockRest;
     private double apuClockRest;
-    private final double vgmSpeed = 1.0;
+    private static final double vgmSpeed = 1.0;
 
     public static void main(String[] args) throws Exception {
         if (args.length == 0) {
@@ -104,7 +104,7 @@ public class NpTestProgram {
         new NpTestProgram().play(args[0], song);
     }
 
-    public void play(String filename, int song) throws Exception {
+    private void play(String filename, int song) throws Exception {
         this.song = song;
         byte[] fileBuffer = Files.readAllBytes(Paths.get(filename));
         if (!parseHeader(fileBuffer)) {

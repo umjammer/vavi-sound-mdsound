@@ -23,7 +23,7 @@ import mdsound.chips.Ym3812;
  */
 public class MameYm3812Inst extends Instrument.BaseInstrument {
 
-    public static final int MAX_CHIPS = 0x02;
+    private static final int MAX_CHIPS = 0x02;
     public static final int DefaultClockValue = 3579545;
 
     private final Ym3812[] chips = {new Ym3812(), new Ym3812()};

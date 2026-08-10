@@ -30,15 +30,15 @@ public class Distortion {
     private int currentCh = 0;
 
     private static class ChInfo {
-        public boolean sw = false;
+        boolean sw = false;
 
-        public Filter highpassL = new Filter();
+        Filter highpassL = new Filter();
 
-        public Filter highpassR = new Filter();
+        Filter highpassR = new Filter();
         /** Amplification amount: 10 to 300 (20 dB to 50 dB in dB conversion) */
-        public float gain = 300.0f;
+        float gain = 300.0f;
         /** The volume of the output signal, ranging from 0.0 to 1.0. */
-        public float volume = 0.1f;
+        float volume = 0.1f;
     }
 
     public Distortion(int clock, int maxCh) {
@@ -47,7 +47,7 @@ public class Distortion {
         init();
     }
 
-    public void init() {
+    private void init() {
         chInfo = new ChInfo[maxCh];
         for (int i = 0; i < chInfo.length; i++) {
             chInfo[i] = new ChInfo();
@@ -70,7 +70,7 @@ public class Distortion {
         mix(ch, inL, inR, 1);
     }
 
-    public void mix(int ch, int[] inL, int[] inR, int waveLength) {
+    private void mix(int ch, int[] inL, int[] inR, int waveLength) {
         if (ch < 0)
             return;
         if (ch >= maxCh)

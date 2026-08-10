@@ -12,7 +12,7 @@ import mdsound.chips.YmF271;
 public class YmF271Inst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
     public static final int DefaultClockValue = 16934400;
-    public static final int MAX_CHIPS = 0x10;
+    private static final int MAX_CHIPS = 0x10;
 
     private final YmF271[] chips = {new YmF271(), new YmF271()};
 

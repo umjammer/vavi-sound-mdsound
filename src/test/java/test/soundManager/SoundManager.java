@@ -16,7 +16,7 @@ public class SoundManager {
     public interface Snd extends HexaConsumer<Integer, Integer, Integer, Integer, Integer, Object[]> {
     }
 
-    public static final int DATA_SEQUENCE_FREQUENCE = 44100;
+    private static final int DATA_SEQUENCE_FREQUENCE = 44100;
 
     /**
      * Music Data Analysis

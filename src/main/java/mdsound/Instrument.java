@@ -68,7 +68,7 @@ public interface Instrument {
 
         protected static final int CHIP_SAMPLING_MODE = 2;
 
-        public static final int CHIP_SAMPLE_RATE = 44100;
+        protected static final int CHIP_SAMPLE_RATE = 44100;
 
         // chipId , type , LR
         protected int[][][] visVolume;

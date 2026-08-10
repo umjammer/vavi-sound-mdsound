@@ -31,7 +31,7 @@ public class X68Sound {
     public static final int SNDERR_DLL = -1;
     public static final int SNDERR_FUNC = -2;
 
-    public final Opm opm;
+    private final Opm opm;
 
     public X68Sound() {
         opm = new Opm();
@@ -198,11 +198,11 @@ public class X68Sound {
 
 
     public int errorCode() {
-        return opm.work.ErrorCode;
+        return opm.work.errorCode;
     }
 
     public int debugValue() {
-        return opm.work.DebugValue;
+        return opm.work.debugValue;
     }
 
     public void timerA() {

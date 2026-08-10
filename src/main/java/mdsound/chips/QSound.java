@@ -137,7 +137,7 @@ public class QSound {
             panTable[i] = (int) ((256 / Math.sqrt(32.0)) * Math.sqrt(i));
     }
 
-    public void setCommand(int address, int data) {
+    private void setCommand(int address, int data) {
         int ch, reg;
 
         // direct Sound reg

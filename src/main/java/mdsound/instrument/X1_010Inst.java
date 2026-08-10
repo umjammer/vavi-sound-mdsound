@@ -13,7 +13,7 @@ public class X1_010Inst extends Instrument.BaseInstrument implements PcmEnabledI
 
     public static final int DefaultClockValue = 16000000;
 
-    public static final int MAX_CHIPS = 0x02;
+    private static final int MAX_CHIPS = 0x02;
 
     private final X1_010[] chips = {new X1_010(), new X1_010()};
 

@@ -18,7 +18,7 @@ import mdsound.x68sound.Global.Work;
  *
  * @author m_puusan
  */
-public class Lfo {
+class Lfo {
 
     Work work;
 
@@ -268,15 +268,15 @@ public class Lfo {
         }
     }
 
-    public int getPmValue(int ch) {
+    int getPmValue(int ch) {
         return pmValue[ch];
     }
 
-    public int getAmValue(int ch) {
+    int getAmValue(int ch) {
         return amValue[ch];
     }
 
-    public void calcTblValue() {
+    private void calcTblValue() {
         switch (lfoWaveForm) {
         case 0:
             pmTblValue = pmTbl0[lfoIdx];
@@ -302,7 +302,7 @@ public class Lfo {
         }
     }
 
-    public void calcPmValue(int ch) {
+    private void calcPmValue(int ch) {
         if (pmTblValue >= 0) {
             pmValue[ch] = ((pmTblValue * pmdPmsMul[ch]) >> (7 + 5)) << pmsShl[ch];
         } else {
@@ -310,17 +310,17 @@ public class Lfo {
         }
     }
 
-    public void calcAmValue(int ch) {
+    private void calcAmValue(int ch) {
         amValue[ch] = (((amTblValue * amd) >> 7) << ams[ch]) & 0x7fff_ffff;
     }
 
-    public void calcAllPmValue() {
+    private void calcAllPmValue() {
         for (int ch = 0; ch < Global.N_CH; ++ch) {
             calcPmValue(ch);
         }
     }
 
-    public void calcAllAmValue() {
+    private void calcAllAmValue() {
         for (int ch = 0; ch < Global.N_CH; ++ch) {
             calcAmValue(ch);
         }

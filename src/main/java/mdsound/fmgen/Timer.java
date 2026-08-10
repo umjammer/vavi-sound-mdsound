@@ -14,7 +14,7 @@ package mdsound.fmgen;
  */
 public abstract class Timer {
 
-    public void reset() {
+    void reset() {
         timerACount = 0;
         timerBCount = 0;
     }
@@ -63,10 +63,10 @@ public abstract class Timer {
         return (Math.min(ta, tb)) + 1;
     }
 
-    protected void setStatus(int bit) {
+    void setStatus(int bit) {
     }
 
-    protected void resetStatus(int bit) {
+    void resetStatus(int bit) {
     }
 
     protected void setTimerBase(int clock) {
@@ -114,12 +114,12 @@ public abstract class Timer {
     private int timerStep;
 
     /** the value register {@code 0x26} was set to, worked back out of the timer period */
-    public int getTimerBRegister() {
+    int getTimerBRegister() {
         return timerStep == 0 ? 0 : 256 - timerB / timerStep;
     }
 
     /** the timer control register, {@code 0x27}: bits 6-7 pick channel 3's mode */
-    public int getTimerControl() {
+    int getTimerControl() {
         return this.regTc;
     }
 }

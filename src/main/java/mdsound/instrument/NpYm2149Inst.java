@@ -11,7 +11,7 @@ import mdsound.np.chip.Emu2149.Psg;
 /** PSG np emu */
 public class NpYm2149Inst extends Instrument.BaseInstrument {
 
-    public static final int DefaultClockValue = 1789750;
+    private static final int DefaultClockValue = 1789750;
 
     private final Psg[] chips = {new Psg(), new Psg()};
 

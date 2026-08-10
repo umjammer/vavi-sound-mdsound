@@ -174,7 +174,7 @@ public class OkiM6295 {
         private int volume;
         private int muted;
 
-        public void reset() {
+        void reset() {
             this.volume = 0;
             this.adpcm.reset();
 

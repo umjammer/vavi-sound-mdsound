@@ -19,9 +19,9 @@ public class NesInst extends Instrument.BaseInstrument implements Instrument.Pcm
 
     private static final Logger logger = System.getLogger(NesInst.class.getName());
 
-    public static final byte MAX_CHIPS = 0x02;
+    private static final byte MAX_CHIPS = 0x02;
 
-    protected final Nes[] chips = {new Nes(), new Nes()};
+    final Nes[] chips = {new Nes(), new Nes()};
 
     private final int[] mask = {0, 0};
 
@@ -182,9 +182,9 @@ logger.log(Level.DEBUG, "tag: " + tag + ", vol: " + vol);
         if (ds[2] != -1) np_nes_fds_volume = ds[2];
     };
 
-    public int np_nes_apu_volume;
-    public int np_nes_dmc_volume;
-    public int np_nes_fds_volume;
+    private int np_nes_apu_volume;
+    int np_nes_dmc_volume;
+    int np_nes_fds_volume;
 
     // vgm
     public static class DmcInst extends NesInst {

@@ -43,7 +43,7 @@ public class Ym2612 {
     private static final int OUTPUT_BITS = 15;
 
     /** Change it if you need to do long update */
-    public static final int MAX_UPDATE_LENGTH = 0x100; // for in_vgm
+    private static final int MAX_UPDATE_LENGTH = 0x100; // for in_vgm
 
     // Gens always uses 16 bits Sound (in 32 bits buffer) and do the conversion later if needed.
 
@@ -153,7 +153,7 @@ public class Ym2612 {
     /** LFO step table */
     private final int[] lfoIncTab = new int[8];
 
-    public interface UpdateChan extends TriConsumer<Channel, int[][], Integer> {
+    private interface UpdateChan extends TriConsumer<Channel, int[][], Integer> {
     }
 
     /** Update Channel functions pointer table */

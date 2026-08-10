@@ -12,7 +12,7 @@ import mdsound.chips.YmZ280B;
 public class YmZ280BInst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
     public static final int DefaultClockValue = 16934400;
-    public static final int MAX_CHIPS = 0x10;
+    private static final int MAX_CHIPS = 0x10;
 
     private final YmZ280B[] chips = {new YmZ280B(), new YmZ280B()};
 

@@ -13,7 +13,7 @@ import mdsound.chips.IremGa20;
 public class Ga20Inst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
     public static final int DefaultClockValue = 3579545;
-    public static final int MAX_CHIPS = 0x02;
+    private static final int MAX_CHIPS = 0x02;
 
     private final IremGa20[] chips = {new IremGa20(), new IremGa20()};
 

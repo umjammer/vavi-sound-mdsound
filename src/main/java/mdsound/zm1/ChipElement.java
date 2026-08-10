@@ -1,7 +1,7 @@
 package mdsound.zm1;
 
 
-public abstract class ChipElement {
+abstract class ChipElement {
 
     // from fmgen
     private static final int[] kftable = new int[64];
@@ -10,9 +10,9 @@ public abstract class ChipElement {
             7349, 7786, 8249, 8740, 8740, 9259, 9810, 10394,
     };
 
-    protected Operator operator;
+    final Operator operator;
 
-    public ChipElement(Operator operator) {
+    ChipElement(Operator operator) {
         this.operator = operator;
         makeTable();
     }
@@ -44,7 +44,7 @@ public abstract class ChipElement {
     /**
      * from fmgen
      */
-    public void makeTable() {
+    private void makeTable() {
         // 100/64 cent =  2^(i*100/64*1200)
         for (int i = 0; i < 64; i++) {
             kftable[i] = (int) (0x10000 * Math.pow(2.0, i / 768.0));

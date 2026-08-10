@@ -191,7 +191,7 @@ public class Emu2413 {
             }
 
             /** Slot key on  */
-            public void slotOn() {
+            void slotOn() {
                 this.egMode = EgState.ATTACK;
                 this.egPhase = 0;
                 this.phase = 0;
@@ -199,26 +199,26 @@ public class Emu2413 {
             }
 
             /** Slot key on without resetting the phase */
-            public void slotOnStayingPhase() {
+            void slotOnStayingPhase() {
                 this.egMode = EgState.ATTACK;
                 this.egPhase = 0;
                 this.updateEg();
             }
 
             /* Slot key off */
-            public void slotOff() {
+            void slotOff() {
                 if (this.egMode == EgState.ATTACK)
                     this.egPhase = expandBits(AR_ADJUST_TABLE[highBits(this.egPhase, EG_DP_BITS - EG_BITS)], EG_BITS, EG_DP_BITS);
                 this.egMode = EgState.RELEASE;
                 this.updateEg();
             }
 
-            public void setVolume(int volume) {
+            void setVolume(int volume) {
                 this.volume = volume;
             }
 
             /** EG */
-            public void calcEnvelope(int lfo) {
+            void calcEnvelope(int lfo) {
                 int egout;
 
                 switch (egMode) {
@@ -302,31 +302,31 @@ public class Emu2413 {
             /**
              * Calc Parameters
              */
-            public int calcEgDPhase() {
+            int calcEgDPhase() {
                 return this.egMode.calcEgDPhase(this);
             }
 
-            public void updatePg() {
+            void updatePg() {
                 this.dPhase = dphaseTable[this.fNum][this.block][this.patch.ml];
             }
 
-            public void updateTll() {
+            void updateTll() {
                 this.tll = (this.type == 0) ? tllTable[this.fNum >> 5][this.block][this.patch.tl][this.patch.kl] : tllTable[this.fNum >> 5][this.block][this.volume][this.patch.kl];
             }
 
-            public void updateRks() {
+            void updateRks() {
                 this.rks = rksTable[this.fNum >> 8][this.block][this.patch.kr];
             }
 
-            public void updateWf() {
+            void updateWf() {
                 this.sinTbl = waveForm[this.patch.wf];
             }
 
-            public void updateEg() {
+            void updateEg() {
                 this.egDPhase = this.calcEgDPhase();
             }
 
-            public void updateAll() {
+            void updateAll() {
                 this.updatePg();
                 this.updateTll();
                 this.updateRks();
@@ -335,12 +335,12 @@ public class Emu2413 {
             }
 
             /* Change a rhythm Voice */
-            public void setSlotPatch(Patch patch) {
+            void setSlotPatch(Patch patch) {
                 this.patch = patch;
             }
 
             /** CARRIER */
-            public int calcCar(int fm) {
+            int calcCar(int fm) {
                 if (this.egOut >= (DB_MUTE - 1)) {
                     //logger.log(Level.TRACE, "calc_slot_car: output over");
                     this.output[0] = 0;
@@ -354,7 +354,7 @@ public class Emu2413 {
             }
 
             /** MODULATOR */
-            public int calcMod() {
+            int calcMod() {
                 this.output[1] = this.output[0];
 
                 if (this.egOut >= (DB_MUTE - 1)) {
@@ -372,7 +372,7 @@ public class Emu2413 {
             }
 
             /** TOM */
-            public int calcTom() {
+            int calcTom() {
                 if (this.egOut >= (DB_MUTE - 1))
                     return 0;
 
@@ -380,7 +380,7 @@ public class Emu2413 {
             }
 
             /** SNARE */
-            public int calcSnare(int noise) {
+            int calcSnare(int noise) {
                 if (this.egOut >= (DB_MUTE - 1))
                     return 0;
 
@@ -391,7 +391,7 @@ public class Emu2413 {
             }
 
             /** TOP-CYM */
-            public int calcCym(int pgOut_hh) {
+            int calcCym(int pgOut_hh) {
                 int dbOut;
 
                 if (this.egOut >= (DB_MUTE - 1))
@@ -410,7 +410,7 @@ public class Emu2413 {
             }
 
             /** HI-HAT */
-            public int calcHat(int pgOutCym, int noise) {
+            int calcHat(int pgOutCym, int noise) {
                 int dbout;
 
                 if (this.egOut >= (DB_MUTE - 1))
@@ -436,7 +436,7 @@ public class Emu2413 {
             }
 
             /** PG */
-            public void calcPhase(int lfo) {
+            void calcPhase(int lfo) {
                 if (this.patch.pm != 0)
                     this.phase += (this.dPhase * lfo) >> PM_AMP_BITS;
                 else
@@ -461,7 +461,7 @@ public class Emu2413 {
         }
 
         /** Mask */
-        public static int maskCh(int x) {
+        static int maskCh(int x) {
             return 1 << x;
         }
 
@@ -1819,7 +1819,7 @@ public class Emu2413 {
                 }
         }
 
-        public static void makeRksTable() {
+        static void makeRksTable() {
             for (int fnum8 = 0; fnum8 < 2; fnum8++)
                 for (int block = 0; block < 8; block++)
                     for (int kr = 0; kr < 2; kr++) {

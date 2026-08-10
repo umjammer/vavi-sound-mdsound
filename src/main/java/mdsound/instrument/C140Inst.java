@@ -17,7 +17,7 @@ public class C140Inst extends Instrument.BaseInstrument implements PcmEnabledIns
 
     private static final Logger logger = getLogger(C140Inst.class.getName());
 
-    public static final int MAX_CHIPS = 0x02;
+    private static final int MAX_CHIPS = 0x02;
 
     private final C140[] chips = {new C140(), new C140()};
 

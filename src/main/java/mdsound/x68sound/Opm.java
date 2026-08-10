@@ -31,7 +31,7 @@ public class Opm {
 
     private static final Logger logger = System.getLogger(Opm.class.getName());
 
-    Work work;
+    final Work work;
 //    private WinAPI.WAVEFORMATEX wfx;
 
     private static final int CMNDBUFSIZE = 65535;
@@ -46,7 +46,7 @@ public class Opm {
 //    typedef HRESULT(WINAPI C86CtlCreateInstance)(REFIID, LPVOID);
 //#endif
 
-    public final String author;
+    private final String author;
 
     /** Operator 0-31 */
     private final Op[][] op = {
@@ -80,18 +80,18 @@ public class Opm {
 
     //short PcmBuf[PCMBUFSIZE][2];
     private short[] pcmBuf; // ?
-    public int pcmBufSize;
+    private int pcmBufSize;
     private int _pcmBufPtr;
 
     public synchronized int getPcmBufPtr() {
         return _pcmBufPtr;
     }
 
-    public synchronized void setPcmBufPtr(int value) {
+    synchronized void setPcmBufPtr(int value) {
         _pcmBufPtr = value;
     }
 
-    public int TimerID = 0;
+    private int TimerID = 0;
 
 //    /** LFO t overflow value */
 //    int LfoOverTime;
@@ -199,11 +199,11 @@ public class Opm {
 //    /** volume x/256 */
 //    int TotalVolume;
 
-    public void setAdpcmRate() {
+    private void setAdpcmRate() {
         adpcm.setAdpcmRate(Global.ADPCMRATETBL[adpcmBaseClock][(ppiReg >> 2) & 3]);
     }
 
-    public void setConnection(int ch, int alg) {
+    private void setConnection(int ch, int alg) {
         switch (alg) {
         case 0:
             op[ch][0].out1 = op[ch][1].inp;
@@ -314,7 +314,7 @@ public class Opm {
         }
         inpOpmIdx = 0;
         opmLpfIdx = 0;
-        opmLPFpBuf = work.OPMLOWPASS;
+        opmLPFpBuf = work.opmLowPass;
         opmLPFpPtr = 0;
 
         opmHpfInp[0] = opmHpfInp[1] =
@@ -439,7 +439,7 @@ public class Opm {
             }
             inpOpmIdx = 0;
             opmLpfIdx = 0;
-            opmLPFpBuf = work.OPMLOWPASS;
+            opmLPFpBuf = work.opmLowPass;
             opmLPFpPtr = 0;
         }
         opmHpfInp[0] = opmHpfInp[1] =
@@ -1440,8 +1440,8 @@ public class Opm {
             Global.firOpm(opmLPFpBuf[opmLPFpPtr], inpOpmBuf0, inpOpmIdx, InpOpmBuf1, inpOpmIdx, outOpm);
 
             opmLPFpPtr += 1;
-            if (opmLPFpPtr >= work.OPMLPF_ROW) {
-                opmLPFpBuf = work.OPMLOWPASS;
+            if (opmLPFpPtr >= work.opmLPF_ROW) {
+                opmLPFpBuf = work.opmLowPass;
                 opmLPFpPtr = 0;
             }
 
@@ -1487,10 +1487,10 @@ public class Opm {
 
     private final int[] out = new int[2];
     private final int[] outInpOpm = new int[2];
-    final int[] lfoPitch = new int[8];
-    final int[] lfoLevel = new int[8];
-    int rate_b = 0;
-    int rate2 = 0;
+    private final int[] lfoPitch = new int[8];
+    private final int[] lfoLevel = new int[8];
+    private int rate_b = 0;
+    private int rate2 = 0;
 
     public void setPcm22(short[] buffer, int offset, int ndata) {
         _pcmBufPtr = 0;
@@ -1777,12 +1777,12 @@ logger.log(Level.INFO, "useOpmFlag: %d useAdpcmFlag: %d".formatted(useOpmFlag, u
 
         if (sampleRate == 44100) {
             work.sampleRate = work.opmRate;
-            work.OPMLPF_ROW = Global.OPMLPF_ROW_44;
-            work.OPMLOWPASS = Global.OPMLOWPASS_44;
+            work.opmLPF_ROW = Global.OPMLPF_ROW_44;
+            work.opmLowPass = Global.OPMLOWPASS_44;
         } else if (sampleRate == 48000) {
             work.sampleRate = work.opmRate;
-            work.OPMLPF_ROW = Global.OPMLPF_ROW_48;
-            work.OPMLOWPASS = Global.OPMLOWPASS_48;
+            work.opmLPF_ROW = Global.OPMLPF_ROW_48;
+            work.opmLowPass = Global.OPMLOWPASS_48;
         } else {
             work.sampleRate = sampleRate;
         }
@@ -1820,12 +1820,12 @@ logger.log(Level.INFO, "useOpmFlag: %d useAdpcmFlag: %d".formatted(useOpmFlag, u
 
         if (sampleRate == 44100) {
             work.sampleRate = work.opmRate;
-            work.OPMLPF_ROW = Global.OPMLPF_ROW_44;
-            work.OPMLOWPASS = Global.OPMLOWPASS_44;
+            work.opmLPF_ROW = Global.OPMLPF_ROW_44;
+            work.opmLowPass = Global.OPMLOWPASS_44;
         } else if (sampleRate == 48000) {
             work.sampleRate = work.opmRate;
-            work.OPMLPF_ROW = Global.OPMLPF_ROW_48;
-            work.OPMLOWPASS = Global.OPMLOWPASS_48;
+            work.opmLPF_ROW = Global.OPMLPF_ROW_48;
+            work.opmLowPass = Global.OPMLOWPASS_48;
         } else {
             work.sampleRate = sampleRate;
         }
@@ -1849,12 +1849,12 @@ logger.log(Level.INFO, "useOpmFlag: %d useAdpcmFlag: %d".formatted(useOpmFlag, u
 
         if (sampleRate == 44100) {
             work.sampleRate = work.opmRate;
-            work.OPMLPF_ROW = Global.OPMLPF_ROW_44;
-            work.OPMLOWPASS = Global.OPMLOWPASS_44;
+            work.opmLPF_ROW = Global.OPMLPF_ROW_44;
+            work.opmLowPass = Global.OPMLOWPASS_44;
         } else if (sampleRate == 48000) {
             work.sampleRate = work.opmRate;
-            work.OPMLPF_ROW = Global.OPMLPF_ROW_48;
-            work.OPMLOWPASS = Global.OPMLOWPASS_48;
+            work.opmLPF_ROW = Global.OPMLPF_ROW_48;
+            work.opmLowPass = Global.OPMLOWPASS_48;
         } else {
             work.sampleRate = sampleRate;
         }
@@ -1928,7 +1928,7 @@ logger.log(Level.INFO, "useOpmFlag: %d useAdpcmFlag: %d".formatted(useOpmFlag, u
 //            WinAPI.SetThreadPriority(Global.thread_handle, 2);// THREAD_PRIORITY_HIGHEST);
 //        } catch {
 //            Free();
-//            Global.ErrorCode = 5;
+//            Global.errorCode = 5;
 //            return X68Sound.X68SNDERR_TIMER;
 //        }
 //        while (Global.threadFlag == 0) System.Threading.Thread.Sleep(100);
@@ -1949,7 +1949,7 @@ logger.log(Level.INFO, "useOpmFlag: %d useAdpcmFlag: %d".formatted(useOpmFlag, u
 //        != WinAPI.MMRESULT.MMSYSERR_NOERROR) {
 //            Global.hwo = IntPtr.Zero;
 //            Free();
-//            Global.ErrorCode = 0x10000000 + (int)ret;
+//            Global.errorCode = 0x10000000 + (int)ret;
 //            return X68Sound.X68SNDERR_PCMOUT;
 //        }
 //        if (waveOutReset(hwo) != MMRESULT.MMSYSERR_NOERROR) {
@@ -1979,7 +1979,7 @@ logger.log(Level.INFO, "useOpmFlag: %d useAdpcmFlag: %d".formatted(useOpmFlag, u
 //        TimerID = WinAPI.timeSetEvent((int)Global.betwTime, Global.timerResolution, Global.keepOpmTimeProc, usrctx , Global.TIME_PERIODIC);
 //        if (TimerID == 0) {
 //            Free();
-//            Global.ErrorCode = 4;
+//            Global.errorCode = 4;
 //            return X68Sound.X68SNDERR_TIMER;
 //        }
 

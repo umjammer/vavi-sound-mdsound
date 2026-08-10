@@ -885,14 +885,14 @@ public class GbSound {
         updateSounds(cycles);
     }
 
-    void tickLengthSounds() {
+    private void tickLengthSounds() {
         this.sound1.tickLength();
         this.sound2.tickLength();
         this.sound3.tickLength();
         this.sound4.tickLength();
     }
 
-    void updateSounds(long cycles) {
+    private void updateSounds(long cycles) {
         this.sound1.updateSquareChannel(cycles);
         this.sound2.updateSquareChannel(cycles);
         this.sound3.updateWaveChannel(cycles, this.mode, this.boostWaveCh, this.registers);

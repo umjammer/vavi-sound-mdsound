@@ -12,7 +12,7 @@ import mdsound.chips.GbSound;
 public class DmgInst extends Instrument.BaseInstrument {
 
     public static final int DefaultClockValue = 4194304;
-    public static final int MAX_CHIPS = 0x02;
+    private static final int MAX_CHIPS = 0x02;
 
     private final GbSound[] chips = {new GbSound(), new GbSound()};
 

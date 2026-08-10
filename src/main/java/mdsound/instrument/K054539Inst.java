@@ -11,7 +11,7 @@ import mdsound.chips.K054539;
 
 public class K054539Inst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
-    public static final int MAX_CHIPS = 0x02;
+    private static final int MAX_CHIPS = 0x02;
 
     private final K054539[] chips = {new K054539(), new K054539()};
 

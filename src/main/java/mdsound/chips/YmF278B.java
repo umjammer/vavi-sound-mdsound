@@ -82,9 +82,9 @@ public class YmF278B {
     /** standard clock for OPL4 */
     public static final int YMF278B_STD_CLOCK = 33868800;
 
-    public static class Interface {
+    static class Interface {
         /** irq Callback */
-        public Callback irqCallback; // (int state);
+        Callback irqCallback; // (int state);
     }
 
     private int romFileSize = 0x00;
@@ -244,7 +244,7 @@ public class YmF278B {
             sc2(4.406), sc2(5.906), sc2(7.406), sc2(11.91)
     };
 
-    public interface Callback extends Consumer<Integer> {
+    interface Callback extends Consumer<Integer> {
     }
 
     private static class Slot {

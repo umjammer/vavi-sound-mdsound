@@ -58,27 +58,27 @@ public class Program {
 
     private static class VgmStream {
 
-        public int chipId;
-        public int port;
-        public int cmd;
+        int chipId;
+        int port;
+        int cmd;
 
-        public int databankId;
-        public int stepsize;
-        public int stepbase;
+        int databankId;
+        int stepsize;
+        int stepbase;
 
-        public int frequency;
+        int frequency;
 
-        public int dataStartOffset;
-        public int lengthMode;
-        public int dataLength;
+        int dataStartOffset;
+        int lengthMode;
+        int dataLength;
 
-        public boolean sw;
+        boolean sw;
 
-        public int blockId;
+        int blockId;
 
-        public int wkDataAdr;
-        public int wkDataLen;
-        public double wkDataStep;
+        int wkDataAdr;
+        int wkDataLen;
+        double wkDataStep;
     }
 
     private Thread playbackThread;
@@ -90,16 +90,16 @@ public class Program {
     private final static int PCM_BANK_COUNT = 0x40;
     private final VgmPcmBank[] pcmBanks = new VgmPcmBank[PCM_BANK_COUNT];
 
-    public static class VgmPcmData {
+    private static class VgmPcmData {
         public int dataSize;
         public byte[] data;
         public int dataStart;
     }
 
-    public static class VgmPcmBank {
+    static class VgmPcmBank {
         public int bankCount;
         public List<VgmPcmData> bank = new ArrayList<>();
-        public int dataSize;
+        int dataSize;
         public byte[] data;
         public int dataPos;
         public int bnkPos;
@@ -125,7 +125,7 @@ public class Program {
         start();
     }
 
-    public void start() {
+    private void start() {
         if (isPlaying) return;
         isPlaying = true;
         playbackThread = new Thread(this::playbackLoop);

@@ -30,16 +30,16 @@ public class MPcmPP {
     }
 
     /** Sound effect ch is not supported */
-    public static final int VOICE_MAX = 16;
+    private static final int VOICE_MAX = 16;
 
-    protected static final int TYPE_NONE = 0;
-    protected static final int TYPE_16 = 1;
-    protected static final int TYPE_8 = 2;
-    protected static final int TYPE_ADPCM = 0xff; // -1
+    private static final int TYPE_NONE = 0;
+    private static final int TYPE_16 = 1;
+    private static final int TYPE_8 = 2;
+    private static final int TYPE_ADPCM = 0xff; // -1
 
-    protected static final int TBL_DIFF = 49 * 16;
+    private static final int TBL_DIFF = 49 * 16;
 
-    public static class Channel {
+    static class Channel {
 
         private boolean enable;
         private int vol;
@@ -189,7 +189,7 @@ public class MPcmPP {
     };
 
     // If I try to make this by calculation, it doesn't add up...
-    public static final int[] pitchTbl = {
+    private static final int[] pitchTbl = {
             0x0000, 0x003b, 0x0076, 0x00b2, 0x00ed, 0x0128, 0x0164, 0x019f,
             0x01db, 0x0217, 0x0252, 0x028e, 0x02ca, 0x0305, 0x0341, 0x037d,
             0x03b9, 0x03f5, 0x0431, 0x046e, 0x04aa, 0x04e6, 0x0522, 0x055f,
@@ -288,12 +288,12 @@ public class MPcmPP {
             0xfc51, 0xfcc7, 0xfd3c, 0xfdb2, 0xfe28, 0xfe9e, 0xff14, 0xff8a
     };
 
-    public static final int[] NextTable = {
+    private static final int[] NextTable = {
             -1, -1, -1, -1, 2, 4, 6, 8,
             -1, -1, -1, -1, 2, 4, 6, 8
     };
 
-    public static final int[] OffsetTable = {
+    private static final int[] OffsetTable = {
             0,
             0, 1, 2, 3, 4, 5, 6, 7,
             8, 9, 10, 11, 12, 13, 14, 15,

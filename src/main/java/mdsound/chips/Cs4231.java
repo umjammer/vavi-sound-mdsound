@@ -19,24 +19,24 @@ import java.util.Map;
  */
 public class Cs4231 {
 
-    int indexAddress;
-    int indexData;
-    int status;
-    int PIOData;
-    final int[] reg = new int[32];
-    int dmaInt;
+    private int indexAddress;
+    private int indexData;
+    private int status;
+    private int PIOData;
+    private final int[] reg = new int[32];
+    private int dmaInt;
     public int renderingFreq;
-    public final short[] sound = new short[2];
-    final short[][] sound2 = {
+    private final short[] sound = new short[2];
+    private final short[][] sound2 = {
             new short[2], new short[2], new short[2], new short[2], new short[2],
             new short[2], new short[2], new short[2], new short[2], new short[2]
     };
-    static final int[] xtal = {24_576_000, 16_934_400};
-    static final int[] divTbl = {3072, 1536, 896, 768, 448, 384, 512, 2560};
+    private static final int[] xtal = {24_576_000, 16_934_400};
+    private static final int[] divTbl = {3072, 1536, 896, 768, 448, 384, 512, 2560};
     public final DMA dma = new DMA();
-    public int imr = 0;
-    double step = 0;
-    double counter = 0;
+    private int imr = 0;
+    private double step = 0;
+    private double counter = 0;
 
     public void update(int[][] outputs, int samples) {
         for (int i = 0; i < samples; i++) {
@@ -231,7 +231,7 @@ public class Cs4231 {
 //        public Runnable int0bEnt;
         private boolean latch = true;
 
-        public DMA() {
+        DMA() {
             this.ptr = 0;
             this.cnt = 0;
             Arrays.fill(fifoBuf, (byte) 0x80);
@@ -239,7 +239,7 @@ public class Cs4231 {
             //this.int0bEnt = int0bEnt;
         }
 
-        public byte getData() {
+        byte getData() {
             if (fifoBuf == null) return (byte) 0x80;
 
             byte dat = fifoBuf[ptr];
@@ -258,7 +258,7 @@ public class Cs4231 {
             return dat;
         }
 
-        public void writeReg(int l, int al) {
+        void writeReg(int l, int al) {
             if (l == 5) {
                 if (latch) {
                     ptr = al;
@@ -310,32 +310,32 @@ public class Cs4231 {
         private static final int level1_ = 0x007f;
         private static final int level2_ = 0x7f;
         private static final int level3_ = 0x7f;
-        public int jump1_ = 0;
-        public int jump2_ = 0;
+        int jump1_ = 0;
+        int jump2_ = 0;
         /** EMS handle for PCM */
-        public int phandle = 0xffff;
+        int phandle = 0xffff;
         /** For saving EMS map information */
         private final byte[] pemsbuf = new byte[32];
-        public int freq2 = 0x987;
-        public final EMS ems = new EMS();
+        int freq2 = 0x987;
+        final EMS ems = new EMS();
 
-        public static class Pcm0work {
+        static class Pcm0work {
 
             /** Extended PCM playback start address/EMS page */
-            public final int[] pcm0adrs = {0, 0};
+            final int[] pcm0adrs = {0, 0};
             /** Playback subtraction counter * 4 */
-            public final int[] pcm0cnt = {0, 0};
+            final int[] pcm0cnt = {0, 0};
             /** Frequency */
-            public final int[] pcm0freq = {0, 0};
+            final int[] pcm0freq = {0, 0};
             /** right+left pan and data (0/FFFF) */
-            public final int[] pcm0pan = {0, 0};
+            final int[] pcm0pan = {0, 0};
             /** Volume */
-            public final int[] pcm0vol =  {0, 0};
+            final int[] pcm0vol =  {0, 0};
             /** Mute flag */
-            public boolean mask = false;
+            boolean mask = false;
         }
 
-        public final Pcm0work[] pcm0work = {
+        final Pcm0work[] pcm0work = {
                 new Pcm0work(), new Pcm0work(), new Pcm0work(), new Pcm0work(),
                 new Pcm0work(), new Pcm0work(), new Pcm0work(), new Pcm0work(),
                 new Pcm0work(), new Pcm0work(), new Pcm0work(), new Pcm0work(),
@@ -550,7 +550,7 @@ fifo_lop1:
                     } while ((cx & 0x8000) == 0);
                 } while (di < fifoend1); // Loop through the number of FIFO bytes
 
-fifo_end1:
+//fifo_end1:
                 pcm0work[si].pcm0cnt[0] = edx & 0xffff;
                 pcm0work[si].pcm0cnt[1] = (edx >>> 16) & 0xffff;
                 pcm0work[si].pcm0freq[0] = cx;
@@ -642,16 +642,16 @@ fifo_end1:
             }
         }
 
-        public void save_extpcm(int[] bx) {
+        void save_extpcm(int[] bx) {
             bx[0] = ems.getPageMap(); // Save EMS map
         }
 
-        public void remove_extpcm() {
+        void remove_extpcm() {
             ems.setPageMap((short) 0, pemsbuf);
         }
     }
 
-    public static class EMS {
+    static class EMS {
 
         private int crntEmsHandle = 0;
         private int crntPageMap = 0;
@@ -662,7 +662,7 @@ fifo_end1:
         private final Map<Integer, byte[][]> emsBuff;
         private final Map<Integer, int[]> mappedPage;
 
-        public EMS() {
+        EMS() {
             crntEmsHandle = 0;
             useEMSList = new HashMap<>();
             handleName = new HashMap<>();
@@ -670,7 +670,7 @@ fifo_end1:
             mappedPage = new HashMap<>();
         }
 
-        public void getHandleName(byte[] ah, int dx, String[] buf) {
+        void getHandleName(byte[] ah, int dx, String[] buf) {
             ah[0] = 0;
             if (handleName.containsKey(dx)) {
                 buf[0] = handleName.get(dx);
@@ -680,7 +680,7 @@ fifo_end1:
             buf[0] = ""; // Kuma: It seems ah becomes 0 even if there is no match
         }
 
-        public void setHandleName(byte[] ah, int dx, String emsName2) {
+        void setHandleName(byte[] ah, int dx, String emsName2) {
             ah[0] = 0;
             if (!handleName.containsKey(dx))
                 handleName.put(dx, emsName2);
@@ -688,7 +688,7 @@ fifo_end1:
                 handleName.put(dx, emsName2);
         }
 
-        public void allocMemory(byte[] ah, int[] dx, int bx) {
+        void allocMemory(byte[] ah, int[] dx, int bx) {
             // Search for unused handle
             int cnt = 0;
             while (cnt < 0x10000) {
@@ -719,12 +719,12 @@ fifo_end1:
             ah[0] = 0;
         }
 
-        public int getPageMap() { // x86Register reg, byte[] pemsbuf)
+        int getPageMap() { // x86Register reg, byte[] pemsbuf)
             //reg.bx = (short) crntPageMap;
             return crntPageMap;
         }
 
-        public void map(int al, byte[] ah, int bx, int dx) {
+        void map(int al, byte[] ah, int bx, int dx) {
             pPageNo = al; // Physical page number
             lPageNo = bx; // Logical page number
 
@@ -739,11 +739,11 @@ fifo_end1:
             }
         }
 
-        public void setPageMap(short si, byte[] pemsbuf) {
+        void setPageMap(short si, byte[] pemsbuf) {
             crntPageMap = pemsbuf[si];// reg.bx;
         }
 
-        public byte[] getCurrentMapBuf() {
+        byte[] getCurrentMapBuf() {
             return emsBuff.get(crntEmsHandle)[mappedPage.get(crntEmsHandle)[crntPageMap]];
         }
 

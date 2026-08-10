@@ -14,7 +14,7 @@ public class MultiPcmInst extends Instrument.BaseInstrument implements PcmEnable
 
     public static final int CHANNELS = 28;
 
-    public static final int MAX_CHIPS = 0x02;
+    private static final int MAX_CHIPS = 0x02;
 
     private final MultiPCM[] chips = {new MultiPCM(), new MultiPCM()};
 

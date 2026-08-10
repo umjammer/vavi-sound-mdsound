@@ -8,7 +8,7 @@ import mdsound.fmgen.Opna.OPNABase;
 import mdsound.fmvgen.effect.ReversePhase;
 
 
-public class AdpcmA {
+class AdpcmA {
 
     public OPNA2 parent = null;
 
@@ -16,30 +16,30 @@ public class AdpcmA {
 
     static class Channel {
         /** pan L */
-        public float panL;
+        float panL;
         /** pan R */
-        public float panR;
+        float panR;
         /** level */
-        public byte level;
+        byte level;
         /** volume */
-        public int volume;
+        int volume;
         /** position */
-        public int pos;
+        int pos;
         /** step */
-        public int step;
+        int step;
 
         /** start */
-        public int start;
+        int start;
         /** stop */
-        public int stop;
+        int stop;
         /** next 4 bit */
-        public int nibble;
+        int nibble;
         /** for encoding */
-        public short adpcmX;
+        short adpcmX;
         /** for encoding */
-        public short adpcmD;
+        short adpcmD;
 
-        public void init() {
+        void init() {
             this.panL = 1.0f;
             this.panR = 1.0f;
             this.level = 0;
@@ -53,7 +53,7 @@ public class AdpcmA {
             this.adpcmD = 0;
         }
 
-        public void keyOn() {
+        void keyOn() {
             this.pos = this.start;
             this.step = 0;
             this.adpcmX = 0;
@@ -61,13 +61,13 @@ public class AdpcmA {
             this.nibble = 0;
         }
 
-        public void pan(byte data) {
+        void pan(byte data) {
             this.panL = OPNA2.panTable[((data >> 5) & 3) & 3] * ((data >> 7) & 1);
             this.panR = OPNA2.panTable[((data >> 2) & 3) & 3] * ((data >> 4) & 1);
         }
     }
 
-    public final Channel[] channel = {
+    private final Channel[] channel = {
             new Channel(), new Channel(), new Channel(),
             new Channel(), new Channel(), new Channel()
     };
@@ -76,13 +76,13 @@ public class AdpcmA {
     public byte[] buf;
     public int size;
     /** AdpcmA whole volume */
-    public byte tl;
-    public int tVol;
+    private byte tl;
+    private final int tVol;
     /** AdpcmA key */
-    public byte key;
+    private byte key;
     public int step;
     public byte[] reg = new byte[32];
-    public static final short[] jediTable = new short[(48 + 1) * 16];
+    private static final short[] jediTable = new short[(48 + 1) * 16];
 
     private final Fmvgen.Effects effects;
     private final int revStartCh;

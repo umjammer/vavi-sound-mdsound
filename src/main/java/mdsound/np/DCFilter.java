@@ -26,7 +26,7 @@ public class DCFilter {
         reset();
     }
 
-    public void updateFactor() {
+    private void updateFactor() {
         if (c == 0.0 || r == 0.0) {
             a = 2.0; // disable
         } else {

@@ -37,9 +37,21 @@ public class Emu2413 {
     }
 
     /* voice data */
-    public static class Patch {
+    static class Patch {
 
-        public int tl, fb, eg, ml, ar, dr, sl, rr, kr, kl, am, pm, ws;
+        int tl;
+        int fb;
+        int eg;
+        int ml;
+        int ar;
+        int dr;
+        int sl;
+        int rr;
+        int kr;
+        int kl;
+        int am;
+        int pm;
+        int ws;
     }
 
     /** slot */
@@ -230,11 +242,11 @@ public class Emu2413 {
 
         private int updateRequests; /* flags to debounce update */
 
-        public void requestUpdate(int flag) {
+        void requestUpdate(int flag) {
             updateRequests |= flag;
         }
 
-        public void commitSlotUpdate() {
+        void commitSlotUpdate() {
 //#if OPLL_DEBUG
             if (lastEgState != egState) {
                 debugPrintSlotInfo();
@@ -308,7 +320,7 @@ public class Emu2413 {
             }
         }
 
-        public void calcPhase(int pmPhase, int reset) {
+        void calcPhase(int pmPhase, int reset) {
             int pm = Slot.this.patch.pm != 0 ? pmTable[(fNum >> 6) & 7][(pmPhase >> 10) & 7] : 0;
             if (reset != 0) {
                 pgPhase = 0;
@@ -318,7 +330,7 @@ public class Emu2413 {
             pgOut = pgPhase >> DP_BASE_BITS;
         }
 
-        public int lookupAttackStep(int counter) {
+        int lookupAttackStep(int counter) {
             int index;
 
             return switch (egRateH) {
@@ -342,7 +354,7 @@ public class Emu2413 {
             };
         }
 
-        public int lookupDecayStep(int counter) {
+        int lookupDecayStep(int counter) {
             int index;
 
             return switch (egRateH) {
@@ -363,7 +375,7 @@ public class Emu2413 {
             };
         }
 
-        public void startEnvelope() {
+        void startEnvelope() {
             if (Math.min(15, Slot.this.patch.ar + (rks >> 2)) == 15) {
                 egState = EgState.DECAY;
                 egOut = 0;
@@ -373,7 +385,7 @@ public class Emu2413 {
             requestUpdate(Update.EG.v);
         }
 
-        public int toLinear(int h, int am) {
+        int toLinear(int h, int am) {
             if (egOut > EG_MAX)
                 return 0;
 
@@ -389,7 +401,7 @@ public class Emu2413 {
             return ((i & 0x8000) != 0 ? ~res : res) << 1;
         }
 
-        public int calcSlotTom() {
+        int calcSlotTom() {
             return this.toLinear(this.waveTable[this.pgOut], 0);
         }
 
@@ -398,7 +410,7 @@ public class Emu2413 {
             return ((PG_BITS < 10) ? (phase >> (10 - PG_BITS)) : (phase << (PG_BITS - 10)));
         }
 
-        public int calcSlotSnare(int noise) {
+        int calcSlotSnare(int noise) {
             int phase;
 
             if (bit(this.pgOut, PG_BITS - 2) != 0)
@@ -409,13 +421,13 @@ public class Emu2413 {
             return this.toLinear(this.waveTable[phase], 0);
         }
 
-        public int calcSlotCym(int short_noise) {
+        int calcSlotCym(int short_noise) {
             int phase = short_noise != 0 ? pd(0x300) : pd(0x100);
 
             return this.toLinear(this.waveTable[phase], 0);
         }
 
-        public int calcSlotHat(int noise, int short_noise) {
+        int calcSlotHat(int noise, int short_noise) {
             int phase;
 
             if (short_noise != 0)
@@ -1677,7 +1689,7 @@ logger.log(Level.TRACE, "[slot#{0} state:{1} fNum:{2:03x} rate:{3}-{4}]",
     }
 
     /** */
-    public void dumpToPatch(short[] dump, int startAdr, Patch[][] patch) {
+    private void dumpToPatch(short[] dump, int startAdr, Patch[][] patch) {
         if (patch[startAdr][0] == null) patch[startAdr][0] = new Patch();
         if (patch[startAdr][1] == null) patch[startAdr][1] = new Patch();
 
@@ -1710,7 +1722,7 @@ logger.log(Level.TRACE, "[slot#{0} state:{1} fNum:{2:03x} rate:{3}-{4}]",
     }
 
     /** */
-    public void getDefaultPatch(int type, int num, Patch[][][] patch) {
+    private void getDefaultPatch(int type, int num, Patch[][][] patch) {
         dumpToPatch(defaultInst[type], num, patch[type]);
     }
 
@@ -1737,7 +1749,7 @@ logger.log(Level.TRACE, "[slot#{0} state:{1} fNum:{2:03x} rate:{3}-{4}]",
     }
 
     /** */
-    public void copyPatch(int num, Patch[] patch) {
+    private void copyPatch(int num, Patch[] patch) {
         this.patch[num][0].am = patch[0].am;
         this.patch[num][0].ar = patch[0].ar;
         this.patch[num][0].dr = patch[0].dr;

@@ -10,7 +10,7 @@ import mdsound.chips.K051649;
 
 public class K051649Inst extends Instrument.BaseInstrument {
 
-    public static final int MAX_CHIPS = 0x02;
+    private static final int MAX_CHIPS = 0x02;
 
     private final K051649[] chips = {new K051649(), new K051649()};
 

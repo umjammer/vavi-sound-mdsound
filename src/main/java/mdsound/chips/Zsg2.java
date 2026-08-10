@@ -218,7 +218,7 @@ public class Zsg2 {
     }
 
     /** */
-    public int read_memory(int offset) {
+    private int read_memory(int offset) {
         if (offset >= m_mem_blocks)
             return 0;
 

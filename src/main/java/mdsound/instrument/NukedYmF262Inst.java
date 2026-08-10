@@ -17,7 +17,7 @@ public class NukedYmF262Inst extends Instrument.BaseInstrument {
 
     private static final Logger logger = getLogger(NukedYmF262Inst.class.getName());
 
-    public static final int MAX_CHIPS = 0x02;
+    private static final int MAX_CHIPS = 0x02;
 
     private final NukedYmF262[] chips = {new NukedYmF262(), new NukedYmF262()};
 

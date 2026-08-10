@@ -7,6 +7,7 @@ import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.lang.System.Logger;
 import java.lang.System.Logger.Level;
 import java.util.concurrent.Executors;
@@ -349,7 +350,7 @@ public class FrmMain extends JFrame {
     private JLabel label14;
     private JLabel lblDebug;
 
-    final Program app;
+    private final Program app;
 
     public FrmMain() {
         initializeComponent();
@@ -357,20 +358,20 @@ public class FrmMain extends JFrame {
         app = new Program();
     }
 
-    static final String KEY_FILECHOOSER_DIRECTORY = "filechooser.directory";
-    static final Preferences prefs = Preferences.userNodeForPackage(FrmMain.class);
+    private static final String KEY_FILECHOOSER_DIRECTORY = "filechooser.directory";
+    private static final Preferences prefs = Preferences.userNodeForPackage(FrmMain.class);
 
     private void btnRefClick(ActionEvent ev) {
 
         JFileChooser ofd = new JFileChooser();
         ofd.addChoosableFileFilter(new FileFilter() {
-            @Override public boolean accept(java.io.File f) { return f.getName().toLowerCase().endsWith(".vgm"); }
+            @Override public boolean accept(File f) { return f.getName().toLowerCase().endsWith(".vgm"); }
             @Override public String getDescription() { return "VGM files(*.vgm)"; }
         });
         ofd.setDialogTitle("Select a file");
         String dir = prefs.get(KEY_FILECHOOSER_DIRECTORY, null);
         if (dir != null) {
-            ofd.setCurrentDirectory(new java.io.File(dir));
+            ofd.setCurrentDirectory(new File(dir));
         }
         if (ofd.showOpenDialog(null) == JFileChooser.APPROVE_OPTION) {
             tbFile.setText(ofd.getSelectedFile().toString());

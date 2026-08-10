@@ -13,17 +13,17 @@ import mdsound.fmvgen.effect.ReversePhase;
 
 public class PSG2 extends mdsound.fmgen.PSG {
 
-    protected final int[] panpot = new int[3];
-    protected final int[] phaseReset = new int[3];
-    protected final boolean[] phaseResetBefore = new boolean[3];
-    protected final int[] duty = new int[3];
+    private final int[] panpot = new int[3];
+    private final int[] phaseReset = new int[3];
+    private final boolean[] phaseResetBefore = new boolean[3];
+    private final int[] duty = new int[3];
     private final Fmvgen.Effects effects;
     private final int efcStartCh;
     private final byte[][] user = new byte[][] {new byte[64], new byte[64], new byte[64], new byte[64], new byte[64], new byte[64]};
     private int userDefCounter = 0;
     private final BiFunction<Integer, Integer, Integer>[] tblGetSample;
     private final int num;
-    protected double nCountDbl;
+    private double nCountDbl;
     private static final double nCountDiv = 32.0;
     private final ReversePhase reversePhase = ReversePhase.getInstance();
 

@@ -130,7 +130,7 @@ public class C219 {
             new Voice(), new Voice(), new Voice(), new Voice(), new Voice(), new Voice(), new Voice(), new Voice(),
     };
 
-    static final short[] asic219banks = {0x1f7, 0x1f1, 0x1f3, 0x1f5};
+    private static final short[] asic219banks = {0x1f7, 0x1f1, 0x1f3, 0x1f5};
 
     /**
        find_sample: compute the actual address of a sample given it's

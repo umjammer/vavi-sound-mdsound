@@ -102,7 +102,7 @@ public class Vrc6Inst extends Instrument.BaseInstrument {
 
     // ----
 
-    public void setVolume(int db) {
+    private void setVolume(int db) {
         db = Math.min(db, 20);
         if (db > -192)
             volume = (int) (16384.0 * Math.pow(10.0, db / 40.0));

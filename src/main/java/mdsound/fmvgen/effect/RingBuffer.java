@@ -11,7 +11,7 @@ package mdsound.fmvgen.effect;
  * @author twitter:@vstcpp
  * @see "https://web.archive.org/web/20200810215827/http://vstcpp.wpblog.jp/?p=1505"
  */
-public class RingBuffer {
+class RingBuffer {
 
     /** Read Position */
     private int rPos;

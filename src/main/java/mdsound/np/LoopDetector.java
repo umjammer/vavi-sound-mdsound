@@ -37,10 +37,10 @@ public interface LoopDetector extends Device {
 
         private static final System.Logger logger = System.getLogger(BasicDetector.class.getName());
 
-        protected final int bufSize;
-        protected final int bufMask;
-        protected final int[] streamBuf;
-        protected final int[] timeBuf;
+        final int bufSize;
+        final int bufMask;
+        final int[] streamBuf;
+        final int[] timeBuf;
         /**
          * How many writes have been recorded, ever - not a position in the ring. {@link #isLooped}
          * reads it as a running total, both to tell that new writes have arrived at all and to
@@ -48,13 +48,13 @@ public interface LoopDetector extends Device {
          * {@link #bLast} and detection stopped for good after the first 64k writes. The masking
          * belongs at each use as an index, which is what the C++ this came from does.
          */
-        protected long bIdx;
+        long bIdx;
         // bIdx last time checked
-        protected long bLast;
-        protected int wSpeed;
-        protected int currentTime;
+        long bLast;
+        int wSpeed;
+        int currentTime;
         protected int loopStart, loopEnd;
-        protected boolean empty;
+        boolean empty;
 
         public BasicDetector(int bufBits /* = 16 */) {
             bufSize = 1 << bufBits;
@@ -205,10 +205,11 @@ public interface LoopDetector extends Device {
             MAX_CH
         }
 
-        protected final BasicDetector[] ld = new BasicDetector[13];
-        protected final boolean[] looped = new boolean[13];
-        protected int n106Addr;
-        protected int loopStart, m_loop_end;
+        final BasicDetector[] ld = new BasicDetector[13];
+        final boolean[] looped = new boolean[13];
+        int n106Addr;
+        int loopStart;
+        int m_loop_end;
 
         private static final int[] bufsize_table = {
                 15, 15, 15, 15, 15, // SQR0, SQR1, TRI, NOIZ, DPCM

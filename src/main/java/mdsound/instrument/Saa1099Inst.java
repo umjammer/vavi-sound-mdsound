@@ -10,7 +10,7 @@ import mdsound.chips.Saa1099;
 
 public class Saa1099Inst extends Instrument.BaseInstrument {
 
-    public static final int MAX_CHIPS = 0x02;
+    private static final int MAX_CHIPS = 0x02;
     public static final int DefaultClockValue = 8000000;
 
     private final Saa1099[] chips = {new Saa1099(), new Saa1099()};

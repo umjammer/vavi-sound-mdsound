@@ -12,7 +12,7 @@ import mdsound.chips.C352;
 
 public class C352Inst extends Instrument.BaseInstrument implements PcmEnabledInstrument {
 
-    public static final int MAX_CHIPS = 0x02;
+    private static final int MAX_CHIPS = 0x02;
 
     private final C352[] chips = {new C352(), new C352()};
 

@@ -24,7 +24,7 @@ import static java.lang.System.getLogger;
  * @author m_puusan
  * @see "http://www.pastel-flower.jp/~isaki/NetBSD/src/?sys/dev/ic/msm6258.c"
  */
-public class Adpcm {
+class Adpcm {
 
     private static final Logger logger = getLogger(Adpcm.class.getName());
 
@@ -47,9 +47,9 @@ public class Adpcm {
     private int n1DataFlag;
 
     /** Interrupt Address */
-    public Runnable intProc;
+    Runnable intProc;
     /** Interrupt Address */
-    public Runnable errIntProc;
+    Runnable errIntProc;
 //    /** 0: Not working 1: Playing */
 //    int adpcmFlag;
 //    /** PPI Register Contents */
@@ -61,12 +61,12 @@ public class Adpcm {
 //    /** 0: DMA not operating 1: DMA operating */
 //    int dmaFlag;
 //    inline int dmaGetByte();
-    public int dmaLastValue;
-    public int adpcmReg;
-    public final int[] dmaReg = new int[0x40];
-    public int finishCounter;
+    private int dmaLastValue;
+    int adpcmReg;
+    final int[] dmaReg = new int[0x40];
+    private int finishCounter;
 
-    public void setAdpcmRate(int rate) {
+    void setAdpcmRate(int rate) {
         adpcmRate = Global.ADPCMRATEADDTBL[rate & 7];
     }
 
@@ -122,7 +122,7 @@ public class Adpcm {
         finishCounter = 3;
     }
 
-    public void initSampleRate() {
+    void initSampleRate() {
         rateCounter = 0;
     }
 
@@ -138,7 +138,7 @@ public class Adpcm {
         n1DataFlag = 0;
     }
 
-    public void dmaError(int errorCode) {
+    void dmaError(int errorCode) {
         dmaReg[0x00] &= 0xf7; // ACT=0
         dmaReg[0x00] |= 0x90; // COC=ERR=1
         dmaReg[0x01] = errorCode; // CER=error-code
@@ -147,7 +147,7 @@ public class Adpcm {
         }
     }
 
-    public void dmaFinish() {
+    private void dmaFinish() {
         dmaReg[0x00] &= 0xF7; // ACT=0
         dmaReg[0x00] |= 0x80; // COC=1
         if ((dmaReg[0x07] & 0x08) != 0) { // INT==1?
@@ -155,7 +155,7 @@ public class Adpcm {
         }
     }
 
-    public int dmaContinueSetNextMtcMar() {
+    private int dmaContinueSetNextMtcMar() {
         dmaReg[0x07] &= (0xff - 0x40); // CNT=0
 
         dmaReg[0x0a] = dmaReg[0x1a]; // BTC -> MTC
@@ -180,7 +180,7 @@ public class Adpcm {
         return 0;
     }
 
-    public int dmaArrayChainSetNextMtcMar() {
+    int dmaArrayChainSetNextMtcMar() {
         int btc = dmaReg[0x1a] * 0x100 + dmaReg[0x1b];
         if (btc == 0) {
             dmaFinish();
@@ -225,7 +225,7 @@ public class Adpcm {
         return 0;
     }
 
-    public int dmaLinkArrayChainSetNextMtcMar() {
+    int dmaLinkArrayChainSetNextMtcMar() {
         int bar = dmaReg[0x1c] * 0x10_00000 +
                 dmaReg[0x1d] * 0x1_0000 +
                 dmaReg[0x1e] * 0x100 +
@@ -276,7 +276,7 @@ public class Adpcm {
 
     private static final int[] MACTBL = {0, 1, -1, 1};
 
-    public int dmaGetByte() {
+    private int dmaGetByte() {
         if (((dmaReg[0x00] & 0x08) == 0) || ((dmaReg[0x07] & 0x20) != 0)) { // ACT==0 || HLT==1 ?
             return 0x8000_0000;
         }
@@ -353,7 +353,7 @@ public class Adpcm {
      * Enter adpcm to change the value of InpPcm
      * -2047<<(4+4) <= InpPcm <= +2047<<(4+4)
      */
-    public void adpcm2pcm(int adpcm) {
+    private void adpcm2pcm(int adpcm) {
 
         int dltL = Global.dltLTBL[scale];
         dltL = (dltL & ((adpcm & 4) != 0 ? -1 : 0)) +
@@ -413,7 +413,7 @@ public class Adpcm {
     }
 
     // -32768<<4 <= retval <= +32768<<4
-    public int getPcm62() {
+    int getPcm62() {
         if ((adpcmReg & 0x80) != 0) { // ADPCM stopped
             return 0x8000_0000;
         }
