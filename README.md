@@ -157,8 +157,7 @@ this is a fork of [MDSound](https://github.com/kuma4649/MDSound)
    * vrc7 ~~no drums~~, skips first few notes
    * ~~ym2149 (np) not correct~~
  * instrument class should handle one chip
- * pcm i/o should use chip register
- * zmusic `lzz.r`. how can i get it?
+ * ~~pcm i/o should use chip register~~
 
 ---
 

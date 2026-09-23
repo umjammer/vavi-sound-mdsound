@@ -88,13 +88,13 @@
     <dependency>
       <groupId>com.github.umjammer</groupId> <!-- com.github.umjammer / vavi -->
       <artifactId>vavi-commons</artifactId>
-      <version>1.1.20</version>
+      <version>1.1.23</version>
     </dependency>
 
     <dependency>
       <groupId>com.github.umjammer</groupId>
       <artifactId>vavi-sound</artifactId>
-      <version>1.0.28</version>
+      <version>1.1.7</version>
       <scope>test</scope>
     </dependency>
 
