@@ -342,7 +342,9 @@ logger.log(Level.INFO, "sampleRate: " + sampleRate);
         }
         int p = mode & 0xff;
         if (p != 0xff) {
-            if ((p & 3) != 0) {
+            // the mixer only checks a channel against the end of the memory, so an address a
+            // driver made up (MXDRV asks for $ffc0f63f for a sample the PDX lacks) threw out of it
+            if ((p & 3) != 0 && mem != null && Integer.compareUnsigned(adrsPtr, mem.length) < 0) {
                 ch[c].play = true;
                 ch[c].adrsPtr = adrsPtr;
                 ch[c].len = len;
