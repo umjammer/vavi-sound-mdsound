@@ -210,6 +210,18 @@ public class MDSound {
             }
         }
 
+        /**
+         * for a chip that changes its own output rate while playing (e.g. ES5503 on writes to 0xe1),
+         * re-selects the resampler and restarts its position from scratch.
+         */
+        void changeSampleRate(int resampleMode, int samplingRate, int newSmplRate) {
+            if (this.samplingRate == newSmplRate)
+                return;
+
+            this.samplingRate = newSmplRate;
+            setup(resampleMode, samplingRate);
+        }
+
         public void changeChipSampleRate(int samplingRate, int newSmplRate) {
             if (this.samplingRate == newSmplRate)
                 return;
@@ -268,6 +280,7 @@ logger.log(Level.DEBUG, "instrument start/reset: %s[%d], %d, %d, @%x, %s".format
             }
 
             chip.setup(resampler.getResampleMode(), samplingRate);
+            chip.instrument.setSamplingRateCallback(chip.id, sr -> chip.changeSampleRate(resampler.getResampleMode(), samplingRate, sr));
         }
 instruments.keySet().forEach(k -> logger.log(Level.DEBUG, "instrument: " + k.getSimpleName().replace("Inst", "") + ": chips: " + instruments.get(k).stream().map(Instrument::getName).collect(Collectors.joining(", ", "[", "]"))));
 

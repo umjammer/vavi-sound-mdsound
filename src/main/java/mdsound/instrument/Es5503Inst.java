@@ -43,7 +43,8 @@ public class Es5503Inst extends BaseInstrument implements PcmEnabledInstrument {
     @Override
     public int start(int chipId, int sampleRate, int clock, Object... option) {
         int ret = chips[chipId].start(clock, (int) option[0]);
-        chips[chipId].setCallback((Consumer<Integer>) option[1]);
+        if (option.length > 1 && option[1] instanceof Consumer<?> callback)
+            chips[chipId].setCallback((Consumer<Integer>) callback);
         if (ret == 0) return clock;
         return 0;
     }
@@ -55,7 +56,7 @@ public class Es5503Inst extends BaseInstrument implements PcmEnabledInstrument {
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        chips[chipId].write(adr, data);
+        chips[chipId].write(adr & 0xff, data & 0xff);
         return 0;
     }
 
@@ -75,6 +76,11 @@ public class Es5503Inst extends BaseInstrument implements PcmEnabledInstrument {
 
     @Override
     public void resetMask(int chipId, int ch) {
+    }
+
+    @Override
+    public void setSamplingRateCallback(int chipId, Consumer<Integer> callback) {
+        chips[chipId].setCallback(callback);
     }
 
     public void setMute(int chipId, int v) {
