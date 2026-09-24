@@ -20,6 +20,9 @@ public class GigatronInst extends BaseInstrument {
 
     private final Gigatron[] gig = {new Gigatron(), new Gigatron()};
 
+    /** bit n: channel n muted */
+    private final int[] muteMask = {0, 0};
+
     @Override
     public String getName() {
         return "Gigatron";
@@ -48,7 +51,7 @@ public class GigatronInst extends BaseInstrument {
 
     @Override
     public int write(int chipId, int port, int adr, int data) {
-        return 0;
+        return gig[chipId].write(port, adr, data);
     }
 
     @Override
@@ -63,9 +66,13 @@ public class GigatronInst extends BaseInstrument {
 
     @Override
     public void setMask(int chipId, int ch) {
+        muteMask[chipId] |= 1 << ch;
+        gig[chipId].setMuteMask(muteMask[chipId]);
     }
 
     @Override
     public void resetMask(int chipId, int ch) {
+        muteMask[chipId] &= ~(1 << ch);
+        gig[chipId].setMuteMask(muteMask[chipId]);
     }
 }

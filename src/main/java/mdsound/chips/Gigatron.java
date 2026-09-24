@@ -15,23 +15,36 @@ public class Gigatron {
             new Channel(), new Channel(), new Channel(), new Channel()
     };
     private byte[] soundTable = new byte[256];
-    private byte samp = 3;
+    /** the 4 channels' sum, unsigned: only its upper nibble reaches the DAC */
+    private int samp = 3;
     private double scanlineCounter = 0;
 
-    private static final double scanlines = 521.0;
-    private static final double vSync = 59.98;
-    private double bClock = 521.0 * 59.98; // scanlines * vSync
+    /** 521 scanlines * 59.98 Hz vsync */
+    private static final double DEFAULT_CLOCK = 521.0 * 59.98;
+    /** scanlines per second */
+    private double bClock = DEFAULT_CLOCK;
     private double audioSampleRate = 44100;
     private byte channelMask = 0x3;
+    /** bit n: channel n muted, its oscillator still runs */
+    private int muteMask = 0;
+
+    public void setMuteMask(int muteMask) {
+        this.muteMask = muteMask;
+    }
 
     public void reset() {
         stop();
         resetSample();
     }
 
+    /**
+     * @param clock scanlines per second, 31250 on the real machine
+     *              (the c# original doubled this and divided the wrong way round,
+     *              which is only ~7 cents off at 44.1kHz by coincidence)
+     */
     public int start(int sampleRate, int clock) {
         this.audioSampleRate = sampleRate;
-        this.bClock = clock * 2;
+        this.bClock = clock != 0 ? clock : DEFAULT_CLOCK;
 
         reset();
 
@@ -51,10 +64,10 @@ public class Gigatron {
         // Synthesis
         for (int p = 0; p < samples; p++) {
 
-            // Update scanlineCounter
-            this.scanlineCounter += this.audioSampleRate / this.bClock;
+            // advance by the scanlines one output sample lasts
+            this.scanlineCounter += this.bClock / this.audioSampleRate;
 
-            // Executed every 4 scanlines
+            // every channel is served once per 4 scanlines
             while (this.scanlineCounter >= 4.0) {
                 this.samp = 3;
 
@@ -64,11 +77,12 @@ public class Gigatron {
                     int c = n & this.channelMask;// ? from dev.asm.py
 
                     this.ch[c].osc += this.ch[c].key;
-                    byte i = (byte) ((this.ch[c].osc >> 7) & 0xfc);
-                    i ^= this.ch[c].wavX;
-                    i = (byte) (this.soundTable[i] + this.ch[c].wavA);
-                    i = (byte) ((i & 128) != 0 ? 63 : (i & 63));
-                    this.samp += i;
+                    int i = (this.ch[c].osc >> 7) & 0xfc;
+                    i ^= this.ch[c].wavX & 0xff;
+                    i = (this.soundTable[i] + this.ch[c].wavA) & 0xff;
+                    i = (i & 128) != 0 ? 63 : (i & 63);
+                    if ((this.muteMask & (1 << c)) != 0) continue;
+                    this.samp = (this.samp + i) & 0xff;
                 }
 
                 // Only the upper 4 bits are output
@@ -77,8 +91,10 @@ public class Gigatron {
                 this.scanlineCounter -= 4.0;
             }
 
-            outputs[0][p] = this.samp << 8;
-            outputs[1][p] = this.samp << 8;
+            // the dac is unipolar 0..0xf0, center it so it neither clips nor carries dc
+            int out = (this.samp - 0x78) << 8;
+            outputs[0][p] = out;
+            outputs[1][p] = out;
         }
     }
 
