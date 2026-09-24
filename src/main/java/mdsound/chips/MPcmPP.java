@@ -384,6 +384,32 @@ public class MPcmPP {
         }
     }
 
+    /**
+     * What each voice is doing, for viewers: {@code channels.N.} {@code playing}, {@code note} (the pitch
+     * word's note, -1 before any), {@code fine}, {@code volume} (0..127 as set), {@code pan} (1 left, 2 right,
+     * 3 both, 0 none), {@code type} (0xff adpcm, 1 16bit, 2 8bit), {@code pos}, {@code size} (samples)
+     * and {@code rate} (Hz).
+     */
+    public java.util.Map<String, Object> getInfo() {
+        java.util.Map<String, Object> info = new java.util.HashMap<>();
+        if (this.work == null) return info;
+        for (int ch = 0; ch < VOICE_MAX; ch++) {
+            Channel w = this.work[ch];
+            if (w == null) continue;
+            String k = "channels." + ch + ".";
+            info.put(k + "playing", w.enable);
+            info.put(k + "note", w.lastNote > 0 ? w.lastNote >> 6 : -1);
+            info.put(k + "fine", w.lastNote & 0x3f);
+            info.put(k + "volume", w.volwork);
+            info.put(k + "pan", (w.lr[0] != 0 ? 1 : 0) | (w.lr[1] != 0 ? 2 : 0));
+            info.put(k + "type", w.type);
+            info.put(k + "pos", (int) (w.pos >> 16));
+            info.put(k + "size", w.size);
+            info.put(k + "rate", w.freq);
+        }
+        return info;
+    }
+
     public void keyOn(int ch) {
         if (ch == 0xff) {
             for (int i = 0; i < VOICE_MAX; i++) keyOn(i);
