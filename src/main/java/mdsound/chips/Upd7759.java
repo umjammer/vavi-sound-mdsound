@@ -1,3 +1,6 @@
+// license:BSD-3-Clause
+// copyright-holders:Juergen Buchmueller, Mike Balfour, Howie Cohen, Olivier Galibert, Aaron Giles
+
 package mdsound.chips;
 
 import java.lang.System.Logger;
@@ -275,7 +278,7 @@ logger.log(Level.DEBUG, "Warning: UPD7759 reading empty FIFO!");
             return;
         }
 
-        this.fifo_in = this.data_buf[this.dbuf_pos_read];
+        this.fifo_in = this.data_buf[this.dbuf_pos_read] & 0xff;
         this.dbuf_pos_read++;
         this.dbuf_pos_read &= 0x3F;
     }
@@ -326,7 +329,7 @@ logger.log(Level.DEBUG, "UPD7759: first data request");
             // Last sample state: latch the last sample value and issue a request for the second byte
             // The second byte read will be just a dummy
             case LAST_SAMPLE:
-                this.last_sample = this.rom != null ? this.rom[this.romPtr + 0] : this.fifo_in;
+                this.last_sample = this.rom != null ? (this.rom[this.romPtr + 0] & 0xff) : this.fifo_in;
 logger.log(Level.DEBUG, "UPD7759: last_sample = %02x, requesting dummy 1".formatted(this.last_sample));
                 this.drq = 1;
 
@@ -349,7 +352,7 @@ logger.log(Level.DEBUG, "UPD7759: dummy1, requesting offset_hi");
             // Address MSB state: latch the MSB of the sample address and issue a request for the fourth byte
             // The expected response will be the LSB of the sample address
             case ADDR_MSB:
-                this.offset = (this.rom != null ? this.rom[this.romPtr + (this.req_sample * 2 + 5)] : this.fifo_in) << 9;
+                this.offset = (this.rom != null ? (this.rom[this.romPtr + (this.req_sample * 2 + 5)] & 0xff) : this.fifo_in) << 9;
 logger.log(Level.DEBUG, "UPD7759: offset_hi = %02x, requesting offset_lo".formatted(this.offset >> 9));
                 this.drq = 1;
 
@@ -361,7 +364,7 @@ logger.log(Level.DEBUG, "UPD7759: offset_hi = %02x, requesting offset_lo".format
             // Address LSB state: latch the LSB of the sample address and issue a request for the fifth byte
             // The expected response will be just a dummy
             case ADDR_LSB:
-                this.offset |= (this.rom != null ? this.rom[this.romPtr + (this.req_sample * 2 + 6)] : this.fifo_in) << 1;
+                this.offset |= (this.rom != null ? (this.rom[this.romPtr + (this.req_sample * 2 + 6)] & 0xff) : this.fifo_in) << 1;
 logger.log(Level.DEBUG, "UPD7759: offset_lo = %02x, requesting dummy 2".formatted((this.offset >> 1) & 0xff));
                 this.drq = 1;
 
@@ -391,7 +394,7 @@ logger.log(Level.DEBUG, "UPD7759: dummy2, requesting block header");
                     this.repeat_count--;
                     this.offset = this.repeat_offset;
                 }
-                this.block_header = this.rom != null ? this.rom[this.romPtr + (this.offset++ & 0x1ffff)] : this.fifo_in;
+                this.block_header = this.rom != null ? (this.rom[this.romPtr + (this.offset++ & 0x1ffff)] & 0xff) : this.fifo_in;
 logger.log(Level.DEBUG, "UPD7759: header (@%05x) = %02x, requesting next byte".formatted(this.offset, this.block_header));
                 this.drq = 1;
 
@@ -433,7 +436,7 @@ logger.log(Level.DEBUG, "UPD7759: header (@%05x) = %02x, requesting next byte".f
             // Nibble count state: latch the number of nibbles to play and request another byte
             // The expected response will be the first data byte
             case NIBBLE_COUNT:
-                this.nibbles_left = (short) ((this.rom != null ? this.rom[this.romPtr + (this.offset++ & 0x1ffff)] : this.fifo_in) + 1);
+                this.nibbles_left = (short) ((this.rom != null ? (this.rom[this.romPtr + (this.offset++ & 0x1ffff)] & 0xff) : this.fifo_in) + 1);
 logger.log(Level.DEBUG, "UPD7759: nibble_count = %d, requesting next byte".formatted(this.nibbles_left));
                 this.drq = 1;
 
@@ -445,7 +448,7 @@ logger.log(Level.DEBUG, "UPD7759: nibble_count = %d, requesting next byte".forma
             // MSN state: latch the data for this pair of samples and request another byte
             // The expected response will be the next sample data or another header
             case NIBBLE_MSN:
-                this.adpcm_data = this.rom != null ? this.rom[this.romPtr + (this.offset++ & 0x1ffff)] : this.fifo_in;
+                this.adpcm_data = this.rom != null ? (this.rom[this.romPtr + (this.offset++ & 0x1ffff)] & 0xff) : this.fifo_in;
                 update_adpcm(this.adpcm_data >> 4);
                 this.drq = 1;
 
