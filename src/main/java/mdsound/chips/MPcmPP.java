@@ -414,7 +414,7 @@ public class MPcmPP {
 
         keyOff(ch);
 
-        this.work[ch].type = ptr.type;
+        this.work[ch].type = ptr.type & 0xff;
         this.work[ch].orig = (short) (ptr.orig << 6);
         this.work[ch].adrs_buf = ptr.adrs_buf;
         this.work[ch].adrs_ptr = ptr.adrs_ptr;
@@ -678,18 +678,22 @@ public class MPcmPP {
                         break;
                     case TYPE_16:
                         if (this.work[ch].outs == 1)
-                            sampleR = sampleL = (short) ((ptr_buf[(int) (ptr_ptr + pos * 2)] << 8) + ptr_buf[(int) (ptr_ptr + pos * 2 + 1)]);
+                            sampleR = sampleL = (short) (((ptr_buf[(int) (ptr_ptr + pos * 2)] & 0xff) << 8) + (ptr_buf[(int) (ptr_ptr + pos * 2 + 1)] & 0xff));
                         else {
-                            sampleL = (short) ((ptr_buf[(int) (ptr_ptr + pos * 4 + 0)] << 8) + ptr_buf[(int) (ptr_ptr + pos * 4 + 1)]);
-                            sampleR = (short) ((ptr_buf[(int) (ptr_ptr + pos * 4 + 2)] << 8) + ptr_buf[(int) (ptr_ptr + pos * 4 + 3)]);
+                            sampleL = (short) (((ptr_buf[(int) (ptr_ptr + pos * 4 + 0)] & 0xff) << 8) + (ptr_buf[(int) (ptr_ptr + pos * 4 + 1)] & 0xff));
+                            sampleR = (short) (((ptr_buf[(int) (ptr_ptr + pos * 4 + 2)] & 0xff) << 8) + (ptr_buf[(int) (ptr_ptr + pos * 4 + 3)] & 0xff));
                         }
+                        // the volume table is scaled for 12bit adpcm: bring 16bit pcm to the same range,
+                        // or a full scale tone is ~24dB hot and clips at the channel clamp
+                        sampleL >>= 4;
+                        sampleR >>= 4;
                         break;
                     case TYPE_8:
                         if (this.work[ch].outs == 1)
-                            sampleR = sampleL = ptr_buf[(int) (ptr_ptr + pos)];
+                            sampleR = sampleL = (ptr_buf[(int) (ptr_ptr + pos)] & 0xff);
                         else {
-                            sampleL = ptr_buf[(int) (ptr_ptr + pos * 2 + 0)];
-                            sampleR = ptr_buf[(int) (ptr_ptr + pos * 2 + 1)];
+                            sampleL = (ptr_buf[(int) (ptr_ptr + pos * 2 + 0)] & 0xff);
+                            sampleR = (ptr_buf[(int) (ptr_ptr + pos * 2 + 1)] & 0xff);
                         }
                         break;
                 }
