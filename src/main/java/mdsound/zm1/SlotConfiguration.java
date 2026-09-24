@@ -3,20 +3,22 @@ package mdsound.zm1;
 
 public class SlotConfiguration extends ChipElement {
 
-    private byte leftVolume = 0;
+    /** 0 ~ 255 (unsigned), full volume by default so that a key on sounds without setting volumes */
+    private byte leftVolume = (byte) 0xff;
 
-    public byte getLeftVolume() {
-        return leftVolume;
+    public int getLeftVolume() {
+        return leftVolume & 0xff;
     }
 
     public void setLeftVolume(byte value) {
         leftVolume = value;
     }
 
-    private byte rightVolume = 0;
+    /** 0 ~ 255 (unsigned), full volume by default so that a key on sounds without setting volumes */
+    private byte rightVolume = (byte) 0xff;
 
-    public byte getRightVolume() {
-        return rightVolume;
+    public int getRightVolume() {
+        return rightVolume & 0xff;
     }
 
     public void setRightVolume(byte value) {
@@ -87,7 +89,7 @@ public class SlotConfiguration extends ChipElement {
         super(operator);
     }
 
-    // TBD
+    // TODO lfo, filters and effects are stored only
     @Override
     public void write(int address, int data) {
         switch (address) {
@@ -117,7 +119,8 @@ public class SlotConfiguration extends ChipElement {
                 break;
 
             default:
-                throw new IllegalArgumentException("The address specification is incorrect");
+                // reserved
+                break;
         }
     }
 }

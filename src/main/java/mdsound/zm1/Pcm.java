@@ -101,8 +101,18 @@ public class Pcm extends ChipElement {
 
     // fmgen
     public void setRate(int chipClock, int playClock) {
-        adplbase = (int) ((int) (8192.0 * (chipClock / 72.0) / playClock));
-        adpld = deltan * adplbase >> 16;
+        adplbase = playClock == 0 ? 0 : (int) (8192.0 * (chipClock / 72.0) / playClock);
+        updateDelta();
+    }
+
+    private void updateDelta() {
+        adpld = (int) ((long) deltan * adplbase >> 16);
+    }
+
+    /** replaces the byte of a little endian 32 bit value */
+    private static int setByte(int value, int index, int data) {
+        int shift = index * 8;
+        return (value & ~(0xff << shift)) | ((data & 0xff) << shift);
     }
 
     @Override
@@ -115,29 +125,25 @@ public class Pcm extends ChipElement {
             case 0x02:
             case 0x03:
             case 0x04:
-                playAddress &= ~(0x0000_00ff << ((address - 1) * 8));
-                playAddress |= (byte) data << ((address - 1) * 8);
+                playAddress = setByte(playAddress, address - 0x01, data);
                 break;
             case 0x05:
             case 0x06:
             case 0x07:
             case 0x08:
-                stopAddress &= ~(0x0000_00ff << ((address - 5) * 8));
-                stopAddress |= (byte) data << ((address - 5) * 8);
+                stopAddress = setByte(stopAddress, address - 0x05, data);
                 break;
             case 0x09:
             case 0x0a:
             case 0x0b:
             case 0x0c:
-                loopAddress &= ~(0x0000_00ff << ((address - 9) * 8));
-                loopAddress |= (byte) data << ((address - 9) * 8);
+                loopAddress = setByte(loopAddress, address - 0x09, data);
                 break;
             case 0x0d:
             case 0x0e:
             case 0x0f:
             case 0x10:
-                keyOffAddress &= ~(0x0000_00ff << ((address - 13) * 8));
-                keyOffAddress |= (byte) data << ((address - 13) * 8);
+                keyOffAddress = setByte(keyOffAddress, address - 0x0d, data);
                 break;
             case 0x12:
                 pcmConfig = (byte) data;
@@ -147,8 +153,29 @@ public class Pcm extends ChipElement {
                 break;
 
             default:
-                throw new IllegalArgumentException("The address specification is incorrect");
+                // 0x11 and others are reserved
+                break;
         }
+    }
+
+    private int sample(int ptr) {
+        return ptr >= 0 && ptr < pCMData.size() ? pCMData.get(ptr) : 0;
+    }
+
+    /** advances the play pointer, handles stop and loop */
+    private void advance() {
+        playPtr++;
+        if (Integer.compareUnsigned(playPtr, stopAddress) > 0) {
+            if (loopAddress != 0)
+                playPtr = loopAddress;
+            else play = false;
+        }
+    }
+
+    private void output(int[][] outputs, int i, int s) {
+        int vol = operator.cp.sysPcmVol;
+        outputs[0][i] += (s * (int) ((long) vol * operator.sc.getLeftVolume() >> 12)) >> 5;
+        outputs[1][i] += (s * (int) ((long) vol * operator.sc.getRightVolume() >> 12)) >> 5;
     }
 
     public void update(int[][] outputs, int samples) {
@@ -158,6 +185,7 @@ public class Pcm extends ChipElement {
                 // A key was pressed.
                 oldKeyOn = ko;
                 playPtr = playAddress;
+                adplc = 0;
                 play = true;
             }
             //else {
@@ -178,31 +206,31 @@ public class Pcm extends ChipElement {
 
         if (!play) return;
 
+        int matrix = operator.getNoteByteMatrix();
         if ((operator.getKeyFrqmode() & 0x40) == 0) {
-            int oct = (byte) ((operator.getNoteByteMatrix() >> 16) & 0x7);
-            int note = (byte) ((operator.getNoteByteMatrix() >> 8) & 0xf);
-            int kf = (byte) (operator.getNoteByteMatrix() & 0x3f);
-            deltan = (deltaKcTable[note] >> (10 - (oct + 3))) & 0xffff;
-            adpld = deltan * adplbase >> 16;
+            // note mode: [23:16] octave, [15:8] note (key code), [5:0] key fraction
+            int oct = (matrix >> 16) & 0x7;
+            int note = (matrix >> 8) & 0xf;
+            int kf = matrix & 0x3f;
+            long d = (long) (deltaKcTable[note] >> (7 - oct)) * kftable[kf] >> 16;
+            deltan = (int) d;
         } else {
-
+            // frequency mode: [15:0] is delta-n directly (as ym2608 adpcm)
+            deltan = matrix & 0xffff;
         }
+        updateDelta();
+
+        if (adpld <= 0) return;
 
         if (adpld <= 8192) { // fplay < fsamp
-            for (int i = 0; i < samples; i++) {
-                byte d = (byte) (playPtr >= pCMData.size() ? 0 : pCMData.get(playPtr));
+            for (int i = 0; i < samples && play; i++) {
+                int d = sample(playPtr);
                 if (adplc < 0) {
                     adplc += 8192;
-                    playPtr++;
-                    if (playPtr > stopAddress) {
-                        if (loopAddress != 0)
-                            playPtr = loopAddress;
-                        else play = false;
-                    }
+                    advance();
                 }
 
-                outputs[0][i] += (d * ((operator.cp.sysPcmVol * operator.sc.getLeftVolume()) >> 12)) >> 5;
-                outputs[1][i] += (d * ((operator.cp.sysPcmVol * operator.sc.getRightVolume()) >> 12)) >> 5;
+                output(outputs, i, d);
                 adplc -= adpld;
             }
             return;
@@ -211,16 +239,10 @@ public class Pcm extends ChipElement {
         // fplay > fsamp (adpld = fplay/famp*8192)
         int t = (-8192 * 8192) / adpld;
         for (int i = 0; i < samples; i++) {
-            byte d = (byte) (playPtr >= pCMData.size() ? 0 : pCMData.get(playPtr));
-            int s = d * (8192 + adplc);
+            int s = sample(playPtr) * (8192 + adplc);
             while (adplc < 0) {
-                d = (byte) (playPtr >= pCMData.size() ? 0 : pCMData.get(playPtr));
-                playPtr++;
-                if (playPtr > stopAddress) {
-                    if (loopAddress != 0)
-                        playPtr = loopAddress;
-                    else play = false;
-                }
+                int d = sample(playPtr);
+                advance();
 
                 if (!play) return;
                 s -= d * Math.max(adplc, t);
@@ -229,8 +251,7 @@ public class Pcm extends ChipElement {
             adplc -= 8192;
             s >>= 13;
 
-            outputs[0][i] += (s * ((operator.cp.sysPcmVol * operator.sc.getLeftVolume()) >> 12)) >> 5;
-            outputs[1][i] += (s * ((operator.cp.sysPcmVol * operator.sc.getRightVolume()) >> 12)) >> 5;
+            output(outputs, i, s);
         }
     }
 }

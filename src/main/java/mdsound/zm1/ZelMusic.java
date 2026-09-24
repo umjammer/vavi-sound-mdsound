@@ -37,10 +37,11 @@ public class ZelMusic {
 
     public void stop() {
         ope = null;
-        cp.pcmData.clear();
+        if (cp.pcmData != null) cp.pcmData.clear();
     }
 
     public void update(int[][] outputs, int samples) {
+        if (ope == null) return; // not reset yet or stopped
         for (int op = 0; op < MAX_OPERATOR; op++) {
             ope[op].update(outputs, samples);
         }
@@ -83,11 +84,13 @@ public class ZelMusic {
     }
 
     private void writeBankA(int adr, int data) {
-        throw new UnsupportedOperationException();
+        // TODO system registers are not specified yet, ignored
     }
 
     private void writeBankB(int adr, int data) {
+        if (ope == null) return;
         int opNum = adr / 0x100;
+        if (opNum < 0 || opNum >= MAX_OPERATOR) return;
         int opAdr = adr % 0x100;
         int opTyp = opAdr < 0x80 ? 0 : (opAdr < 0xf0 ? 1 : 2);
 
@@ -105,6 +108,8 @@ public class ZelMusic {
     }
 
     private void writeBankC(int adr, int data) {
+        if (adr < 0) return;
+        if (cp.pcmData == null) cp.pcmData = new ArrayList<>();
         if (adr >= cp.pcmData.size()) {
             long size = adr - cp.pcmData.size() + 1;
             for (int i = 0; i < size; i++)
@@ -115,16 +120,19 @@ public class ZelMusic {
     }
 
     private void writeBankD(int adr, int data) {
-        int opNum = adr % 0x90;
-        int opTyp = adr / 0x90;
+        if (ope == null || adr < 0) return;
 
-        if (opTyp == 0) {
-            int d = ope[opNum / 3].getNoteByteMatrix();
-            d &= ~(0x0000_00ff << ((adr % 3) * 8));
-            d |= (byte) data << ((adr % 3) * 8);
-            ope[opNum / 3].setNoteByteMatrix(d);
-        } else {
-            Operator o = ope[opNum % 48];
+        if (adr < MAX_OPERATOR * 3) {
+            // note byte matrix, 3 bytes per operator, little endian
+            Operator o = ope[adr / 3];
+            int shift = (adr % 3) * 8;
+            int d = o.getNoteByteMatrix();
+            d &= ~(0xff << shift);
+            d |= (data & 0xff) << shift;
+            o.setNoteByteMatrix(d);
+        } else if (adr < MAX_OPERATOR * 4) {
+            // key on / frequency mode
+            Operator o = ope[adr - MAX_OPERATOR * 3];
             o.setKeyFrqmode((byte) data);
             if (!o.isKeyOnFlg()) {
                 // off > on  --> true
