@@ -475,9 +475,9 @@ public class Emu2413 {
         int adr;
         private int _out;
 
-        private int realStep;
-        private int opllTime;
-        private int opllStep;
+        private long realStep; // e_uint32 in C, (1 << 31) / rate overflows a java int
+        private long opllTime;
+        private long opllStep;
         private int prev, next;
         private final int[] sPrev = new int[2];
         private final int[] sNext = new int[2];
@@ -790,8 +790,8 @@ public class Emu2413 {
                 writeReg(i, 0);
 
 //# ifndef EMU2413_COMPACTION
-            this.realStep = (1 << 31) / rate;
-            this.opllStep = (1 << 31) / (clk / 72);
+            this.realStep = (1L << 31) / rate;
+            this.opllStep = (1L << 31) / (clk / 72);
             this.opllTime = 0;
             for (int i = 0; i < 14; i++) {
                 this.pan[i] = 3; // original was 2, that makes monaural
