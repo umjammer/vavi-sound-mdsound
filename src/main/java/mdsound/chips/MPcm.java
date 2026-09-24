@@ -135,6 +135,7 @@ public class MPcm {
             int pitch = 0x10000;
             int doct = 0, dnote = 0;
 
+            this.lastNote = note; // as mpcmX68k.cs: setFreq re-applies it, and viewers show it
             dnote = note;
 
             if (orig > 0x1fc0) {
