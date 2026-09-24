@@ -167,7 +167,8 @@ public class Fm extends ChipElement {
                 break;
 
             default:
-                throw new IllegalArgumentException("The address specification is incorrect");
+                // reserved
+                break;
         }
     }
 }

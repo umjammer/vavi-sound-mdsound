@@ -6,8 +6,7 @@
 
 package mdsound.chips;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.function.Consumer;
 
 
 /**
@@ -93,287 +92,254 @@ Ensoniq OTIS - ES5505                                            Ensoniq OTTO - 
  *
  * @author Aaron Giles
  */
-abstract class Es550x {
+public abstract class Es550x {
 
-    public int clock() {
-        return 0;
-    }
-
-    public <T> void set_region0(T tag) {
-        //m_region0.set_tag(tag);
-    }
-
-    public <T> void set_region1(T tag) {
-        //m_region1.set_tag(tag);
-    }
-
-    public <T> void set_region2(T tag) {
-        //m_region2.set_tag(tag);
-    }
-
-    public <T> void set_region3(T tag) {
-        //m_region3.set_tag(tag);
-    }
-
-    public void set_channels(int channels) {
-        m_channels = channels;
-    }
-
-    public int get_voice_index() {
-        return m_voice_index;
-    }
-
-    public Object irq_cb() {
-        //return m_irq_cb.bind();
-        return null;
-    }
-
-    public Object read_port_cb() {
-        //return m_read_port_cb.bind();
-        return null;
-    }
-
-    public Object sample_rate_changed() {
-        //return m_sample_rate_changed_cb.bind();
-        return null;
-    }
-
-    private static final int LP3 = 1;
-    private static final int LP4 = 2;
+    protected static final int LP3 = 1;
+    protected static final int LP4 = 2;
     protected static final int LP_MASK = LP3 | LP4;
+
     /** constants for volumes */
     private static final int VOLUME_ACC_BIT = 20;
+
     /** constants for address */
-    private static final int ADDRESS_FRAC_BIT = 11;
-
-    /** struct describing a single playing voice */
-    static class es550x_voice {
-
-        // external state
-        /** control register */
-        int control = 0;
-        /** frequency count register */
-        long freqCount = 0;
-        /** start register */
-        long start = 0;
-        /** left volume register */
-        int lvol = 0;
-        /** end register */
-        long end = 0;
-        /** left volume ramp register */
-        protected int lvRamp = 0;
-        /** accumulator register */
-        long accum = 0;
-        /** right volume register */
-        int rVol = 0;
-        /** right volume ramp register */
-        protected int rvRamp = 0;
-        /** envelope count register */
-        int eCount = 0;
-        /** k2 register */
-        int k2 = 0;
-        /** k2 ramp register */
-        protected int k2Ramp = 0;
-        /** k1 register */
-        int k1 = 0;
-        /** k1 ramp register */
-        protected int k1Ramp = 0;
-        /** filter storage O4(n-1) */
-        int o4n1 = 0;
-        /** filter storage O3(n-1) */
-        int o3n1 = 0;
-        /** filter storage O3(n-2) */
-        int o3n2 = 0;
-        /** filter storage O2(n-1) */
-        int o2n1 = 0;
-        /** filter storage O2(n-2) */
-        int o2n2 = 0;
-        /** filter storage O1(n-1) */
-        int o1n1 = 0;
-        /** external address bank */
-        protected long exBank = 0;
-        // internal state
-        /** index of this voice */
-        byte index = 0;
-        /** filter count */
-        protected byte filtCount = 0;
-    }
-
-    //virtual inline u32 get_bank(u32 control) { return 0; }
-    //virtual inline u32 get_ca(u32 control) { return 0; }
-    //virtual inline u32 get_lp(u32 control) { return 0; }
-
-    private static long lShift_signed(long val, int shift) {
-        return (shift >= 0) ? val << shift : val >> (-shift);
-    }
-//    private int rshift_signed(int val, int shift) { return (shift >= 0) ? val >> shift : val << (-shift); }
-//    private int rshift_signed(long val, int shift) { return 0; }// (shift >= 0) ? val >> shift : val << (-shift); }
-    private static long rShift_signed(long val, int shift) {
-        return (shift >= 0) ? val >> shift : val << (-shift);
-    }
-
-    private long get_volume(int volume) {
-        return m_volume_lookup.get((int) rShift_signed(volume, m_volume_shift));
-    }
-
-    long get_address_acc_shifted_val(long val, int bias /* = 0 */) {
-        return lShift_signed(val, m_address_acc_shift - bias);
-    }
-
-    long get_address_acc_res(long val, int bias /* = 0 */) {
-        return rShift_signed(val, m_address_acc_shift - bias);
-    }
-
-    long get_integer_addr(long accum, int bias /* = 0 */) {
-        return ((accum + ((long) bias << ADDRESS_FRAC_BIT)) & m_address_acc_mask) >> ADDRESS_FRAC_BIT;
-    }
-
-    private long get_sample(int sample, int volume) {
-        return rShift_signed((long) sample * get_volume(volume), (int) m_volume_acc_shift);
-    }
-
-    protected abstract void update_envelopes(/* ref */ es550x_voice[] voice);
-
-    protected abstract void check_for_end_forward(/* ref */ es550x_voice[] voice, long accum);
-
-    protected abstract void check_for_end_reverse(/* ref */ es550x_voice[] voice, long accum);
-
-    protected abstract void generate_samples(int[][] outputs);
-
-    //       inline void update_index(es550x_voice* voice) { m_voice_index = voice->index; }
-    short read_sample(/* ref */ es550x_voice[] voice, int addr) {
-        return 0;
-    }
-
-    //        internal state
-    //       sound_stream* m_stream;               // which stream are we using
-    /** current sample rate */
-    int m_sample_rate;
-    /** master clock frequency */
-    int m_master_clock;
-    /** right shift accumulator for generate integer address */
-    private int m_address_acc_shift;
-    /** accumulator mask */
-    long m_address_acc_mask;
-    /** right shift volume for generate integer volume */
-    private int m_volume_shift;
-    /** right shift output for output normalizing */
-    private long m_volume_acc_shift;
-    /** current register page */
-    int m_current_page;
-    /** number of active voices */
-    int m_active_voices;
-    /** MODE register */
-    short m_mode;
-    /** IRQV register */
-    int m_irqv;
-    /** current voice index value */
-    private int m_voice_index;
-
-    /** the 32 voices */
-    final es550x_voice[] m_voice = new es550x_voice[32];
-
-    private List<Short> m_ulaw_lookup;
-    private List<Integer> m_volume_lookup;
-
-//    optional_memory_region m_region0; // memory region where the sample ROM lives
-//    optional_memory_region m_region1; // memory region where the sample ROM lives
-//    optional_memory_region m_region2; // memory region where the sample ROM lives
-//    optional_memory_region m_region3; // memory region where the sample ROM lives
-int m_channels; // number of output channels: 1 .. 6
-//    devcb_write_line m_irq_cb; // irq callback
-//    devcb_read16 m_read_port_cb; // input port read
-//    devcb_write32 m_sample_rate_changed_cb; // callback for when sample rate is changed
-
-    //
-    // CONSTANTS
-    //
-
-    private static final int LOG_SERIAL = (1 << 1);
-    private static final int VERBOSE = 0;
-
-    private static final int RAINE_CHECK = 0;
+    protected static final int ADDRESS_FRAC_BIT = 11;
 
     private static final int FINE_FILTER_BIT = 16;
     private static final int FILTER_BIT = 12;
-    private static final int FILTER_SHIFT = FINE_FILTER_BIT - FILTER_BIT;
+    protected static final int FILTER_SHIFT = FINE_FILTER_BIT - FILTER_BIT;
+
     private static final int ULAW_MAXBITS = 8;
 
-    private static final int CONTROL_BS1 = 0x8000;
-    private static final int CONTROL_BS0 = 0x4000;
+    protected static final int CONTROL_BS1 = 0x8000;
+    protected static final int CONTROL_BS0 = 0x4000;
     protected static final int CONTROL_CMPD = 0x2000;
-    private static final int CONTROL_CA2 = 0x1000;
-    private static final int CONTROL_CA1 = 0x0800;
-    private static final int CONTROL_CA0 = 0x0400;
-    private static final int CONTROL_LP4 = 0x0200;
-    private static final int CONTROL_LP3 = 0x0100;
-    static final int CONTROL_IRQ = 0x0080;
-    static final int CONTROL_DIR = 0x0040;
-    static final int CONTROL_IRQE = 0x0020;
-    static final int CONTROL_BLE = 0x0010;
-    static final int CONTROL_LPE = 0x0008;
+    protected static final int CONTROL_CA2 = 0x1000;
+    protected static final int CONTROL_CA1 = 0x0800;
+    protected static final int CONTROL_CA0 = 0x0400;
+    protected static final int CONTROL_LP4 = 0x0200;
+    protected static final int CONTROL_LP3 = 0x0100;
+    protected static final int CONTROL_IRQ = 0x0080;
+    protected static final int CONTROL_DIR = 0x0040;
+    protected static final int CONTROL_IRQE = 0x0020;
+    protected static final int CONTROL_BLE = 0x0010;
+    protected static final int CONTROL_LPE = 0x0008;
     protected static final int CONTROL_LEI = 0x0004;
-    private static final int CONTROL_STOP1 = 0x0002;
-    static final int CONTROL_STOP0 = 0x0001;
-    protected static final int CONTROL_BSMASK = (CONTROL_BS1 | CONTROL_BS0);
-    protected static final int CONTROL_CAMASK = (CONTROL_CA2 | CONTROL_CA1 | CONTROL_CA0);
-    protected static final int CONTROL_LPMASK = (CONTROL_LP4 | CONTROL_LP3);
-    static final int CONTROL_LOOPMASK = (CONTROL_BLE | CONTROL_LPE);
-    static final int CONTROL_STOPMASK = (CONTROL_STOP1 | CONTROL_STOP0);
+    protected static final int CONTROL_STOP1 = 0x0002;
+    protected static final int CONTROL_STOP0 = 0x0001;
+
+    protected static final int CONTROL_BSMASK = CONTROL_BS1 | CONTROL_BS0;
+    protected static final int CONTROL_CAMASK = CONTROL_CA2 | CONTROL_CA1 | CONTROL_CA0;
+    protected static final int CONTROL_LPMASK = CONTROL_LP4 | CONTROL_LP3;
+    protected static final int CONTROL_LOOPMASK = CONTROL_BLE | CONTROL_LPE;
+    protected static final int CONTROL_STOPMASK = CONTROL_STOP1 | CONTROL_STOP0;
+
     // ES5505 has sightly different control bit
-    private static final int CONTROL_5505_LP4 = 0x0800;
-    private static final int CONTROL_5505_LP3 = 0x0400;
-    private static final int CONTROL_5505_CA1 = 0x0200;
-    private static final int CONTROL_5505_CA0 = 0x0100;
-    protected static final int CONTROL_5505_LPMASK = (CONTROL_5505_LP4 | CONTROL_5505_LP3);
-    protected static final int CONTROL_5505_CAMASK = (CONTROL_5505_CA1 | CONTROL_5505_CA0);
+    protected static final int CONTROL_5505_LP4 = 0x0800;
+    protected static final int CONTROL_5505_LP3 = 0x0400;
+    protected static final int CONTROL_5505_CA1 = 0x0200;
+    protected static final int CONTROL_5505_CA0 = 0x0100;
 
-    public void es550x_device() {
+    protected static final int CONTROL_5505_LPMASK = CONTROL_5505_LP4 | CONTROL_5505_LP3;
+    protected static final int CONTROL_5505_CAMASK = CONTROL_5505_CA1 | CONTROL_5505_CA0;
+
+    /** struct describing a single playing voice */
+    protected static class Voice {
+
+        // external state
+        /** control register */
+        int control;
+        /** frequency count register */
+        long freqCount;
+        /** start register */
+        long start;
+        /** left volume register */
+        int lVol;
+        /** end register */
+        long end;
+        /** left volume ramp register */
+        int lvRamp;
+        /** accumulator register */
+        long accum;
+        /** right volume register */
+        int rVol;
+        /** right volume ramp register */
+        int rvRamp;
+        /** envelope count register */
+        int eCount;
+        /** k2 register */
+        int k2;
+        /** k2 ramp register */
+        int k2Ramp;
+        /** k1 register */
+        int k1;
+        /** k1 ramp register */
+        int k1Ramp;
+        /** filter storage O4(n-1) */
+        int o4n1;
+        /** filter storage O3(n-1) */
+        int o3n1;
+        /** filter storage O3(n-2) */
+        int o3n2;
+        /** filter storage O2(n-1) */
+        int o2n1;
+        /** filter storage O2(n-2) */
+        int o2n2;
+        /** filter storage O1(n-1) */
+        int o1n1;
+        /** external address bank */
+        long exBank;
+
+        // internal state
+        /** index of this voice */
+        int index;
+        /** filter count */
+        int filtCount;
+
+        boolean muted;
     }
 
-    /**
-     * device-specific startup
-     */
-    void device_start() {
+    // internal state
+
+    /** current sample rate */
+    protected int sampleRate;
+    /** master clock frequency */
+    protected int masterClock;
+    /** right shift accumulator for generate integer address */
+    private int addressAccShift;
+    /** accumulator mask */
+    protected long addressAccMask;
+    /** right shift volume for generate integer volume */
+    private int volumeShift;
+    /** right shift output for output normalizing */
+    private int volumeAccShift;
+    /** current register page */
+    protected int currentPage;
+    /** number of active voices */
+    protected int activeVoices = 0x1f;
+    /** MODE register */
+    protected int mode;
+    /** IRQV register */
+    protected int irqv = 0x80;
+    /** current voice index value */
+    private int voiceIndex;
+
+    /** the 32 voices */
+    protected final Voice[] voices = new Voice[32];
+
+    {
+        for (int i = 0; i < voices.length; i++) voices[i] = new Voice();
+    }
+
+    private short[] ulawLookup;
+    private int[] volumeLookup;
+
+    /** number of output channels: 1 .. 6 */
+    protected int channels;
+
+    /** sample rom per bank, 16 bit words */
+    protected final short[][] regions = new short[4][];
+
+    /** callback for when sample rate is changed */
+    private Consumer<Integer> sampleRateChanged;
+
+    public void setSampleRateChanged(Consumer<Integer> sampleRateChanged) {
+        this.sampleRateChanged = sampleRateChanged;
+    }
+
+    public int getSampleRate() {
+        return sampleRate;
+    }
+
+    public int getVoiceIndex() {
+        return voiceIndex;
+    }
+
+    protected int getBank(int control) {
+        return 0;
+    }
+
+    protected int getCa(int control) {
+        return 0;
+    }
+
+    protected int getLp(int control) {
+        return 0;
+    }
+
+    private static long lShiftSigned(long val, int shift) {
+        return (shift >= 0) ? val << shift : val >>> (-shift);
+    }
+
+    private static long rShiftSigned(long val, int shift) {
+        return (shift >= 0) ? val >> shift : val << (-shift);
+    }
+
+    private int getVolume(int volume) {
+        return volumeLookup[(int) rShiftSigned(volume, volumeShift)];
+    }
+
+    protected long getAddressAccShiftedVal(long val, int bias) {
+        return lShiftSigned(val, addressAccShift - bias);
+    }
+
+    protected long getAddressAccShiftedVal(long val) {
+        return getAddressAccShiftedVal(val, 0);
+    }
+
+    protected long getAddressAccRes(long val, int bias) {
+        return (shiftRight(val, addressAccShift - bias));
+    }
+
+    protected long getAddressAccRes(long val) {
+        return getAddressAccRes(val, 0);
+    }
+
+    /** unsigned version of rshift_signed, u64 in the original */
+    private static long shiftRight(long val, int shift) {
+        return (shift >= 0) ? val >>> shift : val << (-shift);
+    }
+
+    protected long getIntegerAddr(long accum, int bias) {
+        return ((accum + ((long) bias << ADDRESS_FRAC_BIT)) & addressAccMask) >>> ADDRESS_FRAC_BIT;
+    }
+
+    private long getSample(int sample, int volume) {
+        return rShiftSigned((long) sample * getVolume(volume), volumeAccShift);
+    }
+
+    //
+    // device
+    //
+
+    /** device-specific startup */
+    protected void deviceStart(int clock) {
         // initialize the rest of the structure
-        m_master_clock = clock();
-        m_irqv = 0x80;
+        masterClock = clock;
+        irqv = 0x80;
     }
 
-    /**
-     * device_clock_changed
-     */
-    public void device_clock_changed() {
-        m_master_clock = clock();
-        m_sample_rate = m_master_clock / (16 * (m_active_voices + 1));
+    /** device-specific reset */
+    public void reset() {
     }
 
-    /**
-     * device-specific reset
-     */
-    public void device_reset() {
+    /** device-specific stop */
+    public void stop() {
     }
 
-    /**
-     * device-specific stop
-     */
-    public void device_stop() {
-//#if ES5506_MAKE_WAVS
-//	{
-//		wav_close(m_wavraw);
-//	}
-//#endif
+    /** sets the sample rate from the number of active voices, and tells the host */
+    protected void updateSampleRate() {
+        sampleRate = masterClock / (16 * (activeVoices + 1));
+        if (sampleRateChanged != null)
+            sampleRateChanged.accept(sampleRate);
     }
 
-    /**
-     * update the IRQ state
-     */
-    private void update_irq_state() {
+    /** update the IRQ state */
+    private void updateIrqState() {
         // ES5505/6 irq line has been set high - inform the host
-        //m_irq_cb(1); // IRQB set high
+        // no host cpu to inform here
     }
 
-    public void update_internal_irq_state() {
+    protected void updateInternalIrqState() {
         // Host (cpu) has just read the voice interrupt vector (voice IRQ ack).
         //
         // Reset the voice vector to show the IRQB line is low (top bit set).
@@ -382,357 +348,360 @@ int m_channels; // number of output channels: 1 .. 6
         // the vector next time the voice is processed.  In emulation
         // terms they get updated next time generate_samples() is called.
 
-        m_irqv = 0x80;
-        //m_irq_cb(0); // IRQB set low
+        irqv = 0x80;
     }
 
-    /**
-     * compute static tables
-     */
-    void compute_tables(int total_volume_bit, int exponent_bit, int mantissa_bit) {
+    /** compute static tables */
+    protected void computeTables(int totalVolumeBit, int exponentBit, int mantissaBit) {
         // allocate ulaw lookup table
-        m_ulaw_lookup = new ArrayList<>();
-        for (int i = 0; i < (1 << ULAW_MAXBITS); i++)
-            m_ulaw_lookup.add((short) 0);
+        ulawLookup = new short[1 << ULAW_MAXBITS];
 
         // generate ulaw lookup table
         for (int i = 0; i < (1 << ULAW_MAXBITS); i++) {
-            short rawval = (short) ((i << (16 - ULAW_MAXBITS)) | (1 << (15 - ULAW_MAXBITS)));
-            byte exponent = (byte) (rawval >> 13);
-            int mantissa = (rawval << 3) & 0xffff;
+            int rawVal = ((i << (16 - ULAW_MAXBITS)) | (1 << (15 - ULAW_MAXBITS))) & 0xffff;
+            int exponent = rawVal >> 13;
+            int mantissa = (rawVal << 3) & 0xffff;
 
             if (exponent == 0)
-                m_ulaw_lookup.set(i, (short) (mantissa >> 7));
+                ulawLookup[i] = (short) ((short) mantissa >> 7);
             else {
                 mantissa = (mantissa >> 1) | (~mantissa & 0x8000);
-                m_ulaw_lookup.set(i, (short) (mantissa >> (7 - exponent)));
+                ulawLookup[i] = (short) ((short) mantissa >> (7 - exponent));
             }
         }
 
-        int volume_bit = (exponent_bit + mantissa_bit);
-        m_volume_shift = total_volume_bit - volume_bit;
-        int volume_len = 1 << volume_bit;
+        int volumeBit = exponentBit + mantissaBit;
+        volumeShift = totalVolumeBit - volumeBit;
+        int volumeLen = 1 << volumeBit;
         // allocate volume lookup table
-        m_volume_lookup = new ArrayList<>();
-        for (int i = 0; i < volume_len; i++)
-            m_volume_lookup.add(0);
+        volumeLookup = new int[volumeLen];
 
         // generate volume lookup table
-        int exponent_shift = 1 << exponent_bit;
-        int exponent_mask = exponent_shift - 1;
+        int exponentShift = 1 << exponentBit;
+        int exponentMask = exponentShift - 1;
 
-        int mantissa_len = 1 << mantissa_bit;
-        int mantissa_mask = (mantissa_len - 1);
-        int mantissa_shift = exponent_shift - mantissa_bit - 1;
+        int mantissaLen = 1 << mantissaBit;
+        int mantissaMask = mantissaLen - 1;
+        int mantissaShift = exponentShift - mantissaBit - 1;
 
-        for (int i = 0; i < volume_len; i++) {
-            int exponent = (i >> mantissa_bit) & exponent_mask;
-            int mantissa = (i & mantissa_mask) | mantissa_len;
+        for (int i = 0; i < volumeLen; i++) {
+            int exponent = (i >> mantissaBit) & exponentMask;
+            int mantissa = (i & mantissaMask) | mantissaLen;
 
-            m_volume_lookup.set(i, (mantissa << mantissa_shift) >> (exponent_shift - exponent));
+            volumeLookup[i] = (int) (((long) mantissa << mantissaShift) >>> (exponentShift - exponent));
         }
-        m_volume_acc_shift = (16 + exponent_mask) - VOLUME_ACC_BIT;
+        volumeAccShift = (16 + exponentMask) - VOLUME_ACC_BIT;
 
         // init the voices
         for (int j = 0; j < 32; j++) {
-            m_voice[j].index = (byte) j;
-            m_voice[j].control = CONTROL_STOPMASK;
-            m_voice[j].lvol = 1 << (total_volume_bit - 1);
-            m_voice[j].rVol = 1 << (total_volume_bit - 1);
+            voices[j].index = j;
+            voices[j].control = CONTROL_STOPMASK;
+            voices[j].lVol = 1 << (totalVolumeBit - 1);
+            voices[j].rVol = 1 << (totalVolumeBit - 1);
         }
     }
 
-    /**
-     * get address accumulator mask
-     */
-    void get_accum_mask(int address_integer, int address_frac) {
-        m_address_acc_shift = ADDRESS_FRAC_BIT - address_frac;
-        m_address_acc_mask = lShift_signed(
-                (((1L << address_integer) - 1) << address_frac) | ((1L << address_frac) - 1),
-                m_address_acc_shift);
-        if (m_address_acc_shift > 0)
-            m_address_acc_mask = m_address_acc_mask | ((1L << m_address_acc_shift) - 1);
+    /** get address accumulator mask */
+    protected void getAccumMask(int addressInteger, int addressFrac) {
+        addressAccShift = ADDRESS_FRAC_BIT - addressFrac;
+        addressAccMask = lShiftSigned((((1L << addressInteger) - 1) << addressFrac) | ((1L << addressFrac) - 1), addressAccShift);
+        if (addressAccShift > 0)
+            addressAccMask |= (1L << addressAccShift) - 1;
     }
 
-    /**
-     * interpolate between two samples
-     */
+    /** interpolate between two samples */
     private int interpolate(int sample1, int sample2, long accum) {
         int shifted = 1 << ADDRESS_FRAC_BIT;
         int mask = shifted - 1;
-        accum &= mask & m_address_acc_mask;
-        return (sample1 * (int) (shifted - accum) +
-                sample2 * (int) (accum)) >> ADDRESS_FRAC_BIT;
+        int frac = (int) (accum & mask & addressAccMask);
+        return (sample1 * (shifted - frac) + sample2 * frac) >> ADDRESS_FRAC_BIT;
     }
 
-    /**
-     * apply the 4-pole digital filter to the sample
-     */
     // apply lowpass/highpass result
-    private static int apply_lowpass(int _out, int cutoff, int _in) {
-        return ((cutoff >> FILTER_SHIFT) * (_out - _in) / (1 << FILTER_BIT)) + _in;
+    private static int applyLowpass(int out, int cutoff, int in) {
+        return ((cutoff >>> FILTER_SHIFT) * (out - in) / (1 << FILTER_BIT)) + in;
     }
 
-    private static int apply_highpass(int _out, int cutoff, int _in, int prev) {
-        return _out - prev + ((cutoff >> FILTER_SHIFT) * _in) / (1 << (FILTER_BIT + 1)) + _in / 2;
+    private static int applyHighpass(int out, int cutoff, int in, int prev) {
+        return out - prev + ((cutoff >>> FILTER_SHIFT) * in) / (1 << (FILTER_BIT + 1)) + in / 2;
     }
 
-    // update poles from outputs
-    private static void update_pole(/* ref */ int[] pole, int sample) {
-        pole[0] = sample;
-    }
-
-    private static void update_2_pole(/* ref */ int[] prev, /* ref */ int[] pole, int sample) {
-        prev[0] = pole[0];
-        pole[0] = sample;
-    }
-
-    private static void apply_filters(/* ref */ es550x_voice[] voice, /* ref */ int[] sample) {
+    /** apply the 4-pole digital filter to the sample */
+    private int applyFilters(Voice voice, int sample) {
         // pole 1 is always low-pass using K1
-        sample[0] = apply_lowpass(sample[0], voice[0].k1, voice[0].o1n1);
-        int[] tmp = {voice[0].o1n1};
-        update_pole(/* ref */ tmp, sample[0]);
-        voice[0].o1n1 = tmp[0];
+        sample = applyLowpass(sample, voice.k1, voice.o1n1);
+        voice.o1n1 = sample;
 
         // pole 2 is always low-pass using K1
-        sample[0] = apply_lowpass(sample[0], voice[0].k1, voice[0].o2n1);
-        tmp[0] = voice[0].o2n2; int[] tmp2 = {voice[0].o2n1};
-        update_2_pole(/* ref */ tmp, /* ref */ tmp2, sample[0]);
-        voice[0].o2n2 = tmp[0]; voice[0].o2n1 = tmp2[0];
+        sample = applyLowpass(sample, voice.k1, voice.o2n1);
+        voice.o2n2 = voice.o2n1;
+        voice.o2n1 = sample;
 
         // remaining poles depend on the current filter setting
-        switch (voice[0].control) { //(get_lp(voice.control))
-            case 0:
+        switch (getLp(voice.control)) {
+            case 0 -> {
                 // pole 3 is high-pass using K2
-                sample[0] = apply_highpass(sample[0], voice[0].k2, voice[0].o3n1, voice[0].o2n2);
-                tmp[0] = voice[0].o3n2; tmp2[0] = voice[0].o3n1;
-                update_2_pole(/* ref */ tmp, /* ref */ tmp2, sample[0]);
-                voice[0].o3n2 = tmp[0]; voice[0].o3n1 = tmp2[0];
-                // pole 4 is high-pass using K2
-                sample[0] = apply_highpass(sample[0], voice[0].k2, voice[0].o4n1, voice[0].o3n2);
-                tmp[0] = voice[0].o4n1;
-                update_pole(/* ref */ tmp, sample[0]);
-                voice[0].o4n1 = tmp[0];
-                break;
+                sample = applyHighpass(sample, voice.k2, voice.o3n1, voice.o2n2);
+                voice.o3n2 = voice.o3n1;
+                voice.o3n1 = sample;
 
-            case LP3:
+                // pole 4 is high-pass using K2
+                sample = applyHighpass(sample, voice.k2, voice.o4n1, voice.o3n2);
+                voice.o4n1 = sample;
+            }
+            case LP3 -> {
                 // pole 3 is low-pass using K1
-                sample[0] = apply_lowpass(sample[0], voice[0].k1, voice[0].o3n1);
-                tmp[0] = voice[0].o3n2; tmp2[0] = voice[0].o3n1;
-                update_2_pole(/* ref */ tmp, /* ref */ tmp2, sample[0]);
-                voice[0].o3n2 = tmp[0]; voice[0].o3n1 = tmp2[0];
-                // pole 4 is high-pass using K2
-                sample[0] = apply_highpass(sample[0], voice[0].k2, voice[0].o4n1, voice[0].o3n2);
-                tmp[0] = voice[0].o4n1;
-                update_pole(/* ref */ tmp, sample[0]);
-                voice[0].o4n1 = tmp[0];
-                break;
+                sample = applyLowpass(sample, voice.k1, voice.o3n1);
+                voice.o3n2 = voice.o3n1;
+                voice.o3n1 = sample;
 
-            case LP4:
+                // pole 4 is high-pass using K2
+                sample = applyHighpass(sample, voice.k2, voice.o4n1, voice.o3n2);
+                voice.o4n1 = sample;
+            }
+            case LP4 -> {
                 // pole 3 is low-pass using K2
-                sample[0] = apply_lowpass(sample[0], voice[0].k2, voice[0].o3n1);
-                tmp[0] = voice[0].o3n2; tmp2[0] = voice[0].o3n1;
-                update_2_pole(/* ref */ tmp, /* ref */ tmp2, sample[0]);
-                voice[0].o3n2 = tmp[0]; voice[0].o3n1 = tmp2[0];
-                // pole 4 is low-pass using K2
-                sample[0] = apply_lowpass(sample[0], voice[0].k2, voice[0].o4n1);
-                tmp[0] = voice[0].o4n1;
-                update_pole(/* ref */ tmp, sample[0]);
-                voice[0].o4n1 = tmp[0];
-                break;
+                sample = applyLowpass(sample, voice.k2, voice.o3n1);
+                voice.o3n2 = voice.o3n1;
+                voice.o3n1 = sample;
 
-            case LP3 | LP4:
+                // pole 4 is low-pass using K2
+                sample = applyLowpass(sample, voice.k2, voice.o4n1);
+                voice.o4n1 = sample;
+            }
+            case LP3 | LP4 -> {
                 // pole 3 is low-pass using K1
-                sample[0] = apply_lowpass(sample[0], voice[0].k1, voice[0].o3n1);
-                tmp[0] = voice[0].o3n2; tmp2[0] = voice[0].o3n1;
-                update_2_pole(/* ref */ tmp, /* ref */tmp2, sample[0]);
-                voice[0].o3n2 = tmp[0]; voice[0].o3n1 = tmp2[0];
+                sample = applyLowpass(sample, voice.k1, voice.o3n1);
+                voice.o3n2 = voice.o3n1;
+                voice.o3n1 = sample;
+
                 // pole 4 is low-pass using K2
-                sample[0] = apply_lowpass(sample[0], voice[0].k2, voice[0].o4n1);
-                tmp[0] = voice[0].o4n1;
-                update_pole(/* ref */ tmp, sample[0]);
-                voice[0].o4n1 = tmp[0];
-                break;
+                sample = applyLowpass(sample, voice.k2, voice.o4n1);
+                voice.o4n1 = sample;
+            }
         }
+        return sample;
     }
 
+    /** update the envelopes */
+    protected abstract void updateEnvelopes(Voice voice);
+
     /**
-     * generate_ulaw -- general u-law decoding routine
+     * check for loop end and loop appropriately
+     * @return new accumulator
      */
-    private void generate_ulaw(/* ref */ es550x_voice[] voice, int[] dest) {
-        int freqCount = (int) voice[0].freqCount;
-        long accum = voice[0].accum & m_address_acc_mask;
+    protected abstract long checkForEndForward(Voice voice, long accum);
+
+    /**
+     * check for loop end and loop appropriately
+     * @return new accumulator
+     */
+    protected abstract long checkForEndReverse(Voice voice, long accum);
+
+    /** tell each voice to generate samples */
+    protected abstract void generateSamples(int[][] outputs, int samples);
+
+    protected void updateIndex(Voice voice) {
+        voiceIndex = voice.index;
+    }
+
+    /** @return unsigned 16 bit word */
+    protected int readSample(Voice voice, long addr) {
+        updateIndex(voice);
+        short[] rom = regions[getBank(voice.control)];
+        if (rom == null)
+            return 0;
+        long index = voice.exBank + addr;
+        return index < rom.length ? rom[(int) index] & 0xffff : 0;
+    }
+
+    /** general u-law decoding routine */
+    protected void generateUlaw(Voice voice, int[] dest, int l) {
+        int freqCount = (int) voice.freqCount;
+        long accum = voice.accum & addressAccMask;
 
         // outer loop, in case we switch directions
-        if ((voice[0].control & CONTROL_STOPMASK) == 0) {
-            // two cases: first case is forward direction
-            if ((voice[0].control & CONTROL_DIR) == 0) {
-                // fetch two samples
-                int val1 = read_sample(/* ref */ voice, (int) get_integer_addr(accum, 0));
-                int val2 = read_sample(/* ref */ voice, (int) get_integer_addr(accum, 1));
+        if ((voice.control & CONTROL_STOPMASK) == 0) {
+            // fetch two samples
+            int val1 = readSample(voice, getIntegerAddr(accum, 0));
+            int val2 = readSample(voice, getIntegerAddr(accum, 1));
 
-                // decompress u-law
-                val1 = m_ulaw_lookup.get(val1 >> (16 - ULAW_MAXBITS));
-                val2 = m_ulaw_lookup.get(val2 >> (16 - ULAW_MAXBITS));
+            // decompress u-law
+            val1 = ulawLookup[val1 >> (16 - ULAW_MAXBITS)];
+            val2 = ulawLookup[val2 >> (16 - ULAW_MAXBITS)];
 
-                // interpolate
-                val1 = interpolate(val1, val2, accum);
-                accum = (accum + freqCount) & m_address_acc_mask;
-
-                // apply filters
-                int[] tmp = {val1};
-                apply_filters(/* ref */ voice, /* ref */ tmp);
-                val1 = tmp[0];
-
-                // update filters/volumes
-                if (voice[0].eCount != 0)
-                    update_envelopes(/* ref */ voice);
-
-                // apply volumes and add
-                dest[0] += (int) get_sample(val1, voice[0].lvol);
-                dest[1] += (int) get_sample(val1, voice[0].rVol);
-
-                // check for loop end
-                check_for_end_forward(/* ref */ voice, accum);
-            }
-
-            // two cases: second case is backward direction
-            else {
-                // fetch two samples
-                int val1 = read_sample(/* ref */ voice, (int) get_integer_addr(accum, 0));
-                int val2 = read_sample(/* ref */ voice, (int) get_integer_addr(accum, 1));
-
-                // decompress u-law
-                val1 = m_ulaw_lookup.get(val1 >> (16 - ULAW_MAXBITS));
-                val2 = m_ulaw_lookup.get(val2 >> (16 - ULAW_MAXBITS));
-
-                // interpolate
-                val1 = interpolate(val1, val2, accum);
-                accum = (accum - freqCount) & m_address_acc_mask;
-
-                // apply filters
-                int[] tmp = {val1};
-                apply_filters(/* ref */ voice, /* ref */ tmp);
-                val1 = tmp[0];
-
-                // update filters/volumes
-                if (voice[0].eCount != 0)
-                    update_envelopes(/* ref */ voice);
-
-                // apply volumes and add
-                dest[0] += (int) get_sample(val1, voice[0].lvol);
-                dest[1] += (int) get_sample(val1, voice[0].rVol);
-
-                // check for loop end
-                check_for_end_reverse(/* ref */ voice, accum);
-            }
+            generate(voice, dest, l, val1, val2, accum, freqCount);
         } else {
             // if we stopped, process any additional envelope
-            if (voice[0].eCount != 0)
-                update_envelopes(/* ref */ voice);
+            if (voice.eCount != 0)
+                updateEnvelopes(voice);
+            voice.accum = accum;
         }
-
-        voice[0].accum = accum;
     }
 
-    /**
-     * general PCM decoding routine
-     */
-    protected void generate_pcm(/* ref */ Es550x.es550x_voice[] voice, int[] dest) {
-        int freqCount = (int) voice[0].freqCount;
-        long accum = voice[0].accum & m_address_acc_mask;
+    /** general PCM decoding routine */
+    protected void generatePcm(Voice voice, int[] dest, int l) {
+        int freqCount = (int) voice.freqCount;
+        long accum = voice.accum & addressAccMask;
 
         // outer loop, in case we switch directions
-        if ((voice[0].control & CONTROL_STOPMASK) == 0) {
-            // two cases: first case is forward direction
-            if ((voice[0].control & CONTROL_DIR) == 0) {
-                // fetch two samples
-                int val1 = read_sample(/* ref */ voice, (int) get_integer_addr(accum, 0));
-                int val2 = read_sample(/* ref */ voice, (int) get_integer_addr(accum, 1));
+        if ((voice.control & CONTROL_STOPMASK) == 0) {
+            // fetch two samples
+            int val1 = (short) readSample(voice, getIntegerAddr(accum, 0));
+            int val2 = (short) readSample(voice, getIntegerAddr(accum, 1));
 
-                // interpolate
-                val1 = interpolate(val1, val2, accum);
-                accum = (accum + freqCount) & m_address_acc_mask;
-
-                // apply filters
-                int[] tmp = {val1};
-                apply_filters(/* ref */ voice, /* ref */ tmp);
-                val1 = tmp[0];
-
-                // update filters/volumes
-                if (voice[0].eCount != 0)
-                    update_envelopes(/* ref */ voice);
-
-                // apply volumes and add
-                dest[0] += (int) get_sample(val1, voice[0].lvol);
-                dest[1] += (int) get_sample(val1, voice[0].rVol);
-
-                // check for loop end
-                check_for_end_forward(/* ref */ voice, accum);
-            }
-
-            // two cases: second case is backward direction
-            else {
-                // fetch two samples
-                int val1 = read_sample(/* ref */ voice, (int) get_integer_addr(accum, 0));
-                int val2 = read_sample(/* ref */ voice, (int) get_integer_addr(accum, 1));
-
-                // interpolate
-                val1 = interpolate(val1, val2, accum);
-                accum = (accum - freqCount) & m_address_acc_mask;
-
-                // apply filters
-                int[] tmp = {val1};
-                apply_filters(/* ref */ voice, /* ref */ tmp);
-                val1 = tmp[0];
-
-                // update filters/volumes
-                if (voice[0].eCount != 0)
-                    update_envelopes(/* ref */ voice);
-
-                // apply volumes and add
-                dest[0] += (int) get_sample(val1, voice[0].lvol);
-                dest[1] += (int) get_sample(val1, voice[0].rVol);
-
-                // check for loop end
-                check_for_end_reverse(/* ref */ voice, accum);
-            }
+            generate(voice, dest, l, val1, val2, accum, freqCount);
         } else {
             // if we stopped, process any additional envelope
-            if (voice[0].eCount != 0)
-                update_envelopes(/* ref */ voice);
+            if (voice.eCount != 0)
+                updateEnvelopes(voice);
+            voice.accum = accum;
         }
-
-        voice[0].accum = accum;
     }
 
-    /**
-     * general interrupt handling routine
-     */
-    void generate_irq(/* ref */ es550x_voice[] voice, int v) {
+    /** the common part of generate_ulaw and generate_pcm, after the samples are fetched */
+    private void generate(Voice voice, int[] dest, int l, int val1, int val2, long accum, int freqCount) {
+        boolean forward = (voice.control & CONTROL_DIR) == 0;
+
+        // interpolate
+        val1 = interpolate(val1, val2, accum);
+        if (forward)
+            accum = (accum + (freqCount & 0xffff_ffffL)) & addressAccMask;
+        else
+            accum = (accum - (freqCount & 0xffff_ffffL)) & addressAccMask;
+
+        // apply filters
+        val1 = applyFilters(voice, val1);
+
+        // update filters/volumes
+        if (voice.eCount != 0)
+            updateEnvelopes(voice);
+
+        // apply volumes and add
+        if (!voice.muted) {
+            dest[l] += (int) getSample(val1, voice.lVol);
+            dest[l + 1] += (int) getSample(val1, voice.rVol);
+        }
+
+        // check for loop end
+        if (forward)
+            accum = checkForEndForward(voice, accum);
+        else
+            accum = checkForEndReverse(voice, accum);
+
+        voice.accum = accum;
+    }
+
+    /** general interrupt handling routine */
+    protected void generateIrq(Voice voice, int v) {
         // does this voice have it's IRQ bit raised?
-        if ((voice[0].control & CONTROL_IRQ) != 0) {
-            //LOG("es5506: IRQ raised on voice %d!!\n", v);
-
+        if ((voice.control & CONTROL_IRQ) != 0) {
             // only update voice vector if existing IRQ is acked by host
-            if ((m_irqv & 0x80) != 0) {
+            if ((irqv & 0x80) != 0) {
                 // latch voice number into vector, and set high bit low
-                m_irqv = (byte) (v & 0x1f);
+                irqv = v & 0x1f;
 
                 // take down IRQ bit on voice
-                voice[0].control &= ~CONTROL_IRQ;
+                voice.control &= ~CONTROL_IRQ;
 
                 // inform host of irq
-                update_irq_state();
+                updateIrqState();
             }
         }
     }
 
     /**
      * sound_stream_update - handle a stream update
+     *
+     * @param outputs [2][samples] stereo, all the output channels are mixed down
      */
-    private void sound_stream_update(int[][] outputs) {
-        // loop until all samples are output
-        generate_samples(outputs);
+    public void update(int[][] outputs, int samples) {
+        generateSamples(outputs, samples);
+    }
+
+    /**
+     * write a sample rom image, the way VGM data blocks carry it.
+     *
+     * @param romSize the whole size of the region
+     * @param dataStart bit 31: 8 bit rom, bit 29-28: region, the rest: start offset
+     */
+    public void writeRom(int romSize, int dataStart, int dataLength, byte[] romData, int srcOffset) {
+        int region = (dataStart >>> 28) & 0x03;
+        boolean is8bit = ((dataStart >>> 31) & 0x01) != 0;
+        dataStart &= 0x0fff_ffff;
+
+        // in 16 bit words
+        int words = is8bit ? romSize : romSize / 2;
+        if (regions[region] == null || regions[region].length != words)
+            regions[region] = new short[words];
+        short[] rom = regions[region];
+
+        if (is8bit) {
+            if (dataStart > words)
+                return;
+            if (dataStart + dataLength > words)
+                dataLength = words - dataStart;
+            for (int i = 0; i < dataLength; i++)
+                rom[dataStart + i] = (short) ((romData[srcOffset + i] & 0xff) << 8);
+        } else {
+            if (dataStart > romSize)
+                return;
+            if (dataStart + dataLength > romSize)
+                dataLength = romSize - dataStart;
+            // little endian words
+            for (int i = 0; i < dataLength; i++) {
+                int p = dataStart + i;
+                int b = romData[srcOffset + i] & 0xff;
+                if ((p & 1) == 0)
+                    rom[p >> 1] = (short) ((rom[p >> 1] & 0xff00) | b);
+                else
+                    rom[p >> 1] = (short) ((rom[p >> 1] & 0x00ff) | (b << 8));
+            }
+        }
+    }
+
+    /** voice bank, used for the external address bank */
+    public void setVoiceBank(int voice, long bank) {
+        voices[voice].exBank = bank;
+    }
+
+    public void setMuteMask(int muteMask) {
+        for (int v = 0; v < 32; v++)
+            voices[v].muted = ((muteMask >> v) & 0x01) != 0;
+    }
+
+    //
+    // for view
+    //
+
+    public static final int VOICES = 32;
+
+    public int getActiveVoices() {
+        return activeVoices + 1;
+    }
+
+    public boolean isEnabled(int v) {
+        return v <= activeVoices && (voices[v].control & CONTROL_STOPMASK) == 0;
+    }
+
+    /** the frequency count register, fraction bits included */
+    public int getFrequency(int v) {
+        return (int) getAddressAccRes(voices[v].freqCount, 1);
+    }
+
+    public int getVolumeL(int v) {
+        return voices[v].lVol;
+    }
+
+    public int getVolumeR(int v) {
+        return voices[v].rVol;
+    }
+
+    public int getOutput(int v) {
+        return getCa(voices[v].control);
+    }
+
+    public boolean isMuted(int v) {
+        return voices[v].muted;
     }
 }

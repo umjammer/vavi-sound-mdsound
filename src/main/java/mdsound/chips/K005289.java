@@ -6,188 +6,162 @@
 
 package mdsound.chips;
 
+import java.util.Arrays;
+
 
 /**
- * Konami 005289 - SCC Sound as used in Bubblesystem
+ * Konami 005289, the wavetable sound of the Bubble System and Nemesis (Gradius) boards.
  * <p>
- * This file is pieced together by Bryan McPhail from a combination of
- * Namco Sound, Amuse by Cab, Nemesis schematics and whoever first
- * figured out SCC!
- * The 005289 is a 2 channel Sound generator. Each channel gets its
- * waveform from a prom (4 bits wide).
- * (From Nemesis schematics)
- * Address lines A0-A4 of the prom run to the 005289, giving 32 bytes
- * per waveform.  Address lines A5-A7 of the prom run to PA5-PA7 of
- * the AY8910 control port A, giving 8 different waveforms. PA0-PA3
- * of the AY8910 control volume.
- * The second channel is the same as above except port B is used.
- * The 005289 has 12 address inputs and 4 control inputs: LD1, LD2, TG1, TG2.
- * It has no data bus, so data values written don't matter.
- * When LD1 or LD2 is asserted, the 12 bit value on the address bus is
- * latched. Each of the two channels has its own latch.
- * When TG1 or TG2 is asserted, the frequency of the respective channel is
- * set to the previously latched value.
- * The 005289 itself is nothing but an address generator. Digital to analog
- * conversion, volume control and mixing of the channels is all done
- * externally via resistor networks and 4066 switches and is only implemented
- * here for convenience.
+ * It is not an SCC (K051649) variant, it came before it. The chip itself is only an address
+ * generator for two channels: each counts down a 12 bit period and steps through 32 addresses of
+ * a 4 bit wide prom. The board supplies the rest, an AY-3-8910's I/O ports pick one of eight
+ * waveforms per channel (bit 7-5) and its volume (bit 3-0), and resistors and 4066 switches do the
+ * conversion and the mixing. They are implemented here for convenience, as MAME and libvgm do.
+ * <p>
+ * Registers, as libvgm's vgm command {@code 0x42} addresses them:
+ * <pre>
+ * 0/1 control A/B: bit 7-5 waveform, bit 3-0 volume
+ * 2/3 LD1/LD2: latch the 12 bit value as the channel's pitch (the period is 0xfff minus it)
+ * 4/5 TG1/TG2: move the latched pitch into the channel's counter
+ * </pre>
+ * The prom, 0x100 bytes per channel, is loaded as RAM (vgm data block {@code 0xc3}).
+ * <p>
+ * Ported from libvgm's emu/cores/k005289.c (MAME's, improved by Mao and cam900). libvgm runs it
+ * at the clock itself, here it runs at a 32nd of it, each sample the mean of its 32 clocks.
  *
  * @author Bryan McPhail (MAME)
  */
 public class K005289 {
 
-    private final byte[] soundPRom = null;
-    private int rate;
+    public static final int CHANNELS = 2;
 
-    /* mixer tables and internal buffers */
-    private short[] mixerTable;
-    private short mixerLookup;
-    private short[] mixerBuffer;
+    public static final int PROM_SIZE = 0x200;
 
-    private final int[] counter = new int[2];
-    private final int[] frequency = new int[2];
-    private final int[] freqLatch = new int[2];
-    private final int[] waveForm = new int[2];
-    private final byte[] volume = new byte[2];
-
-    // is this an actual hardware limit? or just an arbitrary divider
-    // to bring the output frequency down to a reasonable value for MAME?
+    /** clocks per output sample */
     private static final int CLOCK_DIVIDER = 32;
 
-    /**
-     * device-specific startup
-     */
-    public void start() {
-        /* get stream channels */
-        rate = clock() / CLOCK_DIVIDER;
-        //m_stream = stream_alloc(0, 1, m_rate);
+    public static class Voice {
+        /** the latched pitch */
+        private int pitch;
+        /** the period in clocks less one of a wave step */
+        private int freq;
+        private int volume;
+        private int waveform;
+        private int counter;
+        private int addr;
 
-        /* allocate a Pair of buffers to mix into - 1 second's worth should be more than enough */
-        mixerBuffer = new short[2 * rate];
+        /** the period in clocks less one of each of the wave's 32 steps */
+        public int getFreq() {
+            return freq;
+        }
 
-        /* build the mixer table */
-        makeMixerTable(2);
+        public int getVolume() {
+            return volume;
+        }
 
-        /* reset all the voices */
-        for (int i = 0; i < 2; i++) {
-            counter[i] = 0;
-            frequency[i] = 0;
-            freqLatch[i] = 0;
-            waveForm[i] = i * 0x100;
-            volume[i] = 0;
+        public int getWaveform() {
+            return waveform;
         }
     }
 
-    public int clock() {
-        throw new UnsupportedOperationException();
+    private final Voice[] voices = {new Voice(), new Voice()};
+
+    private final byte[] prom = new byte[PROM_SIZE];
+
+    private int clock;
+
+    private int muteMask;
+
+    /** @return the sampling rate */
+    public int start(int clock) {
+        this.clock = clock;
+        Arrays.fill(prom, (byte) 0xff);
+        muteMask = 0;
+        reset();
+        return getRate();
     }
 
-    /**
-     * handle a stream update
-     */
-    public void update(int[][] inputs, int[][] outputs, int samples) {
-        int[] buffer = outputs[0];
-        short mix;
-        int i, v, f;
+    public void reset() {
+        for (Voice v : voices) {
+            v.pitch = 0;
+            v.freq = 0;
+            v.volume = 0;
+            v.waveform = 0;
+            v.counter = 0;
+            v.addr = 0;
+        }
+    }
 
-        /* zap the contents of the mixer buffer */
-        for (i = 0; i < samples; i++) mixerBuffer[i] = 0;
+    public int getClock() {
+        return clock;
+    }
 
-        v = volume[0];
-        f = frequency[0];
-        if (v != 0 && f != 0) {
-            int w = waveForm[0];
-            int c = counter[0];
+    public int getRate() {
+        return clock / CLOCK_DIVIDER;
+    }
 
-            mix = 0;// m_mixer_buffer
-
-            /* add our contribution */
-            for (i = 0; i < samples; i++) {
-                int offs;
-
-                c += CLOCK_DIVIDER;
-                offs = (c / f) & 0x1f;
-                //m_mixer_buffer[mix++] += (byte)(((w[offs] & 0x0f) - 8) * v);
-                mixerBuffer[mix++] += (byte) (((soundPRom[w + offs] & 0x0f) - 8) * v);
+    public void update(int[][] outputs, int samples) {
+        for (int i = 0; i < samples; i++) {
+            int mix = 0;
+            for (int ch = 0; ch < CHANNELS; ch++) {
+                Voice v = voices[ch];
+                int base = (ch << 8) | (v.waveform << 5);
+                int sum = 0;
+                for (int t = 0; t < CLOCK_DIVIDER; t++) {
+                    if (--v.counter < 0) {
+                        v.addr = (v.addr + 1) & 0x1f;
+                        v.counter = v.freq;
+                    }
+                    sum += (prom[base | v.addr] & 0x0f) - 8;
+                }
+                if ((muteMask & (1 << ch)) == 0)
+                    mix += sum * v.volume;
             }
-
-            /* update the counter for this Voice */
-            counter[0] = c % (f * 0x20);
+            // libvgm scales a clock by 16, this is the sum of 32 of them
+            int out = mix / 2;
+            outputs[0][i] = out;
+            outputs[1][i] = out;
         }
-
-        v = volume[1];
-        f = frequency[1];
-        if (v != 0 && f != 0) {
-            int w = waveForm[1];
-            int c = counter[1];
-
-            mix = 0;// m_mixer_buffer
-
-            /* add our contribution */
-            for (i = 0; i < samples; i++) {
-                int offs;
-
-                c += CLOCK_DIVIDER;
-                offs = (c / f) & 0x1f;
-                mixerBuffer[mix++] += (byte) (((soundPRom[w + offs] & 0x0f) - 8) * v);
-            }
-
-            /* update the counter for this Voice */
-            counter[1] = c % (f * 0x20);
-        }
-
-        /* mix it down */
-        mix = 0;
-        for (i = 0; i < samples; i++)
-            buffer[i] = mixerTable[mixerLookup + mixerBuffer[mix++]];
     }
 
     /**
-     * build a table to divide by the number of voices
+     * @param address 0/1 control A/B, 2/3 LD1/LD2, 4/5 TG1/TG2
+     * @param data 12 bits
      */
-    private void makeMixerTable(int voices) {
-        int count = voices * 128;
-        int i;
-        int gain = 16;
-
-        /* allocate memory */
-        mixerTable = new short[256 * voices];
-
-        /* find the middle of the table */
-        mixerLookup = (short) (128 * voices);
-
-        /* fill in the table - 16 bit case */
-        for (i = 0; i < count; i++) {
-            int val = i * gain * 16 / voices;
-            if (val > 32767) val = 32767;
-            mixerTable[128 * voices + i] = (short) val;
-            mixerTable[128 * voices - i] = (short) -val;
+    public void write(int address, int data) {
+        Voice v = voices[address & 1];
+        switch (address) {
+            case 0, 1 -> {
+                v.volume = data & 0x0f;
+                v.waveform = (data >> 5) & 0x07;
+            }
+            case 2, 3 -> v.pitch = 0xfff - (data & 0x0fff);
+            case 4, 5 -> v.freq = v.pitch;
         }
     }
 
-    public void writeControlA(byte data) {
-        volume[0] = (byte) (data & 0xf);
-        waveForm[0] = data & 0xe0;
+    public void writeProm(int offset, byte[] data, int dataOffset, int length) {
+        if (offset < 0 || offset >= PROM_SIZE)
+            return;
+        if (offset + length > PROM_SIZE)
+            length = PROM_SIZE - offset;
+        System.arraycopy(data, dataOffset, prom, offset, length);
     }
 
-    public void writeControlB(byte data) {
-        volume[1] = (byte) (data & 0xf);
-        waveForm[1] = (data & 0xe0) + 0x100;
+    /** @return the 32 steps of the wave a channel plays now, -8..7 */
+    public int[] getWave(int ch) {
+        int base = (ch << 8) | (voices[ch].waveform << 5);
+        int[] wave = new int[32];
+        for (int i = 0; i < 32; i++)
+            wave[i] = (prom[base | i] & 0x0f) - 8;
+        return wave;
     }
 
-    public void writeLd1(int offset, byte data) {
-        freqLatch[0] = 0xfff - offset;
+    public void setMuteMask(int muteMask) {
+        this.muteMask = muteMask & 0x03;
     }
 
-    public void writeLd2(int offset, byte data) {
-        freqLatch[1] = 0xfff - offset;
-    }
-
-    public void writeTg1(byte data) {
-        frequency[0] = freqLatch[0];
-    }
-
-    public void writeTg2(byte data) {
-        frequency[1] = freqLatch[1];
+    public Voice getVoice(int ch) {
+        return voices[ch];
     }
 }

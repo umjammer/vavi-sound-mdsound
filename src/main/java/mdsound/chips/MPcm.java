@@ -98,7 +98,7 @@ public class MPcm {
         }
 
         private void setPcm(MPcm.PCM ptr) {
-            this.type = ptr.type;
+            this.type = ptr.type & 0xff;
             this.orig = ptr.orig << 6;
             this.adrsBuf = ptr.adrsBuf;
             this.adrsPtr = ptr.adrsPtr;
@@ -135,6 +135,7 @@ public class MPcm {
             int pitch = 0x10000;
             int doct = 0, dnote = 0;
 
+            this.lastNote = note; // as mpcmX68k.cs: setFreq re-applies it, and viewers show it
             dnote = note;
 
             if (orig > 0x1fc0) {
@@ -561,6 +562,32 @@ public class MPcm {
         return sample;
     }
 
+    /**
+     * What each voice is doing, for viewers: {@code channels.N.} {@code playing}, {@code note} (the pitch
+     * word's note, -1 before any), {@code fine}, {@code volume} (0..127 as set), {@code pan} (1 left, 2 right,
+     * 3 both, 0 none), {@code type} (0xff adpcm, 1 16bit, 2 8bit), {@code pos}, {@code size} (samples)
+     * and {@code rate} (Hz, 0 until set).
+     */
+    public java.util.Map<String, Object> getInfo() {
+        java.util.Map<String, Object> info = new java.util.HashMap<>();
+        if (this.channels == null) return info;
+        for (int ch = 0; ch < VOICE_MAX; ch++) {
+            Channel w = this.channels[ch];
+            if (w == null) continue;
+            String k = "channels." + ch + ".";
+            info.put(k + "playing", w.enable);
+            info.put(k + "note", w.lastNote > 0 ? w.lastNote >> 6 : -1);
+            info.put(k + "fine", w.lastNote & 0x3f);
+            info.put(k + "volume", w.volWork);
+            info.put(k + "pan", (w.lr[0] != 0 ? 1 : 0) | (w.lr[1] != 0 ? 2 : 0));
+            info.put(k + "type", w.type);
+            info.put(k + "pos", w.pos >> 16);
+            info.put(k + "size", w.size);
+            info.put(k + "rate", (double) (w.base * this.rate));
+        }
+        return info;
+    }
+
     public void update(int[][] buffer, int count) {
 
         for (int i = 0; i < count; i++) {
@@ -587,7 +614,8 @@ public class MPcm {
                         sample = decode(ch, ptrBuf, ptrPtr, pos);
                         break;
                     case _16:
-                        sample = ((ptrBuf[ptrPtr + pos * 2] & 0xff) << 8) + (ptrBuf[ptrPtr + pos * 2 + 1] & 0xff);
+                        // 12bit like the adpcm the volume table is made for, see MPcmPP
+                        sample = (short) (((ptrBuf[ptrPtr + pos * 2] & 0xff) << 8) + (ptrBuf[ptrPtr + pos * 2 + 1] & 0xff)) >> 4;
                         break;
                     case _8:
                         sample = ptrBuf[ptrPtr + pos] & 0xff;
@@ -596,8 +624,9 @@ public class MPcm {
                 sample = (sample * this.channels[ch].vol) >> 3;
 
                 if (!mute) {
-                    buffer[0][bufPtr] += (short) (sample * this.channels[ch].lr[0]);
-                    buffer[1][bufPtr] += (short) (sample * this.channels[ch].lr[1]);
+                    // clamped as in mpcmX68k.cs: a (short) cast wraps a loud channel round to full scale noise
+                    buffer[0][bufPtr] = Math.clamp(buffer[0][bufPtr] + sample * this.channels[ch].lr[0], Short.MIN_VALUE, Short.MAX_VALUE);
+                    buffer[1][bufPtr] = Math.clamp(buffer[1][bufPtr] + sample * this.channels[ch].lr[1], Short.MIN_VALUE, Short.MAX_VALUE);
                     bufPtr++;
                 }
 

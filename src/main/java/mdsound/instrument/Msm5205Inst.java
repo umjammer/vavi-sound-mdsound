@@ -1,48 +1,45 @@
 /*
- * Copyright (c) 2025 by Naohide Sano, All rights reserved.
+ * Copyright (c) 2026 by Naohide Sano, All rights reserved.
  *
  * Programmed by Naohide Sano
  */
 
 package mdsound.instrument;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
 import vavi.util.compat.Tuple;
-import mdsound.Instrument.BaseInstrument;
-import mdsound.chips.Msm5232;
+import mdsound.Instrument;
+import mdsound.chips.Msm5205;
 
 
 /**
- * OKI MSM5232 8 channel tone generator.
+ * OKI MSM5205 / MSM6585 ADPCM.
  *
  * @author <a href="mailto:umjammer@gmail.com">Naohide Sano</a> (nsano)
- * @version 0.00 2025-02-02 nsano initial version <br>
+ * @version 0.00 2026-09-24 nsano initial version <br>
  */
-public class Msm5232Inst extends BaseInstrument {
+public class Msm5205Inst extends Instrument.BaseInstrument {
 
     private static final int MAX_CHIPS = 0x02;
 
-    private final Msm5232[] chips = {new Msm5232(), new Msm5232()};
+    private final Msm5205[] chips = {new Msm5205(), new Msm5205()};
 
-    private final int[] muteMask = new int[MAX_CHIPS];
-
-    public Msm5232Inst() {
+    public Msm5205Inst() {
+        // 0..Main
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
 
     @Override
     public String getName() {
-        return "MSM5232";
+        return "MSM5205";
     }
 
     @Override
     public String getShortName() {
-        return "MSM5232";
+        return "MSM5";
     }
 
     @Override
@@ -51,7 +48,7 @@ public class Msm5232Inst extends BaseInstrument {
     }
 
     /**
-     * @param option 0: (double[]) the eight external capacitors in Farads, null for 1 µF each,
+     * @param option 0: (int) flags, bit 1-0: prescaler (S1, S2), bit 2: 4 bit (else 3 bit), bit 7: MSM6585,
      *               1: (BiConsumer&lt;Integer, Integer&gt;) the sampling rate change callback, may be absent,
      *               2: (int) the sampling rate the callback reports as the old one
      */
@@ -60,15 +57,21 @@ public class Msm5232Inst extends BaseInstrument {
     public int start(int chipId, int samplingRate, int clock, Object... option) {
         assert chipId < MAX_CHIPS;
 
-        double[] capacitors = option != null && option.length > 0 ? (double[]) option[0] : null;
-        Msm5232 chip = chips[chipId];
+        int flags = option != null && option.length > 0 ? (int) option[0] : 0x04;
+        int prescaler = flags & 0x03;
+        int bitWidth = (flags & 0x04) != 0 ? 4 : 3;
+        boolean isMsm6585 = (flags & 0x80) != 0;
         if (option != null && option.length > 2) {
             BiConsumer<Integer, Integer> callback = (BiConsumer<Integer, Integer>) option[1];
             int oldSampleRate = (int) option[2];
-            chip.setSampleRateChanged(() -> callback.accept(oldSampleRate, chip.getRate()));
+            chips[chipId].setSampleRateChanged(newSampleRate -> callback.accept(oldSampleRate, newSampleRate));
         }
-        muteMask[chipId] = 0;
-        return chip.start(clock, capacitors);
+
+        return chips[chipId].start(clock, prescaler, bitWidth, isMsm6585);
+    }
+
+    @Override
+    public void stop(int chipId) {
     }
 
     @Override
@@ -91,46 +94,30 @@ public class Msm5232Inst extends BaseInstrument {
     }
 
     @Override
-    public void stop(int chipId) {
-    }
-
-    /** @param ch a voice, 0..7 */
-    @Override
     public void setMask(int chipId, int ch) {
-        muteMask[chipId] |= 1 << ch;
-        chips[chipId].setMuteMask(muteMask[chipId]);
+        chips[chipId].setMute(true);
     }
 
     @Override
     public void resetMask(int chipId, int ch) {
-        muteMask[chipId] &= ~(1 << ch);
-        chips[chipId].setMuteMask(muteMask[chipId]);
+        chips[chipId].setMute(false);
     }
 
     //----
 
     private Map<String, Object> getInfo(int chipId) {
-        Msm5232 chip = chips[chipId];
+        Msm5205 chip = chips[chipId];
 
         Map<String, Object> info = new HashMap<>();
-        info.put("clock", chip.getClock());
-        info.put("control1", chip.getControl(0));
-        info.put("control2", chip.getControl(1));
-        info.put("extVol1", chip.getExtVol(0));
-        info.put("extVol2", chip.getExtVol(1));
-        List<Map<String, Object>> voices = new ArrayList<>();
-        for (int ch = 0; ch < Msm5232.CHANNELS; ch++) {
-            Msm5232.Voice v = chip.getVoice(ch);
-            Map<String, Object> voice = new HashMap<>();
-            voice.put("pitch", v.getPitch());
-            voice.put("keyOn", v.isKeyOn());
-            voice.put("noise", v.isNoise());
-            voice.put("egSection", v.getEgSection());
-            voice.put("egVolume", v.getEgVolume());
-            voice.put("mute", (muteMask[chipId] & (1 << ch)) != 0);
-            voices.add(voice);
-        }
-        info.put("voices", voices);
+        info.put("masterClock", chip.getMasterClock());
+        info.put("rate", chip.getRate());
+        info.put("reset", chip.isReset());
+        info.put("mute", chip.isMuted());
+        info.put("signal", chip.getSignal());
+        info.put("step", chip.getStep());
+        info.put("data", chip.getLastData());
+        info.put("bitWidth", chip.getBitWidth());
+        info.put("idleSamples", chip.getIdleSamples());
         return info;
     }
 
@@ -145,10 +132,10 @@ public class Msm5232Inst extends BaseInstrument {
         switch (key) {
             case "volume" ->
                     result.put(getName(), getMonoVolume(visVolume[0][0][0], visVolume[0][0][1], visVolume[1][0][0], visVolume[1][0][1]));
-            case "NAME" -> result.put(getName(), "MSM5232");
-            case "FAMILY" -> result.put(getName(), "OKI tone generator");
+            case "NAME" -> result.put(getName(), chips[chipId].isMsm6585() ? "MSM6585" : "MSM5205");
+            case "FAMILY" -> result.put(getName(), "OKI ADPCM");
             case "VERSION" -> result.put(getName(), "1.0");
-            case "CREDITS" -> result.put(getName(), "Copyright Jarek Burczynski, Hiromitsu Shioya, Angelo Salese, Mao, cam900");
+            case "CREDITS" -> result.put(getName(), "Copyright Aaron Giles, eito, cam900, Valley Bell, Mao");
             case "info" -> result.putAll(getInfo(chipId));
         }
         return result;

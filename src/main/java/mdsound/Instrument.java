@@ -7,6 +7,7 @@ package mdsound;
 import java.util.Collections;
 import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.function.Consumer;
 
 import vavi.util.compat.Tuple;
 
@@ -59,6 +60,12 @@ public interface Instrument {
 
     /** */
     void resetMask(int chipId, int ch);
+
+    /**
+     * for a chip that changes its own output rate while playing,
+     * the callback is told the new sampling rate. does nothing by default.
+     */
+    default void setSamplingRateCallback(int chipId, Consumer<Integer> callback) {}
 
     //
 

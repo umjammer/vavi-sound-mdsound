@@ -32,6 +32,7 @@ mdsound.instrument.MameYm2151Inst
 mdsound.instrument.MameYm2612Inst
 mdsound.instrument.MultiPcmInst
 mdsound.instrument.OkiM6258Inst
+mdsound.instrument.Msm5205Inst
 mdsound.instrument.OkiM6295Inst
 mdsound.instrument.P86Inst
 mdsound.instrument.PokeyInst
@@ -85,3 +86,4 @@ mdsound.instrument.Cs4231Inst
 mdsound.instrument.NpYm2413Inst
 mdsound.instrument.NpYm2149Inst
 mdsound.instrument.ZelMusicInst
+mdsound.instrument.Upd7759Inst

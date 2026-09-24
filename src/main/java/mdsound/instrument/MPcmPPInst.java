@@ -122,4 +122,9 @@ public class MPcmPPInst extends BaseInstrument {
     public void setVolTable(int chipId, int sel, int[] vtbl) {
         chips[chipId].setVolTable(sel, vtbl);
     }
+
+    @Override
+    public java.util.Map<String, Object> getView(int chipId, String key, Object... args) {
+        return "info".equals(key) ? chips[chipId].getInfo() : super.getView(chipId, key, args);
+    }
 }
