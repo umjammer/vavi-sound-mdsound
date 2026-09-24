@@ -98,7 +98,7 @@ public class MPcm {
         }
 
         private void setPcm(MPcm.PCM ptr) {
-            this.type = ptr.type;
+            this.type = ptr.type & 0xff;
             this.orig = ptr.orig << 6;
             this.adrsBuf = ptr.adrsBuf;
             this.adrsPtr = ptr.adrsPtr;
@@ -587,7 +587,8 @@ public class MPcm {
                         sample = decode(ch, ptrBuf, ptrPtr, pos);
                         break;
                     case _16:
-                        sample = ((ptrBuf[ptrPtr + pos * 2] & 0xff) << 8) + (ptrBuf[ptrPtr + pos * 2 + 1] & 0xff);
+                        // 12bit like the adpcm the volume table is made for, see MPcmPP
+                        sample = (short) (((ptrBuf[ptrPtr + pos * 2] & 0xff) << 8) + (ptrBuf[ptrPtr + pos * 2 + 1] & 0xff)) >> 4;
                         break;
                     case _8:
                         sample = ptrBuf[ptrPtr + pos] & 0xff;
