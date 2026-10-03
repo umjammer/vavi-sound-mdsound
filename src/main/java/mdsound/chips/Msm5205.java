@@ -109,10 +109,10 @@ public class Msm5205 {
 
         int sample = diffLookup[step * 16 + data];
         signal = ((sample << 8) + (signal * 245)) >> 8;
-        signal = Math.max(-2048, Math.min(2047, signal));
+        signal = Math.clamp(signal, -2048, 2047);
 
         step += indexShift[data & 7];
-        step = Math.max(0, Math.min(48, step));
+        step = Math.clamp(step, 0, 48);
 
         lastData = data;
         idleSamples = 0;

@@ -107,7 +107,7 @@ class GigatronTest {
         Map<String, Object> info = inst.getView(0, "info");
         assertEquals(CLOCK, info.get("clock"));
         List<Map<String, Object>> channels = (List<Map<String, Object>>) info.get("channels");
-        assertEquals(A880, channels.get(0).get("key"));
+        assertEquals(A880, channels.getFirst().get("key"));
         assertEquals(1, channels.get(0).get("servings"));
         assertEquals(63, channels.get(0).get("level")); // the triangle is 0..63
         assertEquals(0, channels.get(1).get("level"));
