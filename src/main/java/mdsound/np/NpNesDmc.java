@@ -176,6 +176,23 @@ public class NpNesDmc {
         this.sm[1][trk] = mixR;
     }
 
+    /**
+     * The level a channel is putting out now: the triangle 15 while its counters run else 0
+     * (it has no volume), the noise 0 - 15 from its envelope or constant volume, and the delta
+     * PCM the 0 - 127 its DAC sits at while a sample is playing.
+     *
+     * @param trk 0 the triangle, 1 the noise, 2 the delta PCM
+     */
+    public int level(int trk) {
+        return switch (trk) {
+            case 0 -> this.linearCounter > 0 && this.lengthCounter[0] > 0 && this.enable[0] ? 15 : 0;
+            case 1 -> this.lengthCounter[1] > 0 && this.enable[1]
+                    ? (this.envelopeDisable ? this.noiseVolume : this.envelopeCounter) : 0;
+            case 2 -> this.dLength > 0 ? this.reg[0x4011 - 0x4008] & 0x7f : 0;
+            default -> 0;
+        };
+    }
+
 //    TrackInfo getTrackInfo(int trk) {
 //        switch (trk) {
 //            case 0:

@@ -216,6 +216,18 @@ public class NpNesApu {
         return ret;
     }
 
+    /**
+     * The level a pulse is putting out now, 0 - 15: its envelope counter or its constant volume,
+     * and 0 once its length counter has run out or its timer is out of range. Unlike the
+     * register, whose low nibble is only the envelope period when the envelope is in use.
+     *
+     * @param ch 0 or 1
+     */
+    public int level(int ch) {
+        if (this.lengthCounter[ch] <= 0 || this.freq[ch] < 8 || this.sFreq[ch] >= 0x800) return 0;
+        return this.envelopeDisable[ch] ? this.volume[ch] : this.envelopeCounter[ch];
+    }
+
     public boolean read(int adr, /* ref */ int[] val) {
         if (0x4000 <= adr && adr < 0x4008) {
             val[0] |= this.reg[adr & 0x7];
