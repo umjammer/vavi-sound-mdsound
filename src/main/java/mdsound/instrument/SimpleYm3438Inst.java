@@ -20,8 +20,6 @@ public class SimpleYm3438Inst extends Instrument.BaseInstrument {
 
     private final Ym3438Provider[] chips = {new Ym3438Provider(), new Ym3438Provider()};
 
-    private final int[] mask = {0, 0};
-
     public SimpleYm3438Inst() {
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
@@ -76,19 +74,6 @@ public class SimpleYm3438Inst extends Instrument.BaseInstrument {
     @Override
     public void stop(int chipId) {
         chips[chipId].reset();
-    }
-
-    // TODO 2612
-    @Override
-    public synchronized void setMask(int chipId, int ch) {
-        mask[chipId] |= 1 << ch;
-        int mask = this.mask[chipId];
-        if ((mask & 0b0010_0000) == 0) mask &= 0b1011_1111;
-        else mask |= 0b0100_0000;
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
     }
 }
 

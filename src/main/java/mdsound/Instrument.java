@@ -55,11 +55,13 @@ public interface Instrument {
     /** */
     void stop(int chipId);
 
-    /** */
-    void setMask(int chipId, int ch);
-
-    /** */
-    void resetMask(int chipId, int ch);
+    /**
+     * Mutes the channels whose bits are set and lets the rest sound: bit n is channel n, and every
+     * call carries the whole state. An instrument keeps no copy of it - the caller owns which
+     * channels are muted and hands it over again after {@link #start}, which builds the chip anew.
+     * A chip that cannot mute its channels ignores it, which is the default.
+     */
+    default void setMuteMask(int chipId, long mask) {}
 
     /**
      * for a chip that changes its own output rate while playing,

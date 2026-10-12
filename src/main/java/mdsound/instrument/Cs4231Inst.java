@@ -70,16 +70,6 @@ public class Cs4231Inst extends Instrument.BaseInstrument {
 
     }
 
-    @Override
-    public void setMask(int chipId, int ch) {
-
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
-
-    }
-
     // ----
 
     public void setFifoBuf(int chipId, byte[] buf) {
@@ -122,9 +112,10 @@ public class Cs4231Inst extends Instrument.BaseInstrument {
         return chip.readReg(adr);
     }
 
-    public void mutePcm(int chipId, int ch, boolean mute) {
+    @Override
+    public void setMuteMask(int chipId, long mask) {
         Cs4231 chip = chips[chipId & 1];
-        chip.mutePcm(ch, mute);
+        for (int ch = 0; ch < chip.pcmChannels(); ch++) chip.mutePcm(ch, (mask & (1L << ch)) != 0);
     }
 
     @Override

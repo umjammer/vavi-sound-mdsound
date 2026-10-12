@@ -67,19 +67,9 @@ public class MultiPcmInst extends Instrument.BaseInstrument implements PcmEnable
         chips[chipId].stop();
     }
 
-    /** the channels muted on each chip, as a bit a channel */
-    private final int[] mask = {0, 0};
-
     @Override
-    public synchronized void setMask(int chipId, int ch) {
-        mask[chipId] |= ch;
-        chips[chipId].setMuteMask(mask[chipId]);
-    }
-
-    @Override
-    public synchronized void resetMask(int chipId, int ch) {
-        mask[chipId] &= ~ch;
-        chips[chipId].setMuteMask(mask[chipId]);
+    public synchronized void setMuteMask(int chipId, long mask) {
+        chips[chipId].setMuteMask((int) mask);
     }
 
     // ----

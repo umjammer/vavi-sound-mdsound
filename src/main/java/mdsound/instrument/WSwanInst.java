@@ -14,8 +14,6 @@ public class WSwanInst extends Instrument.BaseInstrument {
 
     private final WSwan[] chips = {new WSwan(), new WSwan()};
 
-    private final int[] mask = {0, 0};
-
     public WSwanInst() {
         visVolume = new int[][][] {{{0, 0}, {0, 0}}};
     }
@@ -72,13 +70,8 @@ public class WSwanInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public synchronized void setMask(int chipId, int ch) {
-        mask[chipId] |= ch;
-    }
-
-    @Override
-    public synchronized void resetMask(int chipId, int ch) {
-        mask[chipId] &= ~ch;
+    public synchronized void setMuteMask(int chipId, long mask) {
+        chips[chipId].setMuteMask((int) mask);
     }
 
     // ----

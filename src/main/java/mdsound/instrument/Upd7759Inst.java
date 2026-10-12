@@ -78,14 +78,6 @@ public class Upd7759Inst extends Instrument.BaseInstrument implements PcmEnabled
         chips[chipId].device_stop_upd7759();
     }
 
-    @Override
-    public void setMask(int chipId, int ch) {
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
-    }
-
     /** @param extras 0: srcOffset */
     @Override
     public void writePcm(int chipId, byte[] buf, int offset, int length, Object... extras) {

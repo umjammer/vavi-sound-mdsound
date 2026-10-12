@@ -78,16 +78,6 @@ public class Emu2413Inst extends BaseInstrument {
     }
 
     @Override
-    public void setMask(int chipId, int ch) {
-
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
-
-    }
-
-    @Override
     public void reset(int chipId) {
     }
 

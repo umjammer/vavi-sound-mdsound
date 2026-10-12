@@ -28,8 +28,6 @@ public class K005289Inst extends BaseInstrument {
 
     private final K005289[] chips = {new K005289(), new K005289()};
 
-    private final int[] muteMask = new int[MAX_CHIPS];
-
     public K005289Inst() {
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
@@ -53,7 +51,6 @@ public class K005289Inst extends BaseInstrument {
     public int start(int chipId, int samplingRate, int clock, Object... option) {
         assert chipId < MAX_CHIPS;
 
-        muteMask[chipId] = 0;
         return chips[chipId].start(clock);
     }
 
@@ -88,15 +85,8 @@ public class K005289Inst extends BaseInstrument {
 
     /** @param ch a channel, 0..1 */
     @Override
-    public void setMask(int chipId, int ch) {
-        muteMask[chipId] |= 1 << ch;
-        chips[chipId].setMuteMask(muteMask[chipId]);
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
-        muteMask[chipId] &= ~(1 << ch);
-        chips[chipId].setMuteMask(muteMask[chipId]);
+    public synchronized void setMuteMask(int chipId, long mask) {
+        chips[chipId].setMuteMask((int) mask);
     }
 
     //----
@@ -114,7 +104,6 @@ public class K005289Inst extends BaseInstrument {
             voice.put("volume", v.getVolume());
             voice.put("waveform", v.getWaveform());
             voice.put("wave", chip.getWave(ch));
-            voice.put("mute", (muteMask[chipId] & (1 << ch)) != 0);
             voices.add(voice);
         }
         info.put("voices", voices);

@@ -71,17 +71,8 @@ public class DmgInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public synchronized void setMask(int chipId, int ch) {
-        int maskStatus = chips[chipId].getMuteMask();
-        maskStatus |= 1 << ch; // ch:0 - 3
-        chips[chipId].setMuteMask(maskStatus);
-    }
-
-    @Override
-    public synchronized void resetMask(int chipId, int ch) {
-        int maskStatus = chips[chipId].getMuteMask();
-        maskStatus &= ~(1 << ch); // ch:0 - 3
-        chips[chipId].setMuteMask(maskStatus);
+    public synchronized void setMuteMask(int chipId, long mask) {
+        chips[chipId].setMuteMask((int) mask);
     }
 
     public int readPcm(int chipId, int offset) {

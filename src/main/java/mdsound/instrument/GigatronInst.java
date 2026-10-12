@@ -25,9 +25,6 @@ public class GigatronInst extends BaseInstrument {
 
     private final Gigatron[] gig = {new Gigatron(), new Gigatron()};
 
-    /** bit n: channel n muted */
-    private final int[] muteMask = {0, 0};
-
     @Override
     public String getName() {
         return "Gigatron";
@@ -70,21 +67,14 @@ public class GigatronInst extends BaseInstrument {
     }
 
     @Override
-    public void setMask(int chipId, int ch) {
-        muteMask[chipId] |= 1 << ch;
-        gig[chipId].setMuteMask(muteMask[chipId]);
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
-        muteMask[chipId] &= ~(1 << ch);
-        gig[chipId].setMuteMask(muteMask[chipId]);
+    public synchronized void setMuteMask(int chipId, long mask) {
+        gig[chipId].setMuteMask((int) mask);
     }
 
     /**
      * {@code clock} (scanlines/s), {@code channelMask}, and {@code channels}, a list of four maps
      * with {@code key}, {@code wavX}, {@code wavA}, {@code servings} (slots per tick, 0 when the
-     * mask leaves the channel out), {@code level} (peak to peak, 0..63) and {@code mute}.
+     * mask leaves the channel out) and {@code level} (peak to peak, 0..63).
      */
     private Map<String, Object> getInfo(int chipId) {
         Gigatron chip = gig[chipId];
@@ -101,7 +91,6 @@ public class GigatronInst extends BaseInstrument {
             channel.put("wavA", ch.getWavA());
             channel.put("servings", chip.getServings(c));
             channel.put("level", ch.getLevel());
-            channel.put("mute", (muteMask[chipId] & (1 << c)) != 0);
             channels.add(channel);
         }
         info.put("channels", channels);

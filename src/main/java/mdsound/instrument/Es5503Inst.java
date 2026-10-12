@@ -71,20 +71,13 @@ public class Es5503Inst extends BaseInstrument implements PcmEnabledInstrument {
     }
 
     @Override
-    public void setMask(int chipId, int ch) {
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
-    }
-
-    @Override
     public void setSamplingRateCallback(int chipId, Consumer<Integer> callback) {
         chips[chipId].setCallback(callback);
     }
 
-    public void setMute(int chipId, int v) {
-        chips[chipId].setMuteMask(v);
+    @Override
+    public void setMuteMask(int chipId, long mask) {
+        chips[chipId].setMuteMask((int) mask);
     }
 
     @Override

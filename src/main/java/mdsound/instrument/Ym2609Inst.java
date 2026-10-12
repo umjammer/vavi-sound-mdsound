@@ -112,14 +112,6 @@ public class Ym2609Inst extends Instrument.BaseInstrument implements AdpcmAEnabl
     }
 
     @Override
-    public void setMask(int chipId, int ch) {
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
-    }
-
-    @Override
     public synchronized void writeAdpcmA(int chipId, byte[] Buf) {
         assert chipId < chips.length;
         chips[chipId].setAdpcmA(Buf, Buf.length);

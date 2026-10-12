@@ -92,14 +92,6 @@ public class Vrc6Inst extends Instrument.BaseInstrument {
         chips[chipId].reset();
     }
 
-    @Override
-    public void setMask(int chipId, int ch) {
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
-    }
-
     // ----
 
     private void setVolume(int db) {

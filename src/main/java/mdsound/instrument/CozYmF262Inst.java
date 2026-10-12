@@ -87,16 +87,6 @@ public class CozYmF262Inst extends Instrument.BaseInstrument {
     public void stop(int chipId) {
     }
 
-    @Override
-    public void setMask(int chipId, int ch) {
-//        chips[chipId].setMuteMask(ch); // TODO
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
-//        chips[chipId].setMuteMask(~ch); // TODO
-    }
-
     //----
 
     @Override

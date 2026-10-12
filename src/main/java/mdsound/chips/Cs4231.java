@@ -147,6 +147,10 @@ public class Cs4231 {
         return 0;
     }
 
+    public int pcmChannels() {
+        return this.dma.pcm0work.length;
+    }
+
     public void mutePcm(int ch, boolean sw) {
         if (ch < 0 || ch >= this.dma.pcm0work.length) return;
         this.dma.pcm0work[ch].mask = sw;

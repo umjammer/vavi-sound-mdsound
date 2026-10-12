@@ -87,16 +87,6 @@ logger.log(Level.TRACE, "option: " + Arrays.toString(option));
         chips[chipId].stop();
     }
 
-    @Override
-    public void setMask(int chipId, int ch) {
-//        chips[chipId].setMuteMask(ch); // TODO
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
-//        chips[chipId].setMuteMask(~ch); // TODO
-    }
-
     public void setEmuCore(int emulator) {
         emuCore = (emulator < 0x02) ? emulator : 0x00;
     }

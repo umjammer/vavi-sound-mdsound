@@ -23,8 +23,6 @@ public class NesInst extends Instrument.BaseInstrument implements Instrument.Pcm
 
     final Nes[] chips = {new Nes(), new Nes()};
 
-    private final int[] mask = {0, 0};
-
     public NesInst() {
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
@@ -84,15 +82,8 @@ public class NesInst extends Instrument.BaseInstrument implements Instrument.Pcm
     }
 
     @Override
-    public synchronized void setMask(int chipId, int ch) {
-        mask[chipId] |= 0x1 << ch;
-        chips[chipId].setMuteMask(mask[chipId]);
-    }
-
-    @Override
-    public synchronized void resetMask(int chipId, int ch) {
-        mask[chipId] &= ~(0x1 << ch);
-        chips[chipId].setMuteMask(mask[chipId]);
+    public synchronized void setMuteMask(int chipId, long mask) {
+        chips[chipId].setMuteMask((int) mask);
     }
 
     public void setEmuCore(int emulator) {
@@ -100,18 +91,6 @@ public class NesInst extends Instrument.BaseInstrument implements Instrument.Pcm
 
     public void setChipOption(int chipId) {
         chips[chipId].setChipOption();
-    }
-
-    // ----
-
-    public synchronized void setFDSMask(int chipId) {
-        mask[chipId] |= 0x20;
-        chips[chipId].setMuteMask(mask[chipId]);
-    }
-
-    public synchronized void resetFDSMask(int chipId) {
-        mask[chipId] &= ~0x20;
-        chips[chipId].setMuteMask(mask[chipId]);
     }
 
     @Override

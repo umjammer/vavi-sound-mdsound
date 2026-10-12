@@ -15,8 +15,6 @@ public class HuC6280Inst extends Instrument.BaseInstrument {
 
     private final OotakeHuC6280[] chips = {new OotakeHuC6280(), new OotakeHuC6280()};
 
-    private final int[] mask = {0, 0};
-
     public HuC6280Inst() {
         // 0..Main
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
@@ -72,15 +70,8 @@ public class HuC6280Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public synchronized void setMask(int chipId, int ch) {
-        mask[chipId] |= ch;
-        setMute(chipId, mask[chipId]);
-    }
-
-    @Override
-    public synchronized void resetMask(int chipId, int ch) {
-        mask[chipId] &= ~ch;
-        setMute(chipId, mask[chipId]);
+    public synchronized void setMuteMask(int chipId, long mask) {
+        setMute(chipId, (int) mask);
     }
 
     private void setMute(int chipId, int val) {

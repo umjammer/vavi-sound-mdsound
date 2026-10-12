@@ -51,14 +51,6 @@ public class P86Inst extends Instrument.BaseInstrument implements PcmEnabledInst
     }
 
     @Override
-    public void setMask(int chipId, int ch) {
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
-    }
-
-    @Override
     public synchronized void writePcm(int chipId, byte[] buf, int offset, int length, Object... extras) {
         chip.loadPcm(0, 0, 0, buf);
     }

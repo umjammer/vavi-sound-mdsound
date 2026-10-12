@@ -16,8 +16,6 @@ public class CtrQSoundInst extends Instrument.BaseInstrument implements PcmEnabl
 
     private final CtrQsound[] chips = {new CtrQsound(), new CtrQsound()};
 
-    private final int[] mask = {0, 0};
-
     @Override
     public String getName() {
         return "QSound_ctr";
@@ -34,8 +32,6 @@ public class CtrQSoundInst extends Instrument.BaseInstrument implements PcmEnabl
 
     @Override
     public void init() {
-        mask[0] = 0;
-        mask[1] = 0;
     }
 
     @Override
@@ -75,17 +71,8 @@ public class CtrQSoundInst extends Instrument.BaseInstrument implements PcmEnabl
     }
 
     @Override
-    public synchronized void setMask(int chipId, int ch) {
-        assert chipId < MAX_CHIPS;
-        mask[chipId] |= (1 << ch);
-        chips[chipId].setMuteMask(mask[chipId]);
-    }
-
-    @Override
-    public synchronized void resetMask(int chipId, int ch) {
-        assert chipId < MAX_CHIPS;
-        mask[chipId] &= ~(1 << ch);
-        chips[chipId].setMuteMask(mask[chipId]);
+    public synchronized void setMuteMask(int chipId, long mask) {
+        chips[chipId].setMuteMask((int) mask);
     }
 
     /** @param extras 0: srcOffset, 1: romSize */

@@ -758,7 +758,7 @@ public class WSwan {
         return this.audios[ch].muted != 0;
     }
 
-    private void setMuteMask(int muteMask) {
+    public void setMuteMask(int muteMask) {
         for (int c = 0; c < 4; c++)
             this.audios[c].muted = (muteMask >> c) & 0x01;
     }

@@ -57,12 +57,4 @@ public class ZxBeepInst extends BaseInstrument {
     public void stop(int chipId) {
         reset(chipId);
     }
-
-    @Override
-    public void setMask(int chipId, int ch) {
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
-    }
 }

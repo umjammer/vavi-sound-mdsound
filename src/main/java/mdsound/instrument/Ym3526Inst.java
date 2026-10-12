@@ -81,16 +81,6 @@ public class Ym3526Inst extends Instrument.BaseInstrument {
         chips[chipId].shutdown();
     }
 
-    @Override
-    public void setMask(int chipId, int ch) {
-//        chips[chipId].setMuteMask(ch); // TODO
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
-//        chips[chipId].setMuteMask(~ch); // TODO
-    }
-
     private final int[][] dummyBuf = {null, null};
 
     private void updateStream(/*, int interval */) {

@@ -24,8 +24,6 @@ public class Ym7101Inst extends Instrument.BaseInstrument {
 
     private final NukedPsgProvider[] chips = {new NukedPsgProvider(), new NukedPsgProvider()};
 
-    private final int[] mask = {0, 0};
-
     public Ym7101Inst() {
         // 0..Main
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
@@ -43,8 +41,6 @@ public class Ym7101Inst extends Instrument.BaseInstrument {
 
     @Override
     public void init() {
-        mask[0] = 0;
-        mask[1] = 0;
     }
 
     @Override
@@ -93,15 +89,8 @@ public class Ym7101Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public synchronized void setMask(int chipId, int ch) {
-        mask[chipId] |= ch;
-        setMute(chipId, mask[chipId]);
-    }
-
-    @Override
-    public synchronized void resetMask(int chipId, int ch) {
-        mask[chipId] &= ~ch;
-        setMute(chipId, mask[chipId]);
+    public synchronized void setMuteMask(int chipId, long mask) {
+        setMute(chipId, (int) mask);
     }
 
     public void setVolume(int chipId, int db) {

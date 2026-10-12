@@ -27,8 +27,6 @@ public class MameAy8910Inst extends Instrument.BaseInstrument {
     private final int[][] frm = {new int[1], new int[1]};
     private final int[][] before = {new int[1], new int[1]};
 
-    private final int[] mask = {0, 0};
-
     @Override
     public String getName() {
         return "AY8910mame";
@@ -124,15 +122,8 @@ public class MameAy8910Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public synchronized void setMask(int chipId, int ch) {
-        mask[chipId] |= ch;
-        chips[chipId].setMuteMask(mask[chipId]);
-    }
-
-    @Override
-    public synchronized void resetMask(int chipId, int ch) {
-        mask[chipId] &= ~ch;
-        chips[chipId].setMuteMask(mask[chipId]);
+    public synchronized void setMuteMask(int chipId, long mask) {
+        chips[chipId].setMuteMask((int) mask);
     }
 
     // ----

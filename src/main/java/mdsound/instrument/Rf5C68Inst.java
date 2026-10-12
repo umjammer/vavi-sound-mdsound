@@ -66,13 +66,8 @@ public class Rf5C68Inst extends Instrument.BaseInstrument implements PcmEnabledI
     }
 
     @Override
-    public synchronized void setMask(int chipId, int ch) {
-        chips[chipId].setMuteMask(1);
-    }
-
-    @Override
-    public synchronized void resetMask(int chipId, int ch) {
-        chips[chipId].setMuteMask(0);
+    public synchronized void setMuteMask(int chipId, long mask) {
+        chips[chipId].setMuteMask((int) mask);
     }
 
     /** @param extras 0: srcOffset */

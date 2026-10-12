@@ -15,8 +15,6 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
 
     private final PSG[] chips = {new PSG(), new PSG()};
 
-    private final int[] mask = {0, 0};
-
     public Ay8910Inst() {
         // 0..Main
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
@@ -34,8 +32,6 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
 
     @Override
     public void init() {
-        mask[0] = 0;
-        mask[1] = 0;
     }
 
     @Override
@@ -83,15 +79,8 @@ public class Ay8910Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public synchronized void setMask(int chipId, int ch) {
-        mask[chipId] |= ch;
-        setMute(chipId, mask[chipId]);
-    }
-
-    @Override
-    public synchronized void resetMask(int chipId, int ch) {
-        mask[chipId] &= ~ch;
-        setMute(chipId, mask[chipId]);
+    public synchronized void setMuteMask(int chipId, long mask) {
+        setMute(chipId, (int) mask);
     }
 
     public void setVolume(int chipId, int db) {

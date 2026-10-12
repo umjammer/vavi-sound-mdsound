@@ -16,8 +16,6 @@ public class OkiM6295Inst extends Instrument.BaseInstrument implements PcmEnable
 
     private final OkiM6295[] chips = {new OkiM6295(), new OkiM6295()};
 
-    private final int[] mask = {0, 0};
-
     public OkiM6295Inst() {
         // 0..Main
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
@@ -78,19 +76,8 @@ public class OkiM6295Inst extends Instrument.BaseInstrument implements PcmEnable
     }
 
     @Override
-    public synchronized void setMask(int chipId, int ch) {
-        mask[chipId] |= ch;
-        setMuteMask(chipId, mask[chipId]);
-    }
-
-    @Override
-    public synchronized void resetMask(int chipId, int ch) {
-        mask[chipId] &= ~(int) ch;
-        setMuteMask(chipId, mask[chipId]);
-    }
-
-    private void setMuteMask(int chipId, int muteMask) {
-        chips[chipId].setMuteMask(muteMask);
+    public synchronized void setMuteMask(int chipId, long mask) {
+        chips[chipId].setMuteMask((int) mask);
     }
 
     /** @param extras 0: srcOffset, 1: romSize */

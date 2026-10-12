@@ -11,8 +11,6 @@ public class MameYm2612Inst extends Instrument.BaseInstrument {
 
     private final Ym2612[] chips = {new Ym2612(), new Ym2612()};
 
-    private final int[] mask = {0, 0};
-
     public MameYm2612Inst() {
         // 0..Main
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
@@ -71,19 +69,8 @@ public class MameYm2612Inst extends Instrument.BaseInstrument {
     public void stop(int chipId) {
     }
 
-    // TODO 2612
     @Override
-    public synchronized void setMask(int chipId, int ch) {
-        assert chipId < MAX_CHIPS;
-        mask[chipId] |= 1 << ch;
-        chips[chipId].setMuteMask(mask[chipId]);
-    }
-
-    // TODO 2612
-    @Override
-    public synchronized void resetMask(int chipId, int ch) {
-        assert chipId < MAX_CHIPS;
-        mask[chipId] &= ~(1 << ch);
-        chips[chipId].setMuteMask(mask[chipId]);
+    public synchronized void setMuteMask(int chipId, long mask) {
+        chips[chipId].setMuteMask((int) mask);
     }
 }

@@ -94,13 +94,8 @@ public class Msm5205Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public void setMask(int chipId, int ch) {
-        chips[chipId].setMute(true);
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
-        chips[chipId].setMute(false);
+    public synchronized void setMuteMask(int chipId, long mask) {
+        chips[chipId].setMute((mask & 1) != 0);
     }
 
     //----

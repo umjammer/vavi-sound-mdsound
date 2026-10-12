@@ -66,16 +66,6 @@ public class ZelMusicInst implements Instrument {
     }
 
     @Override
-    public void setMask(int chipId, int ch) {
-
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
-
-    }
-
-    @Override
     public Tuple<Integer, Double> getRegulationVolume() {
         return null;
     }

@@ -80,13 +80,8 @@ public class Pcm8PPInst extends BaseInstrument implements PcmEnabledInstrument {
     }
 
     @Override
-    public void setMask(int chipId, int ch) {
-        assert chipId < chips.length;
-        chips[chipId].setMute(ch, true);
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
+    public synchronized void setMuteMask(int chipId, long mask) {
+        for (int ch = 0; ch < 8; ch++) chips[chipId].setMute(ch, (mask & (1L << ch)) != 0);
     }
 
     @Override
