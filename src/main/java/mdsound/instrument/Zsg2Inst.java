@@ -70,12 +70,4 @@ public class Zsg2Inst extends BaseInstrument {
     @Override
     public void stop(int chipId) {
     }
-
-    @Override
-    public void setMask(int chipId, int ch) {
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
-    }
 }

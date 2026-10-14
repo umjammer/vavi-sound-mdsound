@@ -103,18 +103,6 @@ public class YmFmYm2203Inst extends Instrument.BaseInstrument {
         chips[chipId] = null;
     }
 
-    @Override
-    public void setMask(int chipId, int ch) {
-        assert chipId < chips.length;
-//        chips[chipId].setChannelMask(val);
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
-        assert chipId < chips.length;
-//        chips[chipId].setChannelMask(val);
-    }
-
     // ----
 
     @Override

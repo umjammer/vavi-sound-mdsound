@@ -21,8 +21,6 @@ public class C140Inst extends Instrument.BaseInstrument implements PcmEnabledIns
 
     private final C140[] chips = {new C140(), new C140()};
 
-    private final int[] mask = {0, 0};
-
     private C140.Type type;
 
     public C140Inst() {
@@ -42,8 +40,6 @@ public class C140Inst extends Instrument.BaseInstrument implements PcmEnabledIns
 
     @Override
     public void init() {
-        mask[0] = 0;
-        mask[1] = 0;
     }
 
     @Override
@@ -96,15 +92,8 @@ logger.log(Level.WARNING, "sampleRate: " + sampleRate);
     }
 
     @Override
-    public synchronized void setMask(int chipId, int ch) {
-        mask[chipId] |= ch;
-        chips[chipId].setMuteMask(mask[chipId]);
-    }
-
-    @Override
-    public synchronized void resetMask(int chipId, int ch) {
-        mask[chipId] &= ~(int) ch;
-        chips[chipId].setMuteMask(mask[chipId]);
+    public synchronized void setMuteMask(int chipId, long mask) {
+        chips[chipId].setMuteMask((int) mask);
     }
 
     /** @param extras 0: srcOffset, 1: romSize */

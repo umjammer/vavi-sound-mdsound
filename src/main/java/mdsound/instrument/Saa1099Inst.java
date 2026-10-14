@@ -15,8 +15,6 @@ public class Saa1099Inst extends Instrument.BaseInstrument {
 
     private final Saa1099[] chips = {new Saa1099(), new Saa1099()};
 
-    private final int[] mask = {0, 0};
-
     public Saa1099Inst() {
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
@@ -67,15 +65,8 @@ public class Saa1099Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public synchronized void setMask(int chipId, int ch) {
-        mask[chipId] |= ch;
-        chips[chipId].setMuteMask(mask[chipId]);
-    }
-
-    @Override
-    public synchronized void resetMask(int chipId, int ch) {
-        mask[chipId] &= ~ch;
-        chips[chipId].setMuteMask(mask[chipId]);
+    public synchronized void setMuteMask(int chipId, long mask) {
+        chips[chipId].setMuteMask((int) mask);
     }
 
     //----

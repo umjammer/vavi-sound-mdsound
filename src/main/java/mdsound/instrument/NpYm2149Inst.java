@@ -15,8 +15,6 @@ public class NpYm2149Inst extends Instrument.BaseInstrument {
 
     private final Psg[] chips = {new Psg(), new Psg()};
 
-    private final int[] mask = {0, 0};
-
     public NpYm2149Inst() {
         // 0..Main
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
@@ -34,8 +32,6 @@ public class NpYm2149Inst extends Instrument.BaseInstrument {
 
     @Override
     public void init() {
-        mask[0] = 0;
-        mask[1] = 0;
     }
 
     @Override
@@ -81,15 +77,8 @@ public class NpYm2149Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public synchronized void setMask(int chipId, int ch) {
-        mask[chipId] |= ch;
-        setMute(chipId, mask[chipId]);
-    }
-
-    @Override
-    public synchronized void resetMask(int chipId, int ch) {
-        mask[chipId] &= ~ch;
-        setMute(chipId, mask[chipId]);
+    public synchronized void setMuteMask(int chipId, long mask) {
+        setMute(chipId, (int) mask);
     }
 
     public void setVolume(int chipId, int db) {
@@ -98,6 +87,7 @@ public class NpYm2149Inst extends Instrument.BaseInstrument {
 
     private void setMute(int chipId, int val) {
         assert chipId < chips.length;
+        chips[chipId].setMask(val);
     }
 
     //----

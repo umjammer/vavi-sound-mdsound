@@ -74,13 +74,8 @@ public class YmZ280BInst extends Instrument.BaseInstrument implements PcmEnabled
     }
 
     @Override
-    public void setMask(int chipId, int ch) {
-//        chips[chipId].setMuteMask(ch); // TODO
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
-//        chips[chipId].setMuteMask(~ch); // TODO
+    public synchronized void setMuteMask(int chipId, long mask) {
+        chips[chipId].setMuteMask((int) mask);
     }
 
     /** @param extras 0: srcOffset, 1: romSize */

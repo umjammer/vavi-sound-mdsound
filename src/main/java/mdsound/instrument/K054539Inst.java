@@ -76,13 +76,8 @@ public class K054539Inst extends Instrument.BaseInstrument implements PcmEnabled
     }
 
     @Override
-    public void setMask(int chipId, int ch) {
-//        chips[chipId].setMuteMask(ch); // TODO
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
-//        chips[chipId].setMuteMask(~ch); // TODO
+    public synchronized void setMuteMask(int chipId, long mask) {
+        chips[chipId].setMuteMask((int) mask);
     }
 
     public void setGain(int chipId, int channel, double gain) {

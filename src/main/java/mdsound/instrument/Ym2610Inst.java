@@ -90,14 +90,6 @@ public class Ym2610Inst extends Instrument.BaseInstrument implements AdpcmEnable
     public void stop(int chipId) {
     }
 
-    @Override
-    public void setMask(int chipId, int ch) {
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
-    }
-
     public void setVolume(String tag, int vol, double ignored) {
         switch (tag) {
             case "FM" -> {

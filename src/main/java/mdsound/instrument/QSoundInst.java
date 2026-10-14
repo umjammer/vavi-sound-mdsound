@@ -16,16 +16,12 @@ public class QSoundInst extends Instrument.BaseInstrument implements PcmEnabledI
 
     private final QSound[] chips = {new QSound(), new QSound()};
 
-    private final int[] mask = {0, 0};
-
     public QSoundInst() {
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
 
     @Override
     public void init() {
-        mask[0] = 0;
-        mask[1] = 0;
     }
 
     @Override
@@ -74,17 +70,8 @@ public class QSoundInst extends Instrument.BaseInstrument implements PcmEnabledI
     }
 
     @Override
-    public synchronized void setMask(int chipId, int ch) {
-        ch = (1 << ch);
-        mask[chipId] |= ch;
-        chips[chipId].setMuteMask(mask[chipId]);
-    }
-
-    @Override
-    public synchronized void resetMask(int chipId, int ch) {
-        ch = (1 << ch);
-        mask[chipId] &= ~(int) ch;
-        chips[chipId].setMuteMask(mask[chipId]);
+    public synchronized void setMuteMask(int chipId, long mask) {
+        chips[chipId].setMuteMask((int) mask);
     }
 
     /** @param extras 0: srcOffset, 1: romSize */

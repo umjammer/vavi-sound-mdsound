@@ -10,8 +10,6 @@ public class Ym3438Inst extends Instrument.BaseInstrument {
 
     private final Ym3438[] chips = {new Ym3438(), new Ym3438()};
 
-    private final int[] mask = {0, 0};
-
     private Ym3438Const.Type type;
 
     public void setChipType(Ym3438Const.Type type) {
@@ -73,20 +71,6 @@ public class Ym3438Inst extends Instrument.BaseInstrument {
     @Override
     public void stop(int chipId) {
         chips[chipId].reset(0, 0);
-    }
-
-    // TODO 2612
-    @Override
-    public synchronized void setMask(int chipId, int ch) {
-//        mask[chipId] |= 1 << ch;
-//        int mask = this.mask[chipId];
-//        if ((mask & 0b0010_0000) == 0) mask &= 0b1011_1111;
-//        else mask |= 0b0100_0000;
-//        chips[chipId].setMuteMask(mask);
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
     }
 }
 

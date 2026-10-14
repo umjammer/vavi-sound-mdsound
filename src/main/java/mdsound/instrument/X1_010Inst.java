@@ -17,8 +17,6 @@ public class X1_010Inst extends Instrument.BaseInstrument implements PcmEnabledI
 
     private final X1_010[] chips = {new X1_010(), new X1_010()};
 
-    private final int[] mask = {0, 0};
-
     public X1_010Inst() {
     }
 
@@ -71,15 +69,8 @@ public class X1_010Inst extends Instrument.BaseInstrument implements PcmEnabledI
     }
 
     @Override
-    public synchronized void setMask(int chipId, int ch) {
-        mask[chipId] |= ch;
-        chips[chipId].setMuteMask(mask[chipId]);
-    }
-
-    @Override
-    public synchronized void resetMask(int chipId, int ch) {
-        mask[chipId] &= ~ch;
-        chips[chipId].setMuteMask(mask[chipId]);
+    public synchronized void setMuteMask(int chipId, long mask) {
+        chips[chipId].setMuteMask((int) mask);
     }
 
     /** @param extras 0: srcOffset, 1: romSize */

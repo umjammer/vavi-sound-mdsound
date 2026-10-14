@@ -14,8 +14,6 @@ public class SegaPcmInst extends Instrument.BaseInstrument {
 
     private final SegaPcm[] chips = {new SegaPcm(), new SegaPcm()};
 
-    private final int[] mask = {0, 0};
-
     public SegaPcmInst() {
         // 0..Main
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
@@ -23,8 +21,6 @@ public class SegaPcmInst extends Instrument.BaseInstrument {
 
     @Override
     public void init() {
-        mask[0] = 0;
-        mask[1] = 0;
     }
 
     @Override
@@ -79,15 +75,8 @@ public class SegaPcmInst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public synchronized void setMask(int chipId, int ch) {
-        mask[chipId] |= ch;
-        chips[chipId].setMuteMask(mask[chipId]);
-    }
-
-    @Override
-    public synchronized void resetMask(int chipId, int ch) {
-        mask[chipId] &= ~ch;
-        chips[chipId].setMuteMask(mask[chipId]);
+    public synchronized void setMuteMask(int chipId, long mask) {
+        chips[chipId].setMuteMask((int) mask);
     }
 
     public synchronized void writePcm(int chipId, int romSize, int dataStart, int dataLength, byte[] romData, int srcStartAdr) {

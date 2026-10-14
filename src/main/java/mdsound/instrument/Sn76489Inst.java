@@ -15,8 +15,6 @@ public class Sn76489Inst extends Instrument.BaseInstrument implements PannableIn
 
     private final Sn76489[] chips = {new Sn76489(), new Sn76489()};
 
-    private final int[] mask = {15, 15}; // Since psg is based on mute, the bits are reversed.
-
     public Sn76489Inst() {
         // 0..Main
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
@@ -34,8 +32,6 @@ public class Sn76489Inst extends Instrument.BaseInstrument implements PannableIn
 
     @Override
     public void init() {
-        mask[0] = 15;
-        mask[1] = 15;
     }
 
     @Override
@@ -72,15 +68,8 @@ public class Sn76489Inst extends Instrument.BaseInstrument implements PannableIn
     }
 
     @Override
-    public synchronized void setMask(int chipId, int ch) {
-        mask[chipId] &= ~ch;
-        chips[chipId].setMute(mask[chipId]);
-    }
-
-    @Override
-    public synchronized void resetMask(int chipId, int ch) {
-        mask[chipId] |= ch;
-        chips[chipId].setMute(mask[chipId]);
+    public synchronized void setMuteMask(int chipId, long mask) {
+        chips[chipId].setMute(~(int) mask & 0x0f);
     }
 
     @Override

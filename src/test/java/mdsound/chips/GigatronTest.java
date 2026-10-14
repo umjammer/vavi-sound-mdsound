@@ -83,12 +83,12 @@ class GigatronTest {
         inst.write(0, 0, 0x01fb, 2);
         inst.write(0, 0, 0x01fc, A880 & 0x7f);
         inst.write(0, 0, 0x01fd, A880 >> 7);
-        inst.setMask(0, 0);
+        inst.setMuteMask(0, 1);
         int[][] out = new int[2][4410];
         inst.update(0, out, 4410);
         int first = out[0][4409];
         for (int i = 10; i < out[0].length; i++) assertEquals(first, out[0][i], "muted channel still sounds"); // [0..] is before the first tick
-        inst.resetMask(0, 0);
+        inst.setMuteMask(0, 0);
         inst.update(0, out, 4410);
         int min = Integer.MAX_VALUE, max = Integer.MIN_VALUE;
         for (int s : out[0]) { min = Math.min(min, s); max = Math.max(max, s); }
@@ -107,7 +107,7 @@ class GigatronTest {
         Map<String, Object> info = inst.getView(0, "info");
         assertEquals(CLOCK, info.get("clock"));
         List<Map<String, Object>> channels = (List<Map<String, Object>>) info.get("channels");
-        assertEquals(A880, channels.get(0).get("key"));
+        assertEquals(A880, channels.getFirst().get("key"));
         assertEquals(1, channels.get(0).get("servings"));
         assertEquals(63, channels.get(0).get("level")); // the triangle is 0..63
         assertEquals(0, channels.get(1).get("level"));

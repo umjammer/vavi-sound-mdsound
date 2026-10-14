@@ -69,14 +69,6 @@ public class Ym2413Inst extends Instrument.BaseInstrument {
     public void stop(int chipId) {
     }
 
-    @Override
-    public void setMask(int chipId, int ch) {
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
-    }
-
     //----
 
     @Override

@@ -89,16 +89,6 @@ public class Y8950Inst extends Instrument.BaseInstrument implements PcmEnabledIn
         chips[chipId].stop();
     }
 
-    @Override
-    public void setMask(int chipId, int ch) {
-//        chips[chipId].setMuteMask(ch); // TODO
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
-//        chips[chipId].setMuteMask(~ch); // TODO
-    }
-
     /** @param extras 0: srcOffset, 1: romSize */
     @Override
     public synchronized void writePcm(int chipId, byte[] buf, int offset, int length, Object... extras) {

@@ -61,12 +61,4 @@ public class SinWaveInst extends Instrument.BaseInstrument {
         assert chipId < chips.length;
         chips[chipId].render = false;
     }
-
-    @Override
-    public void setMask(int chipId, int ch) {
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
-    }
 }

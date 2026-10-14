@@ -33,8 +33,6 @@ public class C219Inst extends Instrument.BaseInstrument implements PcmEnabledIns
 
     private final C219[] chips = {new C219(), new C219()};
 
-    private final int[] mask = {0, 0};
-
     public C219Inst() {
         // 0..Main
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
@@ -52,8 +50,6 @@ public class C219Inst extends Instrument.BaseInstrument implements PcmEnabledIns
 
     @Override
     public void init() {
-        mask[0] = 0;
-        mask[1] = 0;
     }
 
     @Override
@@ -94,15 +90,8 @@ logger.log(Level.DEBUG, "sampleRate: " + sampleRete);
     }
 
     @Override
-    public synchronized void setMask(int chipId, int ch) {
-        mask[chipId] |= ch;
-        chips[chipId].setMuteMask(mask[chipId]);
-    }
-
-    @Override
-    public synchronized void resetMask(int chipId, int ch) {
-        mask[chipId] &= ~(int) ch;
-        chips[chipId].setMuteMask(mask[chipId]);
+    public synchronized void setMuteMask(int chipId, long mask) {
+        chips[chipId].setMuteMask((int) mask);
     }
 
     /** @param extras 0: srcOffset. 1: romSize */

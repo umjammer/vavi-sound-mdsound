@@ -112,14 +112,6 @@ logger.log(Level.INFO, "opmFlag: %d, adpcmFlag: %d, pcmBuf: %d, clock: %s, @%08x
         soundIocs[chipId] = null;
     }
 
-    @Override
-    public void setMask(int chipId, int ch) {
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
-    }
-
     // pcm8
 
     @Override

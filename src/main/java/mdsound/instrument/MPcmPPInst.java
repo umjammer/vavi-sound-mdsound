@@ -71,11 +71,8 @@ public class MPcmPPInst extends BaseInstrument {
     }
 
     @Override
-    public void setMask(int chipId, int ch) {
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
+    public synchronized void setMuteMask(int chipId, long mask) {
+        chips[chipId].setMask((int) mask);
     }
 
     public void keyOn(int chipId, int ch) {

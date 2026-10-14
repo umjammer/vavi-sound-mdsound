@@ -113,14 +113,6 @@ public class YmFmYm2610Inst extends Instrument.BaseInstrument implements AdpcmEn
     }
 
     @Override
-    public void setMask(int chipId, int ch) {
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
-    }
-
-    @Override
     public void writeAdpcmA(int chipId, byte[] _adpcma) {
         assert chipId < chips.length;
 //        chips[chipId].setAdpcmA(_adpcma, _adpcma_size);

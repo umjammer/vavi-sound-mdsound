@@ -14,7 +14,6 @@ public class Ym2203Inst extends Instrument.BaseInstrument {
 
     private final Opna.OPN[] chips = {new Opna.OPN(), new Opna.OPN()};
 
-    private final int[] mask = {0, 0};
     private final int[][] keyOn = {new int[6], new int[6]};
 
     public Ym2203Inst() {
@@ -24,8 +23,6 @@ public class Ym2203Inst extends Instrument.BaseInstrument {
 
     @Override
     public void init() {
-        mask[0] = 0;
-        mask[1] = 0;
     }
 
     @Override
@@ -89,17 +86,8 @@ public class Ym2203Inst extends Instrument.BaseInstrument {
     }
 
     @Override
-    public synchronized void setMask(int chipId, int ch) {
-        mask[chipId] |= ch;
-        assert chipId < chips.length;
-        chips[chipId].setChannelMask(mask[chipId]);
-    }
-
-    @Override
-    public synchronized void resetMask(int chipId, int ch) {
-        mask[chipId] &= ~ch;
-        assert chipId < chips.length;
-        chips[chipId].setChannelMask(mask[chipId]);
+    public synchronized void setMuteMask(int chipId, long mask) {
+        chips[chipId].setChannelMask((int) mask);
     }
 
     // ----

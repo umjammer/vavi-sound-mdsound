@@ -16,8 +16,6 @@ public class NpNesInst extends Instrument.BaseInstrument implements Instrument.P
 
     private static final byte MAX_CHIPS = 0x02;
 
-    private final int[] mask = {0, 0};
-
     public NpNesInst() {
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
 
@@ -71,14 +69,6 @@ public class NpNesInst extends Instrument.BaseInstrument implements Instrument.P
 
     @Override
     public void stop(int chipId) {
-    }
-
-    @Override
-    public synchronized void setMask(int chipId, int ch) {
-    }
-
-    @Override
-    public synchronized void resetMask(int chipId, int ch) {
     }
 
     // ----

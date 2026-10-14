@@ -42,8 +42,6 @@ public class VaviYm3438Inst extends Instrument.BaseInstrument {
     private static final double CYCLE_PER_MS = CLOCK_HZ / 1000.0;
     private final static double rateRatio = 44100 / 1000.0 / CYCLE_PER_MS;
 
-    private final int[] mask = {0, 0};
-
     public VaviYm3438Inst() {
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
@@ -150,19 +148,6 @@ public class VaviYm3438Inst extends Instrument.BaseInstrument {
     @Override
     public void stop(int chipId) {
         chips[chipId].reset(0, 0);
-    }
-
-    // TODO 2612
-    @Override
-    public synchronized void setMask(int chipId, int ch) {
-        mask[chipId] |= 1 << ch;
-        int mask = this.mask[chipId];
-        if ((mask & 0b0010_0000) == 0) mask &= 0b1011_1111;
-        else mask |= 0b0100_0000;
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
     }
 }
 

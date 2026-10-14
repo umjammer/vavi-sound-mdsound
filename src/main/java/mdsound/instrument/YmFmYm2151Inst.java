@@ -106,14 +106,6 @@ logger.log(Level.DEBUG, "chipId: %d, %d".formatted(chipId, Arrays.hashCode(chips
         chips[chipId] = null;
     }
 
-    @Override
-    public void setMask(int chipId, int ch) {
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
-    }
-
     //----
 
     @Override

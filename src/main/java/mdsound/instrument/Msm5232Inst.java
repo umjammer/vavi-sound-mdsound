@@ -29,8 +29,6 @@ public class Msm5232Inst extends BaseInstrument {
 
     private final Msm5232[] chips = {new Msm5232(), new Msm5232()};
 
-    private final int[] muteMask = new int[MAX_CHIPS];
-
     public Msm5232Inst() {
         visVolume = new int[][][] {{{0, 0}}, {{0, 0}}};
     }
@@ -67,7 +65,6 @@ public class Msm5232Inst extends BaseInstrument {
             int oldSampleRate = (int) option[2];
             chip.setSampleRateChanged(() -> callback.accept(oldSampleRate, chip.getRate()));
         }
-        muteMask[chipId] = 0;
         return chip.start(clock, capacitors);
     }
 
@@ -96,15 +93,8 @@ public class Msm5232Inst extends BaseInstrument {
 
     /** @param ch a voice, 0..7 */
     @Override
-    public void setMask(int chipId, int ch) {
-        muteMask[chipId] |= 1 << ch;
-        chips[chipId].setMuteMask(muteMask[chipId]);
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
-        muteMask[chipId] &= ~(1 << ch);
-        chips[chipId].setMuteMask(muteMask[chipId]);
+    public synchronized void setMuteMask(int chipId, long mask) {
+        chips[chipId].setMuteMask((int) mask);
     }
 
     //----
@@ -127,7 +117,6 @@ public class Msm5232Inst extends BaseInstrument {
             voice.put("noise", v.isNoise());
             voice.put("egSection", v.getEgSection());
             voice.put("egVolume", v.getEgVolume());
-            voice.put("mute", (muteMask[chipId] & (1 << ch)) != 0);
             voices.add(voice);
         }
         info.put("voices", voices);

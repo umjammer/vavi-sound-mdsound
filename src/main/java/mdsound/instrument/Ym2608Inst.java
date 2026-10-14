@@ -100,14 +100,6 @@ public class Ym2608Inst extends Instrument.BaseInstrument {
     public void stop(int chipId) {
     }
 
-    @Override
-    public void setMask(int chipId, int ch) {
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
-    }
-
     //----
 
     public void setVolume(String tag, int vol, double ignored) {

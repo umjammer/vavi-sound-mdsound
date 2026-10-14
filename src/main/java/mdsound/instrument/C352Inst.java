@@ -72,15 +72,8 @@ public class C352Inst extends Instrument.BaseInstrument implements PcmEnabledIns
     }
 
     @Override
-    public void setMask(int chipId, int ch) {
-        int muteMask = chips[chipId].getMuteMask() | ch;
-        chips[chipId].setMuteMask(muteMask);
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
-        int muteMask = chips[chipId].getMuteMask() & ~ch;
-        chips[chipId].setMuteMask(muteMask);
+    public synchronized void setMuteMask(int chipId, long mask) {
+        chips[chipId].setMuteMask((int) mask);
     }
 
     /** @param extras 0: srcOffset, 1: romSize */

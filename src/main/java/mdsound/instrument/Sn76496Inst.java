@@ -99,14 +99,6 @@ public class Sn76496Inst extends Instrument.BaseInstrument implements PannableIn
     }
 
     @Override
-    public void setMask(int chipId, int ch) {
-    }
-
-    @Override
-    public void resetMask(int chipId, int ch) {
-    }
-
-    @Override
     public synchronized void setPan(int chipId, int data) {
         assert chipId < chips.size();
         chips.get(chipId).writeStereo(0, data);
